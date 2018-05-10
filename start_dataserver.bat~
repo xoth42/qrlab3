@@ -1,0 +1,3 @@
+@echo off
+cd dataserver
+"c:\Users\Wang Lab\Anaconda2\python" dataserver.py

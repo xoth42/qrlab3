@@ -1,0 +1,201 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from pulseseq.sequencer import *
+from pulseseq.pulselib import *
+from measurement import Measurement1D
+#import lmfit
+
+
+class All_XY(Measurement1D):
+
+    def __init__(self, qubit_info, seq=None, postseq=None, **kwargs):
+        self.qubit_info = qubit_info
+        if seq is None:
+            seq = Trigger(250)
+        self.seq = seq
+        self.postseq = postseq
+
+        super(All_XY, self).__init__(21, infos=(qubit_info,), **kwargs)
+        self.data.create_dataset('sequence', data=[range(0,21)])
+#        self.data.set_attrs()
+
+
+    def generate(self):
+        s = Sequence()
+
+        r = self.qubit_info.rotate
+
+        '''North pole sequences'''
+        s.append(self.seq)
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+            
+        s.append(self.seq)
+        s.append(r(np.pi, X_AXIS))
+        s.append(r(np.pi, X_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+            
+        s.append(self.seq)
+        s.append(r(np.pi, Y_AXIS))
+        s.append(r(np.pi, Y_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ])) 
+            
+        s.append(self.seq)
+        s.append(r(np.pi, X_AXIS))
+        s.append(r(np.pi, Y_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+            
+        s.append(self.seq)
+        s.append(r(np.pi, Y_AXIS))
+        s.append(r(np.pi, X_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+            
+        '''Equator sequences'''
+        s.append(self.seq)
+        s.append(r(np.pi/2, X_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+            
+        s.append(self.seq)
+        s.append(r(np.pi/2, Y_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ])) 
+            
+        s.append(self.seq)
+        s.append(r(np.pi/2, X_AXIS))
+        s.append(r(np.pi/2, Y_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+            
+        s.append(self.seq)
+        s.append(r(np.pi/2, Y_AXIS))
+        s.append(r(np.pi/2, X_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+            
+        s.append(self.seq)
+        s.append(r(np.pi/2, X_AXIS))
+        s.append(r(np.pi, Y_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+            
+        s.append(self.seq)
+        s.append(r(np.pi/2, Y_AXIS))
+        s.append(r(np.pi, X_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ])) 
+            
+        s.append(self.seq)
+        s.append(r(np.pi, X_AXIS))
+        s.append(r(np.pi/2, Y_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+            
+        s.append(self.seq)
+        s.append(r(np.pi, Y_AXIS))
+        s.append(r(np.pi/2, X_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+            
+        s.append(self.seq)
+        s.append(r(np.pi/2, X_AXIS))
+        s.append(r(np.pi, X_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+            
+        s.append(self.seq)
+        s.append(r(np.pi, X_AXIS))
+        s.append(r(np.pi/2, X_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ])) 
+            
+        s.append(self.seq)
+        s.append(r(np.pi/2, Y_AXIS))
+        s.append(r(np.pi, Y_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+            
+        s.append(self.seq)
+        s.append(r(np.pi, Y_AXIS))
+        s.append(r(np.pi/2, Y_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+        
+        
+        '''South pole sequences'''
+        s.append(self.seq)
+        s.append(r(np.pi, X_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+            
+        s.append(self.seq)
+        s.append(r(np.pi, Y_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ])) 
+            
+        s.append(self.seq)
+        s.append(r(np.pi/2, X_AXIS))
+        s.append(r(np.pi/2, X_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+            
+        s.append(self.seq)
+        s.append(r(np.pi/2, Y_AXIS))
+        s.append(r(np.pi/2, Y_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+
+        s = self.get_sequencer(s)
+        seqs = s.render()
+
+        return seqs
+
+    def analyze(self, data=None, fig=None):
+#        self.fit_params = analysis(self, data, fig)
+        return #self.fit_params['tau'].value
