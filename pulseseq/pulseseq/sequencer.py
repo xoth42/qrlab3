@@ -34,7 +34,13 @@ PAD_RIGHT     = 1
 PAD_BOTH      = 2
 PAD_CENTER    = 2
 
-MINLEN        = 250
+''' JEFF: default value for Tektronix is 250. Keysight requires a higher value.
+    Try 1000 and look for error messages asking for a longer or shorter pulse length.
+    
+    TODO: make this shit dynamic so it doesn't need to be reset
+'''
+MINLEN        = 2000
+
 
 IGNORE        = 0
 WARN          = 1

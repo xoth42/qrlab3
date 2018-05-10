@@ -1,13 +1,8 @@
 import time
-import visa
 
-# Matplotlib seems to always search for PyQt5 on computer 5, even though PyQt4 is
-# installed and works fine. The lines below fix the problem, although I'm not sure
-# why. -Josh
-import matplotlib
-matplotlib.rcParams['backend'] = 'Qt4Agg'
-matplotlib.rcParams['backend.qt4'] = 'PyQt4'
 import matplotlib.pyplot as plt
+
+
 if 1:
     import os
 
@@ -16,7 +11,6 @@ if 1:
 
 from mclient import instruments
 
-#Magnet = instruments.create('Magnet','AMI_430')
 
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                              deltaf=-100e6,
@@ -29,56 +23,84 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                               w=40,
                               w_quasilective=100,
                               w_selective=500,
-                              channels='3,4',
+                              channels='5,6',
                               sideband_channels='I1,Q1',
-                             sideband_phase=1.315)
-
-#VNA = instruments.create('VNA', 'Agilent_E5071C', address='TCPIP0::K-E5071C-26868.local::inst0::INSTR')
-
-qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
-                              deltaf=-212.100e6,
-                              pi_amp=0.09,
-                              pi_amp_quasilective=0.02,
-                              pi_amp_selective=4.100e-3,
-                              rotation='Gaussian',
-                              w=40,
-                              w_quasilective=100,
-                              w_selective=500,
-                              channels='3,4',
-                              sideband_channels='I2,Q2',
                               sideband_phase=1.315)
 
-#test = instruments.create('sh_test', 'SignalHoundUSBSA124B', waittime=100000,
+refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511, 
+                            use_extref=True) #reference
+RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=18608,
+                             use_extref=True) #readout
+#brick1 = instruments.create('brick1', 'LabBrick_RFSource', serial=14510,
+#                           use_extref=True) #qubit
+
+#sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
+
+
+AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
+                             AWG_PRODUCT = "M3202A",
+                             amps = [1, 1, 1, 1], ofs = [0, 0, 0, 0])
+
+AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis=0, slot=10,
+                         AWG_PRODUCT="M3202A",
+                         amps = [1, 1, 1, 1], ofs = [0, 0, 0, 0])
+
+# Magnet = instruments.create('Magnet','AMI_430')
+
+
+#readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
+#                             IQe_radius= 1 , rfsource1='RObrick', 
+#                             rfsource2='refbrick',
+#                             pulse_len=1000, readout_chan='4m1', acq_chan='1m1')
+
+
+''' Readout_IQ_Info is for iq modulation on the readout brick instead of pulse triggering '''
+readout = instruments.create('readout', 'Readout_IQ_Info', IQe=(1.0), IQg=(0.1),
+                             IQe_radius= 1 , rfsource1='RObrick', rfsource2='refbrick',
+                             pulse_len=2000, readout_chan_I=3, readout_chan_Q=4,
+                             acq_chan=1)
+
+# VNA = instruments.create('VNA', 'Agilent_E5071C',
+# address='TCPIP0::K-E5071C-26868.local::inst0::INSTR')
+#qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
+#                              deltaf=-212.100e6,
+#                              pi_amp=0.09,
+#                              pi_amp_quasilective=0.02,
+#                              pi_amp_selective=4.100e-3,
+#                              rotation='Gaussian',
+#                              w=40,
+#                              w_quasilective=100,
+#                              w_selective=500,
+#                              channels='3,4',
+#                              sideband_channels='I2,Q2',
+#                              sideband_phase=1.315)
+
+# test = instruments.create('sh_test', 'SignalHoundUSBSA124B', waittime=100000,
 #                          serial_no=61660103, ref=-20, center=6e9,
 #                          span=1e8, vbw=30e3, rbw=30e3)
-#peaks, array = test.perform_sweep(peak_find = True, plot = True)
+# peaks, array = test.perform_sweep(peak_find = True, plot = True)
 
-#brick5 = instruments.create('brick5', 'LabBrick_RFSource', serial=18608,
-#         use_extref=True) #reference
-#brick8 = instruments.create('brick8', 'LabBrick_RFSource', serial=19151,
-#         use_extref=True) #reference
-#brick2 = instruments.create('brick2', 'LabBrick_RFSource', serial=17912,
- #                           use_extref=True) #readout
-#brick1 = instruments.create('brick1', 'LabBrick_RFSource', serial=14510,
- #                           use_extref=True) #qubit
- #AWG1 = instrumets.create('AWG1', 'Keysight_AWG', chassis = 1, slot = 7,  AWG_PRODUCT = "M3202A",
-  #                        amps = [1,2,1,1], ofs = [-.08, .02, 0, 0])
+
+
+
 
 # AWG1.do_set_waveform_delay(200000)
 # bla
 
 # VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
 
-AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', reffreq=10e6)
-#AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1')
+# AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C',
+# address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT',
+# reffreq=10e6)
+# AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1')
 
-#sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
 
 
+# brick3 = instruments.create('brick3', 'LabBrick_RFSource', serial=18239,
+# use_extref=True) # old RO
+# brick4 = instruments.create('brick4', 'LabBrick_RFSource', serial=17912,
+# use_extref=True) # RO
 
-brick3 = instruments.create('brick3', 'LabBrick_RFSource', serial=18239, use_extref=True) # old RO
-#brick = instruments.create('brick', 'LabBrick_RFSource', serial=18608, use_extref=True)
-brick4 = instruments.create('brick4', 'LabBrick_RFSource', serial=17912, use_extref=True) # RO
 
 
 # fg = instruments.create('funcgen', 'Agilent_33250A', serial=2391)
@@ -87,6 +109,8 @@ brick4 = instruments.create('brick4', 'LabBrick_RFSource', serial=17912, use_ext
 
 # fg = instruments.create('funcgen', 'BNC_FuncGen645', address='GPIB1::30')
 # Setup Alazar
+'''
+=======
 
 
 
@@ -108,6 +132,7 @@ alz.set_timeout(10e3)
 #alz.setup_clock()
 alz.setup_channels()
 alz.setup_trigger()
+
 
 
 
@@ -323,10 +348,8 @@ if 0:
     AWG.do_set_offset(-0.029, 1)
     AWG.do_set_offset(0.161, 2)
     AWG.do_set_amplitude(3.570, 2)
- '''   
-    
-    
-    
+
+ '''
 '''
 
 # to reload:

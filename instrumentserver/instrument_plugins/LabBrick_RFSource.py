@@ -196,6 +196,7 @@ class LabBrick_RFSource(Instrument):
                            display_scale=6)
         self.add_parameter('use_extref', type=types.BooleanType,
                            flags=Instrument.FLAG_GETSET)
+
         self.add_parameter('internal_pulse_stat', type=types.BooleanType,
                            flags=Instrument.FLAG_GETSET)
         self.add_parameter('external_pulse_stat', type=types.BooleanType,
@@ -272,6 +273,7 @@ class LabBrick_RFSource(Instrument):
                         [ctypes.c_uint32, ctypes.c_bool])
         return f(self._devid, not val)
         
+
 #    def do_get_pulse_on(self):
 #        f = get_lb_func('fnLMS_GetUseInternalPulseMod')
 #        return not f(self._devid)

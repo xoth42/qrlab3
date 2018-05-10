@@ -383,15 +383,17 @@ class Keysight_AWG(Instrument):
         <m1> and <m2>.
         '''
         wave_data = data[:]
-#        print(wave_data)
+
 #        print(wave_data.flags.writeable)
 #        wave_data.setflags(write=1)
 #        wave_data.flags.writeable = True
 #        print(wave_data.flags.writeable)
 #        print('inside keysight add_waveform')
 #        print('wname', wname, 'm1', m1, 'm2', m2, 'waveform_num', self._waveform_num)
+#        print(wave_data.tolist())
         if(len(data) < 2000):
-            print('Waveform is too short. Check the sequencer')
+            print('Waveform might be too short. Check the sequencer')
+
 #            print('wname', wname, 'm1', m1, 'm2', m2, 'waveform_num', self._waveform_num)
 #        if(len(data) % 10 is not 0):
 #            print('Waveform is not a multiple of ten. Will ruin the autotrigger. Check the sequencer')

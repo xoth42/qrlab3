@@ -31,8 +31,9 @@ instr = objsh.helper.find_object('instruments')
 # so called parent widget. This is where the main information display will be.
 root_window = tk.Tk()
 root_window.title('QRLab')
-root_window.maxsize(width=500, height=970)
-root_window.minsize(width=500, height=970)
+root_window.maxsize(width=500, height=950)
+root_window.minsize(width=500, height=950)
+
 
 
 def window_close(*args):
@@ -100,12 +101,14 @@ class InstrumentInputItem():
         self.label.grid(row=1, column=1, sticky=fill_all)
         self.option_dict = instr[self.instrument_name].get_shared_parameters()
         self.option_condition = 'option_list' in self.option_dict[key]
-        # option_list refers to whether the parameter catwon take the value of
+        # option_list refers to whether the parameter can take the value of
+
         # only a few different quantities, like having a sine wave or a
         # sawtooth wave. Thus only a finite number of choices should be
         # presented to the user.
         if self.option_condition:
             dropdown_options = self.option_dict[key]['option_list']
+
             self.valuevar = tk.StringVar(self.frame)
             self.setvar = tk.StringVar(self.frame)
             # When the GUI first starts, set all of the parameters to the
@@ -116,6 +119,7 @@ class InstrumentInputItem():
             self.drop_down_box = tk.OptionMenu(self.frame, self.valuevar,
                                                *dropdown_options)
             self.drop_down_box.config(bg='#d0d0d1')
+
             self.drop_down_box.grid(row=1, column=2, sticky = fill_all)
             self.drop_down_box_set = tk.OptionMenu(self.frame, self.setvar,
                                                    *dropdown_options)
@@ -194,6 +198,7 @@ class InstrumentInformationDisplayFrame():
 
     def __init__(self, win, instrument_name):
         self.instrument_name = instrument_name
+
         self.frame = tk.Frame(root_window)
         tk.Grid.rowconfigure(self.frame, 0, weight=1)
         tk.Grid.columnconfigure(self.frame, 0, weight=1)
@@ -213,6 +218,7 @@ class InstrumentInformationDisplayFrame():
         #  self.info_subframe = tk.Frame(self.canvas)
         name_value_dict = instr[instrument_name].get_parameter_values()
         self.fields = {}
+
         self.sorted_instrument_keys = instr[instrument_name].get_shared_parameters().keys()
         self.sorted_instrument_keys.sort()
         #The fake frame doesn't contain anything. Its used as padding so the
@@ -231,6 +237,7 @@ class InstrumentInformationDisplayFrame():
                                       anchor=tk.W)
             #To move things aronud on the canvas, use the coords method with new coordinates.
             self.canvas.coords(f, 0, 40 + i*35)
+
         t = self.canvas.create_window(0, 0, 
                                   window = self.fake_frame, 
                                   anchor = tk.W)
@@ -241,6 +248,7 @@ class InstrumentInformationDisplayFrame():
         self.canvas.config(scrollregion=self.canvas.bbox(tk.ALL))
         self.canvas.config(yscrollcommand=self.scrollbar.set)
         self.scrollbar.pack(side = tk.RIGHT, fill = tk.Y)
+
         self.canvas.pack(pady = 10, ipady = 0, fill = tk.BOTH, expand = 1)
         self.frame.pack()
         tabs.add(self.frame, text=instrument_name)
