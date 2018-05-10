@@ -35,6 +35,7 @@ root_window.maxsize(width=500, height=950)
 root_window.minsize(width=500, height=950)
 
 
+
 def window_close(*args):
     root_window.destroy()
 #Press ctrl-w to close the window.
@@ -101,13 +102,15 @@ class InstrumentInputItem():
         self.option_dict = instr[self.instrument_name].get_shared_parameters()
         self.option_condition = 'option_list' in self.option_dict[key]
         # option_list refers to whether the parameter can take the value of
+
         # only a few different quantities, like having a sine wave or a
         # sawtooth wave. Thus only a finite number of choices should be
         # presented to the user.
         if self.option_condition:
             dropdown_options = self.option_dict[key]['option_list']
-            self.valuevar = tk.StringVar()
-            self.setvar = tk.StringVar()
+
+            self.valuevar = tk.StringVar(self.frame)
+            self.setvar = tk.StringVar(self.frame)
             # When the GUI first starts, set all of the parameters to the
             # values already present in the instrument server.
             self.valuevar.set(str(instr[self.instrument_name].get(self.key)))
@@ -116,7 +119,8 @@ class InstrumentInputItem():
             self.drop_down_box = tk.OptionMenu(self.frame, self.valuevar,
                                                *dropdown_options)
             self.drop_down_box.config(bg='#d0d0d1')
-            self.drop_down_box.grid(row=1, column=2, sticky=fill_all)
+
+            self.drop_down_box.grid(row=1, column=2, sticky = fill_all)
             self.drop_down_box_set = tk.OptionMenu(self.frame, self.setvar,
                                                    *dropdown_options)
             self.drop_down_box_set.grid(row=1, column=3, sticky=fill_all)
@@ -194,9 +198,10 @@ class InstrumentInformationDisplayFrame():
 
     def __init__(self, win, instrument_name):
         self.instrument_name = instrument_name
-        self.frame = tk.Frame()
-     #   tk.Grid.rowconfigure(self.frame, 0, weight=1)
-      #  tk.Grid.columnconfigure(self.frame, 0, weight=1)
+
+        self.frame = tk.Frame(root_window)
+        tk.Grid.rowconfigure(self.frame, 0, weight=1)
+        tk.Grid.columnconfigure(self.frame, 0, weight=1)
         self.refresh_button = tk.Button(self.frame, text=u"\U0001F5D8",
                                         command=self.refresh_all_parameters)
         # u"\U0001F5D8" is the unicode string that represents a sort of refresh
@@ -213,8 +218,17 @@ class InstrumentInformationDisplayFrame():
         #  self.info_subframe = tk.Frame(self.canvas)
         name_value_dict = instr[instrument_name].get_parameter_values()
         self.fields = {}
-        for i, key in enumerate(name_value_dict):
-            self.name_and_value_frame = tk.Frame()
+
+        self.sorted_instrument_keys = instr[instrument_name].get_shared_parameters().keys()
+        self.sorted_instrument_keys.sort()
+        #The fake frame doesn't contain anything. Its used as padding so the
+        #first and last fields don't get cut off.
+        self.fake_frame = tk.Frame(root_window)
+        self.canvas.create_window(0, 0,
+                                  window = self.fake_frame,
+                                  anchor = tk.W)
+        for i, key in enumerate(self.sorted_instrument_keys):
+            self.name_and_value_frame = tk.Frame(self.canvas)
             item = InstrumentInputItem(self.name_and_value_frame, key,
                                        name_value_dict, instrument_name)
             self.fields[key] = item
@@ -223,16 +237,22 @@ class InstrumentInformationDisplayFrame():
                                       anchor=tk.W)
             #To move things aronud on the canvas, use the coords method with new coordinates.
             self.canvas.coords(f, 0, 40 + i*35)
-            
-            
+
+        t = self.canvas.create_window(0, 0, 
+                                  window = self.fake_frame, 
+                                  anchor = tk.W)
+        self.canvas.coords(t, 0, 40 + (i+1)*35)
         # Note: to get the scrollbar to work, its necessary to put the
         # frame on the canvas. To do this and make the scrollbar work,
         # you need to use the create_window. You cannot just pack it.
         self.canvas.config(scrollregion=self.canvas.bbox(tk.ALL))
         self.canvas.config(yscrollcommand=self.scrollbar.set)
         self.scrollbar.pack(side = tk.RIGHT, fill = tk.Y)
-        self.canvas.pack(pady = 50, fill = tk.BOTH, expand = 1)
+
+        self.canvas.pack(pady = 10, ipady = 0, fill = tk.BOTH, expand = 1)
+        self.frame.pack()
         tabs.add(self.frame, text=instrument_name)
+        
 
     def refresh_all_parameters(self):
         for item in self.fields:

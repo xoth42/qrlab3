@@ -696,6 +696,7 @@ class Measurement(object):
         return ret
 
 
+
     def play_sequence(self, load=True):
         '''
         Generate and play the sequence for this measurement without setting

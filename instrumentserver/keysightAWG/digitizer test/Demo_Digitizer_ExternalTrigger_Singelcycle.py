@@ -50,19 +50,30 @@ if aouID < 0:
 
 # Load waveforms to AWG
 waveform_filepath = "C:\\qrlab\instrumentserver\keysightAWG\waveforms\\"
+<<<<<<< HEAD
 #print(waveform_filepath)
+=======
+print(waveform_filepath)
+>>>>>>> b7dcdcc0b8e6155bc12ad2245303b2cf64d85867
 
 
 gaussian = np.loadtxt(waveform_filepath + 'Gaussian.csv', skiprows = 3)
 pulse_length = len(gaussian)
 
 wait_time = 0
+<<<<<<< HEAD
 num_points = 1
+=======
+num_points = 10
+>>>>>>> b7dcdcc0b8e6155bc12ad2245303b2cf64d85867
 power = np.linspace(.1, 1, num_points)
 
 full_length = pulse_length + wait_time
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> b7dcdcc0b8e6155bc12ad2245303b2cf64d85867
 awg.waveformFlush()
 
 # Load the trigger
@@ -118,15 +129,26 @@ for i in range(num_points):
     awg.AWGqueueWaveform(3, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
 
 
+<<<<<<< HEAD
 #set up full scale, input impedance and AC/DC coupling for Digitizer channels
 Voltage_Scale = 2.8 # Scale > 3 saturates the Digitizer input and folds the waveform causing unwanted wave shape
 dig.channelInputConfig(1 , Voltage_Scale,key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)
+=======
+
+#set up full scale, input impedance and AC/DC coupling for Digitizer channels
+Voltage_Scale = 2.8 # Scale > 3 saturates the Digitizer input and folds the waveform causing unwanted wave shape
+dig.channelInputConfig(3 , Voltage_Scale,key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)
+>>>>>>> b7dcdcc0b8e6155bc12ad2245303b2cf64d85867
 dig.channelInputConfig(2 , Voltage_Scale,key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)
 
 # Check DIG Connection
 if ainID < 0:
     print("ERROR")
     print("ainID:", ainID)
+<<<<<<< HEAD
+=======
+    awg.close()
+>>>>>>> b7dcdcc0b8e6155bc12ad2245303b2cf64d85867
     print()
     print("AIN closed")
 
@@ -134,7 +156,11 @@ data_filepath = "C:\\qrlab\instrumentserver\keysightAWG\data\\"
 print(data_filepath)
 
 #intitialize Digitizer
+<<<<<<< HEAD
 dig.DAQflush(1)
+=======
+dig.DAQflush(3)
+>>>>>>> b7dcdcc0b8e6155bc12ad2245303b2cf64d85867
 dig.DAQflush(2)
 
 
@@ -142,6 +168,7 @@ dig.DAQflush(2)
 #PROGRAM Trig IN/Out as INPUT PORT - def triggerIOconfig(self, direction
 dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)
 #EXTERNAL DIGITAL TRIGGER BEHAVIOR - def DAQdigitalTriggerConfig(self, channel, triggerSource, triggerBehavior)
+<<<<<<< HEAD
 dig.DAQdigitalTriggerConfig(1, key.SD_TriggerExternalSources.TRIGGER_EXTERN, key.SD_TriggerBehaviors.TRIGGER_HIGH) 
 #CONFIGURE DAQ3 FOR CAPTURING RABI SWEEP - DAQconfig(self, nDAQ, nDAQpointsPerCycle, nCycles, prescaler, triggerMode)
 
@@ -154,12 +181,27 @@ dig.DAQconfig(1, num_aq, num_ave * num_points, 0, key.SD_TriggerModes.EXTTRIG)
 
 dig.DAQstart(1)
 #awg.AWGstartMultiple(15)
+=======
+dig.DAQdigitalTriggerConfig(3, key.SD_TriggerExternalSources.TRIGGER_EXTERN, key.SD_TriggerBehaviors.TRIGGER_HIGH) 
+#CONFIGURE DAQ3 FOR CAPTURING RABI SWEEP - DAQconfig(self, nDAQ, nDAQpointsPerCycle, nCycles, prescaler, triggerMode)
+
+
+num_ave = 2000
+num_aq = 5000
+timeout = 2000
+dig.DAQconfig(3, num_aq, num_ave * num_points, 0, key.SD_TriggerModes.EXTTRIG)
+
+
+dig.DAQstart(3)
+awg.AWGstartMultiple(15)
+>>>>>>> b7dcdcc0b8e6155bc12ad2245303b2cf64d85867
 
 
 
 voltage_array = np.zeros((num_points, num_aq))
 #READ DAQ BUFFER FOR ACQUIRED DATA
 for i in range(num_ave * num_points):
+<<<<<<< HEAD
 #    if(i % (num_ave * num_points/10) == 0): 
 #        print(i)
     samp_array = dig.DAQread(1, num_aq, timeout) #def DAQread(self, nDAQ, nPoints, timeOut = 0)
@@ -170,6 +212,15 @@ plt.show()
 
 #STOP DIG
 dig.DAQstop(1)
+=======
+    if(i % (num_ave * num_points/10) == 0): 
+        print(i)
+    samp_array = dig.DAQread(3, num_aq, timeout) #def DAQread(self, nDAQ, nPoints, timeOut = 0)
+    voltage_array[i%num_points] += samp_array*Voltage_Scale/num_ave
+
+#STOP DIG
+dig.DAQstop(3)
+>>>>>>> b7dcdcc0b8e6155bc12ad2245303b2cf64d85867
 dig.DAQstop(2)
 
 plot_array = []

@@ -7,8 +7,13 @@ import numpy as np
 mpl.rcParams['legend.fontsize'] = 9
 
 Nmax = 10
+<<<<<<< HEAD
 cmap = mpl.cm.get_cmap(name='spectral')
 mpl.rcParams['axes.color_cycle'] = [cmap(i) for i in np.linspace(0, 1.0, Nmax)]
+=======
+cmap = mpl.cm.get_cmap(name='Spectral')
+#mpl.rcParams['axes.color_cycle'] = [cmap(i) for i in np.linspace(0, 1.0, Nmax)]
+>>>>>>> b7dcdcc0b8e6155bc12ad2245303b2cf64d85867
 
 bwr = [(0.0, 0.0, 0.7), (0.1, 0.1, 1.0), (1.0, 1.0, 1.0), (1.0, 0.1, 0.1), (0.7, 0.0, 0.0)]
 pcolor_cmap = mpl.colors.LinearSegmentedColormap.from_list('mymap', bwr, gamma=1)
