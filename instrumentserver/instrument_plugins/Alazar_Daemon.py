@@ -11,14 +11,9 @@ import sys
 import ctypes
 import types
 import numpy as np
-<<<<<<< HEAD
 #Josh added this on 3/20/18 so maplotlib wouldn't look for PyQt5
 import matplotlib as mpl
-=======
-import matplotlib as mpl
-#mpl.rcParams['backend'] = 'Qt4Agg'
-#mpl.rcParams['backend.qt4'] = 'PyQt4'
->>>>>>> b7dcdcc0b8e6155bc12ad2245303b2cf64d85867
+
 import matplotlib.pyplot as plt
 mpl.rcParams['legend.fontsize'] = 8
 import time
@@ -617,11 +612,8 @@ real part is applied to I and the imaginary part to Q.
 
         while i < N:
             buf = self.get_next_buffer(acqtimeout)
-<<<<<<< HEAD
 
-=======
             print(i, np.shape(buf), Nperbuf)
->>>>>>> b7dcdcc0b8e6155bc12ad2245303b2cf64d85867
             self._demodA.demodulate(buf[:Nperbuf*nsamples])
             IQA = self._demodA.IQ.reshape([Nperbuf, periods])
 
@@ -637,11 +629,7 @@ real part is applied to I and the imaginary part to Q.
 
             self._card.post_buffers(buf)
             i += Nperbuf
-<<<<<<< HEAD
-=======
-            
-            
->>>>>>> b7dcdcc0b8e6155bc12ad2245303b2cf64d85867
+
 
         self.end_capture()
         if avg is None:
