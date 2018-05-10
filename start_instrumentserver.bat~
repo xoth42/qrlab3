@@ -1,0 +1,3 @@
+@echo off
+cd instrumentserver
+"c:\Users\Wang Lab\Anaconda2\python" instruments_server.py
