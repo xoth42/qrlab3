@@ -1,0 +1,8 @@
+Merge branch 'master' of https://git.yale.edu/ksc45/instrumentserver
+
+Conflicts:
+	instrument_plugins/Agilent_FuncGen33250A.py
+	instrument_plugins/Alazar_Daemon.py
+	instrument_plugins/Qubit_Info.py
+	instrument_plugins/Readout_Info.py
+	instrument_plugins/sauron.py

@@ -1,0 +1,5 @@
+@echo off
+set PYTHONPATH=%CD%;%CD%\objectsharer\;%PYTHONPATH%
+cd instrumentserver
+"c:\Users\Wang Lab\Anaconda2\python" instrument_gui.py
+cd ..
