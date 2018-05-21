@@ -44,19 +44,18 @@ root_window.bind('<Control-q>', window_close)
 
 ### NOTABLE CONSTANTS ###
 # **************************#
-# This value determines how fast the GUI refreshes all the values. 500 is the
-# lowest reasonable value before the interface seems glitchy.
-refresh_time = 800  # in ms
-# This bool determines whether the GUI autorefreshes or not. If set to False,
-# the Get buttons will have to be clicked to update anything in the
-# GUI.
-refresh_continuously = True
+#The time that the GUI will draw all the widgets again. 
+draw_time = 10 # in s
+#The time that the GUI will retrieve all the information about the isntruments from the 
+#instrument server. When this time has elapsed.
+fetch_time = 0.5 # in s
 # This constant is used to resize the widgets to get them to take up all of
 # the available space in the parent window.
 fill_all = tk.N + tk.S + tk.W + tk.E
 # **************************#
 
 tabs = ttk.Notebook(root_window)
+
 
 
 # If create_instruments had a problem running, or the instrument server had
@@ -76,7 +75,10 @@ if list_of_instruments == []:
               'issue in creating instruments?'
     raise NoInstrumentsException(message)
 
-
+def remove_widget(widget):
+    widget.pack_forget()
+    
+    
 class InstrumentInputItem():
     """
     The subassembly of instrument label, value display, Get box, Set box,
@@ -139,6 +141,36 @@ class InstrumentInputItem():
         self.set_button = tk.Button(self.frame, text='Set',
                                     command=self.SetParameter)
         self.set_button.grid(row=1, column=5, sticky=fill_all)
+        self.hide_button = tk.Button(self.frame, text = 'HIDE', command = self.hide_all,
+                                     bg = '#FF3030', fg = 'white')
+        self.hide_button.grid(row = 1, column = 6, sticky = fill_all)
+    
+    def hide_all(self):
+        self.get_button.grid_forget()
+        self.set_button.grid_forget()
+        self.label.grid_forget()
+        if self.option_condition:
+            self.drop_down_box.grid_forget()
+            self.drop_down_box_set.grid_forget()
+        else:
+            self.parameter_value_box.grid_forget()
+            self.set_box.grid_forget()
+        self.hide_button.config(text = 'SHOW', command = self.regrid, bg = '#4651FC', fg = 'white')
+
+    def regrid(self):
+        self.get_button.grid(row=1, column=4)
+        self.set_button.grid(row=1, column=5, sticky=fill_all)
+        self.label.grid(row=1, column=1, sticky=fill_all)
+        if self.option_condition:
+            self.drop_down_box.grid(row=1, column=2, sticky = fill_all)
+            self.drop_down_box_set.grid(row=1, column=3, sticky=fill_all)
+        else:
+            self.parameter_value_box.grid(row=1, column=2)
+            self.set_box.grid(row=1, column=3, sticky=fill_all)
+        self.hide_button.config(text = 'HIDE' , command = self.hide_all, bg = '#FF3030', fg = 'white')
+
+
+
 
     def GetParameter(self):
         """
@@ -184,9 +216,6 @@ class InstrumentInputItem():
                 new_value = True
             if new_value == 'False':
                 new_value = False
-        print parameter_type
-        print type(new_value)
-        print new_value
         instr[self.instrument_name].set(self.key, new_value)
 
 
@@ -235,6 +264,7 @@ class InstrumentInformationDisplayFrame():
             f = self.canvas.create_window(0, 0,
                                       window=self.name_and_value_frame,
                                       anchor=tk.W)
+        
             #To move things aronud on the canvas, use the coords method with new coordinates.
             self.canvas.coords(f, 0, 40 + i*35)
 
@@ -270,26 +300,65 @@ for instrument in list_of_instruments:
 tabs.pack(expand=1, fill='both')
 
 
-def continuous_refresh(display_dict, instruments_in_list_form):
-    """
-    This function refreshes every single parameter for every single
-    instrument. Its structured with the after statements so that it runs
-    while the main window of the GUI is running.
-    :param display_dict: A dict where the keys are the names of the
-    instruments and the items are the InstrumentInputItem objects, which
-    each have a refresh all parameters attribute function.
-    :param instruments_in_list_form: A list of all the active instruments.
-    :return:
-    """
-    for instrument in instruments_in_list_form:
-        display_dict[instrument].refresh_all_parameters()
-        # The after function takes the run time, the function to be run,
-        # and its arguments.
-    root_window.after(refresh_time, continuous_refresh, display_window,
-                      instruments_in_list_form)
+#def continuous_refresh(display_dict, instruments_in_list_form):
+#    """
+#    This function refreshes every single parameter for every single
+#    instrument. Its structured with the after statements so that it runs
+#    while the main window of the GUI is running.
+#    :param display_dict: A dict where the keys are the names of the
+#    instruments and the items are the InstrumentInputItem objects, which
+#    each have a refresh all parameters attribute function.
+#    :param instruments_in_list_form: A list of all the active instruments.
+#    :return:
+#    """
+#    for instrument in instruments_in_list_form:
+#        display_dict[instrument].refresh_all_parameters()
+#        # The after function takes the run time, the function to be run,
+#        # and its arguments.
+#    root_window.after(fetch_time, continuous_refresh, display_window,
+#                      instruments_in_list_form)
+#
+#
+#if refresh_continuously:
+#    root_window.after(fetch_time, continuous_refresh, display_window,
+#                      list_of_instruments)
+#root_window.mainloop()
+import threading 
+import time
+#The problem: The frequency with which the GUI changes the view must be different
+#than the time in which it retrieves information from the instrument server. My
+#solution was to make two threads with infinite loops. One refreshes the on screen
+#view, and one retrieves info from the instrument server. They are independent.
+
+class drawing_thread(threading.Thread):
+    def run(self):
+        while True:
+            time.sleep(draw_time)
+            root_window.update_idletasks()
+            root_window.update()
+            
+            
+            
+class parameter_thread(threading.Thread):
+    def run(self):
+        while True:
+            time.sleep(fetch_time)
+            for instrument in instr.list_instruments():
+                display_window[instrument].refresh_all_parameters()
+
+t1 = drawing_thread()
+t1.daemon = True
+t2 = parameter_thread()
+t2.daemon = True
+t1.start()
+t2.start()
 
 
-if refresh_continuously:
-    root_window.after(refresh_time, continuous_refresh, display_window,
-                      list_of_instruments)
-root_window.mainloop()
+
+
+#while True:
+#    time.sleep(draw_time)
+#    for instrument in instr.list_instruments():
+#        display_window[instrument].refresh_all_parameters()
+#    root_window.update_idletasks()
+#    root_window.update()

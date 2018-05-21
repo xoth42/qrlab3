@@ -27,23 +27,23 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                               sideband_channels='I1,Q1',
                               sideband_phase=1.315)
 
-refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511, 
-                            use_extref=True) #reference
-RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=18608,
-                             use_extref=True) #readout
+#refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511, 
+#                            use_extref=True) #reference
+#RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=18608,
+#                             use_extref=True) #readout
 #brick1 = instruments.create('brick1', 'LabBrick_RFSource', serial=14510,
 #                           use_extref=True) #qubit
 
 #sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
+#sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
 
-
-AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
-                             AWG_PRODUCT = "M3202A",
-                             amps = [1, 1, 1, 1], ofs = [0, 0, 0, 0])
-
-AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis=0, slot=10,
-                         AWG_PRODUCT="M3202A",
-                         amps = [1, 1, 1, 1], ofs = [0, 0, 0, 0])
+#AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
+#                             AWG_PRODUCT = "M3202A",
+#                             amps = [1, 1, 1, 1], ofs = [0, 0, 0, 0])
+#
+#AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis=0, slot=10,
+#                         AWG_PRODUCT="M3202A",
+#                         amps = [1, 1, 1, 1], ofs = [0, 0, 0, 0])
 
 # Magnet = instruments.create('Magnet','AMI_430')
 
@@ -55,10 +55,10 @@ AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis=0, slot=10,
 
 
 ''' Readout_IQ_Info is for iq modulation on the readout brick instead of pulse triggering '''
-readout = instruments.create('readout', 'Readout_IQ_Info', IQe=(1.0), IQg=(0.1),
-                             IQe_radius= 1 , rfsource1='RObrick', rfsource2='refbrick',
-                             pulse_len=2000, readout_chan_I=3, readout_chan_Q=4,
-                             acq_chan=1)
+#readout = instruments.create('readout', 'Readout_IQ_Info', IQe=(1.0), IQg=(0.1),
+#                             IQe_radius= 1 , rfsource1='RObrick', rfsource2='refbrick',
+#                             pulse_len=2000, readout_chan_I=3, readout_chan_Q=4,
+#                             acq_chan=1)
 
 # VNA = instruments.create('VNA', 'Agilent_E5071C',
 # address='TCPIP0::K-E5071C-26868.local::inst0::INSTR')
@@ -142,14 +142,14 @@ readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
                          pulse_len=1000, readout_chan='1m1', acq_chan='4m2')
 
 '''
-readout2 = instruments.create('readout2', 'Readout_Info', IQe=(1.0), IQg=(0.1),
-                             IQe_radius= 1 , rfsource1='brick4', rfsource2='brick2',
-                             pulse_len=1000, readout_chan='1m1', acq_chan='1m2')
-'''
+#readout2 = instruments.create('readout2', 'Readout_Info', IQe=(1.0), IQg=(0.1),
+#                             IQe_radius= 1 , rfsource1='brick4', rfsource2='brick2',
+#                             pulse_len=1000, readout_chan='1m1', acq_chan='1m2')
+
 #AWG2 = instruments.create('AWG2', 'Tektronix_AWG5014C', address='AWG2',
-#                          clock=1e9, refsrc='EXT', reffreq=10e6)
+ #                         clock=1e9, refsrc='EXT', reffreq=10e6)
 
-
+'''
 #ag1 = instruments.create('ag1', 'Agilent_N5183A', address='GPIB1::19')
 #ag2_JPC = instruments.create('ag2_JPC', 'Agilent_N5183A', address='GPIB1::20')
 #ag2 = instruments.create('ag2', 'Agilent_N5183A', address='GPIB1::22')
@@ -199,7 +199,7 @@ readout2 = instruments.create('readout2', 'Readout_Info', IQe=(1.0), IQg=(0.1),
 #    AWG2.do_set_offset(-0.127, 2)
 #    AWG2.do_set_amplitude(4.078, 2)
 '''
-'''
+
 qubit2ge = instruments.create('qubit2ge', 'Qubit_Info',
                             deltaf=-130e6,
                             pi_amp=0.382409,
