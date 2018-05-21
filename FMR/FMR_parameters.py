@@ -176,9 +176,15 @@ pl.plot(x, y-exp_decay(result.params, x, y), marker='s')
 
 def S21(params, x, y):
     est = np.sqrt(params['kappa_prod'])/(1j*(x-params['omega_c'])-(params['kappa_a'])/2.0 )
+<<<<<<< HEAD
     est = -params['amp']*est
     
     return np.abs(y)-np.abs(est)
+=======
+    est = -est
+    
+    return np.concatenate([y.real - est.real, y.imag - est.imag])
+>>>>>>> f59135e796c90615515b0f2c4bf0933eb63ea6b7
     #np.concatenate([y.real - est.real, y.imag - est.imag])
     #y.real - est.real
     #np.abs(y)-np.abs(est)
@@ -188,10 +194,17 @@ def S21(params, x, y):
 #the fitting of 0 magnetic field, with x the frequency
 
 
+<<<<<<< HEAD
 filename = 'S12_fridge_220mode_-40dB'
 print filename
 
 new_data = np.loadtxt(r'C:\Users\Wang_Lab\Documents\yingying\FMR\%s.txt'%(filename),delimiter=",")# while using this fitting, make sure that your peak is exactly at the center
+=======
+filename = 'S12_fridge_-60dB_V2'
+print filename
+
+new_data = np.loadtxt(r'C:\qrlab\FMR\%s.txt'%(filename),delimiter=",")# while using this fitting, make sure that your peak is exactly at the center
+>>>>>>> f59135e796c90615515b0f2c4bf0933eb63ea6b7
 new_data = np.transpose(new_data)
 x = new_data[0] 
 y = new_data[1] 
@@ -200,8 +213,12 @@ phase = new_data[2]
 #x = x.astype(float)
 #print(min(x), max(x))
 x = x * 1000000000
+<<<<<<< HEAD
 pl.figure()
 pl.plot(x,y)
+=======
+
+>>>>>>> f59135e796c90615515b0f2c4bf0933eb63ea6b7
 
 ##plotting s21^2 to get the linewidth of the cavity
 #y = np.power(10,y/10.0)
@@ -228,9 +245,14 @@ y = y * np.exp(-1j*phase)
  
 params = lmfit.Parameters()
 params.add('kappa_prod', value= 3.7e10, min = 0)
+<<<<<<< HEAD
 params.add('omega_c', value=8.325e9)
 params.add('kappa_a', value=3e6, min = 0)
 params.add('amp', value=1, vary = False)
+=======
+params.add('omega_c', value=8.512e9)
+params.add('kappa_a', value=3e6, min = 0)
+>>>>>>> f59135e796c90615515b0f2c4bf0933eb63ea6b7
 
 
 result = lmfit.minimize(S21, params, args=(x, y))

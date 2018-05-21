@@ -122,7 +122,7 @@ class ROCavSpectroscopy(Measurement1D):
             for ifreq, freq in enumerate(self.freqs):
                 self.readout_info.rfsource1.set_frequency(freq)
                 self.readout_info.rfsource2.set_frequency(freq+50e6)
-                time.sleep(0.05)
+                time.sleep(0.1)
 
                 alz.setup_avg_shot(alz.get_naverages())
                 ret = alz.take_avg_shot(async=True)

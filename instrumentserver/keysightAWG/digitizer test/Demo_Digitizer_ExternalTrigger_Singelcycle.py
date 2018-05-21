@@ -11,8 +11,10 @@ CHASSIS = 1
 AWG_SLOT = 7
 
 DIG_PRODUCT = "M3102A"
-CHASSIS = 1
-DIG_SLOT = 8
+
+CHASSIS = 0
+DIG_SLOT = 3
+
 
 # CREATE AND OPEN MODULES
 awg = key.SD_AOU()
@@ -50,6 +52,7 @@ if aouID < 0:
 
 # Load waveforms to AWG
 waveform_filepath = "C:\\qrlab\instrumentserver\keysightAWG\waveforms\\"
+
 print(waveform_filepath)
 
 
@@ -57,10 +60,12 @@ gaussian = np.loadtxt(waveform_filepath + 'Gaussian.csv', skiprows = 3)
 pulse_length = len(gaussian)
 
 wait_time = 0
+
 num_points = 10
 power = np.linspace(.1, 1, num_points)
 
 full_length = pulse_length + wait_time
+
 
 awg.waveformFlush()
 
@@ -120,13 +125,15 @@ for i in range(num_points):
 
 #set up full scale, input impedance and AC/DC coupling for Digitizer channels
 Voltage_Scale = 2.8 # Scale > 3 saturates the Digitizer input and folds the waveform causing unwanted wave shape
-dig.channelInputConfig(3 , Voltage_Scale,key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)
+dig.channelInputConfig(1 , Voltage_Scale,key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)
+
 dig.channelInputConfig(2 , Voltage_Scale,key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)
 
 # Check DIG Connection
 if ainID < 0:
     print("ERROR")
     print("ainID:", ainID)
+
     awg.close()
     print()
     print("AIN closed")
@@ -135,6 +142,7 @@ data_filepath = "C:\\qrlab\instrumentserver\keysightAWG\data\\"
 print(data_filepath)
 
 #intitialize Digitizer
+
 dig.DAQflush(3)
 dig.DAQflush(2)
 
@@ -143,6 +151,7 @@ dig.DAQflush(2)
 #PROGRAM Trig IN/Out as INPUT PORT - def triggerIOconfig(self, direction
 dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)
 #EXTERNAL DIGITAL TRIGGER BEHAVIOR - def DAQdigitalTriggerConfig(self, channel, triggerSource, triggerBehavior)
+
 dig.DAQdigitalTriggerConfig(3, key.SD_TriggerExternalSources.TRIGGER_EXTERN, key.SD_TriggerBehaviors.TRIGGER_HIGH) 
 #CONFIGURE DAQ3 FOR CAPTURING RABI SWEEP - DAQconfig(self, nDAQ, nDAQpointsPerCycle, nCycles, prescaler, triggerMode)
 
@@ -161,6 +170,7 @@ awg.AWGstartMultiple(15)
 voltage_array = np.zeros((num_points, num_aq))
 #READ DAQ BUFFER FOR ACQUIRED DATA
 for i in range(num_ave * num_points):
+
     if(i % (num_ave * num_points/10) == 0): 
         print(i)
     samp_array = dig.DAQread(3, num_aq, timeout) #def DAQread(self, nDAQ, nPoints, timeOut = 0)

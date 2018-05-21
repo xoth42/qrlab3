@@ -41,7 +41,11 @@ import matplotlib.pyplot as pl
 
 
 #with x to be frequency, and fit the trace 
+<<<<<<< HEAD
 filename = 'S22_V5'
+=======
+filename = 'S11_V5'
+>>>>>>> f59135e796c90615515b0f2c4bf0933eb63ea6b7
 print filename
 
 newpath2 = r'C:\Users\Wang_Lab\Documents\yingying\FMR\copper_cavity_input_coupling_test\%s_cal_sub.txt'%(filename)

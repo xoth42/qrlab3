@@ -17,7 +17,7 @@ class Readout_Info(Instrument):
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 help='RF-source for demodulation')
         self.add_parameter('power', type=types.FloatType,
-                flags=Instrument.FLAG_SET|Instrument.FLAG_GET)
+                flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET)
         self.add_parameter('frequency', type=types.FloatType,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_GET)
         self.add_parameter('readout_chan', type=types.StringType,
@@ -85,10 +85,12 @@ class Readout_Info(Instrument):
             return ins.set_power(val)
 
     def do_get_frequency(self):
-        ins = self._get_ins()
-        if ins:
-            return ins.get_frequency()
-
+        #ins = self._get_ins()
+        #if ins:
+         #   return ins.get_frequency()
+        #Josh did this on 3/20/18 since the get wasn't working and it wasn't
+        #important to get working.
+        return 1
     def do_set_frequency(self, val):
         ins = self._get_ins()
         if ins:

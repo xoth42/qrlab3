@@ -41,6 +41,7 @@ if 1:
         plt.xlabel('Time [ns]')
         plt.show()
 #        print alz.get_ch1_range()
+
     
 #alz.set_naverages(5)
 
@@ -50,8 +51,8 @@ if 0:
         amplitude=[]
         I=[]
         Q=[]
-        for k in range(1):
-            alz.setup_avg_shot(5000)
+        for k in range(200):
+            alz.setup_avg_shot(1000)
             buf = alz.take_avg_shot(timeout=50000)
     #        alz.setup_shots(1)
     #        buf = alz.take_demod_shots()
@@ -84,6 +85,7 @@ if 0:
         plt.plot(np.abs(buf[0]),label='amplitude')
 #        plt.plot(np.real(buf2), label='IMA')
 #        plt.plot(np.imag(buf2), label='QMA ')
+
         plt.xlabel('IF period #')
         plt.legend()
     

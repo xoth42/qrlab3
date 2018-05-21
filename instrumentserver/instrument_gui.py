@@ -731,7 +731,8 @@ if __name__ == '__main__':
     if hasattr(objsh, 'ZMQBackend'):
         backend = objsh.ZMQBackend()
     else:
-        backend = objsh.backend
+        backend = objsh.backend()
+
     backend.start_server('127.0.0.1')
     backend.connect_to('tcp://127.0.0.1:55555')     # Instruments server
 

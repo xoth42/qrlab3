@@ -19,3 +19,4 @@ except:
         awg.set_reffreq(awg.get_reffreq())
     except:
         print('no awg')
+

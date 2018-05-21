@@ -58,6 +58,7 @@ class Yokogawa_GS200(VisaInstrument):
 
 
 
+
 #==============================================================================
 #
 #==============================================================================
@@ -139,6 +140,7 @@ class Yokogawa_GS200(VisaInstrument):
             range = ranges[4]
         #elif value <= float(ranges[5]):
             #range = ranges[5]
+
         else:
             # voltage is out of range
             print 'voltage is out of range'
@@ -161,6 +163,7 @@ class Yokogawa_GS200(VisaInstrument):
     # slew is in V/s
     def set_voltage_ramp(self, level, slew=5.0):
         if float(self.do_get_source_level()) == level:
+
             return
 
         self.set_output_state('ON')
@@ -169,6 +172,7 @@ class Yokogawa_GS200(VisaInstrument):
 
         # determine appropriate ramp time given slew rate
         initial = float(self.do_get_source_level())
+
         ramp_time = self.find_ramp_time(initial, level, slew)
         self.set_slope(ramp_time)
         self.set_interval(ramp_time)

@@ -225,7 +225,7 @@ class Tektronix_AWG5014C(VisaInstrument):
     def do_get_skew(self, channel):
         '''Get channel skew in ps.'''
         val = self.ask('SOURCE%d:SKEW?' % (channel,))
-        print val
+#        print val DR 3/21 (is this what was printing 0s over and over in instrumentserver?)
         return float(val) * 1e12
 
     def do_set_m1_low(self, val, channel):

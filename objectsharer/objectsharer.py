@@ -1140,7 +1140,9 @@ class ZMQBackend(object):
             try:
                 info = pickle.loads(msgs[1])
             except Exception, e:
-                logger.warning('Unable to decode object: %s [%r]', str(e), msgs[1])
+
+                logger.warning('Unable to decode object: %s %s', str(e), msgs[1].decode('string_escape'))
+
                 return
 
             # Process
@@ -1243,7 +1245,14 @@ class ZMQBackend(object):
             try:
                 info = pickle.loads(msgs[1])
             except Exception, e:
+<<<<<<< HEAD
                 logger.warning('Unable to decode object: %s [%r]', str(e), msgs[1])
+=======
+                print(msgs[1])
+                logger.warning('Unable to decode object: %s %r', str(e), msgs[1])
+                logger.warning(msgs[1])
+
+>>>>>>> f59135e796c90615515b0f2c4bf0933eb63ea6b7
                 return
 
             # Process
@@ -1289,6 +1298,10 @@ class ZMQBackend(object):
         _app = QtGui.QApplication.instance()
         self.timer = QtCore.QTimer()
         QtCore.QObject.connect(self.timer, QtCore.SIGNAL('timeout()'), self._qt_timer)
+<<<<<<< HEAD
         self.timer.start(interval)
+=======
+        self.timer.start()
+>>>>>>> f59135e796c90615515b0f2c4bf0933eb63ea6b7
         return True
 

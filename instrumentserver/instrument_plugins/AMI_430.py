@@ -22,6 +22,7 @@ class AMI_430(Instrument):
                                  bytesize= serial.EIGHTBITS,
                                  timeout= 10,
                                  rtscts=True)
+
         #self.ser.open() # this line may be uneccessary
         self._max_field = 4 #TBD
         self._min_field = 0 #TBD
@@ -44,6 +45,7 @@ class AMI_430(Instrument):
     def do_get_field(self):
         self.ser.write('FIELD:MAGnet?;')
         self.field = self.ser.read(size=20) #size TBD
+
         return self.field
     
     def do_set_field(self, field):

@@ -1,0 +1,364 @@
+# Started 1/19/18 as a replacement for the Qt GUI. Originally authored by
+# Josh Carey
+# joshuacarey@umass.edu
+# Some miscellaneous notes:
+# (1) The instrument server persists regardless of the GUI. So you can close
+# and open it as much as you want and it should reconnect.
+# (2) You need to start the instrument server before the GUI.
+# TODO add instrument addition window.
+# TODO work on generalized type checking, not just for a couple select types.
+# TODO consider adding default values for parameters.
+# TODO list of parameters that are irrelevant and should not be checked.
+# TODO Fix bad window path issue for spyder.
+# TODO fix coordinate system for right justification.
+import objectsharer as objsh
+# Tkinter is the native python GUI framework. Should be easier than Qt. Also
+# no version upgrade issues.
+import Tkinter as tk
+# ttk provides the means to make the instrument tabs in the GUI. Also provides
+# some other themed widgets.
+import ttk as ttk
+
+# Initialize the ZeroMQ server backend and connect to the instrument server.
+# The instr object will hold all the necessary information for interacting
+# with the instrument server, and thus the physical hardware. The server
+# always sits on the same address at the same port.
+new_backend = objsh.ZMQBackend()
+new_backend.start_server("127.0.0.1")
+new_backend.connect_to("tcp://127.0.0.1:55555")
+instr = objsh.helper.find_object('instruments')
+# The root window. This is the top level object; its the only object with no
+# so called parent widget. This is where the main information display will be.
+root_window = tk.Tk()
+root_window.title('QRLab')
+root_window.maxsize(width=500, height=950)
+root_window.minsize(width=500, height=950)
+
+
+
+def window_close(*args):
+    root_window.destroy()
+#Press ctrl-w to close the window.
+root_window.bind('<Control-w>', window_close)
+root_window.bind('<Control-q>', window_close)
+
+### NOTABLE CONSTANTS ###
+# **************************#
+#The time that the GUI will draw all the widgets again. 
+draw_time = 10 # in s
+#The time that the GUI will retrieve all the information about the isntruments from the 
+#instrument server. When this time has elapsed.
+fetch_time = 0.5 # in s
+# This constant is used to resize the widgets to get them to take up all of
+# the available space in the parent window.
+fill_all = tk.N + tk.S + tk.W + tk.E
+# **************************#
+
+tabs = ttk.Notebook(root_window)
+
+
+
+# If create_instruments had a problem running, or the instrument server had
+# some other issue, nothing will show up, because there are no instruments.
+# The statement below makes sure that won't happen.
+
+# A class for a custom exception to handle if the instrument server did not
+# get initialized correctly.
+class NoInstrumentsException(Exception):
+    pass
+
+
+# A list will the names of the currently active instruments as entries.
+list_of_instruments = instr.list_instruments()
+if list_of_instruments == []:
+    message = 'Error: the instrument server has no instruments. Was there an ' \
+              'issue in creating instruments?'
+    raise NoInstrumentsException(message)
+
+def remove_widget(widget):
+    widget.pack_forget()
+    
+    
+class InstrumentInputItem():
+    """
+    The subassembly of instrument label, value display, Get box, Set box,
+    get button, and set button.
+    """
+
+    def __init__(self, frame, key, name_value_dict, instrument_name):
+        """
+        :param frame: The Tkinter frame in which to draw the object.
+        :param key: The parameter that an instrument uses, i.e. power,
+        frequency, channels, etc.
+        :param name_value_dict: A dict containing the parameter names
+                as keys and the actual values as entries.
+        :param instrument_name: The instrument name.
+        """
+        self.frame = frame
+        self.key = key
+        self.instrument_name = instrument_name
+        self.label = tk.Label(self.frame, text=key)
+        tk.Grid.rowconfigure(self.frame, 0, weight=1)
+        tk.Grid.columnconfigure(self.frame, 0, weight=1)
+        self.label.grid(row=1, column=1, sticky=fill_all)
+        self.option_dict = instr[self.instrument_name].get_shared_parameters()
+        self.option_condition = 'option_list' in self.option_dict[key]
+        # option_list refers to whether the parameter can take the value of
+
+        # only a few different quantities, like having a sine wave or a
+        # sawtooth wave. Thus only a finite number of choices should be
+        # presented to the user.
+        if self.option_condition:
+            dropdown_options = self.option_dict[key]['option_list']
+
+            self.valuevar = tk.StringVar(self.frame)
+            self.setvar = tk.StringVar(self.frame)
+            # When the GUI first starts, set all of the parameters to the
+            # values already present in the instrument server.
+            self.valuevar.set(str(instr[self.instrument_name].get(self.key)))
+            self.setvar.set(str(instr[self.instrument_name].get(self.key)))
+
+            self.drop_down_box = tk.OptionMenu(self.frame, self.valuevar,
+                                               *dropdown_options)
+            self.drop_down_box.config(bg='#d0d0d1')
+
+            self.drop_down_box.grid(row=1, column=2, sticky = fill_all)
+            self.drop_down_box_set = tk.OptionMenu(self.frame, self.setvar,
+                                                   *dropdown_options)
+            self.drop_down_box_set.grid(row=1, column=3, sticky=fill_all)
+        else:
+            self.parameter_value_box = tk.Entry(self.frame, bg='#d0d0d1')
+            self.parameter_value_box.insert(0, str(name_value_dict[key]))
+            self.parameter_value_box.grid(row=1, column=2)
+            self.set_box = tk.Entry(self.frame)
+            self.set_box.insert(0, str(name_value_dict[key]))
+            self.set_box.bind('<Return>', self.SetParameter)
+            self.set_box.grid(row=1, column=3, sticky=fill_all)
+
+        self.get_button = tk.Button(self.frame, text='Get',
+                                    command=self.GetParameter)
+        self.get_button.grid(row=1, column=4)
+        self.set_button = tk.Button(self.frame, text='Set',
+                                    command=self.SetParameter)
+        self.set_button.grid(row=1, column=5, sticky=fill_all)
+        self.hide_button = tk.Button(self.frame, text = 'HIDE', command = self.hide_all,
+                                     bg = '#FF3030', fg = 'white')
+        self.hide_button.grid(row = 1, column = 6, sticky = fill_all)
+    
+    def hide_all(self):
+        self.get_button.grid_forget()
+        self.set_button.grid_forget()
+        self.label.grid_forget()
+        if self.option_condition:
+            self.drop_down_box.grid_forget()
+            self.drop_down_box_set.grid_forget()
+        else:
+            self.parameter_value_box.grid_forget()
+            self.set_box.grid_forget()
+        self.hide_button.config(text = 'SHOW', command = self.regrid, bg = '#4651FC', fg = 'white')
+
+    def regrid(self):
+        self.get_button.grid(row=1, column=4)
+        self.set_button.grid(row=1, column=5, sticky=fill_all)
+        self.label.grid(row=1, column=1, sticky=fill_all)
+        if self.option_condition:
+            self.drop_down_box.grid(row=1, column=2, sticky = fill_all)
+            self.drop_down_box_set.grid(row=1, column=3, sticky=fill_all)
+        else:
+            self.parameter_value_box.grid(row=1, column=2)
+            self.set_box.grid(row=1, column=3, sticky=fill_all)
+        self.hide_button.config(text = 'HIDE' , command = self.hide_all, bg = '#FF3030', fg = 'white')
+
+
+
+
+    def GetParameter(self):
+        """
+        Fetches the value from the instrument server and displays that
+        information in the text field.
+        :return:
+        """
+        param = instr[self.instrument_name].get(self.key)
+        if self.option_condition:
+            self.valuevar.set(str(param))
+        else:
+            self.parameter_value_box.delete(0, 'end')
+            self.parameter_value_box.insert(0, str(param))
+
+    def SetParameter(self, *args):
+        """
+        This function sets the parameter (obviously). The bind statement
+        above keeps trying to pass 2 arguments to this function, while the
+        set button only wants to pass 1 (the class reference self). The args
+        capture this second argument and then promptly throws it away.
+        :param args:
+        :return:
+        """
+        if self.option_condition:
+            new_value = self.setvar.get()
+        else:
+            new_value = self.set_box.get()
+        # Do some type conversion, to make sure the server gets passed the
+        # correct type of value. Looking over the instrument plugins,
+        # these seems to be the most used types.
+        parameter_type = self.option_dict[self.key]['type']
+        print type(parameter_type)
+        if parameter_type == type('string'):
+            new_value = str(new_value)
+        if parameter_type == type(3):
+            new_value = int(new_value)
+        if parameter_type == type(1.0):
+            new_value = float(new_value)
+        if parameter_type == type(1 + 1j):
+            new_value = complex(new_value)
+        if parameter_type == type(True):
+            if new_value == 'True':
+                new_value = True
+            if new_value == 'False':
+                new_value = False
+        instr[self.instrument_name].set(self.key, new_value)
+
+
+class InstrumentInformationDisplayFrame():
+    """
+    This is the frame the contains all of the information about the instrument;
+    Its the thing that gets added to the tab in the actual GUI.
+    """
+
+    def __init__(self, win, instrument_name):
+        self.instrument_name = instrument_name
+
+        self.frame = tk.Frame(root_window)
+        tk.Grid.rowconfigure(self.frame, 0, weight=1)
+        tk.Grid.columnconfigure(self.frame, 0, weight=1)
+        self.refresh_button = tk.Button(self.frame, text=u"\U0001F5D8",
+                                        command=self.refresh_all_parameters)
+        # u"\U0001F5D8" is the unicode string that represents a sort of refresh
+        #  symbol. This label could have been any other character or phrase;
+        # it was purely an aesthetic choice.
+        instrument_label = tk.Label(self.frame, text=
+        "Displayed instrument: " + instrument_name)
+        instrument_label.pack()
+        self.refresh_button.pack()
+        self.scrollbar = tk.Scrollbar(self.frame, orient=tk.VERTICAL)
+        self.canvas = tk.Canvas(self.frame, yscrollcommand=self.scrollbar.set)
+        self.canvas.bind_all('<MouseWheel>', self.mouse_scroll)
+        self.scrollbar.config(command=self.canvas.yview)
+        #  self.info_subframe = tk.Frame(self.canvas)
+        name_value_dict = instr[instrument_name].get_parameter_values()
+        self.fields = {}
+
+        self.sorted_instrument_keys = instr[instrument_name].get_shared_parameters().keys()
+        self.sorted_instrument_keys.sort()
+        #The fake frame doesn't contain anything. Its used as padding so the
+        #first and last fields don't get cut off.
+        self.fake_frame = tk.Frame(root_window)
+        self.canvas.create_window(0, 0,
+                                  window = self.fake_frame,
+                                  anchor = tk.W)
+        for i, key in enumerate(self.sorted_instrument_keys):
+            self.name_and_value_frame = tk.Frame(self.canvas)
+            item = InstrumentInputItem(self.name_and_value_frame, key,
+                                       name_value_dict, instrument_name)
+            self.fields[key] = item
+            f = self.canvas.create_window(0, 0,
+                                      window=self.name_and_value_frame,
+                                      anchor=tk.W)
+        
+            #To move things aronud on the canvas, use the coords method with new coordinates.
+            self.canvas.coords(f, 0, 40 + i*35)
+
+        t = self.canvas.create_window(0, 0, 
+                                  window = self.fake_frame, 
+                                  anchor = tk.W)
+        self.canvas.coords(t, 0, 40 + (i+1)*35)
+        # Note: to get the scrollbar to work, its necessary to put the
+        # frame on the canvas. To do this and make the scrollbar work,
+        # you need to use the create_window. You cannot just pack it.
+        self.canvas.config(scrollregion=self.canvas.bbox(tk.ALL))
+        self.canvas.config(yscrollcommand=self.scrollbar.set)
+        self.scrollbar.pack(side = tk.RIGHT, fill = tk.Y)
+
+        self.canvas.pack(pady = 10, ipady = 0, fill = tk.BOTH, expand = 1)
+        self.frame.pack()
+        tabs.add(self.frame, text=instrument_name)
+        
+
+    def refresh_all_parameters(self):
+        for item in self.fields:
+            self.fields[item].GetParameter()
+
+    def mouse_scroll(self, event):
+        self.canvas.yview_scroll(-1 * (event.delta / 120), "units")
+
+
+display_window = {}
+for instrument in list_of_instruments:
+    display_window[instrument] = InstrumentInformationDisplayFrame(root_window,
+                                                                   instrument)
+
+tabs.pack(expand=1, fill='both')
+
+
+#def continuous_refresh(display_dict, instruments_in_list_form):
+#    """
+#    This function refreshes every single parameter for every single
+#    instrument. Its structured with the after statements so that it runs
+#    while the main window of the GUI is running.
+#    :param display_dict: A dict where the keys are the names of the
+#    instruments and the items are the InstrumentInputItem objects, which
+#    each have a refresh all parameters attribute function.
+#    :param instruments_in_list_form: A list of all the active instruments.
+#    :return:
+#    """
+#    for instrument in instruments_in_list_form:
+#        display_dict[instrument].refresh_all_parameters()
+#        # The after function takes the run time, the function to be run,
+#        # and its arguments.
+#    root_window.after(fetch_time, continuous_refresh, display_window,
+#                      instruments_in_list_form)
+#
+#
+#if refresh_continuously:
+#    root_window.after(fetch_time, continuous_refresh, display_window,
+#                      list_of_instruments)
+#root_window.mainloop()
+import threading 
+import time
+#The problem: The frequency with which the GUI changes the view must be different
+#than the time in which it retrieves information from the instrument server. My
+#solution was to make two threads with infinite loops. One refreshes the on screen
+#view, and one retrieves info from the instrument server. They are independent.
+
+class drawing_thread(threading.Thread):
+    def run(self):
+        while True:
+            time.sleep(draw_time)
+            root_window.update_idletasks()
+            root_window.update()
+            
+            
+            
+class parameter_thread(threading.Thread):
+    def run(self):
+        while True:
+            time.sleep(fetch_time)
+            for instrument in instr.list_instruments():
+                display_window[instrument].refresh_all_parameters()
+
+t1 = drawing_thread()
+t1.daemon = True
+t2 = parameter_thread()
+t2.daemon = True
+t1.start()
+t2.start()
+
+
+
+
+#while True:
+#    time.sleep(draw_time)
+#    for instrument in instr.list_instruments():
+#        display_window[instrument].refresh_all_parameters()
+#    root_window.update_idletasks()
+#    root_window.update()

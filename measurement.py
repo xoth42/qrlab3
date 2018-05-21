@@ -14,7 +14,8 @@ from lib import jsonext
 import os
 import pulseseq
 import awgloader
-from PyQt4 import QtGui
+
+#from PyQt4 import QtGui
 from pulseseq import sequencer
 from pulseseq import pulselib
 
@@ -543,6 +544,133 @@ class Measurement(object):
 
         alz = self.instruments['alazar']
         ret = self.acquisition_loop(alz) # calls update function
+#        print('after aquisition loop')
+        self.avg_data = ret
+
+        if self.histogram:
+            if self.cyclelen == 1:
+                self.plot_histogram(self.shot_data[:])
+        else:
+            ret = self.analyze(self.get_ys(), fig=self.get_figure())
+
+        if self.savefig:
+            self.save_fig()
+
+        txt = 'Done'
+        if self.data:
+            txt += '; in data group: %s' % self.data.get_fullname()
+        logging.info(txt)
+
+        if self._interrupted:
+            raise Exception('Measurement interrupted')
+
+        # Remove pulse data to keep memory usage reasonable
+        pulseseq.sequencer.Pulse.clear_pulse_data()
+ 
+        return ret
+
+    def acquisition_loop_keysight(self, dig, fast=False):
+        '''
+        JEFF: all methods with _keysight used with keysight digitizer instead of alazar
+        Acquisition loop, talk to keysight dig.
+        Also starts the measurement.
+        
+        TODO: implement the interupt like alazar has
+        '''
+
+        # Setup and arm alazar
+        dig.setup_experiment(self.cyclelen)
+        dig.arm()
+
+        # Start measurement, either by starting the AWG or the function generator
+        self.start_awgs()
+        ret = dig.take_experiment()
+
+        # Final processing of data
+        self.post_process()
+        
+        return ret
+
+
+    def setup_measurement_keysight(self):
+        '''
+        - Stop AWGs / function generator
+        - Generate sequence
+        - Save settings
+        - Arm digitizer
+        '''
+
+        self.stop_funcgen()
+        self.stop_awgs()
+        dig = self.instruments['dig']
+        if dig is None:
+            logging.error('Digitizer not found!')
+            return
+
+        # Generate and load sequence
+        if self.do_generate:
+            logging.info('Generating sequence...')
+            seqs = self.generate()
+            if self.plot_seqs:
+                s = pulseseq.sequencer.Sequencer()
+                s.plot_seqs(seqs)
+            if self.print_seqs:
+                s = pulseseq.sequencer.Sequencer()
+                s.print_seqs(seqs)
+            
+            logging.info('Loading sequence...')
+            self.load(seqs)
+            if self.release_seqs:
+                self.seqs = None
+            
+        #If not generating, we guess that all AWGs are used
+        else:
+            l = self.get_awg_loader()
+            l.set_all_awgs_active()
+
+        self.save_settings()
+        
+#        alz.setup_clock()
+#        alz.setup_channels()
+#        alz.setup_trigger()
+#        alz.set_real_signals(self.real_signals)    
+
+    def setup_measurement_data_keysight(self):
+        '''
+        Create datasets to store measured and post-processed data.
+        '''
+        dig = self.instruments['dig']
+        if self.histogram:
+            self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*dig.do_get_naverages()], dtype=np.complex)
+            self.avg_data = None
+            self.pp_data = None
+        elif self.singleshotbin:
+            self.shot_data = None
+            self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
+            self.pp_data = None
+        else:
+            self.shot_data = None
+            # If saving complex data, save both raw signal and post-processed version
+            if not self.real_signals:
+                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.complex)
+                self.pp_data = self.data.create_dataset('avg_pp', [self.cyclelen,], dtype=np.float)
+            else:
+                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
+                self.pp_data = None
+
+    def measure_keysight(self):
+        '''
+        Perform a measurement.
+
+        Sets up data sets, performs initialization and updates plots if the
+        class has an 'update' function.
+        '''
+
+        self.setup_measurement_keysight()
+        self.setup_measurement_data_keysight()
+
+        dig = self.instruments['dig']
+        ret = self.acquisition_loop_keysight(dig) # calls update function
 #        print('after aquisition loop')
         self.avg_data = ret
 

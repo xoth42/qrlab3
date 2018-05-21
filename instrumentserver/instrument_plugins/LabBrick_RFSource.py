@@ -5,6 +5,11 @@
 # It seems the newer builds need the MS Visual C++ 2013 redistributable
 # package, which you can get at http://www.microsoft.com/en-us/download/details.aspx?id=40784
 
+# This file was edited by JOSH on 2/23/18 to fix some problems with the pulse_on
+# parameter.
+# NOTES:
+# Trying to reconnect to a brick when it is already playing prompts a timeout error.
+
 
 import sys
 import time
@@ -17,14 +22,15 @@ import logging
 SUCCESS = 0
 NO_DEVICE = 0
 
-#LB_DLL = r'c:\qrlab\instrumentserver\vnx_fmsynth.dll'
+# LB_DLL = r'c:\qrlab\instrumentserver\vnx_fmsynth.dll'
 LB_DLL = 'C:\\qrlab\\instrumentserver\\vnx_fmsynth.dll'
 try:
     lb_dll = ctypes.windll.LoadLibrary(LB_DLL)
-    #lb_dll = ctypes.cdll.LoadLibrary(LB_DLL)
-    
+    # lb_dll = ctypes.cdll.LoadLibrary(LB_DLL)
+
 except Exception, e:
-    s = 'Unable to load LabBrick DLL, please put vnx_fmsynth.dll in instrumentserver directory ' + str(e)
+    s = 'Unable to load LabBrick DLL, please put vnx_fmsynth.dll in instrumentserver directory ' + str(
+        e)
     raise ValueError(s)
 
 # Many versions of the labbrick DLL are compiled using MS Visual C decorators...
@@ -53,15 +59,16 @@ DECORATOR_MAP = {
     'fnLMS_GetDeviceStatus': '?fnLMS_GetDeviceStatus@@YAHI@Z',
 }
 
-STATUS_INV_DEVID        = 0x80000000
-STATUS_DEV_CONNECTED    = 0x00000001
-STATUS_DEV_OPENED       = 0x00000002
-STATUS_SWP_ACTIVE       = 0x00000004
-STATUS_SWP_UP           = 0x00000008
-STATUS_SWP_REPEAT       = 0x00000010
-STATUS_SWP_BIDIR        = 0x00000020
-STATUS_PLL_LOCKED       = 0x00000040
-STATUS_FAST_PULSE_OPT   = 0x00000080
+STATUS_INV_DEVID = 0x80000000
+STATUS_DEV_CONNECTED = 0x00000001
+STATUS_DEV_OPENED = 0x00000002
+STATUS_SWP_ACTIVE = 0x00000004
+STATUS_SWP_UP = 0x00000008
+STATUS_SWP_REPEAT = 0x00000010
+STATUS_SWP_BIDIR = 0x00000020
+STATUS_PLL_LOCKED = 0x00000040
+STATUS_FAST_PULSE_OPT = 0x00000080
+
 
 def get_lb_func(funcname, argtypes=[ctypes.c_uint32]):
     '''
@@ -75,20 +82,24 @@ def get_lb_func(funcname, argtypes=[ctypes.c_uint32]):
         f = getattr(lb_dll, funcname)
     except:
         if funcname not in DECORATOR_MAP:
-            raise ValueError('Decorated version of function %s not known' % funcname)
+            raise ValueError(
+                'Decorated version of function %s not known' % funcname)
         f = getattr(lb_dll, DECORATOR_MAP[funcname])
 
     f.argtypes = argtypes
     return f
+
 
 def do_set_test_mode(val):
     val = int(val)
     f = get_lb_func('fnLMS_SetTestMode', [ctypes.c_uint32])
     return f(val)
 
+
 def do_get_num_devices():
     f = get_lb_func('fnLMS_GetNumDevices', [])
     return f()
+
 
 def do_get_device_info():
     FP = ctypes.POINTER(ctypes.c_uint32)
@@ -98,15 +109,18 @@ def do_get_device_info():
     f(ctypes.cast(device_info.ctypes.data, FP))
     return device_info
 
+
 def do_get_serial_number(devid):
     f = get_lb_func('fnLMS_GetSerialNumber')
     return f(devid)
 
+
 def do_get_model_name(devid):
     f = get_lb_func('fnLMS_GetModelNameA', [ctypes.c_uint32, ctypes.c_char_p])
-    model_name = ' '*32
+    model_name = ' ' * 32
     name_len = f(devid, model_name)
     return model_name[:name_len]
+
 
 def find_labbricks():
     do_set_test_mode(False)
@@ -119,13 +133,15 @@ def find_labbricks():
         ret[idx] = (sn, mn)
     return ret
 
+
 class LabBrick_RFSource(Instrument):
 
     def __init__(self, name, devid=None, serial=None, **kwargs):
         super(LabBrick_RFSource, self).__init__(name)
 
         if devid is None and serial is None:
-            raise Exception('Labbrick driver needs devid or serial as parameter')
+            raise Exception(
+                'Labbrick driver needs devid or serial as parameter')
 
         if serial is not None:
             serial = int(serial)
@@ -135,56 +151,57 @@ class LabBrick_RFSource(Instrument):
                 if props[0] == serial:
                     devid = did
                     break
-
         if devid is None:
-            raise Exception('Unable to find Labbrick with serial %s'%serial)
+            raise Exception('Unable to find Labbrick with serial %s' % serial)
 
         self._devid = devid
         self._serialno = do_get_serial_number(devid)
         self._modelname = do_get_model_name(devid)
-
         if self._serialno is NO_DEVICE:
             raise Exception('invalid device ID, try again.')
 
         val = self._init()
         if val is not SUCCESS:
             print 'labbrick (sn: %d) device already opened, reopening' % \
-                        (self._serialno)
+                  (self._serialno)
             self._close()
             time.sleep(0.01)
             self._init()
-
         self._max_freq = self._get_max_freq()
         self._min_freq = self._get_min_freq()
         self._max_power = self._get_max_power()
-        self._min_power  = self._get_min_power()
-        logging.debug('Frequency range: %.03f - %.03f MHz' % (self._min_freq/1e6, self._max_freq/1e6))
-        logging.debug('Power range: %.01f - %.01f dBm' % (self._min_power, self._max_power))
-
+        self._min_power = self._get_min_power()
+        logging.debug('Frequency range: %.03f - %.03f MHz' % (
+            self._min_freq / 1e6, self._max_freq / 1e6))
+        logging.debug('Power range: %.01f - %.01f dBm' % (
+            self._min_power, self._max_power))
         self.add_parameter('serial', type=types.IntType,
-            flags=Instrument.FLAG_GET, value=self._serialno)
+                           flags=Instrument.FLAG_GET, value=self._serialno)
         self.add_parameter('model', type=types.StringType,
-            flags=Instrument.FLAG_GET, value=self._modelname)
+                           flags=Instrument.FLAG_GET, value=self._modelname)
 
         self.add_parameter('rf_on', type=types.BooleanType,
-            flags=Instrument.FLAG_GETSET)
+                           flags=Instrument.FLAG_GETSET)
         self.add_parameter('ext_locked', type=types.BooleanType,
-            flags=Instrument.FLAG_GET)
+                           flags=Instrument.FLAG_GET)
         self.add_parameter('fast_pulse_option', type=types.BooleanType,
-            flags=Instrument.FLAG_GET)
+                           flags=Instrument.FLAG_GET)
         self.add_parameter('power', type=types.FloatType,
-            flags=Instrument.FLAG_GETSET, units='dBm',
-            minval=self._min_power, maxval=self._max_power,
-            format='%.02f')
+                           flags=Instrument.FLAG_GETSET, units='dBm',
+                           minval=self._min_power, maxval=self._max_power,
+                           format='%.02f')
         self.add_parameter('frequency', type=types.FloatType,
-            flags=Instrument.FLAG_GETSET, units='Hz',
-            minval=self._min_freq, maxval=self._max_freq,
-            display_scale=6)
+                           flags=Instrument.FLAG_GETSET, units='Hz',
+                           minval=self._min_freq, maxval=self._max_freq,
+                           display_scale=6)
         self.add_parameter('use_extref', type=types.BooleanType,
-            flags=Instrument.FLAG_GETSET)
-        self.add_parameter('pulse_on', type=types.BooleanType,
-            flags=Instrument.FLAG_GETSET)
+                           flags=Instrument.FLAG_GETSET)
 
+        self.add_parameter('internal_pulse_stat', type=types.BooleanType,
+                           flags=Instrument.FLAG_GETSET)
+        self.add_parameter('external_pulse_stat', type=types.BooleanType,
+                           flags=Instrument.FLAG_GETSET)
+        self.external_mod_status = False
         if kwargs.pop('reset', False):
             self.reset()
         else:
@@ -252,16 +269,47 @@ class LabBrick_RFSource(Instrument):
         return f(self._devid) == 0
 
     def do_set_use_extref(self, val):
-        f = get_lb_func('fnLMS_SetUseInternalRef', [ctypes.c_uint32, ctypes.c_bool])
+        f = get_lb_func('fnLMS_SetUseInternalRef',
+                        [ctypes.c_uint32, ctypes.c_bool])
         return f(self._devid, not val)
+        
 
-    def do_get_pulse_on(self):
+#    def do_get_pulse_on(self):
+#        f = get_lb_func('fnLMS_GetUseInternalPulseMod')
+#        return not f(self._devid)
+#
+#    def do_set_pulse_on(self, val):
+#        f = get_lb_func('fnLMS_SetUseExternalPulseMod', [ctypes.c_uint32, ctypes.c_bool])
+#        return f(self._devid, val)    
+           
+
+    def do_get_internal_pulse_stat(self):
         f = get_lb_func('fnLMS_GetUseInternalPulseMod')
-        return not f(self._devid)
+        v = f(self._devid)
+        return v
+        
+    def do_set_internal_pulse_stat(self, value):
+        func = get_lb_func("fnLMS_EnableInternalPulseMod",
+                           [ctypes.c_uint32, ctypes.c_bool])
+        stat = func(self._devid, value)
+        #return stat
 
-    def do_set_pulse_on(self, val):
-        f = get_lb_func('fnLMS_SetUseExternalPulseMod', [ctypes.c_uint32, ctypes.c_bool])
-        return f(self._devid, val)
+    def do_set_external_pulse_stat(self, val):
+        f = get_lb_func('fnLMS_SetUseExternalPulseMod',
+                        [ctypes.c_uint32, ctypes.c_bool])
+        # If val is set to False, then the API says the brick is configured to use
+        # the internal modulation scheme. In that case I want to make it explicit
+        # that the internal modulation is on.
+        # -JC 3/5/18
+        g = f(self._devid, val)
+        self.external_mod_status = val
+        #return g
+
+    def do_get_external_pulse_stat(self):
+        #This function returns None to signify that there is no specific API
+        #function to retrievet this parameter. You should be able to tell its
+        #value from the internal pulse modulation information.
+        return None
 
     def do_get_frequency(self):
         f = get_lb_func('fnLMS_GetFrequency')
@@ -278,9 +326,10 @@ class LabBrick_RFSource(Instrument):
 
     def do_set_power(self, power):
         val = self.convert_to_units(power)
-        f = get_lb_func('fnLMS_SetPowerLevel', [ctypes.c_uint32, ctypes.c_int32])
+        f = get_lb_func('fnLMS_SetPowerLevel',
+                        [ctypes.c_uint32, ctypes.c_int32])
         return f(self._devid, val)
 
-#if __name__ == '__main__':
-#    logging.getLogger().setLevel(logging.DEBUG)
-#    lb = Instrument.test(LabBrick_RFSourceDLL)
+
+if __name__ == '__main__':
+    test = LabBrick_RFSource('test', serial=18239)

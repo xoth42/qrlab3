@@ -1,16 +1,28 @@
 import matplotlib
+<<<<<<< HEAD
 matplotlib.interactive(True)
+=======
+#matplotlib.interactive(True)
+>>>>>>> f59135e796c90615515b0f2c4bf0933eb63ea6b7
 
 
 import lmfit
 import numpy as np
 import matplotlib.pyplot as pl
 import os
+<<<<<<< HEAD
 filename = 'S11_V5'
 print filename
 
 newpath = r'C:\Users\Wang_Lab\Documents\yingying\FMR\copper_cavity_input_coupling_test\%s.txt'%(filename)
 newpath2 = r'C:\Users\Wang_Lab\Documents\yingying\FMR\copper_cavity_input_coupling_test\%s_cal_sub.txt'%(filename)
+=======
+filename = 'S12_fridge_-60dB'
+print filename
+
+newpath = r'C:\qrlab\FMR\%s.txt'%(filename)
+newpath2 = r'C:\qrlab\FMR\%s_cal_sub.txt'%(filename)
+>>>>>>> f59135e796c90615515b0f2c4bf0933eb63ea6b7
 if not os.path.exists(os.path.dirname(newpath)):
 
     os.makedirs(os.path.dirname(newpath))

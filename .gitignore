@@ -1,2 +1,5 @@
+
+*.HVIprj
+.idea/
 *.pyc
 
