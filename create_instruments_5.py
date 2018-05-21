@@ -89,9 +89,9 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 
 # VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
 
-# AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C',
-# address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT',
-# reffreq=10e6)
+AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C',
+                          address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', 
+                          reffreq=10e6)
 # AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1')
 
 

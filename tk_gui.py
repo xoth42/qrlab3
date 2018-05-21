@@ -144,11 +144,10 @@ class InstrumentInputItem():
         self.hide_button = tk.Button(self.frame, text = 'HIDE', command = self.hide_all,
                                      bg = '#FF3030', fg = 'white')
         self.hide_button.grid(row = 1, column = 6, sticky = fill_all)
-    
+    #Hides the instrument info assembly of widgets.
     def hide_all(self):
         self.get_button.grid_forget()
         self.set_button.grid_forget()
-        self.label.grid_forget()
         if self.option_condition:
             self.drop_down_box.grid_forget()
             self.drop_down_box_set.grid_forget()
@@ -156,11 +155,10 @@ class InstrumentInputItem():
             self.parameter_value_box.grid_forget()
             self.set_box.grid_forget()
         self.hide_button.config(text = 'SHOW', command = self.regrid, bg = '#4651FC', fg = 'white')
-
+    #Makes all of the widget elements reappear.
     def regrid(self):
         self.get_button.grid(row=1, column=4)
         self.set_button.grid(row=1, column=5, sticky=fill_all)
-        self.label.grid(row=1, column=1, sticky=fill_all)
         if self.option_condition:
             self.drop_down_box.grid(row=1, column=2, sticky = fill_all)
             self.drop_down_box_set.grid(row=1, column=3, sticky=fill_all)
@@ -332,6 +330,7 @@ import time
 
 class drawing_thread(threading.Thread):
     def run(self):
+#        root_window.mainloop()
         while True:
             time.sleep(draw_time)
             root_window.update_idletasks()
@@ -347,9 +346,9 @@ class parameter_thread(threading.Thread):
                 display_window[instrument].refresh_all_parameters()
 
 t1 = drawing_thread()
-t1.daemon = True
+t1.setDaemon(True)
 t2 = parameter_thread()
-t2.daemon = True
+t2.setDaemon(True)
 t1.start()
 t2.start()
 
