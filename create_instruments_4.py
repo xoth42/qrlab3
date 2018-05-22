@@ -16,7 +16,7 @@ from mclient import instruments
 #Magnet = instruments.create('Magnet','AMI_430')
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='TCPIP0::172.30.56.25::4000::SOCKET')
 VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
-Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
+#Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', reffreq=10e6)
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1')
 
