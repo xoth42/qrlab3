@@ -210,8 +210,6 @@ class SC5511A(Instrument):
         
         device_rf_params = device_rf_params_t()
         device_status = device_status_t()
-        print "HANDLE", self._handle
-        print "STATS", device_status
         lb_dll.sc5511a_get_device_status(self._handle, device_status)
         lb_dll.sc5511a_get_rf_parameters(self._handle, device_rf_params)
 
@@ -295,7 +293,7 @@ class SC5511A(Instrument):
     def do_get_frequency(self):
         device_rf_params = device_rf_params_t()        
         lb_dll.sc5511a_get_rf_parameters(self._handle, device_rf_params)
-        return device_rf_params.frequency
+        return device_rf_params.rf1_freq
 
     def do_set_frequency(self, freq_Hz):
         return lb_dll.sc5511a_set_freq(self._handle, ctypes.c_ulonglong(int(freq_Hz)))

@@ -45,9 +45,11 @@ root_window.bind('<Control-q>', window_close)
 ### NOTABLE CONSTANTS ###
 # **************************#
 #The time that the GUI will draw all the widgets again. 
-draw_time = 10 # in s
+draw_time = 900 # in ms
 #The time that the GUI will retrieve all the information about the isntruments from the 
 #instrument server. When this time has elapsed.
+
+refresh_continuously = True
 fetch_time = 0.5 # in s
 # This constant is used to resize the widgets to get them to take up all of
 # the available space in the parent window.
@@ -298,59 +300,63 @@ for instrument in list_of_instruments:
 tabs.pack(expand=1, fill='both')
 
 
-#def continuous_refresh(display_dict, instruments_in_list_form):
-#    """
-#    This function refreshes every single parameter for every single
-#    instrument. Its structured with the after statements so that it runs
-#    while the main window of the GUI is running.
-#    :param display_dict: A dict where the keys are the names of the
-#    instruments and the items are the InstrumentInputItem objects, which
-#    each have a refresh all parameters attribute function.
-#    :param instruments_in_list_form: A list of all the active instruments.
-#    :return:
-#    """
-#    for instrument in instruments_in_list_form:
-#        display_dict[instrument].refresh_all_parameters()
-#        # The after function takes the run time, the function to be run,
-#        # and its arguments.
-#    root_window.after(fetch_time, continuous_refresh, display_window,
-#                      instruments_in_list_form)
-#
-#
-#if refresh_continuously:
-#    root_window.after(fetch_time, continuous_refresh, display_window,
-#                      list_of_instruments)
-#root_window.mainloop()
-import threading 
-import time
+def continuous_refresh(display_dict, instruments_in_list_form):
+    """
+    This function refreshes every single parameter for every single
+    instrument. Its structured with the after statements so that it runs
+    while the main window of the GUI is running.
+    :param display_dict: A dict where the keys are the names of the
+    instruments and the items are the InstrumentInputItem objects, which
+    each have a refresh all parameters attribute function.
+    :param instruments_in_list_form: A list of all the active instruments.
+    :return:
+    """
+    for instrument in instruments_in_list_form:
+        display_dict[instrument].refresh_all_parameters()
+        # The after function takes the run time, the function to be run,
+        # and its arguments.
+    root_window.after(draw_time, continuous_refresh, display_window,
+                      instruments_in_list_form)
+
+
+if refresh_continuously:
+    root_window.after(draw_time, continuous_refresh, display_window,
+                      list_of_instruments)
+root_window.mainloop()
+
 #The problem: The frequency with which the GUI changes the view must be different
 #than the time in which it retrieves information from the instrument server. My
 #solution was to make two threads with infinite loops. One refreshes the on screen
 #view, and one retrieves info from the instrument server. They are independent.
 
-class drawing_thread(threading.Thread):
-    def run(self):
-#        root_window.mainloop()
-        while True:
-            time.sleep(draw_time)
-            root_window.update_idletasks()
-            root_window.update()
-            
-            
-            
-class parameter_thread(threading.Thread):
-    def run(self):
-        while True:
-            time.sleep(fetch_time)
-            for instrument in instr.list_instruments():
-                display_window[instrument].refresh_all_parameters()
 
-t1 = drawing_thread()
-t1.setDaemon(True)
-t2 = parameter_thread()
-t2.setDaemon(True)
-t1.start()
-t2.start()
+#import threading 
+#import time
+#
+#class drawing_thread(threading.Thread):
+#    def run(self):
+#        root_window.mainloop()
+##        while True:
+##            time.sleep(draw_time)
+##            root_window.update_idletasks()
+##            root_window.update()
+##            
+#            
+#            
+#class parameter_thread(threading.Thread):
+#    def run(self):
+#        while True:
+#            time.sleep(fetch_time)
+#            for instrument in instr.list_instruments():
+#                display_window[instrument].refresh_all_parameters()
+#
+##t1 = drawing_thread()
+##t1.setDaemon(True)
+#t2 = parameter_thread()
+#t2.setDaemon(True)
+##t1.start()
+#t2.start()
+#root_window.mainloop()
 
 
 
