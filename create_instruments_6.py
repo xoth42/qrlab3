@@ -12,28 +12,25 @@ if 1:
 from mclient import instruments
 
 
-DIG = instruments.create('dig', 'Keysight_DIG', chassis=0, slot=3,
-                         DIG_PRODUCT="M3102A")
-DIG.do_set_naverages(2000)
-DIG.do_set_nsamples(2000)
-
-qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
-                              deltaf=-100e6,
-                              pi_amp=0.342948,
-                              pi2_amp=0.171474,
-                              drag=-0.9,
-                              pi_amp_quasilective=0.027025,
-                              pi_amp_selective=0.34 / 25,
-                              rotation='Gaussian',
-                              w=40,
-                              w_quasilective=100,
-                              w_selective=500,
-                              channels='5,6',
-                              sideband_channels='I1,Q1',
-                              sideband_phase=1.315)
-
-
-
+#DIG = instruments.create('dig', 'Keysight_DIG', chassis=0, slot=3,
+#                         DIG_PRODUCT="M3102A")
+#DIG.do_set_naverages(2000)
+#DIG.do_set_nsamples(2000)
+#
+#qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
+#                              deltaf=-100e6,
+#                              pi_amp=0.342948,
+#                              pi2_amp=0.171474,
+#                              drag=-0.9,
+#                              pi_amp_quasilective=0.027025,
+#                              pi_amp_selective=0.34 / 25,
+#                              rotation='Gaussian',
+#                              w=40,
+#                              w_quasilective=100,
+#                              w_selective=500,
+#                              channels='5,6',
+#                              sideband_channels='I1,Q1',
+#                              sideband_phase=1.315)
 
 
 #refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511, 
@@ -44,7 +41,7 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 #                           use_extref=True) #qubit
 
 #sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
-sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
+sc2 = instruments.create('sc2', 'SC5511A', devid='100016B6')
 
 #AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
 #                             AWG_PRODUCT = "M3202A",
@@ -64,10 +61,10 @@ sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
 
 
 ''' Readout_IQ_Info is for iq modulation on the readout brick instead of pulse triggering '''
-readout = instruments.create('readout', 'Readout_IQ_Info', IQe=(1.0), IQg=(0.1),
-                             IQe_radius= 1 , rfsource1='RObrick', rfsource2='refbrick',
-                             pulse_len=2000, readout_chan_I=3, readout_chan_Q=4,
-                             acq_chan=1)
+#readout = instruments.create('readout', 'Readout_IQ_Info', IQe=(1.0), IQg=(0.1),
+#                             IQe_radius= 1 , rfsource1='RObrick', rfsource2='refbrick',
+#                             pulse_len=2000, readout_chan_I=3, readout_chan_Q=4,
+#                             acq_chan=1)
 
 # VNA = instruments.create('VNA', 'Agilent_E5071C',
 # address='TCPIP0::K-E5071C-26868.local::inst0::INSTR')
@@ -99,7 +96,7 @@ readout = instruments.create('readout', 'Readout_IQ_Info', IQe=(1.0), IQg=(0.1),
 # VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
 
 
-AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', reffreq=10e6)
+#AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', reffreq=10e6)
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1')
 
 #sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')

@@ -204,16 +204,17 @@ class SC5511A(Instrument):
 
         string_buffers = [ctypes.create_string_buffer(ID_BUFFER_SIZE) for i in range(NUM_MAX_DEVICES)]
         pointers = (ctypes.c_char_p*NUM_MAX_DEVICES)(*map(ctypes.addressof, string_buffers))
-        print "THING", lb_dll.sc5511a_search_devices(pointers)
         results = [s.value for s in string_buffers]
         self._handle = lb_dll.sc5511a_open_device(results[0])
+        print "HANDLE", self._handle
         
         device_rf_params = device_rf_params_t()
         device_status = device_status_t()
-        print "HANDLE", self._handle
-        print "STATS", device_status
-        lb_dll.sc5511a_get_device_status(self._handle, device_status)
-        lb_dll.sc5511a_get_rf_parameters(self._handle, device_rf_params)
+        
+        
+        print "Params are", self._handle, device_status._fields_
+     #   lb_dll.sc5511a_get_device_status(self._handle, device_status)
+      #  lb_dll.sc5511a_get_rf_parameters(self._handle, device_rf_params)
 
         
 

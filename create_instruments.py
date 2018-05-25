@@ -17,12 +17,12 @@ from mclient import instruments
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='TCPIP0::172.30.56.25::4000::SOCKET')
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
 #Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
-AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', reffreq=10e6)
-print 'AWG OK'
+#AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', reffreq=10e6)
+#print 'AWG OK'
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1')
 
-#sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
-sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
+sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
+#sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
 print 'SC OK'
 
 #brick1 = instruments.create('brick1', 'LabBrick_RFSource', serial=14510, use_extref=True) # qubit
