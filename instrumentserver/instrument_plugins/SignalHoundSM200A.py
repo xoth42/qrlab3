@@ -46,7 +46,7 @@ class APIFunction():
             self.error_report(return_code)
 
     def error_report(self, return_code):
-        print "ALERT: There was an error with the SM200A:"
+        print "ALERT: There was an event with the SM200A:"
         print"In function: " + str(self.func_name.__name__)
         print "Returned: " + str(return_code)
         DLL_LIB.smGetErrorString.restype = ctypes.c_char_p
@@ -64,8 +64,8 @@ class SignalHoundSM200A(Instrument):
                     ctypes.c_int)], ctypes.c_int)
         self.open_devices(self.handle)
         self._handle_ = self.handle.contents
-        self.mode_selection = kwargs['mode']
         self.speed_selection = kwargs['speed']
+        self.parameters = kwargs
 
         # Configure the mode for the data taking.
         self.add_parameter(
@@ -90,7 +90,7 @@ class SignalHoundSM200A(Instrument):
             flags=Instrument.FLAG_GETSET,
             doc='reference level',
             set_func=lambda x: True,
-            value=10)
+            value=3.14)
         self.add_parameter(
             'rbw',
             type=types.IntType,
@@ -136,17 +136,18 @@ class SignalHoundSM200A(Instrument):
             doc='Software spur rejection',
             set_func=lambda x: True,
             value=True)
-        if self.mode_selection == 'swept':
-            self.sweep_config(kwargs)
 
-    def sweep_config(self, kwargs):
+    def sweep(self):
         sweep_speed = APIFunction(DLL_LIB.smSetSweepSpeed,
                                   [ctypes.c_int, ctypes.c_int], ctypes.c_int)
         sweep_speed(self._handle_, speeds[self.speed_selection])
         start_stop = APIFunction(
             DLL_LIB.smSetSweepCenterSpan, [
                 ctypes.c_int, ctypes.c_double, ctypes.c_double], ctypes.c_int)
-        start_stop(self._handle_, kwargs['center'], kwargs['span'])
+        start_stop(
+            self._handle_,
+            self.parameters['center'],
+            self.parameters['span'])
         coupling = APIFunction(DLL_LIB.smSetSweepCoupling, [ctypes.c_int,
                                                             ctypes.c_double,
                                                             ctypes.c_double,
@@ -154,7 +155,11 @@ class SignalHoundSM200A(Instrument):
                                ctypes.c_int)
         # Mot really sure what this parameter should be...
         sweep_time = 1
-        coupling(self._handle_, kwargs['rbw'], kwargs['vbw'], sweep_time)
+        coupling(
+            self._handle_,
+            self.parameters['rbw'],
+            self.parameters['vbw'],
+            sweep_time)
         detector = APIFunction(DLL_LIB.smSetSweepDetector, [ctypes.c_int,
                                                             ctypes.c_int,
                                                             ctypes.c_int],
@@ -172,21 +177,16 @@ class SignalHoundSM200A(Instrument):
 
         spur_reject = APIFunction(DLL_LIB.smSetSweepSpurReject,
                                   [ctypes.c_int, ctypes.c_bool], ctypes.c_int)
-        spur_reject(self._handle_, kwargs['spur'])
+        spur_reject(self._handle_, self.parameters['spur'])
+        ref_ = APIFunction(
+            DLL_LIB.smSetRefLevel, [
+                ctypes.c_int, ctypes.c_double], ctypes.c_int)
+        ref_(self._handle_, self.parameters['ref'])
 
-        get_sweep = APIFunction(DLL_LIB.smGetSweep, [ctypes.c_int,
-                                                     numpy.ctypeslib.ndpointer(
-                                                         numpy.float32, ndim=1,
-                                                         flags='C'),
-                                                     numpy.ctypeslib.ndpointer(
-                                                         numpy.float32, ndim=1,
-                                                         flags='C'),
-                                                     ctypes.c_int],
-                                ctypes.c_int)
         configure = APIFunction(
             DLL_LIB.smConfigure, [
                 ctypes.c_int, ctypes.c_int], ctypes.c_int)
-        configure(self._handle_, modes[self.mode_selection])
+        configure(self._handle_, modes['swept'])
         sweep_parameters = APIFunction(DLL_LIB.smGetSweepParameters,
                                        [ctypes.c_int, ctypes.POINTER(
                                            ctypes.c_double), ctypes.POINTER(
@@ -211,16 +211,113 @@ class SignalHoundSM200A(Instrument):
         sweep_max = numpy.zeros(
             sweep_size.contents.value).astype(
             numpy.float32)
-
+        get_sweep = APIFunction(DLL_LIB.smGetSweep, [ctypes.c_int,
+                                                     numpy.ctypeslib.ndpointer(
+                                                         numpy.float32, ndim=1,
+                                                         flags='C'),
+                                                     numpy.ctypeslib.ndpointer(
+                                                         numpy.float32, ndim=1,
+                                                         flags='C'),
+                                                     ctypes.c_int],
+                                ctypes.c_int)
         get_sweep(self._handle_, sweep_min, sweep_max,
                   ctypes.c_int(0))
-        print sweep_max
+        freqs = [
+            (startfreq.contents.value +
+             (i *
+              binsize.contents.value)) for i in range(
+                0,
+                sweep_size.contents.value)]
 
-    def IQ_config(self):
-        pass
+        return freqs, sweep_max
 
-    def realtime_config(self):
-        pass
+    def realtime_frame(self):
+        cent_span = APIFunction(DLL_LIB.smSetRealTimeCenterSpan,
+                                [ctypes.c_int, ctypes.c_double,
+                                 ctypes.c_double], ctypes.c_int)
+        cent_span(self._handle_, self.parameters['center'], self.parameters[
+            'span'])
+
+        rbw = APIFunction(DLL_LIB.smSetRealTimeRBW, [ctypes.c_int,
+                                                     ctypes.c_double],
+                          ctypes.c_int)
+        rbw(self._handle_, self.parameters['rbw'])
+        scale = APIFunction(DLL_LIB.smSetRealTimeScale, [ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_double,
+                                                         ctypes.c_double],
+                            ctypes.c_int)
+        # A common height for the frames is 100 dB.
+        scale(self._handle_, 0, self.parameters['ref'], 100)
+        window = APIFunction(DLL_LIB.smSetRealTimeWindow, [ctypes.c_int,
+                                                           ctypes.c_int],
+                             ctypes.c_int)
+        window(self._handle_, SmWindowType['smWindowHamming'])
+
+        configure = APIFunction(
+            DLL_LIB.smConfigure, [
+                ctypes.c_int, ctypes.c_int], ctypes.c_int)
+        configure(self._handle_, modes['realtime'])
+        params = APIFunction(
+            DLL_LIB.smGetRealTimeParameters, [
+                ctypes.c_int, ctypes.POINTER(
+                    ctypes.c_double), ctypes.POINTER(ctypes.c_int),
+                ctypes.POINTER(
+                        ctypes.c_double), ctypes.POINTER(ctypes.c_double),
+                ctypes.POINTER(
+                            ctypes.c_int), ctypes.POINTER(
+                                ctypes.c_int), ctypes.POINTER(
+                                    ctypes.c_double)], ctypes.c_int)
+        actual_rbw = ctypes.pointer(ctypes.c_double())
+        sweep_size = ctypes.pointer(ctypes.c_int())
+        startfreq = ctypes.pointer(ctypes.c_double())
+        binsize = ctypes.pointer(ctypes.c_double())
+        width = ctypes.pointer(ctypes.c_int())
+        height = ctypes.pointer(ctypes.c_int())
+        poi = ctypes.pointer(ctypes.c_double())
+
+        # Get all of the params
+        params(self._handle_, actual_rbw, sweep_size, startfreq, binsize,
+               width, height, poi)
+
+        get_frame = APIFunction(
+            DLL_LIB.smGetRealTimeFrame, [
+                ctypes.c_int,
+                ctypes.c_int,
+                ctypes.c_int,
+                ctypes.POINTER(ctypes.c_float),
+                ctypes.POINTER(ctypes.c_float),
+                numpy.ctypeslib.ndpointer(
+                    numpy.float32, ndim=1,
+                    flags='C'),
+                numpy.ctypeslib.ndpointer(
+                    numpy.float32, ndim=1,
+                    flags='C'), ctypes.POINTER(
+                    ctypes.c_int), ctypes.POINTER(
+                    ctypes.c_int)], ctypes.c_int)
+        data_frame = (ctypes.c_float * (width.contents.value *
+                                        height.contents.value))()
+        ctypes.cast(data_frame, ctypes.POINTER(ctypes.c_float))
+        alpha_frame = (ctypes.c_float * (width.contents.value *
+                                         height.contents.value))()
+        ctypes.cast(alpha_frame, ctypes.POINTER(ctypes.c_float))
+        sweep_min = numpy.zeros(
+            sweep_size.contents.value).astype(
+            numpy.float32)
+        sweep_max = numpy.zeros(
+            sweep_size.contents.value).astype(
+            numpy.float32)
+
+        get_frame(
+            self._handle_,
+            width.contents.value,
+            height.contents.value,
+            data_frame,
+            alpha_frame,
+            sweep_min,
+            sweep_max,
+            ctypes.byref(ctypes.c_int()),
+            ctypes.byref(ctypes.c_int()))
 
     def do_set_external_reference(self, ref_val):
         ref_set = APIFunction(
@@ -230,6 +327,15 @@ class SignalHoundSM200A(Instrument):
 
 
 if __name__ == "__main__":
-    test = SignalHoundSM200A("signalhound", mode='swept', speed='normal',
-                             center=1e6, span=1e4, vbw=300e3, rbw=300e3,
-                             spur=True)
+    test = SignalHoundSM200A(
+        "signalhound",
+        speed='auto',
+        center=5e9,
+        span=4e9,
+        vbw=300e3,
+        rbw=300e3,
+        ref=10,
+        spur=False)
+    test.realtime_frame()
+   # import matplotlib.pyplot as plt
+    #plt.plot(a, b)
