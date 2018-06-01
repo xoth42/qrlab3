@@ -714,6 +714,7 @@ class SD_AOU(SD_Module):
 
 	def channelFrequency(self, nChannel, frequency) :
 		if self._SD_Object__handle > 0 :
+			self._SD_Object__core_dll.SD_AOU_channelFrequency.restype = c_double;
 			return self._SD_Object__core_dll.SD_AOU_channelFrequency(self._SD_Object__handle, nChannel, c_double(frequency));
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
@@ -1381,7 +1382,7 @@ class SD_AIN(SD_Module) :
 	def channelFullScale(self, channel) :
 		if self._SD_Object__handle > 0 :
 			self._SD_Object__core_dll.SD_AIN_channelFullScale.restype = c_double;
-			result = self._SD_Object__core_dll.SD_AIN_channelFullScale(self._SD_Object__handle, channel).value;
+			result = self._SD_Object__core_dll.SD_AIN_channelFullScale(self._SD_Object__handle, channel);
 
 			if result < 0 :
 				return int(result);
@@ -1393,7 +1394,7 @@ class SD_AIN(SD_Module) :
 	def channelMinFullScale(self, impedance, coupling) :
 		if self._SD_Object__handle > 0 :
 			self._SD_Object__core_dll.SD_AIN_channelMinFullScale.restype = c_double;
-			result = self._SD_Object__core_dll.SD_AIN_channelMinFullScale(self._SD_Object__handle, impedance, coupling).value;
+			result = self._SD_Object__core_dll.SD_AIN_channelMinFullScale(self._SD_Object__handle, impedance, coupling);
 
 			if result < 0 :
 				return int(result);
@@ -1405,7 +1406,7 @@ class SD_AIN(SD_Module) :
 	def channelMaxFullScale(self, impedance, coupling) :
 		if self._SD_Object__handle > 0 :
 			self._SD_Object__core_dll.SD_AIN_channelMaxFullScale.restype = c_double;
-			result = self._SD_Object__core_dll.SD_AIN_channelMaxFullScale(self._SD_Object__handle, impedance, coupling).value;
+			result = self._SD_Object__core_dll.SD_AIN_channelMaxFullScale(self._SD_Object__handle, impedance, coupling);
 
 			if result < 0 :
 				return int(result);
@@ -1624,7 +1625,7 @@ class SD_AIN(SD_Module) :
 				nPoints = readPoints.value
 
 				if nPoints > 0 :
-					return  np.array(data)
+					return np.ctypeslib.as_array((c_short*nPoints).from_address(addressof(data.contents)))
 				else :
 					return np.empty(0, dtype=np.short)
 		else :

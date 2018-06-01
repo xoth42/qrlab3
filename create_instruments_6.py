@@ -1,6 +1,6 @@
 import time
 
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 
 if 1:
@@ -17,20 +17,20 @@ from mclient import instruments
 #DIG.do_set_naverages(2000)
 #DIG.do_set_nsamples(2000)
 #
-#qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
-#                              deltaf=-100e6,
-#                              pi_amp=0.342948,
-#                              pi2_amp=0.171474,
-#                              drag=-0.9,
-#                              pi_amp_quasilective=0.027025,
-#                              pi_amp_selective=0.34 / 25,
-#                              rotation='Gaussian',
-#                              w=40,
-#                              w_quasilective=100,
-#                              w_selective=500,
-#                              channels='5,6',
-#                              sideband_channels='I1,Q1',
-#                              sideband_phase=1.315)
+qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
+                              deltaf=-100e6,
+                              pi_amp=0.342948,
+                              pi2_amp=0.171474,
+                              drag=-0.9,
+                              pi_amp_quasilective=0.027025,
+                              pi_amp_selective=0.34 / 25,
+                              rotation='Gaussian',
+                              w=40,
+                              w_quasilective=100,
+                              w_selective=500,
+                              channels='5,6',
+                              sideband_channels='I1,Q1',
+                              sideband_phase=1.315)
 
 
 #refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511, 
