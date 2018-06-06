@@ -37,15 +37,15 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 #                            use_extref=True) #reference
 #RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=18608,
 #                             use_extref=True) #readout
-#brick1 = instruments.create('brick1', 'LabBrick_RFSource', serial=14510,
-#                           use_extref=True) #qubit
+brick1 = instruments.create('brick1', 'LabBrick_RFSource', serial=14510,
+                           use_extref=False) #qubit
 
 #sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
-sc2 = instruments.create('sc2', 'SC5511A', devid='100016B6')
+#sc2 = instruments.create('sc2', 'SC5511A', devid='100016B6')
 
-#AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
-#                             AWG_PRODUCT = "M3202A",
-#                             amps = [1, 1, 1, 1], ofs = [0, 0, 0, 0])
+AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
+                             AWG_PRODUCT = "M3202A",
+                             amps = [1, 1, 1, 1], ofs = [0, 0, 0, 0])
 #
 #AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis=0, slot=10,
 #                         AWG_PRODUCT="M3202A",

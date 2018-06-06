@@ -154,7 +154,7 @@ class SignalHoundSM200A(Instrument):
                                                             ctypes.c_double],
                                ctypes.c_int)
         # Mot really sure what this parameter should be...
-        sweep_time = 1
+        sweep_time = 100
         coupling(
             self._handle_,
             self.parameters['rbw'],
@@ -223,7 +223,7 @@ class SignalHoundSM200A(Instrument):
         get_sweep(self._handle_, sweep_min, sweep_max,
                   ctypes.c_int(0))
         freqs = [
-            (startfreq.contents.value +
+            (startfreq.contents.value +b 
              (i *
               binsize.contents.value)) for i in range(
                 0,
@@ -279,35 +279,40 @@ class SignalHoundSM200A(Instrument):
         # Get all of the params
         params(self._handle_, actual_rbw, sweep_size, startfreq, binsize,
                width, height, poi)
-
+#        large_array = numpy.ctypeslib.ndpointer(numpy.float32, ndim=1,flags='C')
         get_frame = APIFunction(
             DLL_LIB.smGetRealTimeFrame, [
-                ctypes.c_int,
-                ctypes.c_int,
-                ctypes.c_int,
-                ctypes.POINTER(ctypes.c_float),
-                ctypes.POINTER(ctypes.c_float),
-                numpy.ctypeslib.ndpointer(
-                    numpy.float32, ndim=1,
-                    flags='C'),
-                numpy.ctypeslib.ndpointer(
-                    numpy.float32, ndim=1,
-                    flags='C'), ctypes.POINTER(
-                    ctypes.c_int), ctypes.POINTER(
-                    ctypes.c_int)], ctypes.c_int)
-        data_frame = (ctypes.c_float * (width.contents.value *
-                                        height.contents.value))()
-        ctypes.cast(data_frame, ctypes.POINTER(ctypes.c_float))
-        alpha_frame = (ctypes.c_float * (width.contents.value *
-                                         height.contents.value))()
-        ctypes.cast(alpha_frame, ctypes.POINTER(ctypes.c_float))
+                ctypes.c_int, ctypes.c_int, ctypes.c_int, numpy.ctypeslib.ndpointer(
+                    numpy.float32, ndim=1, flags='C'), numpy.ctypeslib.ndpointer(
+                    numpy.float32, ndim=1, flags='C'), numpy.ctypeslib.ndpointer(
+                    numpy.float32, ndim=1, flags='C'), numpy.ctypeslib.ndpointer(
+                        numpy.float32, ndim=1, flags='C'), ctypes.POINTER(
+                            ctypes.c_int), ctypes.POINTER(
+                                ctypes.c_int)], ctypes.c_int)
+#        data_frame = (ctypes.c_float * (width.contents.value *
+#                                        height.contents.value))()
+#
+#        alpha_frame = (ctypes.c_float * (width.contenmts.value *
+#                                         height.contents.value))()
+#        ctypes.cast(data_frame, ctypes.POINTER(ctypes.c_float))
+#        ctypes.cast(alpha_frame, ctypes.POINTER(ctypes.c_float))
+        data_frame = numpy.zeros(
+            width.contents.value *
+            height.contents.value).astype(
+            numpy.float32)
+        alpha_frame = numpy.zeros(
+            width.contents.value *
+            height.contents.value).astype(
+            numpy.float32)
+
         sweep_min = numpy.zeros(
             sweep_size.contents.value).astype(
             numpy.float32)
         sweep_max = numpy.zeros(
             sweep_size.contents.value).astype(
             numpy.float32)
-
+        frame_count = ctypes.pointer(ctypes.c_int())
+        ns = ctypes.pointer(ctypes.c_int())
         get_frame(
             self._handle_,
             width.contents.value,
@@ -316,8 +321,8 @@ class SignalHoundSM200A(Instrument):
             alpha_frame,
             sweep_min,
             sweep_max,
-            ctypes.byref(ctypes.c_int()),
-            ctypes.byref(ctypes.c_int()))
+            frame_count,
+            ns)
 
     def do_set_external_reference(self, ref_val):
         ref_set = APIFunction(
@@ -325,17 +330,42 @@ class SignalHoundSM200A(Instrument):
                 ctypes.c_int, ctypes.c_bool], ctypes.c_int)
         return ref_set(self._handle_, ref_val)
 
+    def do_get_external_reference(self):
+        get_ext = APIFunction(
+            DLL_LIB.smGetExternalReference, [
+                ctypes.c_int, ctypes.POINTER(
+                    ctypes.c_bool)], ctypes.c_int)
+        ret_bool = ctypes.pointer(ctypes.c_bool())
+        get_ext(self._handle_, ret_bool)
+        return ret_bool.contents.value
+
+    def do_set_ref(self, new_ref):
+        set_ref = APIFunction(DLL_LIB.smSetRefLevel, [ctypes.c_int,
+                                                      ctypes.c_double],
+                              ctypes.c_int)
+        set_ref(self._handle_, new_ref)
+
+    def do_get_ref(self):
+        new = ctypes.pointer(ctypes.c_double())
+        get_ref = APIFunction(DLL_LIB.smGetRefLevel, [ctypes.c_int,
+                                                      ctypes.POINTER(
+                                                          ctypes.c_double)],
+                              ctypes.c_int)
+        get_ref(self._handle_, new)
+        return new.contents.value
+
 
 if __name__ == "__main__":
     test = SignalHoundSM200A(
         "signalhound",
         speed='auto',
         center=5e9,
-        span=4e9,
+        span=1e9,
         vbw=300e3,
         rbw=300e3,
         ref=10,
         spur=False)
     test.realtime_frame()
-   # import matplotlib.pyplot as plt
-    #plt.plot(a, b)
+#    import matplotlib.pyplot as plt
+#    a, b = test.sweep()
+#    plt.plot(a, b)
