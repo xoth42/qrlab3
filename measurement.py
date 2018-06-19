@@ -15,7 +15,7 @@ import os
 import pulseseq
 import awgloader
 
-#from PyQt4 import QtGui
+from PyQt5 import QtWidgets
 from pulseseq import sequencer
 from pulseseq import pulselib
 
@@ -428,7 +428,7 @@ class Measurement(object):
                 logging.info('Acquiring...')
             while not ret.is_valid() and not self._interrupted:
                 objsh.helper.backend.main_loop(20)
-                QtGui.QApplication.processEvents()
+                QtWidgets.QApplication.processEvents()
             if self._interrupted:
                 alz.set_interrupt(True)
         except Exception, e:
@@ -550,8 +550,8 @@ class Measurement(object):
         if self.histogram:
             if self.cyclelen == 1:
                 self.plot_histogram(self.shot_data[:])
-        else:
-            ret = self.analyze(self.get_ys(), fig=self.get_figure())
+        #else:
+            #ret = self.analyze(self.get_ys(), fig=self.get_figure())
 
         if self.savefig:
             self.save_fig()
@@ -567,6 +567,7 @@ class Measurement(object):
         # Remove pulse data to keep memory usage reasonable
         pulseseq.sequencer.Pulse.clear_pulse_data()
  
+        print ret
         return ret
 
     def acquisition_loop_keysight(self, dig, fast=False):
@@ -575,7 +576,7 @@ class Measurement(object):
         Acquisition loop, talk to keysight dig.
         Also starts the measurement.
         
-        TODO: implement the interupt like alazar has
+        TODO: implement the interrupt like alazar has
         '''
 
         # Setup and arm alazar

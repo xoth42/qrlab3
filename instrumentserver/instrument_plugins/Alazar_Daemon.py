@@ -434,10 +434,10 @@ real part is applied to I and the imaginary part to Q.
     def start_capture(self):
         if self._capturing:
             raise Exception('Already capturing, use set_interrupt to stop!')
-        self._card.start_capture()
-        self._capturing = True
-        self.emit('start-capture')
-        logging.info('Alazar ready for capture...')
+        self._card.start_capture(); print 'A'
+        self._capturing = True ; print 'B'
+        self.emit('start-capture'); print 'C'
+        logging.info('Alazar ready for capture...'); print 'D'
 
     def end_capture(self):
         self._card.end_capture()
@@ -791,7 +791,7 @@ real part is applied to I and the imaginary part to Q.
 
         if singleshotbin:
             return data_sum * 1.0 / navg
-#        print "data_sum finally is", data_sum
+        print "data_sum finally is", data_sum
         return self.convert_signal(data_sum / navg)
 
     def setup_hist(self, N, hist_buf=None, num_demods=1):

@@ -30,20 +30,28 @@ if 0:
 qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')
 print(qubit_info)
-ef_info = mclient.get_qubit_info('qubit1ef')
+#ef_info = mclient.get_qubit_info('qubit1ef')
 #cavity_info = mclient.get_qubit_info('cavity0')
 
 #Find read-out cavity and choose a power
 
-if 0: # RO Cavity spec
-    from single_cavity import rocavspectroscopy
-    rofreq = 6e9
-    freq_range = 3e6
-    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(0, 0, 1),
-                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 11), qubit_pulse=False)
-    ro.measure()
+if 1: # RO Cavity spec
+    from scripts.single_cavity import rocavspectroscopy
+    rofreq = 8273.16e6
+    freq_range = 5e6
+    freqs = np.linspace(rofreq-freq_range, rofreq+freq_range, 10)
+    alz.set_naverages(10000)
+    brickRO = mclient.instruments['brick7']
+    brickref = mclient.instruments['brick2']
+    for freq in freqs:
+        brickRO.set_frequency(freq)
+        brickref.set_frequency(freq+50e6)
+        ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(0, 0, 1),
+                                             np.linspace(rofreq, rofreq, 1), qubit_pulse=False)
+        ro.measure()
+    bla
 #Find qubit
-if 1: # Qubit spec
+if 0: # Qubit spec
     from scripts.single_qubit import spectroscopy
 #    from scripts.single_qubit import spectroscopy_IQ
     qubit_freq = 4503.43e6
@@ -74,7 +82,7 @@ if 0: # Qubit SSBspec
 
 """Power Rabi -- Pi pulse calibration"""
 if 0: # Calibrate pi pulse
-    for i in range(5):
+    for i in range(1):
         from scripts.single_qubit import rabi
         tr = rabi.Rabi(qubit_info, np.linspace(0, .6, 10), plot_seqs=False, generate=True, selective=False, repeat_pulse=1,
                        update=False)
@@ -229,13 +237,14 @@ if 0: # Mixer calibration:
 
 
 if 0: # Check histogramming
-    from scripts.single_qubit import timerabi
-    tr = timerabi.TimeRabi(qubit_info, [qubit_info.pi_area,], histogram=True, title='|e>')
+    from scripts.single_qubit import rabi
+    alz.set_naverages(5000)
+    #tr = timerabi.TimeRabi(qubit_info, [qubit_info.pi_area,], histogram=True, title='|e>')
+    #tr.measure()
+    tr = rabi.Rabi(qubit_info, [0.001,], histogram=True, title='|g>')
     tr.measure()
-    tr = timerabi.TimeRabi(qubit_info, [0.001,], histogram=True, title='|g>')
-    tr.measure()
-    tr = timerabi.TimeRabi(qubit_info, [qubit_info.pi_area/2,], histogram=True, title='|g>+|e>')
-    tr.measure()
+    #tr = timerabi.TimeRabi(qubit_info, [qubit_info.pi_area/2,], histogram=True, title='|g>+|e>')
+    #tr.measure()
 
 if 0: # T1
     from scripts.single_qubit import T1measurement

@@ -137,24 +137,33 @@ class SignalHoundSM200A(Instrument):
             set_func=lambda x: True,
             value=True)
 
-    def sweep(self):
+    def sweep(self, center = 0, span = 0):
         sweep_speed = APIFunction(DLL_LIB.smSetSweepSpeed,
                                   [ctypes.c_int, ctypes.c_int], ctypes.c_int)
         sweep_speed(self._handle_, speeds[self.speed_selection])
+        if center == 0 and span == 0:
+            _center_ = self.parameters['center']
+            _span_ = self.parameters['span']
+        else:
+            _center_ = center
+            _span_ = span
+            
+        
+        
         start_stop = APIFunction(
             DLL_LIB.smSetSweepCenterSpan, [
                 ctypes.c_int, ctypes.c_double, ctypes.c_double], ctypes.c_int)
         start_stop(
             self._handle_,
-            self.parameters['center'],
-            self.parameters['span'])
+            _center_,
+            _span_)
         coupling = APIFunction(DLL_LIB.smSetSweepCoupling, [ctypes.c_int,
                                                             ctypes.c_double,
                                                             ctypes.c_double,
                                                             ctypes.c_double],
                                ctypes.c_int)
         # Mot really sure what this parameter should be...
-        sweep_time = 100
+        sweep_time = 0.1
         coupling(
             self._handle_,
             self.parameters['rbw'],
@@ -223,7 +232,7 @@ class SignalHoundSM200A(Instrument):
         get_sweep(self._handle_, sweep_min, sweep_max,
                   ctypes.c_int(0))
         freqs = [
-            (startfreq.contents.value +b 
+            (startfreq.contents.value + 
              (i *
               binsize.contents.value)) for i in range(
                 0,
@@ -231,12 +240,17 @@ class SignalHoundSM200A(Instrument):
 
         return freqs, sweep_max
 
-    def realtime_frame(self):
+    def realtime_frame(self, center = 0, span = 0):
         cent_span = APIFunction(DLL_LIB.smSetRealTimeCenterSpan,
                                 [ctypes.c_int, ctypes.c_double,
                                  ctypes.c_double], ctypes.c_int)
-        cent_span(self._handle_, self.parameters['center'], self.parameters[
-            'span'])
+        if center == 0 and span == 0:
+            _center_ = self.parameters['center']
+            _span_ = self.parameters['span']
+        else:
+            _center_ = center
+            _span_ = span
+        cent_span(self._handle_, _center_, _span_)
 
         rbw = APIFunction(DLL_LIB.smSetRealTimeRBW, [ctypes.c_int,
                                                      ctypes.c_double],
@@ -282,13 +296,13 @@ class SignalHoundSM200A(Instrument):
 #        large_array = numpy.ctypeslib.ndpointer(numpy.float32, ndim=1,flags='C')
         get_frame = APIFunction(
             DLL_LIB.smGetRealTimeFrame, [
-                ctypes.c_int, ctypes.c_int, ctypes.c_int, numpy.ctypeslib.ndpointer(
+                ctypes.c_int, numpy.ctypeslib.ndpointer(
                     numpy.float32, ndim=1, flags='C'), numpy.ctypeslib.ndpointer(
                     numpy.float32, ndim=1, flags='C'), numpy.ctypeslib.ndpointer(
                     numpy.float32, ndim=1, flags='C'), numpy.ctypeslib.ndpointer(
                         numpy.float32, ndim=1, flags='C'), ctypes.POINTER(
                             ctypes.c_int), ctypes.POINTER(
-                                ctypes.c_int)], ctypes.c_int)
+                                ctypes.c_longlong)], ctypes.c_int)
 #        data_frame = (ctypes.c_float * (width.contents.value *
 #                                        height.contents.value))()
 #
@@ -312,17 +326,17 @@ class SignalHoundSM200A(Instrument):
             sweep_size.contents.value).astype(
             numpy.float32)
         frame_count = ctypes.pointer(ctypes.c_int())
-        ns = ctypes.pointer(ctypes.c_int())
+        ns = ctypes.pointer(ctypes.c_longlong())
+        
         get_frame(
             self._handle_,
-            width.contents.value,
-            height.contents.value,
             data_frame,
             alpha_frame,
             sweep_min,
             sweep_max,
             frame_count,
             ns)
+        return data_frame, alpha_frame, sweep_min, sweep_max
 
     def do_set_external_reference(self, ref_val):
         ref_set = APIFunction(
@@ -359,13 +373,23 @@ if __name__ == "__main__":
     test = SignalHoundSM200A(
         "signalhound",
         speed='auto',
-        center=5e9,
-        span=1e9,
-        vbw=300e3,
-        rbw=300e3,
+        center=1.2e8,
+        span=2e7,
+        vbw=200e3,
+        rbw=200e3,
         ref=10,
         spur=False)
-    test.realtime_frame()
-#    import matplotlib.pyplot as plt
-#    a, b = test.sweep()
+#    a, b, c, d = test.realtime_frame()
+    import matplotlib.pyplot as plt
+    a, b = test.sweep()
 #    plt.plot(a, b)
+#    from scipy.signal import find_peaks_cwt
+#    widths = numpy.arange(10, 50)
+#    peaks = find_peaks_cwt(b, widths)
+#    local_maxes = [b[i] for i in peaks]
+    
+    
+    
+    
+
+  #  plt.show()

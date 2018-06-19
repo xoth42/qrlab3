@@ -7,8 +7,8 @@ if 1:
 
 from mclient import instruments
 
-#AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 1, slot = 7,  AWG_PRODUCT = "M3202A", 
- #                         amps = [1,2,1,1], ofs = [-.08, .02, 0, 0])
+#AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PRODUCT = "M3202A", 
+     #                     amps = [1,2,1,1], ofs = [-.08, .02, 0, 0])
 
 #AWG1.do_set_waveform_delay(200000)
 #bla
@@ -17,21 +17,21 @@ from mclient import instruments
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='TCPIP0::172.30.56.25::4000::SOCKET')
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
 #Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
-#AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', reffreq=10e6)
+AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', reffreq=10e6)
 #print 'AWG OK'
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1')
 
-sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
-#sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
-print 'SC OK'
+#sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
+##sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
+#print 'SC OK'
 
 #brick1 = instruments.create('brick1', 'LabBrick_RFSource', serial=14510, use_extref=True) # qubit
-#brick2 = instruments.create('brick2', 'LabBrick_RFSource', serial=14511, use_extref=True) # ref
+brick2 = instruments.create('brick2', 'LabBrick_RFSource', serial=14511, use_extref=True) # ref
 #brick3 = instruments.create('brick3', 'LabBrick_RFSource', serial=14524, use_extref=True) # old RO
 #brick4 = instruments.create('brick4', 'LabBrick_RFSource', serial=17912, use_extref=True) # RO
 #brick5 = instruments.create('brick5', 'LabBrick_RFSource', serial=14525, use_extref=True) # New brick
 #brick6 = instruments.create('brick6', 'LabBrick_RFSource', serial=18238, use_extref=True)#reference
-#brick7 = instruments.create('brick7', 'LabBrick_RFSource', serial=18239, use_extref=True)#readout
+brick7 = instruments.create('brick7', 'LabBrick_RFSource', serial=19151, use_extref=True)#readout
 
 #fg = instruments.create('funcgen', 'Agilent_33250A', serial=2391)
 
@@ -40,7 +40,7 @@ print 'SC OK'
 #fg = instruments.create('funcgen', 'BNC_FuncGen645', address='GPIB1::30')
 
 # Setup Alazar
-'''
+
 alz = instruments.create('alazar', 'Alazar_Daemon')
 alz.set_ch1_range('40mV')
 alz.set_ch2_range('200mV')
@@ -63,14 +63,14 @@ alz.setup_trigger()
 
 
 readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
-                             IQe_radius= 1 , rfsource1='brick3', rfsource2='sc2',
-                             pulse_len=1000, readout_chan='4m2', acq_chan='1m1')
+                             IQe_radius= 1 , rfsource1='brick7', rfsource2='brick2',
+                             pulse_len=1000, readout_chan='3m1', acq_chan='4m2')
 
 
 #AWG2 = instruments.create('AWG2', 'Tektronix_AWG5014C', address='AWG2',
 #                          clock=1e9, refsrc='EXT', reffreq=10e6)
 
-
+'''
 ag1 = instruments.create('ag1', 'Agilent_N5183A', address='GPIB1::19')
 #ag2_JPC = instruments.create('ag2_JPC', 'Agilent_N5183A', address='GPIB1::20')
 ag2 = instruments.create('ag2', 'Agilent_N5183A', address='GPIB1::22')
@@ -91,7 +91,7 @@ ag2 = instruments.create('ag2', 'Agilent_N5183A', address='GPIB1::22')
 ##yoko = instruments.create('yoko', 'Yokogawa_)
 ##laserfg = instruments.create('laserfg', 'Agilent_FuncGen33250A', address='GPIB1::9')
 #
-
+'''
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                             deltaf=-100e6,
                             pi_amp=0.342948,
@@ -106,6 +106,7 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                             channels='1,2',
                             sideband_channels='I1,Q1',
                             sideband_phase=1.315)
+'''
 qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
                             deltaf=-212.850e6,
                             pi_amp=0.09,

@@ -34,6 +34,17 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, ax=None):
         plt.legend()
         plt.ylabel('Intensity [AU]')
         plt.xlabel('Frequency [MHz]')
+        
+        plt.figure()
+        plt.plot(freqs/1e6, phasedata[ipower,:])
+        plt.ylabel('Phase Angle')
+        plt.xlabel('Frequency [MHz]')
+        
+#        plt.figure()
+#        plt.plot(ampdata[ipower,:])
+#        
+#        plt.figure()
+#        plt.plot(phasedata[ipower,:])
 
     if plot_type == POWER:
 #        ax1 = f.add_subplot(2,1,1)
@@ -122,7 +133,7 @@ class ROCavSpectroscopy(Measurement1D):
             for ifreq, freq in enumerate(self.freqs):
                 self.readout_info.rfsource1.set_frequency(freq)
                 self.readout_info.rfsource2.set_frequency(freq+50e6)
-                time.sleep(0.1)
+                time.sleep(1)
 
                 alz.setup_avg_shot(alz.get_naverages())
                 ret = alz.take_avg_shot(async=True)
@@ -138,13 +149,15 @@ class ROCavSpectroscopy(Measurement1D):
                 amps.append(np.abs(IQ))
                 phases.append(np.angle(IQ, deg=True))
                 print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
+                print 'I,Q = %.03f, %.03f' % (np.real(IQ), np.imag(IQ))
 
             self.ampdata[ipower,:] = amps
             self.phasedata[ipower,:] = phases
+            
 
         self.analyze()
 
     def analyze(self, data=None, ax=None):
         pax = ax if (ax is not None) else plt.figure().add_subplot(111)
         ampdata = data if (data is not None) else self.ampdata
-        analysis(self.powers, self.freqs, ampdata, self.phasedata, self.plot_type, ax=pax)
+        #analysis(self.powers, self.freqs, ampdata, self.phasedata, self.plot_type, ax=pax)
