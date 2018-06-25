@@ -12,7 +12,11 @@ from mclient import instruments
 
 #AWG1.do_set_waveform_delay(200000)
 #bla
-
+#DIG = instruments.create('dig', 'Keysight_DIG', chassis=0, slot=3,
+#                     DIG_PRODUCT="M3102A")
+#DIG.do_set_naverages(2000)
+#DIG.do_set_nsamples(2000)
+#
 #Magnet = instruments.create('Magnet','AMI_430')
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='TCPIP0::172.30.56.25::4000::SOCKET')
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
@@ -25,7 +29,7 @@ AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='TCPIP0::172.30.
 ##sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
 #print 'SC OK'
 
-#brick1 = instruments.create('brick1', 'LabBrick_RFSource', serial=14510, use_extref=True) # qubit
+brick1 = instruments.create('brick1', 'LabBrick_RFSource', serial=14510, use_extref=True) # qubit
 brick2 = instruments.create('brick2', 'LabBrick_RFSource', serial=14511, use_extref=True) # ref
 #brick3 = instruments.create('brick3', 'LabBrick_RFSource', serial=14524, use_extref=True) # old RO
 #brick4 = instruments.create('brick4', 'LabBrick_RFSource', serial=17912, use_extref=True) # RO
@@ -40,7 +44,6 @@ brick7 = instruments.create('brick7', 'LabBrick_RFSource', serial=19151, use_ext
 #fg = instruments.create('funcgen', 'BNC_FuncGen645', address='GPIB1::30')
 
 # Setup Alazar
-
 alz = instruments.create('alazar', 'Alazar_Daemon')
 alz.set_ch1_range('40mV')
 alz.set_ch2_range('200mV')
@@ -61,6 +64,10 @@ alz.setup_clock()
 alz.setup_channels()
 alz.setup_trigger()
 
+#readout = instruments.create('readout', 'Readout_IQ_Info', IQe=(1.0), IQg=(0.1),
+#                             IQe_radius= 1 , rfsource1='brick2', rfsource2='brick7',
+#                             pulse_len=2000, readout_chan_I=3, readout_chan_Q=4,
+#                             acq_chan=1)
 
 readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
                              IQe_radius= 1 , rfsource1='brick7', rfsource2='brick2',

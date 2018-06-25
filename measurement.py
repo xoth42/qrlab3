@@ -550,8 +550,8 @@ class Measurement(object):
         if self.histogram:
             if self.cyclelen == 1:
                 self.plot_histogram(self.shot_data[:])
-        #else:
-            #ret = self.analyze(self.get_ys(), fig=self.get_figure())
+        else:
+            ret = self.analyze(self.get_ys(), fig=self.get_figure())
 
         if self.savefig:
             self.save_fig()

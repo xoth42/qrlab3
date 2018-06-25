@@ -116,7 +116,7 @@ class Keysight_DIG(Instrument):
         self.add_parameter('if_period', type=types.IntType,
                            flags=Instrument.FLAG_GETSET,
                            minval=2, maxval=1000, value=20,
-                           help='Intermediate Frequency period')
+                               help='Intermediate Frequency period')
         
         self.add_parameter('timeout', type=types.IntType, value=DEFAULT_TIMEOUT,
            units='ms', help='Instrument read timeout')

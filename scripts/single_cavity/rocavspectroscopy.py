@@ -160,4 +160,4 @@ class ROCavSpectroscopy(Measurement1D):
     def analyze(self, data=None, ax=None):
         pax = ax if (ax is not None) else plt.figure().add_subplot(111)
         ampdata = data if (data is not None) else self.ampdata
-        #analysis(self.powers, self.freqs, ampdata, self.phasedata, self.plot_type, ax=pax)
+        analysis(self.powers, self.freqs, ampdata, self.phasedata, self.plot_type, ax=pax)

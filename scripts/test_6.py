@@ -35,20 +35,14 @@ print(qubit_info)
 
 #Find read-out cavity and choose a power
 
-if 1: # RO Cavity spec
+if 0: # RO Cavity spec
     from scripts.single_cavity import rocavspectroscopy
-    rofreq = 8273.16e6
+    rofreq = 8273.47e6
     freq_range = 5e6
-    freqs = np.linspace(rofreq-freq_range, rofreq+freq_range, 10)
-    alz.set_naverages(10000)
-    brickRO = mclient.instruments['brick7']
-    brickref = mclient.instruments['brick2']
-    for freq in freqs:
-        brickRO.set_frequency(freq)
-        brickref.set_frequency(freq+50e6)
-        ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(0, 0, 1),
-                                             np.linspace(rofreq, rofreq, 1), qubit_pulse=False)
-        ro.measure()
+
+    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(0, 0, 1),
+                                         np.linspace(rofreq - freq_range, rofreq + freq_range, 11), qubit_pulse=False)
+    ro.measure()
     bla
 #Find qubit
 if 0: # Qubit spec
@@ -81,10 +75,10 @@ if 0: # Qubit SSBspec
     bla
 
 """Power Rabi -- Pi pulse calibration"""
-if 0: # Calibrate pi pulse
-    for i in range(1):
+if 1: # Calibrate pi pulse
+    for i in range(1000):
         from scripts.single_qubit import rabi
-        tr = rabi.Rabi(qubit_info, np.linspace(0, .6, 10), plot_seqs=False, generate=True, selective=False, repeat_pulse=1,
+        tr = rabi.Rabi(qubit_info, np.linspace(0, .1, 100), plot_seqs=False, generate=False, selective=False, repeat_pulse=1,
                        update=False)
 
 #        from scripts.single_qubit import rabi_IQ

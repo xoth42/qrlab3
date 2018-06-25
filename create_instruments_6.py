@@ -184,11 +184,7 @@ plt.grid()
 plt.show()
               
               
-    #DIG = instruments.create('dig', 'Keysight_DIG', chassis=0, slot=3,
-#                         DIG_PRODUCT="M3102A")
-#DIG.do_set_naverages(2000)
-#DIG.do_set_nsamples(2000)
-#
+
 #
 #
 

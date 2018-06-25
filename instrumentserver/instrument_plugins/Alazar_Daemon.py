@@ -434,10 +434,10 @@ real part is applied to I and the imaginary part to Q.
     def start_capture(self):
         if self._capturing:
             raise Exception('Already capturing, use set_interrupt to stop!')
-        self._card.start_capture(); print 'A'
-        self._capturing = True ; print 'B'
-        self.emit('start-capture'); print 'C'
-        logging.info('Alazar ready for capture...'); print 'D'
+        self._card.start_capture()
+        self._capturing = True 
+        self.emit('start-capture')
+        logging.info('Alazar ready for capture...')
 
     def end_capture(self):
         self._card.end_capture()
