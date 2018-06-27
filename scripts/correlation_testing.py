@@ -33,12 +33,7 @@ class PredefinedPlot(object):
 #data_location = 'C:\\Users\\wanglab\\Desktop\\t1tf1'
 #overnight_run = 'C:\\Users\\wanglab\\Desktop\\t1ft1\\0324-0325 overnight run\\processed_results\\100 shot data_IQ.txt'
 #data = []
-#def josh_correlate(a, b):
-#    from scipy.signal import fftconvolve
-#    cross_correlate = fftconvolve(a, b)
-#    from pyfftw.interfaces.numpy_fft import fft
-#    csd = fft(cross_correlate)
-#    return csd
+
 def magnitude(s):
     return np.math.sqrt((s.real)**2 + (s.imag)**2)
 magnitude = np.vectorize(magnitude)
@@ -64,6 +59,9 @@ def noise_average(array):
 def absolute(x):
     return abs(x)
 absolute = np.vectorize(absolute)
+
+def angular_freq_to_freq(w):
+    return w / (2*np.pi)
 #f = open(overnight_run, 'rb')
 #reader = csv.reader(f)
 #l_f = list(reader)
@@ -91,12 +89,15 @@ absolute = np.vectorize(absolute)
 
 run = True
 if run is True:
-    gamma_1 = map(lambda x: 1/x, t1)
-    
-        
-    csd = cross_spectral_density(t1, ft1)
-    absolute_csd = absolute(csd)
-    
+    time_step = 500e-6 * 4 * 100 / 60
+    time = np.linspace(0, time_step * len(t1), len(t1))
+
+    t1_amps = map(magnitude, t1)
+    av_t1 = t1 - np.average(t1_amps)
+    autoc = np.correlate(av_t1, av_t1, mode = 'full') / np.sum(av_t1**2)
+    plt.plot(time, autoc[len(autoc) /2:], 'k*')
+    plt.show()
+
     
     print noise_average(equator)
     print noise_average(t1)
