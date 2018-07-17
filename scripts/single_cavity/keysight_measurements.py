@@ -22,10 +22,11 @@ os.chdir(r'C:/qrlab/scripts')
 
 if 1:
     from single_cavity import rocavspectroscopy_keysight
-    rofreq = 8553.1e6
-    freq_range = 2e6
-    ro = rocavspectroscopy_keysight.ROCavSpectroscopy(qubit_info, np.linspace(0, 0, 1),
-                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 50),
+#    rofreq = 8553.1e6
+    rofreq = 8222.84e6
+    freq_range = .1e6
+    ro = rocavspectroscopy_keysight.ROCavSpectroscopy(qubit_info, np.linspace(10, 10, 1),
+                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 4),
                                              qubit_pulse=False)
     ro.measure()
     
