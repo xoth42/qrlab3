@@ -52,8 +52,6 @@ def argand_diagram(array, *args, **kwargs):
     plt.figure()
     plot = plt.polar(angles, mags, *args, **kwargs)
     return plot
-def coherence(x, y):
-    return (square((magnitude(cross_spectral_density(x, y))))) / (cross_spectral_density(x, x) * cross_spectral_density(y, y))
 def cross_spectral_density(a, b, *args, **kwargs):
     return fft(np.correlate(a, b, mode = 'full'))
 def noise_average(array):
@@ -75,7 +73,8 @@ def angular_freq_to_freq(w):
 #data = np.asarray(data)
 #data.flatten()
 #data = data[0]
-
+def fast_map(func, iterable):
+    return np.asarray(map(func, iterable))
 
 
 
@@ -96,19 +95,40 @@ if run is True:
     time_step = 500e-6 * 4 * 100 / 60
     time = np.linspace(0, time_step * len(t1), len(t1))
     data = [g, equator, t1, ft1]
-    amplitudes = map(np.absolute, data)
-    averages = map(lambda x: x - np.average(x), amplitudes)
+    amplitudes = fast_map(np.absolute, data)
+    averages = fast_map(lambda x: x - np.average(x), amplitudes)
 
-    autocorrelations = map(lambda x: np.correlate(x, x, mode = 'full') / np.sum(x**2), averages)
-    right_halves = map(lambda x: x[int(len(x)/2) + 1:], autocorrelations)
+    autocorrelations = fast_map(lambda x: np.correlate(x, x, mode = 'full') / np.sum(x**2), averages)
+    
+    right_halves = fast_map(lambda x: x[int(len(x)/2) + 1:], autocorrelations)
     t1c_p = PredefinedPlot([right_halves[2], 'k'], r'$T_{1}$ autocorrelation')
     gc_p = PredefinedPlot([right_halves[0], 'b'], r'g autocorrelation')
     eqc_p = PredefinedPlot([right_halves[1], 'g'], r'Equator autocorrelation')
     ft1c_p = PredefinedPlot([right_halves[3], 'm'], r'$FT_{1}$ autocorrelation')
     cross_correlate = lambda x: np.correlate(x[0], x[1], mode = 'full')
     cc = np.correlate(averages[2], averages[3], mode = 'full')
+    coherence = (np.absolute(cc))**2 / (autocorrelations[2]*autocorrelations[3])
     print noise_average(equator)
     print noise_average(t1)
     print noise_average(ft1)
-    beep()
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 

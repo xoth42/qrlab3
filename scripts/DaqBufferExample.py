@@ -1,9 +1,8 @@
-def main(args):
+def digitizer_capture(args):
 #    import os
     import sys
 #    import time
     import numpy as np
-    import matplotlib.pyplot as plt
     sys.path.append('C:\Program Files (x86)\Keysight\SD1\Libraries\Python')
     import keysightSD1 as key
     def error_check(err):
@@ -98,8 +97,10 @@ def main(args):
     
     
     for i in range(len(digChannels)):
-       plt.plot(data[i])
+#       plt.plot(data[i])
 #       plt.show()
+        pass
+        
     
     
     for i in range(len(digChannels)):
@@ -112,19 +113,8 @@ def main(args):
     dig.close()
     return data
     
-   # print("Done.")
-data = main([2000, 1, 1])
-import matplotlib.pyplot as plt
-plt.close('all')
-
-
-def nice_plot(data):
-    for i, k in enumerate(data):
-        plt.figure()
-        plt.grid()
-        plt.plot(k, 'bo')
-        plt.title('Channel ' + str(i+1))
-nice_plot(data)
+#See digitizer_waveform_analysis in the scripts folder for the analysis of
+# the resulting data.
     
 
 

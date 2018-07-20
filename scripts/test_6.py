@@ -35,13 +35,13 @@ print(qubit_info)
 
 #Find read-out cavity and choose a power
 
-if 0: # RO Cavity spec
+if 1: # RO Cavity spec
     from scripts.single_cavity import rocavspectroscopy
-    rofreq = 8273.47e6
-    freq_range = 5e6
+    rofreq = 8552.47e6
+    freq_range = 100e6
 
-    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(0, 0, 1),
-                                         np.linspace(rofreq - freq_range, rofreq + freq_range, 11), qubit_pulse=False)
+    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-20, -20, 1),
+                                         np.linspace(rofreq - freq_range, rofreq + freq_range, 111), qubit_pulse=False)
     ro.measure()
     bla
 #Find qubit
@@ -75,7 +75,7 @@ if 0: # Qubit SSBspec
     bla
 
 """Power Rabi -- Pi pulse calibration"""
-if 1: # Calibrate pi pulse
+if 0: # Calibrate pi pulse
     for i in range(1000):
         from scripts.single_qubit import rabi
         tr = rabi.Rabi(qubit_info, np.linspace(0, .1, 100), plot_seqs=False, generate=False, selective=False, repeat_pulse=1,

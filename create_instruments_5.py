@@ -25,25 +25,25 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                               w_selective=500,
                               channels='5,6',
                               sideband_channels='I1,Q1',
-                              sideband_phase=1.315)
+                              sideband_phase=0)
 
-#refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511, 
-#                            use_extref=True) #reference
-#RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=18608,
-#                             use_extref=True) #readout
-#brick1 = instruments.create('brick1', 'LabBrick_RFSource', serial=14510,
-#                           use_extref=True) #qubit
+refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511, 
+                            use_extref=True) #reference
+RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=19151,
+                             use_extref=True) #readout
+qbrick = instruments.create('qbrick', 'LabBrick_RFSource', serial=14510,
+                           use_extref=True) #qubit
 
 #sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
 #sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
 
-#AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
-#                             AWG_PRODUCT = "M3202A",
-#                             amps = [1, 1, 1, 1], ofs = [0, 0, 0, 0])
+AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
+                             AWG_PRODUCT = "M3202A",
+                             amps = [1, 1, 1, 1], ofs = [0, 0, 0, 0])
 #
-#AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis=0, slot=10,
-#                         AWG_PRODUCT="M3202A",
-#                         amps = [1, 1, 1, 1], ofs = [0, 0, 0, 0])
+AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis=0, slot=10,
+                         AWG_PRODUCT="M3202A",
+                         amps = [1, 1, 1, 1], ofs = [.006, -.007, 0, 0])
 
 # Magnet = instruments.create('Magnet','AMI_430')
 
@@ -55,10 +55,10 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 
 
 ''' Readout_IQ_Info is for iq modulation on the readout brick instead of pulse triggering '''
-#readout = instruments.create('readout', 'Readout_IQ_Info', IQe=(1.0), IQg=(0.1),
-#                             IQe_radius= 1 , rfsource1='RObrick', rfsource2='refbrick',
-#                             pulse_len=2000, readout_chan_I=3, readout_chan_Q=4,
-#                             acq_chan=1)
+readout = instruments.create('readout', 'Readout_IQ_Info', IQe=(1.0), IQg=(0.1),
+                             IQe_radius= 1 , rfsource1='RObrick', rfsource2='refbrick',
+                             pulse_len=1000, readout_chan_I=1, readout_chan_Q=2,
+                             acq_chan=4)
 
 # VNA = instruments.create('VNA', 'Agilent_E5071C',
 # address='TCPIP0::K-E5071C-26868.local::inst0::INSTR')
@@ -89,9 +89,9 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 
 # VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
 
-AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C',
-                          address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', 
-                          reffreq=10e6)
+#AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C',
+#                          address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', 
+#                          reffreq=10e6)
 # AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1')
 
 
@@ -111,7 +111,7 @@ AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C',
 # Setup Alazar
 '''
 =======
-
+'''
 
 
 alz = instruments.create('alazar', 'Alazar_Daemon')
@@ -134,7 +134,7 @@ alz.setup_channels()
 alz.setup_trigger()
 
 
-
+'''
 
 
 readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),

@@ -1,8 +1,13 @@
 import keysightSD1 as key
 import numpy as np
+
+
 import matplotlib.pyplot as plt
 
-
+# The AWG will return integers after almost every operation. If that integer
+# is less than zero, the function in question will have silently failed. This
+#  function can catch that error and cause an explicit exception to be clear
+# that something failed.
 def check_error(err):
     if err < 0:
         raise ValueError('error is ' + str(err))
@@ -15,9 +20,6 @@ AWG_SLOT = 7
 # The secondary AWG will produce triggers for the primary AWG and the digitizer,
 # so that both will be in sync.
 
-SECONDARY_AWG_PRODUCT = 'M3202A'
-SECONDARY_CHASSIS = 0
-SECONDARY_AWG_SLOT = 10
 
 DIG_PRODUCT = "M3102A"
 CHASSIS = 0
@@ -35,24 +37,18 @@ print("Part =", AWGPart)
 print("S/N =", AWGNumber)
 print("Number of Modules = ", AWGNumModules)
 
-secondary_awg = key.SD_AOU()
-opening_result = secondary_awg.openWithSlot(SECONDARY_AWG_PRODUCT,
-                                            SECONDARY_CHASSIS,
-                                            SECONDARY_AWG_SLOT)
-check_error(opening_result)
-
 
 # Make a new Gaussian with tunable parameters, so that it can be changed if
 # necessary.
 def Gaussian(x, sigma, mu):
     return (1 / (sigma * np.sqrt(2 * np.pi))) * np.exp(
         -((x - mu) ** 2) / (2 * sigma) ** 2)
-#Make an array representing a new Gaussian, with tunable parameters.
-new_wave = [Gaussian(x, 10, 10) for x in np.linspace(-50, 50, 1000)]
 
 
-
-#new_wave = new_wave * (1 / max(new_wave))
+# sample the above function to create the actual array of values.
+new_wave = [Gaussian(x, 10, 10) for x in np.linspace(-100, 100, 10000)]
+new_wave = np.asarray(new_wave)
+new_wave = new_wave * (1 / max(new_wave))
 # dig = key.SD_AIN()
 # ainID = dig.openWithSlot(DIG_PRODUCT, CHASSIS, DIG_SLOT)
 #
@@ -78,62 +74,37 @@ waveform_filepath = "C:\\qrlab\instrumentserver\keysightAWG\waveforms\\"
 
 
 # gaussian = np.loadtxt(waveform_filepath + 'Gaussian.csv', skiprows = 3)
+
+# Change out the Gaussian in the saved file for the one above. Doesn't make
+# much of a difference.
 gaussian = new_wave
+gaussian = np.asarray(gaussian)
 pulse_length = len(gaussian)
 
 # Make a whole series of Gaussian waves, each bigger than the last.
-gaussian_waves = [gaussian * i for i in np.linspace(0.1, 1, 10)]
+gaussian_waves = [gaussian * i for i in np.linspace(0.6, 1, 10)]
 
-wait_time = 0
+wait_time = 100
 
 full_length = pulse_length + wait_time
 
 awg.waveformFlush()
-secondary_awg.waveformFlush()
 
 # Load the seconday AWG with the trigger pulses and nothing else.
 
 trigger = key.SD_Wave()
 trigger_data = np.concatenate((np.ones(10), np.zeros(full_length - 10)))
 trigger.newFromArrayDouble(key.SD_WaveformTypes.WAVE_ANALOG, trigger_data)
-secondary_awg.waveformLoad(trigger, 0)
 
-secondary_awg.AWGflush(1)
-secondary_awg.AWGflush(2)
-secondary_awg.AWGflush(3)
-secondary_awg.AWGflush(4)
+# Load the trigger into the secondary AWG.
 
-secondary_awg.channelWaveShape(1, key.SD_Waveshapes.AOU_AWG)
-secondary_awg.channelWaveShape(2, key.SD_Waveshapes.AOU_AWG)
-secondary_awg.channelWaveShape(3, key.SD_Waveshapes.AOU_AWG)
-secondary_awg.channelWaveShape(4, key.SD_Waveshapes.AOU_AWG)
-
-secondary_awg.channelAmplitude(1, 1)
-secondary_awg.channelAmplitude(2, 1)
-secondary_awg.channelAmplitude(3, 1)
-secondary_awg.channelAmplitude(4, 1)
-
-# Setup the queue in cyclic mode
-secondary_awg.AWGqueueConfig(1, 1)
-secondary_awg.AWGqueueConfig(2, 1)
-secondary_awg.AWGqueueConfig(3, 1)
-secondary_awg.AWGqueueConfig(4, 1)
-
-#Load the trigger into the secondary AWG.
-
-for i in [1, 2, 3, 4]:
-    result = secondary_awg.AWGqueueWaveform(i, 0, key.SD_TriggerModes.AUTOTRIG,
-                                            0, 1, 0)
-    check_error(result)
-# pause = key.SD_Wave()
-# pause.newFromArrayDouble(key.SD_WaveformTypes.WAVE_ANALOG, np.zeros(wait_time))
+pause = key.SD_Wave()
+pause.newFromArrayDouble(key.SD_WaveformTypes.WAVE_ANALOG, np.zeros(wait_time))
 ##awg.waveformLoad(pause, 1)
 
 # gaussian = np.concatenate((gaussian, np.zeros(wait_time)))
 # wave = key.SD_Wave()
 # wave.newFromArrayDouble(key.SD_WaveformTypes.WAVE_ANALOG, gaussian)
-# Make a wave object for each of the individual waves.
-# wave_list = [key.SD_Wave() for i in gaussian_waves]
 
 
 wave_list = []
@@ -141,12 +112,15 @@ for w in gaussian_waves:
     temp = key.SD_Wave()
     result = temp.newFromArrayDouble(key.SD_WaveformTypes.WAVE_ANALOG, w)
     check_error(result)
+    wave_list.append(trigger)
+    # wave_list.append(pause)
     wave_list.append(temp)
-# awg.waveformLoad(wave, 2)
 # wave_list.insert(0, trigger)
+wave_number = 0
 for index, w in enumerate(wave_list):
     temp = awg.waveformLoad(w, index)
     check_error(temp)
+    wave_number += 1
 
 # Clear Channels
 awg.AWGflush(1)
@@ -154,7 +128,6 @@ awg.AWGflush(2)
 awg.AWGflush(3)
 awg.AWGflush(4)
 
-total_waves = len(wave_list)
 
 awg.channelWaveShape(1, key.SD_Waveshapes.AOU_AWG)
 awg.channelWaveShape(2, key.SD_Waveshapes.AOU_AWG)
@@ -174,8 +147,8 @@ awg.AWGqueueConfig(4, 1)
 
 # pause at start
 for i in [1, 2, 3, 4]:
-    for k in range(0, total_waves):
-        result = awg.AWGqueueWaveform(i, k, key.SD_TriggerModes.EXTTRIG, 0, 1,
+    for k in range(0, wave_number):
+        result = awg.AWGqueueWaveform(i, k, key.SD_TriggerModes.SWHVITRIG, 0, 1,
                                       0)
         check_error(result)
 #    awg.AWGqueueWaveform(2, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
@@ -208,7 +181,8 @@ print(data_filepath)
 # PROGRAM Trig IN/Out as INPUT PORT - def triggerIOconfig(self, direction
 # dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)
 # EXTERNAL DIGITAL TRIGGER BEHAVIOR - def DAQdigitalTriggerConfig(self, channel, triggerSource, triggerBehavior)
-# dig.DAQdigitalTriggerConfig(1, key.SD_TriggerExternalSources.TRIGGER_EXTERN, key.SD_TriggerBehaviors.TRIGGER_HIGH)
+# dig.DAQdigitalTriggerConfig(1,
+# key.SD_TriggerExternalSources.TRIGGER_EXTERN, key.SD_TriggerBehaviors.TRIGGER_HIGH)
 # dig.DAQdigitalTriggerConfig(2, key.SD_TriggerExternalSources.TRIGGER_EXTERN, key.SD_TriggerBehaviors.TRIGGER_HIGH)
 # dig.DAQdigitalTriggerConfig(3, key.SD_TriggerExternalSources.TRIGGER_EXTERN, key.SD_TriggerBehaviors.TRIGGER_HIGH)
 # dig.DAQdigitalTriggerConfig(4, key.SD_TriggerExternalSources.TRIGGER_EXTERN, key.SD_TriggerBehaviors.TRIGGER_HIGH)
@@ -228,13 +202,15 @@ timeout = 2000
 
 # dig.DAQstart(1)
 # dig.DAQstartMultiple(15)
+
+# map(check_error, results)
 awg.AWGstartMultiple(15)
-secondary_awg.AWGstartMultiple(15)
-map(lambda x: secondary_awg.AWGtrigger(x), [1, 2, 3, 4])
 # awg.AWGtriggerMultiple(15)
 
 
 samp_array = np.zeros((4, num_aq))
+plt.figure()
+plt.plot(new_wave, 'bo')
 # READ DAQ BUFFER FOR ACQUIRED DATA
 # samp_array[0] = dig.DAQread(1, num_aq, timeout)
 # samp_array[1] = dig.DAQread(2, num_aq, timeout)
