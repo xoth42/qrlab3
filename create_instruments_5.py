@@ -12,20 +12,20 @@ if 1:
 from mclient import instruments
 
 
-qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
-                             deltaf=-100e6,
-                              pi_amp=0.342948,
-                              pi2_amp=0.171474,
-                              drag=-0.9,
-                              pi_amp_quasilective=0.027025,
-                              pi_amp_selective=0.34 / 25,
-                              rotation='Gaussian',
-                              w=40,
-                              w_quasilective=100,
-                              w_selective=500,
-                              channels='5,6',
-                              sideband_channels='I1,Q1',
-                              sideband_phase=1.315)
+#qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
+#                             deltaf=-100e6,
+#                              pi_amp=0.342948,
+#                              pi2_amp=0.171474,
+#                              drag=-0.9,
+#                              pi_amp_quasilective=0.027025,
+#                              pi_amp_selective=0.34 / 25,
+#                              rotation='Gaussian',
+#                              w=40,
+#                              w_quasilective=100,
+#                              w_selective=500,
+#                              channels='5,6',
+#                              sideband_channels='I1,Q1',
+#                              sideband_phase=1.315)
 
 #refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511, 
 #                            use_extref=True) #reference
@@ -37,9 +37,9 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 #sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
 #sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
 
-#AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
-#                             AWG_PRODUCT = "M3202A",
-#                             amps = [1, 1, 1, 1], ofs = [0, 0, 0, 0])
+AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
+                             AWG_PRODUCT = "M3202A",
+                             amps = [1, 1, 1, 1], ofs = [0, 0, 0, 0])
 #
 #AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis=0, slot=10,
 #                         AWG_PRODUCT="M3202A",
@@ -87,11 +87,11 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 # AWG1.do_set_waveform_delay(200000)
 # bla
 
-# VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
+#VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
 
-AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C',
-                          address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', 
-                          reffreq=10e6)
+#AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C',
+#                          address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', 
+#                          reffreq=10e6)
 # AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1')
 
 
@@ -109,8 +109,7 @@ AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C',
 
 # fg = instruments.create('funcgen', 'BNC_FuncGen645', address='GPIB1::30')
 # Setup Alazar
-'''
-=======
+
 
 
 
@@ -137,11 +136,11 @@ alz.setup_trigger()
 
 
 
-readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
-                           IQe_radius= 1 , rfsource1='brick3', rfsource2='brick4',
-                         pulse_len=1000, readout_chan='1m1', acq_chan='4m2')
+#readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
+#                           IQe_radius= 1 , rfsource1='brick3', rfsource2='brick4',
+#                         pulse_len=1000, readout_chan='1m1', acq_chan='4m2')
 
-'''
+
 #readout2 = instruments.create('readout2', 'Readout_Info', IQe=(1.0), IQg=(0.1),
 #                             IQe_radius= 1 , rfsource1='brick4', rfsource2='brick2',
 #                             pulse_len=1000, readout_chan='1m1', acq_chan='1m2')
