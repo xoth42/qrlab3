@@ -79,20 +79,20 @@ dig.DAQdigitalTriggerConfig(4, key.SD_TriggerExternalSources.TRIGGER_EXTERN, key
 #CONFIGURE DAQ3 FOR CAPTURING RABI SWEEP - DAQconfig(self, nDAQ, nDAQpointsPerCycle, nCycles, prescaler, triggerMode)
 
 
-num_ave = 2000
-num_aq = 10000
-ave_per_buf = 100
-num_points = 5
+num_ave = 1
+num_aq = 500
+ave_per_buf = 1
+num_points = 1
 #num_aq = 100
 timeout = 2000
-delay = -500
+delay = 0
 
 samp_array = np.zeros((4, num_ave, num_aq * num_points))
 for ave in range(0, num_ave, ave_per_buf):
     dig.DAQconfig(1, num_aq, ave_per_buf * num_points, delay, key.SD_TriggerModes.EXTTRIG)
     dig.DAQconfig(2, num_aq, ave_per_buf * num_points, delay, key.SD_TriggerModes.EXTTRIG)
-    #dig.DAQconfig(3, num_aq, num_ave, delay, key.SD_TriggerModes.EXTTRIG)
-    #dig.DAQconfig(4, num_aq, num_ave, delay, key.SD_TriggerModes.EXTTRIG)
+#    dig.DAQconfig(3, num_aq, num_ave, delay, key.SD_TriggerModes.EXTTRIG)
+#    dig.DAQconfig(4, num_aq, num_ave, delay, key.SD_TriggerModes.EXTTRIG)
     
     
     #dig.DAQstart(1)
@@ -114,10 +114,10 @@ for ave in range(0, num_ave, ave_per_buf):
 
 
 #samp_array /= num_ave
-
+plt.clf()
 for i in range(num_ave):
-#    plt.plot(samp_array[0][i], label = str(i))
-    plt.plot(samp_array[1][i][:], '.', label = str(i), markersize = 1)
+    plt.plot(samp_array[0][i], label = 'sig ' + str(i+1))
+    plt.plot(samp_array[1][i][:], label = 'ref ' + str(i+1), markersize = 1)
 
 for i in range(num_points):
     plt.axvline(i * num_aq)
@@ -128,9 +128,9 @@ for i in range(num_points):
 #plt.plot(samp_array[2], label = 'channel 3')
 #plt.plot(samp_array[3], label = 'channel 4')
 
-#plt.legend()
+plt.legend()
 plt.show()
-plt.clf()
+#plt.clf()
 
 #STOP DIG
 #awg.AWGstopMultiple(15)

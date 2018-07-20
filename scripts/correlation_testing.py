@@ -23,17 +23,21 @@ class VectorizedNumpyFunction(object):
     def __call__(self, *args, **kwargs):
         return self.func(*args, **kwargs)
 class PredefinedPlot(object):
-    def __init__(self, x, y, title, *args, **kwargs):
+    def __init__(self, param_list, title, **kwargs):
         import matplotlib
         matplotlib.rcParams['agg.path.chunksize'] = 10000
         import matplotlib.pyplot as plt
         plt.figure()
-        plt.plot()
+        plt.plot(*param_list, **kwargs)
+        plt.grid()
+        plt.title(str(title))
+        plt.show()
     
 #data_location = 'C:\\Users\\wanglab\\Desktop\\t1tf1'
 #overnight_run = 'C:\\Users\\wanglab\\Desktop\\t1ft1\\0324-0325 overnight run\\processed_results\\100 shot data_IQ.txt'
 #data = []
-
+def beep():
+    print '\a'
 def magnitude(s):
     return np.math.sqrt((s.real)**2 + (s.imag)**2)
 magnitude = np.vectorize(magnitude)
@@ -48,8 +52,6 @@ def argand_diagram(array, *args, **kwargs):
     plt.figure()
     plot = plt.polar(angles, mags, *args, **kwargs)
     return plot
-def coherence(x, y):
-    return (square((magnitude(cross_spectral_density(x, y))))) / (cross_spectral_density(x, x) * cross_spectral_density(y, y))
 def cross_spectral_density(a, b, *args, **kwargs):
     return fft(np.correlate(a, b, mode = 'full'))
 def noise_average(array):
@@ -71,7 +73,8 @@ def angular_freq_to_freq(w):
 #data = np.asarray(data)
 #data.flatten()
 #data = data[0]
-
+def fast_map(func, iterable):
+    return np.asarray(map(func, iterable))
 
 
 
@@ -91,17 +94,41 @@ run = True
 if run is True:
     time_step = 500e-6 * 4 * 100 / 60
     time = np.linspace(0, time_step * len(t1), len(t1))
+    data = [g, equator, t1, ft1]
+    amplitudes = fast_map(np.absolute, data)
+    averages = fast_map(lambda x: x - np.average(x), amplitudes)
 
-    t1_amps = map(magnitude, t1)
-    av_t1 = t1 - np.average(t1_amps)
-    autoc = np.correlate(av_t1, av_t1, mode = 'full') / np.sum(av_t1**2)
-    plt.plot(time, autoc[len(autoc) /2:], 'k*')
-    plt.show()
-
+    autocorrelations = fast_map(lambda x: np.correlate(x, x, mode = 'full') / np.sum(x**2), averages)
     
+    right_halves = fast_map(lambda x: x[int(len(x)/2) + 1:], autocorrelations)
+    t1c_p = PredefinedPlot([right_halves[2], 'k'], r'$T_{1}$ autocorrelation')
+    gc_p = PredefinedPlot([right_halves[0], 'b'], r'g autocorrelation')
+    eqc_p = PredefinedPlot([right_halves[1], 'g'], r'Equator autocorrelation')
+    ft1c_p = PredefinedPlot([right_halves[3], 'm'], r'$FT_{1}$ autocorrelation')
+    cross_correlate = lambda x: np.correlate(x[0], x[1], mode = 'full')
+    cc = np.correlate(averages[2], averages[3], mode = 'full')
+    coherence = (np.absolute(cc))**2 / (autocorrelations[2]*autocorrelations[3])
     print noise_average(equator)
     print noise_average(t1)
     print noise_average(ft1)
-
-
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
