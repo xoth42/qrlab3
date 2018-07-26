@@ -59,12 +59,17 @@ class Spectroscopy_Keysight(Measurement1D):
         s.append(Constant(self.plen, self.amp, chan=chs[0]))
         if self.postseq:
             s.append(self.postseq)
-
+            
         s.append(Combined([
-            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.acq_chan)),
-            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.readout_chan_I)),
-            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.readout_chan_Q)),
-        ]))
+            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+        ]))   
+
+#        s.append(Combined([
+#            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.acq_chan)),
+#            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.readout_chan_I)),
+#            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.readout_chan_Q)),
+#        ]))
         s = self.get_sequencer(s)
         seqs = s.render()
         return seqs
@@ -112,9 +117,11 @@ class Spectroscopy_Keysight(Measurement1D):
         f = plt.figure()
 
         if self.plot_type == SPEC:
+            ax1 = f.add_subplot(2,1,1)
+            ax2 = f.add_subplot(2,1,2)
             for ipower, power in enumerate(self.ro_powers):
-                plt.plot(self.q_freqs/1e6, self.ampdata[ipower,:], label='Power %.01f dB'%power)
-
+                ax1.plot(self.q_freqs/1e6, self.ampdata[ipower,:], label='Amps, Power %.01f dB'%power)
+                ax2.plot(self.q_freqs/1e6, self.phasedata[ipower,:], label='Phase, Power %.01f dB'%power)
             fs = self.q_freqs
             amps = self.ampdata[0,:]
             f = fit.Lorentzian(fs, amps)
@@ -125,11 +132,12 @@ class Spectroscopy_Keysight(Measurement1D):
             p = f.fit(p0)
             txt = 'Center = %.03f MHz' % (p[2]/1e6,)
             print 'Fit gave: %s' % (txt,)
-            plt.plot(fs/1e6, f.func(p, fs), label=txt)
+            ax1.plot(fs/1e6, f.func(p, fs), label=txt)
 
-            plt.legend()
-            plt.ylabel('Intensity [AU]')
-            plt.xlabel('Frequency [MHz]')
+            ax1.legend()
+            ax2.legend()
+            ax1.set_ylabel('Intensity [AU]')
+            ax2.set_xlabel('Frequency [MHz]')
 
         if self.plot_type == POWER:
             ax1 = f.add_subplot(2,1,1)
@@ -143,3 +151,4 @@ class Spectroscopy_Keysight(Measurement1D):
             ax2.set_ylabel('Angle [deg]')
             ax1.set_xlabel('Power [dB]')
             ax2.set_xlabel('Power [dB]')
+#        plt.savefig('out/' + str(int(self.q_freqs[0]/1e6)) + '.png')

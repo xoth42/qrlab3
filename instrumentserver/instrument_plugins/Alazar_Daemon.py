@@ -472,15 +472,24 @@ real part is applied to I and the imaginary part to Q.
         values are then rotated along the real axis and the real part is
         returned.
         '''
+        # DARIO 7/25/2018 added print statements to debug an error: Unable to store averages
+        print('in Alazar Daemon in complex_signal_to_real before shit')
         avg = np.average(buf)
         corr = np.exp(-1j * np.angle(avg))
+        print('in Alazar Daemon in complex_signal_to_real after shit')
         return np.real(corr * buf)
 
     def convert_signal(self, buf):
+        # DARIO 7/25/2018 added print statements to debug an error: Unable to store averages
+        '''
+        print('in Alazar Daemon in convert_signal before if else')
         if self.get_real_signals():
+            print('in Alazar Daemon in convert_signal before complex to real')
             return self.complex_signal_to_real(buf)
         else:
             return buf
+        ''' # We blanked all these off for the 1300 average crashing problem
+        return buf
 
     def take_raw_shots(self, buftimeout=10000):
         '''
@@ -680,9 +689,16 @@ real part is applied to I and the imaginary part to Q.
         self.start_capture()
 
     def update_averages(self, avg_buf, IQ_sum, n):
+        print('in Alazar Daemon in update_averages try-except, n = ', n)
+        #print('IQ_sum / float(n) = ', IQ_sum / float(n)) # This was printed
+        print 'avg_buf before update is', avg_buf[:]
         try:
-            avg_buf[:] = self.convert_signal(IQ_sum / float(n))
+#            avg_buf[:] = self.convert_signal(IQ_sum / float(n))  #Chen 7/26 change to the next line
+            avg_buf[:] = IQ_sum / float(n)
+            # DARIO 7/25/2018 added print statements to debug an error: Unable to store averages; This was not printed
+            print('in Alazar Daemon in update_averages before set_attrs')
             avg_buf.set_attrs(averages=n)
+            print('in Alazar Daemon in update_averages after set_attrs')
         except Exception, e:
             self._card.end_capture()
             msg = 'Unable to store averages: %s' % str(e)

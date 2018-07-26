@@ -8,6 +8,7 @@ matplotlib.rcParams['backend.qt4'] = 'PyQt4'
 import matplotlib.pyplot as plt
 #from t1t2_plotting import smart_T1_delays
 import math as math
+import time
 
 
 import os
@@ -35,27 +36,27 @@ print(qubit_info)
 
 #Find read-out cavity and choose a power
 
-if 1: # RO Cavity spec
+if 0: # RO Cavity spec
     from scripts.single_cavity import rocavspectroscopy
-    rofreq = 8552.47e6
-    freq_range = 100e6
+    rofreq = 8304e6
+    freq_range = 10e6
 
-    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-20, -20, 1),
-                                         np.linspace(rofreq - freq_range, rofreq + freq_range, 111), qubit_pulse=False)
+    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-30, -30, 1),
+                                         np.linspace(rofreq - freq_range, rofreq + freq_range, 55), qubit_pulse=False)
     ro.measure()
     bla
 #Find qubit
 if 0: # Qubit spec
     from scripts.single_qubit import spectroscopy
 #    from scripts.single_qubit import spectroscopy_IQ
-    qubit_freq = 4503.43e6
-    freq_range = 25e6
-    spec = spectroscopy.Spectroscopy(mclient.instruments['brick1'], qubit_info,
+    qubit_freq = 5700e6
+    freq_range = 100e6
+    spec = spectroscopy.Spectroscopy(mclient.instruments['qbrick'], qubit_info,
                                      np.linspace(qubit_freq-freq_range,
-
-                                                 qubit_freq+freq_range, 11),
-                                     [-35],
-                                     plen=40000, amp=0.1, plot_seqs=False) #1=1ns
+                                                 qubit_freq+freq_range, 201),
+                                     [-30],
+                                     plen=40000, amp=0.01, plot_seqs=False,
+                                     freq_delay=0.5) #1=1ns for plen
 
 #    spec = spectroscopy_IQ.Spectroscopy_IQ(client.instruments['gen'], qubit_info,
 #                                     np.linspace(702e6, 710e6, 81), [-30],
@@ -63,22 +64,50 @@ if 0: # Qubit spec
 
     spec.measure()
     bla
-#the parameters are qubit_info, qubit frequency and readout power. Qubit drive power can be changed by changing AWG amp or the total pulse length. Pulse length=is plen*100ns
 
 """Qubit SSBspec"""
-if 0: # Qubit SSBspec
+if 1: # Qubit SSBspec
     from scripts.single_qubit import ssbspec
     seq = sequencer.Trigger(250)
 
-    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-1e6, 1e6, 4), seq=seq, plot_seqs=False)
+    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-20e6, 5e6, 51), seq=seq, plot_seqs=False)
     spec.measure()
+    bla
+
+'''Flux-tuned SSBspec'''
+if 0: 
+    from scripts.single_qubit import ssbspec
+    Yoko = mclient.instruments['Yoko']
+    
+    brick_freq = 5100e6
+    qbrick = mclient.instruments['qbrick']
+    qbrick.set_frequency(brick_freq)
+    currents = np.linspace(0.0012, 0.0013, 11)
+    q_freq = np.zeros_like(currents)
+    freqs = np.linspace(-150e6, 0, 201)
+    alz.set_naverages(1000)
+    for i in range(len(currents)):
+        
+        Yoko.do_set_current(currents[i])
+        time.sleep(1)
+        
+        seq = sequencer.Trigger(250)        
+        spec = ssbspec.SSBSpec(qubit_info, freqs, seq=seq, plot_seqs=False)
+        spec.measure()
+        q_freq[i] = freqs[np.argmin(spec.get_ys())] + brick_freq - 100e6
+    
+    print(currents)
+    print(q_freq)
+    plt.figure()
+    plt.plot(currents, q_freq)
+        
     bla
 
 """Power Rabi -- Pi pulse calibration"""
 if 0: # Calibrate pi pulse
-    for i in range(1000):
+    for i in range(1):
         from scripts.single_qubit import rabi
-        tr = rabi.Rabi(qubit_info, np.linspace(0, .1, 100), plot_seqs=False, generate=False, selective=False, repeat_pulse=1,
+        tr = rabi.Rabi(qubit_info, np.linspace(-0.4, 0.4, 100), plot_seqs=False, generate=True, selective=False, repeat_pulse=1,
                        update=False)
 
 #        from scripts.single_qubit import rabi_IQ
@@ -104,9 +133,10 @@ if 0: # SSB cavspec - ss not defined
 if 0: # Qubit EFspec - ef_info is not defined
     from scripts.single_qubit import spectroscopy
     ef_freq = 4465e6
+    freq_range = 15e6
     seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate(np.pi, 0)])
     postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
-    spec = spectroscopy.Spectroscopy(mclient.instruments['sc1'], ef_info, np.linspace(ef_freq-15e6, ef_freq+15e6, 151), [-40],
+    spec = spectroscopy.Spectroscopy(mclient.instruments['sc1'], ef_info, np.linspace(ef_freq-freq_range, ef_freq+freq_range, 151), [-40],
                                      plen=20000, amp=0.05,
                                      seq=seq, postseq=postseq,
                                      extra_info=qubit_info, plot_seqs=False)
@@ -242,12 +272,15 @@ if 0: # Check histogramming
 
 if 0: # T1
     from scripts.single_qubit import T1measurement
-
-    #postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
-    t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 150e3, 100), double_exp=False, generate=True, plot_seqs=False)
-
-    t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 10e3, 10), double_exp=False, generate=True, plot_seqs=False)
-    t1.measure()
+    alz.set_naverages(5000)
+    t1times = np.zeros(len(range(20)))
+    for i in range(20):
+        #postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
+        t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 40e3, 100), double_exp=False, generate=True, plot_seqs=False)
+    
+    #    t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 10e3, 10), double_exp=False, generate=True, plot_seqs=False)
+        t1.measure()
+        t1times[i] = t1.analyze()
     bla
 
 if 0:
@@ -288,11 +321,11 @@ if 0: # T1_QP
         t1.measure()
     bla
 
-if 0: # T2
+if 1: # T2
     from scripts.single_qubit import T2measurement
 
     for i in range(1):
-        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 10e3, 10), detune=.4e6, double_freq=False, generate=True)
+        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 5e3, 150), detune=2e6, double_freq=False, generate=True)
         t2.measure()
     bla
 

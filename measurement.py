@@ -391,6 +391,7 @@ class Measurement(object):
 
         # If we have a function generator, start AWGs before setting up alazar
         if self._funcgen and not fast:
+            print('inside acquisiton_loop, seeing if funcgen is on')
             self.start_awgs()
             time.sleep(1)
 

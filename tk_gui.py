@@ -178,7 +178,10 @@ class InstrumentInputItem():
         information in the text field.
         :return:
         """
-        param = instr[self.instrument_name].get(self.key)
+        try:
+            param = instr[self.instrument_name].get(self.key)
+        except objsh.TimeoutError as err:
+            print 'The instrument server has now timed out'
         if self.option_condition:
             self.valuevar.set(str(param))
         else:
