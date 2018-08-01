@@ -12,22 +12,23 @@ import gc
 
 
 def digitizer_setup(dig, nsamples, npoints, naverages, ntransfers, captureDelay = 0, digScale = 2):
-    digChannels = [1, 2, 3] 
-    
-    dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)
+    digChannels = [1, 2, 3, 4] 
+    errors = []
+    errors += [dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)]
 
     for i in range(len(digChannels)):   
-       dig.DAQtriggerExternalConfig(digChannels[i], key.SD_TriggerExternalSources.TRIGGER_EXTERN, 
-                                            key.SD_TriggerBehaviors.TRIGGER_RISE, key.SD_SyncModes.SYNC_NONE)
-       dig.DAQflush(digChannels[i])
-       dig.channelInputConfig(digChannels[i], digScale, key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)
-       dig.DAQconfig(digChannels[i], nsamples, npoints * naverages, captureDelay, key.SD_TriggerModes.EXTTRIG)
-       dig.DAQbufferPoolConfig(digChannels[i], nsamples * npoints * naverages / ntransfers)
+       errors += [dig.DAQtriggerExternalConfig(digChannels[i], key.SD_TriggerExternalSources.TRIGGER_EXTERN, 
+                                            key.SD_TriggerBehaviors.TRIGGER_RISE, key.SD_SyncModes.SYNC_NONE)]
+       errors += [dig.DAQflush(digChannels[i])]
+       errors += [dig.channelInputConfig(digChannels[i], digScale, key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)]
+       errors += [dig.DAQconfig(digChannels[i], nsamples, npoints * naverages, captureDelay, key.SD_TriggerModes.EXTTRIG)]
+       errors += [dig.DAQbufferPoolConfig(digChannels[i], nsamples * npoints * naverages / ntransfers, 100)]
+    print(errors)
 
 def digitizer_acquire(dig, hvi, awg, nsamples, npoints, naverages, ntransfers, data_channel):
     assert(naverages % ntransfers == 0)
 
-    digChannels = [1, 2, 3]
+    digChannels = [1, 2, 3, 4]
     awg.AWGstartMultiple(15)
     dig.DAQstartMultiple(3)
     hvi.start()
@@ -68,8 +69,6 @@ def digitizer_acquire(dig, hvi, awg, nsamples, npoints, naverages, ntransfers, d
     
     for i in range(len(digChannels)):
         dig.DAQbufferPoolRelease(digChannels[i])
-        
-    dig.close()
     
 
     means = sums / naverages
@@ -156,10 +155,10 @@ def fetch_keysight_shit(trigger_period):
 trigger_period = 100 #us
 nsamples = 4000 #number of data points taken ever acquisition
 npoints = 20 # number of different experimental points, each will be averaged
-naverages = 1000 # total number of averages per point
+naverages = 100000 # total number of averages per point
 ntransfers = naverages / 10  # number of blocks it takes the dig data to transfer to the pc
 
-data_channel = 2
+data_channel = 4
 
 hvi, dig, awg = fetch_keysight_shit(trigger_period)
 hvi.stop()
@@ -174,6 +173,11 @@ digitizer_setup(dig, nsamples, npoints, naverages, ntransfers)
 start_time = time.time()
 print('starting acquisition')
 means, stds = digitizer_acquire(dig, hvi, awg, nsamples, npoints, naverages, ntransfers, data_channel)
+
+hvi.stop()
+dig.close()
+awg.close()
+
 
 print('acquisition finished', time.time()-start_time)
 
