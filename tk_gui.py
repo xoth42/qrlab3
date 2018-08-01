@@ -182,6 +182,7 @@ class InstrumentInputItem():
             param = instr[self.instrument_name].get(self.key)
         except objsh.TimeoutError as err:
             print 'The instrument server has now timed out'
+            param = None
         if self.option_condition:
             self.valuevar.set(str(param))
         else:

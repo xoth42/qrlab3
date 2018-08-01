@@ -15,8 +15,8 @@ from mclient import instruments
 
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                              deltaf=-100e6,
-                              pi_amp=.125874,
-                              pi2_amp=0.171474,
+                              pi_amp=.193178,
+                              pi2_amp=0,
                               drag=-0.9,
                               pi_amp_quasilective=0.027025,
                               pi_amp_selective=0.34 / 25,
@@ -29,10 +29,12 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                               sideband_phase=0)
 
 qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
-                            deltaf=-350.00e6,
-                            pi_amp=0.465043,
+                            deltaf=-370.50e6,
+                            pi_amp=0.153675,
+                            pi_amp_selective=0.06147,
                             rotation='Gaussian',
-                            w=5,
+                            w=40,
+                            w_selective=100,
                             channels='2,3',
                             sideband_channels='I17,Q17',
                             sideband_phase=0.138623)
