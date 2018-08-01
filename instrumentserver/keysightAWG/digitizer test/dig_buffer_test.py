@@ -155,9 +155,10 @@ def fetch_keysight_shit(trigger_period):
 
 trigger_period = 100 #us
 nsamples = 4000 #number of data points taken ever acquisition
-npoints = 10 # number of different experimental points, each will be averaged
-naverages = 10 # total number of averages per point
-ntransfers = 1  # number of blocks it takes the dig data to transfer to the pc
+
+npoints = 20 # number of different experimental points, each will be averaged
+naverages = 1000 # total number of averages per point
+ntransfers = naverages / 10  # number of blocks it takes the dig data to transfer to the pc
 
 data_channel = 2
 
