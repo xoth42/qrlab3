@@ -49,7 +49,7 @@ def digitizer_acquire(dig, hvi, awg, nsamples, npoints, naverages, ntransfers, d
         except:
             pass# modulo shit ain't workin. its ok
         temp = dig.DAQbufferGet(data_channel) / 35000.
-        if type(temp) is int and temp < 0:
+        if type(temp) is float and temp < 0:
             print('error thrown with code ', temp)
 #        temp = np.array(temp, dtype = float)
         
@@ -154,6 +154,7 @@ def fetch_keysight_shit(trigger_period):
 
 trigger_period = 100 #us
 nsamples = 4000 #number of data points taken ever acquisition
+
 npoints = 20 # number of different experimental points, each will be averaged
 naverages = 100000 # total number of averages per point
 ntransfers = naverages / 10  # number of blocks it takes the dig data to transfer to the pc
