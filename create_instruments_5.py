@@ -28,6 +28,7 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                               sideband_channels='I1,Q1',
                               sideband_phase=0)
 
+
 qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
                             deltaf=-370.50e6,
                             pi_amp=0.153675,
@@ -116,7 +117,7 @@ Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 # AWG1.do_set_waveform_delay(200000)
 # bla
 
-# VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
+#VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
 
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C',
 #                          address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', 
@@ -138,10 +139,8 @@ Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 
 # fg = instruments.create('funcgen', 'BNC_FuncGen645', address='GPIB1::30')
 # Setup Alazar
-'''
-=======
-'''
 
+'''
 
 alz = instruments.create('alazar', 'Alazar_Daemon')
 alz.set_ch1_range('40mV')
@@ -166,11 +165,11 @@ alz.setup_trigger()
 '''
 
 
-readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
-                           IQe_radius= 1 , rfsource1='brick3', rfsource2='brick4',
-                         pulse_len=1000, readout_chan='1m1', acq_chan='4m2')
+#readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
+#                           IQe_radius= 1 , rfsource1='brick3', rfsource2='brick4',
+#                         pulse_len=1000, readout_chan='1m1', acq_chan='4m2')
 
-'''
+
 #readout2 = instruments.create('readout2', 'Readout_Info', IQe=(1.0), IQg=(0.1),
 #                             IQe_radius= 1 , rfsource1='brick4', rfsource2='brick2',
 #                             pulse_len=1000, readout_chan='1m1', acq_chan='1m2')
