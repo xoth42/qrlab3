@@ -12,7 +12,7 @@ import gc
 
 
 def digitizer_setup(dig, nsamples, npoints, naverages, ntransfers, captureDelay = 0, digScale = 2):
-    digChannels = [1, 2] 
+    digChannels = [1, 2, 3] 
     
     dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)
 
@@ -27,7 +27,7 @@ def digitizer_setup(dig, nsamples, npoints, naverages, ntransfers, captureDelay 
 def digitizer_acquire(dig, hvi, awg, nsamples, npoints, naverages, ntransfers, data_channel):
     assert(naverages % ntransfers == 0)
 
-    digChannels = [1, 2]
+    digChannels = [1, 2, 3]
     awg.AWGstartMultiple(15)
     dig.DAQstartMultiple(3)
     hvi.start()
@@ -47,7 +47,7 @@ def digitizer_acquire(dig, hvi, awg, nsamples, npoints, naverages, ntransfers, d
                 gc.collect()
         except:
             pass# modulo shit ain't workin. its ok
-        temp = dig.DAQbufferGet(data_channel+1) / 35000.
+        temp = dig.DAQbufferGet(data_channel) / 35000.
         if type(temp) is int and temp < 0:
             print('error thrown with code ', temp)
 #        temp = np.array(temp, dtype = float)
@@ -156,10 +156,10 @@ def fetch_keysight_shit(trigger_period):
 trigger_period = 100 #us
 nsamples = 4000 #number of data points taken ever acquisition
 npoints = 20 # number of different experimental points, each will be averaged
-naverages = 10000 # total number of averages per point
+naverages = 1000 # total number of averages per point
 ntransfers = naverages / 10  # number of blocks it takes the dig data to transfer to the pc
 
-data_channel = 1
+data_channel = 2
 
 hvi, dig, awg = fetch_keysight_shit(trigger_period)
 hvi.stop()
