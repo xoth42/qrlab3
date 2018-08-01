@@ -1,9 +1,33 @@
 import keysightSD1 as key
 import numpy as np
 
-
 import matplotlib.pyplot as plt
 
+testing_HVI_location = r'C:\qrlab\instrumentserver\keysightAWG\digitizer test\AWG_trigger_testing.HVI'
+class CompiledHVI(object):
+    def __init__(self, HVI_path_str, *args, **kwargs):
+        self.hvi = key.SD_HVI()
+        self.identifier = self.hvi.open(HVI_path_str)
+        self.error(self.identifier)
+        self.loading = key.SD_HVI.load(self.identifier)
+        self.error(self.loading)
+    def error(self, value):
+        if value < 0:
+            raise ValueError('HVI error ' + str(value))
+    def start(self):
+        result = key.SD_HVI.start(self.identifier)
+        self.err(result)
+    def pause(self):
+        result = key.SD_HVI.pause(self.identifier)
+        self.error(result)
+    def resume(self):
+        result = key.SD_HVI.resume(self.identifier)
+        self.error(result)
+    def stop(self):
+        result = key.SD_HVI.stop(self.identifier)
+        self.error(result)
+        
+test_instance = CompiledHVI(testing_HVI_location)
 # The AWG will return integers after almost every operation. If that integer
 # is less than zero, the function in question will have silently failed. This
 #  function can catch that error and cause an explicit exception to be clear

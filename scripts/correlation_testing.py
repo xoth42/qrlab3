@@ -77,19 +77,6 @@ def fast_map(func, iterable):
     return np.asarray(map(func, iterable))
 
 
-
-#results = np.core.defchararray.replace(data, '+ -' , '-')
-#results = np.core.defchararray.replace(results, '+  -', '-')
-#for _ in range(0, 10):
-#    results = np.core.defchararray.replace(results, " ", '')
-#complex = np.vectorize(complex)
-#results = complex(results)
-#
-#g = results[:,0]
-#equator = results[:,1]
-#t1 = results[:,2]
-#ft1 = results[:,3]
-
 run = True
 if run is True:
     time_step = 500e-6 * 4 * 100 / 60
@@ -107,10 +94,15 @@ if run is True:
     ft1c_p = PredefinedPlot([right_halves[3], 'm'], r'$FT_{1}$ autocorrelation')
     cross_correlate = lambda x: np.correlate(x[0], x[1], mode = 'full')
     cc = np.correlate(averages[2], averages[3], mode = 'full')
-    coherence = (np.absolute(cc))**2 / (autocorrelations[2]*autocorrelations[3])
-    print noise_average(equator)
-    print noise_average(t1)
-    print noise_average(ft1)
+    spectrums = fast_map(fft, right_halves)
+    cc_spectrum = fft(cc)
+    coherence = (np.absolute(cc_spectrum[0:361999]))**2 / (spectrums[2]*spectrums[3])
+    
+    
+    
+#    print noise_average(equator)
+#    print noise_average(t1)
+#    print noise_average(ft1)
     
     
     

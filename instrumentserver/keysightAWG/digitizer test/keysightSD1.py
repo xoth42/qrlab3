@@ -222,9 +222,6 @@ class SD_Wave(SD_Object) :
 
 		return self._SD_Object__handle;
 
-	def __del__(self):
-		self._SD_Object__core_dll.SD_Wave_delete(self._SD_Object__handle)
-
 	def newFromArrayDouble(self, waveformType, waveformDataA, waveformDataB = None) :
 		if len(waveformDataA) > 0 and (waveformDataB is None or len(waveformDataA) == len(waveformDataB)) :
 			waveform_dataA_C = (c_double * len(waveformDataA))(*waveformDataA);
@@ -1614,7 +1611,6 @@ class SD_AIN(SD_Module) :
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
-
 	def DAQbufferGet(self, nDAQ):
 		if self._SD_Object__handle > 0 :
 			self._SD_Object__core_dll.SD_AIN_DAQbufferGet.restype = POINTER(c_short)
@@ -1631,7 +1627,7 @@ class SD_AIN(SD_Module) :
 				if nPoints > 0 :
 					return np.ctypeslib.as_array((c_short*nPoints).from_address(addressof(data.contents)))
 				else :
-					return np.empty(0, dtype=np.short)					
+					return np.empty(0, dtype=np.short)
 		else :
 			return SD_Error.MODULE_NOT_OPENED
 
