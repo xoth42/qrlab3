@@ -12,7 +12,6 @@ import gc
 
 
 def digitizer_setup(dig, nsamples, npoints, naverages, ntransfers, captureDelay = 0, digScale = 2):
-    
     digChannels = [1, 2] 
     
     dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)
@@ -27,6 +26,7 @@ def digitizer_setup(dig, nsamples, npoints, naverages, ntransfers, captureDelay 
 
 def digitizer_acquire(dig, hvi, awg, nsamples, npoints, naverages, ntransfers, data_channel):
     assert(naverages % ntransfers == 0)
+
     digChannels = [1, 2]
     awg.AWGstartMultiple(15)
     dig.DAQstartMultiple(3)
@@ -43,6 +43,7 @@ def digitizer_acquire(dig, hvi, awg, nsamples, npoints, naverages, ntransfers, d
         try:
             if transfer % (ntransfers/10) == 0: 
                 print(str(transfer) + r'/' + str(ntransfers) + ' transfers done')
+
                 gc.collect()
         except:
             pass# modulo shit ain't workin. its ok
@@ -62,6 +63,7 @@ def digitizer_acquire(dig, hvi, awg, nsamples, npoints, naverages, ntransfers, d
             for j in range(npoints):
                 sums[j] += temp[i * samples_per_average + j * nsamples : i * samples_per_average + (j+1) * nsamples]
                 sums_squared[j] += temp[i * samples_per_average + j * nsamples : i * samples_per_average + (j+1) * nsamples]**2
+
             
     
     for i in range(len(digChannels)):
@@ -150,11 +152,13 @@ def fetch_keysight_shit(trigger_period):
 
 
 
+
 trigger_period = 100 #us
 nsamples = 4000 #number of data points taken ever acquisition
 npoints = 20 # number of different experimental points, each will be averaged
 naverages = 10000 # total number of averages per point
 ntransfers = naverages / 10  # number of blocks it takes the dig data to transfer to the pc
+
 data_channel = 1
 
 hvi, dig, awg = fetch_keysight_shit(trigger_period)
@@ -170,6 +174,7 @@ digitizer_setup(dig, nsamples, npoints, naverages, ntransfers)
 start_time = time.time()
 print('starting acquisition')
 means, stds = digitizer_acquire(dig, hvi, awg, nsamples, npoints, naverages, ntransfers, data_channel)
+
 print('acquisition finished', time.time()-start_time)
 
 #means /= np.max(means)

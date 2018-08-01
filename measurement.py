@@ -391,6 +391,7 @@ class Measurement(object):
 
         # If we have a function generator, start AWGs before setting up alazar
         if self._funcgen and not fast:
+            print('inside acquisiton_loop, seeing if funcgen is on')
             self.start_awgs()
             time.sleep(1)
 
@@ -422,7 +423,7 @@ class Measurement(object):
             if self.histogram:
                 ret = alz.take_hist(async=True)
             else:
-                ret = alz.take_experiment(avg_buf=self.avg_data, async=True, singleshotbin=self.singleshotbin,
+                ret = alz.take_experiment(avg_buf=self.avg_data, async=True, singleshotbin=self.singleshotbin, shot_buf=self.shot_data, #Dario
                                           IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius)
             if self.print_progress:
                 logging.info('Acquiring...')
@@ -519,6 +520,15 @@ class Measurement(object):
             self.shot_data = None
             self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
             self.pp_data = None
+            '''DARIO added 7/28/18 to keep all single shot data'''
+        elif self.keep_shots:
+            self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen,alz.get_naverages()/100], dtype=np.complex)
+            if not self.real_signals:
+                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.complex)
+                self.pp_data = self.data.create_dataset('avg_pp', [self.cyclelen,], dtype=np.float)
+            else:
+                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
+                self.pp_data = None
         else:
             self.shot_data = None
             # If saving complex data, save both raw signal and post-processed version

@@ -477,10 +477,16 @@ real part is applied to I and the imaginary part to Q.
         return np.real(corr * buf)
 
     def convert_signal(self, buf):
+        # DARIO 7/25/2018 added print statements to debug an error: Unable to store averages
+        '''
+        print('in Alazar Daemon in convert_signal before if else')
         if self.get_real_signals():
+            print('in Alazar Daemon in convert_signal before complex to real')
             return self.complex_signal_to_real(buf)
         else:
             return buf
+        ''' # We blanked all these off for the 1300 average crashing problem
+        return buf
 
     def take_raw_shots(self, buftimeout=10000):
         '''
@@ -681,7 +687,7 @@ real part is applied to I and the imaginary part to Q.
 
     def update_averages(self, avg_buf, IQ_sum, n):
         try:
-            avg_buf[:] = self.convert_signal(IQ_sum / float(n))
+            avg_buf[:] = IQ_sum / float(n)
             avg_buf.set_attrs(averages=n)
         except Exception, e:
             self._card.end_capture()
@@ -716,7 +722,7 @@ real part is applied to I and the imaginary part to Q.
     def ge_criteria(self, IQ, IQ_e, e_radius):
         return (abs(IQ-IQ_e)-e_radius < 0)*1
 
-    def take_experiment(self, acqtimeout=None, avg_buf=None, singleshotbin=False, IQ_e=None, e_radius=None, num_demod=1):
+    def take_experiment(self, acqtimeout=None, avg_buf=None, singleshotbin=False, shot_buf=None, IQ_e=None, e_radius=None, num_demod=1):
         '''
             Performs experiment. Each cycle will be demodulated into 1 point,
             and each cycle will be averaged together.
@@ -736,6 +742,9 @@ real part is applied to I and the imaginary part to Q.
         i = 0
         century_count = 0
         update_averages = False
+        if shot_buf: #Dario
+            tmp_buf = [] #Dario
+            buf_index = 0
         while i < numbufs:
             avgs = i * cyclereps
             if avgs >= century_count * 100:
@@ -779,8 +788,17 @@ real part is applied to I and the imaginary part to Q.
             if avg_buf and update_averages:
                 self.update_averages(avg_buf, data_sum, (i + 1) * cyclereps)
                 update_averages = False
-
+            if shot_buf: #Dario
+                if len(tmp_buf) != 0:
+                    shot_buf[buf_index:buf_index+len(tmp_buf)] = tmp_buf
+                    buf_index += len(tmp_buf)
+                    tmp_buf = []
+                tmp_buf.extend(IQ)
+                #self._card.post_buffers(buf) #Dario
+                
             i += 1
+        if shot_buf:  #Dario
+            shot_buf[buf_index:buf_index+len(tmp_buf)] = tmp_buf
 
         self.end_capture()
         if data_sum is None:

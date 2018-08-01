@@ -54,10 +54,13 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, ax=None):
 
 class ROCavSpectroscopy(Measurement1D):
 
-    def __init__(self, qubit_info, powers, freqs, plot_type=None, qubit_pulse=False, seq=None,  **kwargs):
+    def __init__(self, qubit_info, RO_info, powers, freqs, plen=1000, amp=1, plot_type=None, qubit_pulse=False, seq=None,  **kwargs):
         self.qubit_info = qubit_info
+        self.RO_info = RO_info
         self.freqs = freqs
         self.powers = powers
+        self.plen = plen
+        self.amp = amp
         self.qubit_pulse = qubit_pulse 
         if seq is None:
             seq = Trigger(250)
@@ -71,7 +74,7 @@ class ROCavSpectroscopy(Measurement1D):
                 plot_type = SPEC
         self.plot_type = plot_type
 
-        super(ROCavSpectroscopy, self).__init__(1, infos=(qubit_info,), **kwargs)
+        super(ROCavSpectroscopy, self).__init__(1, infos=(qubit_info, RO_info), **kwargs)
         self.data.create_dataset('powers', data=powers)
         self.data.create_dataset('freqs', data=freqs)
         self.ampdata = self.data.create_dataset('amplitudes', shape=(len(powers),len(freqs)))
@@ -80,7 +83,7 @@ class ROCavSpectroscopy(Measurement1D):
 
     def generate(self):
         s = Sequence(self.seq)
-
+        chs = self.RO_info.sideband_channels
 
 #        s.append(self.seq)
 #        if self.qubit_pulse:
@@ -94,15 +97,14 @@ class ROCavSpectroscopy(Measurement1D):
 #                Constant(1, 0, chan=self.qubit_info.channels[1]),
 #                Constant(1, 0, chan=self.qubit_info.channels[0])
 #            ]))
-        s.append(Combined([
-            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-        ]))
 #        s.append(Combined([
-#            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.acq_chan)),
-#            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.readout_chan_I)),
-#            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.readout_chan_Q)),
+#            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
 #        ]))
+        s.append(Combined([
+            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.acq_chan)),
+            s.append(Constant(self.plen, self.amp, chan=chs[0])),
+        ]))
 
     
         s.append(Delay(1000))

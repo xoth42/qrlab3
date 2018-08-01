@@ -89,23 +89,26 @@ class ROCavSpectroscopy(Measurement1D):
         s = Sequence(self.seq)
 
 #        s.append(self.seq)
-        if self.qubit_pulse:
-            s.append(self.qubit_info.rotate(np.pi, 0))
+#        if self.qubit_pulse:
+#            s.append(self.qubit_info.rotate(np.pi, 0))
 #            s.append(Join([
 #                self.seq,
 #                self.qubit_info.rotate(np.pi, 0),
 #            ]))
-        else:
-            s.append(Combined([
-                Constant(1, 0, chan=self.qubit_info.channels[1]),
-                Constant(1, 0, chan=self.qubit_info.channels[0])
-            ]))
+#        else:
+#            s.append(Combined([
+#                Constant(1, 0, chan=self.qubit_info.channels[1]),
+#                Constant(1, 0, chan=self.qubit_info.channels[0])
+#            ]))
 #        s.append(Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan))
 #        s.append(Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan))
         s.append(Combined([
             Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
         ]))
+    
+        s.append(Delay(1000))
+
 
         s = self.get_sequencer(s)
         seqs = s.render()
@@ -125,7 +128,7 @@ class ROCavSpectroscopy(Measurement1D):
         for ipower, power in enumerate(self.powers):
             self.readout_info.rfsource1.set_power(power)
             print 'Power = %s' % (power, )
-            time.sleep(2)
+            time.sleep(1)
 
             amps = []
             phases = []
