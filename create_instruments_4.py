@@ -1,4 +1,7 @@
 import time
+
+
+import matplotlib.pyplot as plt
 #import visa
 if 1:
     import os
@@ -6,6 +9,21 @@ if 1:
     time.sleep(1)
 
 from mclient import instruments
+
+
+
+
+
+yoko = instruments.create('yoko', 'Yokogawa_7651', address = 'GPIB0::3::INSTR')
+#yoko.do_set_voltage_range(1)
+
+
+
+
+
+
+
+
 
 #AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 1, slot = 7,  AWG_PRODUCT = "M3202A", 
  #                         amps = [1,2,1,1], ofs = [-.08, .02, 0, 0])
@@ -17,7 +35,7 @@ from mclient import instruments
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='TCPIP0::172.30.56.25::4000::SOCKET')
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
 #Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
-AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', reffreq=10e6)
+#AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', reffreq=10e6)
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1')
 
 #sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
