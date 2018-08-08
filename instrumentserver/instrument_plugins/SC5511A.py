@@ -204,16 +204,20 @@ class SC5511A(Instrument):
 
         string_buffers = [ctypes.create_string_buffer(ID_BUFFER_SIZE) for i in range(NUM_MAX_DEVICES)]
         pointers = (ctypes.c_char_p*NUM_MAX_DEVICES)(*map(ctypes.addressof, string_buffers))
-        print "THING", lb_dll.sc5511a_search_devices(pointers)
         results = [s.value for s in string_buffers]
-        self._handle = lb_dll.sc5511a_open_device(results[0])
+        self.dev_num = ctypes.c_char_p(devid)
+        lb_dll.sc5511a_open_device.restype = ctypes.POINTER(ctypes.c_int)
+        self._handle = lb_dll.sc5511a_open_device(self.dev_num)
         
         device_rf_params = device_rf_params_t()
         device_status = device_status_t()
-        lb_dll.sc5511a_get_device_status(self._handle, device_status)
+
+        device_status_temp = ctypes.pointer(device_status)
+        lb_dll.sc5511a_get_device_status.argtypes = [ctypes.POINTER(ctypes.c_int),
+                                                    ctypes.POINTER(device_status_t)]
+        lb_dll.sc5511a_get_device_status(self._handle, device_status_temp.contents)
         lb_dll.sc5511a_get_rf_parameters(self._handle, device_rf_params)
 
-        
 
         lb_dll.sc5511a_set_rf_mode(self._handle, 0)
         lb_dll.sc5511a_set_output(self._handle, 1)
@@ -285,7 +289,7 @@ class SC5511A(Instrument):
             lb_dll.sc5511a_set_rf_mode(self._handle, 0)
 
     def do_get_handle(self):
-        return self._handle
+        return self._handle.contents.value
 
     def do_get_serial(self):
         return self._serialno

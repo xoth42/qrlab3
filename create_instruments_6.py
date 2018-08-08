@@ -1,76 +1,73 @@
 import time
 
 import matplotlib.pyplot as plt
-
-
+import os
+import numpy
 if 1:
-    import os
 
     os.system(r'C:\qrlab\start.bat')
     time.sleep(1)
 
 from mclient import instruments
 
-
-DIG = instruments.create('dig', 'Keysight_DIG', chassis=0, slot=3,
-                         DIG_PRODUCT="M3102A")
-DIG.do_set_naverages(2000)
-DIG.do_set_nsamples(2000)
-
-qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
-                              deltaf=-100e6,
-                              pi_amp=0.342948,
-                              pi2_amp=0.171474,
-                              drag=-0.9,
-                              pi_amp_quasilective=0.027025,
-                              pi_amp_selective=0.34 / 25,
-                              rotation='Gaussian',
-                              w=40,
-                              w_quasilective=100,
-                              w_selective=500,
-                              channels='5,6',
-                              sideband_channels='I1,Q1',
-                              sideband_phase=1.315)
+new_yoko = instruments.create('new', 'Yokogawa_GS200', address =  )
 
 
 
 
 
+#
+#qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
+#                              deltaf=-100e6,
+#                              pi_amp=0.342948,
+#                              pi2_amp=0.171474,
+#                              drag=-0.9,
+#                              pi_amp_quasilective=0.027025,
+#                              pi_amp_selective=0.34 / 25,
+#                              rotation='Gaussian',
+#                              w=40,
+#                              w_quasilective=100,
+#                              w_selective=500,
+#                              channels='5,6',
+#                              sideband_channels='I1,Q1',
+#                              sideband_phase=1.315)
+#
+#
 #refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511, 
 #                            use_extref=True) #reference
-#RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=18608,
+#RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=18239,
 #                             use_extref=True) #readout
-#brick1 = instruments.create('brick1', 'LabBrick_RFSource', serial=14510,
-#                           use_extref=True) #qubit
-
-#sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
-sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
-
+##brick1 = instruments.create('brick1', 'LabBrick_RFSource', serial=14510,
+##                           use_extref=False) #qubit
+##
+###sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
+###sc2 = instruments.create('sc2', 'SC5511A', devid='100016B6')
+##
 #AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
 #                             AWG_PRODUCT = "M3202A",
 #                             amps = [1, 1, 1, 1], ofs = [0, 0, 0, 0])
-#
+##
 #AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis=0, slot=10,
 #                         AWG_PRODUCT="M3202A",
 #                         amps = [1, 1, 1, 1], ofs = [0, 0, 0, 0])
-
-# Magnet = instruments.create('Magnet','AMI_430')
-
-
+#
+## Magnet = instruments.create('Magnet','AMI_430')
+#
+##
 #readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
 #                             IQe_radius= 1 , rfsource1='RObrick', 
 #                             rfsource2='refbrick',
-#                             pulse_len=1000, readout_chan='4m1', acq_chan='1m1')
-
-
-''' Readout_IQ_Info is for iq modulation on the readout brick instead of pulse triggering '''
-readout = instruments.create('readout', 'Readout_IQ_Info', IQe=(1.0), IQg=(0.1),
-                             IQe_radius= 1 , rfsource1='RObrick', rfsource2='refbrick',
-                             pulse_len=2000, readout_chan_I=3, readout_chan_Q=4,
-                             acq_chan=1)
-
-# VNA = instruments.create('VNA', 'Agilent_E5071C',
-# address='TCPIP0::K-E5071C-26868.local::inst0::INSTR')
+#                             pulse_len=1000, readout_chan='5', acq_chan='6')
+#
+#
+#''' Readout_IQ_Info is for iq modulation on the readout brick instead of pulse triggering '''
+##readout = instruments.create('readout', 'Readout_IQ_Info', IQe=(1.0), IQg=(0.1),
+##                             IQe_radius= 1 , rfsource1='RObrick', rfsource2='refbrick',
+##                             pulse_len=2000, readout_chan_I=3, readout_chan_Q=4,
+##                             acq_chan=1)
+#
+## VNA = instruments.create('VNA', 'Agilent_E5071C',
+## address='TCPIP0::K-E5071C-26868.local::inst0::INSTR')
 #qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
 #                              deltaf=-212.100e6,
 #                              pi_amp=0.09,
@@ -84,22 +81,21 @@ readout = instruments.create('readout', 'Readout_IQ_Info', IQe=(1.0), IQg=(0.1),
 #                              sideband_channels='I2,Q2',
 #                              sideband_phase=1.315)
 
-# test = instruments.create('sh_test', 'SignalHoundUSBSA124B', waittime=100000,
-#                          serial_no=61660103, ref=-20, center=6e9,
-#                          span=1e8, vbw=30e3, rbw=30e3)
-# peaks, array = test.perform_sweep(peak_find = True, plot = True)
+#test = instruments.create('sh_test', 'SignalHoundUSBSA124B', waittime=100000,
+#                          serial_no=61660103, ref=10, center=1.2e8,
+#                          span=2e7, vbw=200e3, rbw=200e3)
+#peaks, array = test.perform_sweep(peak_find = True, plot = False)
 
 
 
 
-
+    
 # AWG1.do_set_waveform_delay(200000)
 # bla
 
 # VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
 
 
-AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', reffreq=10e6)
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1')
 
 #sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
@@ -117,27 +113,26 @@ AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='TCPIP0::172.30.
 
 # fg = instruments.create('funcgen', 'BNC_FuncGen645', address='GPIB1::30')
 # Setup Alazar
-'''
 
-alz = instruments.create('alazar', 'Alazar_Daemon')
-alz.set_ch1_range('40mV')
-alz.set_ch2_range('40mV')
-alz.set_nsamples(4800)
-alz.set_naverages(2000)
-alz.set_ch1_coupling('AC')
-alz.set_ch2_coupling('AC')
-#alz.set_clock_source('EXT10M')
-alz.set_clock_source('EXT')
-alz.set_sample_rate('1GEXT10')
-alz.set_engJ_trig_src('EXT')
-alz.set_engJ_trig_lvl(128+5)
-alz.set_real_signals(False)
-alz.set_timeout(10e3)
-#TODO this should be fixed. we should be able to setup_clock
-#alz.setup_clock()
-alz.setup_channels()
-alz.setup_trigger()
-'''
+#alz = instruments.create('alazar', 'Alazar_Daemon')
+#alz.set_ch1_range('40mV')
+#alz.set_ch2_range('40mV')
+#alz.set_nsamples(4800)
+#alz.set_naverages(2000)
+#alz.set_ch1_coupling('AC')
+#alz.set_ch2_coupling('AC')
+##alz.set_clock_source('EXT10M')
+#alz.set_clock_source('EXT')
+#alz.set_sample_rate('1GEXT10')
+#alz.set_engJ_trig_src('EXT')
+#alz.set_engJ_trig_lvl(128+5)
+#alz.set_real_signals(False)
+#alz.set_timeout(10e3)
+##TODO this should be fixed. we should be able to setup_clock
+##alz.setup_clock()
+#alz.setup_channels()
+#alz.setup_trigger()
+
 # readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
 #                           IQe_radius= 1 , rfsource1='brick1',
 # rfsource2='brick5',

@@ -191,7 +191,6 @@ class Keysight_AWG(Instrument):
         self.awg.waveformFlush()
 
     def prime(self):
-        print('keysight prime')
         '''
         logging.info('Priming the AWG')
         data = [[],[],[],[]]
@@ -290,7 +289,8 @@ class Keysight_AWG(Instrument):
 #            self.awg.channelWaveShape(i+1, key.SD_Waveshapes.AOU_AWG)
 #            self.awg.AWGqueueConfig(i+1,1)
 #        self.clear_sequence()
-
+#        self.stop()
+#        self.clear_sequence()
         time.sleep(1)
 
     def do_set_amplitude(self, amp, channel):
@@ -330,14 +330,13 @@ class Keysight_AWG(Instrument):
         '''
         Query all parameters with FLAG_GET flag.
         '''
-        print('keysight get_all')
         keys = []
         for k, v in self._parameters.iteritems():
             if v['flags'] & Instrument.FLAG_GET:
                 keys.append(k)
             if v['flags'] & Instrument.FLAG_GETSET:
                 keys.append(k)
-        print('keys', keys)
+#        print('keys', keys)
         return self.get(keys)
 
 
@@ -393,7 +392,7 @@ class Keysight_AWG(Instrument):
 #        print('wname', wname, 'm1', m1, 'm2', m2, 'waveform_num', self._waveform_num)
 
 #        print(wave_data.tolist())
-        if(len(data) < 2000):
+        if(len(data) < 1000):
             print('Waveform might be too short. Check the sequencer')
 
 #            print('wname', wname, 'm1', m1, 'm2', m2, 'waveform_num', self._waveform_num)

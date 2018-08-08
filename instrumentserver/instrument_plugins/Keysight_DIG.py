@@ -116,7 +116,7 @@ class Keysight_DIG(Instrument):
         self.add_parameter('if_period', type=types.IntType,
                            flags=Instrument.FLAG_GETSET,
                            minval=2, maxval=1000, value=20,
-                           help='Intermediate Frequency period')
+                               help='Intermediate Frequency period')
         
         self.add_parameter('timeout', type=types.IntType, value=DEFAULT_TIMEOUT,
            units='ms', help='Instrument read timeout')
@@ -324,32 +324,32 @@ class Keysight_DIG(Instrument):
 #            ref[i] = self.dig.DAQread(self._ref_channel, self._nsamples, self._timeout)
 #        return signal, ref
 
-    def setup_avg_shot(self):
-        self.dig.channelInputConfig(self._main_channel, VOLTAGE_SCALE, key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)
-        self.dig.channelInputConfig(self._ref_channel, VOLTAGE_SCALE, key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)
-        
+    def setup_avg_shot(self, ntransfers = None):
+        if ntransfers is None:
+            ntransfers = 1
+            
         self.dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)
-        
-        self.dig.DAQdigitalTriggerConfig(self._main_channel, key.SD_TriggerExternalSources.TRIGGER_EXTERN, key.SD_TriggerBehaviors.TRIGGER_HIGH)
-        self.dig.DAQdigitalTriggerConfig(self._ref_channel, key.SD_TriggerExternalSources.TRIGGER_EXTERN, key.SD_TriggerBehaviors.TRIGGER_HIGH)
-
-        self.dig.DAQconfig(self._main_channel, self._nsamples, self._naverages, self._main_delay, key.SD_TriggerModes.EXTTRIG)
-        self.dig.DAQconfig(self._ref_channel, self._nsamples, self._naverages, self._ref_delay, key.SD_TriggerModes.EXTTRIG)
-        
-        self.set_demod(avg_periods=1)
+        for channel in [self._main_channel, self._ref_channel]:
+            self.dig.DAQtriggerExternalConfig(channel, key.SD_TriggerExternalSources.TRIGGER_EXTERN, 
+                                    key.SD_TriggerBehaviors.TRIGGER_RISE, key.SD_SyncModes.SYNC_NONE)
+            self.dig.DAQflush(channel)
+            self.dig.channelInputConfig(channel, VOLTAGE_SCALE, key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)
+            self.dig.DAQconfig(channel, self._nsamples, self._naverages, self._main_delay, key.SD_TriggerModes.EXTTRIG)
+            self.dig.DAQbufferPoolConfig(channel, self._nsamples * self._naverages / ntransfers)
+            self.set_demod(avg_periods=1) #TODO: change avg_periods?
 
     def take_avg_shot(self, acqtimeout=None):
         signal = np.zeros((self._naverages, self._nsamples), dtype = np.complex64)
         ref = np.zeros_like(signal)
         for i in range(self._naverages):
             try:
-                signal[i] = self.dig.DAQread(self._main_channel, self._nsamples, self._timeout)
-                ref[i] = self.dig.DAQread(self._ref_channel, self._nsamples, self._timeout)
+                signal[i] = self.dig.DAQbufferGet(self._main_channel, self._timeout)
+                ref[i] = self.dig.DAQbufferGet(self._ref_channel, self._timeout)
             except ValueError, e:
                 print(str(e))
                 print('digitizer is likely not getting triggered')
                 raise ValueError
-                    
+                
         self._demodA.demodulate(signal.reshape(self._naverages * self._nsamples))
         IQA = self._demodA.IQ.reshape([self._naverages, self._nsamples / self._if_period])
 #        IQA = self._demodA.IQ
@@ -366,19 +366,22 @@ class Keysight_DIG(Instrument):
         return avg/self._naverages
         
     def setup_experiment(self, num_points):
+        if ntransfers is None:
+            ntransfers = self._naverages
+            
         self._num_points = num_points
-        self.dig.channelInputConfig(self._main_channel, VOLTAGE_SCALE, key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)
-        self.dig.channelInputConfig(self._ref_channel, VOLTAGE_SCALE, key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)
-        
+            
         self.dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)
+        for channel in [self._main_channel, self._ref_channel]:
+            self.dig.DAQtriggerExternalConfig(channel, key.SD_TriggerExternalSources.TRIGGER_EXTERN, 
+                                    key.SD_TriggerBehaviors.TRIGGER_RISE, key.SD_SyncModes.SYNC_NONE)
+            self.dig.DAQflush(channel)
+            self.dig.channelInputConfig(channel, VOLTAGE_SCALE, key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)
+            self.dig.DAQconfig(channel, self._nsamples, self._naverages, self._main_delay, key.SD_TriggerModes.EXTTRIG)
+            self.dig.DAQbufferPoolConfig(channel, self._nsamples * self._naverages / ntransfers)
+            self.set_demod(avg_periods=1, bufsize = self._nsamples * num_points) #TODO: change avg_periods?
         
-        self.dig.DAQdigitalTriggerConfig(self._main_channel, key.SD_TriggerExternalSources.TRIGGER_EXTERN, key.SD_TriggerBehaviors.TRIGGER_HIGH)
-        self.dig.DAQdigitalTriggerConfig(self._ref_channel, key.SD_TriggerExternalSources.TRIGGER_EXTERN, key.SD_TriggerBehaviors.TRIGGER_HIGH)
-
-        self.dig.DAQconfig(self._main_channel, self._nsamples, self._naverages * num_points, self._main_delay, key.SD_TriggerModes.EXTTRIG)
-        self.dig.DAQconfig(self._ref_channel, self._nsamples, self._naverages * num_points, self._ref_delay, key.SD_TriggerModes.EXTTRIG)
         
-        self.set_demod(avg_periods=1, bufsize = self._nsamples * num_points)
         
     def take_experiment(self):
         signal = np.zeros((self._num_points, self._nsamples), dtype = np.complex64)
@@ -387,8 +390,8 @@ class Keysight_DIG(Instrument):
         for i in range(self._naverages):
             for j in range(self._num_points):
                 try:
-                    signal[j] = self.dig.DAQread(self._main_channel, self._nsamples, self._timeout)
-                    ref[j] = self.dig.DAQread(self._ref_channel, self._nsamples, self._timeout)
+                    signal[j] = self.dig.DAQbufferGet(self._main_channel, self._timeout)
+                    ref[j] = self.dig.DAQbufferGet(self._ref_channel, self._timeout)
                 except ValueError, e:
                     print(str(e))
                     print('digitizer is likely not getting triggered')

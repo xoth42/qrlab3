@@ -195,6 +195,7 @@ class SignalHoundUSBSA124B(Instrument):
         self.max_array = (ctypes.c_float * self.array_length)()
         ctypes.cast(self.min_array, ctypes.POINTER(ctypes.c_float))
         ctypes.cast(self.max_array, ctypes.POINTER(ctypes.c_float))
+        print 'test'
         DLL_LIB.saGetSweep_32f.argtypes = [ctypes.c_int,
                                            ctypes.POINTER(
                                                ctypes.c_float * self.array_length),
@@ -204,6 +205,7 @@ class SignalHoundUSBSA124B(Instrument):
         self.return_codes['GET SWEEP'] = DLL_LIB.saGetSweep_32f(
             self.device_handle, self.min_array, self.max_array)
         result = list()
+        print 'thing'
         freq = self.start_freq_p.contents.value
         # Only need to consider min_array since both arrays hold the same value.
         for i, value in enumerate(self.min_array, 1):
@@ -218,7 +220,7 @@ class SignalHoundUSBSA124B(Instrument):
         powers = [thing[1] for thing in result]
         if peak_find == True:
             from scipy.signal import find_peaks_cwt
-            widths = np.arange(300, 5000)
+            widths = np.arange(300, 500)
             peaks = find_peaks_cwt(powers, widths)
             local_maxes = [powers[i] for i in peaks]
             if plot == True:

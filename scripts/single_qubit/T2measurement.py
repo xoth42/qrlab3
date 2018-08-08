@@ -114,7 +114,7 @@ def analysis(meas, data=None, fig=None):
         fig.canvas.draw()
         return params3
 
-    return params
+    return result.params
 
 class T2Measurement(Measurement1D):
 
