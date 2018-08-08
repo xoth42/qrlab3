@@ -25,9 +25,9 @@ if 0:
 
 qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')
-print(qubit_info)
-ef_info = mclient.get_qubit_info('qubit1ef')
-cavity_info = mclient.get_qubit_info('cavity0')
+#print(qubit_info)
+#ef_info = mclient.get_qubit_info('qubit1ef')
+#cavity_info = mclient.get_qubit_info('cavity0')
 
 #Find read-out cavity and choose a power
 if 0: # Transmission
@@ -77,7 +77,7 @@ if 0: # Calibrate pi pulse
         data=tr.measure()
     bla
 
-if 1: # Cavity spec
+if 0: # Cavity spec
     from scripts.single_cavity import cavspectroscopy
     cav_freq = 8487.00e6
     cspec = cavspectroscopy.CavSpectroscopy(mclient.instruments['sc1'], qubit_info, cavity_info, [2], np.linspace(cav_freq-5e6, cav_freq+5e6, 31))
@@ -221,14 +221,14 @@ if 0: # Mixer calibration:
     bla
 
 
-if 0: # Check histogramming
-    from scripts.single_qubit import timerabi
-    tr = timerabi.TimeRabi(qubit_info, [qubit_info.pi_area,], histogram=True, title='|e>')
+if 1: # Check histogramming
+    from scripts.single_qubit import rabi
+    #tr = timerabi.TimeRabi(qubit_info, [qubit_info.pi_area,], histogram=True, title='|e>')
+    #tr.measure()
+    tr = rabi.Rabi(qubit_info, [0.001,], histogram=True, title='|g>')
     tr.measure()
-    tr = timerabi.TimeRabi(qubit_info, [0.001,], histogram=True, title='|g>')
-    tr.measure()
-    tr = timerabi.TimeRabi(qubit_info, [qubit_info.pi_area/2,], histogram=True, title='|g>+|e>')
-    tr.measure()
+    #tr = timerabi.TimeRabi(qubit_info, [qubit_info.pi_area/2,], histogram=True, title='|g>+|e>')
+    #tr.measure()
 
 if 0: # T1
     from scripts.single_qubit import T1measurement
@@ -364,7 +364,7 @@ if 0: # SSB number splitting:
 #        spec.measure()
     bla
 
-if 1: # Cavity lifetime:
+if 0: # Cavity lifetime:
     from scripts.single_cavity import cavT1
     t1 = cavT1.CavT1(qubit_info, cavity_info, np.pi, np.linspace(0, 1.8e3, 101), proj_num=0, seq=None, extra_info=None, bgcor=False,
                      plot_seqs=False, generate=False)

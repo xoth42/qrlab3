@@ -125,7 +125,8 @@ class VisaInstrument(Instrument):
                     else:
                         if e.error_code != StatusCode.error_timeout:
                             raise e
-                print objsh.backend
+#               Josh commented this line out on 7/30/18 to fix an error with the old yoko driver.            
+#                print objsh.backend
                 objsh.backend.main_loop(0)
             else:
                 raise Exception("Instrument read timed out (timeout=%s)" % self._timeout)
