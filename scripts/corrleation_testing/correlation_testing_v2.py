@@ -1,3 +1,4 @@
+from __future__ import division
 import h5py
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,6 +19,7 @@ def phase(c):
         return 0
 def mag(n):
     return np.absolute(n)
+
 def fast_map(func, iterable):
     return np.asarray(map(func, iterable))
 def project(c1, v, s):
@@ -46,10 +48,12 @@ class PredefinedPlot(object):
         plt.title(str(title))
         plt.show()
     
-
-
 file_path = r'C:\Users\Wang_Lab\Desktop\TunableTransmonJuly18.hdf5'
-file = h5py.File(file_path, 'r')
+try:
+    file = h5py.File(file_path, 'r')
+except IOError:
+    file_path = r'/media/jcarey/files/TunableTransmonJuly18.hdf5'
+    file = h5py.File(file_path, 'r')
 if len(file.keys()) == 0:
     raise ValueError('No keys')
 correlation_day = file['20180731']
@@ -81,11 +85,11 @@ ft1 = data_II[:, 1]
 f = data_II[:, 2]
 true_ft1 = np.asarray(map(lambda x: project(*x), zip(g_2, f, ft1)))
 
-run = False
+run = True
 if run is True:
     time_step = 500e-6 * 4 * 100 / 60
     time = np.linspace(0, time_step * len(t1), len(t1))
-    data = [g, equator, t1, ft1]
+    data = [g, equator, true_t1, true_ft1]
     amplitudes = fast_map(np.absolute, data)
     averages = fast_map(lambda x: x - np.average(x), amplitudes)
 
@@ -97,10 +101,15 @@ if run is True:
     eqc_p = PredefinedPlot([right_halves[1], 'g'], r'Equator autocorrelation')
     ft1c_p = PredefinedPlot([right_halves[3], 'm'], r'$FT_{1}$ autocorrelation')
     cross_correlate = lambda x: np.correlate(x[0], x[1], mode = 'full')
+
     cc = np.correlate(averages[2], averages[3], mode = 'full')
     spectrums = fast_map(fft, right_halves)
     cc_spectrum = fft(cc)
-    coherence = (np.absolute(cc_spectrum[0:361999]))**2 / (spectrums[2]*spectrums[3])
+    plt.figure()
+    plt.loglog(cc_spectrum, 'r*')
+    plt.grid()
+    plt.title('Power spectral density for T1 and FT1 correlations')
+    coherence = (np.absolute(cc_spectrum[:len(spectrums[2])]))**2 / (spectrums[2]*spectrums[3])
     
     
 
