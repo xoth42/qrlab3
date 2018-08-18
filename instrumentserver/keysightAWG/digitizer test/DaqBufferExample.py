@@ -4,7 +4,7 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 sys.path.append('C:\Program Files (x86)\Keysight\SD1\Libraries\Python')
-import keysightSD1_v26 as key
+import keysightSD1 as key
 
 
 

@@ -1,4 +1,7 @@
 import time
+
+
+import matplotlib.pyplot as plt
 #import visa
 if 1:
     import os
@@ -6,6 +9,21 @@ if 1:
     time.sleep(1)
 
 from mclient import instruments
+
+
+
+
+
+#yoko = instruments.create('yoko', 'Yokogawa_7651', address = 'GPIB0::3::INSTR')
+#yoko.do_set_voltage_range(1)
+
+
+
+
+
+
+
+
 
 #AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 1, slot = 7,  AWG_PRODUCT = "M3202A", 
  #                         amps = [1,2,1,1], ofs = [-.08, .02, 0, 0])
@@ -15,9 +33,9 @@ from mclient import instruments
 
 #Magnet = instruments.create('Magnet','AMI_430')
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='TCPIP0::172.30.56.25::4000::SOCKET')
-#VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
+VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
 #Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
-AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', reffreq=10e6)
+#AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', reffreq=10e6)
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1')
 
 #sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
@@ -26,7 +44,7 @@ AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='TCPIP0::172.30.
 #brick1 = instruments.create('brick1', 'LabBrick_RFSource', serial=14510, use_extref=True) # qubit
 #brick2 = instruments.create('brick2', 'LabBrick_RFSource', serial=14511, use_extref=True) # ref
 #brick3 = instruments.create('brick3', 'LabBrick_RFSource', serial=14524, use_extref=True) # old RO
-#brick4 = instruments.create('brick4', 'LabBrick_RFSource', serial=17912, use_extref=True) # RO
+brick4 = instruments.create('brick4', 'LabBrick_RFSource', serial=17912, use_extref=True) # RO
 #brick5 = instruments.create('brick5', 'LabBrick_RFSource', serial=14525, use_extref=True) # New brick
 #brick6 = instruments.create('brick6', 'LabBrick_RFSource', serial=18238, use_extref=True)#reference
 #brick7 = instruments.create('brick7', 'LabBrick_RFSource', serial=18239, use_extref=True)#readout
@@ -90,32 +108,32 @@ ag2 = instruments.create('ag2', 'Agilent_N5183A', address='GPIB1::22')
 ##laserfg = instruments.create('laserfg', 'Agilent_FuncGen33250A', address='GPIB1::9')
 #
 '''
-qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
-                            deltaf=-100e6,
-                            pi_amp=0.342948,
-                            pi2_amp=0.171474,
-                            drag=-0.9,
-                            pi_amp_quasilective=0.027025,
-                            pi_amp_selective=0.34/25,
-                            rotation='Gaussian',
-                            w=40,
-                            w_quasilective=100,
-                            w_selective=500,
-                            channels='1,2',
-                            sideband_channels='I1,Q1',
-                            sideband_phase=1.315)
-qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
-                            deltaf=-212.850e6,
-                            pi_amp=0.09,
-                            pi_amp_quasilective=0.02,
-                            pi_amp_selective=4.100e-3,
-                            rotation='Gaussian',
-                            w=40,
-                            w_quasilective=100,
-                            w_selective=500,
-                            channels='1,2',
-                            sideband_channels='I2,Q2',
-                            sideband_phase=1.315)
+#qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
+#                            deltaf=-100e6,
+#                            pi_amp=0.342948,
+#                            pi2_amp=0.171474,
+#                            drag=-0.9,
+#                            pi_amp_quasilective=0.027025,
+#                            pi_amp_selective=0.34/25,
+#                            rotation='Gaussian',
+#                            w=40,
+#                            w_quasilective=100,
+#                            w_selective=500,
+#                            channels='1,2',
+#                            sideband_channels='I1,Q1',
+#                            sideband_phase=1.315)
+#qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
+#                            deltaf=-212.850e6,
+#                            pi_amp=0.09,
+#                            pi_amp_quasilective=0.02,
+#                            pi_amp_selective=4.100e-3,
+#                            rotation='Gaussian',
+#                            w=40,
+#                            w_quasilective=100,
+#                            w_selective=500,
+#                            channels='1,2',
+#                            sideband_channels='I2,Q2',
+#                            sideband_phase=1.315)
 
 #Cavity = instruments.create('cavity0', 'Qubit_Info',
 #        deltaf=-100e6,
