@@ -120,6 +120,7 @@ class Measurement(object):
         self.instruments = mclient.instruments
         self.readout_info = mclient.get_readout_info(readout)
         self._funcgen = mclient.instruments.get('funcgen')
+        self._dig = mclient.instruments.get('dig') #Dario
         self.use_sync = use_sync
 
     def setup_data(self, name):
@@ -407,6 +408,7 @@ class Measurement(object):
         alz.set_timeout(timeout)
         time.sleep(1)
 
+
         # Capture CTRL-C and connect callbacks
         self.capture_ctrlc()
         progress_hid = alz.connect('capture-progress', self._capture_progress_cb)
@@ -416,6 +418,11 @@ class Measurement(object):
         if not fast:
             if self._funcgen:
                 self.start_funcgen()
+            elif self._dig: #Dario
+                dig = self.instruments['dig']
+                dig.stop_hvi()
+                self.start_awgs()
+                dig.start_hvi()
             else:
                 self.start_awgs()
 
@@ -425,6 +432,7 @@ class Measurement(object):
             else:
                 ret = alz.take_experiment(avg_buf=self.avg_data, async=True, singleshotbin=self.singleshotbin, shot_buf=self.shot_data, #Dario
                                           IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius)
+                #print 'Done with take experiment'
             if self.print_progress:
                 logging.info('Acquiring...')
             while not ret.is_valid() and not self._interrupted:
@@ -440,9 +448,10 @@ class Measurement(object):
             alz.disconnect(progress_hid)
             self.data.disconnect(dataupd_hid)
             self.release_ctrlc()
-
+#        print 'before post_process'
         # Final processing of data
         self.post_process()
+#        print 'after post_process'
         
         return ret.get()
 
@@ -522,7 +531,7 @@ class Measurement(object):
             self.pp_data = None
             '''DARIO added 7/28/18 to keep all single shot data'''
         elif self.keep_shots:
-            self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen,alz.get_naverages()/100], dtype=np.complex)
+            self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*alz.get_naverages()], dtype=np.complex)
             if not self.real_signals:
                 self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.complex)
                 self.pp_data = self.data.create_dataset('avg_pp', [self.cyclelen,], dtype=np.float)
@@ -588,17 +597,29 @@ class Measurement(object):
         
         TODO: implement the interrupt like alazar has
         '''
+        
 
-        # Setup and arm alazar
-        dig.setup_experiment(self.cyclelen)
+        progress_hid = dig.connect('capture-progress', self._capture_progress_cb)
+        dataupd_hid = self.data.connect('changed', self._data_changed_cb)
+        
+        
+        dig.stop_hvi()
+        dig.setup_experiment(self.cyclelen, ntransfers = 1)
         dig.arm()
 
         # Start measurement, either by starting the AWG or the function generator
         self.start_awgs()
+        dig.start_hvi()
         ret = dig.take_experiment()
 
+
+        dig.disconnect(progress_hid)
+        self.data.disconnect(dataupd_hid)
+        
         # Final processing of data
         self.post_process()
+        
+        dig.release_buf()
         
         return ret
 
@@ -640,11 +661,7 @@ class Measurement(object):
             l.set_all_awgs_active()
 
         self.save_settings()
-        
-#        alz.setup_clock()
-#        alz.setup_channels()
-#        alz.setup_trigger()
-#        alz.set_real_signals(self.real_signals)    
+
 
     def setup_measurement_data_keysight(self):
         '''
@@ -750,7 +767,7 @@ class Measurement(object):
 
     def get_figure(self):
         if self.fig:
-            print "There already exists the figure"
+            #print "There already exists the figure"
             return self.fig
         else:
             print "Here we create a figure"

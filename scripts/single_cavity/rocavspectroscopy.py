@@ -29,6 +29,7 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, ax=None):
         p = f.fit(p0)
         txt = 'Center = %.03f MHz' % (p[2]/1e6,)
         print 'Fit gave: %s' % (txt,)
+        print p[3]/1e6
 #        plt.plot(fs/1e6, f.func(p, fs), label=txt)
 
         plt.legend()
@@ -89,8 +90,8 @@ class ROCavSpectroscopy(Measurement1D):
         s = Sequence(self.seq)
 
 #        s.append(self.seq)
-#        if self.qubit_pulse:
-#            s.append(self.qubit_info.rotate(np.pi, 0))
+        if self.qubit_pulse:
+            s.append(self.qubit_info.rotate(np.pi, 0))
 #            s.append(Join([
 #                self.seq,
 #                self.qubit_info.rotate(np.pi, 0),

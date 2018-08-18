@@ -24,10 +24,10 @@ os.chdir(r'C:/qrlab/scripts')
 if 0:
     from single_cavity import rocavspectroscopy_keysight
 #    rofreq = 8553.1e6
-    rofreq = 8306.00e6
-    freq_range = 15e6
-    ro = rocavspectroscopy_keysight.ROCavSpectroscopy(qubit_info, np.linspace(-20, -20, 1),
-                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 61),
+    rofreq = 8307.18e6
+    freq_range = 10e6
+    ro = rocavspectroscopy_keysight.ROCavSpectroscopy(qubit_info, np.linspace(-40, -30, 5),
+                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 200),
                                              qubit_pulse=False)
     ro.measure()
     
@@ -41,25 +41,29 @@ if 0:
                                              plen=20000, amp=0.0001, qubit_pulse=False)
     ro.measure()
     
-if 0:
-    from single_qubit import rabi_keysight
-    tr = rabi_keysight.Rabi_Keysight(qubit_info, np.linspace(.3, 0, 5), plot_seqs=False, generate=True, 
-                                     selective=False, repeat_pulse=1, update=False)
-    data=tr.measure_keysight()
-    
+
 if 1:
     from single_qubit import spectroscopy_keysight
 #    from scripts.single_qubit import spectroscopy_IQ
 #    for i in range(5560, 5560, 0):
-    qubit_freq = 6000e6
-    freq_range = 100e6
+    qubit_freq = 5945.3e6
+    freq_range = 2e6
     spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['qbrick'], qubit_info,
                                      np.linspace(qubit_freq-freq_range,
 
-                                                 qubit_freq+freq_range, 251),
-                                     [-20],
-                                     plen=20000, amp=0.0001, plot_seqs=False) 
+                                                 qubit_freq+freq_range, 201),
+                                     [-40],
+                                     plen=20000, amp=0.01, plot_seqs=False) 
 
     spec.measure()
 
-    bla
+    
+    
+    
+if 0:
+    from scripts.single_qubit import ssbspec
+    seq = sequencer.Trigger(250)
+
+    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-20e6, 20e6, 101), seq=seq, plot_seqs=False)
+    spec.measure_keysight()
+    

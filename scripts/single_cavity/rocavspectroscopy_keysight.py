@@ -111,7 +111,7 @@ class ROCavSpectroscopy(Measurement1D):
         seqs = sequencer.render()
         return seqs
 
-    """
+
    # def dig_load(self, seqs, run=False, ntries=1):
         #A rewrite of the load function in measurement to deal with the new 
         #keysight AWGs.
@@ -144,7 +144,10 @@ class ROCavSpectroscopy(Measurement1D):
                 '''
                 dig.setup_avg_shot()
                 dig.arm()
+                dig.start_hvi()
                 ret = dig.take_avg_shot()
+                dig.stop_hvi()
+                dig.release_buf()
 #                print('inside keysight measurment. ret:')
 #                print(ret)
 #                try:
@@ -164,9 +167,9 @@ class ROCavSpectroscopy(Measurement1D):
             self.phasedata[ipower,:] = phases
 
         self.analyze()
+    
+
     """
-
-
     def measure(self):
         # Generate and load sequences
         alz = self.instruments['alazar']
@@ -210,7 +213,7 @@ class ROCavSpectroscopy(Measurement1D):
             
 
         self.analyze()
-
+    """
 
 
     def analyze(self, data=None, ax=None):

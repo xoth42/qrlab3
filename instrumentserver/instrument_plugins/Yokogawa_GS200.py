@@ -69,7 +69,7 @@ class Yokogawa_GS200(VisaInstrument):
 
     def do_get_voltage(self):
         if self.set_source_type('CURR'):
-            raise('Source type is VOLTAGE, not CURRENT')
+            raise Exception('Source type is VOLTAGE, not CURRENT')
         return self.do_get_source_level()
 
     def do_set_current(self, level, range='AUTO'):

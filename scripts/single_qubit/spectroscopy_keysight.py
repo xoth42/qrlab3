@@ -75,8 +75,7 @@ class Spectroscopy_Keysight(Measurement1D):
         return seqs
 
     def measure(self):
-        alz = self.instruments['alazar']
-        alz.set_interrupt(False)
+        dig = self.instruments['dig']
 
         # Generate and load sequences
         seqs = self.generate()
@@ -92,18 +91,15 @@ class Spectroscopy_Keysight(Measurement1D):
             for freq in self.q_freqs:
                 self.qubit_rfsource.set_frequency(freq)
                 time.sleep(self.freq_delay)
+                
+                dig.setup_avg_shot()
+                dig.arm()
+                dig.start_hvi()
+                ret = dig.take_avg_shot()
+                dig.release_buf()
 
-                alz.setup_avg_shot(alz.get_naverages())
-                ret = alz.take_avg_shot(async=True)
-                try:
-                    while not ret.is_valid():
-                        objsh.helper.backend.main_loop(100)
-                except Exception, e:
-                    alz.set_interrupt(True)
-                    print 'Error: %s' % (str(e), )
-                    return
 
-                IQ = np.average(ret.get())
+                IQ = np.average(ret)
                 amps.append(np.abs(IQ))
                 phases.append(np.angle(IQ, deg=True))
                 print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))

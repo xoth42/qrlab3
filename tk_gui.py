@@ -104,15 +104,20 @@ class InstrumentInputItem():
         tk.Grid.columnconfigure(self.frame, 0, weight=1)
         self.label.grid(row=1, column=1, sticky=fill_all)
         self.option_dict = instr[self.instrument_name].get_shared_parameters()
+        #Some parameters are special. They are quantized, in that they can
+        # have only a small set of values. Some of these values can be
+        # represented by a dropdown menu. Others define a mapping between
+        # what to show the user and what to pass to the instrument. The
+        # conditions below handle these cases.
         self.option_condition = 'option_list' in self.option_dict[key]
-        # option_list refers to whether the parameter can take the value of
-
-        # only a few different quantities, like having a sine wave or a
-        # sawtooth wave. Thus only a finite number of choices should be
-        # presented to the user.
-        if self.option_condition:
-            dropdown_options = self.option_dict[key]['option_list']
-
+        self.format_map_condition = 'format_map' in self.option_dict[key]
+        if self.format_map_condition:
+            self.format_map = self.option_dict[key]['format_map']
+        if self.option_condition or self.format_map_condition:
+            if self.option_condition:
+                dropdown_options = self.option_dict[key]['option_list']
+            if self.format_map_condition:
+                dropdown_options = self.format_map.values()
             self.valuevar = tk.StringVar(self.frame)
             self.setvar = tk.StringVar(self.frame)
             # When the GUI first starts, set all of the parameters to the
@@ -185,7 +190,9 @@ class InstrumentInputItem():
             param = None
         if self.option_condition:
             self.valuevar.set(str(param))
-        else:
+        if self.format_map_condition:
+            self.valuevar.set(str(self.format_map[param]))
+        if not self.format_map_condition and not self.option_condition:
             self.parameter_value_box.delete(0, 'end')
             self.parameter_value_box.insert(0, str(param))
 
@@ -200,6 +207,11 @@ class InstrumentInputItem():
         """
         if self.option_condition:
             new_value = self.setvar.get()
+        if self.format_map_condition:
+            new_value = self.setvar.get()
+            for i in self.format_map.keys():
+                if self.format_map[i] == new_value:
+                    new_value = i
         else:
             new_value = self.set_box.get()
         # Do some type conversion, to make sure the server gets passed the
@@ -246,7 +258,6 @@ class InstrumentInformationDisplayFrame():
         self.refresh_button.pack()
         self.scrollbar = tk.Scrollbar(self.frame, orient=tk.VERTICAL)
         self.canvas = tk.Canvas(self.frame, yscrollcommand=self.scrollbar.set)
-        self.canvas.bind_all('<MouseWheel>', self.mouse_scroll)
         self.scrollbar.config(command=self.canvas.yview)
         #  self.info_subframe = tk.Frame(self.canvas)
         name_value_dict = instr[instrument_name].get_parameter_values()
