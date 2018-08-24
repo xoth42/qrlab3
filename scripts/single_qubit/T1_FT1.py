@@ -16,12 +16,13 @@ alz = mclient.instruments['alazar']
 qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')
 ef_info = mclient.get_qubit_info('qubit1ef')
+qubit2_info = mclient.get_qubit_info('qubit2ge')
 #readout_info = mclient.get_readout_info()
 
 
-if 1: # T1_FT1
+if 0: # T1_FT1
     from scripts.single_qubit import T1measurement, FT1measurement, T1_FT1measurement, rabi
-    alz.set_naverages(1000)
+    alz.set_naverages(100000)
 #    t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 160e3, 101), double_exp=False, generate=True, plot_seqs=False)
 #    t1.measure()
 #    ofs = t1.result_params['ofs'].value
@@ -32,16 +33,19 @@ if 1: # T1_FT1
 #    f_ofs = ft1.fit_params['ofs'].value
 #    f_amp = ft1.fit_params['amplitude'].value
 
-    t1_decay = []
-    ft1_decay = []
-    times = []
+#    t1_decay = []
+#    ft1_decay = []
+#    times = []
 #    t1_err = []
 #    ft1_err = []
 #    fullt1_decay = []
 #    fullft1_decay = []
 
-    for i in range(10000):
-        t1_ft1 = T1_FT1measurement.T1_FT1measurement(qubit_info, ef_info, 6e3, 5e3, keep_shots=False, generate=True)
+    for i in range(300):
+        print '###############'
+        print i
+        print '##############'
+        t1_ft1 = T1_FT1measurement.T1_FT1measurement(qubit_info, ef_info, 6.5e3, 5.5e3, histogram=True, generate=True)
         t1_ft1.measure()
         
 #        now = datetime.datetime.now()
@@ -50,11 +54,11 @@ if 1: # T1_FT1
 #        minute = str(now)[14:16]
 #        second = str(now)[17:19]
 #    
-        times.append(str(datetime.datetime.now())[11:19])
-        t1_decay.append(t1_ft1.result_params[0]/1000)
-        ft1_decay.append(t1_ft1.result_params[1]/1000)
-        plt.close()
-        time.sleep(5)
+#        times.append(str(datetime.datetime.now())[11:19])
+#        t1_decay.append(t1_ft1.result_params[0]/1000)
+#        ft1_decay.append(t1_ft1.result_params[1]/1000)
+#        plt.close()
+#        time.sleep(5)
         
 #        alz.set_naverages(1000)
 #        t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 200e3, 101), double_exp=False, generate=False, plot_seqs=False)
@@ -297,3 +301,18 @@ if 0: # FT1 Loop
     plt.legend(loc='upper right')
     plt.xlabel('Measurement iterations')
     plt.ylabel('Amplitude (AU)')
+    
+    
+if 0: #T1_FT1 toggle flux
+    from scripts.single_qubit import T1_FT1fluxmeasurement
+    for i in range(1):
+        t1_ft1_flux = T1_FT1fluxmeasurement.T1_FT1fluxmeasurement(qubit_info, ef_info, qubit2_info, 6.5e3, 5.5e3, histogram=False, generate=True)
+        #t1_ft1_flux.play_sequence()
+        t1_ft1_flux.measure()
+        
+if 1: #T1_FT1 toggle flux
+    from scripts.single_qubit import Yoko_exttrig_testing
+    for i in range(1):
+        Yoko_test = Yoko_exttrig_testing.Yoko_test(qubit_info, ef_info, qubit2_info, 6.5e3, 5.5e3, histogram=False, generate=True)
+        #t1_ft1_flux.play_sequence()
+        Yoko_test.measure()

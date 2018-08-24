@@ -760,7 +760,6 @@ real part is applied to I and the imaginary part to Q.
 #            print 'buf: %s, cycle: %s, cyclereps: %s' % (buf.shape, cycles, cyclereps)
 
             IQ = self.get_IQ_rel(buf, cycles * cyclereps)
-
             # performs a running average
 #            print "i=", i, "\n"
             if cyclereps > 1:
@@ -776,13 +775,14 @@ real part is applied to I and the imaginary part to Q.
                     singleshotbin = False
             else:
                 data = IQ
-#            print "data is", data, "\n"
+                
+#            print "data is", data, i, "\n"
                 # Now data is remains an array of IQs
             if data_sum is not None:
                 data_sum += data
             else:
                 data_sum = data
-#            print "data_sum for this iteration is", data_sum, "\n"
+ #           print "data_sum for this iteration is", data_sum, i, "\n"
 
             self._card.post_buffers(buf)
             if avg_buf and update_averages:
@@ -791,6 +791,7 @@ real part is applied to I and the imaginary part to Q.
             if shot_buf: #Dario
                 if len(tmp_buf) != 0:
                     shot_buf[buf_index:buf_index+len(tmp_buf)] = tmp_buf
+                    print tmp_buf, i
                     buf_index += len(tmp_buf)
                     tmp_buf = []
                 tmp_buf.extend(IQ)
@@ -799,6 +800,7 @@ real part is applied to I and the imaginary part to Q.
             i += 1
         if shot_buf:  #Dario
             shot_buf[buf_index:buf_index+len(tmp_buf)] = tmp_buf
+#            print 'shot_buf is', shot_buf, "\n"
 
         self.end_capture()
         if data_sum is None:

@@ -156,10 +156,10 @@ trigger_period = 100 #us
 nsamples = 4000 #number of data points taken ever acquisition
 
 npoints = 20 # number of different experimental points, each will be averaged
-naverages = 100000 # total number of averages per point
+naverages = 10000 # total number of averages per point
 ntransfers = naverages / 10  # number of blocks it takes the dig data to transfer to the pc
 
-data_channel = 4
+data_channel = 1
 
 hvi, dig, awg = fetch_keysight_shit(trigger_period)
 hvi.stop()
