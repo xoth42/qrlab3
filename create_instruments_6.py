@@ -10,7 +10,7 @@ if 1:
 
 from mclient import instruments
 
-new_yoko = instruments.create('new', 'Yokogawa_GS200', address =  )
+#new_yoko = instruments.create('new', 'Yokogawa_GS200', address =  )
 
 
 
@@ -43,10 +43,10 @@ new_yoko = instruments.create('new', 'Yokogawa_GS200', address =  )
 ###sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
 ###sc2 = instruments.create('sc2', 'SC5511A', devid='100016B6')
 ##
-#AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
-#                             AWG_PRODUCT = "M3202A",
-#                             amps = [1, 1, 1, 1], ofs = [0, 0, 0, 0])
-##
+AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
+                             AWG_PRODUCT = "M3202A",
+                             amps = [2, 2, 2, 2], ofs = [2, 2, 2, 2])
+#
 #AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis=0, slot=10,
 #                         AWG_PRODUCT="M3202A",
 #                         amps = [1, 1, 1, 1], ofs = [0, 0, 0, 0])
