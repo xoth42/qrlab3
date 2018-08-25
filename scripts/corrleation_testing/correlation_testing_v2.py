@@ -1,9 +1,10 @@
 from __future__ import division
 import h5py
 import numpy as np
+import matplotlib
+matplotlib.use('TKAgg')
 import matplotlib.pyplot as plt
 from pyfftw.interfaces.numpy_fft import fft
-from pathos.multiprocessing import Pool, freeze_support
 
 plt.close('all')
 
@@ -26,7 +27,7 @@ def unit_vector(v):
 
 
 def coherence(a, b, c):
-    return (np.absolute(a)) ** 2 / (b * c)
+    return ((np.absolute(a)) ** 2) / (b * c)
 
 
 def vectorize_dec(function):
@@ -155,7 +156,6 @@ class CorrelationDay(object):
         return results
 
     def create_data(self):
-        pool = Pool(processes=2)
         #        a = pool.map(parallel_data_construction, [self.flux,
         # self.constant_flux, self.I, self.II])
         results = map(self.parallel_data_construction,
@@ -165,7 +165,6 @@ class CorrelationDay(object):
         data['constant_flux'] = results[1]
         data['I'] = results[2]
         data['II'] = results[3]
-        pool.close()
         return data
 
 
@@ -188,16 +187,17 @@ def data_pipeline(DataDictionary, label):
     plot = True
     run = True
     average = False
-    old = True
+    old = False
     if run is True:
         g = DataDictionary['g']
         equator = DataDictionary['equator']
         t1 = DataDictionary['t1']
         ft1 = DataDictionary['ft1']
+        f = DataDictionary['f']
         time_step = 500e-6 * 4 * 100 / 60
         time = np.linspace(0, time_step * len(t1), len(t1))
         true_t1 = map(lambda x: project(*x), zip(equator, g, t1))
-        true_ft1 = np.asarray(map(lambda x: project(*x), zip(g_2, f, ft1)))
+        true_ft1 = np.asarray(map(lambda x: project(*x), zip(g, f, ft1)))
         true_t1 = np.asarray(true_t1)
         data = [g, equator, true_t1, true_ft1]
 
@@ -267,10 +267,7 @@ def data_pipeline(DataDictionary, label):
                                    nice_label(r'Raw FT1 voltages'))
 
 
-if __name__ == '__main__':
-    pool = Pool(processes=4)
-    information = first_day.create_data()
-    processing_list = [(information[label], label) for label in
-                       information.keys()]
-    a = pool.map(data_pipeline, processing_list)
-    pool.close()
+information = first_day.create_data()
+process_list = [(information[label], label) for label in information.keys()]
+
+map(lambda x: data_pipeline(*x), process_list)
