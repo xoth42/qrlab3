@@ -6,10 +6,12 @@ from __future__ import division
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
+import warnings
 # Some of the arrays are so big that numpy's fft function is super slow. In
 # that case you need the fft from fftw, the fastest Fourier transform in the
 # West.
 from pyfftw.interfaces.numpy_fft import fft
+
 
 # So many plots. So many.
 plt.close('all')
@@ -131,7 +133,7 @@ class PredefinedPlot(object):
     def __init__(self, param_list, title, **kwargs):
         import matplotlib
         matplotlib.rcParams['agg.path.chunksize'] = 10000
-        #This setting isn't really necessary. You need this if you want to
+        # This setting isn't really necessary. You need this if you want to
         # plot a truly gigantic array. Matplotlib will complain that the
         # array is too big to plot.
         import matplotlib.pyplot as plt
@@ -139,7 +141,16 @@ class PredefinedPlot(object):
         plt.plot(*param_list, **kwargs)
         plt.grid()
         plt.title(str(title))
+        print self.convert(title)
+        plt.savefig(self.convert(title) + '.png')
         plt.show()
+
+    def convert(self, name):
+        import re
+        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+        a = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+        a = a.replace(' ', '_')
+        return a
 
     def other_function(self, func, *args, **kwargs):
         '''
@@ -217,16 +228,23 @@ class CorrelationDay(object):
                 pass
         if name == self.I:
             for i in self.I:
-                group = self.groups[i]['avg']
-                equator.append(group[0])
-                t1.append(group[1])
-                g.append(group[2])
+                if 'avg' in self.groups[i]:
+                    group = self.groups[i]['avg']
+                    equator.append(group[0])
+                    t1.append(group[1])
+                    g.append(group[2])
+                else:
+                    print 'No data in measurement ' + str(i) + '. Skipping'
         if name == self.II:
             for i in self.II:
-                group = self.groups[i]['avg']
-                g.append(group[0])
-                ft1.append(group[1])
-                f.append(group[2])
+
+                if 'avg' in self.groups[i]:
+                    group = self.groups[i]['avg']
+                    g.append(group[0])
+                    ft1.append(group[1])
+                    f.append(group[2])
+                else:
+                    print 'No data in measurement ' + str(i) + '. Skipping'
         if name == self.flux:
             pass
         results = dict()
@@ -271,11 +289,12 @@ if len(file.keys()) == 0:
 # format to work with but qrlab produces info in the HDF5 so thats what needs
 #  to be worked with.
 first_day = CorrelationDay(file, '20180731')
+second_day = CorrelationDay(file, '20180809')
 old_data = [np.load('g.npy'), np.load('equator.npy'), np.load('t1.npy'),
             np.load('ft1.npy')]
 
 
-def data_pipeline(DataDictionary, label):
+def data_pipeline(DayObject):
     # The four variables below are 'switches.' plot turns on the plotting
     # routine. Run runs the routine. averages normalizes some of the cross
     # correlations. This might not be good depending on how we want to
@@ -284,21 +303,27 @@ def data_pipeline(DataDictionary, label):
     run = True
     average = False
     old = False
+    CreatedData = DayObject.create_data()
+    label = DayObject.key
     if run is True:
-        g = DataDictionary['g']
-        equator = DataDictionary['equator']
-        t1 = DataDictionary['t1']
-        ft1 = DataDictionary['ft1']
-        f = DataDictionary['f']
+        g = CreatedData['I']['g']
+        g_2 = CreatedData['II']['g']
+        equator = CreatedData['I']['equator']
+        t1 = CreatedData['I']['t1']
+        ft1 = CreatedData['II']['ft1']
+        f = CreatedData['II']['f']
         time_step = 500e-6 * 4 * 100 / 60
         time = np.linspace(0, time_step * len(t1), len(t1))
         true_t1 = map(lambda x: project(*x), zip(equator, g, t1))
-        true_ft1 = np.asarray(map(lambda x: project(*x), zip(g, f, ft1)))
+        true_ft1 = np.asarray(map(lambda x: project(*x), zip(g_2, f, ft1)))
         true_t1 = np.asarray(true_t1)
         data = list()
         for i in [g, equator, true_t1, true_ft1]:
             if len(i) > 0:
+                i = np.nan_to_num(i)
                 data.append(i)
+        len_min = min(map(len, data))
+        data = [i[0:len_min] for i in data]
 
         if old is True:
             data = old_data
@@ -332,7 +357,7 @@ def data_pipeline(DataDictionary, label):
             if old is True:
                 return 'Old data ' + str(title)
             else:
-                return 'New data ' + str(label) + str(' ') + str(title)
+                return 'Dataset_' + str(label) + str(' ') + str(title)
 
         if plot == True:
             plt.figure()
@@ -366,7 +391,4 @@ def data_pipeline(DataDictionary, label):
                                    nice_label(r'Raw FT1 voltages'))
 
 
-information = first_day.create_data()
-process_list = [(information[label], label) for label in information.keys()]
-
-map(lambda x: data_pipeline(*x), process_list)
+data_pipeline(second_day)
