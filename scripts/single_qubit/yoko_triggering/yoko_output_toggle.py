@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 #Decorator that checks the return result from all of the keysight function, to
 #make sure there isn't any errors.
 
-testing_HVI_location = r'C:\qrlab\instrumentserver\keysightAWG\digitizer test\2nd_trigger.HVI'
+testing_HVI_location = r'C:\qrlab\instrumentserver\keysightAWG\digitizer test\1600ustrigger.HVI'
 from CompiledHVI import CompiledHVI
 test_instance = CompiledHVI(testing_HVI_location)
 #test_instance.assignHardware(0, 0, 7)
@@ -47,7 +47,6 @@ AWGNumModules = awg.moduleCount()
 print("Part =", AWGPart)
 print("S/N =", AWGNumber)
 print("Number of Modules = ", AWGNumModules)
-
 
 # Make a new Gaussian with tunable parameters, so that it can be changed if
 # necessary.
@@ -104,24 +103,15 @@ awg.waveformFlush()
 # Load the seconday AWG with the trigger pulses and nothing else.
 
 trigger = key.SD_Wave()
-trigger_data = np.concatenate((np.ones(10), np.zeros(full_length - 10)))
+trigger_data = np.concatenate((np.ones(50000), np.zeros(full_length - 10)))
 trigger.newFromArrayDouble(key.SD_WaveformTypes.WAVE_ANALOG, trigger_data)
 
-# Load the trigger into the secondary AWG.
-
-#pause = key.SD_Wave()
-#pause.newFromArrayDouble(key.SD_WaveformTypes.WAVE_ANALOG, np.zeros(wait_time))
-##awg.waveformLoad(pause, 1)
-
-# gaussian = np.concatenate((gaussian, np.zeros(wait_time)))
-# wave = key.SD_Wave()
-# wave.newFromArrayDouble(key.SD_WaveformTypes.WAVE_ANALOG, gaussian)
 
 
-
+yoko_trigger = [-1 * trigger_data]
 wave_list = []
 wave_list.append(trigger)
-for w in gaussian_waves:
+for w in yoko_trigger:
     temp = key.SD_Wave()
     result = temp.newFromArrayDouble(key.SD_WaveformTypes.WAVE_ANALOG, w)
     check_error(result)

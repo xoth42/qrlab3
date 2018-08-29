@@ -10,7 +10,8 @@ from visainstrument import VisaInstrument
 from instrument import Instrument
 import types
 import logging
-
+class YokoException(Exception):
+    pass
 class Yokogawa_GS200(VisaInstrument):
 
     def __init__(self, name, address, **kwargs):
@@ -69,19 +70,21 @@ class Yokogawa_GS200(VisaInstrument):
 
     def do_get_voltage(self):
         if self.set_source_type('CURR'):
-            raise('Source type is VOLTAGE, not CURRENT')
+            #The yoko raises these exceptions all of the time, and the new GUI doesn't 
+            #like them. They're harmless anyway.
+            raise YokoException('Source type is VOLTAGE, not CURRENT')
         return self.do_get_source_level()
 
     def do_set_current(self, level, range='AUTO'):
         print level, self.get_current_limit()
         if np.abs(level) > np.abs(self.get_current_limit()):
-            raise Exception('%0.6f is out of current limit!')
+            raise YokoException('%0.6f is out of current limit!')
         self.set_source_type('CURR')
         self.set_source_level(level, range)
 
     def do_get_current(self):
         if self.set_source_type('VOLT'):
-            raise('Source type is CURRENT, not VOLTAGE')
+            raise YokoException('Source type is CURRENT, not VOLTAGE')
         return self.do_get_source_level()
 
     def set_interval(self, period):

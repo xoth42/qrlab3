@@ -1,13 +1,8 @@
 import time
 
-import matplotlib.pyplot as plt
-
-
 if 1:
     import os
-
     os.system(r'C:\qrlab\start.bat')
-    
     time.sleep(1)
 
 from mclient import instruments
@@ -59,7 +54,9 @@ refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511,
                             use_extref=True) #reference
 RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=19151,
                              use_extref=True) #readout
-qbrick = instruments.create('qbrick', 'LabBrick_RFSource', serial=14510,
+#qbrick = instruments.create('qbrick', 'LabBrick_RFSource', serial=14510,
+#                           use_extref=True) #qubit
+qbrick = instruments.create('qbrick', 'LabBrick_RFSource', serial=14524,
                            use_extref=True) #qubit
 
 #sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
@@ -68,7 +65,10 @@ qbrick = instruments.create('qbrick', 'LabBrick_RFSource', serial=14510,
 AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
                              AWG_PRODUCT = "M3202A",
                              amps = [1.5, 1, 1, 1], ofs = [0.5, -.002, -.006, 0])
-#
+
+dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3)
+
+
 #AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis=0, slot=10,
 #                         AWG_PRODUCT="M3202A",
 #                         amps = [1, 1, 1, 1], ofs = [0, 0, 0, 0])
@@ -81,7 +81,7 @@ readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
                              rfsource2='refbrick',
                              pulse_len=1000, readout_chan='1m1', acq_chan='4m1')
 
-Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
+#Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 
 
 #''' Readout_IQ_Info is for iq modulation on the readout brick instead of pulse triggering '''
@@ -90,7 +90,7 @@ Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 #                             pulse_len=1000, readout_chan_I=1, readout_chan_Q=2,
 #                             acq_chan=4)
 
-# VNA = instruments.create('VNA', 'Agilent_E5071C',
+# VNA = instruments.create('VNA', 'Agilent_E5071C', 
 # address='TCPIP0::K-E5071C-26868.local::inst0::INSTR')
 #qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
 #                              deltaf=-212.100e6,
@@ -140,7 +140,6 @@ Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 # fg = instruments.create('funcgen', 'BNC_FuncGen645', address='GPIB1::30')
 # Setup Alazar
 
-'''
 
 alz = instruments.create('alazar', 'Alazar_Daemon')
 alz.set_ch1_range('40mV')
@@ -162,7 +161,6 @@ alz.setup_channels()
 alz.setup_trigger()
 
 
-'''
 
 
 #readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),

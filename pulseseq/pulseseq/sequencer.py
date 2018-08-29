@@ -41,6 +41,7 @@ PAD_CENTER    = 2
 
 MINLEN        = 1000
 
+
 IGNORE        = 0
 WARN          = 1
 RAISE         = 2

@@ -117,7 +117,7 @@ class T1_FT1_fluxmeasurementII(Measurement1D):
         self.f_amp = f_amp
 
 
-        super(T1_FT1_fluxmeasurementII, self).__init__(3, infos=(qubit_info, ef_info), **kwargs)
+        super(T1_FT1_fluxmeasurementII, self).__init__(4, infos=(qubit_info, ef_info), **kwargs)
         self.T1data = self.data.create_dataset('T1delay', data=T1delay)
         self.FT1data = self.data.create_dataset('FT1delay', data=FT1delay)
         
@@ -138,15 +138,15 @@ class T1_FT1_fluxmeasurementII(Measurement1D):
 #            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
 #        ]))
         
-#        '''This measures voltage of |g> + |e>'''
-#        s.append(self.seq)
-#        s.append(r_ge(np.pi/2, 0))
-#        
-#        s.append(Combined([
-#            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-#            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-#        ]))
-#        s.append(Delay(1000))
+        '''This measures voltage of |g> + |e>'''
+        s.append(self.seq)
+        s.append(r_ge(np.pi/2, 0))
+        
+        s.append(Combined([
+            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+        ]))
+        s.append(Delay(1000))
 # 
 #        '''This does the T1 measurement'''
 #        s.append(self.seq)

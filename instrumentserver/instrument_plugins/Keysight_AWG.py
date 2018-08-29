@@ -270,8 +270,10 @@ class Keysight_AWG(Instrument):
         return self.awg.AWGisRunning(channel)
 
     def do_set_output(self, enable, channel):
-        0==0
-        #TODO
+        if(enable):
+            self.awg.AWGstart(channel)
+        else:
+            self.awg.AWGstop(channel)
 
     def all_on(self):
         print('keysight all_on')
