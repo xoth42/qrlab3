@@ -7,6 +7,10 @@ if 1:
 
 from mclient import instruments
 
+#new_yoko = instruments.create('new', 'Yokogawa_GS200', address =  )
+
+
+
 
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                              deltaf=-100e6,
