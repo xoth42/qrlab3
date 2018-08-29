@@ -14,7 +14,7 @@ from mclient import instruments
 
 
 
-#yoko = instruments.create('yoko', 'Yokogawa_7651', address = 'GPIB0::3::INSTR')
+#yoko = instruments.create('yoko', 'Yokogawa_7651', address = 'GPIB1::17::INSTR')
 #yoko.do_set_voltage_range(1)
 
 
@@ -33,7 +33,7 @@ from mclient import instruments
 
 #Magnet = instruments.create('Magnet','AMI_430')
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='TCPIP0::172.30.56.25::4000::SOCKET')
-VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
+VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB1::17::INSTR')
 #Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', reffreq=10e6)
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1')
@@ -44,7 +44,7 @@ VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
 #brick1 = instruments.create('brick1', 'LabBrick_RFSource', serial=14510, use_extref=True) # qubit
 #brick2 = instruments.create('brick2', 'LabBrick_RFSource', serial=14511, use_extref=True) # ref
 #brick3 = instruments.create('brick3', 'LabBrick_RFSource', serial=14524, use_extref=True) # old RO
-brick4 = instruments.create('brick4', 'LabBrick_RFSource', serial=17912, use_extref=True) # RO
+#brick4 = instruments.create('brick4', 'LabBrick_RFSource', serial=17912, use_extref=False) # RO
 #brick5 = instruments.create('brick5', 'LabBrick_RFSource', serial=14525, use_extref=True) # New brick
 #brick6 = instruments.create('brick6', 'LabBrick_RFSource', serial=18238, use_extref=True)#reference
 #brick7 = instruments.create('brick7', 'LabBrick_RFSource', serial=18239, use_extref=True)#readout
