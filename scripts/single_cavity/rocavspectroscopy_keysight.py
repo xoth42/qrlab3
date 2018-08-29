@@ -52,7 +52,7 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, ax=None):
         ax.set_xlabel('Power [dB]')
         ax2.set_xlabel('Power [dB]')
 
-class ROCavSpectroscopy(Measurement1D):
+class ROCavSpectroscopy_keysight(Measurement1D):
 
     def __init__(self, qubit_info, powers, freqs, plot_type=None, qubit_pulse=False, seq=None,  **kwargs):
         self.qubit_info = qubit_info
@@ -71,7 +71,7 @@ class ROCavSpectroscopy(Measurement1D):
                 plot_type = SPEC
         self.plot_type = plot_type
 
-        super(ROCavSpectroscopy, self).__init__(1, infos=(qubit_info,), **kwargs)
+        super(ROCavSpectroscopy_keysight, self).__init__(1, infos=(qubit_info,), **kwargs)
         self.data.create_dataset('powers', data=powers)
         self.data.create_dataset('freqs', data=freqs)
         self.ampdata = self.data.create_dataset('amplitudes', shape=(len(powers),len(freqs)))

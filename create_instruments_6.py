@@ -10,7 +10,7 @@ from mclient import instruments
 
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                              deltaf=-100e6,
-                              pi_amp=.185225,
+                              pi_amp=0.278859,
                               pi2_amp=0,
                               drag=0,
                               pi_amp_quasilective=0.027025,
@@ -19,21 +19,21 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                               w=40,
                               w_quasilective=100,
                               w_selective=500,
-                              channels='2,3',
+                              channels='3,4',
                               sideband_channels='I1,Q1',
                               sideband_phase=0)
 
 
-qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
-                            deltaf=-375.06e6,
-                            pi_amp=0.223425,
-                            pi_amp_selective=0.06147,
-                            rotation='Gaussian',
-                            w=40,
-                            w_selective=100,
-                            channels='2,3',
-                            sideband_channels='I17,Q17',
-                            sideband_phase=0)
+#qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
+#                            deltaf=-375.06e6,
+#                            pi_amp=0.223425,
+#                            pi_amp_selective=0.06147,
+#                            rotation='Gaussian',
+#                            w=40,
+#                            w_selective=100,
+#                            channels='2,3',
+#                            sideband_channels='I17,Q17',
+#                            sideband_phase=0)
 
 #qubit2ge = instruments.create('qubit2ge', 'Qubit_Info',
 #                            deltaf=-100e6,
@@ -65,20 +65,22 @@ refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511,
                             use_extref=True) #reference
 RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=19151,
                              use_extref=True) #readout
-qbrick = instruments.create('qbrick', 'LabBrick_RFSource', serial=14510,
-                             use_extref=True) #qubit
+##qbrick = instruments.create('qbrick', 'LabBrick_RFSource', serial=14510,
+#                             use_extref=True) #qubit
 #q2brick = instruments.create('q2brick', 'LabBrick_RFSource', serial=17912,
 #                           use_extref=True) #qubit 2
 
 #sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
-#sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
+sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
+
+
+
+dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 2)
 
 AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
                              AWG_PRODUCT = "M3202A",
-                             amps = [1.5, 1, 1, 1], ofs = [0.5, -.02, -.025, 0])
+                             amps = [1.5, 1, 1, 1], ofs = [0.5, -.02, -0.01, 0.045])
 
-#dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3)
-#
 #AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis=0, slot=10,
 #                         AWG_PRODUCT="M3202A",
 #                         amps = [1, 1, 1, 1], ofs = [0, 0, 0, 0])
@@ -89,7 +91,7 @@ AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
 readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
                              IQe_radius= 1 , rfsource1='RObrick', 
                              rfsource2='refbrick',
-                             pulse_len=1000, readout_chan='1m1', acq_chan='4m1')
+                             pulse_len=1000, readout_chan='1m1', acq_chan='2m1')
 
 Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 
@@ -150,7 +152,7 @@ Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 # fg = instruments.create('funcgen', 'BNC_FuncGen645', address='GPIB1::30')
 # Setup Alazar
 
-
+'''
 alz = instruments.create('alazar', 'Alazar_Daemon')
 alz.set_ch1_range('40mV')
 alz.set_ch2_range('40mV')
@@ -169,7 +171,7 @@ alz.set_timeout(10000)
 alz.setup_clock()
 alz.setup_channels()
 alz.setup_trigger()
-
+'''
 
 
 
