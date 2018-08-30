@@ -83,7 +83,7 @@ dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 2)
 
 AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
                              AWG_PRODUCT = "M3202A",
-                             amps = [1.5, 1, 1, 1], ofs = [0.5, -.02, -0.01, 0.045])
+                             amps = [1.5, 1, 1.5, 1.5], ofs = [0.5, 0, -0.003, 0.059])
 
 #AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis=0, slot=10,
 #                         AWG_PRODUCT="M3202A",

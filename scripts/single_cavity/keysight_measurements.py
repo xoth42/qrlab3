@@ -21,13 +21,13 @@ qubit_info = mclient.get_qubit_info('qubit1ge')
 #RO_info = mclient.get_qubit_info('RO')
 os.chdir(r'C:/qrlab/scripts')
 
-if 1:
+if 0:
     from single_cavity import rocavspectroscopy_keysight
 #    rofreq = 8553.1e6
     rofreq = 7348.8e6
-    freq_range = 5e6
-    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(-15, -15, 1),
-                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 21),
+    freq_range = 15e6
+    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(-30, -40, 6),
+                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 201),
                                              qubit_pulse=False)
     ro.measure()
     
@@ -42,17 +42,17 @@ if 0:
     ro.measure()
     
 
-if 0:
+if 1:
     from single_qubit import spectroscopy_keysight
 #    from scripts.single_qubit import spectroscopy_IQ
 #    for i in range(5560, 5560, 0):
     qubit_freq = 900e6
-    freq_range = 20e6
+    freq_range = 10e6
     spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['sc2'], qubit_info,
                                      np.linspace(qubit_freq-freq_range,
-                                                 qubit_freq+freq_range, 501),
-                                     np.linspace(-15, -25, 3),
-                                     plen=80000, amp=1, plot_seqs=False) 
+                                                 qubit_freq+freq_range, 51),
+                                     [-30],
+                                     plen=95000, amp=0.5, plot_seqs=False) 
 
     spec.measure()
 
