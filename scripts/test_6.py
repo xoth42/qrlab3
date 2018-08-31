@@ -30,18 +30,18 @@ if 0:
 qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')
 print(qubit_info)
-ef_info = mclient.get_qubit_info('qubit1ef')
+#ef_info = mclient.get_qubit_info('qubit1ef')
 #cavity_info = mclient.get_qubit_info('cavity0')
 
 #Find read-out cavity and choose a power
 
 if 0: # RO Cavity spec
     from scripts.single_cavity import rocavspectroscopy
-    rofreq = 8302e6
-    freq_range = 5e6
+    rofreq = 7348.8e6
+    freq_range = 15e6
 
-    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-30, -30, 1),
-                                         np.linspace(rofreq - freq_range, rofreq + freq_range, 51), qubit_pulse=False)
+    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-25, -25, 1),
+                                         np.linspace(rofreq - freq_range, rofreq + freq_range, 101), qubit_pulse=False)
     ro.measure()
     bla
 #Find qubit
@@ -50,7 +50,7 @@ if 0: # Qubit spec
 #    from scripts.single_qubit import spectroscopy_IQ
     qubit_freq = 5436e6
     freq_range = 5e6
-    spec = spectroscopy.Spectroscopy(mclient.instruments['qbrick'], qubit_info,
+    spec = spectroscopy.Spectroscopy(mclient.instruments['sc2'], qubit_info,
                                      np.linspace(qubit_freq-freq_range,
                                                  qubit_freq+freq_range, 51),
                                      [-30],
@@ -66,7 +66,7 @@ if 0: # Qubit spec
     bla
 
 """Qubit SSBspec"""
-if 0: # Qubit SSBspec
+if 1: # Qubit SSBspec
     from scripts.single_qubit import ssbspec
     seq = sequencer.Trigger(250)
 

@@ -25,8 +25,8 @@ if 0:
     from single_cavity import rocavspectroscopy_keysight
 #    rofreq = 8553.1e6
     rofreq = 7348.8e6
-    freq_range = 15e6
-    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(-30, -40, 6),
+    freq_range = 20e6
+    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(-25, -25, 1),
                                              np.linspace(rofreq-freq_range, rofreq+freq_range, 201),
                                              qubit_pulse=False)
     ro.measure()
@@ -42,27 +42,27 @@ if 0:
     ro.measure()
     
 
-if 1:
+if 0:
     from single_qubit import spectroscopy_keysight
 #    from scripts.single_qubit import spectroscopy_IQ
 #    for i in range(5560, 5560, 0):
-    qubit_freq = 900e6
-    freq_range = 10e6
+    qubit_freq = 936e6
+    freq_range = 2e6
     spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['sc2'], qubit_info,
                                      np.linspace(qubit_freq-freq_range,
-                                                 qubit_freq+freq_range, 51),
-                                     [-30],
-                                     plen=95000, amp=0.5, plot_seqs=False) 
+                                                 qubit_freq+freq_range, 151),
+                                     [-25],
+                                     plen=40000, amp=0.3, plot_seqs=False) 
 
     spec.measure()
 
     
     
     
-if 0:
+if 1:
     from scripts.single_qubit import ssbspec
     seq = sequencer.Trigger(250)
 
-    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-20e6, 20e6, 101), seq=seq, plot_seqs=False)
+    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-2e6, 2e6, 151), seq=seq, plot_seqs=False)
     spec.measure_keysight()
     

@@ -79,7 +79,7 @@ sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
 
 
 
-dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 2)
+#dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 2)
 
 AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
                              AWG_PRODUCT = "M3202A",
@@ -156,7 +156,7 @@ Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 # fg = instruments.create('funcgen', 'BNC_FuncGen645', address='GPIB1::30')
 # Setup Alazar
 
-'''
+
 alz = instruments.create('alazar', 'Alazar_Daemon')
 alz.set_ch1_range('40mV')
 alz.set_ch2_range('40mV')
@@ -164,8 +164,8 @@ alz.set_nsamples(4800)
 alz.set_naverages(2000)
 alz.set_ch1_coupling('AC')
 alz.set_ch2_coupling('AC')
-#alz.set_clock_source('EXT10M')
-alz.set_clock_source('EXT')
+alz.set_clock_source('EXT10M')
+#alz.set_clock_source('EXT')
 alz.set_sample_rate('1GEXT10')
 alz.set_engJ_trig_src('EXT')
 alz.set_engJ_trig_lvl(128+5)
@@ -175,7 +175,7 @@ alz.set_timeout(10000)
 alz.setup_clock()
 alz.setup_channels()
 alz.setup_trigger()
-'''
+
 
 
 

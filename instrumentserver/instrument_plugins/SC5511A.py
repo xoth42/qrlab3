@@ -164,34 +164,6 @@ NUM_MAX_DEVICES = 5
 ID_BUFFER_SIZE = 8
 
 
-def do_set_test_mode(val):
-    val = int(val)
-    f = get_lb_func('fnLMS_SetTestMode', [ctypes.c_uint32])
-    return f(val)
-
-def do_get_num_devices():
-    f = get_lb_func('fnLMS_GetNumDevices', [])
-    return f()
-
-def do_get_device_info():
-    FP = ctypes.POINTER(ctypes.c_uint32)
-    f = get_lb_func('fnLMS_GetDevInfo', [FP])
-    num_devices = do_get_num_devices()
-    device_info = np.zeros([num_devices], dtype=np.uint32)
-    f(ctypes.cast(device_info.ctypes.data, FP))
-    return device_info
-
-def do_get_serial_number(devid):
-    f = get_lb_func('fnLMS_GetSerialNumber')
-    return f(devid)
-
-def do_get_model_name(devid):
-    f = get_lb_func('fnLMS_GetModelNameA', [ctypes.c_uint32, ctypes.c_char_p])
-    model_name = ' '*32
-    name_len = f(devid, model_name)
-    return model_name[:name_len]
-
-
 
 class SC5511A(Instrument):
 
@@ -222,7 +194,7 @@ class SC5511A(Instrument):
         lb_dll.sc5511a_set_rf_mode(self._handle, 0)
         lb_dll.sc5511a_set_output(self._handle, 1)
         
-        self._serialno = results[0]
+#        self._serialno = results[0]
         self._min_freq = 100000000
         self._max_freq = 20000000000
         self._min_power = -40
@@ -230,10 +202,10 @@ class SC5511A(Instrument):
 
         
     
-        self.add_parameter('serial', type=types.StringType,
-            flags=Instrument.FLAG_GET, value=self._serialno)
-        self.add_parameter('handle', type=types.IntType,
-            flags=Instrument.FLAG_GET, value=self._handle)
+#        self.add_parameter('serial', type=types.StringType,
+#            flags=Instrument.FLAG_GET, value=self._serialno)
+#        self.add_parameter('handle', type=types.IntType,
+#            flags=Instrument.FLAG_GET, value=self._handle)
         self.add_parameter('frequency', type=types.FloatType,
             flags=Instrument.FLAG_GETSET, units='Hz',
             minval=self._min_freq, maxval=self._max_freq,
@@ -242,13 +214,13 @@ class SC5511A(Instrument):
             flags=Instrument.FLAG_GETSET, units='dBm',
             minval=self._min_power, maxval=self._max_power,
             format='%.02f', value = device_rf_params.rf_level)
-        self.add_parameter('rf_mode', type=types.StringType,
-            flags=Instrument.FLAG_GETSET, option_list=('fixed', 'sweep'),
-            help='sweep mode does not work')
-        self.add_parameter('rf_mode', type=types.StringType,
-            flags=Instrument.FLAG_GETSET, value = 'fixed')
+#        self.add_parameter('rf_mode', type=types.StringType,
+#            flags=Instrument.FLAG_GETSET, option_list=('fixed', 'sweep'),
+#            help='sweep mode does not work')
+#        self.add_parameter('rf_mode', type=types.StringType,
+#            flags=Instrument.FLAG_GETSET, value = 'fixed')
         self.add_parameter('rf_on', type=types.BooleanType,
-            flags=Instrument.FLAG_GETSET)
+            flags=Instrument.FLAG_GETSET, value = True)
         self.add_parameter('ext_locked', type=types.BooleanType,
             flags=Instrument.FLAG_GET, value = True)
         
@@ -274,6 +246,7 @@ class SC5511A(Instrument):
         
         '''
    
+    '''
     def do_get_rf_mode(self):
         device_status = device_status_t()
         lb_dll.sc5511a_get_device_status(self._handle, device_status)
@@ -288,16 +261,18 @@ class SC5511A(Instrument):
         else:
             lb_dll.sc5511a_set_rf_mode(self._handle, 0)
 
-    def do_get_handle(self):
-        return self._handle.contents.value
+    '''
 
-    def do_get_serial(self):
-        return self._serialno
+#    def do_get_handle(self):
+#        return self._handle.contents.value
+
+#    def do_get_serial(self):
+#        return self._serialno
 
     def do_get_frequency(self):
         device_rf_params = device_rf_params_t()        
         lb_dll.sc5511a_get_rf_parameters(self._handle, device_rf_params)
-        return device_rf_params.rf1_freq
+        return float(device_rf_params.rf1_freq)
 
     def do_set_frequency(self, freq_Hz):
         return lb_dll.sc5511a_set_freq(self._handle, ctypes.c_ulonglong(int(freq_Hz)))
@@ -313,7 +288,8 @@ class SC5511A(Instrument):
     def do_get_rf_on(self):
         device_status = device_status_t()
         lb_dll.sc5511a_get_device_status(self._handle, device_status)
-        return device_status.operate_status_t.rf1_out_enable
+        print('inside sc driver do_get_rf_on. returning:', device_status.operate_status_t.rf1_out_enable)
+        return device_status.operate_status_t.rf1_out_enable == 1
 
     def do_set_rf_on(self, val):
         if(val):
