@@ -6,7 +6,6 @@ from __future__ import division
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
-import warnings
 # Some of the arrays are so big that numpy's fft function is super slow. In
 # that case you need the fft from fftw, the fastest Fourier transform in the
 # West.
@@ -187,7 +186,6 @@ class CorrelationDay(object):
         if len(self.groups) == 0:
             raise ValueError('No data groups')
         self.process_groups()
-        self.create_data()
 
     def process_groups(self):
         '''
@@ -225,7 +223,28 @@ class CorrelationDay(object):
 
         if name == self.constant_flux:
             for i in self.constant_flux:
-                pass
+                if 'avg' in self.groups[i]:
+                    continue
+                    group = self.groups[i]['avg']
+                    equator.append(group[0])
+                    t1.append(group[1])
+                    g.append(group[2])
+                    ft1.append(group[3])
+                    f.append(group[4])
+                if 'shots' in self.groups[i]:
+                    group = self.groups[i]['shots']
+                    #for k in group:
+                    #    temp.append(k)
+                    stacked_array = np.row_stack(np.split(group[:],
+                                                          (len(group[:]) /
+                                                                 5)))
+                    equator = np.append(equator, stacked_array[:, 0])
+                    t1 = np.append(t1, stacked_array[:, 1])
+                    g = np.append(g, stacked_array[:, 2])
+                    ft1 = np.append(ft1, stacked_array[:, 3])
+                    f = np.append(f, stacked_array[:, 4])
+
+
         if name == self.I:
             for i in self.I:
                 if 'avg' in self.groups[i]:
@@ -274,7 +293,7 @@ class CorrelationDay(object):
 
 
 file_path = r'C:\Users\Wang_Lab\Desktop\TunableTransmonJuly18.hdf5'
-day_codes = []
+day_codes = [ "20180816"]
 try:
     file = h5py.File(file_path, 'r')
 except IOError:
@@ -288,11 +307,9 @@ if len(file.keys()) == 0:
 # series of numpy files in the same directory as this script. Its an easier
 # format to work with but qrlab produces info in the HDF5 so thats what needs
 #  to be worked with.
-first_day = CorrelationDay(file, '20180731')
-second_day = CorrelationDay(file, '20180809')
+#first_day = CorrelationDay(file, '20180731')
 old_data = [np.load('g.npy'), np.load('equator.npy'), np.load('t1.npy'),
             np.load('ft1.npy')]
-
 
 def data_pipeline(DayObject):
     # The four variables below are 'switches.' plot turns on the plotting
@@ -303,35 +320,53 @@ def data_pipeline(DayObject):
     run = True
     average = False
     old = False
-    CreatedData = DayObject.create_data()
+    I_and_II = True
+    constant = False
+    if old is False:
+        CreatedData = DayObject.create_data()
     label = DayObject.key
     if run is True:
-        g = CreatedData['I']['g']
-        g_2 = CreatedData['II']['g']
-        equator = CreatedData['I']['equator']
-        t1 = CreatedData['I']['t1']
-        ft1 = CreatedData['II']['ft1']
-        f = CreatedData['II']['f']
-        time_step = 500e-6 * 4 * 100 / 60
-        time = np.linspace(0, time_step * len(t1), len(t1))
-        true_t1 = map(lambda x: project(*x), zip(equator, g, t1))
-        true_ft1 = np.asarray(map(lambda x: project(*x), zip(g_2, f, ft1)))
-        true_t1 = np.asarray(true_t1)
-        data = list()
-        for i in [g, equator, true_t1, true_ft1]:
-            if len(i) > 0:
-                i = np.nan_to_num(i)
-                data.append(i)
-        len_min = min(map(len, data))
-        data = [i[0:len_min] for i in data]
-
-        if old is True:
+        if old is False:
+            if I_and_II is True:
+                g = CreatedData['I']['g']
+                g_2 = CreatedData['II']['g']
+                equator = CreatedData['I']['equator']
+                t1 = CreatedData['I']['t1']
+                ft1 = CreatedData['II']['ft1']
+                f = CreatedData['II']['f']
+            if constant is True:
+                g = CreatedData['constant_flux']['g']
+                g_2 = g
+                equator = CreatedData['constant_flux']['equator']
+                t1 = CreatedData['constant_flux']['t1']
+                ft1 = CreatedData['constant_flux']['ft1']
+                f = CreatedData['constant_flux']['f']
+            time_step = 100e-6 * 3 * 100 / 60
+            time = np.linspace(0, time_step * len(t1), len(t1))
+            true_t1 = map(lambda x: project(*x), zip(equator, g, t1))
+            true_ft1 = np.asarray(map(lambda x: project(*x), zip(g_2, f, ft1)))
+            true_t1 = np.asarray(true_t1)
+            data = list()
+            for i in [g, equator, true_t1, true_ft1]:
+                if len(i) > 0:
+                    i = np.nan_to_num(i)
+                    data.append(i)
+            len_min = min(map(len, data))
+            data = [i[0:len_min] for i in data]
+        else:
             data = old_data
+            g = data[0]
+            g_2 = g
+            equator = data[1]
+            t1 = data[2]
+            ft1 = data[3]
+
+
         directions = g - equator
         angles = np.angle(directions, deg=True)
         amplitudes = fast_map(np.absolute, data)
         averages = fast_map(lambda x: x - np.average(x), amplitudes)
-        if averages is True:
+        if average is True:
             autocorrelations = fast_map(
                 lambda x: np.correlate(x, x, mode='full') / np.sum(x ** 2),
                 averages)
@@ -341,8 +376,6 @@ def data_pipeline(DayObject):
                 averages)
 
         right_halves = fast_map(right_half, autocorrelations)
-
-        cross_correlate = lambda x: np.correlate(x[0], x[1], mode='full')
 
         cc = np.correlate(averages[2], averages[3], mode='full')
         spectrums = fast_map(fft, right_halves)
@@ -370,6 +403,7 @@ def data_pipeline(DayObject):
             plt.plot(coherence_, 'k')
             plt.title(nice_label('Coherence'))
             subtracted_autoc = right_halves[2] - right_halves[1]
+            
 
             phases_p = PredefinedPlot([angles, 'k'], nice_label('phases'))
             #    phases_p.other_function(plt.ylim, ((-2*np.pi, 2*np.pi)))
@@ -390,5 +424,6 @@ def data_pipeline(DayObject):
             ft1_p = PredefinedPlot([averages[3], 'b'],
                                    nice_label(r'Raw FT1 voltages'))
 
-
-data_pipeline(second_day)
+#for day in day_codes:
+#    day = CorrelationDay(file, day)
+#    data_pipeline(day)
