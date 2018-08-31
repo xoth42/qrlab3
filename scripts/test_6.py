@@ -30,18 +30,18 @@ if 0:
 qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')
 print(qubit_info)
-ef_info = mclient.get_qubit_info('qubit1ef')
+#ef_info = mclient.get_qubit_info('qubit1ef')
 #cavity_info = mclient.get_qubit_info('cavity0')
 
 #Find read-out cavity and choose a power
 
 if 0: # RO Cavity spec
     from scripts.single_cavity import rocavspectroscopy
-    rofreq = 8302e6
-    freq_range = 5e6
+    rofreq = 7348.8e6
+    freq_range = 15e6
 
-    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-30, -30, 1),
-                                         np.linspace(rofreq - freq_range, rofreq + freq_range, 51), qubit_pulse=False)
+    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-25, -25, 1),
+                                         np.linspace(rofreq - freq_range, rofreq + freq_range, 101), qubit_pulse=False)
     ro.measure()
     bla
 #Find qubit
@@ -50,7 +50,7 @@ if 0: # Qubit spec
 #    from scripts.single_qubit import spectroscopy_IQ
     qubit_freq = 5436e6
     freq_range = 5e6
-    spec = spectroscopy.Spectroscopy(mclient.instruments['qbrick'], qubit_info,
+    spec = spectroscopy.Spectroscopy(mclient.instruments['sc2'], qubit_info,
                                      np.linspace(qubit_freq-freq_range,
                                                  qubit_freq+freq_range, 51),
                                      [-30],
@@ -66,11 +66,11 @@ if 0: # Qubit spec
     bla
 
 """Qubit SSBspec"""
-if 0: # Qubit SSBspec
+if 1: # Qubit SSBspec
     from scripts.single_qubit import ssbspec
     seq = sequencer.Trigger(250)
 
-    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-1e6, 1e6, 151), seq=seq, plot_seqs=False)
+    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-5e6, 5e6, 101), seq=seq, plot_seqs=False)
     spec.measure()
 #    spec.measure_keysight()
     bla
@@ -105,10 +105,10 @@ if 0:
     bla
 
 """Power Rabi -- Pi pulse calibration"""
-if 0: # Calibrate pi pulse
+if 1: # Calibrate pi pulse
     for i in range(1):
         from scripts.single_qubit import rabi
-        tr = rabi.Rabi(qubit_info, np.linspace(-0.4, 0.4, 100), plot_seqs=False, generate=True, selective=False, repeat_pulse=1,
+        tr = rabi.Rabi(qubit_info, np.linspace(-0.5, 0.5, 100), plot_seqs=False, generate=True, selective=False, repeat_pulse=1,
                        update=False)
 
 #        from scripts.single_qubit import rabi_IQ
@@ -154,14 +154,14 @@ if 0: # EF SSBspec
 
 if 0: # EF rabi -ef_info not defined
     from scripts.single_qubit import efrabi
-    alz.set_naverages(5000)
+    alz.set_naverages(2000)
     efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.15, 0.15, 151), plot_seqs=False, selective=True, generate=True)
     efr.measure()
     period = efr.fit_params['period'].value
+    alz.set_naverages(5000)
+    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.15, 0.15, 151), first_pi=False, selective=True, force_period=period, generate=True)
+    efr.measure()
     alz.set_naverages(2000)
-#    alz.set_naverages(5000)
-#    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.2, 0.2, 151), first_pi=False, selective=True, force_period=period, generate=True)
-#    efr.measure()
     bla
 
 if 0: # Single qubit tomography
@@ -277,7 +277,7 @@ if 0: # T1
 #    t1times = np.zeros(len(range(1000)))
     for i in range(1):
         #postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
-        t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 30e3, 151), double_exp=False, generate=True, plot_seqs=False)
+        t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 40e3, 151), double_exp=False, generate=True, plot_seqs=False)
     
     #    t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 10e3, 10), double_exp=False, generate=True, plot_seqs=False)
         t1.measure()
@@ -341,7 +341,7 @@ if 0: # T2_QP
 if 0: # T2echo
     from scripts.single_qubit import T2measurement
  
-    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 40e3, 150), detune=0.1e6, echotype = T2measurement.ECHO_HAHN, plot_seqs = False, generate=True)
+    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 3e3, 150), detune=2e6, echotype = T2measurement.ECHO_HAHN, plot_seqs = False, generate=True)
 
     t2.measure()
     bla
