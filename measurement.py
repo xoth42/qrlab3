@@ -793,9 +793,10 @@ class Measurement(object):
             vproj = IQe - IQg
 
         vproj /= np.abs(vproj)
-        ys = ys - IQg
-        return (np.real(ys)**2+np.imag(ys)**2)**0.5
-#        return np.real(ys) * vproj.real  + np.imag(ys) * vproj.imag
+#        ys = ys - IQg #DARIO 8/31
+        return (np.real(ys)**2+np.imag(ys)**2)**0.5 # returns absolute amplitude
+#        return np.real(ys) * vproj.real  + np.imag(ys) * vproj.imag # returns projected amplitude
+#        return np.angle(ys, deg=True) # returns phase #DARIO 8/31 
 
     def get_ys(self, data=None):
         '''

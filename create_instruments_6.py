@@ -18,11 +18,11 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                               pi2_amp=0,
                               drag=0,
                               pi_amp_quasilective=0.027025,
-                              pi_amp_selective=0.34 / 25,
+                              pi_amp_selective=0.5,
                               rotation='Gaussian',
-                              w=40,
+                              w=4000,
                               w_quasilective=100,
-                              w_selective=500,
+                              w_selective=1000,
                               channels='3,4',
                               sideband_channels='I1,Q1',
                               sideband_phase=0)
@@ -79,11 +79,11 @@ sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
 
 
 
-#dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 2)
+dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 2)
 
 AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
                              AWG_PRODUCT = "M3202A",
-                             amps = [1.5, 1, 1.5, 1.5], ofs = [0.5, 0, -0.003, 0.059])
+                             amps = [1.5, 1, 1.5, 1.5], ofs = [0.5, 0, -0.002, 0.046])
 
 #AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis=0, slot=10,
 #                         AWG_PRODUCT="M3202A",
@@ -92,10 +92,10 @@ AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
 # Magnet = instruments.create('Magnet','AMI_430')
 
 
-readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
+readout = instruments.create('readout', 'Readout_Info', IQe=(0.2-6.7j), IQg=(0.3-6.7j),
                              IQe_radius= 1 , rfsource1='RObrick', 
                              rfsource2='refbrick',
-                             pulse_len=1000, readout_chan='1m1', acq_chan='2m1')
+                             pulse_len=2000, readout_chan='1m1', acq_chan='2m1')
 
 Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 
@@ -156,7 +156,7 @@ Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 # fg = instruments.create('funcgen', 'BNC_FuncGen645', address='GPIB1::30')
 # Setup Alazar
 
-
+'''
 alz = instruments.create('alazar', 'Alazar_Daemon')
 alz.set_ch1_range('40mV')
 alz.set_ch2_range('40mV')
@@ -175,7 +175,7 @@ alz.set_timeout(10000)
 alz.setup_clock()
 alz.setup_channels()
 alz.setup_trigger()
-
+'''
 
 
 
