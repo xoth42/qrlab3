@@ -1,5 +1,8 @@
 # A script by Josh to process all the data for the correlation studies.
-
+#TODO Look and see why some array values are zero.
+#TODO Parallelize.
+#TODO Add some nice comments.
+#TODO Make the timestep right.
 
 from __future__ import division
 
@@ -10,8 +13,6 @@ import numpy as np
 # West.
 from pyfftw.interfaces.numpy_fft import fft
 
-
-# So many plots. So many.
 
 
 def right_half(array):
@@ -98,6 +99,8 @@ def project(c1, v, s):
     :param s:
     :return:
     '''
+    if (v == None) or (s == None):
+        return 0+0j
     v = v - c1
     s = s - c1
     q = (dot(v, s) / (dot(v, v))) * v
@@ -234,8 +237,7 @@ class CorrelationDay(object):
                     group = self.groups[i]['shots']
                     # for k in group:
                     #    temp.append(k)
-                    array = np.asarray(group[:])
-                    stacked_array = np.row_stack(np.split(array,
+                    stacked_array = np.row_stack(np.split(group[:],
                                                           (len(group[:]) /
                                                            5)))
                     equator.append(stacked_array[:, 0])
@@ -267,26 +269,40 @@ class CorrelationDay(object):
         if name == self.flux:
             pass
         results = dict()
-        #g = self.purge_non_arrays_and_flatten(g)
-        #e = self.purge_non_arrays_and_flatten(e)
-        #equator = self.purge_non_arrays_and_flatten(equator)
-        #t1 = self.purge_non_arrays_and_flatten(t1)
-        #ft1 = self.purge_non_arrays_and_flatten(ft1)
-        #f = self.purge_non_arrays_and_flatten(f)
+        g = self.purge_non_arrays_and_flatten(g)
+        e = self.purge_non_arrays_and_flatten(e)
+        equator = self.purge_non_arrays_and_flatten(equator)
+        t1 = self.purge_non_arrays_and_flatten(t1)
+        ft1 = self.purge_non_arrays_and_flatten(ft1)
+        f = self.purge_non_arrays_and_flatten(f)
 
-        results = {'g': np.asarray(g),
-                   'e': np.asarray(e),
-                   'equator': np.asarray(equator),
-                   't1': np.asarray(t1),
-                   'ft1': np.asarray(ft1),
-                   'f': np.asarray(f)}
+        results = {'g': np.asarray(np.ndarray.flatten(g)),
+                   'e': np.asarray(np.ndarray.flatten(e)),
+                   'equator': np.asarray(np.ndarray.flatten(equator)),
+                   't1': np.asarray(np.ndarray.flatten(t1)),
+                   'ft1': np.asarray(np.ndarray.flatten(ft1)),
+                   'f': np.asarray(np.ndarray.flatten(f))}
         return results
     def purge_non_arrays_and_flatten(self, arr):
-        result = list()
+        '''
+        There are measurements which contain the shot data and others that
+        contain only the avg value. In that case the result list would
+        contain a few scalars in between giant numpy arrays. This function
+        purges the scalars.
+        :param arr:
+        :return:
+        '''
+        length = 0
+        i = 0
+        for item in arr:
+            if type(item) is np.ndarray:
+                length += 1
+        result = np.empty(length, dtype=np.ndarray)
         for entry in arr:
             if type(entry) is np.ndarray:
-                result.append(entry)
-        return np.ndarray.flatten(np.asarray(result))
+                result[i] = entry
+                i += 1
+        return np.ndarray.flatten(result)
 
     def create_data(self):
         '''
@@ -310,7 +326,7 @@ day_codes = ["20180816"]
 try:
     file = h5py.File(file_path, 'r')
 except IOError:
-    # This is so that Josh can work on this personal computer.
+    # This is so that Josh can work on his personal computer.
     file_path = r'/media/jcarey/files/TunableTransmonJuly18.hdf5'
     file = h5py.File(file_path, 'r')
 if len(file.keys()) == 0:
@@ -334,7 +350,7 @@ def data_pipeline(DayObject):
     run = True
     average = False
     old = False
-    I_and_II = True
+    I_and_II = False
     constant = True
     if old is False:
         CreatedData = DayObject.create_data()
