@@ -168,7 +168,6 @@ ID_BUFFER_SIZE = 8
 class SC5511A(Instrument):
 
     def __init__(self, name, devid=None, serial=None):
-        print('inside SC5511A.py init')
         super(SC5511A, self).__init__(name)
 
         if devid is None:
@@ -288,7 +287,6 @@ class SC5511A(Instrument):
     def do_get_rf_on(self):
         device_status = device_status_t()
         lb_dll.sc5511a_get_device_status(self._handle, device_status)
-        print('inside sc driver do_get_rf_on. returning:', device_status.operate_status_t.rf1_out_enable)
         return device_status.operate_status_t.rf1_out_enable == 1
 
     def do_set_rf_on(self, val):

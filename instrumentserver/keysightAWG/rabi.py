@@ -6,8 +6,8 @@ import csv
 
 
 AWG_PRODUCT = "M3202A"
-CHASSIS = 1
-AWG_SLOT = 7
+CHASSIS = 0
+AWG_SLOT = 5
 
 # CREATE AND OPEN MODULES
 awg = key.SD_AOU()
@@ -42,9 +42,9 @@ gaussian = np.loadtxt(waveform_filepath + 'Gaussian.csv', skiprows = 3)
 pulse_length = len(gaussian)
 
 wait_time = 0
-num_points = 10
+num_points = 1
 num_averages = 1
-power = np.linspace(.1, 1, num_points)
+power = np.linspace(1, 1, num_points)
 
 full_length = pulse_length + wait_time
 
@@ -90,23 +90,24 @@ awg.channelWaveShape(4, key.SD_Waveshapes.AOU_AWG)
 
 # Setup Envelopes
 awg.AWGqueueWaveform(1, 1, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
-awg.AWGqueueWaveform(2, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
-awg.AWGqueueWaveform(3, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
-awg.AWGqueueWaveform(4, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
+awg.AWGqueueWaveform(1, 1, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
+#awg.AWGqueueWaveform(2, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
+#awg.AWGqueueWaveform(3, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
+#awg.AWGqueueWaveform(4, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
 
-awg.AWGqueueWaveform(1, 1, key.SD_TriggerModes.AUTOTRIG, 0, num_averages-1, 0)
-awg.AWGqueueWaveform(2, 0, key.SD_TriggerModes.AUTOTRIG, 0, num_averages-1, 0)
-awg.AWGqueueWaveform(3, 0, key.SD_TriggerModes.AUTOTRIG, 0, num_averages-1, 0)
-awg.AWGqueueWaveform(4, 0, key.SD_TriggerModes.AUTOTRIG, 0, num_averages-1, 0)
+#awg.AWGqueueWaveform(1, 1, key.SD_TriggerModes.AUTOTRIG, 0, num_averages-1, 0)
+#awg.AWGqueueWaveform(2, 0, key.SD_TriggerModes.AUTOTRIG, 0, num_averages-1, 0)
+#awg.AWGqueueWaveform(3, 0, key.SD_TriggerModes.AUTOTRIG, 0, num_averages-1, 0)
+#awg.AWGqueueWaveform(4, 0, key.SD_TriggerModes.AUTOTRIG, 0, num_averages-1, 0)
 
 
 # Modulate the sinusoid and the envelope
 awg.modulationAmplitudeConfig(1, key.SD_ModulationTypes.AOU_MOD_AM, 1.5)
 # Setup the queue in cyclic mode
 awg.AWGqueueConfig(1,0)
-awg.AWGqueueConfig(2,0)
-awg.AWGqueueConfig(3,0)
-awg.AWGqueueConfig(4,0)
+#awg.AWGqueueConfig(2,0)
+#awg.AWGqueueConfig(3,0)
+#awg.AWGqueueConfig(4,0)
 
 
 
@@ -116,7 +117,7 @@ awg.AWGqueueConfig(4,0)
 # Start and softare trigger channel 1
 #awg.AWGstart(2)
 awg.AWGstartMultiple(15)
-awg.AWGtriggerMultiple(15)
+#awg.AWGtriggerMultiple(15)
 
 
 
