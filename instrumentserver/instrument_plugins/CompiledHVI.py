@@ -12,7 +12,10 @@ class CompiledHVI(object):
         self.hvi = key.SD_HVI()
         self.identifier = self.hvi.open(HVI_path_str)
         self.error(self.identifier)
-#        self.assignHardware(0, 0, 7)
+        self.assignHardware(0, 0, 5)
+        self.assignHardware(1, 0, 7)
+        self.assignHardware(2, 0, 10)
+
         self.hvi.compile()
         self.hvi.load()
         

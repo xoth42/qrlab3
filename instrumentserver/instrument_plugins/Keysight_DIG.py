@@ -202,7 +202,7 @@ class Keysight_DIG(Instrument):
     
     def load_hvi(self):
 #        testing_HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\\' + str(self._trigger_period) + 'usTrigger.HVI'
-        testing_HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\c4_100usTrigger.HVI'
+        testing_HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\3slot500us.HVI'
         self._hvi = CompiledHVI(testing_HVI_location)
         self._hvi.stop()
         

@@ -1,20 +1,18 @@
 # A script by Josh to process all the data for the correlation studies.
-
+#TODO Look and see why some array values are zero.
+#TODO Parallelize.
+#TODO Add some nice comments.
+#TODO Make the timestep right.
 
 from __future__ import division
 
 import h5py
-import matplotlib.pyplot as plt
 import numpy as np
-import warnings
 # Some of the arrays are so big that numpy's fft function is super slow. In
 # that case you need the fft from fftw, the fastest Fourier transform in the
 # West.
 from pyfftw.interfaces.numpy_fft import fft
 
-
-# So many plots. So many.
-plt.close('all')
 
 
 def right_half(array):
@@ -101,6 +99,8 @@ def project(c1, v, s):
     :param s:
     :return:
     '''
+    if (v == None) or (s == None):
+        return 0+0j
     v = v - c1
     s = s - c1
     q = (dot(v, s) / (dot(v, v))) * v
@@ -146,6 +146,8 @@ class PredefinedPlot(object):
         plt.show()
 
     def convert(self, name):
+        '''Make the keys better for saving and printing. Shamelessly stolen
+        from the internet.'''
         import re
         s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
         a = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
@@ -187,7 +189,6 @@ class CorrelationDay(object):
         if len(self.groups) == 0:
             raise ValueError('No data groups')
         self.process_groups()
-        self.create_data()
 
     def process_groups(self):
         '''
@@ -216,16 +217,36 @@ class CorrelationDay(object):
         and constructs a bunch of dictionaries that organize the data for
         further processing. It has parallel in the name since I want to run
         this in parallel at some point. Thats not yet working obviously.'''
-        g = []
-        e = []
-        equator = []
-        t1 = []
-        ft1 = []
-        f = []
+        g = [0]
+        e = [0]
+        equator = [0]
+        t1 = [0]
+        ft1 = [0]
+        f = [0]
 
         if name == self.constant_flux:
             for i in self.constant_flux:
-                pass
+                if 'avg' in self.groups[i]:
+                    group = self.groups[i]['avg']
+                    equator.append(group[0])
+                    t1.append(group[1])
+                    g.append(group[2])
+                    ft1.append(group[3])
+                    f.append(group[4])
+                if 'shots' in self.groups[i]:
+                    group = self.groups[i]['shots']
+                    # for k in group:
+                    #    temp.append(k)
+                    stacked_array = np.row_stack(np.split(group[:],
+                                                          (len(group[:]) /
+                                                           5)))
+                    equator.append(stacked_array[:, 0])
+                    t1.append(stacked_array[:, 1])
+                    g.append(stacked_array[:, 2])
+                    ft1.append(stacked_array[:, 3])
+                    f.append(stacked_array[:, 4])
+
+
         if name == self.I:
             for i in self.I:
                 if 'avg' in self.groups[i]:
@@ -248,13 +269,40 @@ class CorrelationDay(object):
         if name == self.flux:
             pass
         results = dict()
-        results = {'g': np.asarray(g),
-                   'e': np.asarray(e),
-                   'equator': np.asarray(equator),
-                   't1': np.asarray(t1),
-                   'ft1': np.asarray(ft1),
-                   'f': np.asarray(f)}
+        g = self.purge_non_arrays_and_flatten(g)
+        e = self.purge_non_arrays_and_flatten(e)
+        equator = self.purge_non_arrays_and_flatten(equator)
+        t1 = self.purge_non_arrays_and_flatten(t1)
+        ft1 = self.purge_non_arrays_and_flatten(ft1)
+        f = self.purge_non_arrays_and_flatten(f)
+
+        results = {'g': np.asarray(np.ndarray.flatten(g)),
+                   'e': np.asarray(np.ndarray.flatten(e)),
+                   'equator': np.asarray(np.ndarray.flatten(equator)),
+                   't1': np.asarray(np.ndarray.flatten(t1)),
+                   'ft1': np.asarray(np.ndarray.flatten(ft1)),
+                   'f': np.asarray(np.ndarray.flatten(f))}
         return results
+    def purge_non_arrays_and_flatten(self, arr):
+        '''
+        There are measurements which contain the shot data and others that
+        contain only the avg value. In that case the result list would
+        contain a few scalars in between giant numpy arrays. This function
+        purges the scalars.
+        :param arr:
+        :return:
+        '''
+        length = 0
+        i = 0
+        for item in arr:
+            if type(item) is np.ndarray:
+                length += 1
+        result = np.empty(length, dtype=np.ndarray)
+        for entry in arr:
+            if type(entry) is np.ndarray:
+                result[i] = entry
+                i += 1
+        return np.ndarray.flatten(result)
 
     def create_data(self):
         '''
@@ -274,11 +322,11 @@ class CorrelationDay(object):
 
 
 file_path = r'C:\Users\Wang_Lab\Desktop\TunableTransmonJuly18.hdf5'
-day_codes = []
+day_codes = ["20180816"]
 try:
     file = h5py.File(file_path, 'r')
 except IOError:
-    # This is so that Josh can work on this personal computer.
+    # This is so that Josh can work on his personal computer.
     file_path = r'/media/jcarey/files/TunableTransmonJuly18.hdf5'
     file = h5py.File(file_path, 'r')
 if len(file.keys()) == 0:
@@ -288,8 +336,7 @@ if len(file.keys()) == 0:
 # series of numpy files in the same directory as this script. Its an easier
 # format to work with but qrlab produces info in the HDF5 so thats what needs
 #  to be worked with.
-first_day = CorrelationDay(file, '20180731')
-second_day = CorrelationDay(file, '20180809')
+first_day = CorrelationDay(file, '20180816')
 old_data = [np.load('g.npy'), np.load('equator.npy'), np.load('t1.npy'),
             np.load('ft1.npy')]
 
@@ -299,39 +346,56 @@ def data_pipeline(DayObject):
     # routine. Run runs the routine. averages normalizes some of the cross
     # correlations. This might not be good depending on how we want to
     # process this data. Old loads the old data into the proper variables.
-    plot = True
+    plot = False
     run = True
     average = False
     old = False
-    CreatedData = DayObject.create_data()
+    I_and_II = False
+    constant = True
+    if old is False:
+        CreatedData = DayObject.create_data()
     label = DayObject.key
     if run is True:
-        g = CreatedData['I']['g']
-        g_2 = CreatedData['II']['g']
-        equator = CreatedData['I']['equator']
-        t1 = CreatedData['I']['t1']
-        ft1 = CreatedData['II']['ft1']
-        f = CreatedData['II']['f']
-        time_step = 500e-6 * 4 * 100 / 60
-        time = np.linspace(0, time_step * len(t1), len(t1))
-        true_t1 = map(lambda x: project(*x), zip(equator, g, t1))
-        true_ft1 = np.asarray(map(lambda x: project(*x), zip(g_2, f, ft1)))
-        true_t1 = np.asarray(true_t1)
-        data = list()
-        for i in [g, equator, true_t1, true_ft1]:
-            if len(i) > 0:
-                i = np.nan_to_num(i)
-                data.append(i)
-        len_min = min(map(len, data))
-        data = [i[0:len_min] for i in data]
-
-        if old is True:
+        if old is False:
+            if I_and_II is True:
+                g = CreatedData['I']['g']
+                g_2 = CreatedData['II']['g']
+                equator = CreatedData['I']['equator']
+                t1 = CreatedData['I']['t1']
+                ft1 = CreatedData['II']['ft1']
+                f = CreatedData['II']['f']
+            if constant is True:
+                g = CreatedData['constant_flux']['g']
+                g_2 = g
+                equator = CreatedData['constant_flux']['equator']
+                t1 = CreatedData['constant_flux']['t1']
+                ft1 = CreatedData['constant_flux']['ft1']
+                f = CreatedData['constant_flux']['f']
+            time_step = 100e-6 * 3 * 100 / 60
+            time = np.linspace(0, time_step * len(t1), len(t1))
+            true_t1 = map(lambda x: project(*x), zip(equator, g, t1))
+            true_ft1 = np.asarray(map(lambda x: project(*x), zip(g_2, f, ft1)))
+            true_t1 = np.asarray(true_t1)
+            data = list()
+            for i in [g, equator, true_t1, true_ft1]:
+                if len(i) > 0:
+                    i = np.nan_to_num(i)
+                    data.append(i)
+            len_min = min(map(len, data))
+            data = [i[0:len_min] for i in data]
+        else:
             data = old_data
+            g = data[0]
+            g_2 = g
+            equator = data[1]
+            t1 = data[2]
+            ft1 = data[3]
+
         directions = g - equator
         angles = np.angle(directions, deg=True)
         amplitudes = fast_map(np.absolute, data)
         averages = fast_map(lambda x: x - np.average(x), amplitudes)
-        if averages is True:
+        if average is True:
             autocorrelations = fast_map(
                 lambda x: np.correlate(x, x, mode='full') / np.sum(x ** 2),
                 averages)
@@ -341,8 +405,6 @@ def data_pipeline(DayObject):
                 averages)
 
         right_halves = fast_map(right_half, autocorrelations)
-
-        cross_correlate = lambda x: np.correlate(x[0], x[1], mode='full')
 
         cc = np.correlate(averages[2], averages[3], mode='full')
         spectrums = fast_map(fft, right_halves)
@@ -359,7 +421,11 @@ def data_pipeline(DayObject):
             else:
                 return 'Dataset_' + str(label) + str(' ') + str(title)
 
+
+        print 'DONE'
         if plot == True:
+            import matplotlib.pyplot as plt
+            plt.close('all')
             plt.figure()
             plt.loglog(cc_spectrum, 'r')
             plt.grid()
@@ -389,6 +455,4 @@ def data_pipeline(DayObject):
                                   nice_label(r'Raw T1 voltages'))
             ft1_p = PredefinedPlot([averages[3], 'b'],
                                    nice_label(r'Raw FT1 voltages'))
-
-
-data_pipeline(second_day)
+data_pipeline(first_day)

@@ -100,7 +100,6 @@ class AWGLoader:
                     if awg not in self._active_awgs:
                         self._active_awgs.append(awg)
 
-
             
             
     def load(self, seqs, delay_override=False):

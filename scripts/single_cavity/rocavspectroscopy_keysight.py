@@ -162,6 +162,7 @@ class ROCavSpectroscopy_keysight(Measurement1D):
                 amps.append(np.abs(IQ))
                 phases.append(np.angle(IQ, deg=True))
                 print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
+                print 'I,Q = %.03f, %.03f' % (np.real(IQ), np.imag(IQ)) #DARIO 9/5
 
             self.ampdata[ipower,:] = amps
             self.phasedata[ipower,:] = phases

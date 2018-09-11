@@ -168,7 +168,6 @@ ID_BUFFER_SIZE = 8
 class SC5511A(Instrument):
 
     def __init__(self, name, devid=None, serial=None):
-        print('inside SC5511A.py init')
         super(SC5511A, self).__init__(name)
 
         if devid is None:

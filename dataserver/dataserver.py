@@ -64,15 +64,10 @@ class DataSet(object):
         '''
         Set HDF5 attributes.
         '''
-        # DARIO 7/25/2018 added print statements to debug an error: Unable to store averages
-        print('inside of dataserver set_attrs before for loop', kwargs)
         for k, v in kwargs.iteritems():
             self._h5f.attrs[k] = v
-        print('inside of dataserver set_attrs before flush')
         self.flush()
-        print('inside of dataserver set_attrs before emit')
         self.emit('attrs-changed', kwargs)
-        print('inside of dataserver set_attrs after emit')
 
     def get_attrs(self):
         '''
@@ -270,12 +265,12 @@ class DataGroup(object):
 
     def set_attrs(self, **kwargs):
         #JEFF added print statements to track bug
-        print('inside dataserver, inside datagroup, not set. Before loop shit')
+        #print('inside dataserver, inside datagroup, not set. Before loop shit')
         for k, v in kwargs.iteritems():
             self._h5f.attrs[k] = v
         self.flush()
         self.emit('attrs-changed', kwargs)
-        print('inside dataserver, inside datagroup, not set. after emit')
+        #print('inside dataserver, inside datagroup, not set. after emit')
 
     def get_attrs(self):
         ret = {}

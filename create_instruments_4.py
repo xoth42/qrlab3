@@ -37,6 +37,7 @@ AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PR
 
 
 
+
 #AWG1.do_set_waveform_delay(200000)
 #bla
 
@@ -46,6 +47,7 @@ AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PR
 #Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', reffreq=10e6)
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1')
+
 
 #sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
 
@@ -96,6 +98,7 @@ alz.setup_trigger()
 readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
                              IQe_radius= 1 , rfsource1='RObrick', rfsource2='refbrick',
                              pulse_len=1000, readout_chan='1m1', acq_chan='2m1')
+
 
 '''
 #AWG2 = instruments.create('AWG2', 'Tektronix_AWG5014C', address='AWG2',
