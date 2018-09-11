@@ -188,73 +188,11 @@ class Keysight_AWG(Instrument):
 
     def delete_all_waveforms(self, wait=60000):
         print('keysight waveform flush')
-        self.awg.waveformFlush()
-
-    def prime(self):
-        '''
-        logging.info('Priming the AWG')
-        data = [[],[],[],[]]
-        for e in range(self.n_el):
-            trigger_off = False
-            for n in range(4):
-                if self.m1[self.waveform_queue[n, e]] is not None:
-                    data[n].extend(self.m1[self.waveform_queue[n, e]])
-                    trigger_off = True
-                    
-                elif self.m2[self.waveform_queue[n, e]] is not None :
-                    data[n].extend(self.m2[self.waveform_queue[n, e]])
-                    trigger_off = True
-                else:
-                    data[n].extend(self.waveform_list[self.waveform_queue[n, e]])
-            if trigger_off:
-                for n in range(4):
-                    data[n].extend([0]*self.waveform_delay)
-                
-        for n in range(4):
-            waveform_data = np.array(data[n])
-            print('waveform length', 1, len(waveform_data))
-            
-            wave = key.SD_Wave()
-            wave.newFromArrayDouble(key.SD_WaveformTypes.WAVE_ANALOG, waveform_data)
-            self.awg.waveformLoad(wave, n)
-            self.awg.AWGqueueWaveform(n+1, n, key.SD_TriggerModes.SWHVITRIG, 0, 0, 0)
-        logging.info('AWG priming finished')
-#        time.sleep(5)
-
-#        print(self.waveform_dict)
-#        print(self.waveform_queue)
-#        print(self.m1)
-#        print(self.m2)
-        '''
-        '''
-        for i in range(4):
-            data = []
-            for j in range(self.n_el):
-#                print(i, j, self.m1[self.waveform_queue[i, j]])
-#                print(i, j, self.m2[self.waveform_queue[i, j]])
-                if self.m1[self.waveform_queue[i, j]] is not None:
-#                    print(i, j, 'm1 appended')
-                    data.extend(self.m1[self.waveform_queue[i, j]])
-                elif self.m2[self.waveform_queue[i, j]] is not None :
-#                    print(i, j, 'm2 appended')
-                    data.extend(self.m2[self.waveform_queue[i, j]])
-                else:
-                    data.extend(self.waveform_list[self.waveform_queue[i, j]])
-            data = np.array(data)
-            data = np.concatenate((data, np.zeros(self.waveform_delay)))
-            
-            print('waveform length', 1, len(data))
-            
-            wave = key.SD_Wave()
-            wave.newFromArrayDouble(key.SD_WaveformTypes.WAVE_ANALOG, data)
-            self.awg.waveformLoad(wave, i)
-            self.awg.AWGqueueWaveform(i+1, i, key.SD_TriggerModes.SWHVITRIG, 0, 0, 0)
-        '''       
+        self.awg.waveformFlush() 
 
 
     def run(self):
         print('keysight run')
-        time.sleep(1)
         self.awg.AWGstartMultiple(15)
 #        self.awg.AWGtriggerMultiple(15)
 
@@ -277,7 +215,7 @@ class Keysight_AWG(Instrument):
 
     def all_on(self):
         print('keysight all_on')
-        0==0
+        pass
         #TODO
 
 

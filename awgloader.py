@@ -99,8 +99,7 @@ class AWGLoader:
                     awg.wait_done(timeout=AWG_TIMEOUT_SHORT)
                     if awg not in self._active_awgs:
                         self._active_awgs.append(awg)
-            ''' JEFF. Let awg know all waveforms have been loaded '''
-            awg.prime()
+
 
             
             

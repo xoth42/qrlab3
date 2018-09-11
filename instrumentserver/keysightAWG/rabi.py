@@ -6,8 +6,8 @@ import csv
 
 
 AWG_PRODUCT = "M3202A"
-CHASSIS = 1
-AWG_SLOT = 7
+CHASSIS = 0
+AWG_SLOT = 5
 
 # CREATE AND OPEN MODULES
 awg = key.SD_AOU()
@@ -94,10 +94,10 @@ awg.AWGqueueWaveform(2, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
 awg.AWGqueueWaveform(3, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
 awg.AWGqueueWaveform(4, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
 
-awg.AWGqueueWaveform(1, 1, key.SD_TriggerModes.AUTOTRIG, 0, num_averages-1, 0)
-awg.AWGqueueWaveform(2, 0, key.SD_TriggerModes.AUTOTRIG, 0, num_averages-1, 0)
-awg.AWGqueueWaveform(3, 0, key.SD_TriggerModes.AUTOTRIG, 0, num_averages-1, 0)
-awg.AWGqueueWaveform(4, 0, key.SD_TriggerModes.AUTOTRIG, 0, num_averages-1, 0)
+#awg.AWGqueueWaveform(1, 1, key.SD_TriggerModes.AUTOTRIG, 0, num_averages-1, 0)
+#awg.AWGqueueWaveform(2, 0, key.SD_TriggerModes.AUTOTRIG, 0, num_averages-1, 0)
+#awg.AWGqueueWaveform(3, 0, key.SD_TriggerModes.AUTOTRIG, 0, num_averages-1, 0)
+#awg.AWGqueueWaveform(4, 0, key.SD_TriggerModes.AUTOTRIG, 0, num_averages-1, 0)
 
 
 # Modulate the sinusoid and the envelope
@@ -116,7 +116,7 @@ awg.AWGqueueConfig(4,0)
 # Start and softare trigger channel 1
 #awg.AWGstart(2)
 awg.AWGstartMultiple(15)
-awg.AWGtriggerMultiple(15)
+#awg.AWGtriggerMultiple(15)
 
 
 

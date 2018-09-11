@@ -333,7 +333,6 @@ class Measurement(object):
 
     def start_awgs(self):
         l = self.get_awg_loader()
-        print('measurement start_awgs', l)
         print('awgs:', l.get_awgs(), l.get_active_awgs())
         l.run()
 

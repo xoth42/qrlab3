@@ -33,9 +33,9 @@ qubit_info = mclient.get_qubit_info('qubit1ge')
 if 1: # Transmission
 #    from scripts.single_cavity import rocavspectroscopy2
     from scripts.single_cavity import rocavspectroscopy
-    rofreq = 7.7e9
-    freq_range = 50e6 
-    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-30, -20, 3), np.linspace(rofreq-freq_range, rofreq+freq_range, 100), qubit_pulse=False)
+    rofreq = 7.35e9
+    freq_range = 20e6 
+    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-25, -25, 1), np.linspace(rofreq-freq_range, rofreq+freq_range, 100), qubit_pulse=False)
     ro.measure()
     bla
 

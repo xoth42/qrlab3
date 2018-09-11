@@ -209,10 +209,6 @@ class SD_DIO_Bus :
 	DIO_OUTPUT_BUS0 = 2000;
 	DIO_OUTPUT_BUS1 = 2001;
 
-class SD_Compatibility :
-	LEGACY = 0;
-	KEYSIGHT = 1;
-
 class SD_Wave(SD_Object) :
 	PADDING_ZERO = 0;
 	PADDING_REPEAT = 1;
@@ -714,7 +710,6 @@ class SD_AOU(SD_Module):
 
 	def channelFrequency(self, nChannel, frequency) :
 		if self._SD_Object__handle > 0 :
-			self._SD_Object__core_dll.SD_AOU_channelFrequency.restype = c_double;
 			return self._SD_Object__core_dll.SD_AOU_channelFrequency(self._SD_Object__handle, nChannel, c_double(frequency));
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
@@ -760,21 +755,15 @@ class SD_AOU(SD_Module):
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
-	def triggerIOconfigV5(self, direction, syncMode = 1) :
+	def triggerIOconfig(self, direction, syncMode = 1) :
 		if self._SD_Object__handle > 0 :
-			return self._SD_Object__core_dll.SD_AOU_triggerIOconfigV5(self._SD_Object__handle, direction, syncMode);
+			return self._SD_Object__core_dll.SD_AOU_triggerIOconfig(self._SD_Object__handle, direction, syncMode);
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
-	def triggerIOconfig(self, direction) :
+	def triggerIOwrite(self, value) :
 		if self._SD_Object__handle > 0 :
-			return self._SD_Object__core_dll.SD_AOU_triggerIOconfig(self._SD_Object__handle, direction);
-		else :
-			return SD_Error.MODULE_NOT_OPENED;
-
-	def triggerIOwrite(self, value, syncMode = 1) :
-		if self._SD_Object__handle > 0 :
-			return self._SD_Object__core_dll.SD_AOU_triggerIOwrite(self._SD_Object__handle, value, syncMode);
+			return self._SD_Object__core_dll.SD_AOU_triggerIOwrite(self._SD_Object__handle, value);
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
@@ -1382,7 +1371,7 @@ class SD_AIN(SD_Module) :
 	def channelFullScale(self, channel) :
 		if self._SD_Object__handle > 0 :
 			self._SD_Object__core_dll.SD_AIN_channelFullScale.restype = c_double;
-			result = self._SD_Object__core_dll.SD_AIN_channelFullScale(self._SD_Object__handle, channel);
+			result = self._SD_Object__core_dll.SD_AIN_channelFullScale(self._SD_Object__handle, channel).value;
 
 			if result < 0 :
 				return int(result);
@@ -1394,7 +1383,7 @@ class SD_AIN(SD_Module) :
 	def channelMinFullScale(self, impedance, coupling) :
 		if self._SD_Object__handle > 0 :
 			self._SD_Object__core_dll.SD_AIN_channelMinFullScale.restype = c_double;
-			result = self._SD_Object__core_dll.SD_AIN_channelMinFullScale(self._SD_Object__handle, impedance, coupling);
+			result = self._SD_Object__core_dll.SD_AIN_channelMinFullScale(self._SD_Object__handle, impedance, coupling).value;
 
 			if result < 0 :
 				return int(result);
@@ -1406,7 +1395,7 @@ class SD_AIN(SD_Module) :
 	def channelMaxFullScale(self, impedance, coupling) :
 		if self._SD_Object__handle > 0 :
 			self._SD_Object__core_dll.SD_AIN_channelMaxFullScale.restype = c_double;
-			result = self._SD_Object__core_dll.SD_AIN_channelMaxFullScale(self._SD_Object__handle, impedance, coupling);
+			result = self._SD_Object__core_dll.SD_AIN_channelMaxFullScale(self._SD_Object__handle, impedance, coupling).value;
 
 			if result < 0 :
 				return int(result);
@@ -1481,15 +1470,15 @@ class SD_AIN(SD_Module) :
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
-	def triggerIOconfig(self, direction) :
+	def triggerIOconfig(self, direction, syncMode = 1) :
 		if self._SD_Object__handle > 0 :
-			return self._SD_Object__core_dll.SD_AIN_triggerIOconfig(self._SD_Object__handle, direction);
+			return self._SD_Object__core_dll.SD_AIN_triggerIOconfig(self._SD_Object__handle, direction, syncMode);
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
-	def triggerIOwrite(self, value, syncMode = 1) :
+	def triggerIOwrite(self, value) :
 		if self._SD_Object__handle > 0 :
-			return self._SD_Object__core_dll.SD_AIN_triggerIOwrite(self._SD_Object__handle, value, syncMode);
+			return self._SD_Object__core_dll.SD_AIN_triggerIOwrite(self._SD_Object__handle, value);
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
@@ -1625,7 +1614,7 @@ class SD_AIN(SD_Module) :
 				nPoints = readPoints.value
 
 				if nPoints > 0 :
-					return np.ctypeslib.as_array((c_short*nPoints).from_address(addressof(data.contents)))
+					return  np.array(data)
 				else :
 					return np.empty(0, dtype=np.short)
 		else :
