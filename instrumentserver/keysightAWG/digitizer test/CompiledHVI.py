@@ -5,9 +5,6 @@ def error_decorator(function):
         result = function(*args)
         if (result < 0) and (result != -8038) and (result != -8031):
             raise ValueError("Error is " + str(result) + ' in function: ' + str(function.func_name))
-        else:
-            print "HVI info: function " +  str(function.func_name) + " returned " + str(result)
-            print 'This is not an error.'
     return wrapper
         
 class CompiledHVI(object):
@@ -15,7 +12,10 @@ class CompiledHVI(object):
         self.hvi = key.SD_HVI()
         self.identifier = self.hvi.open(HVI_path_str)
         self.error(self.identifier)
-        self.assignHardware(0, 0, 7)
+        self.assignHardware(0, 0, 5)
+        self.assignHardware(1, 0, 7)
+        self.assignHardware(2, 0, 10)
+
         self.hvi.compile()
         self.hvi.load()
         

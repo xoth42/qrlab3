@@ -89,8 +89,8 @@ awg.channelWaveShape(3, key.SD_Waveshapes.AOU_AWG)
 awg.channelWaveShape(4, key.SD_Waveshapes.AOU_AWG)
 
 # Setup Envelopes
-awg.AWGqueueWaveform(1, 1, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
-awg.AWGqueueWaveform(1, 1, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
+awg.AWGqueueWaveform(1, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
+awg.AWGqueueWaveform(2, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
 #awg.AWGqueueWaveform(2, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
 #awg.AWGqueueWaveform(3, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
 #awg.AWGqueueWaveform(4, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
@@ -102,7 +102,7 @@ awg.AWGqueueWaveform(1, 1, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
 
 
 # Modulate the sinusoid and the envelope
-awg.modulationAmplitudeConfig(1, key.SD_ModulationTypes.AOU_MOD_AM, 1.5)
+#awg.modulationAmplitudeConfig(1, key.SD_ModulationTypes.AOU_MOD_AM, 1.5)
 # Setup the queue in cyclic mode
 awg.AWGqueueConfig(1,0)
 #awg.AWGqueueConfig(2,0)
