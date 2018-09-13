@@ -26,7 +26,7 @@ if 1:
 #    rofreq = 8553.1e6
     rofreq = 7348.8e6
     freq_range = 20e6
-    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(-25, -25, 1),
+    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(-20, -20, 1),
                                              np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
                                              qubit_pulse=False)
     ro.measure()

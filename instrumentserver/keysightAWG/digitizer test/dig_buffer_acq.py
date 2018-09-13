@@ -14,7 +14,6 @@ import mclient
 
 
 
-trigger_period = 100 #us
 nsamples = 3000 #number of data points taken ever acquisition
 
 npoints = 1 # number of different experimental points, each will be averaged

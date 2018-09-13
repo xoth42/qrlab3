@@ -36,7 +36,7 @@ if 0: # Transmission
 
     rofreq = 7.35e9
     freq_range = 20e6 
-    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-25, -25, 1), np.linspace(rofreq-freq_range, rofreq+freq_range, 100), qubit_pulse=False)
+    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-20, -20, 1), np.linspace(rofreq-freq_range, rofreq+freq_range, 21), qubit_pulse=False)
 
     ro.measure()
     bla
@@ -45,11 +45,11 @@ if 0: # Transmission
 if 1: # Qubit spec
     from scripts.single_qubit import spectroscopy
 #    from scripts.single_qubit import spectroscopy_IQ
-    qubit_freq = 4534e6
-    freq_range = 5e6
-    spec = spectroscopy.Spectroscopy(mclient.instruments['geBrick'], qubit_info,
-                                     np.linspace(qubit_freq-freq_range, qubit_freq+freq_range, 101), [-32.5],
-                                     plen=20000, amp=0.01, plot_seqs=False) #1=1ns
+    qubit_freq = 930e6
+    freq_range = 30e6
+    spec = spectroscopy.Spectroscopy(mclient.instruments['sc2'], qubit_info,
+                                     np.linspace(qubit_freq-freq_range, qubit_freq+freq_range, 101), [-20],
+                                     plen=40000, amp=0.5, plot_seqs=False) #1=1ns
 
 #    spec = spectroscopy_IQ.Spectroscopy_IQ(client.instruments['gen'], qubit_info,
 #                                     np.linspace(702e6, 710e6, 81), [-30],
@@ -60,10 +60,10 @@ if 1: # Qubit spec
 #the parameters are qubit_info, qubit frequency and readout power. Qubit drive power can be changed by changing AWG amp or the total pulse length. Pulse length=is plen*100ns
 
 """Qubit SSBspec"""
-if 0: # Qubit SSBspec
+if 1: # Qubit SSBspec
     from scripts.single_qubit import ssbspec
     seq = sequencer.Trigger(250)
-    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-5e6, 2e6, 150), seq=seq, plot_seqs=False)
+    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-100e6, 0, 250), seq=seq, plot_seqs=False)
     spec.measure()
     bla
 
@@ -585,3 +585,13 @@ if 0:
         alz.set_naverages(8000)
         t2e = T2measurement.T2Measurement(qubit_info, np.linspace(0.3e3, 40e3, 100), detune=200e3, echotype = T2measurement.ECHO_HAHN)
         t2e.measure()
+
+
+
+if 1: # #Monitoring phase drift of RO tone(s)
+    from scripts.single_cavity import rocav_phasedrift
+    rofreq = 7349.2e6
+    ro = rocav_phasedrift.ROCavPhaseDrift(qubit_info, np.linspace(-20, -20, 1), np.linspace(rofreq, rofreq, 51), qubit_pulse=False)
+
+    ro.measure()
+    bla

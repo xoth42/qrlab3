@@ -1,12 +1,14 @@
 import keysightSD1 as key
 import numpy as np
 import matplotlib.pyplot as plt
+from CompiledHVI import CompiledHVI
 
 #Decorator that checks the return result from all of the keysight function, to
 #make sure there isn't any errors.
 
-testing_HVI_location = r'C:\qrlab\instrumentserver\keysightAWG\digitizer test\2nd_trigger.HVI'
-from CompiledHVI import CompiledHVI
+trigger_period = 200
+testing_HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\\' + '3slot' + str(trigger_period) + 'us.HVI'
+
 test_instance = CompiledHVI(testing_HVI_location)
 #test_instance.assignHardware(0, 0, 7)
         
@@ -26,7 +28,7 @@ def check_error(err):
 
 AWG_PRODUCT = "M3202A"
 CHASSIS = 0
-AWG_SLOT = 7
+AWG_SLOT = 5
 
 # The secondary AWG will produce triggers for the primary AWG and the digitizer,
 # so that both will be in sync.
@@ -34,7 +36,7 @@ AWG_SLOT = 7
 
 DIG_PRODUCT = "M3102A"
 CHASSIS = 0
-DIG_SLOT = 3
+DIG_SLOT = 2
 
 awg = key.SD_AOU()
 

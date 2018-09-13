@@ -89,8 +89,8 @@ awg.channelWaveShape(3, key.SD_Waveshapes.AOU_AWG)
 awg.channelWaveShape(4, key.SD_Waveshapes.AOU_AWG)
 
 # Setup Envelopes
-awg.AWGqueueWaveform(1, 1, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
-awg.AWGqueueWaveform(1, 1, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
+awg.AWGqueueWaveform(1, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
+awg.AWGqueueWaveform(2, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
 #awg.AWGqueueWaveform(2, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
 #awg.AWGqueueWaveform(3, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
 #awg.AWGqueueWaveform(4, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
