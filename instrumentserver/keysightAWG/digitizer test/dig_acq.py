@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 DIG_PRODUCT = "M3102A"
 CHASSIS = 0
-DIG_SLOT = 3
+DIG_SLOT = 2
 
 
 dig = key.SD_AIN()
@@ -25,20 +25,20 @@ print("Number of Modules = ", DIGNumModules)
 
 
 
-AWG_PRODUCT = "M3202A"
-CHASSIS = 0
-AWG_SLOT = 7
-
-awg = key.SD_AOU()
-aouID = awg.openWithSlot(AWG_PRODUCT, CHASSIS, AWG_SLOT)
-
-# Gather Information about AWG S/N, Slot and S/N
-AWGPart = awg.getProductNameBySlot(CHASSIS, AWG_SLOT)
-AWGNumber = awg.getSerialNumberBySlot(CHASSIS, AWG_SLOT)
-AWGNumModules = awg.moduleCount()
-print("Part =", AWGPart)
-print("S/N =", AWGNumber)
-print("Number of Modules = ", AWGNumModules)
+#AWG_PRODUCT = "M3202A"
+#CHASSIS = 0
+#AWG_SLOT = 7
+#
+#awg = key.SD_AOU()
+#aouID = awg.openWithSlot(AWG_PRODUCT, CHASSIS, AWG_SLOT)
+#
+## Gather Information about AWG S/N, Slot and S/N
+#AWGPart = awg.getProductNameBySlot(CHASSIS, AWG_SLOT)
+#AWGNumber = awg.getSerialNumberBySlot(CHASSIS, AWG_SLOT)
+#AWGNumModules = awg.moduleCount()
+#print("Part =", AWGPart)
+#print("S/N =", AWGNumber)
+#print("Number of Modules = ", AWGNumModules)
 
 
 
@@ -96,9 +96,9 @@ for ave in range(0, num_ave, ave_per_buf):
     
     
     #dig.DAQstart(1)
-    awg.AWGstopMultiple(15)
+#    awg.AWGstopMultiple(15)
     dig.DAQstartMultiple(15)
-    awg.AWGstartMultiple(15)
+#    awg.AWGstartMultiple(15)
     
     #READ DAQ BUFFER FOR ACQUIRED DATA
     for i in range(0, ave_per_buf):

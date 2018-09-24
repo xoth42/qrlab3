@@ -25,7 +25,7 @@ class Spectroscopy(Measurement1D):
 
     def __init__(self, qubit_rfsource, qubit_info, q_freqs, ro_powers,
                  plen=1000, amp=1, seq=None, postseq=None,
-                 pow_delay=1, freq_delay=0.1, plot_type=None,
+                 pow_delay=1, freq_delay=0.5, plot_type=None,
                  **kwargs):
         self.qubit_rfsource = qubit_rfsource
         self.qubit_info = qubit_info
@@ -77,8 +77,9 @@ class Spectroscopy(Measurement1D):
             dig.start_hvi()
         except:
             print('no digitizer object for trigger')
-            
+ 
         # Generate and load sequences
+
         seqs = self.generate()
         self.load(seqs)
         self.start_awgs()

@@ -25,8 +25,8 @@ Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 2)
 
 
-AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PRODUCT = "M3202A", 
-                          amps = [1,1,1,1], ofs = [0, 0, 0, 0])
+AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 5,  AWG_PRODUCT = "M3202A", 
+                          amps = [1,1,1,1], ofs = [0.5, 0, 0, 0])
 
 
 #AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 1, slot = 7,  AWG_PRODUCT = "M3202A", 
@@ -61,8 +61,10 @@ sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
 #brick6 = instruments.create('brick6', 'LabBrick_RFSource', serial=18238, use_extref=True)#reference
 refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511, 
                             use_extref=True) #reference
-RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=19151,
+RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=17912,
                              use_extref=True) #readout
+#refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=19151, 
+#                            use_extref=True) #reference
 
 #fg = instruments.create('funcgen', 'Agilent_33250A', serial=2391)
 
@@ -74,10 +76,10 @@ RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=19151,
 #mixFG = instruments.create('mixFG', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270760::0::INSTR')
 
 # Setup Alazar
-
+'''
 alz = instruments.create('alazar', 'Alazar_Daemon')
 alz.set_ch1_range('40mV')
-alz.set_ch2_range('200mV')
+alz.set_ch2_range('40mV')
 alz.set_nsamples(4800)
 alz.set_naverages(2000)
 alz.set_ch1_coupling('AC')
@@ -93,7 +95,7 @@ alz.set_timeout(10e3)
 alz.setup_clock()
 alz.setup_channels()
 alz.setup_trigger()
-
+'''
 
 readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
                              IQe_radius= 1 , rfsource1='RObrick', rfsource2='refbrick',

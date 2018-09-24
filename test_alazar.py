@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import time
+from lib.math import demod
+
 
 def moving_average(a, n=20) :
     ret = np.cumsum(a)
@@ -29,13 +31,16 @@ alz = mclient.instruments['alazar']
 #alz.setup_trigger()
 
 
-if 1:
+if 0:
         alz.setup_shots(1)
+#        start_time = time.time()
         buf = alz.take_raw_shots()
+ #       end_time = time.time()
         plt.figure()
         nsamp = alz.get_nsamples()
         plt.plot(buf[:nsamp], label='A')
         plt.plot(buf[nsamp:2*nsamp], label='B')
+#        plt.plot(buf)
         plt.suptitle('Raw single shot')
         plt.legend()
         plt.xlabel('Time [ns]')
@@ -117,3 +122,41 @@ if 0:
         plt.xlabel('I')
         plt.ylabel('Q')
         plt.show()
+        
+        plt.figure()
+        plt.plot(np.angle(buf, deg=True))
+        
+        
+        
+if 1:
+        N = 1000
+        alz.setup_shots(N)
+        nsamp = alz.get_nsamples()
+        buf = alz.take_raw_shots()
+        demodA = demod.DemodulatorComplex(nsamp*N, 20, avg_periods=1)
+        demodA.demodulate(buf[:N*nsamp])
+        IQA = demodA.IQ.reshape([N, nsamp/20])
+        signal = np.average(IQA, 1)
+        phase = np.angle(signal, deg=True)
+        
+        demodB = demod.DemodulatorComplex(nsamp*N, 20, avg_periods=1)
+        demodB.demodulate(buf[N*nsamp:])
+        IQB = demodB.IQ.reshape([N, nsamp/20])
+        signalB = np.average(IQB, 1)
+        phaseB = np.angle(signalB, deg=True)
+        
+        plt.figure()
+        
+        plt.subplot(211)        
+        plt.plot(np.abs(signal), label='amp')
+        plt.plot(np.abs(signalB), label='ampB')
+        
+        plt.subplot(212)
+        plt.plot(phase, label='phase')
+        plt.plot(phaseB, label='phaseB')
+#        plt.plot(buf)
+        plt.suptitle('Raw single shot')
+        plt.legend()
+        plt.xlabel('Shots')
+        plt.show()
+#        print alz.get_ch1_range()

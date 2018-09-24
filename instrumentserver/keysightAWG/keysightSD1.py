@@ -222,6 +222,7 @@ class SD_Wave(SD_Object) :
 
 		return self._SD_Object__handle;
 
+
 	def __del__(self):
 		self._SD_Object__core_dll.SD_Wave_delete(self._SD_Object__handle)
 
@@ -763,6 +764,7 @@ class SD_AOU(SD_Module):
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
+<<<<<<< HEAD
 	def triggerIOconfigV5(self, direction, syncMode = 1) :
 		if self._SD_Object__handle > 0 :
 			return self._SD_Object__core_dll.SD_AOU_triggerIOconfigV5(self._SD_Object__handle, direction, syncMode);
@@ -778,6 +780,17 @@ class SD_AOU(SD_Module):
 	def triggerIOwrite(self, value, syncMode = 1) :
 		if self._SD_Object__handle > 0 :
 			return self._SD_Object__core_dll.SD_AOU_triggerIOwrite(self._SD_Object__handle, value, syncMode);
+=======
+	def triggerIOconfig(self, direction, syncMode = 1) :
+		if self._SD_Object__handle > 0 :
+			return self._SD_Object__core_dll.SD_AOU_triggerIOconfig(self._SD_Object__handle, direction, syncMode);
+		else :
+			return SD_Error.MODULE_NOT_OPENED;
+
+	def triggerIOwrite(self, value) :
+		if self._SD_Object__handle > 0 :
+			return self._SD_Object__core_dll.SD_AOU_triggerIOwrite(self._SD_Object__handle, value);
+>>>>>>> 4504e6533a8501837914c4d189fa4b8e5b993278
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
@@ -1385,7 +1398,11 @@ class SD_AIN(SD_Module) :
 	def channelFullScale(self, channel) :
 		if self._SD_Object__handle > 0 :
 			self._SD_Object__core_dll.SD_AIN_channelFullScale.restype = c_double;
+<<<<<<< HEAD
 			result = self._SD_Object__core_dll.SD_AIN_channelFullScale(self._SD_Object__handle, channel);
+=======
+			result = self._SD_Object__core_dll.SD_AIN_channelFullScale(self._SD_Object__handle, channel).value;
+>>>>>>> 4504e6533a8501837914c4d189fa4b8e5b993278
 
 			if result < 0 :
 				return int(result);
@@ -1397,7 +1414,11 @@ class SD_AIN(SD_Module) :
 	def channelMinFullScale(self, impedance, coupling) :
 		if self._SD_Object__handle > 0 :
 			self._SD_Object__core_dll.SD_AIN_channelMinFullScale.restype = c_double;
+<<<<<<< HEAD
 			result = self._SD_Object__core_dll.SD_AIN_channelMinFullScale(self._SD_Object__handle, impedance, coupling);
+=======
+			result = self._SD_Object__core_dll.SD_AIN_channelMinFullScale(self._SD_Object__handle, impedance, coupling).value;
+>>>>>>> 4504e6533a8501837914c4d189fa4b8e5b993278
 
 			if result < 0 :
 				return int(result);
@@ -1409,7 +1430,11 @@ class SD_AIN(SD_Module) :
 	def channelMaxFullScale(self, impedance, coupling) :
 		if self._SD_Object__handle > 0 :
 			self._SD_Object__core_dll.SD_AIN_channelMaxFullScale.restype = c_double;
+<<<<<<< HEAD
 			result = self._SD_Object__core_dll.SD_AIN_channelMaxFullScale(self._SD_Object__handle, impedance, coupling);
+=======
+			result = self._SD_Object__core_dll.SD_AIN_channelMaxFullScale(self._SD_Object__handle, impedance, coupling).value;
+>>>>>>> 4504e6533a8501837914c4d189fa4b8e5b993278
 
 			if result < 0 :
 				return int(result);
@@ -1484,6 +1509,7 @@ class SD_AIN(SD_Module) :
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
+<<<<<<< HEAD
 	def triggerIOconfig(self, direction) :
 		if self._SD_Object__handle > 0 :
 			return self._SD_Object__core_dll.SD_AIN_triggerIOconfig(self._SD_Object__handle, direction);
@@ -1493,6 +1519,17 @@ class SD_AIN(SD_Module) :
 	def triggerIOwrite(self, value, syncMode = 1) :
 		if self._SD_Object__handle > 0 :
 			return self._SD_Object__core_dll.SD_AIN_triggerIOwrite(self._SD_Object__handle, value, syncMode);
+=======
+	def triggerIOconfig(self, direction, syncMode = 1) :
+		if self._SD_Object__handle > 0 :
+			return self._SD_Object__core_dll.SD_AIN_triggerIOconfig(self._SD_Object__handle, direction, syncMode);
+		else :
+			return SD_Error.MODULE_NOT_OPENED;
+
+	def triggerIOwrite(self, value) :
+		if self._SD_Object__handle > 0 :
+			return self._SD_Object__core_dll.SD_AIN_triggerIOwrite(self._SD_Object__handle, value);
+>>>>>>> 4504e6533a8501837914c4d189fa4b8e5b993278
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
@@ -1614,7 +1651,10 @@ class SD_AIN(SD_Module) :
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 4504e6533a8501837914c4d189fa4b8e5b993278
 	def DAQbufferGet(self, nDAQ):
 		if self._SD_Object__handle > 0 :
 			self._SD_Object__core_dll.SD_AIN_DAQbufferGet.restype = POINTER(c_short)
@@ -1629,9 +1669,15 @@ class SD_AIN(SD_Module) :
 				nPoints = readPoints.value
 
 				if nPoints > 0 :
+<<<<<<< HEAD
 					return np.ctypeslib.as_array((c_short*nPoints).from_address(addressof(data.contents)))
 				else :
 					return np.empty(0, dtype=np.short)					
+=======
+					return  np.array(data)
+				else :
+					return np.empty(0, dtype=np.short)
+>>>>>>> 4504e6533a8501837914c4d189fa4b8e5b993278
 		else :
 			return SD_Error.MODULE_NOT_OPENED
 
