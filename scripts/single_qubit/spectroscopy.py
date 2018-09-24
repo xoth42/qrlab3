@@ -72,7 +72,12 @@ class Spectroscopy(Measurement1D):
     def measure(self):
         alz = self.instruments['alazar']
         alz.set_interrupt(False)
-
+        try:
+            dig = self.instruments['dig']
+            dig.start_hvi()
+        except:
+            print('no digitizer object for trigger')
+            
         # Generate and load sequences
         seqs = self.generate()
         self.load(seqs)

@@ -29,8 +29,8 @@ alz = mclient.instruments['alazar']
 #alz.setup_trigger()
 
 
-if 0:
-        alz.setup_shots(10000)
+if 1:
+        alz.setup_shots(1)
         buf = alz.take_raw_shots()
         plt.figure()
         nsamp = alz.get_nsamples()
@@ -98,7 +98,7 @@ if 0:
         plt.show()
         
 
-if 1:
+if 0:
         alz.setup_avg_shot(5000)
         buf = alz.take_avg_shot(timeout=50000)
     
