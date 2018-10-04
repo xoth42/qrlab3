@@ -21,7 +21,7 @@ VOLTAGE_SCALE = 2.8
 class Keysight_DIG(Instrument):
 
 
-    def __init__(self, name, chassis=0, slot=2, DIG_PRODUCT = "M3102A", **kwargs):
+    def __init__(self, name, chassis=0, slot=3, DIG_PRODUCT = "M3102A", trigger_period = 200, **kwargs):
         super(Keysight_DIG, self).__init__(name)
         self._timeout = DEFAULT_TIMEOUT
         self._main_channel=1
@@ -31,7 +31,7 @@ class Keysight_DIG(Instrument):
         self._main_delay=0
         self._ref_delay=0
         self._if_period=10
-        self._trigger_period=100
+        self._trigger_period = trigger_period
 
         self._name = name
         self._chassis = chassis
@@ -201,8 +201,8 @@ class Keysight_DIG(Instrument):
         return self.set(keys)
     
     def load_hvi(self):
-        HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\\' + '3slot' + str(self._trigger_period) + 'us.HVI'
-#        testing_HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\3slot500us.HVI'
+        HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\3slot' + str(self._trigger_period) + 'us.HVI'
+#        HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\3slot100ms.HVI'
         self._hvi = CompiledHVI(HVI_location)
         self._hvi.stop()
         

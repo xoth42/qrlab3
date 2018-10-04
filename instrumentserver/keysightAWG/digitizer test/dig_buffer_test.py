@@ -158,10 +158,10 @@ trigger_period = 100 #us
 nsamples = 4000 #number of data points taken ever acquisition
 
 npoints = 5 # number of different experimental points, each will be averaged
-naverages = 10 # total number of averages per point
+naverages = 20 # total number of averages per point
 ntransfers = naverages / 10  # number of blocks it takes the dig data to transfer to the pc
 
-data_channel = 1
+data_channel = 2
 
 hvi, dig, awg = fetch_keysight_shit(trigger_period)
 hvi.stop()
@@ -185,6 +185,7 @@ awg.close()
 print('acquisition finished', time.time()-start_time)
 
 #means /= np.max(means)
+
 
 pl.close('all')
 fig = pl.figure()
