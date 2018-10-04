@@ -71,7 +71,7 @@ class Measurement(object):
                      savefig=True,
                      imagetype='png',
                      print_progress=True,
-                     ):
+                     proj_func = 'amp'):
         if name is None:
             name = self.__class__.__name__
 
@@ -98,6 +98,7 @@ class Measurement(object):
         self.savefig = savefig
         self.imagetype = imagetype
         self.print_progress = print_progress
+        self._proj_func = proj_func
 
         # Build list of info objects
         if infos is None:
@@ -792,11 +793,17 @@ class Measurement(object):
             vproj = IQe - IQg
 
         vproj /= np.abs(vproj)
-#        ys = ys - IQg #DARIO 8/31
-#        return (np.real(ys)**2+np.imag(ys)**2)**0.5 # returns absolute amplitude
-#        return np.real(ys) * vproj.real  + np.imag(ys) * vproj.imag # returns projected amplitude
-        return np.angle(ys, deg=True) # returns phase #DARIO 8/31 
 
+        if(self._proj_func is 'phase'):
+            return np.angle(ys, deg=True) # returns phase #DARIO 8/31 
+        elif(self._proj_func is 'projection'):
+            ys = ys - IQg #DARIO 8/31
+            return np.real(ys) * vproj.real  + np.imag(ys) * vproj.imag # returns projected amplitue
+        else:
+            return (np.real(ys)**2+np.imag(ys)**2)**0.5 # returns absolute amplitude
+        
+        
+        
     def get_ys(self, data=None):
         '''
         Return measured data.

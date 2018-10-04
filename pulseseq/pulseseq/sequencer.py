@@ -1190,7 +1190,7 @@ def Delay(dt, chan=CHAN_ANY, unroll=True, repeat=1, trigger=False, fixed=False, 
     Comes in 3 flavours:
     - unrolled (i.e. N times delay1)
     - smart (i.e. N times delay250 + M times delay1)
-    - fidex (i.e. one element delayN)
+    - fixed (i.e. one element delayN)
     '''
 
     try:

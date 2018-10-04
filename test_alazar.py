@@ -32,9 +32,7 @@ alz = mclient.instruments['alazar']
 
 
 if 1:
-        start_time = time.time()
         alz.setup_shots(1)
-        end_time = time.time()
         buf = alz.take_raw_shots()
         plt.figure()
         nsamp = alz.get_nsamples()
@@ -126,8 +124,8 @@ if 0:
 #        plt.figure()
 #        plt.plot(np.angle(buf, deg=True))
         
+        
 if 0:
-      for i in range(1):  
         N = 1000
         alz.setup_shots(N)
         nsamp = alz.get_nsamples()

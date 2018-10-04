@@ -138,7 +138,7 @@ class CavT2(Measurement1D):
             disp=disp,
         )
 
-    def generate_old(self):
+    def generate(self): # JEFF swaping the generate functions bc the new one is way too confusing
         s = Sequence()
 
         r = self.qubit_info.rotate_selective
@@ -171,7 +171,7 @@ class CavT2(Measurement1D):
         seqs = s.render(debug=False)
         return seqs
 
-    def generate(self):
+    def generate_new(self):
         s = Sequence()
 
         r = self.qubit_info.rotate_selective

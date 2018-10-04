@@ -43,7 +43,7 @@ if 0:
     ro.measure()
     
 
-if 1:
+if 0:
     from single_qubit import spectroscopy_keysight
 #    from scripts.single_qubit import spectroscopy_IQ
 #    for i in range(5560, 5560, 0):
@@ -60,7 +60,7 @@ if 1:
     
     
     
-if 0:
+if 1:
     from scripts.single_qubit import ssbspec
     seq = sequencer.Trigger(250)
 

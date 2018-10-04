@@ -31,7 +31,7 @@ class Keysight_DIG(Instrument):
         self._main_delay=0
         self._ref_delay=0
         self._if_period=10
-        self._trigger_period = trigger_period
+        self._trigger_period=trigger_period
 
         self._name = name
         self._chassis = chassis

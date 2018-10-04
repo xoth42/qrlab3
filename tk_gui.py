@@ -31,7 +31,7 @@ instr = objsh.helper.find_object('instruments')
 # so called parent widget. This is where the main information display will be.
 root_window = tk.Tk()
 root_window.title('QRLab')
-root_window.maxsize(width=500, height=950)
+root_window.maxsize(width=1500, height=950)
 root_window.minsize(width=500, height=950)
 
 
