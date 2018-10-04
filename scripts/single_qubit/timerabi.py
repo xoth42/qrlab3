@@ -87,7 +87,7 @@ class TimeRabi(Measurement1D):
         self.amp = amp
         self.update_ins = update
         if seq is None:
-            seq = Trigger(250)
+            seq = Trigger(1000)
         self.seq = seq
         self.postseq = postseq
         self.fix_phase = fix_phase
@@ -104,27 +104,28 @@ class TimeRabi(Measurement1D):
         s = Sequence()
 
         for i, plen in enumerate(self.times):
+            
             s.append(self.seq)
-            '''these analog pulses are just placeholder for now'''
-            if self.selective==1:
-                s.append(Repeat(self.qubit_info.rotate_selective(0, self.r_axis, amp=self.amp), self.repeat_pulse))
-            elif self.selective==0.5:
-                s.append(Repeat(self.qubit_info.rotate_quasilective(0, self.r_axis, amp=self.amp), self.repeat_pulse))
-            else:
-                s.append(Repeat(self.qubit_info.rotate(0, self.r_axis, amp=self.amp), self.repeat_pulse))
-            if plen > 0:
-                s.append(Constant(plen, 1, chan='1m2'))
-            if self.postseq is not None:
+            g = DetunedSum(self.qubit_info.rotate.base, plen, chans=self.qubit_info.sideband_channels)
+            period = 1e50 #This is basically infinity
+            g.add(self.amp, period)
+
+#            s.append(Join([
+#                self.seq,
+#                g(),
+#            ]))
+            s.append(g())
+            
+#            chs = self.qubit_info.sideband_channels
+#            s.append(Constant(plen, self.amp, chan=chs[0]))
+
+            if self.postseq:
                 s.append(self.postseq)
-            s.append(Delay(20))
             s.append(Combined([
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ]))
+            ]))
 
-        s = self.get_sequencer(s)
-        seqs = s.render()
-        return seqs
 
     def analyze(self, data=None, fig=None):
         if self.fit_type == FIT_PARABOLA:

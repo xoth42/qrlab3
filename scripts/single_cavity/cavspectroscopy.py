@@ -94,6 +94,11 @@ class CavSpectroscopy(Measurement1D):
     def measure(self):
         # Generate and load sequences
         alz = self.instruments['alazar']
+        try:
+            dig = self.instruments['dig']
+            dig.start_hvi()
+        except:
+            print('no digitizer object for trigger')
 
         for idisp, disp in enumerate(self.cav_disps):
             seqs = self.generate(disp)
@@ -103,8 +108,9 @@ class CavSpectroscopy(Measurement1D):
             amps = []
             phases = []
             for freq in self.cav_freqs:
-                self.cav_source.set_rf1_freq(freq)
-                time.sleep(0.5)
+#                self.cav_source.set_rf1_freq(freq) #JEFF Wrong syntax
+                self.cav_source.set_frequency(freq)
+                time.sleep(0.2)
 
                 alz.setup_avg_shot(alz.get_naverages())
                 ret = alz.take_avg_shot(async=True)

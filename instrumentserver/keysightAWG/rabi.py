@@ -7,7 +7,7 @@ import csv
 
 AWG_PRODUCT = "M3202A"
 CHASSIS = 0
-AWG_SLOT = 5
+AWG_SLOT = 7
 
 # CREATE AND OPEN MODULES
 awg = key.SD_AOU()
@@ -76,13 +76,13 @@ awg.AWGflush(3)
 awg.AWGflush(4)
 
 # Setup Sinusoid
-awg.channelWaveShape(1, key.SD_Waveshapes.AOU_SINUSOIDAL)
-awg.channelAmplitude(1, 0)
-awg.channelFrequency(1, 1e8)
-
-awg.channelAmplitude(2, .7)
-awg.channelAmplitude(3, .7)
-awg.channelAmplitude(4, .7)
+awg.channelWaveShape(1, key.SD_Waveshapes.AOU_AWG)
+#awg.channelAmplitude(1, 0)
+#awg.channelFrequency(1, 1e8)
+#
+#awg.channelAmplitude(2, .7)
+#awg.channelAmplitude(3, .7)
+#awg.channelAmplitude(4, .7)
 
 awg.channelWaveShape(2, key.SD_Waveshapes.AOU_AWG)
 awg.channelWaveShape(3, key.SD_Waveshapes.AOU_AWG)
@@ -92,8 +92,8 @@ awg.channelWaveShape(4, key.SD_Waveshapes.AOU_AWG)
 awg.AWGqueueWaveform(1, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
 awg.AWGqueueWaveform(2, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
 #awg.AWGqueueWaveform(2, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
-#awg.AWGqueueWaveform(3, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
-#awg.AWGqueueWaveform(4, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
+awg.AWGqueueWaveform(3, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
+awg.AWGqueueWaveform(4, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
 
 #awg.AWGqueueWaveform(1, 1, key.SD_TriggerModes.AUTOTRIG, 0, num_averages-1, 0)
 #awg.AWGqueueWaveform(2, 0, key.SD_TriggerModes.AUTOTRIG, 0, num_averages-1, 0)
@@ -104,10 +104,10 @@ awg.AWGqueueWaveform(2, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
 # Modulate the sinusoid and the envelope
 #awg.modulationAmplitudeConfig(1, key.SD_ModulationTypes.AOU_MOD_AM, 1.5)
 # Setup the queue in cyclic mode
-awg.AWGqueueConfig(1,0)
-#awg.AWGqueueConfig(2,0)
-#awg.AWGqueueConfig(3,0)
-#awg.AWGqueueConfig(4,0)
+awg.AWGqueueConfig(1,1)
+awg.AWGqueueConfig(2,1)
+awg.AWGqueueConfig(3,1)
+awg.AWGqueueConfig(4,1)
 
 
 

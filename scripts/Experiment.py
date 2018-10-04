@@ -19,8 +19,8 @@ ef_info = mclient.get_qubit_info('qubit1ef')
 
 #gf_info1 = mclient.get_qubit_info('Qubit1gf')
 #cavity_info1R = mclient.get_qubit_info('cavity1R')
-cavity_info1A = mclient.get_qubit_info('cavity1A')
-cavity_info1B = mclient.get_qubit_info('cavity1B')
+cavity_info1A = mclient.get_qubit_info('cavityAlice')
+cavity_info1B = mclient.get_qubit_info('cavityBob')
 #Qswitch_info1A = mclient.get_qubit_info('Qswitch1A')
 #Qswitch_info1B = mclient.get_qubit_info('Qswitch1B')
 
@@ -66,7 +66,7 @@ if 0: # Chi evolution for Cavity A
                      seq=seq, delay=5, bgcor=False, Qswitch_infoA=Qswitch_info1A, Qswitch_infoB=Qswitch_info1B, extra_info=[Qswitch_info1A, Qswitch_info1B,])
         Qfun.measure()
 
-if 0: # Chi evolution for Cavity B
+if 1: # Chi evolution for Cavity B
     from scripts.single_cavity import Qfunction
     for delay in [350]:
         seq = sequencer.Join([prepareB, gepi, sequencer.Delay(delay), #cB(1.65, -pi*0.175),
@@ -88,11 +88,14 @@ if 0: # make a cat a la Brian for cavity A
 
 if 0: # make a cat a la Brian for Cavity B
     from scripts.single_cavity import Qfunction
-    seq = sequencer.Join([prepareB, ge(pi/2, 0), sequencer.Delay(307), cB(1.5, 0),
-                          geqs(pi,0), cB(-1.5, 0)])
-    Qfun = Qfunction.QFunction(qubit_info, cavity_info1B, amax=2.5, N=15, amaxx=None, Nx=None, amaxy=None, Ny=None,
-                 seq=seq, postseq=efpi, delay=5, bgcor=False, extra_info=[ef_info,])
-    Qfun.measure()
+    for delay in [250, 500, 750, 1000]:
+        seq = sequencer.Join([prepareB, ge(pi/2, 0), sequencer.Delay(delay), cB(1.5, 0),
+                              geqs(pi,0), cB(-1.5, 0)])
+        Qfun = Qfunction.QFunction(qubit_info, cavity_info1B, amax=2.5, N=15, amaxx=None, Nx=None, amaxy=None, Ny=None,
+                     seq=seq, postseq=efpi, delay=5, bgcor=False, extra_info=[ef_info,])
+#        Qfun = Qfunction.QFunction(qubit_info, cavity_info1B, amax=2.5, N=15, amaxx=None, Nx=None, amaxy=None, Ny=None,
+#                 seq=seq, postseq=None, delay=5, bgcor=False)
+        Qfun.measure()
     bla
 
 if 0: # ge entangled cat
@@ -138,7 +141,7 @@ if 0: # gf Chi evolution for Cavity A
                      seq=seq, delay=5, bgcor=False, Qswitch_infoA=Qswitch_info1A, Qswitch_infoB=Qswitch_info1B, extra_info=[ef_info, Qswitch_info1A, Qswitch_info1B,])
         Qfun.measure()
 
-if 1: # gf Chi evolution for Cavity B
+if 0: # gf Chi evolution for Cavity B
     from scripts.single_cavity import Qfunction
     for delay in [325]:
         seq = sequencer.Join([prepareBF, sequencer.Delay(delay), #cB(1.5, pi*0.0),#0.05

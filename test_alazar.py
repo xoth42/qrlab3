@@ -31,7 +31,7 @@ alz = mclient.instruments['alazar']
 #alz.setup_trigger()
 
 
-if 0:
+if 1:
         alz.setup_shots(1)
 #        start_time = time.time()
         buf = alz.take_raw_shots()
@@ -128,7 +128,7 @@ if 0:
         
         
         
-if 1:
+if 0:
         N = 1000
         alz.setup_shots(N)
         nsamp = alz.get_nsamples()
