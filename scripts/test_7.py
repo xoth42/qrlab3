@@ -55,9 +55,9 @@ if 0: # Qubit spec
     freq_range = 1e6
     spec = spectroscopy.Spectroscopy(mclient.instruments['geFG'], qubit_info,
                                      np.linspace(qubit_freq-freq_range,
-                                                 qubit_freq+freq_range, 101),
+                                                 qubit_freq+freq_range, 251),
                                      [-4],
-                                     plen=500, amp=0.05, plot_seqs=False,
+                                     plen=2000, amp=0.05, plot_seqs=False,
                                      freq_delay=.1) #1=1ns for plen
 
 #    spec = spectroscopy_IQ.Spectroscopy_IQ(client.instruments['gen'], qubit_info,
@@ -72,7 +72,7 @@ if 0: # Qubit spec
 if 1: # Qubit SSBspec
     from scripts.single_qubit import ssbspec
 #    postseq = sequencer.Delay(500)
-    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-.5e6, .5e6, 201), plot_seqs=False)
+    spec = ssbspec.SSBSpec(cavity_info, np.linspace(-1e6, 1e6, 151), plot_seqs=False)
     spec.measure()
 #    spec.measure_keysight()
     bla

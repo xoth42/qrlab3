@@ -40,7 +40,7 @@ def analysis(meas, data=None, fig=None):
     xs = meas.displacements
     fig.axes[0].plot(xs, ys, 'ks', ms=3)
     ofs0 = np.min(ys)
-    amp0 = np.max(ys) - np.min(ys)
+    amp0 = (np.max(ys) - np.min(ys)) * np.sign(ys[0]-ys[-1])
     scaling0 = 1
     print 'Amplitude estimate: %.03f ' % (amp0)
 
