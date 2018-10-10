@@ -22,18 +22,19 @@ from mclient import instruments
 
 
 
-dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period = 2000)
+dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period = 200)
+
 
 
 AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PRODUCT = "M3202A", 
-                          amps = [1,1.5,1,1], ofs = [0, .5, .0532, -.0116])
+                          amps = [1,1.5,1,1], ofs = [0, .5, .0662, -.01])
 
 
 AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 8,  AWG_PRODUCT = "M3202A", 
                           amps = [1,1,1,1], ofs = [0, 0, 0, 0])
 
 AWG3 = instruments.create('AWG3', 'Keysight_AWG', chassis = 0, slot = 10,  AWG_PRODUCT = "M3202A", 
-                          amps = [1,1,1,1], ofs = [.01, .004, -0.0739, 0.0030])
+                          amps = [1,1,1,1], ofs = [-0.0186, -0.0059, -0.0828, -0.0017])
 
 
 
@@ -53,7 +54,7 @@ sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
 
 #sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
 
-bobBrick = instruments.create('bobBrick', 'LabBrick_RFSource', serial=14510, use_extref=True) # qubit
+#bobBrick = instruments.create('bobBrick', 'LabBrick_RFSource', serial=14510, use_extref=True) # qubit
 #brick2 = instruments.create('brick2', 'LabBrick_RFSource', serial=14511, use_extref=True) # ref
 #ROBrick = instruments.create('ROBrick', 'LabBrick_RFSource', serial=14524, use_extref=True) # old RO
 #aliceBrick = instruments.create('aliceBrick', 'LabBrick_RFSource', serial=17912, use_extref=False) # RO
@@ -76,24 +77,24 @@ geFG = instruments.create('geFG', 'Agilent_Generator', address = 'USB0::0x0957::
 
 # Setup Alazar
 
-alz = instruments.create('alazar', 'Alazar_Daemon')
-alz.set_ch1_range('400mV')
-alz.set_ch2_range('200mV')
-alz.set_nsamples(4800)
-alz.set_naverages(500)
-alz.set_ch1_coupling('AC')
-alz.set_ch2_coupling('AC')
-alz.set_clock_source('EXT10M')
+#alz = instruments.create('alazar', 'Alazar_Daemon')
+#alz.set_ch1_range('400mV')
+#alz.set_ch2_range('200mV')
+#alz.set_nsamples(4800)
+#alz.set_naverages(500)
+#alz.set_ch1_coupling('AC')
+#alz.set_ch2_coupling('AC')
+#alz.set_clock_source('EXT10M')
+##alz.set_sample_rate('1GEXT10')
+##alz.set_clock_source('INT')
 #alz.set_sample_rate('1GEXT10')
-#alz.set_clock_source('INT')
-alz.set_sample_rate('1GEXT10')
-alz.set_engJ_trig_src('EXT')
-alz.set_engJ_trig_lvl(128+5)
-alz.set_real_signals(False)
-alz.set_timeout(10e3)
-alz.setup_clock()
-alz.setup_channels()
-alz.setup_trigger()
+#alz.set_engJ_trig_src('EXT')
+#alz.set_engJ_trig_lvl(128+5)
+#alz.set_real_signals(False)
+#alz.set_timeout(10e3)
+#alz.setup_clock()
+#alz.setup_channels()
+#alz.setup_trigger()
 
 
 readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
@@ -129,15 +130,15 @@ ag2 = instruments.create('ag2', 'Agilent_N5183A', address='GPIB1::22')
 '''
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                              deltaf=-100e6,
-                              pi_amp=.05466,
+                              pi_amp=.1516,
                               pi2_amp=0,
                               drag=0,
                               pi_amp_quasilective=0.027025,
-                              pi_amp_selective=.000277,
+                              pi_amp_selective=.0246,
                               rotation='Gaussian',
                               w=100,
                               w_quasilective=10,
-                              w_selective=2000,
+                              w_selective=500.0,
                               channels='3,4',
                               sideband_channels='I1,Q1',
                               sideband_phase=0)
@@ -159,27 +160,27 @@ qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
 
 CavityB = instruments.create('cavityBob', 'Qubit_Info',
         deltaf=-100e6,
-        pi_amp=0.023,
-        pi_amp_selective=.01,
+        pi_amp=.588,
+        pi_amp_selective=.02,
         rotation='Gaussian',
         channels='9,10',
         sideband_channels='I0,Q0',
-        sideband_phase=3.141,
-        w=1000,
-        w_selective=2000
+        sideband_phase=2.5,
+        w=10,
+        w_selective=500
         )
 
-CavityA = instruments.create('cavityAlice', 'Qubit_Info',
-        deltaf=-100e6,
-        pi_amp=0.1,
-        pi_amp_selective=.1,
-        rotation='Gaussian',
-        channels='11,12',
-        sideband_channels='I0,Q0',
-        sideband_phase=3.141,
-        w=1000,
-        w_selective=1000
-        )
+#CavityA = instruments.create('cavityAlice', 'Qubit_Info',
+#        deltaf=-100e6,
+#        pi_amp=0.1,
+#        pi_amp_selective=.1,
+#        rotation='Gaussian',
+#        channels='11,12',
+#        sideband_channels='I0,Q0',
+#        sideband_phase=3.141,
+#        w=1000,
+#        w_selective=1000
+#        )
 
 #qubit1gf = instruments.create('qubit1gf', 'Qubit_Info',
 #                            deltaf=-186.93e6,

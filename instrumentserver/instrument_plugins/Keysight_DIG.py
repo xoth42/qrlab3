@@ -392,7 +392,6 @@ class Keysight_DIG(Instrument):
             print('digitizer is likely not getting triggered')
             raise ValueError
             
-        print(signal)
         if(not len(signal) == self._naverages * self._nsamples):
             print('Buffer gave some wack shit, or maybe no shit at all:')
             print(np.shape(signal), signal)
@@ -419,11 +418,14 @@ class Keysight_DIG(Instrument):
     def setup_experiment(self, num_points, ntransfers = None):
         if ntransfers is None:
             if self._naverages % 10 == 0:
-                self._ntransfers = self._naverages/10
+                self._ntransfers = self._naverages/100
             else:
                 self._ntransfers = self._naverages
+        elif(self._naverages % ntransfers == 0):
+                self._ntransfers = ntransfers
         else:
-            self._ntransfers = ntransfers
+            print('not able to choose ntransfers or choice is incompatible with naverages')
+            raise ValueError
             
         errors = []    
         
@@ -443,25 +445,28 @@ class Keysight_DIG(Instrument):
         if any(error < 0 for error in errors):
             print('setup_experiment errors: ', errors)
         
-    def take_experiment(self):
+    def take_experiment(self, avg_buf=None, IQ_e=None, e_radius=None):
         samples_per_transfer = self._naverages *  self._npoints * self._nsamples / self._ntransfers
         acq_per_transfer = self._naverages *  self._npoints / self._ntransfers
-        signal = np.zeros(samples_per_transfer, dtype = np.complex64)
-        ref = np.zeros_like(signal)
+#        signal = np.zeros(samples_per_transfer, dtype = np.complex64)
+#        ref = np.zeros_like(signal)
         avgs = np.zeros(self._npoints, dtype = np.complex64)
         
         for i in range(self._ntransfers):
-            if i % np.max([self._ntransfers / 10, 1]) == 0:
-                logging.info('Acquiring %d/%d', i, self._ntransfers)
-                self.emit('capture-progress', i)
+#            print('Acquiring %d/%d', i+1, self._ntransfers)
+            logging.info('%d/%d averages performed', (i+1)*self._naverages/self._ntransfers, self._naverages)
+            self.emit('capture-progress', i)
+            
             try:
-                signal = self.dig.DAQbufferGet(self._main_channel)
-                ref = self.dig.DAQbufferGet(self._ref_channel)
+                signal = np.array(self.dig.DAQbufferGet(self._main_channel), dtype=np.complex64)
+                ref = np.array(self.dig.DAQbufferGet(self._ref_channel), dtype=np.complex64)
             except ValueError, e:
                 print(str(e))
                 print('digitizer is likely not getting triggered')
                 raise ValueError
                         
+            
+                
             self._demodA.demodulate(signal)
             self._demodB.demodulate(ref)
             
@@ -469,8 +474,14 @@ class Keysight_DIG(Instrument):
             IQB = self._demodB.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
             refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
         
-            for j in range(acq_per_transfer):
-                avgs[(i * acq_per_transfer + j) / self._naverages] += np.mean(IQA[j,:] * refs[j])
+            for j in range(self._npoints):
+                for k in range(self._naverages / self._ntransfers):
+                    avgs[j] += np.mean(IQA[j + k*self._npoints,:]
+                                    * refs[j + k*self._npoints])
+                    
+            if avg_buf:
+                self.update_averages(avg_buf, avgs, (i+1) * self._naverages / self._ntransfers)
+            
         return avgs/self._naverages
     
     def test_dig(self, nsamples, npoints, naverages, ntransfers, captureDelay = 0, digScale = 2):
@@ -511,6 +522,7 @@ class Keysight_DIG(Instrument):
                 pass# modulo shit ain't workin. its ok
             temp = self.dig.DAQbufferGet(self._main_channel)
             temp_ref  = self.dig.DAQbufferGet(self._ref_channel)
+            
             if type(temp) is float and temp < 0:
                 print('error thrown with code ', temp)
                 
@@ -544,6 +556,15 @@ class Keysight_DIG(Instrument):
         self.dig.DAQbufferPoolRelease(self._main_channel)
         self.dig.DAQbufferPoolRelease(self._ref_channel)
     
+    def update_averages(self, avg_buf, IQ_sum, n):
+        try:
+            avg_buf[:] = IQ_sum / float(n)
+            avg_buf.set_attrs(averages=n)
+        except Exception, e:
+            msg = 'Unable to store averages: %s' % str(e)
+            logging.warning(msg)
+            raise Exception(msg)
+    
     ###############################################
     # Demodulation stuff
     ###############################################
@@ -573,3 +594,6 @@ class Keysight_DIG(Instrument):
 
         # Garbage collect old demodulators
         gc.collect()
+        
+        
+        

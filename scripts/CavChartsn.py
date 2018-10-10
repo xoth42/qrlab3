@@ -41,10 +41,10 @@ Qswitchseq = sequencer.Join([sequencer.Repeat(sequencer.Delay(100), 100),
 #            Repeat(Constant(250, 1, chan=5), 800),      # Qubit/Readout master switch
             ])])
 '''
-if 0: # Cavity disp calibration
+if 1: # Cavity disp calibration
     from scripts.single_cavity import cavdisp
-    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
-    disp = cavdisp.CavDisp(qubit_info, cavity_infoB, 2, 101, 0, seq=seq,
+#    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
+    disp = cavdisp.CavDisp(qubit_info, cavity_infoA, 2, 71, 0, seq=None,
                            delay=0, bgcor=False, update=False, generate=True,
 #                           Qswitch_infoA=Qswitch_infoB, Qswitch_infoB=Qswitch_infoB,
 #                           extra_info=[Qswitch_infoA, Qswitch_infoB,],
@@ -55,7 +55,7 @@ if 0: # Cavity disp calibration
 if 0: # Cavity T1:
     from scripts.single_cavity import cavT1
     for i in range(1):
-        t1 = cavT1.CavT1(qubit_info, cavity_infoB, 1, np.linspace(0, 1.8e6, 101), proj_num=0, seq=None,
+        t1 = cavT1.CavT1(qubit_info, cavity_infoA, 1, np.linspace(0, 1.8e6, 101), proj_num=0, seq=None,
                          postseq=None, bgcor=False, extra_info=[ef_info,])
         t1.measure()
 
@@ -74,7 +74,7 @@ if 0:# Cavity T2
 
 if 0: #SSB cavspec
     from scripts.single_cavity import ssbcavspec
-    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoB, np.linspace(-2e6, 2e6, 150),
+    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoA, np.linspace(-1e6, 1e6, 101),
 #                                  postseq=efpi, extra_info=[ef_info,]
                                   )
     cspec.measure()
@@ -88,10 +88,10 @@ if 0: # Measure cavity photon population
     tr = rabi.Rabi(qubit_info, np.linspace(-0.005, 0.005, 81), plot_seqs=False, update=False, seq=None, selective=1, singleshotbin=True, fix_period=period)
     tr.measure()
 
-if 1: #Sideband modulated number splitting:
+if 0: #Sideband modulated number splitting:
     from scripts.single_qubit import ssbspec
-    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoB.rotate(1.5, 0)])
-    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-1.5e6, 1.5e6, 201),
+    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate(1.5, 0)])
+    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-1.5e6, 1.5e6, 150),
                            extra_info= cavity_infoB,
                            seq = seq,  plot_seqs=False)
     spec.measure()

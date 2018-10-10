@@ -604,13 +604,13 @@ class Measurement(object):
         
         
         dig.stop_hvi()
-        dig.setup_experiment(self.cyclelen, ntransfers = 1)
+        dig.setup_experiment(self.cyclelen, ntransfers = None)
         dig.arm()
 
         # Start measurement, either by starting the AWG or the function generator
         self.start_awgs()
         dig.start_hvi()
-        ret = dig.take_experiment()
+        ret = dig.take_experiment(avg_buf=self.avg_data, IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius)
 
 
         dig.disconnect(progress_hid)
