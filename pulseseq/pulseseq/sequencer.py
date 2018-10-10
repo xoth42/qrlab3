@@ -39,7 +39,7 @@ PAD_CENTER    = 2
     TODO: make this shit dynamic so it doesn't need to be reset
 '''
 
-MINLEN        = 1000
+MINLEN        = 2000
 
 
 IGNORE        = 0

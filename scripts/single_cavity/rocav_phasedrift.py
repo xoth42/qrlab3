@@ -22,6 +22,7 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, ax=None):
         ax1.set_ylabel('Intensity [AU]')
         ax2.set_ylabel('Phase Angle')
         ax2.set_xlabel('msmt #')
+                    
 
 
     if plot_type == POWER:
@@ -98,6 +99,12 @@ class ROCavPhaseDrift(Measurement1D):
         # Generate and load sequences
         alz = self.instruments['alazar']
         alz.set_interrupt(False)
+        try:
+            dig = self.instruments['dig']
+            dig.start_hvi()
+        except:
+            print('no digitizer object for trigger')
+
 
         seqs = self.generate()
         self.load(seqs)
@@ -117,7 +124,7 @@ class ROCavPhaseDrift(Measurement1D):
                 time.sleep(1)
 
                 alz.setup_avg_shot(alz.get_naverages())
-                ret = alz.take_avg_shot(async=True)
+                ret = alz.take_avg_shot(async=True) 
                 try:
                     while not ret.is_valid():
                         objsh.helper.backend.main_loop(100)
@@ -134,6 +141,7 @@ class ROCavPhaseDrift(Measurement1D):
 
             self.ampdata[ipower,:] = amps
             self.phasedata[ipower,:] = phases
+
             
 
         self.analyze()

@@ -32,17 +32,17 @@ for slot in [7, 8, 10]:
     
     for i in [1,2,3,4]:
         error += [awg.AWGflush(i)]
-    
+        
         error += [awg.channelWaveShape(i, key.SD_Waveshapes.AOU_AWG)]
         error += [awg.channelAmplitude(i, 1)]
-#        error += [awg.channelOffset(i, 0)]
+        error += [awg.channelOffset(i, 0)]
         
         error += [awg.AWGqueueWaveform(i, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)]
         
         error += [awg.AWGqueueConfig(i,1)]
 
     error += [awg.AWGstartMultiple(15)]
-#    error += [awg.AWGtrigger(1)]
+#    error += [awg.AWGtriggerMultiple(15)]
 
     print(error)
 
