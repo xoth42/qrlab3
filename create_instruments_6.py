@@ -26,20 +26,20 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                               channels='3,4',
                               sideband_channels='I1,Q1',
                               sideband_phase=0)
+##
+##
+qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
+                            deltaf=-375.06e6,
+                            pi_amp=0.223425,
+                            pi_amp_selective=0.06147,
+                            rotation='Gaussian',
+                            w=40,
+                            w_selective=100,
+                            channels='2,3',
+                            sideband_channels='I17,Q17',
+                            sideband_phase=0)
 
-
-#qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
-#                            deltaf=-375.06e6,
-#                            pi_amp=0.223425,
-#                            pi_amp_selective=0.06147,
-#                            rotation='Gaussian',
-#                            w=40,
-#                            w_selective=100,
-#                            channels='2,3',
-#                            sideband_channels='I17,Q17',
-#                            sideband_phase=0)
-
-#qubit2ge = instruments.create('qubit2ge', 'Qubit_Info',
+#qubitLOL = instruments.create('qubitLOL', 'Qubit_Info',
 #                            deltaf=-100e6,
 #                            pi_amp=0.196305,
 #                            pi_amp_selective=0.06147,
@@ -65,25 +65,25 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 #                              sideband_channels='I3,Q3',
 #                              sideband_phase=0)
 
-refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511, 
-                            use_extref=True) #reference
-RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=19151,
-                             use_extref=True) #readout
-##qbrick = instruments.create('qbrick', 'LabBrick_RFSource', serial=14510,
-#                             use_extref=True) #qubit
-#q2brick = instruments.create('q2brick', 'LabBrick_RFSource', serial=17912,
-#                           use_extref=True) #qubit 2
+#refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511, 
+#                            use_extref=True) #reference
+#RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=19151,
+#                             use_extref=True) #readout
+###qbrick = instruments.create('qbrick', 'LabBrick_RFSource', serial=14510,
+##                             use_extref=True) #qubit
+##q2brick = instruments.create('q2brick', 'LabBrick_RFSource', serial=17912,
+##                           use_extref=True) #qubit 2
+#
+##sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
+#sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
 
-#sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
-sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
 
 
-
-dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 2)
-
-AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
-                             AWG_PRODUCT = "M3202A",
-                             amps = [1.5, 1, 1.5, 1.5], ofs = [0.5, 0, -0.002, 0.046])
+#dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 2)
+#
+#AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
+#                             AWG_PRODUCT = "M3202A",
+#                             amps = [1.5, 1, 1.5, 1.5], ofs = [0.5, 0, -0.002, 0.046])
 
 #AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis=0, slot=10,
 #                         AWG_PRODUCT="M3202A",
@@ -92,12 +92,12 @@ AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
 # Magnet = instruments.create('Magnet','AMI_430')
 
 
-readout = instruments.create('readout', 'Readout_Info', IQe=(0.2-6.7j), IQg=(0.3-6.7j),
-                             IQe_radius= 1 , rfsource1='RObrick', 
-                             rfsource2='refbrick',
-                             pulse_len=2000, readout_chan='1m1', acq_chan='2m1')
-
-Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
+#readout = instruments.create('readout', 'Readout_Info', IQe=(0.2-6.7j), IQg=(0.3-6.7j),
+#                             IQe_radius= 1 , rfsource1='RObrick', 
+#                             rfsource2='refbrick',
+#                             pulse_len=2000, readout_chan='1m1', acq_chan='2m1')
+#
+#Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 
 
 #''' Readout_IQ_Info is for iq modulation on the readout brick instead of pulse triggering '''
