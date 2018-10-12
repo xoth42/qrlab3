@@ -12,7 +12,7 @@ import gc
 
 
 def digitizer_setup(dig, nsamples, npoints, naverages, ntransfers, captureDelay = 0, digScale = 2):
-    digChannels = [1, 2, 3, 4] 
+    digChannels = [1, 2] 
     errors = []
     errors += [dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)]
 
@@ -28,7 +28,7 @@ def digitizer_setup(dig, nsamples, npoints, naverages, ntransfers, captureDelay 
 def digitizer_acquire(dig, hvi, awg, nsamples, npoints, naverages, ntransfers, data_channel):
     assert(naverages % ntransfers == 0)
 
-    digChannels = [1, 2, 3, 4]
+    digChannels = [1, 2]
     awg.AWGstartMultiple(15)
     dig.DAQstartMultiple(3)
     hvi.start()
@@ -39,7 +39,7 @@ def digitizer_acquire(dig, hvi, awg, nsamples, npoints, naverages, ntransfers, d
        
 #    return data
     averages_per_transfer = naverages / ntransfers
-    temp = np.zeros(nsamples*npoints * averages_per_transfer, dtype = np.float64)
+    signal = np.zeros(nsamples*npoints * averages_per_transfer, dtype = np.float64)
     for transfer in range(ntransfers):
         try:
             if transfer % (ntransfers/10) == 0: 
@@ -48,9 +48,11 @@ def digitizer_acquire(dig, hvi, awg, nsamples, npoints, naverages, ntransfers, d
                 gc.collect()
         except:
             pass# modulo shit ain't workin. its ok
-        temp = dig.DAQbufferGet(data_channel) / 35000.
+        temp = dig.DAQbufferGet(data_channel)
+        print(temp)
         if type(temp) is float and temp < 0:
             print('error thrown with code ', temp)
+        signal = temp
 #        temp = np.array(temp, dtype = float)
         
 #        temp /= np.max(temp)
@@ -62,8 +64,8 @@ def digitizer_acquire(dig, hvi, awg, nsamples, npoints, naverages, ntransfers, d
         samples_per_average = nsamples * npoints
         for i in range(averages_per_transfer):
             for j in range(npoints):
-                sums[j] += temp[i * samples_per_average + j * nsamples : i * samples_per_average + (j+1) * nsamples]
-                sums_squared[j] += temp[i * samples_per_average + j * nsamples : i * samples_per_average + (j+1) * nsamples]**2
+                sums[j] += signal[i * samples_per_average + j * nsamples : i * samples_per_average + (j+1) * nsamples]
+                sums_squared[j] += signal[i * samples_per_average + j * nsamples : i * samples_per_average + (j+1) * nsamples]**2
 
             
     
@@ -116,32 +118,32 @@ def load_awg(awg, npoints):
         awg.channelAmplitude(i, 1)
         awg.AWGqueueConfig(i, 1) # Setup the queue in cyclic mode
         
-    # load data onto channels 1 and 2
+    # load triggers onto channels 1 and 2
     for i in [1, 2]: 
         for k in range(npoints):
-            awg.AWGqueueWaveform(i, k+1, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
+            awg.AWGqueueWaveform(i, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
     
-    # load triggers onto channels 3 and 4
+    # load data onto channels 3 and 4
     for i in [3, 4]:
         for k in range(npoints):
-            awg.AWGqueueWaveform(i, 0, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
+            awg.AWGqueueWaveform(i, k+1, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)
     
 
 
 def fetch_keysight_shit(trigger_period):
 #    testing_HVI_location = r'C:\qrlab\instrumentserver\keysightAWG\digitizer test\2nd_trigger.HVI'
-    testing_HVI_location = r'C:\qrlab\instrumentserver\keysightAWG\\' + str(trigger_period) + 'usTrigger.HVI'
+    testing_HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\3slot500us.HVI'
     hvi = CompiledHVI(testing_HVI_location)
     
     chassis = 0
     digSlot = 3
     digName = "M3102A"
     dig = key.SD_AIN()
-    dig.openWithSlotCompatibility(digName, chassis, digSlot, key.SD_Compatibility.KEYSIGHT)
+    dig.openWithSlot(digName, chassis, digSlot)
     
     AWG_PRODUCT = "M3202A"
     CHASSIS = 0
-    AWG_SLOT = 7
+    AWG_SLOT = 5
     awg = key.SD_AOU()
     awg.openWithSlot(AWG_PRODUCT, CHASSIS, AWG_SLOT)
     
@@ -155,11 +157,11 @@ def fetch_keysight_shit(trigger_period):
 trigger_period = 100 #us
 nsamples = 4000 #number of data points taken ever acquisition
 
-npoints = 20 # number of different experimental points, each will be averaged
-naverages = 10000 # total number of averages per point
+npoints = 5 # number of different experimental points, each will be averaged
+naverages = 20 # total number of averages per point
 ntransfers = naverages / 10  # number of blocks it takes the dig data to transfer to the pc
 
-data_channel = 1
+data_channel = 2
 
 hvi, dig, awg = fetch_keysight_shit(trigger_period)
 hvi.stop()
@@ -183,6 +185,7 @@ awg.close()
 print('acquisition finished', time.time()-start_time)
 
 #means /= np.max(means)
+
 
 pl.close('all')
 fig = pl.figure()

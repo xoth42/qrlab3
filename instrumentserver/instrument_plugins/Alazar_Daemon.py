@@ -634,7 +634,6 @@ real part is applied to I and the imaginary part to Q.
                 avg = np.zeros_like(IQA[0,:])
             for j in range(Nperbuf):
                 avg += IQA[j,:] * refs[j]
-
             self._card.post_buffers(buf)
             i += Nperbuf
 
@@ -644,7 +643,7 @@ real part is applied to I and the imaginary part to Q.
             return None
 
         avg /= N
-        return self.convert_signal(avg)
+        return avg
 
     def setup_experiment(self, cycles):
         self.end_capture()

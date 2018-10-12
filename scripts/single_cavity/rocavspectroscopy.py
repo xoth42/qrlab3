@@ -121,6 +121,11 @@ class ROCavSpectroscopy(Measurement1D):
         # Generate and load sequences
         alz = self.instruments['alazar']
         alz.set_interrupt(False)
+        try:
+            dig = self.instruments['dig']
+            dig.start_hvi()
+        except:
+            print('no digitizer object for trigger')
 
         seqs = self.generate()
         self.load(seqs)
@@ -137,8 +142,8 @@ class ROCavSpectroscopy(Measurement1D):
             for ifreq, freq in enumerate(self.freqs):
                 self.readout_info.rfsource1.set_frequency(freq)
                 self.readout_info.rfsource2.set_frequency(freq+50e6)
-                time.sleep(1)
-
+                time.sleep(.1)
+                
                 alz.setup_avg_shot(alz.get_naverages())
                 ret = alz.take_avg_shot(async=True)
                 try:

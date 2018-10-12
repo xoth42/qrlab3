@@ -76,7 +76,7 @@ def analysis(meas, data=None, fig=None):
     params.add('amp', value=amp0, min=0)
     params.add('tau', value=xs[-1], min=10, max=200000)
     params.add('freq', value=f0, min=0)
-    params.add('phi0', value=0, min=-1.2*np.pi, max=1.2*np.pi)
+    params.add('phi0', value=-np.pi/2.0, min=-1.2*np.pi, max=1.2*np.pi)
     params.add('slope', value=0)
     result = lmfit.minimize(t2_fit_tilted, params, args=(xs, ys))
     lmfit.report_fit(result.params)

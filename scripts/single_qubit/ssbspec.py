@@ -25,6 +25,7 @@ class SSBSpec(Measurement1D):
         self.bgcor = bgcor
         self.coplay_delay=coplay_delay
 
+
         npoints = len(detunings)
         if bgcor:
             npoints += 1

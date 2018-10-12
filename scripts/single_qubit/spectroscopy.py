@@ -25,7 +25,7 @@ class Spectroscopy(Measurement1D):
 
     def __init__(self, qubit_rfsource, qubit_info, q_freqs, ro_powers,
                  plen=1000, amp=1, seq=None, postseq=None,
-                 pow_delay=1, freq_delay=0.1, plot_type=None,
+                 pow_delay=1, freq_delay=1, plot_type=None,
                  **kwargs):
         self.qubit_rfsource = qubit_rfsource
         self.qubit_info = qubit_info
@@ -64,7 +64,6 @@ class Spectroscopy(Measurement1D):
             Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
             Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
         ]))
-
         s = self.get_sequencer(s)
         seqs = s.render()
         return seqs
@@ -72,8 +71,14 @@ class Spectroscopy(Measurement1D):
     def measure(self):
         alz = self.instruments['alazar']
         alz.set_interrupt(False)
-
+        try:
+            dig = self.instruments['dig']
+            dig.start_hvi()
+        except:
+            print('no digitizer object for trigger')
+ 
         # Generate and load sequences
+
         seqs = self.generate()
         self.load(seqs)
         self.start_awgs()

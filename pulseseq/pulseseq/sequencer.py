@@ -39,7 +39,7 @@ PAD_CENTER    = 2
     TODO: make this shit dynamic so it doesn't need to be reset
 '''
 
-MINLEN        = 1000
+MINLEN        = 2000
 
 
 IGNORE        = 0
@@ -1190,7 +1190,7 @@ def Delay(dt, chan=CHAN_ANY, unroll=True, repeat=1, trigger=False, fixed=False, 
     Comes in 3 flavours:
     - unrolled (i.e. N times delay1)
     - smart (i.e. N times delay250 + M times delay1)
-    - fidex (i.e. one element delayN)
+    - fixed (i.e. one element delayN)
     '''
 
     try:

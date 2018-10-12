@@ -38,6 +38,12 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, ax=None):
         plt.legend()
         plt.ylabel('Intensity [AU]')
         plt.xlabel('Frequency [MHz]')
+        
+        plt.figure()
+        for ipower, power in enumerate(powers):
+            plt.plot(freqs/1e6, phasedata[ipower,:], label='Power %.02f dB'%power)
+        plt.ylabel('Phase Angle')
+        plt.xlabel('Frequency [MHz]')
 
     if plot_type == POWER:
 #        ax1 = f.add_subplot(2,1,1)
