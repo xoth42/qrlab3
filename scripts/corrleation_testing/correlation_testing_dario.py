@@ -414,7 +414,7 @@ class CorrelationDay(object):
         return new_data
 
 
-file_path = r'C:\Users\Wang_Lab\Desktop\TunableTransmonJuly18.hdf5'
+file_path = r'C:\Users\Wang_Lab\Desktop\test_1024.h5'
 day_codes = ["20180816"]
 try:
     file = h5py.File(file_path, 'r')
@@ -429,8 +429,8 @@ if len(file.keys()) == 0:
 # series of numpy files in the same directory as this script. Its an easier
 # format to work with but qrlab produces info in the HDF5 so thats what needs
 #  to be worked with.
-first_day = CorrelationDay(file, '20180815', histogram=False, start=
-'133503', end='195709')
+first_day = CorrelationDay(file, '20181024', histogram=False, start=
+'112820', end='235957')
 
 old_data = [np.load('g.npy'), np.load('equator.npy'), np.load('t1.npy'),
             np.load('ft1.npy')]
@@ -550,6 +550,9 @@ def data_pipeline(DayObject):
         angles = np.angle(directions, deg=True)
         amplitudes = map(np.absolute, data)
         averages = map(lambda x: x - np.average(x), amplitudes)
+#        np.savetxt('dataset 0816 average subtracted, projected amplitudes.txt', np.column_stack([averages[0], averages[1], averages[2], averages[3], averages[4], averages[5]]), 
+#                   fmt="%10.5f", delimiter = ',',
+#                   header = 'g,          equator,       T1,      FT1,     g_2,    equator_2')
         if average is True:
             autocorrelations = map(
                 lambda x: np.correlate(x, x, mode='full') / np.sum(x ** 2),
@@ -699,13 +702,17 @@ def data_pipeline(DayObject):
             plt.legend()
             
             coherence = cc_spectrum_yz[:-1]**2 / (spectrums[2]*spectrums[3])
+            print(coherence)
+            print(cc_spectrum_yz[:-1]**2)
+            print(spectrums[2])
+            print(spectrums[3])
             coherence_subtr_corr = R_t1ft1_spec[:-1]**2 / (R_ft1ft1_spec*R_t1t1_spec)
             coherence_subtr_spec = subtracted_spec_t1ft1[:-1]**2 / (subtracted_spec*subtracted_specII)
             
             plt.figure()
-            plt.plot(w, 2.0 / N * coherence[0:N // 2], 'o', label='T1-FT1 coherence')
-            plt.plot(w, 2.0 / N * coherence_subtr_corr[0:N // 2], 'o', label='bg sub correlations')
-            plt.plot(w, 2.0 / N * coherence_subtr_spec[0:N // 2], 'o', label='bg sub spectrum')
+            plt.plot(w, coherence[0:N // 2], 'o', label='T1-FT1 coherence')
+            plt.plot(w, coherence_subtr_corr[0:N // 2], 'o', label='bg sub correlations')
+            plt.plot(w, coherence_subtr_spec[0:N // 2], 'o', label='bg sub spectrum')
             plt.yscale('log')
             plt.xscale('log')
             plt.xlabel('Frequency (Hz)')
@@ -713,100 +720,111 @@ def data_pipeline(DayObject):
             plt.legend()
             
 
-##            phases_p = PredefinedPlot([angles, 'k'], nice_label('phases'))
-#            #    phases_p.other_function(plt.ylim, ((-2*np.pi, 2*np.pi)))
-#            autoc_p = PredefinedPlot([time, subtracted_autoc, 'm'], nice_label(
-#                "autocorr of T1 minus autocorr of eq"))
-#            t1c_p = PredefinedPlot([time, right_halves[2], 'k'],
-#                                   nice_label(r'$T_{1}$ autocorrelation'))
-##            gc_p = PredefinedPlot([time, right_halves[0], 'b'],
-##                                  nice_label(r'g autocorrelation'))
-#            eqc_p = PredefinedPlot([time, right_halves[1], 'g'],
-#                                   nice_label(r'Equator autocorrelation'))
-#            ft1c_p = PredefinedPlot([time, right_halves[3], 'k'],
-#                                    nice_label(r'$FT_{1}$ autocorrelation'))
-#            eqIIc_p = PredefinedPlot([time, right_halves[5], 'g'],
-#                                    nice_label(r'Equator(II) autocorrelation'))
-#            autocII_p = PredefinedPlot([time, subtracted_autocII, 'm'], nice_label(
-#                "autocorr of FT1 minus autocorr of eqII"))
-##            g_p = PredefinedPlot([time_raw, averages[0], 'm'],
-##                                 nice_label(r'Raw g_1 voltages'))
-#            eq_p = PredefinedPlot([time_raw, averages[1], 'g'],
-#                                  nice_label(r'Raw Equator voltages'))
-#            print('variance of equator:', np.sum(averages[1]**2)/len(averages[1]))
-#            t1_p = PredefinedPlot([time_raw, averages[2], 'k'],
-#                                  nice_label(r'Raw T1 voltages'))
-#            print('variance of T1:', np.sum(averages[2]**2)/len(averages[2]))
-#            ft1_p = PredefinedPlot([time_raw, averages[3], 'b'],
-#                                   nice_label(r'Raw FT1 voltages'))
-#            print('variance of FT1:', np.sum(averages[3]**2)/len(averages[3]))
-##            ft1_p = PredefinedPlot([time_raw, averages[4], 'b'],
-##                                   nice_label(r'Raw g_2 voltages'))
-#            ft1_p = PredefinedPlot([time_raw, averages[5], 'b'],
-#                                   nice_label(r'Raw eq_2 voltages'))
-#            print('variance of equatorII:', np.sum(averages[5]**2)/len(averages[5]))
-#            cc_eqt1_p = PredefinedPlot([time_raw, cc_xy, 'b'],
-#                                       nice_label(
-#                                           r'Cross-correlation of equator and '
-#                                           r'T1'))
-#            cc_eqft1_p = PredefinedPlot([time_raw, cc_xz, 'b'],
-#                                        nice_label(
-#                                            r'Cross-correlation of equator '
-#                                            r'and FT1'))
-#            cc_t1ft1_p = PredefinedPlot([time_raw, cc_yz, 'b'],
-#                                        nice_label(
-#                                            r'Cross-correlation of T1 and FT1'))
-#            cc_ft1eq2_p = PredefinedPlot([time_raw, cc_ft1eq2, 'b'],
-#                                         nice_label(
-#                                             r'Cross-correlation of FT1 and '
-#                                             r'equatorII'))
-#            cc_eqeq2_p = PredefinedPlot([time_raw, cc_xx2, 'b'],
-#                                         nice_label(
-#                                             r'Cross-correlation of equator and '
-#                                             r'equatorII'))
-#            noise_equiv_p = PredefinedPlot([time, noise_equiv, 'b'],
-#                                         nice_label(
-#                                             r'Cross-corr equator T1 minus autocorr equator'))
-#            spec_t1t1_p = PredefinedPlot(
-#                [w, 2.0 / N * R_t1t1_spec[0:N // 2], 'o'],
-#                nice_label(r'Spectral density of T1'))
-#            plt.yscale('log')
-#            plt.xscale('log')
-#            spec_ft1ft1_p = PredefinedPlot(
-#                [w, 2.0 / N * R_ft1ft1_spec[0:N // 2], 'o'],
-#                nice_label(r'Spectral density of FT1'))
-#            plt.yscale('log')
-#            plt.xscale('log')                                          
-#            spec_eqt1_p = PredefinedPlot(
-#                [w, 2.0 / N * cc_spectrum_xy[0:N // 2], 'o'],
-#                nice_label(r'Cross-spectral density of equator and T1'))
-#            plt.yscale('log')
-#            plt.xscale('log')
-#            spec_eqft1_p = PredefinedPlot(
-#                [w, 2.0 / N * cc_spectrum_xz[0:N // 2], 'o'],
-#                nice_label(r'Cross-spectral density of equator and FT1'))
-#            plt.yscale('log')
-#            plt.xscale('log')
-#            spec_t1ft1_p = PredefinedPlot(
-#                [w, 2.0 / N * cc_spectrum_yz[0:N // 2], 'o'],
-#                nice_label(r'Cross-spectral density of T1 and FT1'))
-#            plt.yscale('log')
-#            plt.xscale('log')
-#            spec_ft1eq2_p = PredefinedPlot(
-#                [w, 2.0 / N * cc_spectrum_ft1eq2[0:N // 2], 'o'],
-#                nice_label(r'Cross-spectral density of FT1 and equatorII'))
-#            plt.yscale('log')
-#            plt.xscale('log')
-#            spec_eqeq2_p = PredefinedPlot(
-#                [w, 2.0 / N * cc_spectrum_xx2[0:N // 2], 'o'],
-#                nice_label(r'Cross-spectral density of equator and equatorII'))
-#            plt.yscale('log')
-#            plt.xscale('log')
-#            spec_t1ft1_subtr_p = PredefinedPlot(
-#                [w, 2.0 / N * R_t1ft1_spec[0:N // 2], 'o'],
-#                nice_label(r'Cross-spectral density of T1 and FT1 (with background subtracted)'))
-#            plt.yscale('log')
-#            plt.xscale('log')
+            phases_p = PredefinedPlot([time_raw, angles, 'k'], nice_label('phases'))
+            #    phases_p.other_function(plt.ylim, ((-2*np.pi, 2*np.pi)))
+            autoc_p = PredefinedPlot([time, subtracted_autoc, 'm'], nice_label(
+                "autocorr of T1 minus autocorr of eq"))
+            t1c_p = PredefinedPlot([time, right_halves[2], 'k'],
+                                   nice_label(r'$T_{1}$ autocorrelation'))
+#            gc_p = PredefinedPlot([time, right_halves[0], 'b'],
+#                                  nice_label(r'g autocorrelation'))
+            eqc_p = PredefinedPlot([time, right_halves[1], 'g'],
+                                   nice_label(r'Equator autocorrelation'))
+            ft1c_p = PredefinedPlot([time, right_halves[3], 'k'],
+                                    nice_label(r'$FT_{1}$ autocorrelation'))
+            eqIIc_p = PredefinedPlot([time, right_halves[5], 'g'],
+                                    nice_label(r'Equator(II) autocorrelation'))
+            autocII_p = PredefinedPlot([time, subtracted_autocII, 'm'], nice_label(
+                "autocorr of FT1 minus autocorr of eqII"))
+#            g_p = PredefinedPlot([time_raw, averages[0], 'm'],
+#                                 nice_label(r'Raw g_1 voltages'))
+            eq_p = PredefinedPlot([time_raw, averages[1], 'g'],
+                                  nice_label(r'Raw Equator voltages'))
+            print('variance of equator:', np.sum(averages[1]**2)/len(averages[1]))
+            t1_p = PredefinedPlot([time_raw, averages[2], 'k'],
+                                  nice_label(r'Raw T1 voltages'))
+            print('variance of T1:', np.sum(averages[2]**2)/len(averages[2]))
+            ft1_p = PredefinedPlot([time_raw, averages[3], 'b'],
+                                   nice_label(r'Raw FT1 voltages'))
+            print('variance of FT1:', np.sum(averages[3]**2)/len(averages[3]))
+#            ft1_p = PredefinedPlot([time_raw, averages[4], 'b'],
+#                                   nice_label(r'Raw g_2 voltages'))
+            ft1_p = PredefinedPlot([time_raw, averages[5], 'b'],
+                                   nice_label(r'Raw eq_2 voltages'))
+            print('variance of equatorII:', np.sum(averages[5]**2)/len(averages[5]))
+            cc_eqt1_p = PredefinedPlot([time_raw, cc_xy, 'b'],
+                                       nice_label(
+                                           r'Cross-correlation of equator and '
+                                           r'T1'))
+            cc_eqft1_p = PredefinedPlot([time_raw, cc_xz, 'b'],
+                                        nice_label(
+                                            r'Cross-correlation of equator '
+                                            r'and FT1'))
+            cc_t1ft1_p = PredefinedPlot([time_raw, cc_yz, 'b'],
+                                        nice_label(
+                                            r'Cross-correlation of T1 and FT1'))
+            cc_ft1eq2_p = PredefinedPlot([time_raw, cc_ft1eq2, 'b'],
+                                         nice_label(
+                                             r'Cross-correlation of FT1 and '
+                                             r'equatorII'))
+            cc_eqeq2_p = PredefinedPlot([time_raw, cc_xx2, 'b'],
+                                         nice_label(
+                                             r'Cross-correlation of equator and '
+                                             r'equatorII'))
+            noise_equiv_p = PredefinedPlot([time, noise_equiv, 'b'],
+                                         nice_label(
+                                             r'Cross-corr equator T1 minus autocorr equator'))
+            spec_t1t1_p = PredefinedPlot(
+                [w, 2.0 / N * R_t1t1_spec[0:N // 2], 'o'],
+                nice_label(r'Spectral density of T1'))
+            plt.yscale('log')
+            plt.xscale('log')
+            spec_ft1ft1_p = PredefinedPlot(
+                [w, 2.0 / N * R_ft1ft1_spec[0:N // 2], 'o'],
+                nice_label(r'Spectral density of FT1'))
+            plt.yscale('log')
+            plt.xscale('log')                                          
+            spec_eqt1_p = PredefinedPlot(
+                [w, 2.0 / N * cc_spectrum_xy[0:N // 2], 'o'],
+                nice_label(r'Cross-spectral density of equator and T1'))
+            plt.yscale('log')
+            plt.xscale('log')
+            spec_eqft1_p = PredefinedPlot(
+                [w, 2.0 / N * cc_spectrum_xz[0:N // 2], 'o'],
+                nice_label(r'Cross-spectral density of equator and FT1'))
+            plt.yscale('log')
+            plt.xscale('log')
+            spec_t1ft1_p = PredefinedPlot(
+                [w, 2.0 / N * cc_spectrum_yz[0:N // 2], 'o'],
+                nice_label(r'Cross-spectral density of T1 and FT1'))
+            plt.yscale('log')
+            plt.xscale('log')
+            spec_ft1eq2_p = PredefinedPlot(
+                [w, 2.0 / N * cc_spectrum_ft1eq2[0:N // 2], 'o'],
+                nice_label(r'Cross-spectral density of FT1 and equatorII'))
+            plt.yscale('log')
+            plt.xscale('log')
+            spec_eqeq2_p = PredefinedPlot(
+                [w, 2.0 / N * cc_spectrum_xx2[0:N // 2], 'o'],
+                nice_label(r'Cross-spectral density of equator and equatorII'))
+            plt.yscale('log')
+            plt.xscale('log')
+            spec_t1ft1_subtr_p = PredefinedPlot(
+                [w, 2.0 / N * R_t1ft1_spec[0:N // 2], 'o'],
+                nice_label(r'Cross-spectral density of T1 and FT1 (with background subtracted)'))
+            plt.yscale('log')
+            plt.xscale('log')
+            
+            spec_t1t1_p = PredefinedPlot(
+                [w, 2.0 / N * spectrums[2][0:N // 2], 'o'],
+                nice_label(r'Spectral density of T1'))
+            plt.yscale('log')
+            plt.xscale('log')
+            spec_ft1ft1_p = PredefinedPlot(
+                [w, 2.0 / N * spectrums[1][0:N // 2], 'o'],
+                nice_label(r'Spectral density of equator'))
+            plt.yscale('log')
+            plt.xscale('log')         
             
             
 

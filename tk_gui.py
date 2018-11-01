@@ -18,6 +18,25 @@ import Tkinter as tk
 # ttk provides the means to make the instrument tabs in the GUI. Also provides
 # some other themed widgets.
 import ttk as ttk
+# json provides the means to parse the struct of instrument subgroups.
+
+### NOTABLE CONSTANTS ###
+# **************************#
+# The time that the GUI will draw all the widgets again.
+draw_time = 900  # in ms
+# The time that the GUI will retrieve all the information about the
+# isntruments from the
+# instrument server. When this time has elapsed.
+
+refresh_continuously = True
+fetch_time = 0.5  # in s
+# This constant is used to resize the widgets to get them to take up all of
+# the available space in the parent window.
+fill_all = tk.N + tk.S + tk.W + tk.E
+# The number of decimal points used in the parameter value display box,
+# when the value in written in scientific notation.
+precision = 3
+
 
 # Initialize the ZeroMQ server backend and connect to the instrument server.
 # The instr object will hold all the necessary information for interacting
@@ -48,24 +67,6 @@ def window_close(*args):
 # Press ctrl-w to close the window.
 root_window.bind('<Control-w>', window_close)
 root_window.bind('<Control-q>', window_close)
-
-### NOTABLE CONSTANTS ###
-# **************************#
-# The time that the GUI will draw all the widgets again.
-draw_time = 900  # in ms
-# The time that the GUI will retrieve all the information about the
-# isntruments from the
-# instrument server. When this time has elapsed.
-
-refresh_continuously = True
-fetch_time = 0.5  # in s
-# This constant is used to resize the widgets to get them to take up all of
-# the available space in the parent window.
-fill_all = tk.N + tk.S + tk.W + tk.E
-# The number of decimal points used in the parameter value display box,
-# when the value in written in scientific notation.
-precision = 3
-# **************************#
 
 tabs = ttk.Notebook(root_window)
 
@@ -274,7 +275,9 @@ class InstrumentInformationDisplayFrame():
     Its the thing that gets added to the tab in the actual GUI.
     """
 
-    def __init__(self, win, instrument_name, add = True):
+    def __init__(self, win, instrument_name, add=True):
+        #self.full_information_dict = instr[
+         #   instrument_name].get_shared_parameters()
         self.instrument_name = instrument_name
         self.add = add
         self.frame = tk.Frame(root_window)
@@ -292,7 +295,6 @@ class InstrumentInformationDisplayFrame():
         self.scrollbar = tk.Scrollbar(self.frame, orient=tk.VERTICAL)
         self.canvas = tk.Canvas(self.frame, yscrollcommand=self.scrollbar.set)
         self.scrollbar.config(command=self.canvas.yview)
-        #  self.info_subframe = tk.Frame(self.canvas)
         name_value_dict = instr[instrument_name].get_parameter_values()
         self.fields = {}
 
@@ -348,26 +350,37 @@ def produce_initial_display_dictionary():
     for instrument in list_of_instruments:
         display_window[instrument] = InstrumentInformationDisplayFrame(
             root_window,
-            instrument, add = True)
+            instrument, add=True)
     return display_window
-
 
 
 display_window = produce_initial_display_dictionary()
 
 tabs.pack(expand=1, fill='both')
 
+
 class ContinuousRefreshFunction(object):
+    '''
+    The reason for this class is that tkinter wants a function as a parameter
+    for the after function. I want to do something that requires preserving
+    state across function calls, so I can use a class and essentially
+    fake being a function, with the __call__ magic method. It works because
+    tkinter only calls the function, and doesn't check what kind of object it
+    is.
+    '''
+
     def __init__(self, initializing_instruments, window):
         self.instruments = initializing_instruments
         self.display_window = window
+
     def __call__(self):
         new_instruments = fetch_instruments()
         if new_instruments != self.instruments:
-            diff_instruments = list(set(new_instruments) - set(self.instruments))
+            diff_instruments = list(
+                set(new_instruments) - set(self.instruments))
             for i in diff_instruments:
                 self.display_window[i] = InstrumentInformationDisplayFrame(
-                    root_window, i, add = True)
+                    root_window, i, add=True)
             self.instruments = new_instruments
 
         for instrument in self.instruments:
@@ -380,36 +393,39 @@ class ContinuousRefreshFunction(object):
         root_window.after(draw_time, self.__call__)
 
 
-test = ContinuousRefreshFunction(list_of_instruments, display_window)
-test.__name__ = 'LOL'
+refresh_function_instance = ContinuousRefreshFunction(list_of_instruments,
+                                                      display_window)
+# I have to set this value to get this scheme to work with Tkinter. I'm not
+# sure why, or what it even does.
+refresh_function_instance.__name__ = 'LOL'
 
-
-def continuous_refresh(display_dict, instruments_in_list_form):
-    """
-    This function refreshes every single parameter for every single
-    instrument. Its structured with the after statements so that it runs
-    while the main window of the GUI is running.
-    :param display_dict: A dict where the keys are the names of the
-    instruments and the items are the InstrumentInputItem objects, which
-    each have a refresh all parameters attribute function.
-    :param instruments_in_list_form: A list of all the active instruments.
-    :return:
-    """
-    new_instruments = fetch_instruments()
-    if new_instruments != stack[-1]:
-        new_instruments = instruments_in_list_form
-        stack.append(new_instruments)
-        display_dict = produce_display_dictionary()
-    for instrument in instruments_in_list_form:
-        # Need to refetch the instruments so that the window will display new
-        # instruments.
-        display_dict[instrument].refresh_all_parameters()
-        # The after function takes the run time, the function to be run,
-        # and its arguments.
-    root_window.after(draw_time, continuous_refresh, display_window,
-                      instruments_in_list_form)
+#
+# def continuous_refresh(display_dict, instruments_in_list_form):
+#     """
+#     This function refreshes every single parameter for every single
+#     instrument. Its structured with the after statements so that it runs
+#     while the main window of the GUI is running.
+#     :param display_dict: A dict where the keys are the names of the
+#     instruments and the items are the InstrumentInputItem objects, which
+#     each have a refresh all parameters attribute function.
+#     :param instruments_in_list_form: A list of all the active instruments.
+#     :return:
+#     """
+#     new_instruments = fetch_instruments()
+#     if new_instruments != stack[-1]:
+#         new_instruments = instruments_in_list_form
+#         stack.append(new_instruments)
+#         display_dict = produce_display_dictionary()
+#     for instrument in instruments_in_list_form:
+#         # Need to refetch the instruments so that the window will display new
+#         # instruments.
+#         display_dict[instrument].refresh_all_parameters()
+#         # The after function takes the run time, the function to be run,
+#         # and its arguments.
+#     root_window.after(draw_time, continuous_refresh, display_window,
+#                       instruments_in_list_form)
 
 
 if refresh_continuously:
-    root_window.after(draw_time, test)
+    root_window.after(draw_time, refresh_function_instance)
 root_window.mainloop()
