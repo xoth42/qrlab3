@@ -30,7 +30,7 @@ AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PR
 
 
 AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 8,  AWG_PRODUCT = "M3202A", 
-                          amps = [1.5,1.5,1,1], ofs = [0.0184, -0.102, 0, 0])
+                          amps = [1.5,1.5,1,1], ofs = [0.02, -0.098, 0, 0])
 #
 #AWG3 = instruments.create('AWG3', 'Keysight_AWG', chassis = 1, slot = 10,  AWG_PRODUCT = "M3202A", 
 #                          amps = [1,1,1,1], ofs = [0, 0, 0, 0])
@@ -130,7 +130,7 @@ ag2 = instruments.create('ag2', 'Agilent_N5183A', address='GPIB1::22')
 '''
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                              deltaf=-100e6,
-                              pi_amp=0.281726,
+                              pi_amp=0.283499,
                               pi2_amp=0,
                               drag=0,
                               pi_amp_quasilective=0.027025,
@@ -151,7 +151,7 @@ qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
                             pi_amp_quasilective=0.02,
                             pi_amp_selective=0.1,
                             rotation='Gaussian',
-                            w=200,
+                            w=80,
                             w_quasilective=100,
                             w_selective=500,
                             channels='5,6',

@@ -119,6 +119,7 @@ class Rabi(Measurement1D):
                 ]))
             s.append(Delay(1000))
 
+
         s = self.get_sequencer(s)
         seqs = s.render()
         return seqs

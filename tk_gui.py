@@ -26,38 +26,48 @@ import ttk as ttk
 new_backend = objsh.ZMQBackend()
 new_backend.start_server("127.0.0.1")
 new_backend.connect_to("tcp://127.0.0.1:55555")
+# The initial fetch of the instruments.
 instr = objsh.helper.find_object('instruments')
 # The root window. This is the top level object; its the only object with no
 # so called parent widget. This is where the main information display will be.
 root_window = tk.Tk()
 root_window.title('QRLab')
-root_window.maxsize(width=1500, height=950)
-root_window.minsize(width=500, height=950)
+import ctypes
 
+user32 = ctypes.windll.user32
+resolution_x = user32.GetSystemMetrics(0)
+resolution_y = user32.GetSystemMetrics(1)
+root_window.maxsize(width=resolution_x / 2, height=resolution_y - 70)
+root_window.minsize(width=resolution_x / 2, height=resolution_y - 70)
 
 
 def window_close(*args):
     root_window.destroy()
-#Press ctrl-w to close the window.
+
+
+# Press ctrl-w to close the window.
 root_window.bind('<Control-w>', window_close)
 root_window.bind('<Control-q>', window_close)
 
 ### NOTABLE CONSTANTS ###
 # **************************#
-#The time that the GUI will draw all the widgets again. 
-draw_time = 900 # in ms
-#The time that the GUI will retrieve all the information about the isntruments from the 
-#instrument server. When this time has elapsed.
+# The time that the GUI will draw all the widgets again.
+draw_time = 900  # in ms
+# The time that the GUI will retrieve all the information about the
+# isntruments from the
+# instrument server. When this time has elapsed.
 
 refresh_continuously = True
-fetch_time = 0.5 # in s
+fetch_time = 0.5  # in s
 # This constant is used to resize the widgets to get them to take up all of
 # the available space in the parent window.
 fill_all = tk.N + tk.S + tk.W + tk.E
+# The number of decimal points used in the parameter value display box,
+# when the value in written in scientific notation.
+precision = 3
 # **************************#
 
 tabs = ttk.Notebook(root_window)
-
 
 
 # If create_instruments had a problem running, or the instrument server had
@@ -70,17 +80,27 @@ class NoInstrumentsException(Exception):
     pass
 
 
+def fetch_instruments():
+    '''
+    Fetches the instruments and returns them in a nice list.
+    :return:
+    '''
+    instr = objsh.helper.find_object('instruments')
+    return instr.list_instruments()
+
+
 # A list will the names of the currently active instruments as entries.
-list_of_instruments = instr.list_instruments()
+list_of_instruments = fetch_instruments()
 if list_of_instruments == []:
     message = 'Error: the instrument server has no instruments. Was there an ' \
               'issue in creating instruments?'
     raise NoInstrumentsException(message)
 
+
 def remove_widget(widget):
     widget.pack_forget()
-    
-    
+
+
 class InstrumentInputItem():
     """
     The subassembly of instrument label, value display, Get box, Set box,
@@ -104,7 +124,7 @@ class InstrumentInputItem():
         tk.Grid.columnconfigure(self.frame, 0, weight=1)
         self.label.grid(row=1, column=1, sticky=fill_all)
         self.option_dict = instr[self.instrument_name].get_shared_parameters()
-        #Some parameters are special. They are quantized, in that they can
+        # Some parameters are special. They are quantized, in that they can
         # have only a small set of values. Some of these values can be
         # represented by a dropdown menu. Others define a mapping between
         # what to show the user and what to pass to the instrument. The
@@ -129,7 +149,7 @@ class InstrumentInputItem():
                                                *dropdown_options)
             self.drop_down_box.config(bg='#d0d0d1')
 
-            self.drop_down_box.grid(row=1, column=2, sticky = fill_all)
+            self.drop_down_box.grid(row=1, column=2, sticky=fill_all)
             self.drop_down_box_set = tk.OptionMenu(self.frame, self.setvar,
                                                    *dropdown_options)
             self.drop_down_box_set.grid(row=1, column=3, sticky=fill_all)
@@ -148,10 +168,12 @@ class InstrumentInputItem():
         self.set_button = tk.Button(self.frame, text='Set',
                                     command=self.SetParameter)
         self.set_button.grid(row=1, column=5, sticky=fill_all)
-        self.hide_button = tk.Button(self.frame, text = 'HIDE', command = self.hide_all,
-                                     bg = '#FF3030', fg = 'white')
-        self.hide_button.grid(row = 1, column = 6, sticky = fill_all)
-    #Hides the instrument info assembly of widgets.
+        self.hide_button = tk.Button(self.frame, text='HIDE',
+                                     command=self.hide_all,
+                                     bg='#FF3030', fg='white')
+        self.hide_button.grid(row=1, column=6, sticky=fill_all)
+
+    # Hides the instrument info assembly of widgets.
     def hide_all(self):
         self.get_button.grid_forget()
         self.set_button.grid_forget()
@@ -161,21 +183,21 @@ class InstrumentInputItem():
         else:
             self.parameter_value_box.grid_forget()
             self.set_box.grid_forget()
-        self.hide_button.config(text = 'SHOW', command = self.regrid, bg = '#4651FC', fg = 'white')
-    #Makes all of the widget elements reappear.
+        self.hide_button.config(text='SHOW', command=self.regrid, bg='#4651FC',
+                                fg='white')
+
+    # Makes all of the widget elements reappear.
     def regrid(self):
         self.get_button.grid(row=1, column=4)
         self.set_button.grid(row=1, column=5, sticky=fill_all)
         if self.option_condition:
-            self.drop_down_box.grid(row=1, column=2, sticky = fill_all)
+            self.drop_down_box.grid(row=1, column=2, sticky=fill_all)
             self.drop_down_box_set.grid(row=1, column=3, sticky=fill_all)
         else:
             self.parameter_value_box.grid(row=1, column=2)
             self.set_box.grid(row=1, column=3, sticky=fill_all)
-        self.hide_button.config(text = 'HIDE' , command = self.hide_all, bg = '#FF3030', fg = 'white')
-
-
-
+        self.hide_button.config(text='HIDE', command=self.hide_all,
+                                bg='#FF3030', fg='white')
 
     def GetParameter(self):
         """
@@ -194,6 +216,15 @@ class InstrumentInputItem():
             self.valuevar.set(str(self.format_map[param]))
         if not self.format_map_condition and not self.option_condition:
             self.parameter_value_box.delete(0, 'end')
+            try:
+                number_conditions = (abs(param) > 100) or (param < 0.01)
+            except TypeError:
+                number_conditions = False
+            if ((type(param) is float) or (
+                    type(param) is int)) and number_conditions:
+                # Format the parameter into scientific notation,
+                # with variable number of decimal points.
+                param = ('%.' + str(precision) + 'E') % param
             self.parameter_value_box.insert(0, str(param))
 
     def SetParameter(self, *args):
@@ -218,6 +249,8 @@ class InstrumentInputItem():
         # correct type of value. Looking over the instrument plugins,
         # these seems to be the most used types.
         parameter_type = self.option_dict[self.key]['type']
+        if new_value[0:3] == 'P: ':
+            new_value = eval(new_value[3:])
         print type(parameter_type)
         if parameter_type == type('string'):
             new_value = str(new_value)
@@ -241,9 +274,9 @@ class InstrumentInformationDisplayFrame():
     Its the thing that gets added to the tab in the actual GUI.
     """
 
-    def __init__(self, win, instrument_name):
+    def __init__(self, win, instrument_name, add = True):
         self.instrument_name = instrument_name
-
+        self.add = add
         self.frame = tk.Frame(root_window)
         tk.Grid.rowconfigure(self.frame, 0, weight=1)
         tk.Grid.columnconfigure(self.frame, 0, weight=1)
@@ -263,41 +296,43 @@ class InstrumentInformationDisplayFrame():
         name_value_dict = instr[instrument_name].get_parameter_values()
         self.fields = {}
 
-        self.sorted_instrument_keys = instr[instrument_name].get_shared_parameters().keys()
+        self.sorted_instrument_keys = instr[
+            instrument_name].get_shared_parameters().keys()
         self.sorted_instrument_keys.sort()
-        #The fake frame doesn't contain anything. Its used as padding so the
-        #first and last fields don't get cut off.
+        # The fake frame doesn't contain anything. Its used as padding so the
+        # first and last fields don't get cut off.
         self.fake_frame = tk.Frame(root_window)
         self.canvas.create_window(0, 0,
-                                  window = self.fake_frame,
-                                  anchor = tk.W)
+                                  window=self.fake_frame,
+                                  anchor=tk.W)
         for i, key in enumerate(self.sorted_instrument_keys):
             self.name_and_value_frame = tk.Frame(self.canvas)
             item = InstrumentInputItem(self.name_and_value_frame, key,
                                        name_value_dict, instrument_name)
             self.fields[key] = item
             f = self.canvas.create_window(0, 0,
-                                      window=self.name_and_value_frame,
-                                      anchor=tk.W)
-        
-            #To move things aronud on the canvas, use the coords method with new coordinates.
-            self.canvas.coords(f, 0, 40 + i*35)
+                                          window=self.name_and_value_frame,
+                                          anchor=tk.W)
 
-        t = self.canvas.create_window(0, 0, 
-                                  window = self.fake_frame, 
-                                  anchor = tk.W)
-        self.canvas.coords(t, 0, 40 + (i+1)*35)
+            # To move things aronud on the canvas, use the coords method with
+            #  new coordinates.
+            self.canvas.coords(f, 0, 40 + i * 35)
+
+        t = self.canvas.create_window(0, 0,
+                                      window=self.fake_frame,
+                                      anchor=tk.W)
+        self.canvas.coords(t, 0, 40 + (i + 1) * 35)
         # Note: to get the scrollbar to work, its necessary to put the
         # frame on the canvas. To do this and make the scrollbar work,
         # you need to use the create_window. You cannot just pack it.
         self.canvas.config(scrollregion=self.canvas.bbox(tk.ALL))
         self.canvas.config(yscrollcommand=self.scrollbar.set)
-        self.scrollbar.pack(side = tk.RIGHT, fill = tk.Y)
+        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        self.canvas.pack(pady = 10, ipady = 0, fill = tk.BOTH, expand = 1)
+        self.canvas.pack(pady=10, ipady=0, fill=tk.BOTH, expand=1)
         self.frame.pack()
-        tabs.add(self.frame, text=instrument_name)
-        
+        if self.add is True:
+            tabs.add(self.frame, text=instrument_name)
 
     def refresh_all_parameters(self):
         for item in self.fields:
@@ -307,12 +342,46 @@ class InstrumentInformationDisplayFrame():
         self.canvas.yview_scroll(-1 * (event.delta / 120), "units")
 
 
-display_window = {}
-for instrument in list_of_instruments:
-    display_window[instrument] = InstrumentInformationDisplayFrame(root_window,
-                                                                   instrument)
+def produce_initial_display_dictionary():
+    list_of_instruments = fetch_instruments()
+    display_window = {}
+    for instrument in list_of_instruments:
+        display_window[instrument] = InstrumentInformationDisplayFrame(
+            root_window,
+            instrument, add = True)
+    return display_window
+
+
+
+display_window = produce_initial_display_dictionary()
 
 tabs.pack(expand=1, fill='both')
+
+class ContinuousRefreshFunction(object):
+    def __init__(self, initializing_instruments, window):
+        self.instruments = initializing_instruments
+        self.display_window = window
+    def __call__(self):
+        new_instruments = fetch_instruments()
+        if new_instruments != self.instruments:
+            diff_instruments = list(set(new_instruments) - set(self.instruments))
+            for i in diff_instruments:
+                self.display_window[i] = InstrumentInformationDisplayFrame(
+                    root_window, i, add = True)
+            self.instruments = new_instruments
+
+        for instrument in self.instruments:
+            # Need to refetch the instruments so that the window will
+            # display new
+            # instruments.
+            self.display_window[instrument].refresh_all_parameters()
+            # The after function takes the run time, the function to be run,
+            # and its arguments.
+        root_window.after(draw_time, self.__call__)
+
+
+test = ContinuousRefreshFunction(list_of_instruments, display_window)
+test.__name__ = 'LOL'
 
 
 def continuous_refresh(display_dict, instruments_in_list_form):
@@ -326,7 +395,14 @@ def continuous_refresh(display_dict, instruments_in_list_form):
     :param instruments_in_list_form: A list of all the active instruments.
     :return:
     """
+    new_instruments = fetch_instruments()
+    if new_instruments != stack[-1]:
+        new_instruments = instruments_in_list_form
+        stack.append(new_instruments)
+        display_dict = produce_display_dictionary()
     for instrument in instruments_in_list_form:
+        # Need to refetch the instruments so that the window will display new
+        # instruments.
         display_dict[instrument].refresh_all_parameters()
         # The after function takes the run time, the function to be run,
         # and its arguments.
@@ -335,50 +411,5 @@ def continuous_refresh(display_dict, instruments_in_list_form):
 
 
 if refresh_continuously:
-    root_window.after(draw_time, continuous_refresh, display_window,
-                      list_of_instruments)
+    root_window.after(draw_time, test)
 root_window.mainloop()
-
-#The problem: The frequency with which the GUI changes the view must be different
-#than the time in which it retrieves information from the instrument server. My
-#solution was to make two threads with infinite loops. One refreshes the on screen
-#view, and one retrieves info from the instrument server. They are independent.
-
-
-#import threading 
-#import time
-#
-#class drawing_thread(threading.Thread):
-#    def run(self):
-#        root_window.mainloop()
-##        while True:
-##            time.sleep(draw_time)
-##            root_window.update_idletasks()
-##            root_window.update()
-##            
-#            
-#            
-#class parameter_thread(threading.Thread):
-#    def run(self):
-#        while True:
-#            time.sleep(fetch_time)
-#            for instrument in instr.list_instruments():
-#                display_window[instrument].refresh_all_parameters()
-#
-##t1 = drawing_thread()
-##t1.setDaemon(True)
-#t2 = parameter_thread()
-#t2.setDaemon(True)
-##t1.start()
-#t2.start()
-#root_window.mainloop()
-
-
-
-
-#while True:
-#    time.sleep(draw_time)
-#    for instrument in instr.list_instruments():
-#        display_window[instrument].refresh_all_parameters()
-#    root_window.update_idletasks()
-#    root_window.update()

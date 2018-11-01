@@ -13,8 +13,79 @@ from mclient import instruments
 
 
 
-yoko = instruments.create('yoko', 'Yokogawa_7651_new', address = 'GPIB0::3::INSTR')
-#yoko.do_set_voltage_range(1)
+
+qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
+                             deltaf=-100e6,
+                              pi_amp=0.278859,
+                              pi2_amp=0,
+                              drag=0,
+                              pi_amp_quasilective=0.027025,
+                              pi_amp_selective=0.5,
+                              rotation='Gaussian',
+                              w=4000,
+                              w_quasilective=100,
+                              w_selective=1000,
+                              channels='3,4',
+                              sideband_channels='I1,Q1',
+                              sideband_phase=0)
+##
+##
+qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
+                            deltaf=-375.06e6,
+                            pi_amp=0.223425,
+                            pi_amp_selective=0.06147,
+                            rotation='Gaussian',
+                            w=40,
+                            w_selective=100,
+                            channels='2,3',
+                            sideband_channels='I17,Q17',
+                            sideband_phase=0)
+
+#qubitLOL = instruments.create('qubitLOL', 'Qubit_Info',
+#                            deltaf=-100e6,
+#                            pi_amp=0.196305,
+#                            pi_amp_selective=0.06147,
+#                            rotation='Gaussian',
+#                            w=40,
+#                            w_selective=100,
+#                            channels='6,7',
+#                            sideband_channels='I2,Q2',
+#                            sideband_phase=0)
+
+#ROcav_IQ = instruments.create('RO', 'Qubit_Info',
+#                             deltaf=-100e6,
+#                              pi_amp=0.342948,
+#                              pi2_amp=0.171474,
+#                              drag=-0.9,
+#                              pi_amp_quasilective=0.027025,
+#                              pi_amp_selective=0.34 / 25,
+#                              rotation='Gaussian',
+#                              w=40,
+#                              w_quasilective=100,
+#                              w_selective=500,
+#                              channels='1,2',
+#                              sideband_channels='I3,Q3',
+#                              sideband_phase=0)
+
+#refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511, 
+#                            use_extref=True) #reference
+#RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=19151,
+#                             use_extref=True) #readout
+###qbrick = instruments.create('qbrick', 'LabBrick_RFSource', serial=14510,
+##                             use_extref=True) #qubit
+##q2brick = instruments.create('q2brick', 'LabBrick_RFSource', serial=17912,
+##                           use_extref=True) #qubit 2
+#
+##sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
+#sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
+
+
+
+#dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 2)
+#
+#AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
+#                             AWG_PRODUCT = "M3202A",
+#                             amps = [1.5, 1, 1.5, 1.5], ofs = [0.5, 0, -0.002, 0.046])
 
 
 
@@ -26,8 +97,10 @@ dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_p
 
 
 
+
 AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PRODUCT = "M3202A", 
                           amps = [1,1.5,1,1], ofs = [0, .5, .032, .009])
+
 
 
 #AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 8,  AWG_PRODUCT = "M3202A", 
