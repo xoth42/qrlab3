@@ -58,7 +58,10 @@ def analysis(meas, data=None, fig=None):
     params.add('amp', value=amp0, min=0)
     params.add('tau', value=xs[-1], min=10, max=2e5)
     params.add('freq', value=f0, min=0)
-    params.add('phi0', value=-np.pi/2, min=-1.2*np.pi, max=1.2*np.pi)
+    if meas.echotype == ECHO_NONE:
+        params.add('phi0', value=np.pi/2, min=-1.2*np.pi, max=1.2*np.pi)
+    elif meas.echotype == ECHO_HAHN:
+        params.add('phi0', value=-np.pi/2, min=-1.2*np.pi, max=1.2*np.pi) #DARIO added to fit better for echo vs plain T2
     result = lmfit.minimize(t2_fit, params, args=(xs, ys))
 #    lmfit.report_fit(params)
 #    result2 = lmfit.minimize(t2_fit, result.params, args=(xs,ys))

@@ -11,18 +11,15 @@ import datetime
 import os
 os.chdir(r'c:\qrlab')
 
-alz = mclient.instruments['alazar']
-
 qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')
 ef_info = mclient.get_qubit_info('qubit1ef')
-qubit2_info = mclient.get_qubit_info('qubit2ge')
 #readout_info = mclient.get_readout_info()
 
 
-if 0: # T1_FT1
+if 1: # T1_FT1
     from scripts.single_qubit import T1measurement, FT1measurement, T1_FT1measurement, rabi
-    alz.set_naverages(100000)
+    dig.set_naverages(1000)
 #    t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 160e3, 101), double_exp=False, generate=True, plot_seqs=False)
 #    t1.measure()
 #    ofs = t1.result_params['ofs'].value
@@ -41,12 +38,13 @@ if 0: # T1_FT1
 #    fullt1_decay = []
 #    fullft1_decay = []
 
-    for i in range(300):
+    for i in range(20000):
         print '###############'
         print i
         print '##############'
-        t1_ft1 = T1_FT1measurement.T1_FT1measurement(qubit_info, ef_info, 6.5e3, 5.5e3, histogram=True, generate=True)
-        t1_ft1.measure()
+        t1_ft1 = T1_FT1measurement.T1_FT1measurement(qubit_info, ef_info, 16e3, 8e3, generate=True)
+        t1_ft1.measure_keysight()
+        plt.close()
         
 #        now = datetime.datetime.now()
 #        date = str(now)[5:7] + str(now)[8:10]
@@ -310,7 +308,7 @@ if 0: #T1_FT1 toggle flux
         #t1_ft1_flux.play_sequence()
         t1_ft1_flux.measure()
         
-if 1: #T1_FT1 toggle flux
+if 0: #T1_FT1 toggle flux
     from scripts.single_qubit import Yoko_exttrig_testing
     for i in range(1):
         Yoko_test = Yoko_exttrig_testing.Yoko_test(qubit_info, ef_info, qubit2_info, 6.5e3, 5.5e3, histogram=False, generate=True)

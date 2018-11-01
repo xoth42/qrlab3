@@ -58,6 +58,7 @@ def analysis(meas, data=None, fig=None):
         fig.axes[1].plot(xs, double_exp_decay(result.params, xs, ys), marker='s')
 
     fig.canvas.draw()
+    meas.fit_params = result.params
     return result.params
 
 class T1Measurement(Measurement1D):

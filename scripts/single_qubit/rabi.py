@@ -117,6 +117,7 @@ class Rabi(Measurement1D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
+            s.append(Delay(1000))
 
 
         s = self.get_sequencer(s)

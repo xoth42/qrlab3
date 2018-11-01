@@ -201,9 +201,10 @@ class Keysight_DIG(Instrument):
         return self.set(keys)
     
     def load_hvi(self):
-        HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\3slot' + str(self._trigger_period) + 'us.HVI'
-#        HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\3slot100ms.HVI'
-        self._hvi = CompiledHVI(HVI_location)
+#        HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\3slot' + str(self._trigger_period) + 'us.HVI'
+        one_slot_test = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\1slot' + str(self._trigger_period) + 'us.HVI'
+#        self._hvi = CompiledHVI(HVI_location)
+        self._hvi = CompiledHVI(one_slot_test)
         self._hvi.stop()
         
     def start_hvi(self):
@@ -360,6 +361,8 @@ class Keysight_DIG(Instrument):
     def setup_avg_shot(self, ntransfers = None):
         if ntransfers is None:
             ntransfers = 1
+            
+        self.release_buf()
         
         errors = []
             
@@ -427,6 +430,8 @@ class Keysight_DIG(Instrument):
             print('not able to choose ntransfers or choice is incompatible with naverages')
             raise ValueError
             
+        self.release_buf()
+            
         errors = []    
         
         self._npoints = num_points
@@ -488,6 +493,8 @@ class Keysight_DIG(Instrument):
         digChannels = [1, 2] 
         errors = []
         errors += [self.dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)]
+    
+        self.release_buf()
     
         for i in range(len(digChannels)):   
            errors += [self.dig.DAQtriggerExternalConfig(digChannels[i], key.SD_TriggerExternalSources.TRIGGER_EXTERN, 
