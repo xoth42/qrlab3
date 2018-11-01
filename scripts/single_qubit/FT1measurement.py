@@ -56,6 +56,7 @@ class FT1Measurement(Measurement1D):
             ]))
             s.append(Delay(dt))
             s.append(r(np.pi/2, 0))
+            s.append(Delay(30))
             s.append(self.get_readout_pulse())
 
         s = self.get_sequencer(s)

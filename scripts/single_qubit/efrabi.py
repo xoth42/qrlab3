@@ -88,7 +88,7 @@ class EFRabi(Measurement1D):
                 add = Join([Trigger(dt=250), r(np.pi, 0), Delay(5)])
             add = Join([add, r_ef(0, 0, amp = amp), Delay(5)])
             if self.second_pi:
-                add = Join([add, r(np.pi, 0)])
+                add = Join([add, r(np.pi, 0), Delay(250)])
 #            marker_switch = Constant(, 1, chan=self.)
             s.append(add)
             s.append(Combined([

@@ -58,7 +58,7 @@ class Keysight_AWG(Instrument):
             flags=Instrument.FLAG_GET,
             value = self.awg.getStatus())
         self.add_parameter('clock_freq', type=types.StringType,
-            flags=Instrument.FLAG_GETSET,
+            flags=Instrument.FLAG_GET,
             value = self.awg.clockGetFrequency())
         self.add_parameter('clock_sync_freq', type=types.StringType,
             flags=Instrument.FLAG_GET,
@@ -220,6 +220,7 @@ class Keysight_AWG(Instrument):
 
 
     def all_off(self):
+        time.sleep(.1)
         self.__init__(self._name, self._chassis, self._slot, self._AWG_PRODUCT,
                       self._channel_amps, self._channel_ofs)
 #        ''' I honestly don't know why but we need these resets.... '''
@@ -231,7 +232,7 @@ class Keysight_AWG(Instrument):
 #        self.clear_sequence()
 #        self.stop()
 #        self.clear_sequence()
-        time.sleep(1)
+        time.sleep(.1)
 
     def do_set_amplitude(self, amp, channel):
         self._channel_amps[channel-1] = amp
@@ -365,6 +366,7 @@ class Keysight_AWG(Instrument):
 
     def clear_sequence(self):
         print('keysight clear_sequence')
+        time.sleep(.1)
         self.awg.AWGflush(1)
         self.awg.AWGflush(2)
         self.awg.AWGflush(3)
