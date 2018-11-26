@@ -1,3 +1,11 @@
+'''
+this file is for measuring with VNA and saving data to a file, 
+determine the magnetic field region and stepsize, sleeptime for magnetic field ramping, VNA average factor, filename @ line 44
+and ramp the magnetic field to your Mi before start running it, or set a longer sleeptime @ line 62 for the ramping
+
+!!remember to change the filename every time, otherwise the older data would be overwritten
+'''
+
 import matplotlib
 matplotlib.interactive(True)
 
@@ -15,30 +23,13 @@ if 1:
         os.system(r'C:\qrlab\start.bat')
         time.sleep(1)
     '''
-<<<<<<< HEAD
-from mclient import instruments
-=======
+
 import mclient
-#from mclient import instruments
->>>>>>> f59135e796c90615515b0f2c4bf0933eb63ea6b7
-    
-    #Yoko = instruments.create('Yoko','Yokogawa_7651',address='GPIB1::3::INSTR')
-    
-    
-    #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1', clock=1e9, refsrc='EXT', reffreq=10e6)
-    
-    
-<<<<<<< HEAD
-VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB1::17::INSTR')
-Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB1::11::INSTR')
-=======
+
+
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB1::17::INSTR')
 #Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB1::11::INSTR')
->>>>>>> f59135e796c90615515b0f2c4bf0933eb63ea6b7
 
-
-
-#import mclient
 import numpy as np
 import datetime
 import time
@@ -46,44 +37,38 @@ import matplotlib.pyplot as pl
 
 
 
-
-
-#Make sure to check that repeat is off for Yoko GS200
-#To do manually, press 'Program' key and press repeat is the left most option on screen
-
-<<<<<<< HEAD
-#mag = mclient.instruments['Magnet']
-#yoko = mclient.instruments['Yoko']
-#VNA = mclient.instruments['VNA']
-
-Mi = float(270)  #initial field
-Mf = float(330) #final field
-step =0.1
-sleeptime =6
-=======
 magnet = mclient.instruments['Magnet']
 #yoko = mclient.instruments['Yoko']
 VNA = mclient.instruments['VNA']
 
-Mi = float(0.24)  #initial field in Tesla
-Mf = float(0.285) #final field
-step =0.0002
-sleeptime =3
->>>>>>> f59135e796c90615515b0f2c4bf0933eb63ea6b7
-  #magnetic field step
+Mi = float(0.0) #initial field in Tesla
+Mf = float(0.8) #final field
+step = 0.005
+sleeptime = 9
+avefac = 45
+filename = 'circulator_fridge_S31_field_%s_%s_%s_ave_factor_%s-0806.txt'%(Mi,Mf,step,avefac)
+
+VNA.set_average_factor(avefac)
+VNA.do_enable_averaging()
+#magnetic field step
 #range = yoko.select_voltage_range(10)
 #yoko.do_set_source_range(range)
 
-m = Mi  
+if Mi<Mf:
+    step = abs(step)
+else:
+    step = -abs(step)
+m = Mi
+print m  
 #Yoko.do_set_voltage(m/float(40))
-<<<<<<< HEAD
-Yoko.set_voltage_ramp(m/float(40),slew=10)
-time.sleep(sleeptime)
-=======
 magnet.do_set_field(m)
-time.sleep(3*sleeptime)
->>>>>>> f59135e796c90615515b0f2c4bf0933eb63ea6b7
-data = VNA.do_get_data()
+time.sleep(sleeptime)
+#
+VNA.set_averaging_trigger(0)
+VNA.set_averaging_trigger(1)
+time.sleep(60)
+data = VNA.do_get_data(fmt='PLOG')#, opc=True, trig_each_avg=True)
+
 value = data[0]
 phase = data[1]
 value = value[:,None].T
@@ -92,28 +77,18 @@ Mag = []
 Mag.append(m)
 axis = VNA.do_get_xaxis()
 m = m + step
-#axis = axis[:,None].T
-while m <= Mf: #current field
-<<<<<<< HEAD
-    level = m/40 # change Field to Voltage
-    Yoko.do_set_source_range('10E+0') # fixes range problem
-#    Yoko.set_voltage_ramp(level, slew = 10) # slew is rate of change of voltage
-    Yoko.do_set_voltage(level)
-=======
-#    level = m/40 # change Field to Voltage
-#    Yoko.do_set_source_range('10E+0') # fixes range problem
-#    Yoko.set_voltage_ramp(level, slew = 10) # slew is rate of change of voltage
-#    Yoko.do_set_voltage(level)
+axis = axis[:,None].T
+while np.abs(m) <= np.abs(Mf): #current field
+
     print m
     magnet.do_set_field(m)
->>>>>>> f59135e796c90615515b0f2c4bf0933eb63ea6b7
     time.sleep(sleeptime)
     
-    
-    #mag.do_set_field(N) #commmand for using arduino power supply  
     Mag.append(m)
-    
-    datanew = VNA.do_get_data()
+    VNA.set_averaging_trigger(0)
+    VNA.set_averaging_trigger(1)
+    time.sleep(60)
+    datanew = VNA.do_get_data(fmt='PLOG')#, opc=True, trig_each_avg=True)
     valuenew = datanew[0]
     phasenew = datanew[1]
     valuenew = valuenew[:,None].T
@@ -124,15 +99,11 @@ while m <= Mf: #current field
     
     m = m+step  
     
-    
-#print Mag
-<<<<<<< HEAD
-Yoko.do_set_voltage(0)
 
-=======
-#Yoko.do_set_voltage(0)
+
+#print Mag
 #magnet.do_ramp_zero()
->>>>>>> f59135e796c90615515b0f2c4bf0933eb63ea6b7
+
 axis = axis / float(1000000000)
 X, Y = np.meshgrid(Mag, axis)
 Z = np.transpose(value)
@@ -140,11 +111,9 @@ phase = np.transpose(phase)
 
 #save the data as a file
 to_save = [X, Y, Z, phase]
-<<<<<<< HEAD
-with file('text_1.5mm_copper_cavity_%s_%s_%s_P2.txt'%(Mi,Mf,step),'w') as outfile:
-=======
-with file('text_1.5mm_fridge_%s_%s_%s.txt'%(Mi,Mf,step),'w') as outfile:
->>>>>>> f59135e796c90615515b0f2c4bf0933eb63ea6b7
+
+with file(filename,'w') as outfile:
+
     outfile.write('# Array\n')
 
     # Iterating through a ndimensional array produces slices along
@@ -160,14 +129,19 @@ with file('text_1.5mm_fridge_%s_%s_%s.txt'%(Mi,Mf,step),'w') as outfile:
         outfile.write('# New slice\n')
 
 pl.figure()
+pl.suptitle(filename[0:21])
 pl.pcolormesh(X, Y, Z)
 pl.colorbar()
-<<<<<<< HEAD
-pl.xlabel('Magnetic Field')
-=======
+
 pl.xlabel('Magnetic Field(T)')
->>>>>>> f59135e796c90615515b0f2c4bf0933eb63ea6b7
 pl.ylabel('Frequency (GHZ)')
 pl.show()   
 
+
+
+mlist = np.linspace(m,0,301) 
+for i in mlist[2:]:
+    print i
+    magnet.do_set_field(i)
+    time.sleep(sleeptime)
 

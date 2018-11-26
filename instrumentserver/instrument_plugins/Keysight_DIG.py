@@ -21,7 +21,7 @@ VOLTAGE_SCALE = 2.8
 class Keysight_DIG(Instrument):
 
 
-    def __init__(self, name, chassis=0, slot=3, DIG_PRODUCT = "M3102A", trigger_period = 200, **kwargs):
+    def __init__(self, name, chassis=0, slot=10, DIG_PRODUCT = "M3102A", trigger_period = 200, **kwargs):
         super(Keysight_DIG, self).__init__(name)
         self._timeout = DEFAULT_TIMEOUT
         self._main_channel=1

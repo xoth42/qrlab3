@@ -9,37 +9,37 @@ if 1:
 
 from mclient import instruments
 
-#Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
+Yoko = instruments.create('Yoko','Yokogawa_7651_new',address='GPIB0::3::INSTR')
 
 
 
 
-qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
-                             deltaf=-100e6,
-                              pi_amp=0.278859,
-                              pi2_amp=0,
-                              drag=0,
-                              pi_amp_quasilective=0.027025,
-                              pi_amp_selective=0.5,
-                              rotation='Gaussian',
-                              w=4000,
-                              w_quasilective=100,
-                              w_selective=1000,
-                              channels='3,4',
-                              sideband_channels='I1,Q1',
-                              sideband_phase=0)
-##
-##
-qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
-                            deltaf=-375.06e6,
-                            pi_amp=0.223425,
-                            pi_amp_selective=0.06147,
-                            rotation='Gaussian',
-                            w=40,
-                            w_selective=100,
-                            channels='2,3',
-                            sideband_channels='I17,Q17',
-                            sideband_phase=0)
+#qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
+#                             deltaf=-100e6,
+#                              pi_amp=0.278859,
+#                              pi2_amp=0,
+#                              drag=0,
+#                              pi_amp_quasilective=0.027025,
+#                              pi_amp_selective=0.5,
+#                              rotation='Gaussian',
+#                              w=4000,
+#                              w_quasilective=100,
+#                              w_selective=1000,
+#                              channels='3,4',
+#                              sideband_channels='I1,Q1',
+#                              sideband_phase=0)
+###
+###
+#qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
+#                            deltaf=-375.06e6,
+#                            pi_amp=0.223425,
+#                            pi_amp_selective=0.06147,
+#                            rotation='Gaussian',
+#                            w=40,
+#                            w_selective=100,
+#                            channels='2,3',
+#                            sideband_channels='I17,Q17',
+#                            sideband_phase=0)
 
 #qubitLOL = instruments.create('qubitLOL', 'Qubit_Info',
 #                            deltaf=-100e6,
@@ -123,20 +123,20 @@ AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PR
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1')
 
 
-sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
+#sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
 
 #sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
 
-pump2Brick = instruments.create('pump2Brick', 'LabBrick_RFSource', serial=14510, use_extref=True) # qubit
+#pump2Brick = instruments.create('pump2Brick', 'LabBrick_RFSource', serial=14510, use_extref=True) # qubit
 #brick2 = instruments.create('brick2', 'LabBrick_RFSource', serial=14511, use_extref=True) # ref
 #ROBrick = instruments.create('ROBrick', 'LabBrick_RFSource', serial=14524, use_extref=True) # old RO
 #aliceBrick = instruments.create('aliceBrick', 'LabBrick_RFSource', serial=17912, use_extref=False) # RO
 #brick5 = instruments.create('brick5', 'LabBrick_RFSource', serial=14525, use_extref=True) # New brick
-pump1Brick = instruments.create('pump1Brick', 'LabBrick_RFSource', serial=18239, use_extref=True)#reference
+#pump1Brick = instruments.create('pump1Brick', 'LabBrick_RFSource', serial=18239, use_extref=True)#reference
 #refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511, 
 #                            use_extref=True) #reference
-pump1Brick.set_rf_on(False)
-pump2Brick.set_rf_on(False)
+#pump1Brick.set_rf_on(False)
+#pump2Brick.set_rf_on(False)
 
 RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=14524,
                              use_extref=True) #readout
@@ -206,7 +206,7 @@ ag2 = instruments.create('ag2', 'Agilent_N5183A', address='GPIB1::22')
 '''
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                              deltaf=-100e6,
-                              pi_amp=0.234126098358,
+                              pi_amp=0.233,
                               pi2_amp=0,
                               drag=0,
                               pi_amp_quasilective=0.027025,
@@ -222,12 +222,12 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 
 
 qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
-                            deltaf=-378.87e6,
-                            pi_amp=0.07440,
+                            deltaf=-378.46e6,
+                            pi_amp=0.18524,
                             pi_amp_quasilective=0.02,
                             pi_amp_selective=.05,
                             rotation='Gaussian',
-                            w=100,
+                            w=40,
                             w_quasilective=100,
                             w_selective=200,
                             channels='3,4',
