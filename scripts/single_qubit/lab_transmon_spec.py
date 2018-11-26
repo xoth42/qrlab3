@@ -30,15 +30,15 @@ qubit_info = mclient.get_qubit_info('qubit1ge')
 
 ge = mclient.instruments['qubit1ge']
 
-Yoko = mclient.instruments['yoko']
+Yoko = mclient.instruments['Yoko']
 qbrick = mclient.instruments['geFG']
 #RObrick = mclient.instruments['RObrick']
 #refbrick = mclient.instruments['refFG']
 
 
-currents = np.linspace(0.21, 0.26, 6)
+currents = np.linspace(0.22, 0.27, 6)
 Yoko.set_output_state(1) 
-ssbspec_freqs = np.linspace(-2.5e6, 2.5e6, 101) #range of points to check each ssbspec
+ssbspec_freqs = np.linspace(-1.5e6, 1.5e6, 101) #range of points to check each ssbspec
 qbrick_freq = 938e6
 #RObrick_freq = 7348.8e6
 w = 200
@@ -81,5 +81,5 @@ plt.xlabel('current [mA]')
 
 plt.plot()
 
-Yoko.set_output_state(0)    
+#Yoko.set_output_state(0)    
 

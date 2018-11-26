@@ -86,19 +86,32 @@ if 0:# Cavity T2
 
 if 0: # Cavity spec
     from single_cavity import cavspectroscopy_keysight
+<<<<<<< HEAD
     cav_freq = 5520.56e6
     freq_range = 5e6
     cspec = cavspectroscopy_keysight.CavSpectroscopy(mclient.instruments['bobFG'], qubit_info, cavity_infoB, [0.001], 
                                             np.linspace(cav_freq-freq_range, cav_freq+freq_range, 11))
+=======
+    cav_freq = 5419.63e6
+    freq_range = 0.1e6
+    cspec = cavspectroscopy_keysight.CavSpectroscopy(mclient.instruments['bobFG'], qubit_info, cavity_infoB, [3.14], 
+                                            np.linspace(cav_freq-freq_range, cav_freq+freq_range, 61))
+>>>>>>> 507004ebcb600713fc2b96c15f5e52b1a4514b6a
     #This amplitude is NOT capped at 1 like on the qubit spec
     cspec.measure()
     bla
 
 
 
+<<<<<<< HEAD
 if 1: #SSB cavspec
     from single_cavity import ssbcavspec
     cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoB, np.linspace(-10e6, 10e6, 11),
+=======
+if 0: #SSB cavspec
+    from single_cavity import ssbcavspec
+    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoB, np.linspace(-0.5e6, 0.5e6, 61),
+>>>>>>> 507004ebcb600713fc2b96c15f5e52b1a4514b6a
 #                                  postseq=efpi, extra_info=[ef_info,]
                                   )
     cspec.measure_keysight()

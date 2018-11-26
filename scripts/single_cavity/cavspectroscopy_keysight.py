@@ -71,8 +71,11 @@ class CavSpectroscopy(Measurement1D):
 
     def generate(self, amp):
         s = Sequence()
+<<<<<<< HEAD
 #        chs = self.cav_info.sideband_channels
 #        s.append(Constant(self.plen, self.amp, chan=chs[0]))
+=======
+>>>>>>> 507004ebcb600713fc2b96c15f5e52b1a4514b6a
         s.append(Trigger(250))
         s.append(self.cav_info.rotate(amp, 0))
 
@@ -97,8 +100,11 @@ class CavSpectroscopy(Measurement1D):
         # Generate and load sequences
         dig = self.instruments['dig']
 
+<<<<<<< HEAD
 
         
+=======
+>>>>>>> 507004ebcb600713fc2b96c15f5e52b1a4514b6a
         for idisp, disp in enumerate(self.cav_disps):
             seqs = self.generate(disp)
             self.load(seqs)
@@ -110,7 +116,10 @@ class CavSpectroscopy(Measurement1D):
 #                self.cav_source.set_rf1_freq(freq) #JEFF Wrong syntax
                 self.cav_source.set_frequency(freq)
                 time.sleep(0.2)
+<<<<<<< HEAD
                 
+=======
+>>>>>>> 507004ebcb600713fc2b96c15f5e52b1a4514b6a
 
                 dig.setup_avg_shot()
                 dig.arm()
@@ -118,6 +127,7 @@ class CavSpectroscopy(Measurement1D):
                 ret = dig.take_avg_shot(async=True)
                 dig.release_buf()
                 
+<<<<<<< HEAD
 #                try:
 #                    while not ret.is_valid():
 #                        objsh.helper.backend.main_loop(100)
@@ -128,6 +138,13 @@ class CavSpectroscopy(Measurement1D):
                 amps.append(np.abs(IQ))
                 phases.append(np.angle(IQ, deg=True))
                 print 'F = %.03f MHz --> amp = %.1f, angle = %.01f' % (freq / 1e6, np.abs(IQ), np.angle(IQ, deg=True))
+=======
+                
+                IQ = np.average(ret.get())
+                amps.append(np.abs(IQ))
+                phases.append(np.angle(IQ, deg=True))
+                print 'F = %.03f GHz --> amp = %.1f, angle = %.01f' % (freq / 1e9, np.abs(IQ), np.angle(IQ, deg=True))
+>>>>>>> 507004ebcb600713fc2b96c15f5e52b1a4514b6a
 
             self.ampdata[idisp,:] = amps
             self.phasedata[idisp,:] = phases
@@ -136,4 +153,8 @@ class CavSpectroscopy(Measurement1D):
 
     def analyze(self):
         fig = self.create_figure()
+<<<<<<< HEAD
         analysis(self.cav_disps, self.cav_freqs, self.ampdata, self.phasedata, self.plot_type, fig=fig)
+=======
+        analysis(self.cav_disps, self.cav_freqs, self.ampdata, self.phasedata, self.plot_type, fig=fig)
+>>>>>>> 507004ebcb600713fc2b96c15f5e52b1a4514b6a

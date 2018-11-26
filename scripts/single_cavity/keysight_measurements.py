@@ -84,7 +84,11 @@ if 0:
     
     
     
+<<<<<<< HEAD
 if 1: # SSB spec
+=======
+if 0: # SSB spec
+>>>>>>> 507004ebcb600713fc2b96c15f5e52b1a4514b6a
     from single_qubit import ssbspec
     seq = sequencer.Trigger(250)
 
@@ -110,7 +114,11 @@ if 0: # T1
     t1.measure_keysight()
     
     
+<<<<<<< HEAD
 if 0: # T2
+=======
+if 1: # T2
+>>>>>>> 507004ebcb600713fc2b96c15f5e52b1a4514b6a
     from single_qubit import T2measurement
     postseq = sequencer.Delay(500)
     t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 8e3, 61), detune=0.8e6, double_freq=False, generate=True, postseq=postseq)

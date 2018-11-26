@@ -23,7 +23,7 @@ def analysis(meas, data=None, fig=None):
     result = lmfit.minimize(exp_decay, params, args=(xs, ys))
     lmfit.report_fit(result.params)
 
-    fig.axes[0].plot(xs/1e3, -exp_decay(result.params, xs, 0), label='Fit, tau = %.03f us'%(result.params['tau'].value/1000.))
+    fig.axes[0].plot(xs/1e3, -exp_decay(result.params, xs, 0), label='Fit, tau = %.03f us +/- %.03f us'%(result.params['tau'].value/1000.0, result.params['tau'].stderr/1000.0))
     fig.axes[0].legend(loc=0)
     fig.axes[0].set_ylabel('Intensity [AU]')
     fig.axes[0].set_xlabel('Time [us]')
@@ -56,8 +56,8 @@ class FT1Measurement(Measurement1D):
             ]))
             s.append(Delay(dt))
             s.append(r(np.pi/2, 0))
-            s.append(Delay(30))
             s.append(self.get_readout_pulse())
+            s.append(Delay(1000))
 
         s = self.get_sequencer(s)
         seqs = s.render()

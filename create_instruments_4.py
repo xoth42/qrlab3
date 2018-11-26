@@ -9,7 +9,7 @@ if 1:
 
 from mclient import instruments
 
-Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
+#Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 
 
 
@@ -18,6 +18,22 @@ Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 
 
 
+<<<<<<< HEAD
+
+
+
+
+#dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period=500)
+#
+#
+#AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PRODUCT = "M3202A", 
+#                          amps = [1,1.5,1.5,1.5], ofs = [0.5, 0, -0.0012, 0.0466])
+#
+#
+#AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 8,  AWG_PRODUCT = "M3202A", 
+#                          amps = [1.5,1.5,1,1], ofs = [0.02, -0.098, 0, 0])
+=======
+>>>>>>> 4c5a5d601badfc0c2317ef3dd47af3d22598bd6c
 #
 #
 #
@@ -41,9 +57,15 @@ Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 #AWG1.do_set_waveform_delay(200000)
 #bla
 
-#Magnet = instruments.create('Magnet','AMI_430')
+Magnet = instruments.create('Magnet','AMI_430')
+print 'Magnet OK'
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='TCPIP0::172.30.56.25::4000::SOCKET')
+<<<<<<< HEAD
+#VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB1::17::INSTR')
+#print 'VNA OK'
+=======
 VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB1::17::INSTR')
+>>>>>>> 4c5a5d601badfc0c2317ef3dd47af3d22598bd6c
 #Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', reffreq=10e6)
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1')
@@ -53,6 +75,15 @@ VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB1::17::INSTR')
 #sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
 
 #sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
+<<<<<<< HEAD
+#
+#efBrick = instruments.create('efBrick', 'LabBrick_RFSource', serial=17912, use_extref=True) # qubit
+##brick2 = instruments.create('brick2', 'LabBrick_RFSource', serial=14511, use_extref=True) # ref
+##ROBrick = instruments.create('ROBrick', 'LabBrick_RFSource', serial=14524, use_extref=True) # old RO
+##aliceBrick = instruments.create('aliceBrick', 'LabBrick_RFSource', serial=17912, use_extref=False) # RO
+##brick5 = instruments.create('brick5', 'LabBrick_RFSource', serial=14525, use_extref=True) # New brick
+##brick6 = instruments.create('brick6', 'LabBrick_RFSource', serial=18238, use_extref=True)#reference
+=======
 
 #efBrick = instruments.create('efBrick', 'LabBrick_RFSource', serial=17912, use_extref=True) # qubit
 #brick2 = instruments.create('brick2', 'LabBrick_RFSource', serial=14511, use_extref=True) # ref
@@ -60,6 +91,7 @@ VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB1::17::INSTR')
 #aliceBrick = instruments.create('aliceBrick', 'LabBrick_RFSource', serial=17912, use_extref=False) # RO
 #brick5 = instruments.create('brick5', 'LabBrick_RFSource', serial=14525, use_extref=True) # New brick
 #brick6 = instruments.create('brick6', 'LabBrick_RFSource', serial=18238, use_extref=True)#reference
+>>>>>>> 4c5a5d601badfc0c2317ef3dd47af3d22598bd6c
 #refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511, 
 #                            use_extref=True) #reference
 #RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=19151,
@@ -77,7 +109,11 @@ VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB1::17::INSTR')
 #mixFG = instruments.create('mixFG', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270760::0::INSTR')
 
 # Setup Alazar
+<<<<<<< HEAD
+
+=======
 #
+>>>>>>> 4c5a5d601badfc0c2317ef3dd47af3d22598bd6c
 #alz = instruments.create('alazar', 'Alazar_Daemon')
 #alz.set_ch1_range('40mV')
 #alz.set_ch2_range('40mV')
@@ -100,7 +136,11 @@ VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB1::17::INSTR')
 #readout = instruments.create('readout', 'Readout_Info', IQe=(30.69-48.9j), IQg=(31.27-48.64j),
 #                             IQe_radius= 1 , rfsource1='RObrick', rfsource2='refbrick',
 #                             pulse_len=1000, readout_chan='1m1', acq_chan='2m1')
+<<<<<<< HEAD
+#
+=======
 
+>>>>>>> 4c5a5d601badfc0c2317ef3dd47af3d22598bd6c
 
 '''
 #AWG2 = instruments.create('AWG2', 'Tektronix_AWG5014C', address='AWG2',
