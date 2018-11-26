@@ -192,7 +192,7 @@ class PredefinedPlot(object):
 
     def other_function(self, func, *args, **kwargs):
         '''
-        I'm not sure why this works, but it does.
+        I'm not sure why this works, but it does. Such is life.
         :param func:
         :param args:
         :param kwargs:
@@ -415,7 +415,6 @@ class CorrelationDay(object):
 
 
 file_path = r'C:\Users\Wang_Lab\Desktop\TunableTransmonJuly18.hdf5'
-day_codes = ["20180816"]
 try:
     file = h5py.File(file_path, 'r')
 except IOError:
@@ -429,14 +428,16 @@ if len(file.keys()) == 0:
 # series of numpy files in the same directory as this script. Its an easier
 # format to work with but qrlab produces info in the HDF5 so thats what needs
 #  to be worked with.
-first_day = CorrelationDay(file, '20180816', histogram=False, start=
-'083526', end='104950') 
+first_day = CorrelationDay(file, '20180815', histogram=False, start=
+'133503', end='195709')
+second_day = CorrelationDay(file, '20180816', histogram=True, start = None,
+                            end = None)
 
 old_data = [np.load('g.npy'), np.load('equator.npy'), np.load('t1.npy'),
             np.load('ft1.npy')]
 
 preliminary_option_dict = {'plot': True,
-                           'mean': True,
+                           'mean': False,
                            'run': True,
                            'average': False,
                            'old': False,
@@ -450,96 +451,57 @@ class DataPipeLineCallableClass(object):
     def __init__(self, data_processing_mode, option_dictionary):
         self.data_processing_mode = data_processing_mode
         self.option_dictionary = option_dictionary
+        self.dictionary_error_check()
+
+    def dictionary_error_check(self):
+        if self.option_dictionary['old'] == self.option_dictionary[
+            'I_and_II'] == self.option_dictionary['constant']:
+            raise ValueError('One option must be selected.')
+        if type(self.option_dictionary['mean_point_number']) is not int:
+            raise ValueError('Mean point number must be an integer.')
+
     def __call__(self, DayObject):
         if self.data_processing_mode is 'I_and_II':
-            flux_toggle_data_pipeline(DayObject)
+            self.flux_toggle_data_pipeline(DayObject)
         if self.data_processing_mode is 'constant':
-            constant_flux_data_pipeline(DayObject)
+            self.constant_flux_data_pipeline(DayObject)
 
-
-def flux_toggle_data_pipeline(DayObject):
-    pass
-def constant_flux_data_pipeline(Dayobject):
-    pass
-def data_pipeline(DayObject):
-    # The four variables below are 'switches.' plot turns on the plotting
-    # routine. Run runs the routine. averages normalizes some of the cross
-    # correlations. This might not be good depending on how we want to
-    # process this data. Old loads the old data into the proper variables.
-    # I_and_II means the data will be taken from the measurements that end
-    # with I and II. constant means take the data from the constant data; the
-    #  one with no flux in the name. Projections determine whether the data
-    # will be projected on the right axis, AKA T1 onto the line spanned by
-    # |equator> and |g>, and FT1 onto the line spanned by |g_2> and |f>. Mean
-    #  determines whether the data will be averaged, and mean_point_number
-    # determines how many points get averaged together.
-    display()
-    plot = True
-    mean = False
-    run = True
-    average = False
-    old = False
-    I_and_II = True
-    constant = False
-    projections = True
-    mean_point_number = 100
-    if type(mean_point_number) is not int:
-        raise ValueError('Must be an integer.')
-    if constant == I_and_II == old:
-        raise ValueError('Cannot be set at the same time.')
-    if old is False:
+    def constant_flux_data_pipeline(self, DayObject):
         # Creating the day objects takes very little time. Running the
         # create_data function is what produces the data and takes so long.
         CreatedData = DayObject.create_data()
-    label = DayObject.key
-    if run is True:
-        if old is False:
-            if I_and_II is True:
-                g = CreatedData['I']['g']
-                g_2 = CreatedData['II']['g']
-                equator = CreatedData['I']['equator']
-                equator_2 = CreatedData['II']['equator']
-                t1 = CreatedData['I']['t1']
-                ft1 = CreatedData['II']['ft1']
-                f = CreatedData['II']['f']
-            if constant is True:
-                g = CreatedData['constant_flux']['g']
-                g_2 = g
-                equator = CreatedData['constant_flux']['equator']
-                equator_2 = equator
-                t1 = CreatedData['constant_flux']['t1']
-                ft1 = CreatedData['constant_flux']['ft1']
-                f = CreatedData['constant_flux']['f']
+        label = DayObject.key
+        g = CreatedData['constant_flux']['g']
+        equator = CreatedData['constant_flux']['equator']
+        t1 = CreatedData['constant_flux']['t1']
+        ft1 = CreatedData['constant_flux']['ft1']
+        f = CreatedData['constant_flux']['f']
+        projections = self.option_dictionary['projections']
+        true_t1 = t1
+        true_ft1 = ft1
+        if projections is True:
+            true_t1 = map(lambda x: project(*x), zip(equator, g, t1))
+            true_ft1 = np.asarray(
+                map(lambda x: project(*x), zip(f, g, ft1)))
+            true_t1 = np.asarray(true_t1)
 
-            if projections is True:
-                true_t1 = map(lambda x: project(*x), zip(equator, g, t1))
-                true_ft1 = np.asarray(
-                    map(lambda x: project(*x), zip(f, g_2, ft1)))
-                true_t1 = np.asarray(true_t1)
-            if projections is False:
-                true_t1 = t1
-                true_ft1 = ft1
-            data = list()
-            for i in [g, equator, true_t1, true_ft1, g_2, equator_2]:
-                if (type(i) == np.ndarray) or (i != None):
-                    i = np.nan_to_num(i)
-                    data.append(i)
-            len_min = min(map(len, data))
-            data = [i[0:len_min] for i in data]
-        else:
-            data = old_data
-            g = data[0]
-            g_2 = g
-            equator = data[1]
-            t1 = data[2]
-            ft1 = data[3]
-        if mean is True:
-            empty_data = []
+        data = filter(lambda x: type(x) == np.ndarray, [g, equator, true_t1,
+                                                        true_ft1])
+        len_min = min(map(len, data))
+        data = [i[0:len_min] for i in data]
+        len_max = max(map(len, data))
+        if len_max is 0:
+            print "There is no data. Returning"
+            return
+        if self.option_dictionary['mean'] is True:
+            mean_point_number = self.option_dictionary['mean_point_number']
+            temporary_data = []
             for index, entry in enumerate(data):
-                splits = np.array_split(entry, (len(entry) / mean_point_number))
+                splits = np.array_split(entry,
+                                        (len(entry) / mean_point_number))
                 means = np.asarray(map(np.average, splits))
-                empty_data.append(means)
-            data = empty_data
+                temporary_data.append(means)
+            data = temporary_data
         display()
 
         ##########################################
@@ -550,6 +512,257 @@ def data_pipeline(DayObject):
         angles = np.angle(directions, deg=True)
         amplitudes = map(np.absolute, data)
         averages = map(lambda x: x - np.average(x), amplitudes)
+        if self.option_dictionary['average'] is True:
+            autocorrelations = map(
+                lambda x: np.correlate(x, x, mode='full') / np.sum(x ** 2),
+                averages)
+        else:
+            autocorrelations = map(
+                lambda x: np.correlate(x, x, mode='full'),
+                averages)
+
+        right_halves = fast_map(right_half, autocorrelations)
+
+        #        cc = np.correlate(averages[2], averages[3], mode='full')
+
+        spectrums = fast_map(fft, right_halves)
+
+        cc_yz = np.correlate(averages[2], averages[3], mode='full')  # cross
+        # -correlation of T1 and FT1
+        cc_yz = cc_yz[len(cc_yz) // 2:]
+        cc_xy = np.correlate(averages[1], averages[2], mode='full')  #
+        # cross-correlation of equator and T1
+        cc_xy = cc_xy[len(cc_xy) // 2:]
+        cc_xz = np.correlate(averages[1], averages[3], mode='full')  #
+        # cross-correlation of equator and FT1
+        cc_xz = cc_xz[len(cc_xz) // 2:]
+
+        cc_ft1eq2 = np.correlate(averages[3], averages[5], mode='full')
+        cc_ft1eq2 = cc_ft1eq2[len(cc_ft1eq2) // 2:]
+
+        cc_xx2 = np.correlate(averages[1], averages[5], mode='full')
+        cc_xx2 = cc_xx2[len(cc_xx2) // 2:]
+
+        time_step = 12.0  # in seconds
+
+        time = np.linspace(0, time_step * len(right_halves[0]),
+                           len(right_halves[0]))
+        time_raw = np.linspace(0, time_step * len(averages[0]),
+                               len(averages[0]))
+        N = len(time)
+
+        w = np.linspace(0.0, 1.0 / (2.0 * time_step), len(time) / 2)
+
+        cc_spectrum_yz = np.abs(fft(cc_yz))
+        cc_spectrum_xy = np.abs(fft(cc_xy))
+        cc_spectrum_xz = np.abs(fft(cc_xz))
+
+        cc_spectrum_ft1eq2 = np.abs(fft(cc_ft1eq2))
+        cc_spectrum_xx2 = np.abs(fft(cc_xx2))
+
+        #        fft_yz = scipy.fftpack.fft(right_halves_cc[0])
+        #        fft_xy = scipy.fftpack.fft(cc_xy[len(cc_xy)/2:])
+        #        fft_xz = scipy.fftpack.fft(cc_xz[len(cc_xz)/2:])
+        #
+        #        fourier = scipy.fftpack.fft(autocorr_T1[len(
+        # autocorr_T1)/2:])
+
+        def nice_label(title):
+            if old is True:
+                return 'Old data ' + str(title)
+            else:
+                return 'Dataset_' + str(label) + str(' ') + str(title)
+
+        if self.option_dictionary['plot'] == True:
+            import matplotlib.pyplot as plt
+            plt.close('all')
+            #            plt.figure()
+            #            plt.loglog(cc_spectrum, 'r')
+            #            plt.grid()
+            #            plt.title(
+            #                nice_label(
+            #                    'Power spectral density for T1 and FT1
+            # correlations'))
+            #            plt.figure()
+            #            plt.plot(coherence_, 'k')
+            #            plt.title(nice_label('Coherence'))
+            subtracted_autoc = right_halves[2] - right_halves[1]
+            R_t1t1_spec = np.abs(fft(subtracted_autoc))
+            subtracted_autocII = right_halves[3] - right_halves[5]
+            R_ft1ft1_spec = np.abs(fft(subtracted_autocII))
+            noise_equiv = cc_xy[:-1] - right_halves[1]
+            R_t1ft1 = cc_yz - cc_xx2
+            R_t1ft1_spec = np.abs(fft(R_t1ft1))
+
+            #            phases_p = PredefinedPlot([angles, 'k'],
+            # nice_label('phases'))
+            #    phases_p.other_function(plt.ylim, ((-2*np.pi, 2*np.pi)))
+            autoc_p = PredefinedPlot([time, subtracted_autoc, 'm'],
+                                     nice_label(
+                                         "autocorr of T1 minus autocorr "
+                                         "of eq"))
+            t1c_p = PredefinedPlot([time, right_halves[2], 'k'],
+                                   nice_label(r'$T_{1}$ autocorrelation'))
+            #            gc_p = PredefinedPlot([time, right_halves[0], 'b'],
+            #                                  nice_label(r'g
+            # autocorrelation'))
+            eqc_p = PredefinedPlot([time, right_halves[1], 'g'],
+                                   nice_label(r'Equator autocorrelation'))
+            ft1c_p = PredefinedPlot([time, right_halves[3], 'k'],
+                                    nice_label(r'$FT_{1}$ autocorrelation'))
+            eqIIc_p = PredefinedPlot([time, right_halves[5], 'g'],
+                                     nice_label(
+                                         r'Equator(II) autocorrelation'))
+            autocII_p = PredefinedPlot([time, subtracted_autocII, 'm'],
+                                       nice_label(
+                                           "autocorr of FT1 minus "
+                                           "autocorr of eqII"))
+            #            g_p = PredefinedPlot([time_raw, averages[0], 'm'],
+            #                                 nice_label(r'Raw g_1
+            # voltages'))
+            eq_p = PredefinedPlot([time_raw, averages[1], 'g'],
+                                  nice_label(r'Raw Equator voltages'))
+            print('variance of equator:',
+                  np.sum(averages[1] ** 2) / len(averages[1]))
+            t1_p = PredefinedPlot([time_raw, averages[2], 'k'],
+                                  nice_label(r'Raw T1 voltages'))
+            print(
+                'variance of T1:',
+                np.sum(averages[2] ** 2) / len(averages[2]))
+            ft1_p = PredefinedPlot([time_raw, averages[3], 'b'],
+                                   nice_label(r'Raw FT1 voltages'))
+            print(
+                'variance of FT1:',
+                np.sum(averages[3] ** 2) / len(averages[3]))
+            #            ft1_p = PredefinedPlot([time_raw, averages[4],
+            # 'b'],
+            #                                   nice_label(r'Raw g_2
+            # voltages'))
+            ft1_p = PredefinedPlot([time_raw, averages[5], 'b'],
+                                   nice_label(r'Raw eq_2 voltages'))
+            print('variance of equatorII:',
+                  np.sum(averages[5] ** 2) / len(averages[5]))
+            cc_eqt1_p = PredefinedPlot([time_raw, cc_xy, 'b'],
+                                       nice_label(
+                                           r'Cross-correlation of equator '
+                                           r'and '
+                                           r'T1'))
+            cc_eqft1_p = PredefinedPlot([time_raw, cc_xz, 'b'],
+                                        nice_label(
+                                            r'Cross-correlation of equator '
+                                            r'and FT1'))
+            cc_t1ft1_p = PredefinedPlot([time_raw, cc_yz, 'b'],
+                                        nice_label(
+                                            r'Cross-correlation of T1 and '
+                                            r'FT1'))
+            cc_ft1eq2_p = PredefinedPlot([time_raw, cc_ft1eq2, 'b'],
+                                         nice_label(
+                                             r'Cross-correlation of FT1 '
+                                             r'and '
+                                             r'equatorII'))
+            cc_eqeq2_p = PredefinedPlot([time_raw, cc_xx2, 'b'],
+                                        nice_label(
+                                            r'Cross-correlation of '
+                                            r'equator and '
+                                            r'equatorII'))
+            noise_equiv_p = PredefinedPlot([time, noise_equiv, 'b'],
+                                           nice_label(
+                                               r'Cross-corr equator T1 '
+                                               r'minus autocorr equator'))
+            spec_t1t1_p = PredefinedPlot(
+                [w, 2.0 / N * R_t1t1_spec[0:N // 2], 'o'],
+                nice_label(r'Spectral density of T1'))
+            plt.yscale('log')
+            plt.xscale('log')
+            spec_ft1ft1_p = PredefinedPlot(
+                [w, 2.0 / N * R_ft1ft1_spec[0:N // 2], 'o'],
+                nice_label(r'Spectral density of FT1'))
+            plt.yscale('log')
+            plt.xscale('log')
+            spec_eqt1_p = PredefinedPlot(
+                [w, 2.0 / N * cc_spectrum_xy[0:N // 2], 'o'],
+                nice_label(r'Cross-spectral density of equator and T1'))
+            plt.yscale('log')
+            plt.xscale('log')
+            spec_eqft1_p = PredefinedPlot(
+                [w, 2.0 / N * cc_spectrum_xz[0:N // 2], 'o'],
+                nice_label(r'Cross-spectral density of equator and FT1'))
+            plt.yscale('log')
+            plt.xscale('log')
+            spec_t1ft1_p = PredefinedPlot(
+                [w, 2.0 / N * cc_spectrum_yz[0:N // 2], 'o'],
+                nice_label(r'Cross-spectral density of T1 and FT1'))
+            plt.yscale('log')
+            plt.xscale('log')
+            spec_ft1eq2_p = PredefinedPlot(
+                [w, 2.0 / N * cc_spectrum_ft1eq2[0:N // 2], 'o'],
+                nice_label(r'Cross-spectral density of FT1 and equatorII'))
+            plt.yscale('log')
+            plt.xscale('log')
+            spec_eqeq2_p = PredefinedPlot(
+                [w, 2.0 / N * cc_spectrum_xx2[0:N // 2], 'o'],
+                nice_label(
+                    r'Cross-spectral density of equator and equatorII'))
+            plt.yscale('log')
+            plt.xscale('log')
+            spec_t1ft1_subtr_p = PredefinedPlot(
+                [w, 2.0 / N * R_t1ft1_spec[0:N // 2], 'o'],
+                nice_label(
+                    r'Cross-spectral density of T1 and FT1 (with '
+                    r'background subtracted)'))
+            plt.yscale('log')
+            plt.xscale('log')
+
+    def flux_toggle_data_pipeline(self, DayObject):
+        # Creating the day objects takes very little time. Running the
+        # create_data function is what produces the data and takes so long.
+        CreatedData = DayObject.create_data()
+        label = DayObject.key
+        g = CreatedData['I']['g']
+        g_2 = CreatedData['II']['g']
+        equator = CreatedData['I']['equator']
+        equator_2 = CreatedData['II']['equator']
+        t1 = CreatedData['I']['t1']
+        ft1 = CreatedData['II']['ft1']
+        f = CreatedData['II']['f']
+
+        projections = self.option_dictionary['projections']
+        if projections is True:
+            true_t1 = map(lambda x: project(*x), zip(equator, g, t1))
+            true_ft1 = np.asarray(
+                map(lambda x: project(*x), zip(f, g_2, ft1)))
+            true_t1 = np.asarray(true_t1)
+        if projections is False:
+            true_t1 = t1
+            true_ft1 = ft1
+        data = filter(lambda x: type(x) is np.ndarray,
+                      [g, equator, true_t1, true_ft1, g_2, equator_2])
+        len_min = min(map(len, data))
+        len_max = max(map(len, data))
+        if len_max is 0:
+            print "There is no data. Returning"
+            return
+        data = [i[0:len_min] for i in data]
+        mean = self.option_dictionary['mean']
+        if mean is True:
+            mean_point_number = self.option_dictionary['mean_point_number']
+            empty_data = []
+            for index, entry in enumerate(data):
+                splits = np.array_split(entry,
+                                        (len(entry) / mean_point_number))
+                means = np.asarray(map(np.average, splits))
+                empty_data.append(means)
+            data = empty_data
+
+        ##########################################
+        # Data is now properly prepared for calculations.
+        ##########################################
+
+        directions = g - equator
+        angles = np.angle(directions, deg=True)
+        amplitudes = map(np.absolute, data)
+        averages = map(lambda x: x - np.average(x), amplitudes)
+        average = self.option_dictionary['average']
         if average is True:
             autocorrelations = map(
                 lambda x: np.correlate(x, x, mode='full') / np.sum(x ** 2),
@@ -585,13 +798,13 @@ def data_pipeline(DayObject):
 
         cc_ft1eq2 = np.correlate(averages[3], averages[5], mode='full')
         cc_ft1eq2 = cc_ft1eq2[len(cc_ft1eq2) // 2:]
-        
+
         cc_xx2 = np.correlate(averages[1], averages[5], mode='full')
         cc_xx2 = cc_xx2[len(cc_xx2) // 2:]
 
         crosscorrelations = [[cc_yz], [cc_xy], [cc_xz]]
 
-        time_step = 12.0 # in seconds
+        time_step = 12.0  # in seconds
 
         time = np.linspace(0, time_step * len(right_halves[0]),
                            len(right_halves[0]))
@@ -612,15 +825,16 @@ def data_pipeline(DayObject):
         #        fft_xy = scipy.fftpack.fft(cc_xy[len(cc_xy)/2:])
         #        fft_xz = scipy.fftpack.fft(cc_xz[len(cc_xz)/2:])
         #
-        #        fourier = scipy.fftpack.fft(autocorr_T1[len(autocorr_T1)/2:])
+        #        fourier = scipy.fftpack.fft(autocorr_T1[len(
+        # autocorr_T1)/2:])
 
         def nice_label(title):
-            if old is True:
+            if self.option_dictionary['old'] is True:
                 return 'Old data ' + str(title)
             else:
                 return 'Dataset_' + str(label) + str(' ') + str(title)
 
-        if plot == True:
+        if self.option_dictionary['plot'] == True:
             import matplotlib.pyplot as plt
             plt.close('all')
             #            plt.figure()
@@ -641,41 +855,61 @@ def data_pipeline(DayObject):
             R_t1ft1 = cc_yz - cc_xx2
             R_t1ft1_spec = np.abs(fft(R_t1ft1))
 
-#            phases_p = PredefinedPlot([angles, 'k'], nice_label('phases'))
+            #            phases_p = PredefinedPlot([angles, 'k'],
+            # nice_label(
+            # 'phases'))
             #    phases_p.other_function(plt.ylim, ((-2*np.pi, 2*np.pi)))
-            autoc_p = PredefinedPlot([time, subtracted_autoc, 'm'], nice_label(
-                "autocorr of T1 minus autocorr of eq"))
+            autoc_p = PredefinedPlot([time, subtracted_autoc, 'm'],
+                                     nice_label(
+                                         "autocorr of T1 minus autocorr "
+                                         "of eq"))
             t1c_p = PredefinedPlot([time, right_halves[2], 'k'],
                                    nice_label(r'$T_{1}$ autocorrelation'))
-#            gc_p = PredefinedPlot([time, right_halves[0], 'b'],
-#                                  nice_label(r'g autocorrelation'))
+            #            gc_p = PredefinedPlot([time, right_halves[0], 'b'],
+            #                                  nice_label(r'g
+            # autocorrelation'))
             eqc_p = PredefinedPlot([time, right_halves[1], 'g'],
                                    nice_label(r'Equator autocorrelation'))
             ft1c_p = PredefinedPlot([time, right_halves[3], 'k'],
                                     nice_label(r'$FT_{1}$ autocorrelation'))
             eqIIc_p = PredefinedPlot([time, right_halves[5], 'g'],
-                                    nice_label(r'Equator(II) autocorrelation'))
-            autocII_p = PredefinedPlot([time, subtracted_autocII, 'm'], nice_label(
-                "autocorr of FT1 minus autocorr of eqII"))
-#            g_p = PredefinedPlot([time_raw, averages[0], 'm'],
-#                                 nice_label(r'Raw g_1 voltages'))
+                                     nice_label(
+                                         r'Equator(II) autocorrelation'))
+            autocII_p = PredefinedPlot([time, subtracted_autocII, 'm'],
+                                       nice_label(
+                                           "autocorr of FT1 minus "
+                                           "autocorr of "
+                                           "eqII"))
+            #            g_p = PredefinedPlot([time_raw, averages[0], 'm'],
+            #                                 nice_label(r'Raw g_1
+            # voltages'))
             eq_p = PredefinedPlot([time_raw, averages[1], 'g'],
                                   nice_label(r'Raw Equator voltages'))
-            print('variance of equator:', np.sum(averages[1]**2)/len(averages[1]))
+            print(
+                'variance of equator:',
+                np.sum(averages[1] ** 2) / len(averages[1]))
             t1_p = PredefinedPlot([time_raw, averages[2], 'k'],
                                   nice_label(r'Raw T1 voltages'))
-            print('variance of T1:', np.sum(averages[2]**2)/len(averages[2]))
+            print(
+                'variance of T1:',
+                np.sum(averages[2] ** 2) / len(averages[2]))
             ft1_p = PredefinedPlot([time_raw, averages[3], 'b'],
                                    nice_label(r'Raw FT1 voltages'))
-            print('variance of FT1:', np.sum(averages[3]**2)/len(averages[3]))
-#            ft1_p = PredefinedPlot([time_raw, averages[4], 'b'],
-#                                   nice_label(r'Raw g_2 voltages'))
+            print(
+                'variance of FT1:',
+                np.sum(averages[3] ** 2) / len(averages[3]))
+            #            ft1_p = PredefinedPlot([time_raw, averages[4],
+            # 'b'],
+            #                                   nice_label(r'Raw g_2
+            # voltages'))
             ft1_p = PredefinedPlot([time_raw, averages[5], 'b'],
                                    nice_label(r'Raw eq_2 voltages'))
-            print('variance of equatorII:', np.sum(averages[5]**2)/len(averages[5]))
+            print('variance of equatorII:',
+                  np.sum(averages[5] ** 2) / len(averages[5]))
             cc_eqt1_p = PredefinedPlot([time_raw, cc_xy, 'b'],
                                        nice_label(
-                                           r'Cross-correlation of equator and '
+                                           r'Cross-correlation of equator '
+                                           r'and '
                                            r'T1'))
             cc_eqft1_p = PredefinedPlot([time_raw, cc_xz, 'b'],
                                         nice_label(
@@ -683,18 +917,23 @@ def data_pipeline(DayObject):
                                             r'and FT1'))
             cc_t1ft1_p = PredefinedPlot([time_raw, cc_yz, 'b'],
                                         nice_label(
-                                            r'Cross-correlation of T1 and FT1'))
+                                            r'Cross-correlation of T1 and '
+                                            r'FT1'))
             cc_ft1eq2_p = PredefinedPlot([time_raw, cc_ft1eq2, 'b'],
                                          nice_label(
-                                             r'Cross-correlation of FT1 and '
+                                             r'Cross-correlation of FT1 '
+                                             r'and '
                                              r'equatorII'))
             cc_eqeq2_p = PredefinedPlot([time_raw, cc_xx2, 'b'],
-                                         nice_label(
-                                             r'Cross-correlation of equator and '
-                                             r'equatorII'))
+                                        nice_label(
+                                            r'Cross-correlation of '
+                                            r'equator and '
+                                            r'equatorII'))
             noise_equiv_p = PredefinedPlot([time, noise_equiv, 'b'],
-                                         nice_label(
-                                             r'Cross-corr equator T1 minus autocorr equator'))
+                                           nice_label(
+                                               r'Cross-corr equator T1 '
+                                               r'minus '
+                                               r'autocorr equator'))
             spec_t1t1_p = PredefinedPlot(
                 [w, 2.0 / N * R_t1t1_spec[0:N // 2], 'o'],
                 nice_label(r'Spectral density of T1'))
@@ -704,7 +943,7 @@ def data_pipeline(DayObject):
                 [w, 2.0 / N * R_ft1ft1_spec[0:N // 2], 'o'],
                 nice_label(r'Spectral density of FT1'))
             plt.yscale('log')
-            plt.xscale('log')                                          
+            plt.xscale('log')
             spec_eqt1_p = PredefinedPlot(
                 [w, 2.0 / N * cc_spectrum_xy[0:N // 2], 'o'],
                 nice_label(r'Cross-spectral density of equator and T1'))
@@ -727,15 +966,316 @@ def data_pipeline(DayObject):
             plt.xscale('log')
             spec_eqeq2_p = PredefinedPlot(
                 [w, 2.0 / N * cc_spectrum_xx2[0:N // 2], 'o'],
-                nice_label(r'Cross-spectral density of equator and equatorII'))
+                nice_label(
+                    r'Cross-spectral density of equator and equatorII'))
             plt.yscale('log')
             plt.xscale('log')
             spec_t1ft1_subtr_p = PredefinedPlot(
                 [w, 2.0 / N * R_t1ft1_spec[0:N // 2], 'o'],
-                nice_label(r'Cross-spectral density of T1 and FT1 (with background subtracted)'))
+                nice_label(
+                    r'Cross-spectral density of T1 and FT1 (with background '
+                    r'subtracted)'))
             plt.yscale('log')
             plt.xscale('log')
-            
 
 
-data_pipeline(first_day)
+# def data_pipeline(DayObject):
+#     # The four variables below are 'switches.' plot turns on the plotting
+#     # routine. Run runs the routine. averages normalizes some of the cross
+#     # correlations. This might not be good depending on how we want to
+#     # process this data. Old loads the old data into the proper variables.
+#     # I_and_II means the data will be taken from the measurements that end
+#     # with I and II. constant means take the data from the constant data; the
+#     #  one with no flux in the name. Projections determine whether the data
+#     # will be projected on the right axis, AKA T1 onto the line spanned by
+#     # |equator> and |g>, and FT1 onto the line spanned by |g_2> and |f>. Mean
+#     #  determines whether the data will be averaged, and mean_point_number
+#     # determines how many points get averaged together.
+#     display()
+#     plot = False
+#     mean = False
+#     run = True
+#     average = False
+#     old = False
+#     I_and_II = True
+#     constant = False
+#     projections = True
+#     mean_point_number = 100
+#     if type(mean_point_number) is not int:
+#         raise ValueError('Must be an integer.')
+#     if constant == I_and_II == old:
+#         raise ValueError('Cannot be set at the same time.')
+#     if old is False:
+#         # Creating the day objects takes very little time. Running the
+#         # create_data function is what produces the data and takes so long.
+#         CreatedData = DayObject.create_data()
+#     label = DayObject.key
+#     if run is True:
+#         if old is False:
+#             if I_and_II is True:
+#                 g = CreatedData['I']['g']
+#                 g_2 = CreatedData['II']['g']
+#                 equator = CreatedData['I']['equator']
+#                 equator_2 = CreatedData['II']['equator']
+#                 t1 = CreatedData['I']['t1']
+#                 ft1 = CreatedData['II']['ft1']
+#                 f = CreatedData['II']['f']
+#             if constant is True:
+#                 g = CreatedData['constant_flux']['g']
+#                 g_2 = g
+#                 equator = CreatedData['constant_flux']['equator']
+#                 equator_2 = equator
+#                 t1 = CreatedData['constant_flux']['t1']
+#                 ft1 = CreatedData['constant_flux']['ft1']
+#                 f = CreatedData['constant_flux']['f']
+#
+#             if projections is True:
+#                 true_t1 = map(lambda x: project(*x), zip(equator, g, t1))
+#                 true_ft1 = np.asarray(
+#                     map(lambda x: project(*x), zip(f, g_2, ft1)))
+#                 true_t1 = np.asarray(true_t1)
+#             if projections is False:
+#                 true_t1 = t1
+#                 true_ft1 = ft1
+#             data = list()
+#             for i in [g, equator, true_t1, true_ft1, g_2, equator_2]:
+#                 if (type(i) == np.ndarray) or (i != None):
+#                     i = np.nan_to_num(i)
+#                     data.append(i)
+#             len_min = min(map(len, data))
+#             data = [i[0:len_min] for i in data]
+#         else:
+#             data = old_data
+#             g = data[0]
+#             g_2 = g
+#             equator = data[1]
+#             t1 = data[2]
+#             ft1 = data[3]
+#         if mean is True:
+#             empty_data = []
+#             for index, entry in enumerate(data):
+#                 splits = np.array_split(entry, (len(entry) /
+# mean_point_number))
+#                 means = np.asarray(map(np.average, splits))
+#                 empty_data.append(means)
+#             data = empty_data
+#         display()
+#
+#         ##########################################
+#         # Data is now properly prepared for calculations.
+#         ##########################################
+#
+#         directions = g - equator
+#         angles = np.angle(directions, deg=True)
+#         amplitudes = map(np.absolute, data)
+#         averages = map(lambda x: x - np.average(x), amplitudes)
+#         if average is True:
+#             autocorrelations = map(
+#                 lambda x: np.correlate(x, x, mode='full') / np.sum(x ** 2),
+#                 averages)
+#         else:
+#             autocorrelations = map(
+#                 lambda x: np.correlate(x, x, mode='full'),
+#                 averages)
+#
+#         display()
+#         right_halves = fast_map(right_half, autocorrelations)
+#
+#         #        cc = np.correlate(averages[2], averages[3], mode='full')
+#
+#         spectrums = fast_map(fft, right_halves)
+#         spectrums = fast_map(np.absolute, spectrums)
+#         #        cc_spectrum = fft(cc)
+#         #        cc_spectrum = np.absolute(cc_spectrum)
+#         #
+#         #        coherence_ = coherence(cc_spectrum[0:len(spectrums[2])],
+#         # spectrums[2],
+#         #                               spectrums[3])
+#
+#         cc_yz = np.correlate(averages[2], averages[3], mode='full')  # cross
+#         # -correlation of T1 and FT1
+#         cc_yz = cc_yz[len(cc_yz) // 2:]
+#         cc_xy = np.correlate(averages[1], averages[2], mode='full')  #
+#         # cross-correlation of equator and T1
+#         cc_xy = cc_xy[len(cc_xy) // 2:]
+#         cc_xz = np.correlate(averages[1], averages[3], mode='full')  #
+#         # cross-correlation of equator and FT1
+#         cc_xz = cc_xz[len(cc_xz) // 2:]
+#
+#         cc_ft1eq2 = np.correlate(averages[3], averages[5], mode='full')
+#         cc_ft1eq2 = cc_ft1eq2[len(cc_ft1eq2) // 2:]
+#
+#         cc_xx2 = np.correlate(averages[1], averages[5], mode='full')
+#         cc_xx2 = cc_xx2[len(cc_xx2) // 2:]
+#
+#         crosscorrelations = [[cc_yz], [cc_xy], [cc_xz]]
+#
+#         time_step = 12.0  # in seconds
+#
+#         time = np.linspace(0, time_step * len(right_halves[0]),
+#                            len(right_halves[0]))
+#         time_raw = np.linspace(0, time_step * len(averages[0]),
+#                                len(averages[0]))
+#         N = len(time)
+#
+#         w = np.linspace(0.0, 1.0 / (2.0 * time_step), len(time) / 2)
+#
+#         cc_spectrum_yz = np.abs(fft(cc_yz))
+#         cc_spectrum_xy = np.abs(fft(cc_xy))
+#         cc_spectrum_xz = np.abs(fft(cc_xz))
+#
+#         cc_spectrum_ft1eq2 = np.abs(fft(cc_ft1eq2))
+#         cc_spectrum_xx2 = np.abs(fft(cc_xx2))
+#
+#         #        fft_yz = scipy.fftpack.fft(right_halves_cc[0])
+#         #        fft_xy = scipy.fftpack.fft(cc_xy[len(cc_xy)/2:])
+#         #        fft_xz = scipy.fftpack.fft(cc_xz[len(cc_xz)/2:])
+#         #
+#         #        fourier = scipy.fftpack.fft(autocorr_T1[len(autocorr_T1)/2:])
+#
+#         def nice_label(title):
+#             if old is True:
+#                 return 'Old data ' + str(title)
+#             else:
+#                 return 'Dataset_' + str(label) + str(' ') + str(title)
+#
+#         if plot == True:
+#             import matplotlib.pyplot as plt
+#             plt.close('all')
+#             #            plt.figure()
+#             #            plt.loglog(cc_spectrum, 'r')
+#             #            plt.grid()
+#             #            plt.title(
+#             #                nice_label(
+#             #                    'Power spectral density for T1 and FT1
+#             # correlations'))
+#             #            plt.figure()
+#             #            plt.plot(coherence_, 'k')
+#             #            plt.title(nice_label('Coherence'))
+#             subtracted_autoc = right_halves[2] - right_halves[1]
+#             R_t1t1_spec = np.abs(fft(subtracted_autoc))
+#             subtracted_autocII = right_halves[3] - right_halves[5]
+#             R_ft1ft1_spec = np.abs(fft(subtracted_autocII))
+#             noise_equiv = cc_xy[:-1] - right_halves[1]
+#             R_t1ft1 = cc_yz - cc_xx2
+#             R_t1ft1_spec = np.abs(fft(R_t1ft1))
+#
+#             #            phases_p = PredefinedPlot([angles, 'k'], nice_label(
+#             # 'phases'))
+#             #    phases_p.other_function(plt.ylim, ((-2*np.pi, 2*np.pi)))
+#             autoc_p = PredefinedPlot([time, subtracted_autoc, 'm'],
+# nice_label(
+#                 "autocorr of T1 minus autocorr of eq"))
+#             t1c_p = PredefinedPlot([time, right_halves[2], 'k'],
+#                                    nice_label(r'$T_{1}$ autocorrelation'))
+#             #            gc_p = PredefinedPlot([time, right_halves[0], 'b'],
+#             #                                  nice_label(r'g
+# autocorrelation'))
+#             eqc_p = PredefinedPlot([time, right_halves[1], 'g'],
+#                                    nice_label(r'Equator autocorrelation'))
+#             ft1c_p = PredefinedPlot([time, right_halves[3], 'k'],
+#                                     nice_label(r'$FT_{1}$ autocorrelation'))
+#             eqIIc_p = PredefinedPlot([time, right_halves[5], 'g'],
+#                                      nice_label(r'Equator(II)
+# autocorrelation'))
+#             autocII_p = PredefinedPlot([time, subtracted_autocII, 'm'],
+#                                        nice_label(
+#                                            "autocorr of FT1 minus autocorr
+# of "
+#                                            "eqII"))
+#             #            g_p = PredefinedPlot([time_raw, averages[0], 'm'],
+#             #                                 nice_label(r'Raw g_1 voltages'))
+#             eq_p = PredefinedPlot([time_raw, averages[1], 'g'],
+#                                   nice_label(r'Raw Equator voltages'))
+#             print(
+#             'variance of equator:', np.sum(averages[1] ** 2) / len(
+# averages[1]))
+#             t1_p = PredefinedPlot([time_raw, averages[2], 'k'],
+#                                   nice_label(r'Raw T1 voltages'))
+#             print(
+#             'variance of T1:', np.sum(averages[2] ** 2) / len(averages[2]))
+#             ft1_p = PredefinedPlot([time_raw, averages[3], 'b'],
+#                                    nice_label(r'Raw FT1 voltages'))
+#             print(
+#             'variance of FT1:', np.sum(averages[3] ** 2) / len(averages[3]))
+#             #            ft1_p = PredefinedPlot([time_raw, averages[4], 'b'],
+#             #                                   nice_label(r'Raw g_2
+# voltages'))
+#             ft1_p = PredefinedPlot([time_raw, averages[5], 'b'],
+#                                    nice_label(r'Raw eq_2 voltages'))
+#             print('variance of equatorII:',
+#                   np.sum(averages[5] ** 2) / len(averages[5]))
+#             cc_eqt1_p = PredefinedPlot([time_raw, cc_xy, 'b'],
+#                                        nice_label(
+#                                            r'Cross-correlation of equator
+# and '
+#                                            r'T1'))
+#             cc_eqft1_p = PredefinedPlot([time_raw, cc_xz, 'b'],
+#                                         nice_label(
+#                                             r'Cross-correlation of equator '
+#                                             r'and FT1'))
+#             cc_t1ft1_p = PredefinedPlot([time_raw, cc_yz, 'b'],
+#                                         nice_label(
+#                                             r'Cross-correlation of T1 and
+# FT1'))
+#             cc_ft1eq2_p = PredefinedPlot([time_raw, cc_ft1eq2, 'b'],
+#                                          nice_label(
+#                                              r'Cross-correlation of FT1 and '
+#                                              r'equatorII'))
+#             cc_eqeq2_p = PredefinedPlot([time_raw, cc_xx2, 'b'],
+#                                         nice_label(
+#                                             r'Cross-correlation of equator
+# and '
+#                                             r'equatorII'))
+#             noise_equiv_p = PredefinedPlot([time, noise_equiv, 'b'],
+#                                            nice_label(
+#                                                r'Cross-corr equator T1 minus '
+#                                                r'autocorr equator'))
+#             spec_t1t1_p = PredefinedPlot(
+#                 [w, 2.0 / N * R_t1t1_spec[0:N // 2], 'o'],
+#                 nice_label(r'Spectral density of T1'))
+#             plt.yscale('log')
+#             plt.xscale('log')
+#             spec_ft1ft1_p = PredefinedPlot(
+#                 [w, 2.0 / N * R_ft1ft1_spec[0:N // 2], 'o'],
+#                 nice_label(r'Spectral density of FT1'))
+#             plt.yscale('log')
+#             plt.xscale('log')
+#             spec_eqt1_p = PredefinedPlot(
+#                 [w, 2.0 / N * cc_spectrum_xy[0:N // 2], 'o'],
+#                 nice_label(r'Cross-spectral density of equator and T1'))
+#             plt.yscale('log')
+#             plt.xscale('log')
+#             spec_eqft1_p = PredefinedPlot(
+#                 [w, 2.0 / N * cc_spectrum_xz[0:N // 2], 'o'],
+#                 nice_label(r'Cross-spectral density of equator and FT1'))
+#             plt.yscale('log')
+#             plt.xscale('log')
+#             spec_t1ft1_p = PredefinedPlot(
+#                 [w, 2.0 / N * cc_spectrum_yz[0:N // 2], 'o'],
+#                 nice_label(r'Cross-spectral density of T1 and FT1'))
+#             plt.yscale('log')
+#             plt.xscale('log')
+#             spec_ft1eq2_p = PredefinedPlot(
+#                 [w, 2.0 / N * cc_spectrum_ft1eq2[0:N // 2], 'o'],
+#                 nice_label(r'Cross-spectral density of FT1 and equatorII'))
+#             plt.yscale('log')
+#             plt.xscale('log')
+#             spec_eqeq2_p = PredefinedPlot(
+#                 [w, 2.0 / N * cc_spectrum_xx2[0:N // 2], 'o'],
+#                 nice_label(r'Cross-spectral density of equator and
+# equatorII'))
+#             plt.yscale('log')
+#             plt.xscale('log')
+#             spec_t1ft1_subtr_p = PredefinedPlot(
+#                 [w, 2.0 / N * R_t1ft1_spec[0:N // 2], 'o'],
+#                 nice_label(
+#                     r'Cross-spectral density of T1 and FT1 (with background
+#  subtracted)'))
+#             plt.yscale('log')
+#             plt.xscale('log')
+#
+#
+# data_pipeline(first_day)
+test = DataPipeLineCallableClass('I_and_II', preliminary_option_dict)
+test(first_day)

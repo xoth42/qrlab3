@@ -95,7 +95,7 @@ if 1:
     sc1.do_set_frequency(pump_freq)
     
     x = VNA.do_get_xaxis()
-    power_traces = np.zeros((len(pump_powers), len(x)))
+    power_traces = np.zeros((len(pump_powers), len(x)))4
     for i in range(len(pump_powers)):
         print(i+1, len(pump_powers))
         sc1.do_set_power(pump_powers[i])
