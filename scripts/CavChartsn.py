@@ -1,10 +1,20 @@
 import mclient
 reload(mclient)
 import numpy as np
-from pulseseq import sequencer
+from pulseseq import sequencer, pulselib
+import matplotlib
+#matplotlib.rcParams['backend'] = 'Qt4Agg'
+#matplotlib.rcParams['backend.qt4'] = 'PyQt4'
+import matplotlib.pyplot as plt
+#from t1t2_plotting import smart_T1_delays
+import os
+import time
+import math
 
-alz = mclient.instruments['alazar']
-fg = mclient.instruments['funcgen']
+#alz = mclient.instruments['alazar']
+#fg = mclient.instruments['funcgen']
+os.chdir(r'C:/qrlab/scripts')
+dig = mclient.instruments['dig']
 #laserfg = mclient.instruments['laserfg']
 #awg2 = mclient.instruments['AWG2']
 #ag1 = mclient.instruments['ag1_RO']
@@ -13,7 +23,7 @@ fg = mclient.instruments['funcgen']
 qubit_info = mclient.get_qubit_info('qubit1ge')
 ef_info = mclient.get_qubit_info('qubit1ef')
 #cavity_infoR = mclient.get_qubit_info('cavity1R')
-cavity_infoA = mclient.get_qubit_info('cavityAlice')
+#cavity_infoA = mclient.get_qubit_info('cavityAlice')
 cavity_infoB = mclient.get_qubit_info('cavityBob')
 #Qswitch_info1A = mclient.get_qubit_info('Qswitch1A')
 #Qswitch_info1B = mclient.get_qubit_info('Qswitch1B')
@@ -23,7 +33,7 @@ cavity_infoB = mclient.get_qubit_info('cavityBob')
 #cavity_info2A = mclient.get_qubit_info('cavity2A')
 #cavity_info2B = mclient.get_qubit_info('cavity2B')
 
-cA = cavity_infoA.rotate
+#cA = cavity_infoA.rotate
 cB = cavity_infoB.rotate
 ge = qubit_info.rotate
 ges= qubit_info.rotate_selective
@@ -41,30 +51,30 @@ Qswitchseq = sequencer.Join([sequencer.Repeat(sequencer.Delay(100), 100),
 #            Repeat(Constant(250, 1, chan=5), 800),      # Qubit/Readout master switch
             ])])
 '''
-if 1: # Cavity disp calibration
-    from scripts.single_cavity import cavdisp
+if 0: # Cavity disp calibration
+    from single_cavity import cavdisp
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
-    disp = cavdisp.CavDisp(qubit_info, cavity_infoA, 2, 71, 0, seq=None,
+    disp = cavdisp.CavDisp(qubit_info, cavity_infoB, 2, 71, 0, seq=None,
                            delay=0, bgcor=False, update=False, generate=True,
 #                           Qswitch_infoA=Qswitch_infoB, Qswitch_infoB=Qswitch_infoB,
 #                           extra_info=[Qswitch_infoA, Qswitch_infoB,],
                           )
-    disp.measure()
+    disp.measure_keysight()
     bla
 
 if 0: # Cavity T1:
-    from scripts.single_cavity import cavT1
+    from single_cavity import cavT1
     for i in range(1):
         t1 = cavT1.CavT1(qubit_info, cavity_infoA, 1, np.linspace(0, 1.8e6, 101), proj_num=0, seq=None,
                          postseq=None, bgcor=False, extra_info=[ef_info,])
-        t1.measure()
+        t1.measure_keysight()
 
 if 0:# Cavity T2
-    from scripts.single_cavity import cavT2
+    from single_cavity import cavT2
     detune = 1e3
     ct2b = cavT2.CavT2(qubit_info, cavity_infoB, .5, np.linspace(0, .7e6, 201), detune=detune, seq=None,
                        postseq=None, bgcor=False, extra_info=[ef_info,])
-    ct2b.measure()
+    ct2b.measure_keysight()
 
 #    for i in range(10):
 #        t2 = cavT2.CavT2(qubit_info, cavity_infoA, 1.0, np.linspace(0, 1.0e6, 101), detune=10e3, seq=None,
@@ -72,16 +82,30 @@ if 0:# Cavity T2
 #        t2.measure()
     bla
 
-if 0: #SSB cavspec
-    from scripts.single_cavity import ssbcavspec
-    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoA, np.linspace(-1e6, 1e6, 101),
-#                                  postseq=efpi, extra_info=[ef_info,]
-                                  )
+
+
+if 0: # Cavity spec
+    from single_cavity import cavspectroscopy_keysight
+    cav_freq = 5520.56e6
+    freq_range = 5e6
+    cspec = cavspectroscopy_keysight.CavSpectroscopy(mclient.instruments['bobFG'], qubit_info, cavity_infoB, [0.001], 
+                                            np.linspace(cav_freq-freq_range, cav_freq+freq_range, 11))
+    #This amplitude is NOT capped at 1 like on the qubit spec
     cspec.measure()
     bla
 
+
+
+if 1: #SSB cavspec
+    from single_cavity import ssbcavspec
+    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoB, np.linspace(-10e6, 10e6, 11),
+#                                  postseq=efpi, extra_info=[ef_info,]
+                                  )
+    cspec.measure_keysight()
+    bla
+
 if 0: # Measure cavity photon population
-    from scripts.single_qubit import rabi
+    from single_qubit import rabi
     tr = rabi.Rabi(qubit_info, np.linspace(-0.005, 0.005, 81), plot_seqs=False, update=False, seq=None, selective=1, singleshotbin=True)
     period = tr.fit_params['period'].value
     alz.set_naverages(4000)
@@ -89,7 +113,7 @@ if 0: # Measure cavity photon population
     tr.measure()
 
 if 0: #Sideband modulated number splitting:
-    from scripts.single_qubit import ssbspec
+    from single_qubit import ssbspec
     seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate(1.5, 0)])
     spec = ssbspec.SSBSpec(qubit_info, np.linspace(-1.5e6, 1.5e6, 150),
                            extra_info= cavity_infoB,
@@ -98,7 +122,7 @@ if 0: #Sideband modulated number splitting:
     bla
 
 if 0: #EF Sideband modulated number splitting:
-    from scripts.single_qubit import ssbspec
+    from single_qubit import ssbspec
     seq = sequencer.Join([sequencer.Trigger(250), qubit_info.rotate(np.pi,0), cavity_infoA.rotate(1.2, 0)])
     postseq = qubit_info.rotate(np.pi,0)
 #    postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
@@ -109,7 +133,7 @@ if 0: #EF Sideband modulated number splitting:
     bla
 
 if 0: #mixer calibration:
-    from scripts.single_qubit import mixer_calibration
+    from single_qubit import mixer_calibration
     mixer_cal = mixer_calibration.Mixer_Calibration
 
     cal = mixer_cal('cavity1A', 4219.661700e6 , 'VA', 'AWG1', verbose=True,

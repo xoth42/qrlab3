@@ -36,7 +36,8 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 #Josh made this number bigger on 7/25/18 to try and stop timeout errors.
-DEFAULT_TIMEOUT = 50000      # Timeout in msec
+#JEFF increased this on 11/14 to do longer measurements
+DEFAULT_TIMEOUT = 120000      # Timeout in msec
 REDUCE_LATENCY  = True      # Use Voodoo latency reduction?
 
 OS_CALL         = 'c'

@@ -24,9 +24,6 @@ import ttk as ttk
 # **************************#
 # The time that the GUI will draw all the widgets again.
 draw_time = 900  # in ms
-# The time that the GUI will retrieve all the information about the
-# isntruments from the
-# instrument server. When this time has elapsed.
 
 refresh_continuously = True
 fetch_time = 0.5  # in s
