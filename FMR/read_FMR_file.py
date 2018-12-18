@@ -5,7 +5,7 @@ import matplotlib.pyplot as pl
 
 # Read the array from file
 
-new_data = np.loadtxt(r'C:\Users\Wang_Lab\Documents\yingying\FMR\text_0531_1.5mm_copper_cavity_270.0_330.0_0.05.txt')
+new_data = np.loadtxt(r'C:\qrlab\FMR\text_1.5mm_fridge_0.24_0.285_0.0002.txt')
 
 print new_data.shape
 # Note that this returned a 2D array!
@@ -21,86 +21,86 @@ Z = new_data[2]
 phase = new_data[3]
 
 
-Ms = 178 *0.963# * 0.8
-X = X *304/290.4
-
-
-pl.figure()
-pl.pcolormesh(X, Y, Z)
-pl.colorbar()
-pl.xlabel('Magnetic Field')
-pl.ylabel('Frequency (GHZ)')
-
-
-# x= X[0]
-# pl.plot(x,np.zeros_like(x)+8.484)
-# pl.plot(x,np.zeros_like(x)+8.532)
-# pl.plot(x,np.zeros_like(x)+8.562)
-# pl.plot(x,np.zeros_like(x)+8.592)
-#pl.plot(x,np.zeros_like(x)+8.624)
-#pl.show()
-#pl.legend()
-
-
- 
- 
-
-
-#x= X[0]
-#y= Y[:,0]
-#pl.plot(np.zeros_like(y)+0.262,y)
-#pl.plot(x,np.zeros_like(x)+8.2)
-#pl.plot(x,np.zeros_like(x)+8.532)
-#pl.plot(x,np.zeros_like(x)+8.562)
-#pl.plot(x,np.zeros_like(x)+8.592)
-#pl.plot(x,np.zeros_like(x)+8.624)
-#pl.show()
-#pl.legend()
-x = X[0]
-slope = 28.02
-offset = 0
-pl.plot(x, offset+ slope*x/1000,label = '110')
-pl.plot(x, offset+ slope*(x+Ms*(0.4-0.333333))/1000,label = '220')
-pl.plot(x, offset+ slope*(x+Ms*(0.428571-0.333333))/1000,label = '330')
-pl.plot(x, offset+ slope*(x+Ms*(0.444444-0.333333))/1000,label = '440')
-pl.plot(x, offset+ slope*(x+Ms*(0.454545-0.333333))/1000,label = '550')
-pl.plot(x, offset+ slope*(x+Ms*(0.2-0.333333))/1000,label = '210')
-##if specific trace is needed
+#Ms = 178 *0.963# * 0.8
+#X = X *304/290.4
+#
+#
+#pl.figure()
+#pl.pcolormesh(X, Y, Z)
+#pl.colorbar()
+#pl.xlabel('Magnetic Field')
+#pl.ylabel('Frequency (GHZ)')
+#
+#
+## x= X[0]
+## pl.plot(x,np.zeros_like(x)+8.484)
+## pl.plot(x,np.zeros_like(x)+8.532)
+## pl.plot(x,np.zeros_like(x)+8.562)
+## pl.plot(x,np.zeros_like(x)+8.592)
+##pl.plot(x,np.zeros_like(x)+8.624)
+##pl.show()
+##pl.legend()
+#
+#
+# 
+# 
+#
+#
+##x= X[0]
+##y= Y[:,0]
+##pl.plot(np.zeros_like(y)+0.262,y)
+##pl.plot(x,np.zeros_like(x)+8.2)
+##pl.plot(x,np.zeros_like(x)+8.532)
+##pl.plot(x,np.zeros_like(x)+8.562)
+##pl.plot(x,np.zeros_like(x)+8.592)
+##pl.plot(x,np.zeros_like(x)+8.624)
+##pl.show()
+##pl.legend()
+#x = X[0]
+#slope = 28.02
+#offset = 0
+#pl.plot(x, offset+ slope*x/1000,label = '110')
+#pl.plot(x, offset+ slope*(x+Ms*(0.4-0.333333))/1000,label = '220')
+#pl.plot(x, offset+ slope*(x+Ms*(0.428571-0.333333))/1000,label = '330')
+#pl.plot(x, offset+ slope*(x+Ms*(0.444444-0.333333))/1000,label = '440')
+#pl.plot(x, offset+ slope*(x+Ms*(0.454545-0.333333))/1000,label = '550')
+#pl.plot(x, offset+ slope*(x+Ms*(0.2-0.333333))/1000,label = '210')
+###if specific trace is needed
 
 #==============================================================================
-#m = 328 #the magnetic field you want
-#
-#for i in range(size):
-#    if X[0][i] < m:
-#        i = i + 1
-#    else:
-#        break
-# 
-#Z = np.transpose(Z)
-#Y = np.transpose(Y)
-#phase = np.transpose(phase)
-#z = Z[i]
-#phase = phase[i]
-#freq = Y[0]
-#pl.figure()
-#pl.plot(freq, z)
-#pl.xlabel('frequency(GHZ)')
-#pl.ylabel('dB')
-#
-#pl.show()
+m = 0.24 #the magnetic field you want
 
-# #pl.show()
+for i in range(size):
+    if X[0][i] < m:
+        i = i + 1
+    else:
+        break
+ 
+Z = np.transpose(Z)
+Y = np.transpose(Y)
+phase = np.transpose(phase)
+z = Z[i]
+phase = phase[i]
+freq = Y[0]
+pl.figure()
+pl.plot(freq, z)
+pl.xlabel('frequency(GHZ)')
+pl.ylabel('dB')
+
+pl.show()
+
+ #pl.show()
 
 # pl.legend()
-# pl.figure()
-# y= np.exp(z/20)
-# pl.plot(freq,y)
-# z = z[:,None].T
-# freq = freq[:,None].T
-# phase = phase[:,None].T
-# trace = np.concatenate([freq, z, phase]).T
+pl.figure()
+#y= np.exp(z/20)
+pl.plot(freq,y)
+z = z[:,None].T
+freq = freq[:,None].T
+phase = phase[:,None].T
+trace = np.concatenate([freq, z, phase]).T
 
-# np.savetxt(r'C:\Users\Wang_Lab\Documents\yingying\FMR\%smT.txt' %(X[0][i]), trace , delimiter=",") 
+#np.savetxt(r'C:\Users\Wang_Lab\Documents\yingying\FMR\%smT.txt' %(X[0][i]), trace , delimiter=",") 
 #==============================================================================
 
 

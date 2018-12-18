@@ -91,9 +91,11 @@ if 0: # Cavity spec
     freq_range = 1e6
     cspec = cavspectroscopy_keysight.CavSpectroscopy(mclient.instruments['Alicebrick'], qubit_info, cavity_infoA, [np.pi], 
                                             np.linspace(cav_freq-freq_range, cav_freq+freq_range, 41))
+
     #This amplitude is NOT capped at 1 like on the qubit spec
     cspec.measure()
     bla
+
 
 
 

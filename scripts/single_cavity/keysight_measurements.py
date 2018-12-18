@@ -67,8 +67,9 @@ if 0:
     freq_range = 15e6
     ro = rocavspectroscopy_keysight_IQmod.ROCavSpectroscopy(qubit_info, RO_info, np.linspace(-10, -20, 3),
                                              np.linspace(rofreq-freq_range, rofreq+freq_range, 55),
-                                             plen=20000, amp=0.0001, qubit_pulse=False)
+                                               plen=20000, amp=0.0001, qubit_pulse=False)
     ro.measure()
+    bla
     
 
 if 0:
@@ -85,15 +86,17 @@ if 0:
 
     spec.measure()
 
+
     
     
     
-if 1: # SSB spec
+
+if 0: # SSB spec
     from single_qubit import ssbspec
     seq = sequencer.Trigger(600)
     spec = ssbspec.SSBSpec(cavity_infoA, np.linspace(-1e6, 1e6, 21), seq=seq, plot_seqs=False)
     spec.measure_keysight()
-    bla
+
     
 
 if 0: #Multiple times SSB spec
@@ -115,6 +118,7 @@ if 0: #Multiple times SSB spec
      
     
 if 0: # Calibrate pi pulse
+
     from single_qubit import rabi
     tr = rabi.Rabi(qubit_info, 
  #                  np.linspace(-0.05, 0.05, 51), selective=True,
@@ -122,6 +126,7 @@ if 0: # Calibrate pi pulse
                    plot_seqs=False, generate=True, repeat_pulse=1, update=True)
     tr.measure_keysight()
     bla
+
     
 if 0: # T1
     from single_qubit import T1measurement
@@ -129,8 +134,16 @@ if 0: # T1
     t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 70e3, 51), 
                                      double_exp=False, generate=True, plot_seqs=False)
     t1.measure_keysight()
+
+if 0:
+    from scripts.single_qubit import ssbspec
+    from scripts.single_qubit import rabi
+    from scripts.single_qubit import T1measurement
+    powers = np.linspace(-20, 10, 2)
+    frequencies = np.linspace(120, 180, 3)
+
     
-    
+
 if 0: # T2
     from single_qubit import T2measurement
     postseq = sequencer.Delay(500)

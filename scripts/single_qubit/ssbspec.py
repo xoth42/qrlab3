@@ -65,6 +65,7 @@ class SSBSpec(Measurement1D):
         s = self.get_sequencer(s)
         seqs = s.render()
         return seqs
+    
 
     def get_ys(self, data=None):
         ys = super(SSBSpec, self).get_ys(data)

@@ -69,7 +69,7 @@ if 0: # Qubit spec
     bla
 
 """Qubit SSBspec"""
-if 1: # Qubit SSBspec
+if 0: # Qubit SSBspec
     from scripts.single_qubit import ssbspec
 #    postseq = sequencer.Delay(500)
     spec = ssbspec.SSBSpec(qubit_info, np.linspace(-.5e6, .5e6, 201), plot_seqs=False)
@@ -131,11 +131,11 @@ if 0: # Time Rabi
     data = tr.measure()
     bla
 
-if 0: # Cavity spec
+if 1: # Cavity spec
     from scripts.single_cavity import cavspectroscopy
-    cav_freq = 4089.56e6
-    freq_range = 0.4e6
-    cspec = cavspectroscopy.CavSpectroscopy(mclient.instruments['aliceFG'], qubit_info, cavity_info, [np.pi], 
+    cav_freq = 5420.56e6
+    freq_range = 10e6
+    cspec = cavspectroscopy.CavSpectroscopy(mclient.instruments['bobFG'], qubit_info, cavity_infoB, [np.pi], 
                                             np.linspace(cav_freq-freq_range, cav_freq+freq_range, 51))
     #This amplitude is NOT capped at 1 like on the qubit spec
     cspec.measure()

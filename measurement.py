@@ -609,7 +609,13 @@ class Measurement(object):
         # Start measurement, either by starting the AWG or the function generator
         self.start_awgs()
         dig.start_hvi()
-        ret = dig.take_experiment(avg_buf=self.avg_data, IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius)
+        ret = dig.take_experiment(avg_buf=self.avg_data, async=True, IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius)
+
+        while not ret.is_valid() and not self._interrupted:
+            objsh.helper.backend.main_loop(20)
+            QtWidgets.QApplication.processEvents()
+        if self._interrupted:
+            dig.set_interrupt(True)
 
 
         dig.disconnect(progress_hid)
@@ -620,7 +626,7 @@ class Measurement(object):
         
         dig.release_buf()
         
-        return ret
+        return ret.get()
 
 
     def setup_measurement_keysight(self):

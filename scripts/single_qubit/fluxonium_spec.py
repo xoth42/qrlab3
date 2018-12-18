@@ -23,8 +23,8 @@ os.chdir(r'c:\qrlab')
 
 #mpl.rcParams['figure.figsize']=[5,3.5]
 #mpl.rcParams['axes.color_cycle'] = ['b', 'g', 'r', 'c', 'm', 'k']
-alz = mclient.instruments['alazar']
-alz.set_naverages(1000)
+#alz = mclient.instruments['alazar']
+#alz.set_naverages(2000)
 
 qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')
@@ -37,11 +37,11 @@ RObrick = mclient.instruments['RObrick']
 refbrick = mclient.instruments['refbrick']
 
 
-currents = np.arange(1.5e-3, 2.5e-3, 0.02e-3)
+currents = np.arange(1.8e-3, 2.2e-3, 0.02e-3)
 Yoko.set_output_state(True) 
-ssbspec_freqs = np.linspace(-10e6, 50e6, 101) #range of points to check each ssbspec
-qbrick_freq = 938e6
-RObrick_freq = 7348.8e6
+ssbspec_freqs = np.linspace(-15e6, 15e6, 51) #range of points to check each ssbspec
+qbrick_freq = 720e6
+RObrick_freq = 7596.1e6
 w = 200
 w_selective = 1000
 pi_amp_initial = .1934
@@ -62,11 +62,20 @@ for i in range(len(currents)):
     time.sleep(1)
     
              
+#    '''Here we do an SSB spec'''
+#    from scripts.single_qubit import ssbspec
+#    seq = sequencer.Trigger(250)        
+#    spec = ssbspec.SSBSpec(qubit_info, ssbspec_freqs, seq=seq, plot_seqs=False)
+#    spec.measure()
+#    drive_freq = qbrick.do_get_frequency()
+#    w_q[i] = ssbspec_freqs[np.argmin(spec.get_ys())] + drive_freq - default_sideband
+#    
+#    time.sleep(1)
     '''Here we do an SSB spec'''
     from scripts.single_qubit import ssbspec
     seq = sequencer.Trigger(250)        
     spec = ssbspec.SSBSpec(qubit_info, ssbspec_freqs, seq=seq, plot_seqs=False)
-    spec.measure()
+    spec.measure_keysight()
     drive_freq = qbrick.do_get_frequency()
     w_q[i] = ssbspec_freqs[np.argmin(spec.get_ys())] + drive_freq - default_sideband
     

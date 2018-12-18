@@ -18,15 +18,11 @@ import Tkinter as tk
 # ttk provides the means to make the instrument tabs in the GUI. Also provides
 # some other themed widgets.
 import ttk as ttk
-# json provides the means to parse the struct of instrument subgroups.
 
 ### NOTABLE CONSTANTS ###
 # **************************#
 # The time that the GUI will draw all the widgets again.
 draw_time = 900  # in ms
-# The time that the GUI will retrieve all the information about the
-# isntruments from the
-# instrument server. When this time has elapsed.
 
 refresh_continuously = True
 fetch_time = 0.5  # in s
@@ -35,8 +31,13 @@ fetch_time = 0.5  # in s
 fill_all = tk.N + tk.S + tk.W + tk.E
 # The number of decimal points used in the parameter value display box,
 # when the value in written in scientific notation.
-precision = 3
+precision = 5
 
+# This is dictionary of colors to use to color the borders in the groups of
+# parameters. Purely an aesthetic addition.
+color_dict = {'red': '#ff0000', 'blue': '#0066ff', 'yellow': '#ffff00',
+              'green': '#00cc00', 'pink': '#ff9999', 'white': '#ffffff',
+              'violet': '#cc6699', 'orange': '#FFA500'}
 
 # Initialize the ZeroMQ server backend and connect to the instrument server.
 # The instr object will hold all the necessary information for interacting
@@ -237,14 +238,14 @@ class InstrumentInputItem():
         :param args:
         :return:
         """
-        if self.option_condition:
+        if self.option_condition:0
             new_value = self.setvar.get()
         if self.format_map_condition:
             new_value = self.setvar.get()
             for i in self.format_map.keys():
                 if self.format_map[i] == new_value:
                     new_value = i
-        else:
+        if (not self.option_condition) and (not self.format_map_condition):
             new_value = self.set_box.get()
         # Do some type conversion, to make sure the server gets passed the
         # correct type of value. Looking over the instrument plugins,
@@ -276,8 +277,8 @@ class InstrumentInformationDisplayFrame():
     """
 
     def __init__(self, win, instrument_name, add=True):
-        #self.full_information_dict = instr[
-         #   instrument_name].get_shared_parameters()
+        # self.full_information_dict = instr[
+        #   instrument_name].get_shared_parameters()
         self.instrument_name = instrument_name
         self.add = add
         self.frame = tk.Frame(root_window)
@@ -304,26 +305,130 @@ class InstrumentInformationDisplayFrame():
         # The fake frame doesn't contain anything. Its used as padding so the
         # first and last fields don't get cut off.
         self.fake_frame = tk.Frame(root_window)
+        self.total_information_dict = instr[
+            self.instrument_name].get_shared_parameters()
         self.canvas.create_window(0, 0,
                                   window=self.fake_frame,
                                   anchor=tk.W)
-        for i, key in enumerate(self.sorted_instrument_keys):
-            self.name_and_value_frame = tk.Frame(self.canvas)
-            item = InstrumentInputItem(self.name_and_value_frame, key,
+        self.grouped_parameters = filter(lambda x:
+                                         'gui_group' in
+                                         self.total_information_dict[x],
+                                         self.sorted_instrument_keys)
+        self.misc_parameters = set(self.sorted_instrument_keys) - set(
+            self.grouped_parameters)
+        self.groups = [self.total_information_dict[x]['gui_group'] for x
+                       in self.grouped_parameters]
+        self.groups = set(sorted(self.groups, key=lambda x: x[1]))
+        self.name_and_value_frame = tk.LabelFrame(self.canvas)
+        self.name_and_value_frame.pack(fill=tk.BOTH, expand=1)
+        self.organized_dict = {}
+        # for group in self.groups:
+        #     result = []
+        #     for parameter in self.grouped_parameters:
+        #         if self.total_information_dict[parameter]['gui_group'] is
+        # group:
+        #             result.append(parameter)
+        #     self.organized_dict[group] = result
+
+        self.grouped_frames = [(group_name, tk.LabelFrame(
+            self.name_and_value_frame, text=str(group_name), background=
+            color_dict[
+                key]))
+                               for
+                               group_name, key in
+                               zip(self.groups, color_dict)]
+        self.misc_frame = tk.LabelFrame(self.name_and_value_frame, text=
+        'Miscellaneous')
+        for parameter in self.grouped_parameters:
+            for frame in self.grouped_frames:
+                if self.total_information_dict[parameter]['gui_group'] is \
+                        frame[0]:
+                    self.temp_frame = tk.Frame(frame[1])
+                    self.hide_button = tk.Button(self.temp_frame, text=
+                    'Hide Group', command=lambda:
+                    self.hide_parameter_group(frame[1], self.hide_button))
+                    item = InstrumentInputItem(self.temp_frame, parameter,
+                                               name_value_dict, instrument_name)
+                    self.fields[parameter] = item
+                    self.temp_frame.pack(fill=tk.BOTH, expand=1, anchor=
+                    tk.E)
+            # self.hide_button.grid()
+
+
+        for index, frame in enumerate(self.grouped_frames):
+            frame[1].pack(fill=tk.BOTH, expand=1)
+        for entry in self.misc_parameters:
+            self.dumb_frame = tk.Frame(self.misc_frame)
+            item = InstrumentInputItem(self.dumb_frame, entry,
                                        name_value_dict, instrument_name)
-            self.fields[key] = item
-            f = self.canvas.create_window(0, 0,
+            self.fields[entry] = item
+            self.dumb_frame.pack(fill=tk.BOTH, expand=1)
+        self.misc_frame.pack(fill=tk.BOTH, expand=1)
+        #     f = self.canvas.create_window(0, 0,
+        #                                   window=self.name_and_value_frame,
+        #                                   anchor=tk.W)
+        #
+        #     # To move things aronud on the canvas, use the coords method with
+        #     #  new coordinates.
+        #     self.canvas.coords(f, 0, 40 + i * 35)
+        # for frame, index in zip(self.grouped_frames, range(0,
+        #                                                    len(
+        # self.grouped_frames))):
+        #     thing = self.canvas.create_window(0, 0, window = frame[1],
+        #                                       anchor = tk.W)
+        #     self.canvas.coords(thing, 0, 40+index*35)
+        thing = self.canvas.create_window(0, 0,
                                           window=self.name_and_value_frame,
                                           anchor=tk.W)
+        self.canvas.coords(thing, 0, 400)
 
-            # To move things aronud on the canvas, use the coords method with
-            #  new coordinates.
-            self.canvas.coords(f, 0, 40 + i * 35)
+        # for i, key in enumerate(self.sorted_instrument_keys):
+        #     try:
+        #         self.group_selection = instr[
+        #             self.instrument_name].get_shared_parameters()[key][
+        #             'gui_group']
+        #     except KeyError:
+        #         self.group_selection = 'misc'
+        #     if self.group_selection is 'always':
+        #         self.always_group_frame = tk.Frame(self.name_and_value_frame)
+        #         self.always_label = tk.Label(self.always_group_frame, text=
+        #         'Always group')
+        #
+        #         item = InstrumentInputItem(self.always_group_frame, key,
+        #                                    name_value_dict, instrument_name)
+        #         self.always_group_frame.pack()
+        #     if self.group_selection is 'misc':
+        #         self.misc_group_frame = tk.Frame(self.name_and_value_frame)
+        #         self.misc_label = tk.Label(self.misc_group_frame, text=
+        #         "Miscellaneous parameters")
+        #         item = InstrumentInputItem(self.misc_group_frame, key,
+        #                                    name_value_dict, instrument_name)
+        #         # self.misc_label.pack()
+        #
+        #         self.misc_group_frame.pack()
+        #     else:
+        #         self.other_frame = tk.Frame(self.name_and_value_frame)
+        #         self.other_label = tk.Label(self.other_frame, text=str(
+        #             self.group_selection))
+        #         item = InstrumentInputItem(self.other_frame, key,
+        #                                    name_value_dict, instrument_name)
+        #
+        #         # self.other_label.pack()
+        #         self.other_frame.pack()
+        #
+        #     self.fields[key] = item
+        #     f = self.canvas.create_window(0, 0,
+        #                                   window=self.name_and_value_frame,
+        #                                   anchor=tk.W)
+        #
+        #     # To move things aronud on the canvas, use the coords method with
+        #     #  new coordinates.
+        #     self.canvas.coords(f, 0, 40 + i * 35)
 
         t = self.canvas.create_window(0, 0,
                                       window=self.fake_frame,
                                       anchor=tk.W)
-        self.canvas.coords(t, 0, 40 + (i + 1) * 35)
+        # self.canvas.coords(t, 0, 40 + (i + 1) * 35)
         # Note: to get the scrollbar to work, its necessary to put the
         # frame on the canvas. To do this and make the scrollbar work,
         # you need to use the create_window. You cannot just pack it.
@@ -342,6 +447,16 @@ class InstrumentInformationDisplayFrame():
 
     def mouse_scroll(self, event):
         self.canvas.yview_scroll(-1 * (event.delta / 120), "units")
+
+    def hide_parameter_group(self, frame, button_object):
+        frame.pack_forget()
+        button_object.config(text = 'Show Group', command = lambda:
+        self.show_parameter_group(frame, button_object))
+
+    def show_parameter_group(self, frame, button_object):
+        frame.pack()
+        button_object.config(text = 'Hide Group', command = lambda:
+        self.hide_parameter_group(frame, button_object))
 
 
 def produce_initial_display_dictionary():
