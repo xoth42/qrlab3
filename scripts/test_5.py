@@ -9,15 +9,15 @@ import matplotlib.pyplot as plt
 #from t1t2_plotting import smart_T1_delays
 import math as math
 
-<<<<<<< HEAD
-=======
+
 import os
 os.chdir(r'c:\qrlab')
 
->>>>>>> b7dcdcc0b8e6155bc12ad2245303b2cf64d85867
 #mpl.rcParams['figure.figsize']=[5,3.5]
 #mpl.rcParams['axes.color_cycle'] = ['b', 'g', 'r', 'c', 'm', 'k']
 alz = mclient.instruments['alazar']
+SCpump = mclient.instruments['SCpump']
+SCqubit = mclient.instruments['SCqubit']
 
 
 #fg = mclient.instruments['funcgen']
@@ -31,51 +31,46 @@ if 0:
 
 qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')
-print(qubit_info)
-ef_info = mclient.get_qubit_info('qubit1ef')
+#ef_info = mclient.get_qubit_info('qubit1ef')
 #cavity_info = mclient.get_qubit_info('cavity0')
 
 #Find read-out cavity and choose a power
-<<<<<<< HEAD
-for _ in range(0, 2):
-    from scripts.single_cavity import rocavspectroscopy
-    rofreq = 7718.13e6
-    freq_range = 3e6
-    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-35,
-                                                                     -35, 1),
-                                             np.linspace(rofreq-freq_range,
-                                                         rofreq+freq_range,
-                                                         11),
-                                             qubit_pulse=False)
+
+
+if 1: # RO Cavity spec
+    from single_cavity import rocavspectroscopy
+    rofreq = 7.71948e9
+    freq_range = .35e6
+#    SCpump.do_set_power(-6)
+#    SCpump.do_set_frequency(6.2e9)
+#    SCpump.do_set_rf_on(True)
+    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-10, 0, 1),
+                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 51), qubit_pulse=False)
     ro.measure()
+
+if 0: # calibrate TWPA
+    from single_cavity import twpa_calibration
+    twpa_powers = np.linspace(-8, -5, 4)
+    twpa_freqs = np.linspace(6.18e9, 6.25e9, 7)
+
+    tc = twpa_calibration.twpa_calibration(qubit_info, -12.5, 7.71942e9, twpa_powers, 
+                                           twpa_freqs, SCpump, qubit_pulse=False)
+    tc.measure()
+        
+
+
+   
 #Find qubit
 if 0: # Qubit spec
-=======
-if 0: # RO Cavity spec
-    from single_cavity import rocavspectroscopy
-    rofreq = 6e9
-    freq_range = 3e6
-    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(0, 0, 1),
-                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 11), qubit_pulse=False)
-    ro.measure()
-#Find qubit
-if 1: # Qubit spec
->>>>>>> b7dcdcc0b8e6155bc12ad2245303b2cf64d85867
     from scripts.single_qubit import spectroscopy
-#    from scripts.single_qubit import spectroscopy_IQ
-    qubit_freq = 4503.43e6
-    freq_range = 25e6
-    spec = spectroscopy.Spectroscopy(mclient.instruments['brick1'], qubit_info,
+#    from scripts.single_qubit import spectroscopy_IQ  
+    qubit_freq = 4435.43e6
+    freq_range = 80e6
+    spec = spectroscopy.Spectroscopy(mclient.instruments['SCqubit'], qubit_info,
                                      np.linspace(qubit_freq-freq_range,
-<<<<<<< HEAD
-                                                 qubit_freq+freq_range, 400),
-                                     [-35],
-                                     plen=20000, amp=0.05, plot_seqs=False) #1=1ns
-=======
-                                                 qubit_freq+freq_range, 11),
-                                     [-35],
-                                     plen=40000, amp=0.1, plot_seqs=False) #1=1ns
->>>>>>> b7dcdcc0b8e6155bc12ad2245303b2cf64d85867
+                                                 qubit_freq+freq_range, 1500),
+                                     [-5],
+                                     plen=40000, amp=0.001, plot_seqs=False) #1=1ns
 
 #    spec = spectroscopy_IQ.Spectroscopy_IQ(client.instruments['gen'], qubit_info,
 #                                     np.linspace(702e6, 710e6, 81), [-30],
@@ -86,22 +81,18 @@ if 1: # Qubit spec
 #the parameters are qubit_info, qubit frequency and readout power. Qubit drive power can be changed by changing AWG amp or the total pulse length. Pulse length=is plen*100ns
 
 """Qubit SSBspec"""
-if 0: # Qubit SSBspec
+if 1: # Qubit SSBspec
     from scripts.single_qubit import ssbspec
     seq = sequencer.Trigger(250)
-<<<<<<< HEAD
-    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-1e6, 1e6, 100), seq=seq, plot_seqs=False)
-=======
-    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-1e6, 1e6, 4), seq=seq, plot_seqs=False)
->>>>>>> b7dcdcc0b8e6155bc12ad2245303b2cf64d85867
+    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-120e6, 120e6, 1500), seq=seq, plot_seqs=False)
     spec.measure()
     bla
 
 """Power Rabi -- Pi pulse calibration"""
 if 0: # Calibrate pi pulse
-    for i in range(5):
+    for i in range(1):
         from scripts.single_qubit import rabi
-        tr = rabi.Rabi(qubit_info, np.linspace(0, .6, 10), plot_seqs=False, generate=True, selective=False, repeat_pulse=1,
+        tr = rabi.Rabi(qubit_info, np.linspace(-1, 1, 251), plot_seqs=False, generate=True, selective=True, repeat_pulse=1,
                        update=False)
 
 #        from scripts.single_qubit import rabi_IQ
@@ -266,11 +257,7 @@ if 0: # T1
     from scripts.single_qubit import T1measurement
 
     #postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
-<<<<<<< HEAD
-    t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 150e3, 100), double_exp=False, generate=True, plot_seqs=False)
-=======
-    t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 10e3, 10), double_exp=False, generate=True, plot_seqs=False)
->>>>>>> b7dcdcc0b8e6155bc12ad2245303b2cf64d85867
+    t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 200e3, 101), double_exp=False, generate=True, plot_seqs=False)
     t1.measure()
     bla
 
@@ -314,13 +301,8 @@ if 0: # T1_QP
 
 if 0: # T2
     from scripts.single_qubit import T2measurement
-<<<<<<< HEAD
-    for i in range(5):
-        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 10e3, 150), detune=.4e6, double_freq=False, generate=True)
-=======
     for i in range(1):
-        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 10e3, 10), detune=.4e6, double_freq=False, generate=True)
->>>>>>> b7dcdcc0b8e6155bc12ad2245303b2cf64d85867
+        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 10e3, 150), detune=.1e6, double_freq=False, generate=True) 
         t2.measure()
     bla
 
@@ -333,11 +315,7 @@ if 0: # T2_QP
 
 if 0: # T2echo
     from scripts.single_qubit import T2measurement
-<<<<<<< HEAD
     t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 40e3, 150), detune=0.1e6, echotype = T2measurement.ECHO_HAHN, plot_seqs = False, generate=True)
-=======
-    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 10e3, 10), detune=0.1e6, echotype = T2measurement.ECHO_HAHN, plot_seqs = False, generate=True)
->>>>>>> b7dcdcc0b8e6155bc12ad2245303b2cf64d85867
     t2.measure()
     bla
 

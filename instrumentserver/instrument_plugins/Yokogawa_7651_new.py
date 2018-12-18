@@ -68,9 +68,9 @@ class VISACommand(object):
         return result_list[1:]
 
 
-class Yokogawa_7651(Instrument):
+class Yokogawa_7651_new(Instrument):
     def __init__(self, name, address, *args, **kwargs):
-        super(Yokogawa_7651, self).__init__(name, address=address,
+        super(Yokogawa_7651_new, self).__init__(name, address=address,
                                             term_chars='\r\n', **kwargs)
         # Determines whether the unit should be milliamps or amps.
         # Open the device
@@ -198,5 +198,5 @@ class Yokogawa_7651(Instrument):
 
 
 if __name__ == '__main__':
-    test = Yokogawa_7651('test', address='GPIB0::3::INSTR')
+    test = Yokogawa_7651_new('test', address='GPIB0::3::INSTR')
     test.do_get_polarity()

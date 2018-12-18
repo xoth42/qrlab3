@@ -21,13 +21,17 @@ VOLTAGE_SCALE = 2.8
 class Keysight_DIG(Instrument):
 
 
-    def __init__(self, name, chassis=0, slot=3, DIG_PRODUCT = "M3102A", trigger_period = 200, **kwargs):
+<<<<<<< HEAD
+    def __init__(self, name, chassis=0, slot=3, DIG_PRODUCT = "M3102A", trigger_period = 200, trigger_only = False, **kwargs):
+=======
+    def __init__(self, name, chassis=0, slot=10, DIG_PRODUCT = "M3102A", trigger_period = 200, **kwargs):
+>>>>>>> 507004ebcb600713fc2b96c15f5e52b1a4514b6a
         super(Keysight_DIG, self).__init__(name)
         self._timeout = DEFAULT_TIMEOUT
         self._main_channel=1
         self._ref_channel=2
         self._nsamples=1000
-        self._naverages=1000
+        self._naverages=2000
         self._main_delay=0
         self._ref_delay=0
         self._if_period=10
@@ -43,7 +47,17 @@ class Keysight_DIG(Instrument):
         self._hvi = None
         self.load_hvi()
         
+        if trigger_only:
+            self.add_parameter('if_period', type=types.IntType,
+                           flags=Instrument.FLAG_GETSET,
+                           minval=2, maxval=1000, value=20,
+                           help='Intermediate Frequency period')
         
+            self.add_parameter('trigger_period', type=types.IntType,
+                           flags=Instrument.FLAG_GETSET,
+                           minval=50, maxval=1600, value=self._trigger_period,
+                           help='Period for the HVI trigger for measurments')
+            return
 
 
         self.dig = key.SD_AIN()
@@ -213,9 +227,10 @@ class Keysight_DIG(Instrument):
         return self.set(keys)
     
     def load_hvi(self):
-        HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\3slot' + str(self._trigger_period) + 'us.HVI'
-#        HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\3slot100ms.HVI'
-        self._hvi = CompiledHVI(HVI_location)
+#        HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\3slot' + str(self._trigger_period) + 'us.HVI'
+        one_slot_test = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\1slot' + str(self._trigger_period) + 'us.HVI'
+#        self._hvi = CompiledHVI(HVI_location)
+        self._hvi = CompiledHVI(one_slot_test)
         self._hvi.stop()
         
     def start_hvi(self):
@@ -372,6 +387,8 @@ class Keysight_DIG(Instrument):
     def setup_avg_shot(self, ntransfers = None):
         if ntransfers is None:
             ntransfers = 1
+            
+        self.release_buf()
         
         errors = []
             
@@ -439,6 +456,8 @@ class Keysight_DIG(Instrument):
             print('not able to choose ntransfers or choice is incompatible with naverages')
             raise ValueError
             
+        self.release_buf()
+            
         errors = []    
         
         self._npoints = num_points
@@ -498,16 +517,18 @@ class Keysight_DIG(Instrument):
             
         return avgs/self._naverages
     
-    def test_dig(self, nsamples, npoints, naverages, ntransfers, captureDelay = 0, digScale = 2):
+    def test_dig(self, nsamples, npoints, naverages, ntransfers, captureDelay = 0):
         digChannels = [1, 2] 
         errors = []
         errors += [self.dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)]
+    
+        self.release_buf()
     
         for i in range(len(digChannels)):   
            errors += [self.dig.DAQtriggerExternalConfig(digChannels[i], key.SD_TriggerExternalSources.TRIGGER_EXTERN, 
                                                 key.SD_TriggerBehaviors.TRIGGER_RISE, key.SD_SyncModes.SYNC_NONE)]
            errors += [self.dig.DAQflush(digChannels[i])]
-           errors += [self.dig.channelInputConfig(digChannels[i], digScale, key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)]
+           errors += [self.dig.channelInputConfig(digChannels[i], VOLTAGE_SCALE, key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)]
            errors += [self.dig.DAQconfig(digChannels[i], nsamples, npoints * naverages, captureDelay, key.SD_TriggerModes.EXTTRIG)]
            errors += [self.dig.DAQbufferPoolConfig(digChannels[i], nsamples * npoints * naverages / ntransfers, 100)]
         if any(error < 0 for error in errors):

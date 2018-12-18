@@ -31,7 +31,7 @@ def analysis(meas, data=None, fig=None):
 #        result2 = lmfit.minimize(exp_decay, result.params, args=(xs,ys))
         lmfit.report_fit(result.params)
 
-        fig.axes[0].plot(xs/1e3, -exp_decay(result.params, xs, 0), label='Fit, tau = %.03f us'%(result.params['tau'].value/1000.))
+        fig.axes[0].plot(xs/1e3, -exp_decay(result.params, xs, 0), label='Fit, tau = %.03f us +/- %.03f us '%(result.params['tau'].value/1000.0, result.params['tau'].stderr/1000.0))
         fig.axes[0].legend(loc=0)
         fig.axes[0].set_ylabel('Intensity [AU]')
         fig.axes[0].set_xlabel('Time [us]')
@@ -58,6 +58,7 @@ def analysis(meas, data=None, fig=None):
         fig.axes[1].plot(xs, double_exp_decay(result.params, xs, ys), marker='s')
 
     fig.canvas.draw()
+    meas.fit_params = result.params
     return result.params
 
 class T1Measurement(Measurement1D):
