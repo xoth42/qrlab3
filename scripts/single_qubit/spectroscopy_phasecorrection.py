@@ -9,9 +9,9 @@ import objectsharer as objsh
 SPEC   = 0
 POWER  = 1
 
-class Spectroscopy(Measurement1D):
+class Spectroscopy_phasecorrection(Measurement1D):
     '''
-    Perform qubit spectroscopy.
+    Perform qubit spectroscopy and account for the phase drift over time. 
 
     The frequency of <qubit_rfsource> will be swept over <q_freqs> and
     different read-out powers <ro_powers> will be set on readout_info.rfsource1.
@@ -47,7 +47,7 @@ class Spectroscopy(Measurement1D):
                 plot_type = SPEC
         self.plot_type = plot_type
 
-        super(Spectroscopy, self).__init__(1, infos=qubit_info, **kwargs)
+        super(Spectroscopy_phasecorrection, self).__init__(1, infos=qubit_info, **kwargs)
         self.data.create_dataset('powers', data=ro_powers)
         self.data.create_dataset('freqs', data=q_freqs)
         self.ampdata = self.data.create_dataset('amplitudes', shape=[len(ro_powers),len(q_freqs)])
@@ -67,14 +67,13 @@ class Spectroscopy(Measurement1D):
 #        s = self.get_sequencer(s)
 #        seqs = s.render()
 #        return seqs
-        
+    
     def generate(self):
         s = Sequence(self.seq)
-#        chs = self.qubit_info.sideband_channels       
-#        s.append(Constant(self.plen, self.amp, chan=chs[0]))
+#        chs = self.qubit_info.sideband_channels
+#        s.append(Constant(self.plen, self.amp. chan=chs[0]))
         s.append(Constant(self.plen, 1, chan='3m1'))
-        s.append(Delay(100))
-        
+        s.append(Delay(150))
         if self.postseq:
             s.append(self.postseq)
 
@@ -84,7 +83,8 @@ class Spectroscopy(Measurement1D):
         ]))
         s = self.get_sequencer(s)
         seqs = s.render()
-        return seqs    
+        return seqs
+    
     
     def measure(self):
         alz = self.instruments['alazar']
@@ -106,7 +106,9 @@ class Spectroscopy(Measurement1D):
             time.sleep(self.pow_delay)
 
             amps = []
-            phases = []
+            phases1 = []
+            phases2 =[]
+            phases=[]
             for freq in self.q_freqs:
                 self.qubit_rfsource.set_frequency(freq)
                 time.sleep(self.freq_delay)
@@ -123,11 +125,43 @@ class Spectroscopy(Measurement1D):
 
                 IQ = np.average(ret.get())
                 amps.append(np.abs(IQ))
-                phases.append(np.angle(IQ, deg=True))
+                phases1.append(np.angle(IQ, deg=True))
                 print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
+                
+#                self.qubit_rfsource.do_set_rf_on(0)
+                self.qubit_rfsource.set_rf_on(0)
 
+               
+                time.sleep(1)
+
+                alz.setup_avg_shot(alz.get_naverages())
+                ret = alz.take_avg_shot(async=True)
+                try:
+                    while not ret.is_valid():
+                        objsh.helper.backend.main_loop(100)
+                except Exception, e:
+                    alz.set_interrupt(True)
+                    print 'Error: %s' % (str(e), )
+                    return
+
+                IQ = np.average(ret.get())
+
+                phases2.append(np.angle(IQ, deg=True))
+                print 'brick off F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
+                                
+#                self.qubit_rfsource.do_set_rf_on(1)
+                self.qubit_rfsource.set_rf_on(1)
+                            
+
+                
+            m=len(amps)
+            for i in range(m):
+
+                phases.append(phases1[i] - phases2[i])
+                
             self.ampdata[ipower,:] = amps
             self.phasedata[ipower,:] = phases
+                
 
         self.analyze()
 

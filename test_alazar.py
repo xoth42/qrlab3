@@ -14,21 +14,21 @@ def moving_average(a, n=20) :
 
 import mclient
 alz = mclient.instruments['alazar']
-#mclient.instruments.reload('alazar')
-#alz = mclient.instruments['alazar']
-#alz.set_ch1_range('100mV')
-#alz.set_ch2_range('100mV')
-#alz.set_nsamples(4800)
-#alz.set_naverages(2000)
-#alz.set_ch1_coupling('AC')
-#alz.set_ch2_coupling('AC')
-#alz.set_clock_source('EXT10M')
-#alz.set_sample_rate('1GEXT10')
-#alz.set_engJ_trig_src('EXT')
-#alz.set_engJ_trig_lvl(128+5)
-#alz.set_real_signals(False)
-#alz.setup_channels()
-#alz.setup_trigger()
+mclient.instruments.reload('alazar')
+alz = mclient.instruments['alazar']
+alz.set_ch1_range('100mV')
+alz.set_ch2_range('40mV')
+alz.set_nsamples(4800)
+alz.set_naverages(2000)
+alz.set_ch1_coupling('AC')
+alz.set_ch2_coupling('AC')
+alz.set_clock_source('EXT10M')
+alz.set_sample_rate('1GEXT10')
+alz.set_engJ_trig_src('EXT')
+alz.set_engJ_trig_lvl(128+5)
+alz.set_real_signals(False)
+alz.setup_channels()
+alz.setup_trigger()
 
 
 if 1:

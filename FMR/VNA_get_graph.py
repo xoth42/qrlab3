@@ -23,9 +23,9 @@ VNA = mclient.instruments['VNA']
 
 import matplotlib.pyplot as pl 
 
-filename = '13_cp_from_2'
+filename = '4-14_S12'
 #    filename = 'S12_fridge_220mode_-35dB'
-newpath = r'C:\qrlab\FMR\RT Measurements\transitions\%s'%(filename)
+newpath = r'C:\Users\Wang_Lab\Documents\\yingying\\11282018cooldown\\before_cooldown\\%s.txt'%(filename)
 
 if not os.path.exists(os.path.dirname(newpath)):
 

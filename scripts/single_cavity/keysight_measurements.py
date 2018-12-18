@@ -25,25 +25,24 @@ os.chdir(r'C:/qrlab/scripts')
 
 if 0:
     dig = mclient.instruments['dig']
-    data = dig.test_dig(1000, 1, 1, 1)
-    print(np.shape(data))
-    plt.clf()
+    data = dig.test_dig(10000, 1, 1, 1)
+    print(np.min(data), np.max(data))
+    plt.figure()
     plt.plot(data[0][0][:])
     plt.plot(data[1][0][:])
     plt.show()
-
-
 
 if 0:
     from single_cavity import rocavspectroscopy_keysight
 #    rofreq = 8553.1e6
 
-    rofreq = 7719.07e6
-    freq_range = 1e6
-    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(-4, -40, 1),
-                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 50),
+    rofreq = 7597.3e6
+    freq_range = 40e6
+    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(0, 0, 1),
+                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 11),
                                              qubit_pulse=False)
     ro.measure()
+    bla
     
 if 0:
     from single_cavity import rocavspectroscopy_keysight_IQmod
@@ -52,45 +51,49 @@ if 0:
     freq_range = 15e6
     ro = rocavspectroscopy_keysight_IQmod.ROCavSpectroscopy(qubit_info, RO_info, np.linspace(-10, -20, 3),
                                              np.linspace(rofreq-freq_range, rofreq+freq_range, 55),
-                                             plen=20000, amp=0.0001, qubit_pulse=False)
+                                               plen=20000, amp=0.0001, qubit_pulse=False)
     ro.measure()
+    bla
     
 
 if 0:
     from single_qubit import spectroscopy_keysight
 #    from scripts.single_qubit import spectroscopy_IQ
-#    for i in range(5560, 5560, 0):
-    qubit_freq = 4534.13e6
-    freq_range = 1.5e6
-    spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['geBrick'], qubit_info,
+#    for i in range(5560, 5560, 0)
+    
+    qubit_freq = 400.3e6
+    freq_range = 100e6
+    spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['sc2'], qubit_info,
                                      np.linspace(qubit_freq-freq_range,
-                                                 qubit_freq+freq_range, 251),
-                                     [-30],
-                                     plen=5000, amp=0.006, plot_seqs=False) 
+                                                 qubit_freq+freq_range, 201),
+                                     [4],
+                                     plen= 5000, amp=0.1, plot_seqs=False) 
 
     spec.measure()
 
+
     
     
     
-if 0:
+if 1:
     from scripts.single_qubit import ssbspec
     seq = sequencer.Trigger(250)
 
-    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-1e6, 1e6, 50), seq=seq, plot_seqs=False)
+    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-5e6, 5e6, 100), seq=seq, plot_seqs=False, proj_func='phase')
     spec.measure_keysight()
-    bla
+
     
     
 if 0: # Calibrate pi pulse
     from scripts.single_qubit import rabi
-    tr = rabi.Rabi(qubit_info, 
+    seq = sequencer.Trigger(700)
+    tr = rabi.Rabi(ef_info, 
 #                   np.linspace(-.06, .06, 100), selective=True,
-                   np.linspace(-.3, .3, 150), selective=False,
-                   plot_seqs=False, generate=True, repeat_pulse=1, update=False)
+                   np.linspace(-0.8, 0.8, 81), selective=False, seq=seq,
+                   plot_seqs=False, generate=True, repeat_pulse=1, update=False, proj_func='phase')
     tr.measure_keysight()
     
-    bla
+
     
     
 if 0: # T1
@@ -104,7 +107,7 @@ if 0: # T1
 
 
 
-if 1:
+if 0:
     from scripts.single_qubit import ssbspec
     from scripts.single_qubit import rabi
     from scripts.single_qubit import T1measurement
