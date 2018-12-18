@@ -72,7 +72,7 @@ class CavSpectroscopy(Measurement1D):
     def generate(self, amp):
         s = Sequence()
         s.append(Trigger(250))
-        s.append(self.cav_info.rotate(amp, 0))
+        s.append(self.cav_info.rotate_selective(amp, 0))
 
         if self.Qswitchseq:
             s.append(self.Qswitchseq)
@@ -105,6 +105,7 @@ class CavSpectroscopy(Measurement1D):
             for freq in self.cav_freqs:
 #                self.cav_source.set_rf1_freq(freq) #JEFF Wrong syntax
                 self.cav_source.set_frequency(freq)
+#                self.cav_source.set_rf_on(True)
                 time.sleep(0.2)
 
                 dig.setup_avg_shot()
@@ -112,10 +113,24 @@ class CavSpectroscopy(Measurement1D):
                 dig.start_hvi()
                 ret = dig.take_avg_shot(async=True)
                 dig.release_buf()
-                
+
+                '''
+                IQ1 = np.average(ret.get())
+                self.cav_source.set_rf_on(False)
+                time.sleep(0.2)
+                dig.setup_avg_shot()
+                dig.arm()
+                dig.start_hvi()
+                ret = dig.take_avg_shot(async=True)
+                dig.release_buf()              
+                IQ2 = np.average(ret.get())
+                IQ = IQ1-IQ2
+                amps.append(np.abs(IQ1)-np.abs(IQ2))
+                '''
                 
                 IQ = np.average(ret.get())
                 amps.append(np.abs(IQ))
+                
                 phases.append(np.angle(IQ, deg=True))
                 print 'F = %.03f GHz --> amp = %.1f, angle = %.01f' % (freq / 1e9, np.abs(IQ), np.angle(IQ, deg=True))
 

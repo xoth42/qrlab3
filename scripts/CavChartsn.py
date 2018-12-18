@@ -23,8 +23,8 @@ dig = mclient.instruments['dig']
 qubit_info = mclient.get_qubit_info('qubit1ge')
 ef_info = mclient.get_qubit_info('qubit1ef')
 #cavity_infoR = mclient.get_qubit_info('cavity1R')
-#cavity_infoA = mclient.get_qubit_info('cavityAlice')
-cavity_infoB = mclient.get_qubit_info('cavityBob')
+cavity_infoA = mclient.get_qubit_info('cavityAlice')
+#cavity_infoB = mclient.get_qubit_info('cavityBob')
 #Qswitch_info1A = mclient.get_qubit_info('Qswitch1A')
 #Qswitch_info1B = mclient.get_qubit_info('Qswitch1B')
 
@@ -33,8 +33,8 @@ cavity_infoB = mclient.get_qubit_info('cavityBob')
 #cavity_info2A = mclient.get_qubit_info('cavity2A')
 #cavity_info2B = mclient.get_qubit_info('cavity2B')
 
-#cA = cavity_infoA.rotate
-cB = cavity_infoB.rotate
+cA = cavity_infoA.rotate
+#cB = cavity_infoB.rotate
 ge = qubit_info.rotate
 ges= qubit_info.rotate_selective
 ef = ef_info.rotate
@@ -54,7 +54,8 @@ Qswitchseq = sequencer.Join([sequencer.Repeat(sequencer.Delay(100), 100),
 if 0: # Cavity disp calibration
     from single_cavity import cavdisp
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
-    disp = cavdisp.CavDisp(qubit_info, cavity_infoB, 2, 71, 0, seq=None,
+    seq = sequencer.Trigger(250)
+    disp = cavdisp.CavDisp(qubit_info, cavity_infoA, 3, 23, 0, seq=None,
                            delay=0, bgcor=False, update=False, generate=True,
 #                           Qswitch_infoA=Qswitch_infoB, Qswitch_infoB=Qswitch_infoB,
 #                           extra_info=[Qswitch_infoA, Qswitch_infoB,],
@@ -62,17 +63,17 @@ if 0: # Cavity disp calibration
     disp.measure_keysight()
     bla
 
-if 0: # Cavity T1:
+if 1: # Cavity T1:
     from single_cavity import cavT1
-    for i in range(1):
-        t1 = cavT1.CavT1(qubit_info, cavity_infoA, 1, np.linspace(0, 1.8e6, 101), proj_num=0, seq=None,
-                         postseq=None, bgcor=False, extra_info=[ef_info,])
-        t1.measure_keysight()
+    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
+    t1 = cavT1.CavT1(qubit_info, cavity_infoA, 1, np.linspace(0, 0.1e6, 21), proj_num=0, seq=seq,
+                     postseq=None, bgcor=False, extra_info=[ef_info,])
+    t1.measure_keysight()
 
 if 0:# Cavity T2
     from single_cavity import cavT2
     detune = 1e3
-    ct2b = cavT2.CavT2(qubit_info, cavity_infoB, .5, np.linspace(0, .7e6, 201), detune=detune, seq=None,
+    ct2b = cavT2.CavT2(qubit_info, cavity_infoB, .5, np.linspace(0, .7e6, 41), detune=detune, seq=None,
                        postseq=None, bgcor=False, extra_info=[ef_info,])
     ct2b.measure_keysight()
 
@@ -86,10 +87,10 @@ if 0:# Cavity T2
 
 if 0: # Cavity spec
     from single_cavity import cavspectroscopy_keysight
-    cav_freq = 5419.63e6
-    freq_range = 0.1e6
-    cspec = cavspectroscopy_keysight.CavSpectroscopy(mclient.instruments['bobFG'], qubit_info, cavity_infoB, [3.14], 
-                                            np.linspace(cav_freq-freq_range, cav_freq+freq_range, 61))
+    cav_freq = 4089.50e6
+    freq_range = 1e6
+    cspec = cavspectroscopy_keysight.CavSpectroscopy(mclient.instruments['Alicebrick'], qubit_info, cavity_infoA, [np.pi], 
+                                            np.linspace(cav_freq-freq_range, cav_freq+freq_range, 41))
     #This amplitude is NOT capped at 1 like on the qubit spec
     cspec.measure()
     bla
@@ -98,7 +99,7 @@ if 0: # Cavity spec
 
 if 0: #SSB cavspec
     from single_cavity import ssbcavspec
-    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoB, np.linspace(-0.5e6, 0.5e6, 61),
+    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoA, np.linspace(-2e6, 2e6, 71),
 #                                  postseq=efpi, extra_info=[ef_info,]
                                   )
     cspec.measure_keysight()
@@ -106,27 +107,63 @@ if 0: #SSB cavspec
 
 if 0: # Measure cavity photon population
     from single_qubit import rabi
-    tr = rabi.Rabi(qubit_info, np.linspace(-0.005, 0.005, 81), plot_seqs=False, update=False, seq=None, selective=1, singleshotbin=True)
-    period = tr.fit_params['period'].value
-    alz.set_naverages(4000)
-    tr = rabi.Rabi(qubit_info, np.linspace(-0.005, 0.005, 81), plot_seqs=False, update=False, seq=None, selective=1, singleshotbin=True, fix_period=period)
-    tr.measure()
+    tr = rabi.Rabi(qubit_info, np.linspace(-0.9, 0.9, 29), plot_seqs=False, update=False, seq=None, selective=1, singleshotbin=True)
+    tr.measure_keysight()
+#    period = tr.fit_params['period'].value
+##    alz.set_naverages(4000)
+#    tr = rabi.Rabi(qubit_info, np.linspace(-0.9, 0.9, 29), plot_seqs=False, update=False, seq=None, selective=1, singleshotbin=True, fix_period=period)
+#    tr.measure_keysight()
+    
+
 
 if 0: #Sideband modulated number splitting:
     from single_qubit import ssbspec
-    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate(1.5, 0)])
-    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-1.5e6, 1.5e6, 150),
-                           extra_info= cavity_infoB,
+    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])
+    spec = ssbspec.SSBSpec(qubit_info, #np.linspace(-30e6, 10e6, 21),
+                           np.concatenate((np.linspace(-30.5e6, -26.5e6, 5),np.linspace(-13e6, -9e6, 8), np.linspace(-2.5e6, 1.5e6, 8))),
+                           extra_info= cavity_infoA,
                            seq = seq,  plot_seqs=False)
-    spec.measure()
+    spec.measure_keysight()
+    bla
+
+if 0: #Multiple times Sideband modulated number splitting:
+    from single_qubit import ssbspec
+#    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(0, 0)])
+    freq_array = np.concatenate((np.linspace(-31e6, -26e6, 30),np.linspace(-13e6, -9e6, 24), np.linspace(-2.5e6, 1.5e6, 24)))
+#    freq_array = np.linspace(-1.7e6, 0.3e6, 51)
+    spec = ssbspec.SSBSpec(qubit_info, freq_array,
+                           extra_info= cavity_infoA,
+                           seq = None,  plot_seqs=False)
+    spec.measure_keysight()
+    data_sum = spec.get_ys()
+    for i in range (9):
+#        seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(0, 0)])
+        spec = ssbspec.SSBSpec(qubit_info, freq_array,
+                               extra_info= cavity_infoA,
+                               seq = None,  plot_seqs=False)
+        spec.measure_keysight()
+        data_sum = data_sum + spec.get_ys()
+        data_avg = data_sum / (i+2)
+    plt.figure()
+    plt.plot(freq_array, data_avg)
+    bla
+ 
+if 0: #Alice spec with qubit pulse
+    from single_qubit import ssbspec
+    seq = sequencer.Join([sequencer.Trigger(250), qubit_info.rotate(np.pi, 0)])
+    postseq = qubit_info.rotate(np.pi, 0)
+    spec = ssbspec.SSBSpec(cavity_infoA, np.linspace(-15e6, 2e6, 51),
+                           extra_info= qubit_info,
+                           seq = seq,  postseq = postseq, plot_seqs=False)
+    spec.measure_keysight()
     bla
 
 if 0: #EF Sideband modulated number splitting:
     from single_qubit import ssbspec
-    seq = sequencer.Join([sequencer.Trigger(250), qubit_info.rotate(np.pi,0), cavity_infoA.rotate(1.2, 0)])
+    seq = sequencer.Join([sequencer.Trigger(250), qubit_info.rotate(np.pi,0), cavity_infoB.rotate(1.2, 0)])
     postseq = qubit_info.rotate(np.pi,0)
 #    postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
-    spec = ssbspec.SSBSpec(ef_info, np.linspace(-5e6, 1e6, 121),
+    spec = ssbspec.SSBSpec(ef_info, np.linspace(-14e6, 14e6, 121),
                            extra_info= [qubit_info, cavity_infoA],
                            seq =seq,  postseq = postseq, plot_seqs=False)
     spec.measure()
@@ -159,14 +196,14 @@ if 0: # test Q function
 #    Qfun = Qfunction.QFunction(qubit_info, cavity_infoB, amax=2.5, N=21, amaxx=None, Nx=None, amaxy=None, Ny=None,
 #             seq=seq, delay=0, saveas=None, bgcor=False, extra_info=ef_info)
 #    Qfun.measure()
-    for dt in [0, 200, 400, 600]:
+    for dt in [0,100,200]:
 #        seq = sequencer.Join([sequencer.Trigger(250), cB(1.0, np.pi/2)])
 #        seq.append(sequencer.Delay(dt))
-        seq = sequencer.Join([sequencer.Trigger(250), cB(1.5, 0), ge(np.pi/2,0)])
+        seq = sequencer.Join([sequencer.Trigger(250), cB(1, 0), ge(np.pi/2,0)])
         seq.append(sequencer.Delay(dt))
         seq.append(ges(-np.pi/2, 0))
-        Qfun = Qfunction.QFunction(qubit_info, cavity_infoB, amax=2.5, N=15, amaxx=None, Nx=None, amaxy=None, Ny=None,
+        Qfun = Qfunction.QFunction(qubit_info, cavity_infoB, amax=2, N=6, amaxx=None, Nx=None, amaxy=None, Ny=None,
                      seq=seq, delay=0, saveas=None, bgcor=False, extra_info=ef_info)
-        Qfun.measure()
+        Qfun.measure_keysight()
     bla
 

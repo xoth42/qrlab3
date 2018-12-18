@@ -598,7 +598,6 @@ class Measurement(object):
         TODO: implement the interrupt like alazar has
         '''
         
-
         progress_hid = dig.connect('capture-progress', self._capture_progress_cb)
         dataupd_hid = self.data.connect('changed', self._data_changed_cb)
         
@@ -722,6 +721,7 @@ class Measurement(object):
         # Remove pulse data to keep memory usage reasonable
         pulseseq.sequencer.Pulse.clear_pulse_data()
  
+        print ret
         return ret
 
     def play_sequence(self, load=True):

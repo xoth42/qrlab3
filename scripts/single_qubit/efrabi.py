@@ -51,7 +51,7 @@ class EFRabi(Measurement1D):
 
     def __init__(self, ge_info, ef_info, amps, first_pi=True, second_pi=True, selective=False,
                  update=False, seq=None, extra_info=None, laser_power = None,
-                 force_period=None,
+                 force_period=None, postseq = None,
                  **kwargs):
         self.ge_info = ge_info
         self.ef_info = ef_info
@@ -63,6 +63,7 @@ class EFRabi(Measurement1D):
         self.force_period = force_period
         self.selective = selective
         self.laser_power = laser_power
+        self.postseq = postseq
         if seq is None:
             seq = Trigger(250)
         self.seq = seq
