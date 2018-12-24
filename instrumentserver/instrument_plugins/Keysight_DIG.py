@@ -21,7 +21,8 @@ VOLTAGE_SCALE = 2.8
 class Keysight_DIG(Instrument):
 
 
-    def __init__(self, name, chassis=0, slot=7, DIG_PRODUCT = "M3102A", trigger_period = 200, **kwargs):
+
+    def __init__(self, name, chassis=0, slot=3, DIG_PRODUCT = "M3102A", trigger_period = 200, trigger_only = False, **kwargs):
         super(Keysight_DIG, self).__init__(name)
         self._timeout = DEFAULT_TIMEOUT
         self._main_channel=1
@@ -32,7 +33,9 @@ class Keysight_DIG(Instrument):
         self._ref_delay=0
         self._if_period=10
         self._trigger_period=trigger_period
-
+        self._interrupt = False
+        self._capturing = False
+        
         self._name = name
         self._chassis = chassis
         self._slot = slot
@@ -175,6 +178,16 @@ class Keysight_DIG(Instrument):
     def do_set_timeout(self, timeout):
         self._timeout = timeout
         
+    def set_interrupt(self, val):
+        if val:
+            logging.info('Setting capture interrupt flag')
+        self._interrupt = val
+
+    def get_interrupt(self):
+        return self._interrupt
+    
+    
+        
 
     def get_all(self):
         '''
@@ -203,7 +216,7 @@ class Keysight_DIG(Instrument):
     def load_hvi(self):
         HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\3slot' + str(self._trigger_period) + 'us.HVI'
 #       HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\1slot' + str(self._trigger_period) + 'us.HVI'
-#        self._hvi = CompiledHVI(HVI_location)
+
         self._hvi = CompiledHVI(HVI_location)
         self._hvi.stop()
         
@@ -456,11 +469,13 @@ class Keysight_DIG(Instrument):
 #        signal = np.zeros(samples_per_transfer, dtype = np.complex64)
 #        ref = np.zeros_like(signal)
         avgs = np.zeros(self._npoints, dtype = np.complex64)
-        
+                
+        self._capturing = True 
+        self.emit('start-capture')
         for i in range(self._ntransfers):
 #            print('Acquiring %d/%d', i+1, self._ntransfers)
             logging.info('%d/%d averages performed', (i+1)*self._naverages/self._ntransfers, self._naverages)
-            self.emit('capture-progress', i)
+            self.emit('capture-progress', (i+1)*self._naverages/self._ntransfers)
             
             try:
                 signal = np.array(self.dig.DAQbufferGet(self._main_channel), dtype=np.complex64)

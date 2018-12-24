@@ -810,7 +810,6 @@ real part is applied to I and the imaginary part to Q.
 
         if singleshotbin:
             return data_sum * 1.0 / navg
-        print "data_sum finally is", data_sum
         return self.convert_signal(data_sum / navg)
 
     def setup_hist(self, N, hist_buf=None, num_demods=1):

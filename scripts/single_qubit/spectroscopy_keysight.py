@@ -63,8 +63,27 @@ class Spectroscopy_Keysight(Measurement1D):
         s.append(Combined([
             Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
             Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-        ]))   
-
+        ])) 
+        
+        
+##Ebru - I will delete this when I'm done
+#        s = Sequence(self.seq)
+#        chs = self.qubit_info.sideband_channels
+##        s.append(Constant(self.plen, self.amp, chan=chs[0]))
+##        
+#
+#            
+#        s.append(Combined([
+#            Constant(self.plen, self.amp, chan=chs[0]),
+#            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+#            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#        ])) 
+#            
+#        if self.postseq:
+#            s.append(self.postseq)
+#
+##Ebru
+    
 #        s.append(Combined([
 #            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.acq_chan)),
 #            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.readout_chan_I)),
