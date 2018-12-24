@@ -21,11 +21,8 @@ VOLTAGE_SCALE = 2.8
 class Keysight_DIG(Instrument):
 
 
-<<<<<<< HEAD
+
     def __init__(self, name, chassis=0, slot=3, DIG_PRODUCT = "M3102A", trigger_period = 200, trigger_only = False, **kwargs):
-=======
-    def __init__(self, name, chassis=0, slot=10, DIG_PRODUCT = "M3102A", trigger_period = 200, **kwargs):
->>>>>>> 507004ebcb600713fc2b96c15f5e52b1a4514b6a
         super(Keysight_DIG, self).__init__(name)
         self._timeout = DEFAULT_TIMEOUT
         self._main_channel=1
@@ -227,10 +224,10 @@ class Keysight_DIG(Instrument):
         return self.set(keys)
     
     def load_hvi(self):
-#        HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\3slot' + str(self._trigger_period) + 'us.HVI'
-        one_slot_test = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\1slot' + str(self._trigger_period) + 'us.HVI'
+        HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\3slot' + str(self._trigger_period) + 'us.HVI'
+#        HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\1slot' + str(self._trigger_period) + 'us.HVI'
 #        self._hvi = CompiledHVI(HVI_location)
-        self._hvi = CompiledHVI(one_slot_test)
+        self._hvi = CompiledHVI(HVI_location)
         self._hvi.stop()
         
     def start_hvi(self):
@@ -426,8 +423,8 @@ class Keysight_DIG(Instrument):
             print(np.shape(signal), signal)
             print(np.shape(ref), ref)
             raise ValueError
-#        self.dig.DAQbufferPoolRelease(self._main_channel)
-#        self.dig.DAQbufferPoolRelease(self._ref_channel)
+        self.dig.DAQbufferPoolRelease(self._main_channel)
+        self.dig.DAQbufferPoolRelease(self._ref_channel)
         
         self._demodA.demodulate(signal)
         IQA = self._demodA.IQ.reshape([self._naverages, self._nsamples / self._if_period])

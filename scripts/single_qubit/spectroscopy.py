@@ -70,10 +70,9 @@ class Spectroscopy(Measurement1D):
         
     def generate(self):
         s = Sequence(self.seq)
-#        chs = self.qubit_info.sideband_channels       
-#        s.append(Constant(self.plen, self.amp, chan=chs[0]))
-        s.append(Constant(self.plen, 1, chan='3m1'))
-        s.append(Delay(100))
+        chs = self.qubit_info.sideband_channels       
+        s.append(Constant(self.plen, self.amp, chan=chs[0]))
+
         
         if self.postseq:
             s.append(self.postseq)

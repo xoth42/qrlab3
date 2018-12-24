@@ -238,7 +238,7 @@ class InstrumentInputItem():
         :param args:
         :return:
         """
-        if self.option_condition:0
+        if self.option_condition: 
             new_value = self.setvar.get()
         if self.format_map_condition:
             new_value = self.setvar.get()

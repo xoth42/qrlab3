@@ -35,13 +35,13 @@ if 0: # test digitizer
     plt.legend()
     plt.show()
 
-if 0: # cav spec
+if 1: # cav spec
     from single_cavity import rocavspectroscopy_keysight
     seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate(np.pi, 0)])
     rofreq = 7.7194e9
     freq_range = 1.5e6
     ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(3, 3, 1),
-                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 51),
+                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 11),
                                              qubit_pulse=False, seq=None)
     ro.measure()
     bla
@@ -75,7 +75,7 @@ if 0:
 #    for i in range(5560, 5560, 0)
     qubit_freq = 400.3e6
     freq_range = 100e6
-    spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['sc2'], qubit_info,
+    spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['QK'], qubit_info,
                                      np.linspace(qubit_freq-freq_range,
                                                  qubit_freq+freq_range, 201),
                                      [4],
