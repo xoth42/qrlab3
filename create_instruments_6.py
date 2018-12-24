@@ -9,12 +9,11 @@ if 1:
 
 from mclient import instruments
 
-Yoko = instruments.create('Yoko','Yokogawa_7651_new',address='GPIB0::3::INSTR')
-
-
-
-<<<<<<< HEAD
-
+#Yoko = instruments.create('Yoko','Yokogawa_7651_new',address='GPIB0::3::INSTR')
+#
+#
+#
+#
 #qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 #                             deltaf=-100e6,
 #                              pi_amp=0.278859,
@@ -41,34 +40,6 @@ Yoko = instruments.create('Yoko','Yokogawa_7651_new',address='GPIB0::3::INSTR')
 #                            channels='2,3',
 #                            sideband_channels='I17,Q17',
 #                            sideband_phase=0)
-=======
-qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
-                             deltaf=-100e6,
-                              pi_amp=0.278859,
-                              pi2_amp=0,
-                              drag=0,
-                              pi_amp_quasilective=0.027025,
-                              pi_amp_selective=0.5,
-                              rotation='Gaussian',
-                              w=4000,
-                              w_quasilective=100,
-                              w_selective=1000,
-                              channels='3,4',
-                              sideband_channels='I1,Q1',
-                              sideband_phase=0)
-##
-##
-qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
-                            deltaf=-375.06e6,
-                            pi_amp=0.223425,
-                            pi_amp_selective=0.06147,
-                            rotation='Gaussian',
-                            w=40,
-                            w_selective=100,
-                            channels='2,3',
-                            sideband_channels='I17,Q17',
-                            sideband_phase=0)
->>>>>>> 4c5a5d601badfc0c2317ef3dd47af3d22598bd6c
 
 #qubitLOL = instruments.create('qubitLOL', 'Qubit_Info',
 #                            deltaf=-100e6,
@@ -142,9 +113,10 @@ qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
 #AWG1.do_set_waveform_delay(200000)
 #bla
 
-#Magnet = instruments.create('Magnet','AMI_430')
+Magnet = instruments.create('Magnet','AMI_430')
+print 'OK'
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='TCPIP0::172.30.56.25::4000::SOCKET')
-VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB1::17::INSTR')
+#VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB1::17::INSTR')
 #Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', reffreq=10e6)
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1')
@@ -162,11 +134,10 @@ VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB1::17::INSTR')
 #pump1Brick = instruments.create('pump1Brick', 'LabBrick_RFSource', serial=18239, use_extref=True)#reference
 #refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511, 
 #                            use_extref=True) #reference
-<<<<<<< HEAD
+
 #pump1Brick.set_rf_on(False)
 #pump2Brick.set_rf_on(False)
-=======
->>>>>>> 4c5a5d601badfc0c2317ef3dd47af3d22598bd6c
+
 
 
 #fg = instruments.create('funcgen', 'Agilent_33250A', serial=2391)
@@ -179,8 +150,8 @@ VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB1::17::INSTR')
 
 #aliceFG = instruments.create('aliceFG', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270811::0::INSTR')
 
-geFG = instruments.create('geFG', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270811::0::INSTR')
-refFG = instruments.create('refFG', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270760::0::INSTR')
+#geFG = instruments.create('geFG', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270811::0::INSTR')
+#refFG = instruments.create('refFG', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270760::0::INSTR')
 
 # Setup Alazar
 
@@ -189,7 +160,7 @@ refFG = instruments.create('refFG', 'Agilent_Generator', address = 'USB0::0x0957
 #alz.set_ch2_range('200mV')
 #alz.set_nsamples(4800)
 #alz.set_naverages(500)
-#alz.set_ch1_coupling('AC')
+#alz.set_ch1_coupling('AC')y
 #alz.set_ch2_coupling('AC')
 #alz.set_clock_source('EXT10M')
 ##alz.set_sample_rate('1GEXT10')
@@ -204,9 +175,9 @@ refFG = instruments.create('refFG', 'Agilent_Generator', address = 'USB0::0x0957
 #alz.setup_trigger()
 
 
-readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
-                             IQe_radius= 1 , rfsource1='RObrick', rfsource2='refFG',
-                             pulse_len=1000, readout_chan='2m1', acq_chan='1m1')
+#readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
+#                             IQe_radius= 1 , rfsource1='RObrick', rfsource2='refFG',
+#                             pulse_len=1000, readout_chan='2m1', acq_chan='1m1')
 
 
 '''

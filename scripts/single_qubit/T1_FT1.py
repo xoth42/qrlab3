@@ -1,3 +1,4 @@
+from __future__ import division
 import mclient
 reload(mclient)
 import numpy as np
@@ -33,19 +34,23 @@ For the switching flux, you need to do the steps above for static flux PLUS:
 '''
 
 
-if 0: # T1_FT1 static flux
+if 1: # T1_FT1 static flux
     from scripts.single_qubit import T1measurement, FT1measurement, T1_FT1measurement, rabi
     N = 3000 # number of full curves you want to take for each T1 and FT1
-    dig.set_naverages(2000)
+#    dig.set_naverages(2000)
     '''Create all your empty arrays to save fit parameters in'''
     t1_result = np.zeros(N)
     t1_err = np.zeros(N)
     t1_ofs = np.zeros(N)
+    t1_ofs_err = np.zeros(N)
     t1_amp = np.zeros(N)
+    t1_amp_err = np.zeros(N)
     ft1_result = np.zeros(N)
     ft1_err = np.zeros(N)
     ft1_ofs = np.zeros(N)
+    ft1_ofs_err = np.zeros(N) 
     ft1_amp = np.zeros(N)
+    ft1_amp_err = np.zeros(N)
     '''Set the delay points you would like to use. It's a good idea to tweak these manually a bit to
     minimize the errors on your fit parameters'''
     delays = np.concatenate((np.logspace(1, 3, num=3, endpoint=False), 
@@ -60,11 +65,13 @@ if 0: # T1_FT1 static flux
         print '##############'
         '''Do the T1 measurement and save the fit parameters'''
         t1 = T1measurement.T1Measurement(qubit_info, delays, double_exp=False, generate=True, plot_seqs=False)
-        t1.measure_keysight()
+        t1.measure()
         t1_result[i] = t1.fit_params['tau'].value/1000
         t1_err[i] = t1.fit_params['tau'].stderr/1000
         t1_ofs[i] = t1.fit_params['ofs'].value
+        t1_ofs_err[i] = t1.fit_params['ofs'].stderr
         t1_amp[i] = t1.fit_params['amplitude'].value
+        t1_amp_err[i] = t1.fit_params['amplitude'].stderr
         plt.close()
         
         '''Do the FT1 measurement and save the fit parameters'''
@@ -73,7 +80,9 @@ if 0: # T1_FT1 static flux
         ft1_result[i] = ft1.fit_params['tau'].value/1000
         ft1_err[i] = ft1.fit_params['tau'].stderr/1000
         ft1_ofs[i] = ft1.fit_params['ofs'].value
+        ft1_ofs_err[i] = ft1.fit_params['ofs'].stderr
         ft1_amp[i] = ft1.fit_params['amplitude'].value
+        ft1_amp_err[i] = ft1.fit_params['amplitude'].stderr
         plt.close()
 #    for i in range(16000):
 #        print '###############'
@@ -116,15 +125,15 @@ if 0: # T1_FT1 static flux
     save_filepath = 'C:/Users/wanglab/Documents/DRosenstock/t1ft1/full curve results/'
     save_string = str('start') + str(start_time) + str('end') + str(end_time)
     np.savetxt(save_filepath + str(save_string) + 'results.txt',
-               np.column_stack((t1_result, t1_err, t1_ofs, t1_amp, ft1_result, ft1_err, ft1_ofs, ft1_amp)),
+               np.column_stack((t1_result, t1_err, t1_ofs, t1_ofs_err, t1_amp, t1_amp_err, ft1_result, ft1_err, ft1_ofs, ft1_ofs_err, ft1_amp, ft1_amp_err)),
                header = 
                
-               'T1 result, T1 error, T1 offset, T1 amplitude, FT1 result, FT1 error, FT1 offset, FT1 amplitude')
+               'T1 result, T1 error, T1 offset, offset err, T1 amplitude, amp err, FT1 result, FT1 error, FT1 offset, offset err, FT1 amplitude, amp err')
     
 if 1: # T1_FT1 switching flux
     from scripts.single_qubit import T1measurement, FT1measurement, T1_FT1measurement, rabi
     N = 3000 # number of full curves you want to take for each T1 and FT1
-    dig.set_naverages(2000)
+    alz.set_naverages(2000)
     '''Create all your empty arrays to save fit parameters in'''
     t1_result = np.zeros(N)
     t1_err = np.zeros(N)
@@ -244,7 +253,7 @@ if 1: # T1_FT1 switching flux
 
 if 0: # T1 Loop
     from scripts.single_qubit import T1measurement
-    alz.set_naverages(5000)
+    dig.set_naverages(5000)
     t1_result = []
     tau_err = []
     v_g = []

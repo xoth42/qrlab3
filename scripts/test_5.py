@@ -16,8 +16,9 @@ os.chdir(r'c:\qrlab')
 #mpl.rcParams['figure.figsize']=[5,3.5]
 #mpl.rcParams['axes.color_cycle'] = ['b', 'g', 'r', 'c', 'm', 'k']
 alz = mclient.instruments['alazar']
-SCpump = mclient.instruments['SCpump']
-SCqubit = mclient.instruments['SCqubit']
+ROFG = mclient.instruments['ROFG']
+refbrick = mclient.instruments['refbrick']
+qubrick = mclient.instruments['qubrick']
 
 
 #fg = mclient.instruments['funcgen']
@@ -31,21 +32,21 @@ if 0:
 
 qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')
-#ef_info = mclient.get_qubit_info('qubit1ef')
-#cavity_info = mclient.get_qubit_info('cavity0')
+ef_info = mclient.get_qubit_info('qubit1ef')
+cavity_infoB = mclient.get_qubit_info('cavityBob')
 
 #Find read-out cavity and choose a power
 
 
-if 1: # RO Cavity spec
+if 0: # RO Cavity spec
     from single_cavity import rocavspectroscopy
-    rofreq = 7.71948e9
-    freq_range = .35e6
+    rofreq = 7719.72e6
+    freq_range = 0.7e6
 #    SCpump.do_set_power(-6)
 #    SCpump.do_set_frequency(6.2e9)
 #    SCpump.do_set_rf_on(True)
-    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-10, 0, 1),
-                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 51), qubit_pulse=False)
+    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-4, -4, 1),
+                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 31), qubit_pulse=False)
     ro.measure()
 
 if 0: # calibrate TWPA
@@ -84,7 +85,7 @@ if 0: # Qubit spec
 if 1: # Qubit SSBspec
     from scripts.single_qubit import ssbspec
     seq = sequencer.Trigger(250)
-    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-120e6, 120e6, 1500), seq=seq, plot_seqs=False)
+    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-1e6, 1e6, 51), seq=seq, plot_seqs=False)
     spec.measure()
     bla
 
@@ -92,7 +93,7 @@ if 1: # Qubit SSBspec
 if 0: # Calibrate pi pulse
     for i in range(1):
         from scripts.single_qubit import rabi
-        tr = rabi.Rabi(qubit_info, np.linspace(-1, 1, 251), plot_seqs=False, generate=True, selective=True, repeat_pulse=1,
+        tr = rabi.Rabi(qubit_info, np.linspace(-0.02, 0.02, 71), plot_seqs=False, generate=True, selective=True, repeat_pulse=1,
                        update=False)
 
 #        from scripts.single_qubit import rabi_IQ
@@ -102,15 +103,15 @@ if 0: # Calibrate pi pulse
 
 if 0: # Cavity spec
     from scripts.single_cavity import cavspectroscopy
-    cav_freq = 4108.00e6
-    cspec = cavspectroscopy.CavSpectroscopy(mclient.instruments['sc1'], qubit_info, cavity_info, [2], np.linspace(cav_freq-5e6, cav_freq+5e6, 31))
+    cav_freq = 5518.92e6
+    cspec = cavspectroscopy.CavSpectroscopy(mclient.instruments['BobFG'], qubit_info, cavity_infoB, [0.0001], np.linspace(cav_freq-5e6, cav_freq+5e6, 51))
     #This amplitude is NOT capped at 1 like on the qubit spec
     cspec.measure()
     bla
 
 if 0: # SSB cavspec - ss not defined
     from scripts.single_cavity import ssbcavspec
-    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_info, np.linspace(-2e6, 2e6, 101))
+    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoB, np.linspace(-2e6, 2e6, 101))
     cspec.measure()
     bla
 
@@ -137,13 +138,14 @@ if 0: # EF SSBspec
 
 if 0: # EF rabi -ef_info not defined
     from scripts.single_qubit import efrabi
-#    alz.set_naverages(2000)
-#    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(0.01, 0.05, 61), plot_seqs=False, selective=True, generate=True)
-#    efr.measure()
-#    period = efr.fit_params['period'].value
-
-    alz.set_naverages(5000)
-    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(0.01, 0.05, 61), first_pi=False, selective=True, force_period=period, generate=True)
+    dig = mclient.instruments['dig']
+    alz.set_naverages(4000)
+    postseq = sequencer.Delay(400)
+    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.5, 0.5, 51), plot_seqs=False, selective=False, generate=True, postseq = postseq)
+    efr.measure()
+    period = efr.fit_params['period'].value
+    alz.set_naverages(4000)
+    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.5, 0.5, 51), first_pi=False, selective=False, force_period=period, postseq= postseq, generate=True)
     efr.measure()
     bla
 
