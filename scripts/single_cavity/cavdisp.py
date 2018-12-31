@@ -45,11 +45,11 @@ def analysis(meas, data=None, fig=None):
     print 'Amplitude estimate: %.03f ' % (amp0)
 
     fPoiss = PoissonFit(meas.proj_num, xs, ys)
-#    p0 = [ofs0, amp0, scaling0] # JEFF this order seems totally wrong. I might be an idiot though...
+    p0 = [ofs0, amp0, scaling0] # JEFF this order seems totally wrong. I might be an idiot though...
     p0 = [amp0, scaling0, ofs0]
     print('p0', p0)
-    fig.axes[0].plot(xs, p0[2] + p0[0] * np.exp(-np.square(p0[1] * xs)) * np.power(np.abs(p0[1]*xs), (2*meas.proj_num)) 
-                / factorial(meas.proj_num), label='Guess')
+#    fig.axes[0].plot(xs, p0[2] + p0[0] * np.exp(-np.square(p0[1] * xs)) * np.power(np.abs(p0[1]*xs), (2*meas.proj_num)) 
+#                / factorial(meas.proj_num), label='Guess')
     p = fPoiss.fit(p0)
     print('p', p)
     fig.axes[0].plot(xs, fPoiss.func(p, xs), label='Fit, Ofs=%.03f, Amp=%.03f , Scaling=%.03f '%(p[2], p[0], p[1]))

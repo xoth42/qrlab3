@@ -122,7 +122,7 @@ awg.AWGstartMultiple(15)
 
 
 #awg.AWGtrigger(1)
-#awg.AWGtriggerMultiple(3)
+awg.AWGtriggerMultiple(3)
 
 
 #awg.AWGpause(1)

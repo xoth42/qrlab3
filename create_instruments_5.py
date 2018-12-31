@@ -8,17 +8,14 @@ if 1:
 from mclient import instruments
 
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 507004ebcb600713fc2b96c15f5e52b1a4514b6a
+
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                              deltaf=-100e6,
-                              pi_amp=.246128,
+                              pi_amp=.163475,
                               pi2_amp=0,
                               drag=-0.9,
                               pi_amp_quasilective=0.027025,
-                              pi_amp_selective=.048895,
+                              pi_amp_selective=0.03256,
                               rotation='Gaussian',
                               w=40,
                               w_quasilective=100,
@@ -39,20 +36,29 @@ qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
                             sideband_channels='I2,Q2',
                             sideband_phase=0)
 
-CavityB = instruments.create('cavityBob', 'Qubit_Info',
-                            deltaf=-100e6,
-                            pi_amp=.588,
-                            pi_amp_selective=.2,
+#CavityB = instruments.create('cavityBob', 'Qubit_Info',
+#                            deltaf=-100e6,
+#                            pi_amp=.879,
+#                            pi_amp_selective=.527,
+#                            rotation='Gaussian',
+#                            channels='5,6',
+#                            sideband_channels='I0,Q0',
+#                            sideband_phase=0,
+#                            w=1200,
+#                            w_selective=2000)
+
+CavityA = instruments.create('cavityAlice', 'Qubit_Info',
+                            deltaf=100e6,
+                            pi_amp=.879,
+                            pi_amp_selective=0.03,
                             rotation='Gaussian',
                             channels='5,6',
-                            sideband_channels='I0,Q0',
+                            sideband_channels='I3,Q3',
                             sideband_phase=0,
                             w=40,
-                            w_selective=200)
+                            w_selective=3000)
 
-<<<<<<< HEAD
-=======
-=======
+
 #qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 #                             deltaf=-100e6,
 #                              pi_amp=.193178,
@@ -79,8 +85,7 @@ CavityB = instruments.create('cavityBob', 'Qubit_Info',
 #                            channels='2,3',
 #                            sideband_channels='I17,Q17',
 #                            sideband_phase=0.138623)
->>>>>>> 4c5a5d601badfc0c2317ef3dd47af3d22598bd6c
->>>>>>> 507004ebcb600713fc2b96c15f5e52b1a4514b6a
+
 
 #ROcav_IQ = instruments.create('RO', 'Qubit_Info',
 #                             deltaf=-100e6,
@@ -101,21 +106,20 @@ CavityB = instruments.create('cavityBob', 'Qubit_Info',
 #                             use_extref=True) #reference
 # RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=19151,
 #                              use_extref=True) #readout
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 507004ebcb600713fc2b96c15f5e52b1a4514b6a
+
+#refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511,
+#                          use_extref=True)
+Alicebrick = instruments.create('Alicebrick', 'LabBrick_RFSource', serial=14510,
+
 refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511,
                           use_extref=True)
 RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=17912,
                           use_extref=True)
-<<<<<<< HEAD
-=======
 # qbrick = instruments.create('qbrick', 'LabBrick_RFSource', serial=14524,
 #                            use_extref=True) #qubits
 
 SCqubit = instruments.create('SCqubit', 'SC5511A', devid='100016B6')
-SCpump = instruments.create('SCpump', 'SC5511A', devid='10001C09')
+SCref = instruments.create('SCref', 'SC5511A', devid='10001C09')
 #SCpump.do_set_frequency(6.194e9)
 #SCpump.do_set_power(-5)
 #SCpump.do_set_rf_on(True)
@@ -125,24 +129,27 @@ SCpump = instruments.create('SCpump', 'SC5511A', devid='10001C09')
 #sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
 AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
                               AWG_PRODUCT = "M3202A",
-                              amps = [1, 1.5, 1, 1], ofs = [0, 0, 0.0085, -0.0615])
+                              amps = [1, 1.5, 1, 1], ofs = [0, 0, 0.008, -0.062])
 
 AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 10,  
                               AWG_PRODUCT = "M3202A", 
-                              amps = [1,1,1,1], ofs = [0.00214, 0.0034, 0, 0])
+                              amps = [1, 1, 1, 1], ofs = [-0.0064, -0.0646, 0, 0])
 
-dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_only = False)
-dig.set_naverages(3500)
+dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period = 2000, trigger_only = False)
+dig.set_naverages(200000)
 
-bobFG = instruments.create('bobFG', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270811::0::INSTR')
+#Yoko = instruments.create('Yoko', 'Yokogawa_GS200', address = 'GPIB0::11::INSTR')
+#Yoko.do_set_current(0.1)
+
+ROFG = instruments.create('ROFG', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270811::0::INSTR')
 #refFG = instruments.create('refFG', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270760::0::INSTR')
-=======
+#=======
 # #qbrick = instruments.create('qbrick', 'LabBrick_RFSource', serial=14510,
 # #                           use_extref=True) #qubit
->>>>>>> 507004ebcb600713fc2b96c15f5e52b1a4514b6a
 # qbrick = instruments.create('qbrick', 'LabBrick_RFSource', serial=14524,
 #                            use_extref=True) #qubits
 
+#sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
 SCqubit = instruments.create('SCqubit', 'SC5511A', devid='100016B6')
 SCpump = instruments.create('SCpump', 'SC5511A', devid='10001C09')
 #SCpump.do_set_frequency(6.194e9)
@@ -156,7 +163,6 @@ AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
                               AWG_PRODUCT = "M3202A",
                               amps = [1, 1.5, 1, 1], ofs = [0, 0, 0.0085, -0.0615])
 
-<<<<<<< HEAD
 AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 10,  
                               AWG_PRODUCT = "M3202A", 
                               amps = [1,1,1,1], ofs = [0.00078, 0.00091, 0, 0])
@@ -166,14 +172,11 @@ dig.set_naverages(4000)
 
 bobFG = instruments.create('bobFG', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270811::0::INSTR')
 #refFG = instruments.create('refFG', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270760::0::INSTR')
-=======
 # AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
 #                              AWG_PRODUCT = "M3202A",
 #                              amps = [1.5, 1, 1, 1], ofs = [0.5, -.002, -.006, 0])
 #
 # dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3)
->>>>>>> 4c5a5d601badfc0c2317ef3dd47af3d22598bd6c
->>>>>>> 507004ebcb600713fc2b96c15f5e52b1a4514b6a
 
 
 #AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis=0, slot=10,
@@ -248,10 +251,7 @@ bobFG = instruments.create('bobFG', 'Agilent_Generator', address = 'USB0::0x0957
 # fg = instruments.create('funcgen', 'BNC_FuncGen645', address='GPIB1::30')
 # Setup Alazar
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 507004ebcb600713fc2b96c15f5e52b1a4514b6a
+
 
 #alz = instruments.create('alazar', 'Alazar_Daemon')
 #alz.set_ch1_range('40mV')
@@ -270,9 +270,7 @@ bobFG = instruments.create('bobFG', 'Agilent_Generator', address = 'USB0::0x0957
 ##TODO this should be fixed. we should be able to setup_clo#alz.setup_clock()
 #alz.setup_channels()
 #alz.setup_trigger()
-<<<<<<< HEAD
-=======
-=======
+
 #
 # alz = instruments.create('alazar', 'Alazar_Daemon')
 # alz.set_ch1_range('40mV')
@@ -292,14 +290,13 @@ bobFG = instruments.create('bobFG', 'Agilent_Generator', address = 'USB0::0x0957
 # #alz.setup_clock()
 # alz.setup_channels()
 # alz.setup_trigger()
->>>>>>> 4c5a5d601badfc0c2317ef3dd47af3d22598bd6c
->>>>>>> 507004ebcb600713fc2b96c15f5e52b1a4514b6a
+
 
 
 
 
 readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
-                           IQe_radius= 1 , rfsource1='RObrick', rfsource2='refbrick',
+                           IQe_radius= 1 , rfsource1='ROFG', rfsource2='SCref',
                          pulse_len=1000, readout_chan='2m1', acq_chan='1m1')
 
 
