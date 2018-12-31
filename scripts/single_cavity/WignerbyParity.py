@@ -89,6 +89,8 @@ class WignerFunction(Measurement2D):
                         s.append(Delay(self.t_gf))
                         s.append(ef(np.pi, X_AXIS))
                     s.append(ge(np.pi/2, X_AXIS))
+                else:
+                    s.append(ge(np.pi/2, Y_AXIS))
 
                 if self.delay:
                     s.append(Delay(self.delay))
@@ -97,6 +99,7 @@ class WignerFunction(Measurement2D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
+                s.append(Delay(800))
 
             if self.QswA is not None or self.QswB is not None:
                 s.append(Repeat(Delay(1000), 20))   # wait for alazar acquisition to finish

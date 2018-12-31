@@ -110,11 +110,11 @@ CavityA = instruments.create('cavityAlice', 'Qubit_Info',
 #refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511,
 #                          use_extref=True)
 Alicebrick = instruments.create('Alicebrick', 'LabBrick_RFSource', serial=14510,
-
-refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511,
                           use_extref=True)
-RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=17912,
-                          use_extref=True)
+#refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511,
+#                          use_extref=True)
+#RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=17912,
+#                          use_extref=True)
 # qbrick = instruments.create('qbrick', 'LabBrick_RFSource', serial=14524,
 #                            use_extref=True) #qubits
 
@@ -135,7 +135,7 @@ AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 10,
                               AWG_PRODUCT = "M3202A", 
                               amps = [1, 1, 1, 1], ofs = [-0.0064, -0.0646, 0, 0])
 
-dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period = 2000, trigger_only = False)
+dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period = 200, trigger_only = False)
 dig.set_naverages(200000)
 
 #Yoko = instruments.create('Yoko', 'Yokogawa_GS200', address = 'GPIB0::11::INSTR')
@@ -150,8 +150,8 @@ ROFG = instruments.create('ROFG', 'Agilent_Generator', address = 'USB0::0x0957::
 #                            use_extref=True) #qubits
 
 #sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
-SCqubit = instruments.create('SCqubit', 'SC5511A', devid='100016B6')
-SCpump = instruments.create('SCpump', 'SC5511A', devid='10001C09')
+#SCqubit = instruments.create('SCqubit', 'SC5511A', devid='100016B6')
+#SCpump = instruments.create('SCpump', 'SC5511A', devid='10001C09')
 #SCpump.do_set_frequency(6.194e9)
 #SCpump.do_set_power(-5)
 #SCpump.do_set_rf_on(True)
@@ -159,18 +159,18 @@ SCpump = instruments.create('SCpump', 'SC5511A', devid='10001C09')
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
 
 #sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
-AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
-                              AWG_PRODUCT = "M3202A",
-                              amps = [1, 1.5, 1, 1], ofs = [0, 0, 0.0085, -0.0615])
+#AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
+#                              AWG_PRODUCT = "M3202A",
+#                              amps = [1, 1.5, 1, 1], ofs = [0, 0, 0.0085, -0.0615])
+#
+#AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 10,  
+#                              AWG_PRODUCT = "M3202A", 
+#                              amps = [1,1,1,1], ofs = [0.00078, 0.00091, 0, 0])
+#
+#dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_only = False)
+#dig.set_naverages(4000)
 
-AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 10,  
-                              AWG_PRODUCT = "M3202A", 
-                              amps = [1,1,1,1], ofs = [0.00078, 0.00091, 0, 0])
-
-dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_only = False)
-dig.set_naverages(4000)
-
-bobFG = instruments.create('bobFG', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270811::0::INSTR')
+#bobFG = instruments.create('bobFG', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270811::0::INSTR')
 #refFG = instruments.create('refFG', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270760::0::INSTR')
 # AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,
 #                              AWG_PRODUCT = "M3202A",
