@@ -7,11 +7,12 @@ from pulseseq.pulselib import *
 
 def analysis(meas, data=None, fig=None):
     zs, fig = meas.get_ys_fig(data, fig)
+    print(zs.shape)
     zs = zs.reshape(len(meas.xs), len(meas.ys))
     xs, ys = meas.get_plotxsys()
     ax = fig.axes[0]
     plt.sca(ax)
-    pc = ax.pcolormesh(xs, ys, zs)
+    pc = ax.pcolormesh(xs, ys, zs, cmap=plt.get_cmap('RdBu'))
     fig.colorbar(pc)
 
     ax.set_xlim(xs.min()), xs.max()
@@ -124,4 +125,5 @@ class WignerFunction(Measurement2D):
         return ys
 
     def analyze(self, data=None, fig=None):
+        print(data.shape)
         self.fit_params = analysis(self, data, fig)

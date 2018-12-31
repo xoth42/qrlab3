@@ -844,7 +844,10 @@ class Measurement(object):
         '''
         if fig is None:
             fig = self.get_figure()
-        return self.get_ys(), fig
+        if data is None:
+            return self.get_ys(), fig
+        else:
+            return data, fig
 
     def analyze(self, data=None, fig=None):
         '''
