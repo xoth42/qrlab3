@@ -18,10 +18,10 @@ import json
 
 ''' Path to the .hdf5 file '''
 filepath = 'C:/_Data/'
-hdf5_name = 'test_dev.hdf5'
-date = '20171204'
-time = '152513'
-experiment = 'Rabi'
+hdf5_name = 'LabTransmonOct8.hdf5'
+date = '20181231'
+time = '071234'
+experiment = 'WignerFunction'
 
 ''' Primary x axis and secondary if 2d'''
 x_key = 'amps'
@@ -30,6 +30,7 @@ x_key = 'amps'
 f = h5.File(filepath + hdf5_name, 'r')
 exp = f['/' + date + '/' + time + '_' + experiment]
 y_keys = exp.keys()
+print(y_keys)
 y_keys.remove(x_key)
 #y_keys.remove(x2_key)
 

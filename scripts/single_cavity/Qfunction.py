@@ -86,7 +86,8 @@ class QFunction(Measurement2D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
-
+                s.append(Delay(800))
+                
             if self.QswA is not None or self.QswB is not None:
                 s.append(Repeat(Delay(1000), 30))   # wait for alazar acquisition to finish
                 s.append(Combined([

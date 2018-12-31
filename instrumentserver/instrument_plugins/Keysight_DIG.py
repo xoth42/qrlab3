@@ -141,7 +141,7 @@ class Keysight_DIG(Instrument):
         
         self.add_parameter('trigger_period', type=types.IntType,
                            flags=Instrument.FLAG_GETSET,
-                           minval=50, maxval=1600, value=self._trigger_period,
+                           minval=50, maxval=10000, value=self._trigger_period,
                                help='Period for the HVI trigger for measurments')
         
         self.add_parameter('timeout', type=types.IntType, value=DEFAULT_TIMEOUT,
@@ -486,6 +486,17 @@ class Keysight_DIG(Instrument):
 #            print('Acquiring %d/%d', i+1, self._ntransfers)
             logging.info('%d/%d averages performed', (i+1)*self._naverages/self._ntransfers, self._naverages)
             self.emit('capture-progress', (i+1)*self._naverages/self._ntransfers)
+            
+            if self._interrupt:
+                logging.info('Capture interrupted')
+                raise Exception('Capture interrupted')
+                self._card.end_capture()
+                if self._capturing:
+                    self.emit('end-capture')
+                self.set_interrupt(False)
+                self._capturing = False
+                logging.info('DIG ended capture...')
+                return avgs/((i+1)*self._naverages/self._ntransfers)
             
             try:
                 signal = np.array(self.dig.DAQbufferGet(self._main_channel), dtype=np.complex64)
