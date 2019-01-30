@@ -1,14 +1,8 @@
 import matplotlib
 matplotlib.interactive(True)
 
-import os
 
 from mclient import instruments
-
-
-import mclient
-import time
-import numpy as np
 
 #Yoko = instruments.create('Yoko','Yokogawa_7651',address='GPIB1::3::INSTR')
 
@@ -19,41 +13,29 @@ import numpy as np
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB1::17::INSTR')
 #Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB1::11::INSTR')
 
-VNA = mclient.instruments['VNA']
+VNA = instruments['VNA']
 
-import matplotlib.pyplot as pl 
-
-filename = '4-14_S12'
-#    filename = 'S12_fridge_220mode_-35dB'
-newpath = r'C:\Users\Wang_Lab\Documents\\yingying\\11282018cooldown\\before_cooldown\\%s.txt'%(filename)
-
-if not os.path.exists(os.path.dirname(newpath)):
-
-    os.makedirs(os.path.dirname(newpath))
+import matplotlib.pyplot as pl
 
 data = VNA.do_get_data()
 axis = VNA.do_get_xaxis()
 
-pl.figure()
+
 if axis[len(axis) - 1] > 10 **9:
     axis = axis / float(1000000000)
     pl.xlabel('frequency(GHZ)')
-elif axis[len(axis) - 1] > 10 **6:
+else:
     axis = axis / float(1000000)
     pl.xlabel('frequency(MHZ)')
 
 
-pl.plot(axis, data[0], label = filename)
+pl.plot(axis, data[0])
 
 pl.ylabel('dB')
 #pl.show()
-pl.legend()
 
 
+import numpy as np
 axis = axis[:,None].T
 trace = np.concatenate([axis,data]).T
-
-
-
-np.savetxt(newpath , trace , delimiter=",") # saves data
-
+np.savetxt(r'trace-parall-0mT-5.txt' , trace , delimiter=",") # saves data
