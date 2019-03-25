@@ -14,18 +14,17 @@ import objectsharer as objsh
 
 
 
-class FWM_spec(Measurement1D):
+class FWM_f0g1(Measurement1D):
 
-    def __init__(self, qubit_info, cav_info, fwm_info, fwm_gen, disp, delay, 
-                 freqs, amp, fwm_channel, seq=None, postseq=None, 
+    def __init__(self, qubit_info, ef_info, fwm_gen, delay, 
+                 freqs, power, amp, fwm_channel, seq=None, postseq=None, 
                  extra_info=None, bgcor=False, **kwargs):
         self.qubit_info = qubit_info
-        self.cav_info = cav_info
-        self.fwm_info = fwm_info
+        self.ef_info = ef_info
         self.fwm_gen = fwm_gen
-        self.disp = disp
         self.delay = delay
         self.freqs = freqs
+        self.power = power
         self.amp = amp
         self.fwm_channel = fwm_channel
         self.bgcor = bgcor
@@ -38,36 +37,40 @@ class FWM_spec(Measurement1D):
         npoints = len(self.freqs)
         if bgcor:
             npoints *= 2
-        super(FWM_spec, self).__init__(npoints, infos=(qubit_info, cav_info, fwm_info), **kwargs)
+        super(FWM_f0g1, self).__init__(npoints, infos=(qubit_info, ef_info), **kwargs)
         self.ampdata = self.data.create_dataset('amplitudes', shape=[len(freqs)])
         self.phasedata = self.data.create_dataset('phases', shape=[len(freqs)])
 
         self.data.create_dataset('freqs', data=self.freqs)
         self.data.set_attrs(
-            disp=disp,
+            power=power,
             delay=delay
         )
 
     def generate(self):
         s = Sequence()
 
-        r = self.qubit_info.rotate_selective
-        c = self.cav_info.rotate
+        r = self.qubit_info.rotate
+        r_ef = self.ef_info.rotate
         
 
         s.append(self.seq)
         
-        s.append(c(np.abs(self.disp), np.angle(self.disp)))
-                
-        s.append(Combined([
-            Constant(int(self.delay-160e3), 1, chan=self.fwm_channel),
-            Constant(int(self.delay-160e3), self.amp, chan=self.fwm_info.sideband_channels[0]),
-            Constant(int(self.delay-160e3), self.amp, chan=self.fwm_info.sideband_channels[1]),
-        ]))
-
-        s.append(Delay(160e3))
+        s.append(r(np.pi, 0))
         
-        s.append(r(np.pi, X_AXIS))
+#        s.append(r_ef(np.pi, 0))
+#        s.append(Constant(int(self.delay), 1, chan=self.fwm_channel))
+#        s.append(Delay(1e3))x
+        
+        s.append(Combined([
+            Constant(int(self.delay), 1, chan=self.fwm_channel),
+            Constant(int(self.delay), self.amp, chan=self.ef_info.sideband_channels[0]),
+            Constant(int(self.delay), self.amp, chan=self.ef_info.sideband_channels[1])
+        ]))
+    
+        s.append(Delay(2e3))
+        
+        
 
         if self.postseq:
             s.append(self.postseq)
@@ -83,6 +86,7 @@ class FWM_spec(Measurement1D):
     def measure(self):
         # Generate and load sequences
         dig = self.instruments['dig']
+        self.fwm_gen.set_power(self.power)
 
         seqs = self.generate()
         self.load(seqs)

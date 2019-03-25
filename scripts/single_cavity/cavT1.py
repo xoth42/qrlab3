@@ -72,8 +72,11 @@ def analysis_standard(meas, data=None, fig=None):
         params.add('ofs', value=0, vary=False)
     else:
         params.add('ofs', value=np.max(ys))
-    params.add('amp', value=(np.max(ys)-np.min(ys)))
-    params.add('alpha0', value=meas.disp)
+    params.add('amp', value=-1.*(np.max(ys)-np.min(ys)))
+    if meas.force_a0:
+        params.add('alpha0', value=meas.disp, vary=False)
+    else:
+        params.add('alpha0', value=meas.disp)
     params.add('nth', value=0, min=0, max=0.4)
     params.add('tau', value=xs[-1]/4.0, min=0)
     result = lmfit.minimize(poisson_decay_fit_func, params, args=(xs, ys, meas.proj_num))
@@ -92,7 +95,8 @@ def analysis_standard(meas, data=None, fig=None):
 
 class CavT1(Measurement1D):
 
-    def __init__(self, qubit_info, cav_info, disp, delays, proj_num, seq=None, postseq=None, extra_info=None, bgcor=False, **kwargs):
+    def __init__(self, qubit_info, cav_info, disp, delays, proj_num, seq=None, postseq=None, extra_info=None, bgcor=False,
+                 force_a0 = False, **kwargs):
         self.qubit_info = qubit_info
         self.cav_info = cav_info
         self.disp = disp
@@ -104,6 +108,7 @@ class CavT1(Measurement1D):
         self.seq = seq
         self.postseq = postseq
         self.xs = self.delays/1e3
+        self.force_a0 = force_a0
 
         npoints = len(self.delays)
         if bgcor:
@@ -140,6 +145,8 @@ class CavT1(Measurement1D):
                         Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                         Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
+    
+                s.append(Delay(1000))
 
         s = self.get_sequencer(s)
         seqs = s.render()
@@ -152,5 +159,5 @@ class CavT1(Measurement1D):
         return ys
 
     def analyze(self, data=None, fig=None):
-        self.fit_params = analysis(self, data, fig)
+        self.fit_params = analysis_standard(self, data, fig)
         return self.fit_params['tau'].value

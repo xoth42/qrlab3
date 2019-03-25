@@ -56,6 +56,9 @@ class FT1Measurement(Measurement1D):
             ]))
             s.append(Delay(dt))
             s.append(r(np.pi/2, 0))
+            # For Al better to do ef-pi, ge-pi to get contrast
+#            s.append(r_ef(np.pi,0))
+#            s.append(r(np.pi,0))
             s.append(self.get_readout_pulse())
             s.append(Delay(1000))
 

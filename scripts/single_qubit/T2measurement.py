@@ -252,7 +252,7 @@ class T2Measurement(Measurement1D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
     
-            s.append(Delay(1000))
+            s.append(Delay(50000))
 
 #            s.append(Repeat(Delay(1000), 20))   # wait for alazar acquisition to finish
 #            s.append(Combined([

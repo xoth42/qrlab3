@@ -88,7 +88,7 @@ class EFRabi(Measurement1D):
                 r_ef = self.ef_info.rotate
             add = self.seq
             if self.first_pi:
-                add = Join([Trigger(dt=250), r(np.pi, 0), Delay(5)])
+                add = Join([add, r(np.pi, 0), Delay(5)])
             add = Join([add, r_ef(0, 0, amp = amp), Delay(5)])
             if self.second_pi:
                 add = Join([add, r(np.pi, 0), Delay(250)])
