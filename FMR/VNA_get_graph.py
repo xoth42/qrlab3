@@ -1,8 +1,10 @@
 import matplotlib
 matplotlib.interactive(True)
 
-
+import os
 from mclient import instruments
+import datetime
+date = datetime.datetime.now()
 
 #Yoko = instruments.create('Yoko','Yokogawa_7651',address='GPIB1::3::INSTR')
 
@@ -15,27 +17,37 @@ from mclient import instruments
 
 VNA = instruments['VNA']
 
-import matplotlib.pyplot as pl
+import matplotlib.pyplot as pl 
+date = datetime.datetime.now()
+filename = 'transition_1_s11%s_%s_%s'%(date.hour,date.minute,date.second)
+
+print filename
+newpath = r'C:\Users\WangLab\Documents\TConnolly\transition_calibration\terminated_reflections\\%s.txt'%(filename)
+
+if not os.path.exists(os.path.dirname(newpath)):
+
+    os.makedirs(os.path.dirname(newpath))
 
 data = VNA.do_get_data()
 axis = VNA.do_get_xaxis()
 
-
+pl.figure()
 if axis[len(axis) - 1] > 10 **9:
-    axis = axis / float(1000000000)
+    xaxis = axis / float(1000000000)
     pl.xlabel('frequency(GHZ)')
-else:
-    axis = axis / float(1000000)
+elif axis[len(axis) - 1] > 10 **6:
+    xaxis = axis / float(1000000)
     pl.xlabel('frequency(MHZ)')
 
 
-pl.plot(axis, data[0])
+pl.plot(xaxis, data[0], label = filename)
 
 pl.ylabel('dB')
-#pl.show()
-
+pl.show()
+pl.legend()
 
 import numpy as np
 axis = axis[:,None].T
 trace = np.concatenate([axis,data]).T
-np.savetxt(r'trace-parall-0mT-5.txt' , trace , delimiter=",") # saves data
+
+np.savetxt(newpath , trace , delimiter=",") # saves data

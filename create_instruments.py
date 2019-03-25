@@ -17,7 +17,7 @@ print 'VNA OK'
 #Magnet = instruments.create('Magnet','AMI_430')
 #print 'Magnet OK'
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='TCPIP0::172.30.56.25::4000::SOCKET')
-Yoko = instruments.create('Yoko','Yokogawa_7651',address='GPIB0::6::INSTR') # No. 2
+Yoko = instruments.create('Yoko','Yokogawa_7651_new',address='GPIB0::6::INSTR') # No. 2 
 print 'Yoko OK'
 #
 #brick1 = instruments.create('brick1', 'LabBrick_RFSource', serial=14510, use_extref=True) # qubit

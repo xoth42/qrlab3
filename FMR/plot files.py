@@ -50,6 +50,6 @@ for filename in filelist:
             x = new_data[0] 
             y = new_data[1] 
             phase2 = new_data[2]
-            pl.plot(x,y,label='%s dB'%(digit[-1] ))
+            pl.plot(x,y,label=filename[len(filepath):])
 pl.legend()            
 pl.show()

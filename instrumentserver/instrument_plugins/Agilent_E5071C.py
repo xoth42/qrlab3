@@ -143,6 +143,13 @@ class Agilent_E5071C(SCPI_Instrument):
     def opc(self):
         return self.ask('*OPC?')
 
+#Yingying add opc_w and opc_r        
+    def opc_w(self):
+        return self.write('*OPC?')
+        
+    def opc_r(self):
+        return self.read()
+
     def trigger(self):
         self.write('TRIG:SING')
 
@@ -191,6 +198,8 @@ class Agilent_E5071C(SCPI_Instrument):
         data = ','.join(flat)
         self.write('SENS:SEGM:DATA %s%s' % (header,data))
 
+    def set_s_param(self, sij):
+        self.write(':CALC1:PAR1:DEF %s' % (sij))
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.DEBUG)
     Instrument.test(Agilent_E5071C)
