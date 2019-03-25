@@ -1000,3 +1000,4 @@ class Measurement2D(Measurement):
                 fig.axes[0].legend(loc=0)
         else:
             logging.warning('Unable to plot 2D array without xs and ys')
+

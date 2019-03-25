@@ -4,9 +4,7 @@ import numpy as np
 import matplotlib.pyplot as pl
 
 # Read the array from file
-
-new_data = np.loadtxt(r'C:\qrlab\FMR\text_1.5mm_fridge_0.24_0.285_0.0002.txt')
-
+new_data = np.loadtxt('text_1.5mm_240-320.txt')
 print new_data.shape
 # Note that this returned a 2D array!
 # However, going back to 3D is easy if we know the 
@@ -15,97 +13,53 @@ print new_data.shape
 size = new_data.shape[1]
 new_data = new_data.reshape((4,new_data.shape[0]/4,size))
 
+Ms = 178 * 0.8
+
 X = new_data[0]
 Y = new_data[1]
 Z = new_data[2]
 phase = new_data[3]
 
-
-#Ms = 178 *0.963# * 0.8
-#X = X *304/290.4
-#
-#
-#pl.figure()
-#pl.pcolormesh(X, Y, Z)
-#pl.colorbar()
-#pl.xlabel('Magnetic Field')
-#pl.ylabel('Frequency (GHZ)')
-#
-#
-## x= X[0]
-## pl.plot(x,np.zeros_like(x)+8.484)
-## pl.plot(x,np.zeros_like(x)+8.532)
-## pl.plot(x,np.zeros_like(x)+8.562)
-## pl.plot(x,np.zeros_like(x)+8.592)
-##pl.plot(x,np.zeros_like(x)+8.624)
-##pl.show()
-##pl.legend()
-#
-#
-# 
-# 
-#
-#
-##x= X[0]
-##y= Y[:,0]
-##pl.plot(np.zeros_like(y)+0.262,y)
-##pl.plot(x,np.zeros_like(x)+8.2)
-##pl.plot(x,np.zeros_like(x)+8.532)
-##pl.plot(x,np.zeros_like(x)+8.562)
-##pl.plot(x,np.zeros_like(x)+8.592)
-##pl.plot(x,np.zeros_like(x)+8.624)
-##pl.show()
-##pl.legend()
-#x = X[0]
-#slope = 28.02
-#offset = 0
-#pl.plot(x, offset+ slope*x/1000,label = '110')
-#pl.plot(x, offset+ slope*(x+Ms*(0.4-0.333333))/1000,label = '220')
-#pl.plot(x, offset+ slope*(x+Ms*(0.428571-0.333333))/1000,label = '330')
-#pl.plot(x, offset+ slope*(x+Ms*(0.444444-0.333333))/1000,label = '440')
-#pl.plot(x, offset+ slope*(x+Ms*(0.454545-0.333333))/1000,label = '550')
-#pl.plot(x, offset+ slope*(x+Ms*(0.2-0.333333))/1000,label = '210')
-###if specific trace is needed
-
-#==============================================================================
-m = 0.24 #the magnetic field you want
-
-for i in range(size):
-    if X[0][i] < m:
-        i = i + 1
-    else:
-        break
- 
-Z = np.transpose(Z)
-Y = np.transpose(Y)
-phase = np.transpose(phase)
-z = Z[i]
-phase = phase[i]
-freq = Y[0]
-pl.figure()
-pl.plot(freq, z)
-pl.xlabel('frequency(GHZ)')
-pl.ylabel('dB')
-
+X = X *302.8/296.1
+pl.pcolormesh(X, Y, Z)
+pl.colorbar()
+pl.xlabel('Magnetic Field')
+pl.ylabel('Frequency (GHZ)')
 pl.show()
+x = X[0]
+pl.plot(x, 28.025*x/1000, color = 'r')
+pl.plot(x, 28.025*(x+Ms*(0.4-0.333333))/1000, color = 'r')
+pl.plot(x, 28.025*(x+Ms*(0.428571-0.333333))/1000, color = 'r')
+pl.plot(x, 28.025*(x+Ms*(0.444444-0.333333))/1000, color = 'r')
+pl.plot(x, 28.025*(x+Ms*(0.454545-0.333333))/1000, color = 'r')
+pl.plot(x, 28.025*(x+Ms*(0.285714-0.333333))/1000, color = 'r')
+pl.plot(x, 28.025*(x+Ms*(0.2-0.333333))/1000, color = 'r')
+#if specific trace is needed
 
- #pl.show()
-
-# pl.legend()
-pl.figure()
-#y= np.exp(z/20)
-pl.plot(freq,y)
-z = z[:,None].T
-freq = freq[:,None].T
-phase = phase[:,None].T
-trace = np.concatenate([freq, z, phase]).T
-
-#np.savetxt(r'C:\Users\Wang_Lab\Documents\yingying\FMR\%smT.txt' %(X[0][i]), trace , delimiter=",") 
 #==============================================================================
-
-
-# #np.savetxt(r'C:\Users\Wang_Lab\Documents\yingying\FMR\%smT.txt' %(X[0][i]), trace , delimiter=",") 
 # 
+# m = 290 #the magnetic field you want
+# for i in range(size):
+#     if X[0][i] < m:
+#         i = i + 1
+#     else:
+#         break
+# 
+# Z = np.transpose(Z)
+# Y = np.transpose(Y)
+# phase = np.transpose(phase)
+# z = Z[i]
+# phase = phase[i]
+# freq = Y[0]
+# pl.plot(freq, z)
+# pl.xlabel('frequency(GHZ)')
+# pl.ylabel('dB')
+# pl.show()
+# z = z[:,None].T
+# freq = freq[:,None].T
+# phase = phase[:,None].T
+# trace = np.concatenate([freq, z, phase]).T
+# np.savetxt(r'C:\qrlab\FMR\traces_1.5mm_240-320\%smT.txt' %(X[0][i]), trace , delimiter=",") 
 #==============================================================================
 
 #==============================================================================

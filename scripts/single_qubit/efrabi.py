@@ -52,7 +52,6 @@ class EFRabi(Measurement1D):
     def __init__(self, ge_info, ef_info, amps, first_pi=True, second_pi=True, selective=False,
                  update=False, seq=None, extra_info=None, laser_power = None,
                  force_period=None, postseq = None,
-
                  **kwargs):
         self.ge_info = ge_info
         self.ef_info = ef_info
@@ -68,7 +67,6 @@ class EFRabi(Measurement1D):
         if seq is None:
             seq = Trigger(250)
         self.seq = seq
-        self.postseq = postseq
 
         super(EFRabi, self).__init__(len(amps), infos=(ge_info, ef_info), **kwargs)
         self.data.create_dataset('areas', data=amps)
@@ -88,14 +86,12 @@ class EFRabi(Measurement1D):
                 r_ef = self.ef_info.rotate
             add = self.seq
             if self.first_pi:
-                add = Join([Trigger(dt=250), r(np.pi, 0), Delay(5)])
+                add = Join([add, r(np.pi, 0), Delay(5)])
             add = Join([add, r_ef(0, 0, amp = amp), Delay(5)])
             if self.second_pi:
                 add = Join([add, r(np.pi, 0), Delay(250)])
 #            marker_switch = Constant(, 1, chan=self.)
             s.append(add)
-            if self.postseq is not None:
-                s.append(self.postseq)
             s.append(Combined([
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),

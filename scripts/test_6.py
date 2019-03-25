@@ -31,20 +31,21 @@ if 0:
 
 qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')
-ef_info = mclient.get_qubit_info('qubit1ef')
+#ef_info = mclient.get_qubit_info('qubit1ef')
 #cavity_info = mclient.get_qubit_info('cavityBob')
 #cavity_info = mclient.get_qubit_info('cavityRO')
 #cavity_info = mclient.get_qubit_info('cavityAlice')
 
 #Find read-out cavity and choose a power
 
-if 0: # RO Cavity spec
+if 1: # RO Cavity spec
     from scripts.single_cavity import rocavspectroscopy
     rofreq = 6.926e9
     freq_range = 2e6
 
     ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-15, -5, 6),
                                          np.linspace(rofreq - freq_range, rofreq + freq_range, 31), qubit_pulse=False)
+
     ro.measure()
     bla
     

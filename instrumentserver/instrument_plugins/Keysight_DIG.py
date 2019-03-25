@@ -28,7 +28,7 @@ class Keysight_DIG(Instrument):
         self._main_channel=1
         self._ref_channel=2
         self._nsamples=1000
-        self._naverages=2000
+        self._naverages=1000
         self._main_delay=0
         self._ref_delay=0
         self._if_period=10
@@ -45,17 +45,7 @@ class Keysight_DIG(Instrument):
         self._hvi = None
         self.load_hvi()
         
-        if trigger_only:
-            self.add_parameter('if_period', type=types.IntType,
-                           flags=Instrument.FLAG_GETSET,
-                           minval=2, maxval=1000, value=20,
-                           help='Intermediate Frequency period')
         
-            self.add_parameter('trigger_period', type=types.IntType,
-                           flags=Instrument.FLAG_GETSET,
-                           minval=50, maxval=1600, value=self._trigger_period,
-                           help='Period for the HVI trigger for measurments')
-            return
 
 
         self.dig = key.SD_AIN()
@@ -229,6 +219,7 @@ class Keysight_DIG(Instrument):
         HVI_location = 'C:/qrlab/instrumentserver/instrument_plugins/HVI/' + str(num_slots) + 'slot' + str(self._trigger_period) + 'us.HVI'
 #        HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\1slot' + str(self._trigger_period) + 'us.HVI'
         self._hvi = CompiledHVI(HVI_location, self._awg_list) #DARIO 1/31 dynamic slot assignment
+
         self._hvi.stop()
         
     def start_hvi(self):
@@ -424,8 +415,6 @@ class Keysight_DIG(Instrument):
             print(np.shape(signal), signal)
             print(np.shape(ref), ref)
             raise ValueError
-        self.dig.DAQbufferPoolRelease(self._main_channel)
-        self.dig.DAQbufferPoolRelease(self._ref_channel)
         
         self._demodA.demodulate(signal)
         IQA = self._demodA.IQ.reshape([self._naverages, self._nsamples / self._if_period])
@@ -439,6 +428,8 @@ class Keysight_DIG(Instrument):
         avg = 0
         for i in range(self._naverages):
             avg += IQA[i,:] * refs[i]
+            
+        self.release_buf()
             
         return avg/self._naverages
         
@@ -526,7 +517,7 @@ class Keysight_DIG(Instrument):
             
         return avgs/self._naverages
     
-    def test_dig(self, nsamples, npoints, naverages, ntransfers, captureDelay = 0):
+    def test_dig(self, nsamples, npoints, naverages, ntransfers, captureDelay = 0, digScale = 2):
         digChannels = [1, 2] 
         errors = []
         errors += [self.dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)]
@@ -537,7 +528,7 @@ class Keysight_DIG(Instrument):
            errors += [self.dig.DAQtriggerExternalConfig(digChannels[i], key.SD_TriggerExternalSources.TRIGGER_EXTERN, 
                                                 key.SD_TriggerBehaviors.TRIGGER_RISE, key.SD_SyncModes.SYNC_NONE)]
            errors += [self.dig.DAQflush(digChannels[i])]
-           errors += [self.dig.channelInputConfig(digChannels[i], VOLTAGE_SCALE, key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)]
+           errors += [self.dig.channelInputConfig(digChannels[i], digScale, key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)]
            errors += [self.dig.DAQconfig(digChannels[i], nsamples, npoints * naverages, captureDelay, key.SD_TriggerModes.EXTTRIG)]
            errors += [self.dig.DAQbufferPoolConfig(digChannels[i], nsamples * npoints * naverages / ntransfers, 100)]
         if any(error < 0 for error in errors):
@@ -589,6 +580,62 @@ class Keysight_DIG(Instrument):
        
         return sums / naverages, sums_ref / naverages
     
+    
+    def test_dig_demod(self, nsamples, naverages, captureDelay = 0):
+        digChannels = [1, 2] 
+        errors = []
+        errors += [self.dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)]
+    
+        self.release_buf()
+    
+        for i in range(len(digChannels)):   
+           errors += [self.dig.DAQtriggerExternalConfig(digChannels[i], key.SD_TriggerExternalSources.TRIGGER_EXTERN, 
+                                                key.SD_TriggerBehaviors.TRIGGER_RISE, key.SD_SyncModes.SYNC_NONE)]
+           errors += [self.dig.DAQflush(digChannels[i])]
+           errors += [self.dig.channelInputConfig(digChannels[i], VOLTAGE_SCALE, key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)]
+           errors += [self.dig.DAQconfig(digChannels[i], nsamples, naverages, captureDelay, key.SD_TriggerModes.EXTTRIG)]
+           errors += [self.dig.DAQbufferPoolConfig(digChannels[i], nsamples * naverages, 100)]
+        if any(error < 0 for error in errors):
+            print('test_dig errors:', errors)
+        
+        self.dig.DAQstartMultiple(3)
+        self.start_hvi()
+    #    hvi.start()
+        
+        
+        try:
+            signal = np.array(self.dig.DAQbufferGet(digChannels[0]), dtype=np.complex64)
+            ref = np.array(self.dig.DAQbufferGet(digChannels[1]), dtype=np.complex64)
+        except ValueError, e:
+            print(str(e))
+            print('digitizer is likely not getting triggered')
+            raise ValueError
+            
+        if(not len(signal) == naverages * nsamples):
+            print('Buffer gave some wack shit, or maybe no shit at all:')
+            print(np.shape(signal), signal)
+            print(np.shape(ref), ref)
+            raise ValueError
+      
+        self.set_demod(naverages * nsamples)
+        self._demodA.demodulate(signal)
+        self._demodB.demodulate(ref)
+        
+        IQA = self._demodA.IQ.reshape([naverages, nsamples / self._if_period])
+        IQB = self._demodB.IQ.reshape([naverages, nsamples / self._if_period])
+        refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
+    
+        avgs = np.zeros_like(IQA[0,:])
+        for i in range(naverages):
+            avgs += IQA[i,:]  * refs[i]
+            
+        self.stop_hvi()
+        
+        for i in range(len(digChannels)):
+            self.dig.DAQbufferPoolRelease(digChannels[i])
+       
+        return avgs / naverages
+    
     def setup_demod_shots(self, N):
         self.setup_avg_shots(N)
 
@@ -605,6 +652,8 @@ class Keysight_DIG(Instrument):
             avg_buf[:] = IQ_sum / float(n)
             avg_buf.set_attrs(averages=n)
         except Exception, e:
+            print(IQ_sum.shape, n, avg_buf.shape)
+            print(avg_buf[:].shape)
             msg = 'Unable to store averages: %s' % str(e)
             logging.warning(msg)
             raise Exception(msg)

@@ -259,7 +259,7 @@ class T2Measurement(Measurement1D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
     
-            s.append(Delay(1000))
+            s.append(Delay(50000))
 
 #            s.append(Repeat(Delay(1000), 20))   # wait for alazar acquisition to finish
 #            s.append(Combined([
@@ -270,7 +270,8 @@ class T2Measurement(Measurement1D):
 #                Repeat(Constant(5000, 1, chan='1m1'), 60),     # Readout pump tone switch
 #                Repeat(Constant(5000, 0.0001, chan=5), 60),         # Qubit/Readout master switch
 #            ]))
-
+#Ebru: adding the 1000 delay
+            s.append(Delay(5000))
         s = self.get_sequencer(s)
         seqs = s.render()
 #        s.plot_seqs(seqs)

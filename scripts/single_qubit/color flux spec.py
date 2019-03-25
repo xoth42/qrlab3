@@ -5,63 +5,76 @@ Created on Wed Oct 31 13:37:44 2018
 @author: Wang_Lab
 """
 
+
+import time
+import datetime
+#
+
 import mclient
 reload(mclient)
 import numpy as np
-import matplotlib.pyplot as plt
 from pulseseq import sequencer, pulselib
-import matplotlib as mpl
-import math as math
+import matplotlib
+#matplotlib.rcParams['backend'] = 'Qt4Agg'
+#matplotlib.rcParams['backend.qt4'] = 'PyQt4'
+import matplotlib.pyplot as plt
+#from t1t2_plotting import smart_T1_delays
+import os
 import time
-import datetime
-
-alz = mclient.instruments['alazar']
+import math
+os.chdir(r'C:/qrlab/scripts')
+#alz = mclient.instruments['alazar']
 #yoko1 = mclient.instruments['yoko1']
-dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period=100)
+dig = mclient.instruments['dig']
+AWG1 = mclient.instruments['AWG1']
 #yoko2 = mclient.instruments['yoko2']
 Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 
-qubits = mclient.get_qubits()
+#qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')
-#ef_info = mclient.get_qubit_info('qubit1ef')
-readout_info = mclient.get_readout_info()
-
-#from scripts.single_qubit import spectroscopy_keysight
-from scripts.single_qubit import spectroscopy
+##ef_info = mclient.get_qubit_info('qubit1ef')
+#readout_info = mclient.get_readout_info()
+#Yoko = mclient.instruments['Yoko']
+#
+#from single_qubit import spectroscopy_keysight_phasecorrection
+from single_qubit import spectroscopy_keysight
 #from scripts.single_qubit import spectroscopy_phasecorrection
 
 #Make sure to check that repeat is off for Yoko GS200
 #To do manually, press 'Program' key and press repeat is the left most option on screen
-qubit_freq = 465e6
-freq_range1= 50e6
-freq_range2 =50e6
-freq_points =101
+qubit_freq = 950.5e6
+freq_range1= 10e6
+freq_range2 = 20e6
+freq_points = 31
 results = []
 min_result = []
-ramp_currents = np.linspace(-0.55e-3, 0.65e-3, 15) #units are in A
+ramp_currents = np.linspace(49.2e-3, 49.4e-3, 21) #units are in A
 fxn_freq=[]
 current = ramp_currents[0]
 Yoko.do_set_current(current)
+time.sleep(.2)
 
 
 
-
-spec = spectroscopy.Spectroscopy(mclient.instruments['QK'], qubit_info,
-                                 np.linspace(qubit_freq-freq_range1, qubit_freq+freq_range2, freq_points), [-5],
-                                 plen=20000, amp=0.4, plot_seqs=False) #1=1ns
-
-
-#spec = spectroscopy_phasecorrection.Spectroscopy_phasecorrection(mclient.instruments['sc2'], qubit_info,
-#                                 np.linspace(qubit_freq-freq_range1, qubit_freq+freq_range2, freq_points), [5],
-#                                 plen=20000, amp=0.001, plot_seqs=False) #1=1ns
+#
+spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['QK'], qubit_info,
+                                 np.linspace(qubit_freq-freq_range1, qubit_freq+freq_range2, freq_points), [-18],
+                                 plen=2000, amp=0.01, plot_seqs=False) #1=1ns
 
 
-#spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['sc2'], qubit_info,
+#spec = spectroscopy_keysight_phasecorrection.Spectroscopy_Keysight_phasecorrection(mclient.instruments['QK'], qubit_info,
+#                                 np.linspace(qubit_freq-freq_range1, qubit_freq+freq_range2, freq_points), [-18],
+#                                 plen=10000, amp=0.08, plot_seqs=False) #1=1ns
+
+#
+#spec = spectroscopy_keysight_phasecorrection.Spectroscopy_Keysight_phasecorrection(mclient.instruments['QK'], qubit_info,
 #                                     np.linspace(qubit_freq-freq_range1,
-#                                                 qubit_freq+freq_range2, 71),
-#                                     [4],
-#                                     plen=5000, amp=0.1, plot_seqs=False) 
+#                                                 qubit_freq+freq_range2, freq_points),
+#                                     [-18],
+#                                     plen=10000, amp=0.05, plot_seqs=False) 
 spec.measure()
+
+
 phase=np.asarray(spec.phasedata[0,:])
 phase=phase[:,None].T
 fxn_freq.append(spec.q_freqs[np.argmin(spec.phasedata[0,:])])
@@ -69,22 +82,25 @@ fxn_freq.append(spec.q_freqs[np.argmin(spec.phasedata[0,:])])
 for current in ramp_currents[1:]:
     #yoko1.do_set_current(current)
     Yoko.do_set_current(current)
-    spec = spectroscopy.Spectroscopy(mclient.instruments['QK'], qubit_info,
-                                     np.linspace(qubit_freq-freq_range1, qubit_freq+freq_range2, freq_points), [-5],
-                                     plen=20000, amp=0.4, plot_seqs=False) #1=1ns
+    time.sleep(.2)
+    spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['QK'], qubit_info,
+                                     np.linspace(qubit_freq-freq_range1, qubit_freq+freq_range2, freq_points), [-18],
+                                     plen=2000, amp=0.01, plot_seqs=False) #1=1ns
 
-##
-#    spec = spectroscopy_phasecorrection.Spectroscopy_phasecorrection(mclient.instruments['sc2'], qubit_info,
-#                                     np.linspace(qubit_freq-freq_range1, qubit_freq+freq_range2, freq_points), [5],
-#                                     plen=20000, amp=0.001, plot_seqs=False) #1=1ns
+
+#    spec = spectroscopy_keysight_phasecorrection.Spectroscopy_Keysight_phasecorrection(mclient.instruments['QK'], qubit_info,
+#                                     np.linspace(qubit_freq-freq_range1, qubit_freq+freq_range2, freq_points), [-18],
+#                                     plen=10000, amp=0.08, plot_seqs=False) #1=1ns
+#    
     
-    
-#    spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['sc2'], qubit_info,
+#    spec = spectroscopy_keysight_phasecorrection.Spectroscopy_Keysight_phasecorrection(mclient.instruments['QK'], qubit_info,
 #                                     np.linspace(qubit_freq-freq_range1,
-#                                                 qubit_freq+freq_range2, 71),
-#                                     [4],
-#                                     plen=5000, amp=0.1, plot_seqs=False) 
+#                                                 qubit_freq+freq_range2, freq_points),
+#                                     [-18],
+#                                     plen=10000, amp=0.05, plot_seqs=False) 
     spec.measure()
+    plt.close()
+
     phasenew=np.asarray(spec.phasedata[0,:])
     phasenew=phasenew[:,None].T
     phase= np.concatenate([phase,phasenew])
@@ -93,6 +109,7 @@ for current in ramp_currents[1:]:
 #print ramp_currents
 #print fxn_freq
 plt.figure()
+
 #plt.plot(ramp_currents, fxn_freq)
 #    results.append(spec.ampdata[0,:])
 ##    results.append(spec.get_ys())
@@ -111,7 +128,8 @@ plt.xlabel('Coil Current (mA)')
 plt.ylabel('Frequency (GHZ)')
 plt.show()
 to_save = [X, Y, Z]
-with file('text.txt','w') as outfile:
+
+with open('colorflux_4march_01','w') as outfile:
     outfile.write('# Array\n')
 
     # Iterating through a ndimensional array produces slices along

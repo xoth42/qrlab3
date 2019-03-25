@@ -37,7 +37,7 @@ if 1:
         plt.figure()
         nsamp = alz.get_nsamples()
         plt.plot(buf[:nsamp], label='A')
-        plt.plot(buf[nsamp:2*nsamp], label='B')
+#        plt.plot(buf[nsamp:2*nsamp], label='B')
 #        plt.plot(buf)
         plt.suptitle('Raw single shot')
         plt.legend()

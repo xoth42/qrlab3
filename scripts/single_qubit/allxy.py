@@ -23,8 +23,9 @@ class All_XY(Measurement1D):
     def generate(self):
         s = Sequence()
 
+
         r = self.qubit_info.rotate
-        wait = Delay(40)
+        wait = Delay(5)
 
         '''North pole sequences'''
         s.append(self.seq)
@@ -32,7 +33,7 @@ class All_XY(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ]))
-            
+        s.append(Delay(2000))   
         s.append(self.seq)
         s.append(r(np.pi, X_AXIS))
         if wait is not None: s.append(wait)
@@ -41,7 +42,7 @@ class All_XY(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ]))
-            
+        s.append(Delay(2000))    
         s.append(self.seq)
         s.append(r(np.pi, Y_AXIS))
         if wait is not None: s.append(wait)
@@ -50,7 +51,7 @@ class All_XY(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ])) 
-            
+        s.append(Delay(2000))    
         s.append(self.seq)
         s.append(r(np.pi, X_AXIS))
         if wait is not None: s.append(wait)
@@ -59,7 +60,7 @@ class All_XY(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ]))
-            
+        s.append(Delay(2000))    
         s.append(self.seq)
         s.append(r(np.pi, Y_AXIS))
         if wait is not None: s.append(wait)
@@ -68,7 +69,7 @@ class All_XY(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ]))
-            
+        s.append(Delay(2000))    
         '''Equator sequences'''
         s.append(self.seq)
         s.append(r(np.pi/2, X_AXIS))
@@ -76,14 +77,14 @@ class All_XY(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ]))
-            
+        s.append(Delay(2000))    
         s.append(self.seq)
         s.append(r(np.pi/2, Y_AXIS))
         s.append(Combined([
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ])) 
-            
+        s.append(Delay(2000))    
         s.append(self.seq)
         s.append(r(np.pi/2, X_AXIS))
         if wait is not None: s.append(wait)
@@ -92,7 +93,7 @@ class All_XY(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ]))
-            
+        s.append(Delay(2000))    
         s.append(self.seq)
         s.append(r(np.pi/2, Y_AXIS))
         if wait is not None: s.append(wait)
@@ -101,7 +102,7 @@ class All_XY(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ]))
-            
+        s.append(Delay(2000))    
         s.append(self.seq)
         s.append(r(np.pi/2, X_AXIS))
         if wait is not None: s.append(wait)
@@ -110,7 +111,7 @@ class All_XY(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ]))
-            
+        s.append(Delay(2000))    
         s.append(self.seq)
         s.append(r(np.pi/2, Y_AXIS))
         if wait is not None: s.append(wait)
@@ -119,7 +120,7 @@ class All_XY(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ])) 
-            
+        s.append(Delay(2000))    
         s.append(self.seq)
         s.append(r(np.pi, X_AXIS))
         if wait is not None: s.append(wait)
@@ -128,7 +129,7 @@ class All_XY(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ]))
-            
+        s.append(Delay(2000))    
         s.append(self.seq)
         s.append(r(np.pi, Y_AXIS))
         if wait is not None: s.append(wait)
@@ -137,7 +138,7 @@ class All_XY(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ]))
-            
+        s.append(Delay(2000))    
         s.append(self.seq)
         s.append(r(np.pi/2, X_AXIS))
         if wait is not None: s.append(wait)
@@ -146,7 +147,7 @@ class All_XY(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ]))
-            
+        s.append(Delay(2000))    
         s.append(self.seq)
         s.append(r(np.pi, X_AXIS))
         if wait is not None: s.append(wait)
@@ -155,7 +156,7 @@ class All_XY(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ])) 
-            
+        s.append(Delay(2000))    
         s.append(self.seq)
         s.append(r(np.pi/2, Y_AXIS))
         if wait is not None: s.append(wait)
@@ -164,7 +165,7 @@ class All_XY(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ]))
-            
+        s.append(Delay(2000))    
         s.append(self.seq)
         s.append(r(np.pi, Y_AXIS))
         if wait is not None: s.append(wait)
@@ -173,7 +174,7 @@ class All_XY(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ]))
-        
+        s.append(Delay(2000))
         
         '''South pole sequences'''
         s.append(self.seq)
@@ -182,14 +183,14 @@ class All_XY(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ]))
-            
+        s.append(Delay(2000))    
         s.append(self.seq)
         s.append(r(np.pi, Y_AXIS))
         s.append(Combined([
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ])) 
-            
+        s.append(Delay(2000))    
         s.append(self.seq)
         s.append(r(np.pi/2, X_AXIS))
         if wait is not None: s.append(wait)
@@ -198,7 +199,7 @@ class All_XY(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ]))
-            
+        s.append(Delay(2000))    
         s.append(self.seq)
         s.append(r(np.pi/2, Y_AXIS))
         if wait is not None: s.append(wait)
@@ -207,7 +208,7 @@ class All_XY(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ]))
-
+        s.append(Delay(2000))
         s = self.get_sequencer(s)
         seqs = s.render()
 

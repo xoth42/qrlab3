@@ -7,6 +7,8 @@ import math
 import random 
 #import lmfit
 
+#This is an alternative RB code using a dictionary - not well tested
+
 ''' Maps from one bloch sphere point to another through rotations A1-A4,B1-B7'''
 ''' A1: X(pi/2), ....''' 
 R_TABLE=np.matrix([[1,5,2,0,4,3],

@@ -8,12 +8,10 @@ if 1:
 from mclient import instruments
 
 
-#instruments.remove('dig')
-dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period = 200, 
-                         trigger_only = True, awg_list = [8])
-#dig.set_naverages(500)
 
-#yoko = instruments.create('yoko', 'Yokogawa_7651_new', address = 'GPIB0::3::INSTR')
+instruments.remove('dig')
+dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period = 2000, trigger_only = False)
+dig.set_naverages(10000)
 
 
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
@@ -130,7 +128,7 @@ qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
 #                            w_selective=100,
 #                            channels='2,3',
 #                            sideband_channels='I17,Q17',
-#                            sideband_phase=0.138623)
+
 
 
 #ROcav_IQ = instruments.create('RO', 'Qubit_Info',
@@ -250,6 +248,7 @@ readout = instruments.create('readout', 'Readout_Info', IQe=(-4.4+6.34j), IQg=(-
 #                              rfsource2='refbrick',
 #                              pulse_len=1000, readout_chan='1m1', acq_chan='4m1')
 
+
 #Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 
 
@@ -275,10 +274,7 @@ readout = instruments.create('readout', 'Readout_Info', IQe=(-4.4+6.34j), IQg=(-
 #                              sideband_channels='I2,Q2',
 #                              sideband_phase=1.315)
 
-# test = instruments.create('sh_test', 'SignalHoundUSBSA124B', waittime=100000,
-#                          serial_no=61660103, ref=-20, center=6e9,
-#                          span=1e8, vbw=30e3, rbw=30e3)
-# peaks, array = test.perform_sweep(peak_find = True, plot = True)
+
 
 
 
@@ -288,11 +284,6 @@ readout = instruments.create('readout', 'Readout_Info', IQe=(-4.4+6.34j), IQg=(-
 # bla
 
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
-
-#AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C',
-#                          address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', 
-#                          reffreq=10e6)
-# AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1')
 
 
 
@@ -315,8 +306,7 @@ readout = instruments.create('readout', 'Readout_Info', IQe=(-4.4+6.34j), IQg=(-
 #alz.set_ch1_range('40mV')
 #alz.set_ch2_range('40mV')
 #alz.set_nsamples(4800)
-#alz.set_naverages(1000)
-#alz.set_ch1_coupling('AC')
+
 #alz.set_ch2_coupling('AC')
 ##alz.set_clock_source('EXT10M')
 #alz.set_clock_source('EXT')
@@ -348,6 +338,7 @@ alz.set_timeout(10000)
 #alz.setup_clock()
 alz.setup_channels()
 alz.setup_trigger()
+
 
 
 

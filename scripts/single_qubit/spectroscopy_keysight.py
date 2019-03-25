@@ -66,24 +66,21 @@ class Spectroscopy_Keysight(Measurement1D):
             Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
             Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
         ])) 
-        
-        
-##Ebru - I will delete this when I'm done
+
+###Ebru    
 #        s = Sequence(self.seq)
-#        chs = self.qubit_info.sideband_channels
-##        s.append(Constant(self.plen, self.amp, chan=chs[0]))
-##        
-#
+#        s.append(Constant(self.plen, 1, chan='3m1'))  
+#        s.append(Delay(100))
+#        if self.postseq:
+#            s.append(self.postseq)
 #            
 #        s.append(Combined([
-#            Constant(self.plen, self.amp, chan=chs[0]),
 #            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
 #            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
 #        ])) 
-#            
-#        if self.postseq:
-#            s.append(self.postseq)
-#
+          
+
+
 ##Ebru
     
 #        s.append(Combined([
@@ -91,6 +88,7 @@ class Spectroscopy_Keysight(Measurement1D):
 #            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.readout_chan_I)),
 #            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.readout_chan_Q)),
 #        ]))
+        s.append(Delay(2000))          #ebru:added the delay
         s = self.get_sequencer(s)
         seqs = s.render()
         return seqs
@@ -126,6 +124,7 @@ class Spectroscopy_Keysight(Measurement1D):
                 print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
 
             self.ampdata[ipower,:] = amps
+
             self.phasedata[ipower,:] = phases
 
         self.analyze()
@@ -141,7 +140,9 @@ class Spectroscopy_Keysight(Measurement1D):
                 ax2.plot(self.q_freqs/1e6, self.phasedata[ipower,:], label='Phase, Power %.01f dB'%power)
             fs = self.q_freqs
             amps = self.ampdata[0,:]
+#            phases = self.phasedata[0,:]
             f = fit.Lorentzian(fs, amps)
+#            f = fit.Lorentzian(fs, phases)
             h0 = np.max(amps)/2.0
             w0 = 2e6
             pos = fs[np.argmax(amps)]

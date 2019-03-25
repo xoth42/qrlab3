@@ -14,8 +14,7 @@ def analysis(meas, data=None, fig=None):
 
 class FWM_SSBCavSpec(Measurement1D):
 
-    def __init__(self, qubit_info, cav_info, fwm_info, fwm_gen, disp, delay, 
-                 freqs, amp, fwm_channel, detunings, seq=None, postseq=None, 
+    def __init__(self, qubit_info, cav_info, fwm_info, delay, amp, detunings, seq=None, postseq=None, 
                  extra_info=None, saveas=None, Qswitch_infoB=None, **kwargs):
         self.qubit_info = qubit_info
         self.cav_info = cav_info
@@ -24,6 +23,9 @@ class FWM_SSBCavSpec(Measurement1D):
         self.seq = seq
         self.postseq = postseq
         self.detunings = detunings
+        self.amp = amp
+        self.fwm_info = fwm_info
+        self.delay = delay
         self.extra_info = extra_info
         self.xs = detunings / 1e6       # For plot
         self.saveas = saveas
@@ -34,11 +36,6 @@ class FWM_SSBCavSpec(Measurement1D):
 
     def generate(self):
         s = Sequence()
-        fwm.append(Combined([
-            Constant(int(self.delay-30e3), 1, chan=self.fwm_channel),
-            Constant(int(self.delay-30e3), self.amp, chan=self.fwm_info.sideband_channels[0]),
-            Constant(int(self.delay-30e3), self.amp, chan=self.fwm_info.sideband_channels[1]),
-        ]))
         for i, df in enumerate(self.detunings):
             g = DetunedSum(self.cav_info.rotate_selective.base, self.cav_info.w_selective, chans=self.cav_info.sideband_channels)
             if df != 0:
@@ -47,24 +44,16 @@ class FWM_SSBCavSpec(Measurement1D):
                 period = 1e50
             g.add(self.cav_info.pi_amp_selective, period)
 
+            s.append(self.seq)
+            s.append(Constant(int(self.delay), 1, chan=self.fwm_channel))
             s.append(Combined([
-                    self.seq,
-                    Constant(int(self.delay-30e3), 1, chan=self.fwm_channel),
-                    Constant(int(self.delay-30e3), self.amp, chan=self.fwm_info.sideband_channels[0]),
-                    Constant(int(self.delay-30e3), self.amp, chan=self.fwm_info.sideband_channels[1]),
-                ]))
-                s.append(Combined([
-                    g(),
-                    Constant(int(self.delay-30e3), 1, chan=self.fwm_channel),
-                    Constant(int(self.delay-30e3), self.amp, chan=self.fwm_info.sideband_channels[0]),
-                    Constant(int(self.delay-30e3), self.amp, chan=self.fwm_info.sideband_channels[1]),
-                ]))
-                s.append(Combined([
-                    self.qubit_info.rotate_selective(np.pi, 0),
-                    Constant(int(self.delay-30e3), 1, chan=self.fwm_channel),
-                    Constant(int(self.delay-30e3), self.amp, chan=self.fwm_info.sideband_channels[0]),
-                    Constant(int(self.delay-30e3), self.amp, chan=self.fwm_info.sideband_channels[1]),
-                ]))
+                Constant(int(self.cav_info.w_selective*4), 1, chan=self.fwm_channel),
+                g()
+            ]))
+            s.append(Combined([
+                Constant(int(self.qubit_info.w_selective*4), 1, chan=self.fwm_channel),
+                self.qubit_info.rotate_selective(np.pi, 0)
+            ]))
             
             s.append(Combined([
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
