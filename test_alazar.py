@@ -14,9 +14,9 @@ def moving_average(a, n=20) :
 
 import mclient
 alz = mclient.instruments['alazar']
-mclient.instruments.reload('alazar')
-alz = mclient.instruments['alazar']
-alz.set_ch1_range('100mV')
+#mclient.instruments.reload('alazar')
+#alz = mclient.instruments['alazar']
+alz.set_ch1_range('40mV')
 alz.set_ch2_range('40mV')
 alz.set_nsamples(4800)
 alz.set_naverages(2000)
@@ -37,7 +37,7 @@ if 1:
         plt.figure()
         nsamp = alz.get_nsamples()
         plt.plot(buf[:nsamp], label='A')
-        plt.plot(buf[nsamp:2*nsamp], label='B')
+#        plt.plot(buf[nsamp:2*nsamp], label='B')
 #        plt.plot(buf)
         plt.suptitle('Raw single shot')
         plt.legend()
@@ -101,7 +101,7 @@ if 0:
         plt.show()
         
 
-if 0:
+if 1:
         alz.setup_avg_shot(5000)
         buf = alz.take_avg_shot(timeout=50000)
     

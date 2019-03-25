@@ -109,7 +109,7 @@ class CavSpectroscopy(Measurement1D):
 #                self.cav_source.set_rf1_freq(freq) #JEFF Wrong syntax
                 self.cav_source.set_frequency(freq)
 #                self.cav_source.set_rf_on(True)
-                time.sleep(0.2)
+                time.sleep(0.1)
 
 
                 dig.setup_avg_shot()

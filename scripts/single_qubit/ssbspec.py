@@ -7,7 +7,7 @@ from measurement import Measurement1D
 def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
     xs = meas.detunings
-    fig.axes[0].plot(-xs/1e6, ys)
+    fig.axes[0].plot(-xs/1e6, ys, '.')
     fig.axes[0].set_xlabel('Detuning (MHz)')
     fig.axes[0].set_ylabel('Intensity (AU)')
     fig.canvas.draw()
@@ -61,7 +61,8 @@ class SSBSpec(Measurement1D):
             if self.postseq:
                 s.append(self.postseq)
             s.append(ro)
-
+            #Ebru, adding the 20000 delay
+            s.append(Delay(20000))
         s = self.get_sequencer(s)
         seqs = s.render()
         return seqs

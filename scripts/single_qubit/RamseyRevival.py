@@ -162,14 +162,17 @@ class RamseyRevival(Measurement1D):
 
         for i, dt in enumerate(self.delays):
             s.append(self.seq)
-            s.append(Pad(r_ge(np.pi/2, X_AXIS), 250, PAD_LEFT))
-            s.append(r_ef(np.pi, X_AXIS))
+#            s.append(Pad(r_ge(np.pi/2, X_AXIS), 25 0, PAD_LEFT))
+            s.append(r_ge(np.pi/2, 0))
+            # JEFF removed ef pulse
+#            s.append(r_ef(np.pi, X_AXIS))
 
             s.append(Delay(dt))
 
             # Measurement pulse
             angle = dt * 1e-9 * self.detune * 2 * np.pi
-            s.append(r_ef(np.pi, np.pi*0.8))
+            # JEFF removed ef pulse
+#            s.append(r_ef(np.pi, np.pi*0.8))
             s.append(r_ge(np.pi/2, angle))
 
             if self.postseq:
@@ -178,6 +181,8 @@ class RamseyRevival(Measurement1D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
+    
+            s.append(Delay(1000))
 
         s = self.get_sequencer(s)
         seqs = s.render()

@@ -36,7 +36,7 @@ class drag_test(Measurement1D):
 #            s.append(Delay(40))
 #            s.append(r(np.pi, Y_AXIS, drag=coeff))
             s.append(r(np.pi, X_AXIS, drag=coeff))  #This is AllXY#12 (counting from 1)
-            s.append(Delay(40))
+            s.append(Delay(20))
             s.append(r(np.pi/2, Y_AXIS, drag=coeff))
             if self.postseq is not None:
                 s.append(self.postseq)
@@ -44,11 +44,11 @@ class drag_test(Measurement1D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
-            
+            s.append(Delay(2000))
         for i, coeff in enumerate(self.coeffs):
             s.append(self.seq)
             s.append(r(np.pi/2, Y_AXIS, drag=coeff))      #This is AllXY#11
-            s.append(Delay(40))
+            s.append(Delay(20))
             s.append(r(np.pi, X_AXIS, drag=coeff))
 #            s.append(r(np.pi, Y_AXIS, drag=coeff))   #This is AllXY#13
 #            s.append(Delay(40))
@@ -59,7 +59,7 @@ class drag_test(Measurement1D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
-
+            s.append(Delay(2000))
         s = self.get_sequencer(s)
         seqs = s.render()
 

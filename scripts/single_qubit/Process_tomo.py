@@ -36,7 +36,7 @@ class Process_tomo(Measurement1D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
-                
+            s.append(Delay(2000))    
             s.append(self.seq)
             s.append(init_state) #prepare x or y or z
             s.append(self.process_seq)
@@ -46,7 +46,7 @@ class Process_tomo(Measurement1D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
-            
+            s.append(Delay(2000))
             s.append(self.seq)
             s.append(init_state) #prepare x or y or z
             s.append(self.process_seq)
@@ -55,7 +55,7 @@ class Process_tomo(Measurement1D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
-
+        s.append(Delay(2000))
         s = self.get_sequencer(s)
         seqs = s.render()
 

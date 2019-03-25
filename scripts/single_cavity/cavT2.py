@@ -58,7 +58,7 @@ def double_sin_fit(params, x, data):
     est = params['ofs'].value + params['amp'].value * exp1 * sin1 + params['amp2'].value * exp2 * sin2
     return data - est
 
-def analysis(meas, data=None, fig=None):  #Temporary analysis for double exponential decay by Chen
+def analysis_2tau(meas, data=None, fig=None):  #Temporary analysis for double exponential decay by Chen
     xs = meas.delays
     ys, fig = meas.get_ys_fig(data, fig)
 
@@ -92,7 +92,7 @@ def analysis(meas, data=None, fig=None):  #Temporary analysis for double exponen
 
     return result.params
 
-def analysis_standard(meas, data=None, fig=None): 
+def analysis(meas, data=None, fig=None): 
     xs = meas.delays
     ys, fig = meas.get_ys_fig(data, fig)
 
@@ -276,4 +276,4 @@ class CavT2(Measurement1D):
 
     def analyze(self, data=None, fig=None):
         self.fit_params = analysis(self, data, fig)
-        return self.fit_params['tau1'].value
+        return self.fit_params['tau'].value

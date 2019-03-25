@@ -10,6 +10,7 @@ from pulseseq.pulselib import *
 import lmfit
 import math
 import time
+import objectsharer as objsh
 
 
 
@@ -59,12 +60,12 @@ class FWM_spec(Measurement1D):
         s.append(c(np.abs(self.disp), np.angle(self.disp)))
                 
         s.append(Combined([
-            Constant(int(self.delay-100e3), 1, chan=self.fwm_channel),
-            Constant(int(self.delay-100e3), self.amp, chan=self.fwm_info.sideband_channels[0]),
-            Constant(int(self.delay-100e3), self.amp, chan=self.fwm_info.sideband_channels[1]),
+            Constant(int(self.delay-160e3), 1, chan=self.fwm_channel),
+            Constant(int(self.delay-160e3), self.amp, chan=self.fwm_info.sideband_channels[0]),
+            Constant(int(self.delay-160e3), self.amp, chan=self.fwm_info.sideband_channels[1]),
         ]))
 
-        s.append(Delay(100e3))
+        s.append(Delay(160e3))
         
         s.append(r(np.pi, X_AXIS))
 
@@ -83,8 +84,6 @@ class FWM_spec(Measurement1D):
         # Generate and load sequences
         dig = self.instruments['dig']
 
-        fwmgen = mclient.instruments['fwmgen']
-
         seqs = self.generate()
         self.load(seqs)
         self.start_awgs()
@@ -102,7 +101,7 @@ class FWM_spec(Measurement1D):
             dig.arm()
             dig.start_hvi()
             ret = dig.take_avg_shot(async=True)
-            dig.release_buf()
+            
             
             try:
                 while not ret.is_valid():
@@ -111,7 +110,7 @@ class FWM_spec(Measurement1D):
                 dig.set_interrupt(True)
                 print 'Error: %s' % (str(e), )
                 return
-
+            dig.release_buf()
             IQ = np.average(ret.get())
             IQ_std = np.std(ret.get())
             
@@ -130,7 +129,7 @@ class FWM_spec(Measurement1D):
             dig.arm()
             dig.start_hvi()
             ret = dig.take_avg_shot(async=True)
-            dig.release_buf()
+
             dig.set_naverages(naverages)
             
             try:
@@ -140,6 +139,9 @@ class FWM_spec(Measurement1D):
                 dig.set_interrupt(True)
                 print 'Error: %s' % (str(e), )
                 return
+            dig.release_buf()
+            
+            self.fwm_gen.set_rf_on(True)
             
             IQ_bg = np.average(ret.get())
             print('background amp', np.abs(IQ_bg))

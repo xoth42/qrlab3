@@ -14,7 +14,8 @@ from lib import jsonext
 import os
 import pulseseq
 import awgloader
-from PyQt4 import QtGui
+
+from PyQt5 import QtWidgets
 from pulseseq import sequencer
 from pulseseq import pulselib
 
@@ -70,7 +71,7 @@ class Measurement(object):
                      savefig=True,
                      imagetype='png',
                      print_progress=True,
-                     ):
+                     proj_func = 'amp'):
         if name is None:
             name = self.__class__.__name__
 
@@ -97,6 +98,7 @@ class Measurement(object):
         self.savefig = savefig
         self.imagetype = imagetype
         self.print_progress = print_progress
+        self._proj_func = proj_func
 
         # Build list of info objects
         if infos is None:
@@ -119,6 +121,7 @@ class Measurement(object):
         self.instruments = mclient.instruments
         self.readout_info = mclient.get_readout_info(readout)
         self._funcgen = mclient.instruments.get('funcgen')
+        self._dig = mclient.instruments.get('dig') #Dario
         self.use_sync = use_sync
 
     def setup_data(self, name):
@@ -291,6 +294,8 @@ class Measurement(object):
         awgs are located from the instruments list and should be named
         AWG1, AWG2, ... (up to 4 currently).
         '''
+        
+        start = time.clock()
         l = self.get_awg_loader()
         for i in range(ntries):
             try:
@@ -298,7 +303,22 @@ class Measurement(object):
                 break
             except Exception, e:
                 logging.warning('Loading failed (%s), retrying', str(e))
-                time.sleep(10)
+                time.sleep(1)
+
+                
+#        ''' JEFF wait till all awgs active '''
+#        count = 1
+#        while not l.is_awg_running() and count < 30:
+#            print(count, 'tries to prime', l)
+#            time.sleep(1)
+#            count += 1
+#            
+#        ''' JEFF moved waveform load time from awgloader.py '''
+#        dt = time.clock() - start
+#        nloaded = len(l._loaded_wforms)
+#        if nloaded > 0:
+#            print 'Loaded %d waveforms in %.03f sec' % (nloaded, dt)
+            
         if run:
             self.start_awgs()
 
@@ -314,6 +334,9 @@ class Measurement(object):
 
     def start_awgs(self):
         l = self.get_awg_loader()
+        #JEFF trying to force all awgs to run
+#        l.set_all_awgs_active()
+        print('starting awgs:', l.get_awgs(), l.get_active_awgs())
         l.run()
 
     def stop_funcgen(self):
@@ -371,6 +394,7 @@ class Measurement(object):
 
         # If we have a function generator, start AWGs before setting up alazar
         if self._funcgen and not fast:
+            print('inside acquisiton_loop, seeing if funcgen is on')
             self.start_awgs()
             time.sleep(1)
 
@@ -386,6 +410,7 @@ class Measurement(object):
         alz.set_timeout(timeout)
         time.sleep(1)
 
+
         # Capture CTRL-C and connect callbacks
         self.capture_ctrlc()
         progress_hid = alz.connect('capture-progress', self._capture_progress_cb)
@@ -395,6 +420,11 @@ class Measurement(object):
         if not fast:
             if self._funcgen:
                 self.start_funcgen()
+            elif self._dig: #Dario
+                dig = self.instruments['dig']
+                dig.stop_hvi()
+                self.start_awgs()
+                dig.start_hvi()
             else:
                 self.start_awgs()
 
@@ -402,13 +432,14 @@ class Measurement(object):
             if self.histogram:
                 ret = alz.take_hist(async=True)
             else:
-                ret = alz.take_experiment(avg_buf=self.avg_data, async=True, singleshotbin=self.singleshotbin,
+                ret = alz.take_experiment(avg_buf=self.avg_data, async=True, singleshotbin=self.singleshotbin, shot_buf=self.shot_data, #Dario
                                           IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius)
             if self.print_progress:
                 logging.info('Acquiring...')
             while not ret.is_valid() and not self._interrupted:
-                objsh.helper.backend.main_loop(20,origin='measurement')
-                QtGui.QApplication.processEvents()
+                objsh.helper.backend.main_loop(20) 
+                QtWidgets.QApplication.processEvents()
+            print 'Done with take experiment'
             if self._interrupted:
                 alz.set_interrupt(True)
         except Exception, e:
@@ -419,7 +450,6 @@ class Measurement(object):
             alz.disconnect(progress_hid)
             self.data.disconnect(dataupd_hid)
             self.release_ctrlc()
-
         # Final processing of data
         self.post_process()
         
@@ -474,16 +504,15 @@ class Measurement(object):
             if self.release_seqs:
                 self.seqs = None
             
-        # If not generating, we guess that all AWGs are used
+        #If not generating, we guess that all AWGs are used
         else:
             l = self.get_awg_loader()
             l.set_all_awgs_active()
 
         self.save_settings()
-
-        alz.setup_clock()
+        
+#        alz.setup_clock() #DARIO 1/24/19 testing if this line of code is really needed
         alz.setup_channels()
-
         alz.setup_trigger()
         alz.set_real_signals(self.real_signals)     # Doesn't do anything for histrograms
 
@@ -500,6 +529,15 @@ class Measurement(object):
             self.shot_data = None
             self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
             self.pp_data = None
+            '''DARIO added 7/28/18 to keep all single shot data'''
+        elif self.keep_shots:
+            self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*alz.get_naverages()], dtype=np.complex)
+            if not self.real_signals:
+                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.complex)
+                self.pp_data = self.data.create_dataset('avg_pp', [self.cyclelen,], dtype=np.float)
+            else:
+                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
+                self.pp_data = None
         else:
             self.shot_data = None
             # If saving complex data, save both raw signal and post-processed version
@@ -525,6 +563,147 @@ class Measurement(object):
 
         alz = self.instruments['alazar']
         ret = self.acquisition_loop(alz) # calls update function
+        print('after acquisition loop')
+        self.avg_data = ret
+
+        if self.histogram:
+            if self.cyclelen == 1:
+                self.plot_histogram(self.shot_data[:])
+        else:
+            ret = self.analyze(self.get_ys(), fig=self.get_figure())
+
+        if self.savefig:
+            self.save_fig()
+
+        txt = 'Done'
+        if self.data:
+            txt += '; in data group: %s' % self.data.get_fullname()
+        logging.info(txt)
+
+        if self._interrupted:
+            raise Exception('Measurement interrupted')
+
+        # Remove pulse data to keep memory usage reasonable
+        pulseseq.sequencer.Pulse.clear_pulse_data()
+ 
+#        print ret
+        return ret
+
+    def acquisition_loop_keysight(self, dig, fast=False):
+        '''
+        JEFF: all methods with _keysight used with keysight digitizer instead of alazar
+        Acquisition loop, talk to keysight dig.
+        Also starts the measurement.
+        
+        TODO: implement the interrupt like alazar has
+        '''
+        
+        progress_hid = dig.connect('capture-progress', self._capture_progress_cb)
+        dataupd_hid = self.data.connect('changed', self._data_changed_cb)
+        
+        
+        dig.stop_hvi()
+        dig.setup_experiment(self.cyclelen, ntransfers = None)
+        dig.arm()
+
+        # Start measurement, either by starting the AWG or the function generator
+        self.start_awgs()
+        dig.start_hvi()
+        ret = dig.take_experiment(avg_buf=self.avg_data, async=True, IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius)
+
+        while not ret.is_valid() and not self._interrupted:
+            objsh.helper.backend.main_loop(20)
+            QtWidgets.QApplication.processEvents()
+        if self._interrupted:
+            dig.set_interrupt(True)
+
+
+        dig.disconnect(progress_hid)
+        self.data.disconnect(dataupd_hid)
+        
+        # Final processing of data
+        self.post_process()
+        
+        dig.release_buf()
+        
+        return ret.get()
+
+
+    def setup_measurement_keysight(self):
+        '''
+        - Stop AWGs / function generator
+        - Generate sequence
+        - Save settings
+        - Arm digitizer
+        '''
+
+        self.stop_funcgen()
+        self.stop_awgs()
+        dig = self.instruments['dig']
+        if dig is None:
+            logging.error('Digitizer not found!')
+            return
+
+        # Generate and load sequence
+        if self.do_generate:
+            logging.info('Generating sequence...')
+            seqs = self.generate()
+            if self.plot_seqs:
+                s = pulseseq.sequencer.Sequencer()
+                s.plot_seqs(seqs)
+            if self.print_seqs:
+                s = pulseseq.sequencer.Sequencer()
+                s.print_seqs(seqs)
+            
+            logging.info('Loading sequence...')
+            self.load(seqs)
+            if self.release_seqs:
+                self.seqs = None
+            
+        #If not generating, we guess that all AWGs are used
+        else:
+            l = self.get_awg_loader()
+            l.set_all_awgs_active()
+
+        self.save_settings()
+
+
+    def setup_measurement_data_keysight(self):
+        '''
+        Create datasets to store measured and post-processed data.
+        '''
+        dig = self.instruments['dig']
+        if self.histogram:
+            self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*dig.do_get_naverages()], dtype=np.complex)
+            self.avg_data = None
+            self.pp_data = None
+        elif self.singleshotbin:
+            self.shot_data = None
+            self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
+            self.pp_data = None
+        else:
+            self.shot_data = None
+            # If saving complex data, save both raw signal and post-processed version
+            if not self.real_signals:
+                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.complex)
+                self.pp_data = self.data.create_dataset('avg_pp', [self.cyclelen,], dtype=np.float)
+            else:
+                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
+                self.pp_data = None
+
+    def measure_keysight(self):
+        '''
+        Perform a measurement.
+
+        Sets up data sets, performs initialization and updates plots if the
+        class has an 'update' function.
+        '''
+
+        self.setup_measurement_keysight()
+        self.setup_measurement_data_keysight()
+
+        dig = self.instruments['dig']
+        ret = self.acquisition_loop_keysight(dig) # calls update function
 #        print('after aquisition loop')
         self.avg_data = ret
 
@@ -548,6 +727,7 @@ class Measurement(object):
         # Remove pulse data to keep memory usage reasonable
         pulseseq.sequencer.Pulse.clear_pulse_data()
  
+        print ret
         return ret
 
     def play_sequence(self, load=True):
@@ -593,7 +773,10 @@ class Measurement(object):
 
     def get_figure(self):
         if self.fig:
+            #print "There already exists the figure"
             return self.fig
+        else:
+            print "Here we create a figure"
         return self.create_figure()
 
     def complex_to_real(self, ys):
@@ -616,9 +799,17 @@ class Measurement(object):
             vproj = IQe - IQg
 
         vproj /= np.abs(vproj)
-        ys = ys - IQg
-        return np.real(ys) * vproj.real  + np.imag(ys) * vproj.imag
 
+        if(self._proj_func is 'phase'):
+            return np.angle(ys, deg=True) # returns phase #DARIO 8/31 
+        elif(self._proj_func is 'projection'):
+            ys = ys - IQg #DARIO 8/31
+            return np.real(ys) * vproj.real  + np.imag(ys) * vproj.imag # returns projected amplitue
+        else:
+            return (np.real(ys)**2+np.imag(ys)**2)**0.5 # returns absolute amplitude
+        
+        
+        
     def get_ys(self, data=None):
         '''
         Return measured data.
@@ -629,6 +820,8 @@ class Measurement(object):
             ys = self.avg_data[:]
         else:
             ys = data
+        ''' CHEN/DARIO/JEFF fix for old error shifting first point to last point '''
+#        ys=np.concatenate((ys[1:], ys[:1]))
         return self.complex_to_real(ys)
 
     def post_process(self):
@@ -649,7 +842,10 @@ class Measurement(object):
         '''
         if fig is None:
             fig = self.get_figure()
-        return self.get_ys(), fig
+        if data is None:
+            return self.get_ys(), fig
+        else:
+            return data, fig
 
     def analyze(self, data=None, fig=None):
         '''
@@ -804,3 +1000,4 @@ class Measurement2D(Measurement):
                 fig.axes[0].legend(loc=0)
         else:
             logging.warning('Unable to plot 2D array without xs and ys')
+

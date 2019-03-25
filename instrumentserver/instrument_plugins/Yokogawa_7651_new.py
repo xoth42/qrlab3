@@ -135,6 +135,7 @@ class Yokogawa_7651_new(Instrument):
                            flags=Instrument.FLAG_GET)
 
     def do_get_output_state(self):
+        return self.output
         return None
 
     def do_set_output_state(self, state):
@@ -142,6 +143,7 @@ class Yokogawa_7651_new(Instrument):
             raise StateWrongValueError("Output state can be 0 or 1, nothing "
                                        "else.")
         self.output_state.send(state)
+        self.output = state
 
     def do_set_source_type(self, source):
         currSource = source
