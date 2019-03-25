@@ -44,8 +44,8 @@ datagroup.set_attrs(
 #
 ##step = 1e-3
 #step = 0.0004
-sleeptime = 0.05
-currents = np.linspace(0,0.1,980)
+#sleeptime = 0.05
+currents = np.linspace(0,0.98,981)
 freqs = np.linspace(8e9,9e9,1601)
 average_factor = 1
 Sij = ['S11']#,'S21','S12','S22']
@@ -116,9 +116,9 @@ for icurrent, current in enumerate(currents):
 #            VNA.set_average_factor(40)
 
         VNA.set_trigger_source('BUS')
-        VNA.write('INIT:CONT ON')
+#        VNA.write('INIT:CONT ON')
 
-        VNA.set_averaging_trigger(1)
+#        VNA.set_averaging_trigger(1)
         
         VNA.trigger()
         
