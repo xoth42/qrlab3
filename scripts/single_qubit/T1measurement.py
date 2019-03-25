@@ -100,7 +100,8 @@ class T1Measurement(Measurement1D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ]))
-            s.append(Delay(1000))
+            s.append(Delay(20000))
+            #Ebru: changed the delay from 1000 to 20000.
 
 #            s.append(Repeat(Delay(1000), 20))   # wait for alazar acquisition to finish
 #            s.append(Combined([

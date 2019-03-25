@@ -30,20 +30,20 @@ if 0:
 
 qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')
-ef_info = mclient.get_qubit_info('qubit1ef')
+#ef_info = mclient.get_qubit_info('qubit1ef')
 #cavity_info = mclient.get_qubit_info('cavityBob')
 #cavity_info = mclient.get_qubit_info('cavityRO')
-cavity_info = mclient.get_qubit_info('cavityAlice')
+#cavity_info = mclient.get_qubit_info('cavityAlice')
 
 #Find read-out cavity and choose a power
 
-if 0: # RO Cavity spec
+if 1: # RO Cavity spec
     from scripts.single_cavity import rocavspectroscopy
-    rofreq = 7719.13e6
-    freq_range = .5e6
+    rofreq = 7600.13e6
+    freq_range = 50e6
 
-    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-4, -4, 1),
-                                         np.linspace(rofreq - freq_range, rofreq + freq_range, 71), qubit_pulse=False)
+    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-5, -5, 1),
+                                         np.linspace(rofreq - freq_range, rofreq + freq_range, 101), qubit_pulse=False)
     ro.measure()
     bla
     
@@ -131,7 +131,7 @@ if 0: # Time Rabi
     data = tr.measure()
     bla
 
-if 1: # Cavity spec
+if 0: # Cavity spec
     from scripts.single_cavity import cavspectroscopy
     cav_freq = 5420.56e6
     freq_range = 10e6

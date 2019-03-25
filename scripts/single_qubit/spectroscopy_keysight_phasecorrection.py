@@ -9,7 +9,7 @@ import objectsharer as objsh
 SPEC   = 0
 POWER  = 1
 
-class Spectroscopy_Keysight(Measurement1D):
+class Spectroscopy_Keysight_phasecorrection(Measurement1D):
     '''
     Perform qubit spectroscopy.
 
@@ -47,7 +47,7 @@ class Spectroscopy_Keysight(Measurement1D):
                 plot_type = SPEC
         self.plot_type = plot_type
 
-        super(Spectroscopy_Keysight, self).__init__(1, infos=qubit_info, **kwargs)
+        super(Spectroscopy_Keysight_phasecorrection, self).__init__(1, infos=qubit_info, **kwargs)
         self.data.create_dataset('powers', data=ro_powers)
         self.data.create_dataset('freqs', data=q_freqs)
         self.ampdata = self.data.create_dataset('amplitudes', shape=[len(ro_powers),len(q_freqs)])
@@ -64,8 +64,7 @@ class Spectroscopy_Keysight(Measurement1D):
             Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
             Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
         ])) 
-
-###Ebru    
+#
 #        s = Sequence(self.seq)
 #        s.append(Constant(self.plen, 1, chan='3m1'))  
 #        s.append(Delay(100))
@@ -76,7 +75,7 @@ class Spectroscopy_Keysight(Measurement1D):
 #            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
 #            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
 #        ])) 
-          
+#          
 
 
 ##Ebru
@@ -86,7 +85,7 @@ class Spectroscopy_Keysight(Measurement1D):
 #            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.readout_chan_I)),
 #            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.readout_chan_Q)),
 #        ]))
-        s.append(Delay(2000))          #ebru:added the delay
+        s.append(Delay(20000))          #ebru:added the delay
         s = self.get_sequencer(s)
         seqs = s.render()
         return seqs
@@ -104,7 +103,9 @@ class Spectroscopy_Keysight(Measurement1D):
             time.sleep(self.pow_delay)
 
             amps = []
-            phases = []
+            phases1 = []
+            phases2 =[]
+            phases=[]
             for freq in self.q_freqs:
                 self.qubit_rfsource.set_frequency(freq)
                 time.sleep(self.freq_delay)
@@ -118,12 +119,31 @@ class Spectroscopy_Keysight(Measurement1D):
 
                 IQ = np.average(ret)
                 amps.append(np.abs(IQ))
-                phases.append(np.angle(IQ, deg=True))
+                phases1.append(np.angle(IQ, deg=True))
                 print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
+                self.qubit_rfsource.set_rf_on(0)
+                
+                time.sleep(0.1)
+                
+                dig.setup_avg_shot()
+                dig.arm()
+                dig.start_hvi()
+                ret = dig.take_avg_shot()
+                dig.release_buf()
+                IQ = np.average(ret)
+                phases2.append(np.angle(IQ, deg=True))
+                print 'brick off F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
+                self.qubit_rfsource.set_rf_on(1)
+                time.sleep(0.1)
+                
+                
+        m=len(amps)            
+        for i in range(m):
 
-            self.ampdata[ipower,:] = amps
-
-            self.phasedata[ipower,:] = phases
+            phases.append(phases1[i] - phases2[i])       
+                
+        self.ampdata[ipower,:] = amps
+        self.phasedata[ipower,:] = phases
 
         self.analyze()
 
@@ -138,9 +158,7 @@ class Spectroscopy_Keysight(Measurement1D):
                 ax2.plot(self.q_freqs/1e6, self.phasedata[ipower,:], label='Phase, Power %.01f dB'%power)
             fs = self.q_freqs
             amps = self.ampdata[0,:]
-#            phases = self.phasedata[0,:]
             f = fit.Lorentzian(fs, amps)
-#            f = fit.Lorentzian(fs, phases)
             h0 = np.max(amps)/2.0
             w0 = 2e6
             pos = fs[np.argmax(amps)]
