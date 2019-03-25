@@ -486,6 +486,7 @@ real part is applied to I and the imaginary part to Q.
         else:
             return buf
         ''' # We blanked all these off for the 1300 average crashing problem
+        print 'inside convert_signal'
         return buf
 
     def take_raw_shots(self, buftimeout=10000):
@@ -804,9 +805,11 @@ real part is applied to I and the imaginary part to Q.
         self.end_capture()
         if data_sum is None:
             return None
-
+        
         if avg_buf:
             self.update_averages(avg_buf, data_sum, navg)
+        
+        print 'after update_averages'
 
         if singleshotbin:
             return data_sum * 1.0 / navg

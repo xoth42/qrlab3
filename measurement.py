@@ -434,12 +434,12 @@ class Measurement(object):
             else:
                 ret = alz.take_experiment(avg_buf=self.avg_data, async=True, singleshotbin=self.singleshotbin, shot_buf=self.shot_data, #Dario
                                           IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius)
-                #print 'Done with take experiment'
             if self.print_progress:
                 logging.info('Acquiring...')
             while not ret.is_valid() and not self._interrupted:
-                objsh.helper.backend.main_loop(20)
+                objsh.helper.backend.main_loop(20) 
                 QtWidgets.QApplication.processEvents()
+            print 'Done with take experiment'
             if self._interrupted:
                 alz.set_interrupt(True)
         except Exception, e:
@@ -450,10 +450,8 @@ class Measurement(object):
             alz.disconnect(progress_hid)
             self.data.disconnect(dataupd_hid)
             self.release_ctrlc()
-#        print 'before post_process'
         # Final processing of data
         self.post_process()
-#        print 'after post_process'
         
         return ret.get()
 
@@ -513,7 +511,7 @@ class Measurement(object):
 
         self.save_settings()
         
-        alz.setup_clock()
+#        alz.setup_clock() #DARIO 1/24/19 testing if this line of code is really needed
         alz.setup_channels()
         alz.setup_trigger()
         alz.set_real_signals(self.real_signals)     # Doesn't do anything for histrograms
@@ -565,7 +563,7 @@ class Measurement(object):
 
         alz = self.instruments['alazar']
         ret = self.acquisition_loop(alz) # calls update function
-#        print('after aquisition loop')
+        print('after acquisition loop')
         self.avg_data = ret
 
         if self.histogram:
@@ -588,7 +586,7 @@ class Measurement(object):
         # Remove pulse data to keep memory usage reasonable
         pulseseq.sequencer.Pulse.clear_pulse_data()
  
-        print ret
+#        print ret
         return ret
 
     def acquisition_loop_keysight(self, dig, fast=False):

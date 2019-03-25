@@ -105,8 +105,8 @@ def analysis(meas, data=None, fig=None):
         params2.add('freq', value=f0, min=0)
         params2.add('phi0', value=0, min=-1.2*np.pi, max=1.2*np.pi)
         result = lmfit.minimize(t2_fit, params2, args=(xs, residues))
-        lmfit.report_fit(params2)
-        fig.axes[1].plot(xs/1e3, -t2_fit(params2, xs, 0), label='Fit, tau=%.03f us, df=%.03f kHz'%(params2['tau'].value/1000, params2['freq'].value*1e6))
+        lmfit.report_fit(result.params)
+        fig.axes[1].plot(xs/1e3, -t2_fit(result.params, xs, 0), label='Fit, tau=%.03f us, df=%.03f kHz'%(result.params['tau'].value/1000, result.params['freq'].value*1e6))
         fig.axes[1].legend()
 
         params3 = lmfit.Parameters()
@@ -115,24 +115,24 @@ def analysis(meas, data=None, fig=None):
         params3.add('tau', value=params['tau'].value, min=10, max=200000)
         params3.add('freq', value=params['freq'].value, min=0)
         params3.add('phi1', value=params['phi0'].value, min=-1.2*np.pi, max=1.2*np.pi)
-        params3.add('amp2', value=params2['amp'].value, min=0)
-        params3.add('tau2', value=params2['tau'].value, min=10, max=200000)
-        params3.add('freq2', value=params2['freq'].value, min=0)
-        params3.add('phi2', value=params2['phi0'].value, min=-1.2*np.pi, max=1.2*np.pi)
+        params3.add('amp2', value=result.params['amp'].value, min=0)
+        params3.add('tau2', value=result.params['tau'].value, min=10, max=200000)
+        params3.add('freq2', value=result.params['freq'].value, min=0)
+        params3.add('phi2', value=result.params['phi0'].value, min=-1.2*np.pi, max=1.2*np.pi)
         params3.add('slope', value=params['slope'].value)
 
         result = lmfit.minimize(double_sin_fit_tilted, params3, args=(xs,ys))
-        lmfit.report_fit(params3)
-        text = 'Fit, tau1=%.03f us, df1=%.03f kHz, amp1=%.02f \nFit, tau2=%.03f us, df2=%.03f kHz, amp2=%.02f'%(params3['tau'].value/1000, params3['freq'].value*1e6, params3['amp'].value, params3['tau2'].value/1000, params3['freq2'].value*1e6, params3['amp2'].value)
-        fig.axes[0].plot(xs/1e3, -double_sin_fit_tilted(params3, xs, 0), label=text)
+        lmfit.report_fit(result.params)
+        text = 'Fit, tau1=%.03f us, df1=%.03f kHz, amp1=%.02f \nFit, tau2=%.03f us, df2=%.03f kHz, amp2=%.02f'%(result.params['tau'].value/1000, result.params['freq'].value*1e6, result.params['amp'].value, result.params['tau2'].value/1000, result.params['freq2'].value*1e6, result.params['amp2'].value)
+        fig.axes[0].plot(xs/1e3, -double_sin_fit_tilted(result.params, xs, 0), label=text)
         fig.axes[0].legend()
         fig.axes[0].set_ylabel('Intensity [AU]')
         fig.axes[0].set_xlabel('Time [us]')
-        fig.axes[1].plot(xs/1e3, double_sin_fit_tilted(params3, xs, ys), marker='s')
+        fig.axes[1].plot(xs/1e3, double_sin_fit_tilted(result.params, xs, ys), marker='s')
         fig.canvas.draw()
         return params3
 
-    return params
+    return result.params
 
 class EFT2Measurement(Measurement1D):
 
@@ -259,6 +259,7 @@ class EFT2Measurement(Measurement1D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
+            s.append(Delay(1000))
 
         s = self.get_sequencer(s)
         seqs = s.render()

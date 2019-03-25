@@ -40,10 +40,10 @@ y_keys.remove(x_key)
     
 qubit_info = mclient.get_qubit_info('qubit1ge')
 ef_info = mclient.get_qubit_info('qubit1ef')
-qubit2_info = mclient.get_qubit_info('qubit2tone')
+#qubit2_info = mclient.get_qubit_info('qubit2tone')
 
 #cavity_infoR = mclient.get_qubit_info('cavity1R')
-cavity_infoA = mclient.get_qubit_info('cavityAlice')
+#cavity_infoA = mclient.get_qubit_info('cavityAlice')
 cavity_infoB = mclient.get_qubit_info('cavityBob')
 
 #toload = ['qubit1ge', 'readout']
@@ -57,6 +57,7 @@ tr = WignerbyParity.WignerFunction(qubit_info, ef_info, cavity_infoB, t_ge=300, 
                                          seq=None, delay=5, saveas=None, bgcor=False)
 tr.displacements = exp[x_key].value
 data = exp['avg_pp'].value[::2] - exp['avg_pp'].value[1::2]
+data /= 80
 tr.avg_data = exp['avg']
 tr.analyze(data = data)
 

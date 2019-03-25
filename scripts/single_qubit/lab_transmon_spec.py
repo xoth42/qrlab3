@@ -30,26 +30,26 @@ qubit_info = mclient.get_qubit_info('qubit1ge')
 
 ge = mclient.instruments['qubit1ge']
 
-Yoko = mclient.instruments['Yoko']
-qbrick = mclient.instruments['geFG']
+yoko = mclient.instruments['yoko']
+qbrick = mclient.instruments['qbrick']
 #RObrick = mclient.instruments['RObrick']
 #refbrick = mclient.instruments['refFG']
 
 
-currents = np.linspace(0.22, 0.27, 6)
-Yoko.set_output_state(1) 
+currents = np.linspace(0.06, -0.06, 13)
+yoko.set_output_state(1) 
 ssbspec_freqs = np.linspace(-1.5e6, 1.5e6, 101) #range of points to check each ssbspec
-qbrick_freq = 938e6
+qbrick_freq = 5160.75e6
 #RObrick_freq = 7348.8e6
-w = 200
-w_selective = 1000
-pi_amp_initial = .1934
+#w = 30
+#w_selective = 300
+#pi_amp_initial = .1678
 default_sideband = 100e6
 
 
 w_q = np.zeros_like(currents)
 
-#qbrick.set_frequency(qbrick_freq)
+qbrick.set_frequency(qbrick_freq)
 #RObrick.set_frequency(RObrick_freq)
 #refbrick.set_frequency(RObrick_freq+50e6)
 #time.sleep(1)
@@ -57,7 +57,7 @@ w_q = np.zeros_like(currents)
 
 for i in range(len(currents)):
     
-    Yoko.do_set_current(currents[i])
+    yoko.do_set_current(currents[i])
     time.sleep(.5)
     
              
@@ -65,7 +65,7 @@ for i in range(len(currents)):
     from scripts.single_qubit import ssbspec
     seq = sequencer.Trigger(250)        
     spec = ssbspec.SSBSpec(qubit_info, ssbspec_freqs, seq=seq, plot_seqs=False)
-    spec.measure_keysight()
+    spec.measure()
     drive_freq = qbrick.get_frequency()
     w_q[i] = ssbspec_freqs[np.argmin(spec.get_ys())] + drive_freq - default_sideband
     
@@ -81,5 +81,5 @@ plt.xlabel('current [mA]')
 
 plt.plot()
 
-#Yoko.set_output_state(0)    
+yoko.set_output_state(0)    
 

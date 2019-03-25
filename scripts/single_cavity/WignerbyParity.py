@@ -7,7 +7,6 @@ from pulseseq.pulselib import *
 
 def analysis(meas, data=None, fig=None):
     zs, fig = meas.get_ys_fig(data, fig)
-    print(zs.shape)
     zs = zs.reshape(len(meas.xs), len(meas.ys))
     xs, ys = meas.get_plotxsys()
     ax = fig.axes[0]

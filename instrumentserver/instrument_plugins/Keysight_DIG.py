@@ -22,7 +22,7 @@ class Keysight_DIG(Instrument):
 
 
 
-    def __init__(self, name, chassis=0, slot=3, DIG_PRODUCT = "M3102A", trigger_period = 200, trigger_only = False, **kwargs):
+    def __init__(self, name, chassis=0, slot=3, DIG_PRODUCT = "M3102A", trigger_period = 200, trigger_only = False, awg_list = [7, 8, 10], **kwargs):
         super(Keysight_DIG, self).__init__(name)
         self._timeout = DEFAULT_TIMEOUT
         self._main_channel=1
@@ -35,6 +35,7 @@ class Keysight_DIG(Instrument):
         self._trigger_period=trigger_period
         self._interrupt = False
         self._capturing = False
+        self._awg_list = awg_list #DARIO 1/31 dynamic slot assignment
         
         self._name = name
         self._chassis = chassis
@@ -224,10 +225,10 @@ class Keysight_DIG(Instrument):
         return self.set(keys)
     
     def load_hvi(self):
-        HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\3slot' + str(self._trigger_period) + 'us.HVI'
+        num_slots = len(self._awg_list) #DARIO 1/31 dynamic slot assignment
+        HVI_location = 'C:/qrlab/instrumentserver/instrument_plugins/HVI/' + str(num_slots) + 'slot' + str(self._trigger_period) + 'us.HVI'
 #        HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\1slot' + str(self._trigger_period) + 'us.HVI'
-#        self._hvi = CompiledHVI(HVI_location)
-        self._hvi = CompiledHVI(HVI_location)
+        self._hvi = CompiledHVI(HVI_location, self._awg_list) #DARIO 1/31 dynamic slot assignment
         self._hvi.stop()
         
     def start_hvi(self):

@@ -36,6 +36,7 @@ class Gaussian(Pulse):
         blockwidth = np.round(chop*s)
         ts = np.linspace(-blockwidth/2, blockwidth/2, blockwidth, endpoint=True)
         ys = a * np.exp(-ts**2/(2 * s**2))
+        ys[-1] = 0.         # JEFF added to solve t2 echo stitching problem
         name = 'gauss(%.2f,%.5f)' % (s, a)
         super(Gaussian, self).__init__(name, ys, chan=chan)
 

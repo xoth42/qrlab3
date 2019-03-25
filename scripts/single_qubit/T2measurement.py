@@ -59,7 +59,7 @@ def analysis(meas, data=None, fig=None):
     params.add('tau', value=xs[-1], min=10, max=2e5)
     params.add('freq', value=f0, min=0)
     if meas.echotype == ECHO_NONE:
-        params.add('phi0', value=np.pi/2, min=-1.2*np.pi, max=1.2*np.pi)
+        params.add('phi0', value=np.pi/2, min=-1.2*np.pi, max=1.2*np.pi)  #Changed to plus sign for accommodate for amplitude RO, need a good LT solution
     elif meas.echotype == ECHO_HAHN:
         params.add('phi0', value=-np.pi/2, min=-1.2*np.pi, max=1.2*np.pi) #DARIO added to fit better for echo vs plain T2
     result = lmfit.minimize(t2_fit, params, args=(xs, ys))
@@ -219,13 +219,20 @@ class T2Measurement(Measurement1D):
             s.append(self.seq)
             s.append(r(np.pi/2, X_AXIS))#s.append(Pad(r(np.pi/2, X_AXIS), 250, PAD_LEFT))
 
-            # We want echos: <tau> (<echo> <2tau>)^n <tau>
+            # We want echos: <tau> (<tau> <echo> <tau>)^n <tau>
             if e:
-                tau=int(dt/(self.necho+1))
-                s.append(Delay(tau))
+                tau=int(dt/(self.necho*2 + 2))
+#                s.append(Delay(tau))
+#                for i in range(self.necho):
+#                    s.append(Delay(tau))
+#                    s.append(e)
+#                    s.append(Delay(tau))
+#                s.append(Delay(tau))
+                
                 for i in range(self.necho):
+                    s.append(Delay(2*tau))
                     s.append(e)
-                    s.append(Delay(tau))
+                s.append(Delay(2*tau))
 #                tau = int(np.round(dt / (2 * self.necho) - epadlen/2))
 #                if tau < 0:
 #                    s.append(Delay(dt))

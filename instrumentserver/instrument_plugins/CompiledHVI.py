@@ -8,13 +8,15 @@ def error_decorator(function):
     return wrapper
         
 class CompiledHVI(object):
-    def __init__(self, HVI_path_str, *args, **kwargs):
+    def __init__(self, HVI_path_str, awg_list, *args, **kwargs):
         self.hvi = key.SD_HVI()
         self.identifier = self.hvi.open(HVI_path_str)
         self.error(self.identifier)
-        self.assignHardware(0, 0, 7)
-        self.assignHardware(1, 0, 8)
-        self.assignHardware(2, 0, 10)
+        for i in range(len(awg_list)):
+            self.assignHardware(i, 0, awg_list[i]) #DARIO 1/31 dynamic slot assignment
+#        self.assignHardware(1, 0, 10) #DARIO 1/17/19 changed for different slot arrangement on the third
+#                                                                   (digitizer-less) chassis
+#        self.assignHardware(2, 0, 10)
 
         self.hvi.compile()
         self.hvi.load()
