@@ -86,6 +86,7 @@ class ROCavSpectroscopy_keysight(Measurement1D):
 
     def generate(self):
         s = Sequence()
+        print('readout pulse length', self.readout_info.pulse_len)
 
         s.append(self.seq)
         if self.qubit_pulse:
@@ -100,10 +101,12 @@ class ROCavSpectroscopy_keysight(Measurement1D):
 #                Constant(1, 0, chan=self.qubit_info.channels[1]),
 #                Constant(1, 0, chan=self.qubit_info.channels[0])
 #            ]))
+
         s.append(Combined([
             Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
         ]))
+
 #        s.append(Combined([
 #            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.acq_chan)),
 #            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.readout_chan_I)),
@@ -111,7 +114,7 @@ class ROCavSpectroscopy_keysight(Measurement1D):
 #        ]))
 
     
-        s.append(Delay(1000))
+        s.append(Delay(2000))
 
         sequencer = self.get_sequencer(s)
         seqs = sequencer.render()
@@ -152,6 +155,7 @@ class ROCavSpectroscopy_keysight(Measurement1D):
                 dig.arm()
                 dig.start_hvi()
                 ret = dig.take_avg_shot()
+
                 dig.stop_hvi()
                 dig.release_buf()
 #                print('inside keysight measurment. ret:')

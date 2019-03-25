@@ -7,7 +7,7 @@ from measurement import Measurement1D
 def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
     xs = meas.detunings
-    fig.axes[0].plot(-xs/1e6, ys)
+    fig.axes[0].plot(-xs/1e6, ys, '.')
     fig.axes[0].set_xlabel('Detuning (MHz)')
     fig.axes[0].set_ylabel('Intensity (AU)')
     fig.canvas.draw()

@@ -7,6 +7,7 @@ import numpy as np
 from instrument import Instrument
 import types
 
+currSource = 'none'
 
 # Some exceptions to make errors nicer.
 class StateWrongValueError(Exception):
@@ -42,12 +43,16 @@ class VISACommand(object):
         :param arguments: Any info that actually needs to be sent to the
         device, like a voltage or current.
         :return: None
+        Functions based on the send definition act through "Listener Functions"
+        in the Yoko 7651 manual
         '''
         self.ins.write(self.command + str(arguments) + ';')
         self.ins.write('E;')
 
     def recieve(self):
         '''
+        This needs to work such that "Talker Functions" in the Yoko 7651 manual
+        communicate through the recieve function.
         Get a piece of info from the device.
         :return: A list of the results.
         '''
@@ -56,7 +61,7 @@ class VISACommand(object):
             while True:
                 query_string = self.command + '?;'
                 self.ins.write(query_string)
-                result = self.ins.read_raw()
+                result = self.ins.read_raw() #Built-in function in qrlab
                 if result == result_list[-1]:
                     break
                 if (result != 'END' + self.term_chars) and (result != u''):
@@ -80,17 +85,17 @@ class Yokogawa_7651_new(Instrument):
 
         # Define all of the necesary commands that we'll need to interact with
         #  the device.
-        self.OS = VISACommand('OS', self.instrument)
-        self.voltage_function = VISACommand('F1', self.instrument)
-        self.auto_range_value = VISACommand('SA', self.instrument)
-        self.output = VISACommand('OD', self.instrument)
-        self.current_function = VISACommand('F5', self.instrument)
-        self.polarity = VISACommand('SG', self.instrument)
-        self.output_state = VISACommand('O', self.instrument)
-        self.voltage_limit = VISACommand('LV', self.instrument)
-        self.current_limit = VISACommand('LA', self.instrument)
-        self.status = VISACommand('OC', self.instrument)
-        self.voltage_limit = VISACommand('LV', self.instrument)
+        self.OS = VISACommand('OS', self.instrument) #OS is "Set Information Output"
+        self.voltage_function = VISACommand('F1', self.instrument) #F1 is Function setting for voltage
+        self.auto_range_value = VISACommand('SA', self.instrument) #SA is for auto ranging mode (?)
+        self.output = VISACommand('OD', self.instrument) #OD "Output Value Data Output"
+        self.current_function = VISACommand('F5', self.instrument) #F5 is Function setting for current
+        self.polarity = VISACommand('SG', self.instrument) #SG is for specifying or altering polarity
+        self.output_state = VISACommand('O', self.instrument) #O is On/Off, i.e. O1 or O2
+        self.voltage_limit = VISACommand('LV', self.instrument) #LV is Voltage Limit Setting
+        self.current_limit = VISACommand('LA', self.instrument) #LA is Current Limit Setting
+        self.status = VISACommand('OC', self.instrument) #OC is "Status Code Output" 8 bit number to tell behavior of Yoko
+#        self.voltage_limit = VISACommand('LV', self.instrument) Repeated
 
         self.add_parameter('output_state', type=types.IntType,
                            flags=Instrument.FLAG_GETSET,
@@ -130,6 +135,7 @@ class Yokogawa_7651_new(Instrument):
                            flags=Instrument.FLAG_GET)
 
     def do_get_output_state(self):
+        return self.output
         return None
 
     def do_set_output_state(self, state):
@@ -137,8 +143,10 @@ class Yokogawa_7651_new(Instrument):
             raise StateWrongValueError("Output state can be 0 or 1, nothing "
                                        "else.")
         self.output_state.send(state)
+        self.output = state
 
     def do_set_source_type(self, source):
+        currSource = source
         if source == 'voltage':
             source = 1
         if source == 'current':
@@ -151,21 +159,43 @@ class Yokogawa_7651_new(Instrument):
             self.current_function.send()
 
     def do_get_source_type(self):
-        return None
+        return currSource
 
     def do_set_voltage(self, voltage):
         if (abs(voltage) > 30):
             raise VoltageError("Voltage out of range")
-        self.voltage_function.send()
-        self.auto_range_value.send(voltage)
+#        self.voltage_function.send()
+#       The if statement below is necessary to ensure Yoko can switch between
+#       current and voltage. BS & AS, 2/13/19.
+#        if (self.do_get_source_type() != 'voltage'): 
+#            self.do_set_source_type('voltage')
+#        self.auto_range_value.send(voltage)
+        self.do_set_voltage_limit(float(abs(voltage)))
+        self.write( 'S%f;' % (voltage,) )
+        self.trigger()
 
     def do_get_voltage(self):
         return None
+        
+    def do_sweep_voltage(self, voltmin):#, voltmax, voltstep, timestep):
+#        return None
+        #Native sweeping function implementation, 3/14/19, BS
+#        if (voltmin < -30):
+#            raise VoltageError("Voltage out of range")
+#        if (voltmax > 30):
+#            raise VoltageError("Voltage out of range")
+        print(voltmin)
+#        indexvoltage = (voltmax-voltmin)/voltstep #Needs to be integer
+#        print(indexvoltage)
+
 
     def do_set_current(self, current):
         if (abs(current) > 120):
             raise CurrentError('Current out of range.')
-
+#       The if statement below is necessary to ensure Yoko can switch between
+#       current and voltage. BS & AS, 2/13/19.
+        if (self.do_get_source_type() != 'current'):
+            self.do_set_source_type('current')
         self.current_function.send()
         self.auto_range_value.send(current / 1000)
 
@@ -198,5 +228,5 @@ class Yokogawa_7651_new(Instrument):
 
 
 if __name__ == '__main__':
-    test = Yokogawa_7651_new('test', address='GPIB0::3::INSTR')
+    test = Yokogawa_7651_new('test', address='GPIB0::3::INSTR') #why is this ::3 and not ::6? Uh oh.
     test.do_get_polarity()

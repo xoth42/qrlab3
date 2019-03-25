@@ -7,11 +7,12 @@ from pulseseq.pulselib import *
 
 def analysis(meas, data=None, fig=None):
     zs, fig = meas.get_ys_fig(data, fig)
+    print(zs.shape)
     zs = zs.reshape(len(meas.xs), len(meas.ys))
     xs, ys = meas.get_plotxsys()
     ax = fig.axes[0]
     plt.sca(ax)
-    pc = ax.pcolormesh(xs, ys, zs)
+    pc = ax.pcolormesh(xs, ys, zs, cmap=plt.get_cmap('RdBu'))
     fig.colorbar(pc)
 
     ax.set_xlim(xs.min()), xs.max()
@@ -89,6 +90,8 @@ class WignerFunction(Measurement2D):
                         s.append(Delay(self.t_gf))
                         s.append(ef(np.pi, X_AXIS))
                     s.append(ge(np.pi/2, X_AXIS))
+                else:
+                    s.append(ge(np.pi/2, Y_AXIS))
 
                 if self.delay:
                     s.append(Delay(self.delay))
@@ -97,6 +100,7 @@ class WignerFunction(Measurement2D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
+                s.append(Delay(800))
 
             if self.QswA is not None or self.QswB is not None:
                 s.append(Repeat(Delay(1000), 20))   # wait for alazar acquisition to finish
@@ -121,4 +125,5 @@ class WignerFunction(Measurement2D):
         return ys
 
     def analyze(self, data=None, fig=None):
+        print(data.shape)
         self.fit_params = analysis(self, data, fig)

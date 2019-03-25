@@ -131,7 +131,7 @@ class Keysight_DIG(Instrument):
         
         self.add_parameter('trigger_period', type=types.IntType,
                            flags=Instrument.FLAG_GETSET,
-                           minval=50, maxval=1600, value=self._trigger_period,
+                           minval=50, maxval=10000, value=self._trigger_period,
                                help='Period for the HVI trigger for measurments')
         
         self.add_parameter('timeout', type=types.IntType, value=DEFAULT_TIMEOUT,
@@ -413,8 +413,6 @@ class Keysight_DIG(Instrument):
             print(np.shape(signal), signal)
             print(np.shape(ref), ref)
             raise ValueError
-#        self.dig.DAQbufferPoolRelease(self._main_channel)
-#        self.dig.DAQbufferPoolRelease(self._ref_channel)
         
         self._demodA.demodulate(signal)
         IQA = self._demodA.IQ.reshape([self._naverages, self._nsamples / self._if_period])
@@ -428,6 +426,8 @@ class Keysight_DIG(Instrument):
         avg = 0
         for i in range(self._naverages):
             avg += IQA[i,:] * refs[i]
+            
+        self.release_buf()
             
         return avg/self._naverages
         
@@ -476,6 +476,17 @@ class Keysight_DIG(Instrument):
 #            print('Acquiring %d/%d', i+1, self._ntransfers)
             logging.info('%d/%d averages performed', (i+1)*self._naverages/self._ntransfers, self._naverages)
             self.emit('capture-progress', (i+1)*self._naverages/self._ntransfers)
+            
+            if self._interrupt:
+                logging.info('Capture interrupted')
+                raise Exception('Capture interrupted')
+                self._card.end_capture()
+                if self._capturing:
+                    self.emit('end-capture')
+                self.set_interrupt(False)
+                self._capturing = False
+                logging.info('DIG ended capture...')
+                return avgs/((i+1)*self._naverages/self._ntransfers)
             
             try:
                 signal = np.array(self.dig.DAQbufferGet(self._main_channel), dtype=np.complex64)
@@ -567,6 +578,62 @@ class Keysight_DIG(Instrument):
        
         return sums / naverages, sums_ref / naverages
     
+    
+    def test_dig_demod(self, nsamples, naverages, captureDelay = 0):
+        digChannels = [1, 2] 
+        errors = []
+        errors += [self.dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)]
+    
+        self.release_buf()
+    
+        for i in range(len(digChannels)):   
+           errors += [self.dig.DAQtriggerExternalConfig(digChannels[i], key.SD_TriggerExternalSources.TRIGGER_EXTERN, 
+                                                key.SD_TriggerBehaviors.TRIGGER_RISE, key.SD_SyncModes.SYNC_NONE)]
+           errors += [self.dig.DAQflush(digChannels[i])]
+           errors += [self.dig.channelInputConfig(digChannels[i], VOLTAGE_SCALE, key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)]
+           errors += [self.dig.DAQconfig(digChannels[i], nsamples, naverages, captureDelay, key.SD_TriggerModes.EXTTRIG)]
+           errors += [self.dig.DAQbufferPoolConfig(digChannels[i], nsamples * naverages, 100)]
+        if any(error < 0 for error in errors):
+            print('test_dig errors:', errors)
+        
+        self.dig.DAQstartMultiple(3)
+        self.start_hvi()
+    #    hvi.start()
+        
+        
+        try:
+            signal = np.array(self.dig.DAQbufferGet(digChannels[0]), dtype=np.complex64)
+            ref = np.array(self.dig.DAQbufferGet(digChannels[1]), dtype=np.complex64)
+        except ValueError, e:
+            print(str(e))
+            print('digitizer is likely not getting triggered')
+            raise ValueError
+            
+        if(not len(signal) == naverages * nsamples):
+            print('Buffer gave some wack shit, or maybe no shit at all:')
+            print(np.shape(signal), signal)
+            print(np.shape(ref), ref)
+            raise ValueError
+      
+        self.set_demod(naverages * nsamples)
+        self._demodA.demodulate(signal)
+        self._demodB.demodulate(ref)
+        
+        IQA = self._demodA.IQ.reshape([naverages, nsamples / self._if_period])
+        IQB = self._demodB.IQ.reshape([naverages, nsamples / self._if_period])
+        refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
+    
+        avgs = np.zeros_like(IQA[0,:])
+        for i in range(naverages):
+            avgs += IQA[i,:]  * refs[i]
+            
+        self.stop_hvi()
+        
+        for i in range(len(digChannels)):
+            self.dig.DAQbufferPoolRelease(digChannels[i])
+       
+        return avgs / naverages
+    
     def setup_demod_shots(self, N):
         self.setup_avg_shots(N)
 
@@ -583,6 +650,8 @@ class Keysight_DIG(Instrument):
             avg_buf[:] = IQ_sum / float(n)
             avg_buf.set_attrs(averages=n)
         except Exception, e:
+            print(IQ_sum.shape, n, avg_buf.shape)
+            print(avg_buf[:].shape)
             msg = 'Unable to store averages: %s' % str(e)
             logging.warning(msg)
             raise Exception(msg)

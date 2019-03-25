@@ -334,6 +334,8 @@ class Measurement(object):
 
     def start_awgs(self):
         l = self.get_awg_loader()
+        #JEFF trying to force all awgs to run
+#        l.set_all_awgs_active()
         print('starting awgs:', l.get_awgs(), l.get_active_awgs())
         l.run()
 
@@ -842,7 +844,10 @@ class Measurement(object):
         '''
         if fig is None:
             fig = self.get_figure()
-        return self.get_ys(), fig
+        if data is None:
+            return self.get_ys(), fig
+        else:
+            return data, fig
 
     def analyze(self, data=None, fig=None):
         '''

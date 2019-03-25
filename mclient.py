@@ -263,5 +263,9 @@ def restore_instruments(fn=config.ins_store_fn):
 instruments = objsh.helper.find_object('instruments')
 datasrv = objsh.helper.find_object('dataserver')
 datadir = 'c:/_data'
+<<<<<<< HEAD
 filename = 'c:/_data/Fluxonium31December2018.hdf5'
+=======
+filename = 'c:/_data/YIG_Copper_Cavity_sweep_test.hdf5'
+>>>>>>> b7c5053c21228c5a9732365d18228b3536f0f761
 datafile = datasrv.get_file(filename)
