@@ -5,14 +5,12 @@ Created on Mon Jan 08 14:50:08 2018
 @author: WangLab
 """
 
-import lmfit
-
+import mclient
 import numpy as np
 import matplotlib.pyplot as pl
 
 # Read the array from file
-filename = 'text_0.5mm_270.0_300.0_0.05'
-new_data = np.loadtxt(r'%s.txt'%(filename))
+new_data = np.loadtxt(r'C:\\qrlab\FMR\text_0.75mm_parall_280-305-0.2.txt')
 print new_data.shape
 # Note that this returned a 2D array!
 # However, going back to 3D is easy if we know the 
@@ -31,13 +29,10 @@ Y = np.transpose(Y)
 
  #if specific trace is needed
  
-m = 292  #the initial magnetic field you want
-M = 293  #the final magnetic field you want
-step = 0.05
-#f = open('parameters_per_310-345-0.2_V1.txt','w')
-#f.close
+m = 293.9  #the initial magnetic field you want
+M = 294.9  #the final magnetic field you want
+step = 0.2
 kappa_a =[]
-pl.figure()
 while m <= M:
     for i in range(size):
         if X[0][i] < m:
@@ -121,23 +116,18 @@ while m <= M:
         return y - abs(est)
         
     params = lmfit.Parameters()
-    params.add('kappa_prod', value= 3e10, min = 0)
-    params.add('omega_c', value= 8.5e9)
-    params.add('kappa_a', value=3e6, min = 0)
-    params.add('g',value= 24.75e6, min = 0)
-    params.add('omega_FMR',value = 8.48e9)
+    params.add('kappa_prod', value= 323300165.147, vary = False)
+    params.add('omega_c', value= 8456886798.41, vary = False)
+    params.add('kappa_a', value=3864338.96732, vary = False)
+    params.add('g',value= 24.75e6)
+    params.add('omega_FMR',value = 8.5e9)
     params.add('gamma_m', value = 3e6, min=0)
     print X[0][i]
     result = lmfit.minimize(S21, params, args=(x, y))
-    lmfit.report_fit(result.params)    
+    lmfit.report_fit(result.params)
     y=y-S21(result.params, x, y)
     
     pl.plot(x, y,'--')
     
 
     m = m + step
-    f= open('parameters_%s.txt'%(filename),'a')
-    f.writelines('%s\n %s\n'%(X[0][i], result.params))
-    f.close()
-    
-pl.legend()

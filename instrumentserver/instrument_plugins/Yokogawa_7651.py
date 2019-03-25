@@ -63,14 +63,16 @@ class Yokogawa_7651(VisaInstrument):
         '''
         Triggering function for the Yokogawa 7651.
         
-        After changing any parameters of the instrument (for example, output voltage), the device needs to be triggered before it will update.
+        After changing any parameters of the instrument (for example, output voltage),
+        the device needs to be triggered before it will update.
         '''
         self.write('E;')
     
     def do_set_voltage_range(self,voltage):
         '''
         Function changes the voltage range of the power supply. 
-        A float representing the desired voltage will adjust the range accordingly, or a string specifying the range will also work.
+        A float representing the desired voltage will adjust the range accordingly,
+        or a string specifying the range will also work.
         
         Device can output a max of 30V.
         
@@ -160,9 +162,9 @@ class Yokogawa_7651(VisaInstrument):
         '''
 
         self.do_set_voltage_range(float(abs(voltage)))
-        self.write( 'S%f;' % (abs(voltage),) )
+        self.write( 'S%f;' % (voltage,) )
         self.trigger()
-        self.do_set_polarity(voltage)
+#        self.do_set_polarity(voltage)
         self.do_get_voltage()
         
     def do_set_current(self,current):
