@@ -602,9 +602,12 @@ class Measurement(object):
         progress_hid = dig.connect('capture-progress', self._capture_progress_cb)
         dataupd_hid = self.data.connect('changed', self._data_changed_cb)
         
-        
         dig.stop_hvi()
-        dig.setup_experiment(self.cyclelen, ntransfers = None)
+        if self.histogram:
+            dig.setup_hist(self.cyclelen * dig.get_naverages(), self.shot_data)
+        else:
+            dig.setup_experiment(self.cyclelen, ntransfers = None)
+        
         dig.arm()
         
         dig.set_interrupt(False)
