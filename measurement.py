@@ -613,6 +613,8 @@ class Measurement(object):
 
         while not ret.is_valid() and not self._interrupted:
             objsh.helper.backend.main_loop(20)
+#            dig.do_set_timeout(2000)
+            #yingying
             QtWidgets.QApplication.processEvents()
         if self._interrupted:
             dig.set_interrupt(True)

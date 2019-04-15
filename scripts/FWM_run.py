@@ -87,20 +87,69 @@ if 0: # f0 - g1 fwm test
 #    target = 6.926e9
     target = 4.96320e9 * 2 - 221.2e6 - 6.92605e9
 #    freqs = np.linspace(target-3e6, target+3e6, 50)    this is original set values (juliang)
-    freqs = np.linspace(target-3.0e6, target +4.0e6, 101)
-    import FWM_f0g1
-    for amp in [.035]:
-        f0g1 = FWM_f0g1.FWM_f0g1(qubit_info, ef_info, fwm_gen, 5e3, 
-                     freqs, 15, amp, '2m1')
-        f0g1.measure()
+    freqs = np.linspace(target-5.0e6, target+1e6, 51)
+    amps = [.002, .003, .004, .005, .006, .007]    # Jeff's 
+    powers = [10, 12.5, 15]     #Jeff's
+    shift_freq = np.zeros((len(amps), len(powers)))
+    from FWM import FWM_f0g1
+    for i, amp in enumerate(amps):
+        for j, power in enumerate(powers):
+            f0g1 = FWM_f0g1.FWM_f0g1(qubit_info, ef_info, fwm_gen, 5e3, 
+                         freqs, power, amp, '2m1')
+            f0g1.measure()
+            shift_freq[i, j] = f0g1.xs[np.argmax(f0g1.ampdata[:])]
         
         
-if 1: # f0 - g1 time domain test
+if 0: # f0 - g1 time domain test
     fwm_gen = mclient.instruments['SCpump']
-    delays = np.linspace(0, 6e3, 151)
-    import FWM_f0g1_t1
-    for amp in [.035]:
-        f0g1 = FWM_f0g1_t1.FWM_f0g1_t1(qubit_info, ef_info, fwm_gen, delays, 
-                     amp, '2m1', plot_seqs = False)
-        f0g1.measure_keysight()
+    delays = np.linspace(0, 20e3, 151)
+    from FWM import FWM_f0g1_t1
+    amps = [.002, .003, .004, .005, .006, .007]
+    powers = [10, 12.5, 15]
+    t1s = np.zeros_like(shift_freq)
+    for i, amp in enumerate(amps):
+        for j, power in enumerate(powers):
+            fwm_gen.set_power(power)
+            fwm_gen.set_frequency(shift_freq[i, j])
+            f0g1_t1 = FWM_f0g1_t1.FWM_f0g1_t1(qubit_info, ef_info, fwm_gen, delays, 
+                         amp, '2m1', plot_seqs = False)
+            t1s[i, j] = f0g1_t1.measure_keysight()
 
+if 0: # f0 - g1 fwm test (Juliang)
+    fwm_gen = mclient.instruments['SCpump']
+#    target = 4.96386e9 * 2 - 221.2e6 - 6.92618e9   this is original set values (juliang)
+#    target = 4.96356e9 * 2 - 221.2e6 + 6.92618e9    4.96356e9 is the frequency at the center
+#    target = 6.926e9
+    target = 4.96310e9 * 2 - 221.2e6 - 6.92605e9
+#    freqs = np.linspace(target-3e6, target+3e6, 50)    this is original set values (juliang)
+    freqs = np.linspace(target-3.0e6, target+4e6, 51)
+#    amps = [.01, .02, .04, .08]
+#    powers = [0, 5, 10, 15]
+#    amps = [.002, .003, .004, .005, .006, .007]    # Jeff's 
+    amps=.035   
+#    powers = [10, 12.5, 15]     #Jeff's
+    powers=14     
+#    shift_freq = np.zeros((len(amps), len(powers)))
+    from FWM import FWM_f0g1
+#    for i, amp in enumerate(amps):
+#        for j, power in enumerate(powers):
+    f0g1 = FWM_f0g1.FWM_f0g1(qubit_info, ef_info, fwm_gen, 5e3, 
+                         freqs, power, amp, '2m1')
+    f0g1.measure()
+#            shift_freq[i, j] = f0g1.xs[np.argmax(f0g1.ampdata[:])]
+        
+        
+if 1: # f0 - g1 time domain test (Juliang)
+    fwm_gen = mclient.instruments['SCpump']
+    delays = np.linspace(0, 10e3, 151)
+    from FWM import FWM_f0g1_t1
+    amps = [.002, .003, .004, .005, .006, .007]
+    powers = [10, 12.5, 15]
+    t1s = np.zeros_like(shift_freq)
+#    for i, amp in enumerate(amps):
+#        for j, power in enumerate(powers):
+    fwm_gen.set_power(power)
+    fwm_gen.set_frequency(shift_freq[i, j])
+    f0g1_t1 = FWM_f0g1_t1.FWM_f0g1_t1(qubit_info, ef_info, fwm_gen, delays, 
+                 amp, '2m1', plot_seqs = False)
+    t1s[i, j] = f0g1_t1.measure_keysight()
