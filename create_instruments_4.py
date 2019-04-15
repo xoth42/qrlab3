@@ -9,9 +9,9 @@ from mclient import instruments
 
 
 instruments.remove('dig')
-dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period = 50, trigger_only = False)
-dig.set_naverages(10000)
-dig.set_nsamples(700)
+dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period = 50, trigger_only = False,
+                         naverages = 1000, nsamples = 700)
+
 
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB1::17::INSTR')
 #Magnet = instruments.create('Magnet','AMI_430')

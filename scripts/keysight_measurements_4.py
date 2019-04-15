@@ -219,11 +219,9 @@ if 0: # Time Rabi
     bla
 
     
-if 0: # T1
+if 1: # T1
     from single_qubit import T1measurement
-
-
-    t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 7e3, 51), 
+    t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 7e3, 200), 
                                      double_exp=False, generate=True, plot_seqs=False)
     t1.measure_keysight()
     bla
@@ -613,7 +611,7 @@ if 0: # stark shift measurments
         pumpFG.set_rf_on(False)       
     
 #Yingying
-if 1: #sweep field to do T1, T2 measurement
+if 0: #sweep field to do T1, T2 measurement
 
 
     from single_qubit import T1measurement, T2measurement
