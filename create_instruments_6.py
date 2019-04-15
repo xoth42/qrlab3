@@ -9,9 +9,9 @@ from mclient import instruments
 
 
 
-instruments.remove('dig')
-dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period = 2000, trigger_only = False)
-dig.set_naverages(10000)
+#instruments.remove('dig')
+dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period = 100, trigger_only = True, awg_list = [8])
+
 
 
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
@@ -324,7 +324,7 @@ alz = instruments.create('alazar', 'Alazar_Daemon')
 alz.set_ch1_range('40mV')
 alz.set_ch2_range('40mV')
 alz.set_nsamples(4800)
-alz.set_naverages(10000)
+alz.set_naverages(1000)
 alz.set_ch1_coupling('AC')
 alz.set_ch2_coupling('AC')
 #alz.set_clock_source('EXT10M')
