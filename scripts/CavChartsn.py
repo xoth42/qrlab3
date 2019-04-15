@@ -62,8 +62,21 @@ if 0: # Cavity disp calibration
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
     seq = sequencer.Trigger(250)
 
-    disp = cavdisp.CavDisp(qubit_info, cavity_infoA, 2.5, 31, 0, seq=None,
-                           delay=0, bgcor=True, update=False, generate=True,
+    disp = cavdisp.CavDisp(qubit_info, cavity_infoA, 2.5, 41, 0, seq=None,
+                           delay=0, bgcor=False, update=False, generate=True,
+#                           Qswitch_infoA=Qswitch_infoB, Qswitch_infoB=Qswitch_infoB,
+#                           extra_info=[Qswitch_infoA, Qswitch_infoB,],
+                          )
+    disp.measure_keysight()
+    bla
+
+if 1: # Cavity disp calibration with switch
+    from single_cavity import cavdisp_switch
+#    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
+    seq = sequencer.Trigger(250)
+
+    disp = cavdisp_switch.CavDisp_switch(qubit_info, cavity_infoA, '2m1', 2.5, 41, 0, seq=None,
+                           delay=0, bgcor=False, update=False, generate=True,
 #                           Qswitch_infoA=Qswitch_infoB, Qswitch_infoB=Qswitch_infoB,
 #                           extra_info=[Qswitch_infoA, Qswitch_infoB,],
                           )
@@ -74,13 +87,29 @@ if 0: # Cavity T1
     from single_cavity import cavT1
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
 #    xs = np.concatenate((np.linspace(0e3, 50e3, 26), np.linspace(60e3, 1250e3, 55)))
-    t1 = cavT1.CavT1(qubit_info, cavity_infoA, 2, np.linspace(0, 1400e3, 51),
-                     proj_num=0, seq=None, postseq=None, bgcor=True, force_a0 = True 
+    t1 = cavT1.CavT1(qubit_info, cavity_infoA, 1, np.linspace(0, 1400e3, 51),
+                     proj_num=0, seq=None, postseq=None, bgcor=False, force_a0 = True 
 #                     extra_info=[ef_info,]
                      )
     t1.measure_keysight()
     ys = t1.get_ys()
     bla
+    
+if 0: # Cavity T1 with switch
+    fwm_gen = mclient.instruments['SCpump']
+#    fwm_gen.set_power(power)
+#    fwm_gen.set_frequency(shift_freq[i, j])
+    from cavity_switch import cavT1_switch
+#    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
+#    xs = np.concatenate((np.linspace(0e3, 50e3, 26), np.linspace(60e3, 1250e3, 55)))
+    t1 = cavT1_switch.CavT1_switch(qubit_info, cavity_infoA, fwm_gen, '2m1', 1.5, np.linspace(0, 1400e3, 51),
+                     proj_num=0, seq=None, postseq=None, bgcor=False, force_a0 = True 
+#                     extra_info=[ef_info,]
+                     )
+    t1.measure_keysight()
+    ys = t1.get_ys()
+    bla
+    
 
 if 0:# Cavity T2
     from single_cavity import cavT2
@@ -111,8 +140,8 @@ if 0: #Cavity T2
 
 if 0: # Cavity spec
     from single_cavity import cavspectroscopy_keysight
-    cav_freq = 3966e6
-    freq_range = 2e6
+    cav_freq = 4.0903e9
+    freq_range = 0.5e6
     cspec = cavspectroscopy_keysight.CavSpectroscopy(mclient.instruments['SCalice'], qubit_info, cavity_infoA, [np.pi], 
                                             np.linspace(cav_freq-freq_range, cav_freq+freq_range, 51), plot_seqs=False)
 
@@ -125,7 +154,7 @@ if 0: # Cavity spec
 
 if 0: #SSB cavspec
     from single_cavity import ssbcavspec
-    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoA, np.linspace(-5e6, 5e6, 51),
+    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoA, np.linspace(-1e6, 1e6, 51),
 #                                  postseq=efpi, extra_info=[ef_info,]
                                   )
     cspec.measure_keysight()
@@ -334,7 +363,7 @@ if 0: # Wigner function by displaced parity for cavity B
                                          seq=seq, delay=5, saveas=None, bgcor=False)
     Wfun.measure_keysight()
 
-if 1: # Wigner function by displaced parity for cavity A
+if 0: # Wigner function by displaced parity for cavity A
     from scripts.single_cavity import WignerbyParity
 #    seq = sequencer.Join([prepareB, geph(pi/2,0), sequencer.Delay(950), cB(1.65, -pi*0.175),
 #                          geqs(pi,0), cB(-1.65, -pi*0.02)])    

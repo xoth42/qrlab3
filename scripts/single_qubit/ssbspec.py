@@ -76,3 +76,5 @@ class SSBSpec(Measurement1D):
 
     def analyze(self, data=None, fig=None):
         analysis(self, data, fig)
+        self.fig = fig
+

@@ -19,10 +19,10 @@ VNA = instruments['VNA']
 
 import matplotlib.pyplot as pl 
 date = datetime.datetime.now()
-filename = 'transition_1_s11%s_%s_%s'%(date.hour,date.minute,date.second)
+filename = '%sdB_%s_%s_%s'%(VNA.get_power(),date.hour,date.minute,date.second)
 
 print filename
-newpath = r'C:\Users\WangLab\Documents\TConnolly\transition_calibration\terminated_reflections\\%s.txt'%(filename)
+newpath = r'C:\Users\Wang_Lab\Documents\\yingying\\0405cooldown\\%s.txt'%(filename)
 
 if not os.path.exists(os.path.dirname(newpath)):
 
@@ -31,7 +31,7 @@ if not os.path.exists(os.path.dirname(newpath)):
 data = VNA.do_get_data()
 axis = VNA.do_get_xaxis()
 
-pl.figure()
+#pl.figure()
 if axis[len(axis) - 1] > 10 **9:
     xaxis = axis / float(1000000000)
     pl.xlabel('frequency(GHZ)')
@@ -40,7 +40,7 @@ elif axis[len(axis) - 1] > 10 **6:
     pl.xlabel('frequency(MHZ)')
 
 
-pl.plot(xaxis, data[0], label = filename)
+pl.plot(xaxis, data[0], label = filename[0:7])
 
 pl.ylabel('dB')
 pl.show()

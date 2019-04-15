@@ -56,9 +56,15 @@ class Spectroscopy_Keysight(Measurement1D):
     def generate(self):
         s = Sequence(self.seq)
         chs = self.qubit_info.sideband_channels
-        s.append(Constant(self.plen, self.amp, chan=chs[0])) #DARIO 4/11 why was this commented out earlier?
+
+        s.append(Combined([
+            Constant(self.plen, self.amp, chan=chs[0]),
+            Constant(self.plen, self.amp, chan=chs[1]),
+        ])) 
 #        s.append(Constant(self.plen, 1, chan='3m1'))
-#        s.append(Delay(100))
+        
+        s.append(Delay(100))
+
         if self.postseq:
             s.append(self.postseq)
             
@@ -98,11 +104,13 @@ class Spectroscopy_Keysight(Measurement1D):
 
         # Generate and load sequences
         seqs = self.generate()
+        self.stop_awgs()
         self.load(seqs)
         self.start_awgs()
 
         for ipower, power in enumerate(self.ro_powers):
             self.readout_info.rfsource1.set_power(power)
+            print 'Power = %s' % (power, )
             time.sleep(self.pow_delay)
 
             amps = []
