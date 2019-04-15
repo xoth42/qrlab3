@@ -263,6 +263,6 @@ def restore_instruments(fn=config.ins_store_fn):
 instruments = objsh.helper.find_object('instruments')
 datasrv = objsh.helper.find_object('dataserver')
 datadir = 'c:/_data'
-filename = 'c:/_data/20190204 Cooldown.hdf5'
+filename = 'c:/_data/April9Fluxonium.hdf5'
 
 datafile = datasrv.get_file(filename)

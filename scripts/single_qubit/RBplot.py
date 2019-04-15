@@ -8,13 +8,20 @@ Created on Wed Mar 13 11:02:09 2019
 import matplotlib.pyplot as plt
 import lmfit
 
-#data= y
+data=y
+
 
 
 #ave=np.mean(y, axis=0)
 
-#data_normalized=(data +25) / -6.5
-std = np.std(wd, axis = 0)/np.sqrt(int(np.shape(wd)[0]))
+#Separating the RB measurement from the normalization points  - The first 20 points are excited states, the following 20 points are ground state
+
+
+
+
+std = np.std(y, axis = 0)/np.sqrt(int(np.shape(y)[0]))
+
+
 
 
 #ave_oneless = np.delete(ave, 0)

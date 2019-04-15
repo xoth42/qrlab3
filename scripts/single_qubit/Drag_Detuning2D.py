@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Mar 29 11:42:34 2019
+
+@author: Wang_Lab
+"""
+
+#This is a 2D sweep for the optimal detuning and the drag value 
+
 import numpy as np
 import matplotlib.pyplot as plt
 from pulseseq.sequencer import *
@@ -6,55 +15,34 @@ from measurement import Measurement1D
 import lmfit
 #import lmfit
 
-def linear_fit(params, x, data):
-    est = params['m']*x + params['n']
-    return (data-est)
-
-def linear_fit2(params, x):
-    est = params['m']*x + params['n']
-    return est
+from mpl_toolkits.mplot3d import Axes3D
 
 
-
-
-#Ebru: I added linear fit to make it easier to pin down the crossing point
     
 
 def analysis(meas, data=None, fig=None):
-    ys, fig = meas.get_ys_fig(data, fig)
-    xs = meas.xs
-    drag_y = meas.get_ys()
-    drag_y1, drag_y2 = np.split(drag_y, 2)      #Splitting the measurement result in two to fit them separately
-    xs1, xs2 = np.split(xs,2)
+#    ys, fig = meas.get_ys_fig(data, fig)
+#    xs = meas.xs
+#    drag_y = meas.get_ys()
+#    drag_y1, drag_y2 = np.split(drag_y, 2)      #Splitting the measurement result in two to fit them separately
+#    xs1, xs2 = np.split(xs,2)
 
     
-    params = lmfit.Parameters()
-    params.add('m', value=0)
-    params.add('n', value=0)
-    result1 = lmfit.minimize(linear_fit, params, args=(xs1,drag_y1))
-    result2 = lmfit.minimize(linear_fit, params, args=(xs2,drag_y2))
-    
-    lmfit.report_fit(result1.params)
-    lmfit.report_fit(result2.params)
-    plt.figure()
-    plt.plot(xs1, linear_fit2(result1.params, xs1), color='r')
-    plt.plot(xs2, linear_fit2(result2.params, xs2), color='b')
-    plt.plot(xs1, drag_y1, color='r')
-    plt.plot(xs2, drag_y2, color='b')
 
+class Drag_Detuning2D(Measurement1D):
 
-class drag_test(Measurement1D):
-
-    def __init__(self, qubit_info, coeffs, seq=None, postseq=None, **kwargs):
+    def __init__(self, qubit_info, coeffs, freqs, seq=None, postseq=None, **kwargs):
         self.qubit_info = qubit_info
         if seq is None:
             seq = Trigger(250)
         self.coeffs = coeffs
-        self.xs = np.concatenate((coeffs, coeffs))
+        self.freqs= freqs
+        self.xs1 = np.concatenate((coeffs, coeffs))
+        self.xs2 = np.concatenate((freqs, freqs))
         self.seq = seq
         self.postseq = postseq
 
-        super(drag_test, self).__init__(len(coeffs)*2, infos=(qubit_info,), **kwargs)
+        super(Drag_Detuning2D, self).__init__(len(coeffs)*2, infos=(qubit_info,), **kwargs)
         self.data.create_dataset('drag_coefficients', data=coeffs)
 #        self.data.set_attrs()
 
@@ -64,7 +52,6 @@ class drag_test(Measurement1D):
         r = self.qubit_info.rotate
 
         for i, coeff in enumerate(self.coeffs):
-            print(self.coeffs[i])
             s.append(self.seq)
 #            s.append(r(np.pi/2, X_AXIS, drag=coeff))     #This is AllXY#10
 #            s.append(Delay(40))
@@ -80,7 +67,6 @@ class drag_test(Measurement1D):
                 ]))
             s.append(Delay(2000))
         for i, coeff in enumerate(self.coeffs):
-            print(self.coeffs[i])
             s.append(self.seq)
             s.append(r(np.pi/2, Y_AXIS, drag=coeff))      #This is AllXY#11
             s.append(Delay(20))
