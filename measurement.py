@@ -15,7 +15,7 @@ import os
 import pulseseq
 import awgloader
 
-from PyQt5 import QtWidgets
+#from PyQt5 import QtWidgets
 from pulseseq import sequencer
 from pulseseq import pulselib
 

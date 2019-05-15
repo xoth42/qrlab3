@@ -15,27 +15,27 @@ from scipy.optimize import curve_fit
 X= np.asarray(X)
 import matplotlib.pyplot as pl
 
-def fitting(params, x, data):
-    est = params['c'] + params['b'] * x + params['a'] * x **2
-    return data - est
-
-pl.figure()
-pl.scatter(X,Y,marker = 's')
-pl.plot(X[0:6],60*X[0:6],'--')
-
-params = lmfit.Parameters()
-params.add('a', value=-4)
-params.add('b', value=40)
-params.add('c', value=0)
+#def fitting(params, x, data):
+#    est = params['c'] + params['b'] * x + params['a'] * x **2
+#    return data - est
+#
+#pl.figure()
+#pl.scatter(X,Y,marker = 's')
+#pl.plot(X[0:6],60*X[0:6],'--')
+#
+#params = lmfit.Parameters()
+#params.add('a', value=-4)
+#params.add('b', value=40)
+#params.add('c', value=0)
 xs = X[5:]
 ys = Y[5:]
-result = lmfit.minimize(fitting, params,  args=(xs, ys))
-lmfit.report_fit(result.params)
-#pl.plot(xs,ys-fitting(result.params, xs,ys),'--')
-#pl.plot(X[5:],-2*X[5:]**2+ 40*X[5:],'--')
-pl.xlabel('voltage(V)')
-pl.ylabel('magnetic field(mT)')
-pl.legend()
+#result = lmfit.minimize(fitting, params,  args=(xs, ys))
+#lmfit.report_fit(result.params)
+##pl.plot(xs,ys-fitting(result.params, xs,ys),'--')
+##pl.plot(X[5:],-2*X[5:]**2+ 40*X[5:],'--')
+#pl.xlabel('voltage(V)')
+#pl.ylabel('magnetic field(mT)')
+#pl.legend()
 
 def model_func(x, a, b, c):    
     return a*x**2 + b*x + c 

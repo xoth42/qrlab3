@@ -19,10 +19,10 @@ VNA = instruments['VNA']
 
 import matplotlib.pyplot as pl 
 date = datetime.datetime.now()
-filename = 'transition_1_s11%s_%s_%s'%(date.hour,date.minute,date.second)
+filename = 'transition_1_s11_junk%s_%s_%s'%(date.hour,date.minute,date.second)
 
 print filename
-newpath = r'C:\Users\WangLab\Documents\TConnolly\transition_calibration\terminated_reflections\\%s.txt'%(filename)
+newpath = r'C:\Users\WangLab\Documents\TConnolly\\%s.txt'%(filename)
 
 if not os.path.exists(os.path.dirname(newpath)):
 
