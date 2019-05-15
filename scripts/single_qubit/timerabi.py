@@ -12,19 +12,16 @@ FIT_AMP         = 'AMP'         # Fit simple sine wave
 FIT_AMPFUNC     = 'AMPFUNC'     # Try to fit amplitude curve based on pi/2 and pi amp
 FIT_PARABOLA    = 'PARABOLA'    # Fit a parabola (to determine min/max pos)
 
-def fit_amprabi(params, x, data):
-    est = params['ofs'].value - params['amp'].value * np.cos(2*np.pi*x / params['period'].value + params['phase'].value)
+def fit_timerabi(params, x, data):
+    est = (params['ofs'].value - np.exp(-x / params['tau']) *params['amp'].value 
+            * np.cos(2*np.pi*x / params['period'].value + params['phase'].value))
     return data  - est
 
-def fit_amprabi_func(params, x, data, meas):
-    coeffs = np.polyfit([0, params['pi2_amp'].value, params['pi_amp'].value], [0, np.pi/2, np.pi], 2)
-    phases = (x**2*coeffs[0] + x*coeffs[1] + coeffs[0]) * meas.repeat_pulse
-    est = params['ofs'].value - params['amp'].value * np.cos(phases)
-    return data  - est
+
 
 def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
-    xs = meas.amps
+    xs = meas.times
 
     fig.axes[0].plot(xs, ys, 'ks', ms=3)
 
@@ -39,39 +36,26 @@ def analysis(meas, data=None, fig=None):
     params.add('ofs', value=np.average(ys))
     params.add('amp', value=amp0)
     params.add('phase', value=0, vary=False)#min=-np.pi, max=np.pi)
-
-    if meas.fit_type == FIT_AMPFUNC:
-        pi_amp = period0 * meas.repeat_pulse / 2
-        params.add('pi_amp', value=pi_amp)
-        params.add('pi2_amp', value=0.5*pi_amp)
-        result = lmfit.minimize(fit_amprabi_func, params, args=(xs, ys, meas))
-#        result2 = lmfit.minimize(fit_amprabi_func, result.params, args=(xs, ys, meas))
-        txt = ''
-        fig.axes[0].plot(xs, -fit_amprabi_func(result.params, xs, 0, meas), label='fit')
-        fig.axes[1].plot(xs, fit_amprabi_func(result.params, xs, ys, meas), marker='s')
-
-    else:
-        if meas.fix_period is not None:
-            params.add('period', value=meas.fix_period, vary=False)
-        else:
-            params.add('period', value=period0, min=0)
-        result = lmfit.minimize(fit_amprabi, params, args=(xs, ys))
-        # stderr of 0 is none. replace with other line when using actual data
-        #txt = 'Amp = %.03f +- %.03e\nPeriod = %.03f +- %.03e\nPi amp = %.06f' % (result.params['amp'].value, 0, result.params['period'].value, 0, result.params['period'].value/2 )
-        txt = 'Amp = %.03f +- %.03e\nPeriod = %.03f +- %.03e\nPi amp = %.06f' % (result.params['amp'].value, 
-                                                                                 result.params['amp'].stderr, 
-                                                                                 result.params['period'].value, 
-                                                                                 result.params['period'].stderr, 
-                                                                                 result.params['period'].value/2 )
-        fig.axes[0].plot(xs, -fit_amprabi(result.params, xs, 0), label=txt)
-        fig.axes[0].plot(xs, -fit_amprabi(result.params, xs, 0))
-        fig.axes[1].plot(xs, fit_amprabi(result.params, xs, ys), marker='s')
+    params.add('tau', value=np.max(xs))
+    params.add('period', value=period0, min=0)
+    
+    result = lmfit.minimize(fit_timerabi, params, args=(xs, ys))
+    # stderr of 0 is none. replace with other line when using actual data
+    #txt = 'Amp = %.03f +- %.03e\nPeriod = %.03f +- %.03e\nPi amp = %.06f' % (result.params['amp'].value, 0, result.params['period'].value, 0, result.params['period'].value/2 )
+    txt = 'Amp = %.03f +- %.03e\nPeriod = %.03f +- %.03e\nPi amp = %.06f' % (result.params['amp'].value, 
+                                                                             result.params['amp'].stderr, 
+                                                                             result.params['period'].value, 
+                                                                             result.params['period'].stderr, 
+                                                                             result.params['period'].value/2 )
+    fig.axes[0].plot(xs, -fit_timerabi(result.params, xs, 0), label=txt)
+    fig.axes[0].plot(xs, -fit_timerabi(result.params, xs, 0))
+    fig.axes[1].plot(xs, fit_timerabi(result.params, xs, ys), marker='s')
 
 #    lmfit.report_fit(params)
     lmfit.report_fit(result.params)
 
     fig.axes[0].set_ylabel('Intensity [AU]')
-    fig.axes[0].set_xlabel('Pulse amplitude')
+    fig.axes[0].set_xlabel('Pulse time')
     fig.axes[0].legend(loc=0)
 
     fig.canvas.draw()
@@ -103,21 +87,25 @@ class TimeRabi(Measurement1D):
     def generate(self):
         s = Sequence()
 
-        for i, plen in enumerate(self.times):
+        for plen in self.times:
             
             s.append(self.seq)
-            g = DetunedSum(self.qubit_info.rotate.base, plen, chans=self.qubit_info.sideband_channels)
-            period = 1e50 #This is basically infinity
-            g.add(self.amp, period)
+#            g = DetunedSum(self.qubit_info.rotate.base, plen, chans=self.qubit_info.sideband_channels)
+#            period = 1e50 #This is basically infinity
+#            g.add(self.amp, period)
 
 #            s.append(Join([
 #                self.seq,
 #                g(),
 #            ]))
-            s.append(g())
+#            s.append(g())
             
-#            chs = self.qubit_info.sideband_channels
-#            s.append(Constant(plen, self.amp, chan=chs[0]))
+            chs = self.qubit_info.sideband_channels
+            s.append(Combined([
+                Constant(int(plen), self.amp, chan=chs[0]),
+                Constant(int(plen), self.amp, chan=chs[1])
+            ]))
+
 
             if self.postseq:
                 s.append(self.postseq)
@@ -125,42 +113,12 @@ class TimeRabi(Measurement1D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ]))
+    
+    
+        s = self.get_sequencer(s)
+        seqs = s.render()
+        return seqs
 
 
     def analyze(self, data=None, fig=None):
-        if self.fit_type == FIT_PARABOLA:
-            if self.repeat_pulse%2 == 0:
-                self.pi_amp = 0
-                self.pi2_amp = self.analyze_parabola(data=data, fig=fig, xlabel='Amplitude', ylabel='Signal')
-            else:
-                self.pi_amp = self.analyze_parabola(data=data, fig=fig, xlabel='Amplitude', ylabel='Signal')
-                self.pi2_amp = 0
-
-        elif self.fit_type == FIT_AMPFUNC:
-            self.fit_params = analysis(self, data=data, fig=fig)
-            self.pi_amp = self.fit_params['pi_amp'].value
-            self.pi2_amp = self.fit_params['pi2_amp'].value
-        else:
-            self.fit_params = analysis(self, data=data, fig=fig)
-            self.pi_amp = self.fit_params['period'].value / 2 * self.repeat_pulse
-            self.pi2_amp = 0
-
-        if self.update_ins:
-            print 'Setting qubit pi-rotation ampltidue to %.06f, pi/2 to %.06f' % (self.pi_amp, self.pi2_amp)
-            if self.selective==1:
-                if self.pi_amp:
-                    mclient.instruments[self.qubit_info.insname].set_pi_amp_selective(self.pi_amp)
-                if self.pi2_amp:
-                    mclient.instruments[self.qubit_info.insname].set_pi2_amp_selective(self.pi2_amp)
-            elif self.selective==0.5:
-                if self.pi_amp:
-                    mclient.instruments[self.qubit_info.insname].set_pi_amp_quasilective(self.pi_amp)
-                if self.pi2_amp:
-                    mclient.instruments[self.qubit_info.insname].set_pi2_amp_quasilective(self.pi2_amp)
-            else:
-                if self.pi_amp:
-                    mclient.instruments[self.qubit_info.insname].set_pi_amp(self.pi_amp)
-                if self.pi2_amp:
-                    mclient.instruments[self.qubit_info.insname].set_pi2_amp(self.pi2_amp)
-
-        return self.pi_amp
+        self.fit_params = analysis(self, data=data, fig=fig)

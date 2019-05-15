@@ -22,13 +22,14 @@ class Keysight_DIG(Instrument):
 
 
 
-    def __init__(self, name, chassis=0, slot=3, DIG_PRODUCT = "M3102A", trigger_period = 200, trigger_only = False, awg_list = [7, 8, 10], **kwargs):
+    def __init__(self, name, chassis=0, slot=3, DIG_PRODUCT = "M3102A", trigger_period = 200, trigger_only = False, awg_list = [7, 8, 10], 
+                 nsamples=1000, naverages = 1000, **kwargs):
         super(Keysight_DIG, self).__init__(name)
         self._timeout = DEFAULT_TIMEOUT
         self._main_channel=1
         self._ref_channel=2
-        self._nsamples=1000
-        self._naverages=1000
+        self._nsamples=nsamples
+        self._naverages=naverages
         self._main_delay=0
         self._ref_delay=0
         self._if_period=10
@@ -45,7 +46,18 @@ class Keysight_DIG(Instrument):
         self._hvi = None
         self.load_hvi()
         
+        if trigger_only:
+            self.add_parameter('if_period', type=types.IntType,
+                           flags=Instrument.FLAG_GETSET,
+                           minval=2, maxval=1000, value=20,
+                           help='Intermediate Frequency period')
         
+            self.add_parameter('trigger_period', type=types.IntType,
+                           flags=Instrument.FLAG_GETSET,
+                           minval=50, maxval=1600, value=self._trigger_period,
+                           help='Period for the HVI trigger for measurments')
+            return
+
 
 
         self.dig = key.SD_AIN()

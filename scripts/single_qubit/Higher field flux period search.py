@@ -40,10 +40,10 @@ ge = mclient.instruments['qubit1ge']
 os.chdir(r'C:/qrlab/scripts')
 
 start_freq = 946.894e6
-start_current = 1.92e-3
+start_current = 1.86e-3
 #start_current = 1.99e-3  #This is the flux point in question for the frequency above
-stop_current = 2.00e-3
-current_step=0.005e-3
+stop_current = 1.87e-3
+current_step=0.001e-3
 
 from single_qubit import ssbspec
 
@@ -53,7 +53,7 @@ Yoko.do_set_current(current)
 time.sleep(.2)
 
 seq = sequencer.Trigger(600)
-spec = ssbspec.SSBSpec(qubit_info, np.linspace(-30e6, 30e6, 61), seq=seq, plot_seqs=False, proj_func='phase')
+spec = ssbspec.SSBSpec(qubit_info, np.linspace(-5e6, 5e6, 61), seq=seq, plot_seqs=False, proj_func='phase')
 spec.measure_keysight()
 
 current = current + current_step
@@ -62,7 +62,7 @@ time.sleep(.2)
 
 while current < stop_current:
         seq = sequencer.Trigger(600)
-        spec = ssbspec.SSBSpec(qubit_info, np.linspace(-30e6, 30e6, 61), seq=seq, plot_seqs=False, proj_func='phase')
+        spec = ssbspec.SSBSpec(qubit_info, np.linspace(-5e6, 5e6, 61), seq=seq, plot_seqs=False, proj_func='phase')
         spec.measure_keysight()
         current = current + current_step
         Yoko.do_set_current(current)
