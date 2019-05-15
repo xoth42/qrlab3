@@ -62,7 +62,7 @@ if 0: #sweep current Yoko and get 2D plot
     bla
 
 
-if 1: #sweep power and get 2D plot
+if 0: #sweep power and get 2D plot
     from scripts.single_cavity import Magnet_sweep_VNA
     VNA.set_timeout(40000)
     VNA.do_enable_averaging(True)
@@ -128,7 +128,9 @@ if 0: #get single trace from VNA, for long meaasurements
     VNA.do_enable_averaging(True)
     VNA.set_averaging_trigger(1)
     VNA.set_trigger_source('internal')
+
     ro = VNA_single_trace_V2.SingleTrace(freqs = np.linspace(5.5639e9, 5.5739e9, 401), average_factor = 40, avelimit = 2, fit_S12 = 0, fit_S11 =0)
+
 
 #    print 'ok3'
     ro.measure()
@@ -138,6 +140,7 @@ if 0: #get single trace from VNA, for long meaasurements
 #    print 'ok5'
     pl.show()
     bla 
+
 
 if 0: #get single trace from VNA, withoout waiting, just take screenshot and fit it.
     from scripts.single_cavity import VNA_single_trace_V2
@@ -242,3 +245,5 @@ if 0: #sweep field to
     pl.savefig(save_filepath + 'Qs.png')
     
 #    magnet.do_set_field(0)
+    bla
+

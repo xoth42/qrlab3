@@ -7,18 +7,21 @@ if 1:
 
 from mclient import instruments
 
-#Yoko = instruments.create('Yoko','Yokogawa_7651',address='GPIB1::3::INSTR')
+#SC = instruments.create('SC', 'SC5511A', devid='100016B5')
+
+#Yoko = instruments.create('Yoko','Yokogawa_7651',address='GPIB1::6::INSTR')
 #print 'Yoko OK'
 
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1', clock=1e9, refsrc='EXT', reffreq=10e6)
-
+'''
 VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
 print 'VNA OK'
+'''
 #Magnet = instruments.create('Magnet','AMI_430')
 #print 'Magnet OK'
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='TCPIP0::172.30.56.25::4000::SOCKET')
-Yoko = instruments.create('Yoko','Yokogawa_7651_new',address='GPIB0::6::INSTR') # No. 2 
-print 'Yoko OK'
+#Yoko = instruments.create('Yoko','Yokogawa_7651_new',address='GPIB1::6::INSTR') # No. 2 
+#print 'Yoko OK'
 #
 #brick1 = instruments.create('brick1', 'LabBrick_RFSource', serial=14510, use_extref=True) # qubit
 #brick2 = instruments.create('brick2', 'LabBrick_RFSource', serial=14511, use_extref=True) # ref
@@ -55,12 +58,12 @@ print 'Yoko OK'
 #
 #
 #
-#
+'''
 readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
                              IQe_radius= 1 , rfsource1='brick3', rfsource2='brick2',
                              pulse_len=1000, readout_chan='3m1', acq_chan='4m2')
 
-'''
+
 #AWG2 = instruments.create('AWG2', 'Tektronix_AWG5014C', address='AWG2',
 #                          clock=1e9, refsrc='EXT', reffreq=10e6)
 
@@ -86,6 +89,8 @@ ag2 = instruments.create('ag2', 'Agilent_N5183A', address='GPIB1::22')
 ##laserfg = instruments.create('laserfg', 'Agilent_FuncGen33250A', address='GPIB1::9')
 #
 '''
+
+'''
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                             deltaf=-100e6,
                             pi_amp=0.06777,
@@ -99,6 +104,7 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                             channels='3,4',
                             sideband_channels='I1,Q1',
                             sideband_phase=0.106814)
+'''
 #qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
 #                            deltaf=-277.004e6,
 #                            pi_amp=0.4976,

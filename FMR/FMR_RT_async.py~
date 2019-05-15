@@ -15,16 +15,15 @@ import time
 import matplotlib.pyplot as pl
 import objectsharer as objsh
 from matplotlib import gridspec
-#from matplotlib.colorbar import Colorbar
 
-currents = np.linspace(0,0.1,101)
+currents = np.linspace(0,0.05,11)
 freqs = np.linspace(8e9,9e9,1601)
-average_factor = 50
+average_factor = 10
 Sij = ['S11','S21','S12','S22']
 #timelimit = 16 # breaks long time measurement to severals 16 seconds.
 main_loop_time = 100
 IF_bandwidth = 50000
-fig_name = 'test'
+
 
 VNA.set_if_bandwidth('%s'%(IF_bandwidth))
 VNA.set_timeout(40000)
@@ -42,7 +41,7 @@ VNA.set_average_factor(avelimit)
 
 #date = datetime.datetime.now()
 datasrv = objsh.helper.find_object('dataserver')
-filename = 'c:/_data/test.hdf5'
+filename = 'c:/_data/YIG_Copper_Cavity_sweep_test.hdf5'
 datafile = datasrv.get_file(filename)
 ts = time.localtime()
 tstr = time.strftime('%Y%m%d/%H%M%S', ts)
@@ -52,7 +51,6 @@ datagroup = datafile.create_group(datafile._groupname)
 datagroup.set_attrs(
     title='test with VNA',
     comment='with YOKO, VNA data',
-    Sij_list = Sij,
     VNA_IF_bandwidth = VNA.get_if_bandwidth(),
     total_average_factor = average_factor,
     mainlooptime = main_loop_time,
@@ -178,15 +176,14 @@ for icurrent, current in enumerate(currents):
 
     if icurrent == 0:
         fig = pl.figure()
-        if len(Sij) == 1:
+        if len(Sij) == 0:
             fig.add_subplot(111)
 #            fig.axes[0].title = Sij[0]
         else:
             gs = gridspec.GridSpec((len(Sij)-1)/2 + 1, 2)
             gs.update(wspace=0.4, hspace=0.35)
         for i in range(len(Sij)):
-            if not len(Sij) == 1:
-                fig.add_subplot(gs[i])
+            fig.add_subplot(gs[i])
             fig.axes[i].set_title(Sij[i])
             fig.axes[i].set_xlim(xs.min(), xs.max()+dcurrents)
             fig.axes[i].set_ylim(ys.min(), ys.max())
@@ -199,13 +196,12 @@ for icurrent, current in enumerate(currents):
         z = np.concatenate([z1,z2])
         z = np.transpose(z)
         x = np.zeros((len(freqs),2))
-        x[:,0] = currents[icurrent]                                                                
+        x[:,0] = currents[icurrent]
         x[:,1] = currents[icurrent]+dcurrents
         y = np.zeros((2,len(freqs)))
         y[0] = y[1] = freqs
         y = np.transpose(y)
-        fig.axes[i].pcolormesh(x, y, z)#, vmin=-80, vmax=0)
-        print np.min(z)
+        fig.axes[i].pcolormesh(x, y, z, vmin=-80, vmax=0)
 #        fig.axes[i].set_xlim(xs.min(), xs.max())
 #        fig.axes[i].set_ylim(ys.min(), ys.max())
         fig.canvas.draw()
@@ -213,58 +209,7 @@ for icurrent, current in enumerate(currents):
     
 print datagroup.get_fullname()
 
-
-fig = pl.figure()
-a=[0,0,0,0]
-
-if len(Sij) == 1:
-#    gs=[0]
-    gs= gridspec.GridSpec(1 , 1)
-#            fig.axes[0].title = Sij[0]
-else:
-    gs = gridspec.GridSpec((len(Sij)-1)/2 + 1, 2)
-    gs.update(wspace=0.5, hspace=0.4)
     
-field = np.zeros(len(currents))     
-for i in range(len(currents)):
-    #Current-field relationship input below, for driving Yoko in current mode - BS, 3/20/19
-    if currents[i] < 0.5:
-        field[i] = currents[i]*529.37 + 0.49
-    else:
-        field[i] = -268.93 * (currents[i])**2 + 839.69*currents[i]-88.67
-
-ampdata = np.zeros((len(Sij),len(currents), len(freqs)))
-ampdata_a = np.zeros((len(Sij),len(freqs), len(currents)))
-xs,ys = np.meshgrid(field, freqs/float(1e9))
-gss=[0,0,0,0]
-for k in range(len(Sij)):
-#    if not len(Sij) == 1:
-    gss[k] = gridspec.GridSpecFromSubplotSpec(1,2, subplot_spec=gs[k],width_ratios = (19,1))        
-    fig.add_subplot(gss[k][0])
-    fig.axes[k].set_title('%s%s'%(fig_name,Sij[k]))
-    fig.axes[k].set_xlim(xs.min(), xs.max()+currents[1] - currents[0])
-    fig.axes[k].set_ylim(ys.min(), ys.max())
-    
-#        ampdata = np.zeros((len(realdata),len(currentdata[0,:]), len(freqdata[0,:])))
-#    imag = np.zeros((len(self.currents),len(self.freqs)))
-    for i in range(len(currents)):
-        ampdata[k][i] = 20*np.log10(np.sqrt(realdata[k][i,:]**2 + imagdata[k][i,:]**2))
-#        ampdata[k][i] = imagdata[k][i,:]
-#    print Z
-#    field_a, freqdata = np.meshgrid(field, freqs)
-    ampdata_a[k] = np.transpose(ampdata[k])
-#    print ampdata_a[k]
-#    phase = np.transpose(phase)
-    a[k]=fig.axes[k].pcolormesh(xs, ys, ampdata_a[k])
-#    Colorbar(ax = fig.axes[k], mappable = a, orientation = 'horizontal', ticklocation = 'top')
-#    pl.colorbar( a[k] )#, ax = gs[k/2, k%2] )
-    fig.axes[k].set_xlabel('Magnetic Field(mT)')
-    fig.axes[k].set_ylabel('Frequency(GHz)')
-
-
-for k in range(len(Sij)):
-    fig.add_subplot(gss[k][1])
-    pl.colorbar( a[k],fig.axes[len(Sij)+k])
 
 
     

@@ -56,6 +56,7 @@ class Spectroscopy_Keysight(Measurement1D):
     def generate(self):
         s = Sequence(self.seq)
         chs = self.qubit_info.sideband_channels
+
         s.append(Combined([
             Constant(self.plen, self.amp, chan=chs[0]),
             Constant(self.plen, self.amp, chan=chs[1]),
@@ -63,6 +64,7 @@ class Spectroscopy_Keysight(Measurement1D):
 #        s.append(Constant(self.plen, 1, chan='3m1'))
         
         s.append(Delay(100))
+
         if self.postseq:
             s.append(self.postseq)
             
@@ -121,6 +123,15 @@ class Spectroscopy_Keysight(Measurement1D):
                 dig.arm()
                 dig.start_hvi()
                 ret = dig.take_avg_shot()
+                #Yingying to add a main loop, suggesting to help with the spectroscopy crash
+                
+#                try:
+#                    while not wait.is_valid():
+#                        objsh.helper.backend.main_loop(100)
+#                        dig.do_get_status()
+#                except:
+#                    print 'error with async'
+
                 dig.release_buf()
 
 

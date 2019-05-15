@@ -37,8 +37,8 @@ def analysis(meas, data=None, fig=None):
 
     params = lmfit.Parameters()
     params.add('ofs', value=np.average(ys))
-    params.add('amp', value=amp0)
-    params.add('phase', value=0, vary=False)
+    params.add('amp', value=amp0, max = 0) # Chen 4/3 for pulse train cal
+    params.add('phase', value=0, min=-np.pi, max=np.pi)#vary=False# Chen changed to flexible phase for pulse train calibration 4/3.
 
     if meas.fit_type == FIT_AMPFUNC:
         pi_amp = period0 * meas.repeat_pulse / 2

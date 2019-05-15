@@ -69,7 +69,7 @@ class Yokogawa_GS200(VisaInstrument):
         self.set_source_level(level, range)
 
     def do_get_voltage(self):
-        if self.set_source_type('CURR'):
+        if self.get_source_type()=='CURR':
             #The yoko raises these exceptions all of the time, and the new GUI doesn't 
             #like them. They're harmless anyway.
             raise YokoException('Source type is VOLTAGE, not CURRENT')
@@ -83,7 +83,7 @@ class Yokogawa_GS200(VisaInstrument):
         self.set_source_level(level, range)
 
     def do_get_current(self):
-        if self.set_source_type('VOLT'):
+        if self.get_source_type()=='VOLT':
             raise YokoException('Source type is CURRENT, not VOLTAGE')
         return self.do_get_source_level()
 

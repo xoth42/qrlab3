@@ -31,6 +31,7 @@ def analysis(twpa_powers, twpa_freqs, ampdata, ax=None):
     ax.pcolormesh(x, y, data.T)
     ax.set_xlabel('twpa powers')
     ax.set_ylabel('twpa frequencies')
+#    ax.set_zlabel('RO peak transmission amplitude')
     
     print('max power', twpa_powers[np.unravel_index(data.argmax(), data.shape)[0]],
           'max_freq',  twpa_freqs[np.unravel_index(data.argmax(), data.shape)[1]])
@@ -110,10 +111,10 @@ class twpa_calibration_keysight(Measurement1D):
         for i_twpa_power, twpa_power in enumerate(self.twpa_powers):
             self.twpa_pump.set_power(twpa_power)
             print 'twpa_power = %s' % (twpa_power, )
-            time.sleep(2)
+            time.sleep(0.1)
             for i_twpa_freq, twpa_freq in enumerate(self.twpa_freqs):
                 self.twpa_pump.set_frequency(twpa_freq)
-                time.sleep(2)
+                time.sleep(0.1)
                     
                 dig.setup_avg_shot()
                 dig.arm()
