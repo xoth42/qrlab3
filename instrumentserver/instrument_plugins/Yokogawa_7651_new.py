@@ -128,7 +128,13 @@ class Yokogawa_7651_new(Instrument):
         self.add_parameter('current', type=types.FloatType,
                            flags=Instrument.FLAG_GETSET, maxval=120,
                            minval=-120, units='mA')
+        self.add_parameter('ramp_current', type=types.FloatType,
+                           flags=Instrument.FLAG_GETSET, maxval=120,
+                           minval=-120, units='mA')
         self.add_parameter('voltage', type=types.FloatType,
+                   flags=Instrument.FLAG_GETSET, units='V',
+                   minvalue=-30.0, maxvalue=30.0)
+        self.add_parameter('ramp_voltage', type=types.FloatType,
                    flags=Instrument.FLAG_GETSET, units='V',
                    minvalue=-30.0, maxvalue=30.0)
 #        self.add_parameter('polarity', type=types.IntType,
@@ -210,8 +216,8 @@ class Yokogawa_7651_new(Instrument):
             return               
         v = self.do_get_voltage()
         vstep = .01
-        bigger = np.max((abs(v),abs(vtarget)))
-        self.do_set_voltage_range(bigger)
+#        bigger = np.max((abs(v),abs(vtarget)))
+#        self.do_set_voltage_range(bigger)
         if (v < vtarget):   
             while (v+vstep <= vtarget):
                 self.range_value.send(v+vstep)
@@ -220,6 +226,13 @@ class Yokogawa_7651_new(Instrument):
             while (v-vstep >= vtarget):
                 self.range_value.send(v-vstep)
                 v = self.do_get_voltage()
+        self.do_set_voltage(vtarget)
+                
+    def do_set_ramp_voltage(self,v_target):
+        self.do_ramp_voltage(v_target)
+    
+    def do_get_ramp_voltage(self):
+        self.do_get_voltage()
 
     def do_set_voltage_range(self,R):
         R = abs(R)
@@ -288,8 +301,8 @@ class Yokogawa_7651_new(Instrument):
             return               
         i = self.do_get_current()
         i_step = .001 / 1000
-        bigger = np.max((abs(i),abs(i_target)))
-        self.do_set_current_range(bigger)
+#        bigger = np.max((abs(i),abs(i_target)))
+#        self.do_set_current_range(bigger)
         if (i/1000 < i_target /1000 ):   
             while (i/1000+i_step <= i_target / 1000):
                 self.range_value.send(i/1000+i_step)
@@ -327,7 +340,16 @@ class Yokogawa_7651_new(Instrument):
         if ( strng[8] == '.'):
             return 100
         else:
-            raise currentError('Range not found!!!')   
+            raise currentError('Range not found!!!')  
+            
+            
+    def do_set_ramp_current(self,i_target):
+        self.do_ramp_current(i_target)
+    
+    def do_get_ramp_current(self):
+        self.do_get_current()
+        
+    
 
     def do_set_polarity(self, polarity):
         if polarity not in range(0, 3):

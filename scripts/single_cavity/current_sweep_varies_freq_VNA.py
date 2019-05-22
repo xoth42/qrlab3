@@ -155,11 +155,8 @@ class Current_Sweep_Varies_freq_VNA(Measurement1D):
 
             if icurrent == 0 or np.abs(self.dcurrents) > 0.002:
                 Yoko.do_ramp_current(current)
-                time.sleep(1)
-            Yoko.do_set_current(current)
+                time.sleep(2)
 
-            
-            
             VNA.set_center_freq(self.center_freqs[icurrent])
 #            time.sleep(0.5)
             ave = avelimit
