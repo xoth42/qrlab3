@@ -51,7 +51,7 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
         params = lmfit.Parameters()
 
         params.add('kappa_prod', value= (np.max(np.abs(datas))*0.5e6)**2.001, min = 0)#,vary = False)
-        params.add('omega_c', value=freqs[np.argmax(np.abs(datas))]*1.0001,min = freqs[np.argmax(np.abs(datas))]*0.9998, max = freqs[np.argmax(np.abs(datas))] * 1.0002)#,vary = False)
+        params.add('omega_c', value=freqs[np.argmax(np.abs(datas))]*1.00002,min = freqs[np.argmax(np.abs(datas))]*0.9998, max = freqs[np.argmax(np.abs(datas))] * 1.0002)#,vary = False)
         params.add('kappa_a', value=1e6, min = 0)#, max = 4e6)#,vary = False)
 
         if np.max(np.abs(datas)) < limit_for_off:
