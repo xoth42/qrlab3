@@ -448,7 +448,10 @@ class Keysight_DIG(Instrument):
     def setup_experiment(self, num_points, ntransfers = None):
         if ntransfers is None:
             if self._naverages % 10 == 0:
-                self._ntransfers = self._naverages/100
+                if num_points >= 10:
+                    self._ntransfers = self._naverages/100
+                else:
+                    self._ntransfers = self._naverages/2000  # May 2019: Less frequent update when number of points is small
             else:
                 self._ntransfers = self._naverages
         elif(self._naverages % ntransfers == 0):

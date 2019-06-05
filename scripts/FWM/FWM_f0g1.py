@@ -58,17 +58,18 @@ class FWM_f0g1(Measurement1D):
         
         s.append(r(np.pi, 0))
         
-#        s.append(r_ef(np.pi, 0))
-#        s.append(Constant(int(self.delay), 1, chan=self.fwm_channel))
-#        s.append(Delay(1e3))x
+        s.append(r_ef(np.pi, 0))
+        s.append(Constant(int(self.delay), 1, chan=self.fwm_channel))
+        s.append(Delay(0.5e3))
+        s.append(r_ef(np.pi, 0))
         
-        s.append(Combined([
-            Constant(int(self.delay), 1, chan=self.fwm_channel),
-            Constant(int(self.delay), self.amp, chan=self.ef_info.sideband_channels[0]),
-            Constant(int(self.delay), self.amp, chan=self.ef_info.sideband_channels[1])
-        ]))
+#        s.append(Combined([
+#            Constant(int(self.delay), 1, chan=self.fwm_channel),
+#            Constant(int(self.delay), self.amp, chan=self.ef_info.sideband_channels[0]),
+#            Constant(int(self.delay), self.amp, chan=self.ef_info.sideband_channels[1])
+#        ]))
     
-        s.append(Delay(2e3))
+#        s.append(Delay(2e3))
         
         
 
@@ -110,6 +111,7 @@ class FWM_f0g1(Measurement1D):
             try:
                 while not ret.is_valid():
                     objsh.helper.backend.main_loop(100)
+                    dig.get_naverages()
             except Exception, e:
                 dig.set_interrupt(True)
                 print 'Error: %s' % (str(e), )

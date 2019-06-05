@@ -22,7 +22,7 @@ date = datetime.datetime.now()
 filename = '%sdB_%s_%s_%s'%(VNA.get_power(),date.hour,date.minute,date.second)
 
 print filename
-newpath = r'C:\Users\Wang_Lab\Documents\\yingying\\0405cooldown\\%s.txt'%(filename)
+newpath = r'C:\Users\Wang_Lab\Documents\\yingying\\0418cooldown\\%s.txt'%(filename)
 
 if not os.path.exists(os.path.dirname(newpath)):
 
@@ -31,7 +31,7 @@ if not os.path.exists(os.path.dirname(newpath)):
 data = VNA.do_get_data()
 axis = VNA.do_get_xaxis()
 
-#pl.figure()
+pl.figure()
 if axis[len(axis) - 1] > 10 **9:
     xaxis = axis / float(1000000000)
     pl.xlabel('frequency(GHZ)')

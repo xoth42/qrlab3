@@ -41,9 +41,9 @@ def analysis(meas, data=None, fig=None):
         params = lmfit.Parameters()
         params.add('ofs', value=np.min(ys))
         params.add('amplitude', value=np.max(ys)/2.0)
-        params.add('tau', value=xs[-1], min=50.0)
+        params.add('tau', value=xs[-1]/2.0, min=50.0)  #Chen, fine tune the initial guess a bit 4/27/19
         params.add('amplitude2', value=np.max(ys)/2.0)
-        params.add('tau2', value=xs[-1]/4.0, min=50.0)
+        params.add('tau2', value=xs[-1]/50.0, min=50.0)  ##Chen, fine tune the initial guess a bit 4/27/19
         result = lmfit.minimize(double_exp_decay, params, args=(xs, ys))
         lmfit.report_fit(result.params)
 
@@ -85,10 +85,16 @@ class T1Measurement(Measurement1D):
         s = Sequence()
 #        s.append(Constant(250, 0, chan=4))
 #        s.append(Constant(250, 1, chan='4m1'))
+        
+        
         r = self.qubit_info.rotate
         for i, dt in enumerate(self.delays):
             s.append(self.seq)
             s.append(r(np.pi, 0))
+#            s.append(Combined([
+#                    Constant(25000, 0.1, chan=self.qubit_info.sideband_channels[0]),
+#                    Constant(25000, 0.1, chan=self.qubit_info.sideband_channels[1]),
+#            ]))
             s.append(Delay(dt))
 
             if self.postseq is not None:
@@ -100,7 +106,7 @@ class T1Measurement(Measurement1D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ]))
-            s.append(Delay(20000))
+            s.append(Delay(2000))
             #Ebru: changed the delay from 1000 to 20000.
 
 #            s.append(Repeat(Delay(1000), 20))   # wait for alazar acquisition to finish
