@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Mar 14 16:51:43 2019
+Created on Thu May 16 16:34:15 2019
 
 @author: WangLab
 """
+
 
 #import mclient
 from measurement import Measurement1D
@@ -31,10 +32,15 @@ def analysis(currents, freqs, realdata, imagdata, fig_name, full_fig_name, Sij, 
         gs = gridspec.GridSpec((len(Sij)-1)/2 + 1, 2)
         gs.update(wspace=0.5, hspace=0.4)
         
-    currents = np.concatenate((currents, np.zeros(1) + currents[1]-currents[0] + currents[-1]))
-    ampdata = np.zeros((len(Sij),len(currents), len(freqs)))
-    ampdata_a = np.zeros((len(Sij),len(freqs), len(currents)))
-    xs,ys = np.meshgrid(currents, freqs/float(1e9))
+    currents = np.concatenate((currents, np.zeros(1) + currents[-1]-currents[-2] + currents[-1]))
+    ampdata = np.zeros((len(Sij),len(currents), len(freqs[0])))
+    ampdata_a = np.zeros((len(Sij),len(freqs[0]), len(currents)))
+    xs,ys = np.meshgrid(currents, freqs[0])
+    ys = np.zeros((len(currents), len(freqs[0])))
+    for i in range(len(currents)-1):
+        ys[i] = freqs[i]
+    ys[len(currents)-1] = freqs[-1]
+    ys = np.transpose(ys)
     gss=[0,0,0,0]
     for k in range(len(Sij)):
     #    if not len(Sij) == 1:
@@ -49,12 +55,12 @@ def analysis(currents, freqs, realdata, imagdata, fig_name, full_fig_name, Sij, 
         for i in range(len(currents)-1):
             ampdata[k][i] = 20*np.log10(np.sqrt(realdata[k][i,:]**2 + imagdata[k][i,:]**2))
             
-        ampdata[k][len(currents)-1] = 20*np.log10(np.sqrt(realdata[k][i,:]**2 + imagdata[k][i,:]**2))
+#        ampdata[k][len(currents)-1] = 20*np.log10(np.sqrt(realdata[k][i,:]**2 + imagdata[k][i,:]**2))
     #    print Z
         ampdata_a[k] = np.transpose(ampdata[k])
     #    print ampdata_a[k]
     #    phase = np.transpose(phase)
-        a[k]=fig.axes[k].pcolormesh(xs, ys, ampdata_a[k],vmin = np.max([np.min(ampdata_a[k]),-200]))
+        a[k]=fig.axes[k].pcolormesh(xs, ys, ampdata_a[k])
     #    Colorbar(ax = fig.axes[k], mappable = a, orientation = 'horizontal', ticklocation = 'top')
     #    pl.colorbar( a[k] )#, ax = gs[k/2, k%2] )
         fig.axes[k].set_xlabel('currents(mA)')
@@ -67,23 +73,25 @@ def analysis(currents, freqs, realdata, imagdata, fig_name, full_fig_name, Sij, 
         
     pl.suptitle(full_fig_name)
 
-class Current_Sweep_VNA(Measurement1D):
+class Current_Sweep_Varies_freq_VNA(Measurement1D):
 
-    def __init__(self, currents, freqs, average_factor,avelimit,if_bandwidth, Sij, fig_name,comment, **kwargs):
+    def __init__(self, currents, center_freqs, span, VNA_points, average_factor,avelimit,if_bandwidth, Sij, fig_name, comment, **kwargs):
         self.currents = currents
 #        print 'self.currents', self.currents
-        self.freqs = freqs
+        self.center_freqs = center_freqs
         self.average_factor = average_factor
+        self.span = span
+        self.VNA_points = VNA_points
         self.avelimit = avelimit
         self.if_bandwidth = if_bandwidth
         self.Sij = Sij
         self.fig_name = fig_name
         self.comment = comment
-        self.dcurrents = currents[1] - currents[0]
+        self.dcurrents = currents[-1] - currents[-2]
 #        self.sleeptime_field = sleeptime_field
 #        self.plot_type = plot_type
 #
-        super(Current_Sweep_VNA, self).__init__(1, **kwargs)
+        super(Current_Sweep_Varies_freq_VNA, self).__init__(1, **kwargs)
 #        self.set_attrs(
 #            title=self.fig_name,
 #            comment=self.comment,
@@ -96,8 +104,8 @@ class Current_Sweep_VNA(Measurement1D):
 #        )
         print self.data.get_fullname()
         self.full_fig_name = self.data.get_fullname()
-        self.data.create_dataset('currents', data=self.currents)
-        self.data.create_dataset('freqs', data=self.freqs)
+        self.currentdata = self.data.create_dataset('currents', data=self.currents)
+        self.freqs = self.data.create_dataset('freqs', shape=[len(self.currents),self.VNA_points])
         
     
 #        self.currentdata = self.data.create_dataset('currents', shape=[1,len(self.currents)])
@@ -109,29 +117,27 @@ class Current_Sweep_VNA(Measurement1D):
         self.imagdata = [0,0,0,0]
         for i, sij in enumerate(self.Sij):
             
-            self.realdata[i] = self.data.create_dataset('real%s'%(sij), shape=[len(self.currents),len(freqs)])
-            self.imagdata[i]= self.data.create_dataset('imaginary%s'%(sij), shape=[len(self.currents),len(freqs)])
+            self.realdata[i] = self.data.create_dataset('real%s'%(sij), shape=[len(self.currents),self.VNA_points])
+            self.imagdata[i]= self.data.create_dataset('imaginary%s'%(sij), shape=[len(self.currents),self.VNA_points])
 #        
         
     def measure(self):
         # Generate and load sequences
         VNA = self.instruments['VNA']
-        Yoko = self.instruments['Yoko']
+#        Yoko = self.instruments['Yoko']
+        Magnet = self.instruments['Magnet']
 #        SCqubit = self.instruments['SCqubit']
 
-
-        VNA.set_start_freq(self.freqs[0])
-        VNA.set_stop_freq(self.freqs[-1])
-        VNA.set_points(len(self.freqs))
         VNA.set_s_param(self.Sij[0])
+        VNA.set_span(self.span)
+        VNA.set_points(self.VNA_points)
         Freqs = VNA.do_get_xaxis()
-        if not (Freqs == self.freqs).all():
-            print 'error in setting frequency'
+
 #            break
 #        self.freqdata[0,:] = Freqs
 #        self.currentdata[0,:] = self.currents
         
-        xs,ys = np.meshgrid(self.currents, self.freqs)
+        xs,ys = np.meshgrid(self.currents, self.freqs[0])
 #        timelimit = 16 # breaks long time measurement to severals 16 seconds.
 #        avelimit = int(timelimit/VNA.get_sweep_time())
         avelimit = self.avelimit
@@ -147,17 +153,23 @@ class Current_Sweep_VNA(Measurement1D):
         VNA.set_if_bandwidth(self.if_bandwidth)
         
         for icurrent, current in enumerate(self.currents):
-            if icurrent == 0 or np.abs(self.dcurrents) > 0.002:
-                Yoko.do_ramp_current(current)
-                time.sleep(1)
-            Yoko.do_set_current(current)
 
-            time.sleep(1)
+
+#            Yoko.do_ramp_current(current)
+#            Magnet.do_set_field(current)
+            time.sleep(2)
+
+            VNA.set_center_freq(self.center_freqs[icurrent])
+#            time.sleep(0.5)
             ave = avelimit
+            
             if self.average_factor > avelimit:
                 VNA.set_average_factor(ave)
             count = 0
-    
+            
+            Freqs = VNA.do_get_xaxis()
+            self.freqs[icurrent,:] = Freqs
+            
             while count < self.average_factor:
                 ave = avelimit
                 
@@ -200,7 +212,7 @@ class Current_Sweep_VNA(Measurement1D):
                 for i, sij in enumerate(self.Sij):
                     if len(self.Sij) > 1:  
                         VNA.set_s_param(sij)
-                    prev_fmt = VNA.get_format()
+#                    prev_fmt = VNA.get_format()
 #                    freqs = VNA.do_get_xaxis()
                     VNA.set_format('REAL')
                     ret = VNA.do_get_yaxes()
@@ -208,7 +220,7 @@ class Current_Sweep_VNA(Measurement1D):
                     VNA.set_format('IMAG')
                     ret = VNA.do_get_yaxes()
                     imags = ret[0]
-                    VNA.set_format(prev_fmt)
+                    VNA.set_format('MLOG')
                 
         #        ret = VNA.do_get_data()
 #                VNA.set_trigger_source('internal')
@@ -224,7 +236,6 @@ class Current_Sweep_VNA(Measurement1D):
                         self.realdata[i][icurrent,:] = reals
                         self.imagdata[i][icurrent,:] = imags
             
-            
                     else:
                         reals =( reals *ave + self.realdata[i][icurrent,:] * count)/float(ave+count)
                         imags =( imags *ave + self.imagdata[i][icurrent,:] * count)/float(ave+count)
@@ -236,7 +247,7 @@ class Current_Sweep_VNA(Measurement1D):
                 count = count + ave
                 print '%s averages done' %(count)
             
-            print 'current = %.04fmA done ' % (current)
+            print 'current = %.05fmA done  %s/%s' % (current, icurrent+1, len(self.currents))
             if icurrent == 0:
                 self.fig = pl.figure()
                 if len(self.Sij) == 1:
@@ -249,30 +260,32 @@ class Current_Sweep_VNA(Measurement1D):
                     self.fig.add_subplot(gs[i])
                     self.fig.axes[i].set_title('%s%s'%(self.fig_name,self.Sij[i]))
                     self.fig.axes[i].set_xlim(xs.min(), xs.max()+self.dcurrents)
-                    self.fig.axes[i].set_ylim(ys.min(), ys.max())
+#                    self.fig.axes[i].set_ylim(ys.min(), ys.max())
+                    
                 pl.suptitle(self.full_fig_name)
+        
             for i in range(len(self.Sij)):
-                z1 = 10*np.log10(self.realdata[i][icurrent,:]**2 + self.imagdata[i][icurrent,:]**2)
+                z1 = 20*np.log10(self.realdata[i][icurrent,:]**2 + self.imagdata[i][icurrent,:]**2)
                 z1 = z1[:,None].T
-                z2 = 10*np.log10(self.realdata[i][icurrent,:]**2 + self.imagdata[i][icurrent,:]**2)
+                z2 = 20*np.log10(self.realdata[i][icurrent,:]**2 + self.imagdata[i][icurrent,:]**2)
                 z2 = z2[:,None].T
                 z = np.concatenate([z1,z2])
                 z = np.transpose(z)
-                x = np.zeros((len(self.freqs),2))
+                x = np.zeros((len(self.freqs[icurrent]),2))
                 x[:,0] = self.currents[icurrent]
                 x[:,1] = self.currents[icurrent]+self.dcurrents
-                y = np.zeros((2,len(self.freqs)))
-                y[0] = y[1] = self.freqs
+                y = np.zeros((2,len(self.freqs[icurrent])))
+                y[0] = y[1] = self.freqs[icurrent]
                 y = np.transpose(y)
-                self.fig.axes[i].pcolormesh(x, y, z,vmax=np.max(z),vmin = np.max([np.min(z),-200]))
+                self.fig.axes[i].pcolormesh(x, y, z,vmax=np.max(z))#,vmin = np.max([np.min(z),-200]))
                 print np.max(z), np.min(z)
         #        fig.axes[i].set_xlim(xs.min(), xs.max())
         #        fig.axes[i].set_ylim(ys.min(), ys.max())
                 self.fig.canvas.draw()
 
-#        print 'self.ampdata\n', self.ampdata
+#        print 'self.freqs\n', self.freqs.value
         self.analyze()
         print self.data.get_fullname()
-        Yoko.do_ramp_current(0)
+        
     def analyze(self):
         analysis(self.currents, self.freqs, self.realdata, self.imagdata, self.fig_name,self.full_fig_name, self.Sij, fig = None)

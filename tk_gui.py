@@ -91,7 +91,7 @@ def fetch_instruments():
     return instr.list_instruments()
 
 
-# A list will the names of the currently active instruments as entries.
+# A list with the names of the currently active instruments as entries.
 list_of_instruments = fetch_instruments()
 if list_of_instruments == []:
     message = 'Error: the instrument server has no instruments. Was there an ' \
@@ -238,7 +238,10 @@ class InstrumentInputItem():
         :param args:
         :return:
         """
-        if self.option_condition:
+
+
+        if self.option_condition: 
+
             new_value = self.setvar.get()
         if self.format_map_condition:
             new_value = self.setvar.get()

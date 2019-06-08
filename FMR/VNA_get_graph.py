@@ -19,10 +19,12 @@ VNA = instruments['VNA']
 
 import matplotlib.pyplot as pl 
 date = datetime.datetime.now()
+
 filename = '%sdB_%s_%s_%s'%(VNA.get_power(),date.hour,date.minute,date.second)
 
 print filename
 newpath = r'C:\Users\Wang_Lab\Documents\\yingying\\0418cooldown\\%s.txt'%(filename)
+
 
 if not os.path.exists(os.path.dirname(newpath)):
 

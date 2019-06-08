@@ -17,7 +17,7 @@ import matplotlib.pyplot as pl
 import glob
 #foldername = 'S21 0.02T'
 #filepath = 'C:\Users\WangLab\Documents\\FMR 11032018\\different modes\\%s'%(foldername) 
-filepath = 'C:\Users\Wang_Lab\Documents\\yingying\\0405cooldown' 
+filepath = 'C:\Users\Wang_Lab\Documents\yingying\\0418cooldown\RT' 
 filelist = glob.glob(r'%s\*.txt'%(filepath))
 #pl.title('temperature dependence')
 line=np.empty(len(filelist))

@@ -11,8 +11,8 @@ import lmfit
 kappa_1 = 1e5
 kappa_2 = 1e5
 omega_c = 8.5e9
-kappa_a = 1e6
-g = 5e7
+kappa_a = 2e6
+g = 200e6
 omega_fmr = 7.5e9
 kappa_fmr = 3e6
 
@@ -31,8 +31,8 @@ def S21(params, x, y):
 #    np.sqrt((y.real - est.real)**2 + (y.imag - est.imag)**2)
 #x = np.arange(7.5e9, 8.5e9, 0.00001e9)
 
-m_lst = np.arange(7.7e9,9.3e9,0.05e9)
-span1 = 1e8
+m_lst = np.arange(7.7e9,8.4e9,0.05e9)
+span1 = 4e8
 span = 10e6
  
     
@@ -59,6 +59,8 @@ for omega_fmr in m_lst:
     omega_fmr1 = x[np.argmax(abs(y))]
     x = np.linspace(omega_fmr1 - span/2, omega_fmr1 + span/2, 1601)
     y = np.sqrt(kappa_1 *kappa_2)/(1j*(x-omega_c)-kappa_a/2 +g**2/(1j*(x-omega_fmr)-kappa_fmr/2))
+#    y_bg = np.sqrt(kappa_1 *kappa_2)/(1j*(x-omega_c)-kappa_a/2)
+    y = y - y_bg
 
       
     #pl.suptitle('fitting for %s'%(foldername))

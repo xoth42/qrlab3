@@ -10,6 +10,11 @@ import objectsharer as objsh
 import time
 import lmfit
 from matplotlib import gridspec
+
+import os
+import config
+import time
+
 #
 #plot type 0: amp and phase
 #plot type 1: real and imag
@@ -32,6 +37,7 @@ def S11(params, x, y):
     
         
 def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
+    fn = None
     if fig is None:
         fig = plt.figure()
         gs = gridspec.GridSpec(1, 2, width_ratios=[1,1])
@@ -42,9 +48,13 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
     datasdB = 20*np.log10(np.abs(datas))
     if fit_S12:
         params = lmfit.Parameters()
-        params.add('kappa_prod', value= (np.max(np.abs(datas))*1.5e6)**2.001, min = 0)#,vary = False)
-        params.add('omega_c', value=freqs[np.argmax(np.abs(datas))]*1.0001,min = freqs[np.argmax(np.abs(datas))]*0.9998, max = freqs[np.argmax(np.abs(datas))] * 1.0002)#,vary = False)
-        params.add('kappa_a', value=2e6, min = 0)#, max = 4e6)#,vary = False)
+
+
+        params.add('kappa_prod', value= (np.max(np.abs(datas))*0.5e6)**2.001, min = 0)#,vary = False)
+        params.add('omega_c', value=freqs[np.argmax(np.abs(datas))]*1.00002,min = freqs[np.argmax(np.abs(datas))]*0.9998, max = freqs[np.argmax(np.abs(datas))] * 1.0002)#,vary = False)
+        params.add('kappa_a', value=1e6, min = 0)#, max = 4e6)#,vary = False)
+
+
         if np.max(np.abs(datas)) < limit_for_off:
             params.add('roff',value = 1e-5)#,vary = False)
             params.add('ioff',value = 1e-5)#, vary = False)
@@ -54,7 +64,9 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
         result = lmfit.minimize(S21, params, args=(freqs, datas))
         lmfit.report_fit(result.params)
         print ('total Q: ',result.params['omega_c'].value/result.params['kappa_a'].value)
+
         fitdata = np.sqrt(result.params['kappa_prod'].value)/(-1j*(freqs-result.params['omega_c'].value)-(result.params['kappa_a'].value)/2.0 )
+
         if np.max(np.abs(datas)) < limit_for_off:
             fitdata = fitdata + result.params['roff'].value + 1j*result.params['ioff'].value
         fitdata = fitdata * np.exp(1j*result.params['phi'].value)
@@ -88,28 +100,47 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
     
 #    if plot_type == 1:
 
-    fig.axes[1].plot( datas.real, datas.imag)
-    if fit_S12 or fit_S11:
-        fig.axes[1].plot(fitdata.real,fitdata.imag, '--')
-    plt.xlabel('I')
-    plt.ylabel('Q')        
-#    print datas.real, fitdata.real
 
+
+    fig.axes[1].plot( datas.real, datas.imag)
+    if fit_S12:
+        fig.axes[1].plot(fitdata.real,fitdata.imag, '--',label = 'total Q = %s\n freq = %sGHz'%(result.params['omega_c'].value/result.params['kappa_a'].value, result.params['omega_c'].value/1e9))
+    if fit_S11:
+        fig.axes[1].plot(fitdata.real,fitdata.imag, '--',label = 'total Q = %s\n couplingQ = %s\n freq = %sGHz'%(result.params['omega_c'].value/result.params['kappa_a'].value, result.params['omega_c'].value/result.params['kappa_1'].value,result.params['omega_c'].value/1e9))
+    plt.xlabel('I')
+    plt.ylabel('Q') 
+    plt.legend()       
+#    print datas.real, fitdata.real
+    if fn is None:
+        fn = os.path.join(config.datadir, 'images/%s_VNA_trace.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
+    fdir = os.path.split(fn)[0]
+    if not os.path.isdir(fdir):
+        os.makedirs(fdir)
+    kwargs = dict()
+    fig.savefig(fn, **kwargs)
+    if fit_S11 or fit_S12:
+        return result.params
 class SingleTrace(Measurement1D):
 
-    def __init__(self,freqs, average_factor, avelimit, fit_S12, fit_S11, **kwargs):
+    def __init__(self,freqs, average_factor, avelimit, if_bandwidth, fit_S12, fit_S11, **kwargs):
         self.freqs =freqs
 #        self.meas_info = meas_info
 #        self.device_info = device_info
 #        plot_type = SPEC
         self.average_factor = average_factor
         self.avelimit = avelimit
+        self.if_bandwidth = if_bandwidth
         self.fit_S12 = fit_S12
         self.fit_S11 = fit_S11
         self.fig = None
+
+        self.fit_params = None
+
+
 #        self.plot_type = plot_type
 
         super(SingleTrace, self).__init__(1, **kwargs)
+        self.figname = self.data.get_fullname()
 #        self.data.create_dataset('freqs', data = self.freqs)
         self.freqdata = self.data.create_dataset('freqs', shape=[1,len(self.freqs)])
         self.realdata = self.data.create_dataset('real', shape=[1,len(self.freqs)])
@@ -120,7 +151,7 @@ class SingleTrace(Measurement1D):
 
     def measure(self):
         # Generate and load sequences
-        print 'ok6'
+#        print 'ok6'
         VNA = self.instruments['VNA']
 
         VNA.set_start_freq(self.freqs[0])
@@ -134,7 +165,7 @@ class SingleTrace(Measurement1D):
 #            avelimit = 1
 #        if avelimit >999:
 #            avelimit = 999
-            
+        VNA.set_if_bandwidth(self.if_bandwidth)    
         ave = self.avelimit
         VNA.set_average_factor(ave)
         count = 0
@@ -212,6 +243,10 @@ class SingleTrace(Measurement1D):
                 self.fig.add_subplot(gs[1])
                 self.fig.axes[0].plot(freqs/1e9, 20*np.log10(np.abs(datas)))
                 self.fig.axes[1].plot(reals, imags)
+
+
+                self.fig.axes[1].set_aspect('equal', 'box')
+
 #                plt.show()
                 self.fig.canvas.draw()
 
@@ -230,6 +265,11 @@ class SingleTrace(Measurement1D):
                 self.fig.add_subplot(gs[1])
                 self.fig.axes[0].plot(freqs/1e9, 20*np.log10(np.abs(datas)))
                 self.fig.axes[1].plot(reals, imags)
+
+
+                self.fig.axes[1].set_aspect('equal', 'box')
+
+
 #                self.fig.axes[0].plot(freqs/1e9, 20*np.log10(np.abs(datas)))
 #                plt.show()
                 self.fig.canvas.draw()
@@ -244,7 +284,10 @@ class SingleTrace(Measurement1D):
     def analyze(self):
 #        fig = plt.figure()
         
-        analysis(self.freqdata, self.realdata, self.imagdata, self.fit_S12, self.fit_S11, fig=self.fig)
+
+
+        self.fit_params = analysis(self.freqdata, self.realdata, self.imagdata, self.fit_S12, self.fit_S11,figname = self.figname, fig=self.fig)
+
         
         
 
@@ -256,6 +299,9 @@ class SingleTraceNoAsync(Measurement1D):
         self.fit_S12 = fit_S12
         self.fit_S11 = fit_S11
         self.fig = None
+
+        self.fit_params = None
+
 #        self.plot_type = plot_type
 
         super(SingleTraceNoAsync, self).__init__(1, **kwargs)
@@ -306,6 +352,11 @@ class SingleTraceNoAsync(Measurement1D):
         self.fig.add_subplot(gs[1])
         self.fig.axes[0].plot(freqs/1e9, 20*np.log10(np.abs(datas)))
         self.fig.axes[1].plot(reals, imags)
+
+
+        self.fig.axes[1].set_aspect('equal', 'box')
+
+
 #                plt.show()
         self.fig.canvas.draw()
 
@@ -317,4 +368,6 @@ class SingleTraceNoAsync(Measurement1D):
     def analyze(self):
 #        fig = plt.figure()
         
-        analysis(self.freqdata, self.realdata, self.imagdata, self.fit_S12, self.fit_S11, figname = self.figname, fig=self.fig)
+
+        self.fit_params = analysis(self.freqdata, self.realdata, self.imagdata, self.fit_S12, self.fit_S11, figname = self.figname, fig=self.fig)
+

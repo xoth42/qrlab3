@@ -57,7 +57,7 @@ Qswitchseq = sequencer.Join([sequencer.Repeat(sequencer.Delay(100), 100),
 #            Repeat(Constant(250, 1, chan=5), 800),      # Qubit/Readout master switch
             ])])
 '''
-if 0: # Cavity disp calibration
+if 1: # Cavity disp calibration
     from single_cavity import cavdisp
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
     seq = sequencer.Trigger(250)
@@ -70,7 +70,7 @@ if 0: # Cavity disp calibration
     disp.measure_keysight()
     bla
 
-if 1: # Cavity disp calibration with switch
+if 0: # Cavity disp calibration with switch
     from single_cavity import cavdisp_switch
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
     seq = sequencer.Trigger(250)
@@ -138,10 +138,11 @@ if 0: #Cavity T2
     bla
 
 
-if 0: # Cavity spec
+if 1: # Cavity spec
     from single_cavity import cavspectroscopy_keysight
-    cav_freq = 4.0903e9
-    freq_range = 0.5e6
+    cav_freq = 4.09e9
+#    cav_freq = 5.418e9
+    freq_range = 2.0e6
     cspec = cavspectroscopy_keysight.CavSpectroscopy(mclient.instruments['SCalice'], qubit_info, cavity_infoA, [np.pi], 
                                             np.linspace(cav_freq-freq_range, cav_freq+freq_range, 51), plot_seqs=False)
 

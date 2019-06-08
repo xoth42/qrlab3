@@ -15,19 +15,19 @@ from mclient import instruments
 
 
 #
-#instruments.remove('dig')
-#dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period=1000, naverages=20000)
-##dig.set_naverages(15000)
-#
-#AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PRODUCT = "M3202A", 
-#                          amps = [1,1.5,1,1.5], ofs = [0.5, 0, 0.5, 0])
-#
-#
-#AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 8,  AWG_PRODUCT = "M3202A", 
-#                          amps = [1.5,1.5,1.5,1.5], ofs = [-0.02, 0.01, -0.005, 0.045])
-#
-#AWG3 = instruments.create('AWG3', 'Keysight_AWG', chassis = 0, slot = 10,  AWG_PRODUCT = "M3202A", 
-#                          amps = [1,1,1,1], ofs = [0, 0, -0.0038, 0.044])
+instruments.remove('dig')
+dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period=100, naverages=2000)
+#dig.set_naverages(15000)
+
+AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PRODUCT = "M3202A", 
+                          amps = [1,1.5,1,1.5], ofs = [0.5, 0, 0.5, 0])
+
+
+AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 8,  AWG_PRODUCT = "M3202A", 
+                          amps = [1.5,1.5,1.5,1.5], ofs = [-0.02, 0.01, -0.005, 0.045])
+
+AWG3 = instruments.create('AWG3', 'Keysight_AWG', chassis = 0, slot = 10,  AWG_PRODUCT = "M3202A", 
+                          amps = [1,1,1,1], ofs = [0, 0, -0.0038, 0.044])
 
 
 #dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period=500)
@@ -53,9 +53,9 @@ from mclient import instruments
 #print 'Magnet OK'
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='TCPIP0::172.30.56.25::4000::SOCKET')
 
-VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB1::17::INSTR')
+#VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB1::17::INSTR')
 #
-#Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
+Yoko = instruments.create('Yoko','Yokogawa_GS200',address='GPIB0::11::INSTR')
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='TCPIP0::172.30.56.25::inst0::INSTR', clock=1e9, refsrc='EXT', reffreq=10e6)
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1')
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='GPIB1::1::INSTR')

@@ -36,7 +36,7 @@ os.chdir(r'C:/qrlab/scripts')
 
 if 0: # test digitizer
     dig = mclient.instruments['dig']
-    data = dig.test_dig(1000000, 1, 1, 1)
+    data = dig.test_dig(5000, 1, 1, 1)
     print(np.shape(data))
     plt.figure()
     plt.plot(data[0][0][:], label = 'sig')
@@ -51,7 +51,7 @@ if 0: # cav transmission
 #    Yoko.do_set_current(-0.00175)
     rofreq = 7608.5e6
     freq_range = 20e6
-    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(10, 10, 1),
+    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(0, 0, 1),
                                              np.linspace(rofreq-freq_range, rofreq+freq_range, 51),
                                              qubit_pulse=False, seq=None)
     ro.measure()
@@ -87,13 +87,13 @@ if 0: #     qubit spectroscopy
 #    from scripts.single_qubit import spectroscopy_IQ
     seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate(np.pi, 0)])
     postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
-    qubit_freq = 7.707e9
+    qubit_freq = 965e6
 
-    freq_range = 1000e6
-    spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['Brick14'], qubit14_info, 
+    freq_range = 35e6
+    spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['QK'], qubit_info, 
                                      np.linspace(qubit_freq-freq_range,
-                                                 qubit_freq+freq_range, 2501),
-                                     [10],
+                                                 qubit_freq+freq_range, 71),
+                                     [0],
                                      plen=30000, amp=0.08, extra_info=qubit_info, seq=seq, postseq=postseq, plot_seqs=False) 
 
     spec.measure()
@@ -118,7 +118,7 @@ if 0: # Qubit spec with phase correction
     
     
 
-if 0: # SSB spec
+if 1: # SSB spec
     from single_qubit import ssbspec
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
     for i in range(1):
@@ -240,7 +240,7 @@ if 0: # T1
     t1.measure_keysight()
     bla
 
-if 1: # T1 - alternating pi-pulse and saturation T1
+if 0: # T1 - alternating pi-pulse and saturation T1
     from single_qubit import T1_alternate_pi_saturation
 
     t1 = T1_alternate_pi_saturation.T1Measurement(qubit_info, #np.linspace(0, 0.8e3, 100),
@@ -256,7 +256,7 @@ if 0:
     powers = np.linspace(-20, 10, 2)
     frequencies = np.linspace(120, 180, 3)
 
-if 1: #T2
+if 0: #T2
     from single_qubit import T2measurement
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
     for i in range(1):
