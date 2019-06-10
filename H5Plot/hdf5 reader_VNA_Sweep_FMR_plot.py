@@ -22,8 +22,8 @@ filepath = 'C:\_Data\\'
 #hdf5_name = 'VNAtestJan30.hdf5'
 #hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
 hdf5_name = 'FMR_RT_0515.hdf5'
-date = '20190517'
-time = '182155'
+date = '20190530'
+time = '160430'
 experiment = 'Current_Sweep_VNA'
 
 ''' Primary x axis and secondary if 2d'''
@@ -62,8 +62,8 @@ for i in range(len(currents)):
 
 mag = 10*np.log10(real**2 + imag**2)
 Z = np.transpose(mag)
-#X,Y = np.meshgrid(field, freq)
-X,Y = np.meshgrid(field, freq/1e9)
+X,Y = np.meshgrid(currents, freq/1e9)
+#X,Y = np.meshgrid(field, freq/1e9)
 pl.xlim(X.min(), X.max())
 pl.ylim(Y.min(), Y.max())
 pl.pcolormesh(X,Y,Z)
@@ -71,10 +71,10 @@ pl.colorbar()
 #pl.title('YIG FMR Spectrum, S11 Measurement')
 #pl.xlabel('Magnetic Field(mT)')
 pl.ylabel('Frequency(GHz)')
-x = field
-Ms = 178 *0.95
-k = 0.97
-off = 0.589
+x = X[0]
+Ms = 178 
+k = 0.945
+off = 0.86
 pl.plot(x, k*28.025*x/1000+off, color = 'b') #110
 pl.plot(x, k*28.025*(x+Ms*(0.4-0.333333))/1000+off, color = 'r') #220
 pl.plot(x, k*28.025*(x+Ms*(0.428571-0.333333))/1000+off, color = 'r') #330

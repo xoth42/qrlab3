@@ -24,14 +24,14 @@ filepath = 'C:\_Data\\'
 #hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
 hdf5_name = 'FMR_RT_0515.hdf5'
 #hdf5_name = 'FMR_RT_0515 - Copy.hdf5'
-date = '20190520'
-time = '182559'
+date = '20190530'
+time = '155703'
 #experiment = 'Power_Sweep_Varies_freq_VNA'
 experiment = 'Current_Sweep_Varies_freq_VNA'
 #experiment = 'Current_Sweep_VNA'
 fit_S12 = True
 fit_S11 = False
-seperate_fitting_figure = False
+seperate_fitting_figure = True
 
 #xlabel = 'current(mA)'
 xlabel = 'different measurements'
@@ -127,9 +127,9 @@ for i in range(len(real))[0:]:
     datas = real[i] + 1j*imag[i]
     if fit_S12:
         params = lmfit.Parameters()
-        params.add('kappa_prod', value= (np.max(np.abs(datas))*1.6e6)**2.001, min = 0)#,vary = False)
+        params.add('kappa_prod', value= (np.max(np.abs(datas))*2e6)**2.001, min = 0)#,vary = False)
         params.add('omega_c', value=freqs[i][np.argmax(np.abs(datas))]*1.000,min = freqs[i][np.argmax(np.abs(datas))]*0.9, max = freqs[i][np.argmax(np.abs(datas))] * 1.1)#,vary = False)
-        params.add('kappa_a', value=1.6e6, min = 0)#, max = 4e6)#,vary = False)
+        params.add('kappa_a', value=2e6, min = 0)#, max = 4e6)#,vary = False)
         if np.max(np.abs(datas)) < limit_for_off:
             params.add('roff',value = 0)#,vary = False)
             params.add('ioff',value = 0)#, vary = False)

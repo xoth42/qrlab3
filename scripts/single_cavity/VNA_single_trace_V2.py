@@ -33,6 +33,10 @@ def S11(params, x, y):
 
     est = (-1 - params['kappa_1'] / (1j*(x-params['omega_c'])-params['kappa_a']/2))*params['A']
     return y - abs(est)
+#    if np.max(np.abs(y)) < limit_for_off:
+#        est = est + params['roff'] + 1j*params['ioff']
+#    est = est * np.exp(1j*params['phi'])
+#    return np.sqrt((y.real - est.real)**2 + (y.imag - est.imag)**2)
     
         
 def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
@@ -50,21 +54,21 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
     if fit_S12:
         params = lmfit.Parameters()
 
-        params.add('kappa_prod', value= (np.max(np.abs(datas))*0.5e6)**2.001, min = 0)#,vary = False)
-        params.add('omega_c', value=freqs[np.argmax(np.abs(datas))]*1.00002,min = freqs[np.argmax(np.abs(datas))]*0.9998, max = freqs[np.argmax(np.abs(datas))] * 1.0002)#,vary = False)
-        params.add('kappa_a', value=1e6, min = 0)#, max = 4e6)#,vary = False)
+        params.add('kappa_prod', value= (np.max(np.abs(datas))*1e6)**2.001, min = 0)#,vary = False)
+        params.add('omega_c', value=freqs[np.argmax(np.abs(datas))]*1.0001,min = freqs[np.argmax(np.abs(datas))]*0.998, max = freqs[np.argmax(np.abs(datas))] * 1.002)#,vary = False)
+        params.add('kappa_a', value=2e6, min = 0)#, max = 4e6)#,vary = False)
 
         if np.max(np.abs(datas)) < limit_for_off:
-            params.add('roff',value = 1e-5)#,vary = False)
-            params.add('ioff',value = 1e-5)#, vary = False)
-        params.add('phi',value = -1, max = np.pi, min = -np.pi)#,vary = False)
+            params.add('roff',value = np.real(datas[0]))#,vary = False)
+            params.add('ioff',value = np.imag(datas[0]))#, vary = False)
+        params.add('phi',value = -2, max = np.pi, min = -np.pi)#,vary = False)
                 
     #    datas = realdata[0,:]+ 1j*imagdata[0,:]    
         result = lmfit.minimize(S21, params, args=(freqs, datas))
         lmfit.report_fit(result.params)
         print ('total Q: ',result.params['omega_c'].value/result.params['kappa_a'].value)
 
-        fitdata = np.sqrt(result.params['kappa_prod'].value)/(1j*(freqs-result.params['omega_c'].value)-(result.params['kappa_a'].value)/2.0 )
+        fitdata = np.sqrt(result.params['kappa_prod'].value)/(-1j*(freqs-result.params['omega_c'].value)-(result.params['kappa_a'].value)/2.0 )
 
         if np.max(np.abs(datas)) < limit_for_off:
             fitdata = fitdata + result.params['roff'].value + 1j*result.params['ioff'].value
@@ -77,6 +81,11 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
         params.add('omega_c', value=freqs[np.argmin(np.abs(datas))]*1.0001)
         params.add('kappa_a', value=3.0022e+06)
         params.add('A', value=1)
+#        params.add('phi',value = -1, max = np.pi, min = -np.pi)#,vary = False)
+#        if np.max(np.abs(datas)) < limit_for_off:
+#            params.add('roff',value = 1e-5)#,vary = False)
+#            params.add('ioff',value = 1e-5)#, vary = False)
+
                 
     #    datas = realdata[0,:]+ 1j*imagdata[0,:]    
         result = lmfit.minimize(S11, params, args=(freqs, abs(datas)))
@@ -100,8 +109,11 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
 
 
     fig.axes[1].plot( datas.real, datas.imag)
+#    fig.axes[1].plot( datas.real[0:100], datas.imag[0:100])
     if fit_S12:
         fig.axes[1].plot(fitdata.real,fitdata.imag, '--',label = 'total Q = %s\n freq = %sGHz'%(result.params['omega_c'].value/result.params['kappa_a'].value, result.params['omega_c'].value/1e9))
+#        fig.axes[1].plot(fitdata.real[0:100],fitdata.imag[0:100], '--')
+    
     if fit_S11:
         fig.axes[1].plot(fitdata.real,fitdata.imag, '--',label = 'total Q = %s\n couplingQ = %s\n freq = %sGHz'%(result.params['omega_c'].value/result.params['kappa_a'].value, result.params['omega_c'].value/result.params['kappa_1'].value,result.params['omega_c'].value/1e9))
     plt.xlabel('I')
