@@ -15,7 +15,7 @@ import os
 import pulseseq
 import awgloader
 
-#from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets
 from pulseseq import sequencer
 from pulseseq import pulselib
 
@@ -668,7 +668,7 @@ class Measurement(object):
                 s = pulseseq.sequencer.Sequencer()
                 s.print_seqs(seqs)
             
-            logging.info('Loading sequence...')
+            logging.info('Loading sequence...') 
             self.load(seqs)
             if self.release_seqs:
                 self.seqs = None

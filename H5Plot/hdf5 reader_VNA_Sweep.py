@@ -15,16 +15,23 @@ from matplotlib import gridspec
 filepath = 'C:\_Data\\'
 #hdf5_name = 'VNAtestJan30.hdf5'
 #hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
-hdf5_name = '20190322 Cooldown - Copy.hdf5'
-date = '20190507'
-time = '124013'
+hdf5_name = '0531cooldown_FMR.hdf5'
+#hdf5_name = '0531cooldown_FMR - Copy.hdf5'
+date = '20190607'
+time = '182329'
 experiment = 'Power_Sweep_VNA'
 
 fit_S12 = True
 fit_S11 = False
 
+subtract = False
 
-
+if subtract:
+#    hdf5_name_s = '0531cooldown_FMR.hdf5'
+    hdf5_name_s = hdf5_name
+    date_s = '20190607'
+    time_s = '123440'
+    experiment_s = 'SingleTrace'
 
 def S21(params, x, y):
     est = np.sqrt(params['kappa_prod'])/(-1j*(x-params['omega_c'])-(params['kappa_a'])/2.0 )
@@ -60,6 +67,19 @@ powers = exp['powers'].value
 real = exp['realS21'].value
 imag = exp['imaginaryS21'].value
 
+if subtract:
+    f_s = h5.File(filepath + hdf5_name_s, 'r')
+    exp_s = f_s['/' + date_s + '/' + time_s + '_' + experiment_s]
+    y_keys_s = exp_s.keys()
+    #print(y_keys)
+    
+    #y_keys.remove(x_key)
+    #y_keys.remove(x2_key)
+    freq_s = exp_s['freqs'].value
+
+    real_s = exp_s['real'].value
+    imag_s = exp_s['imaginary'].value
+
 '''Conversion factor from Yoko current in mA to actual magnetic field in mT'''
 #if current.any() < 0.5:
 #    field = current*529.37 + 0.49
@@ -67,6 +87,12 @@ imag = exp['imaginaryS21'].value
 #    field = -268.93 * (current)**2 + 839.69*current - 88.67
 
 '''Plot'''
+
+
+if subtract:
+    for i in range(len(real)):
+        real[i] = real[i] - real_s
+        imag[i] = imag[i] - imag_s
 pl.figure()
 figname = ''
 powerplot = np.concatenate((powers, np.zeros(1) + powers[1]-powers[0] + powers[-1]))
@@ -188,12 +214,12 @@ pl.figure()
 pl.scatter(lin_power, omega_c/1e9, label='frequency')
 #    pl.xlabel('field(T)')
 #    pl.xlabel('different measurement')
-n=19
-m,b = np.polyfit(lin_power[0:n],omega_c[0:n]/1e9,1)
-print 'frequencu(GHz) = %s * power(mW) + %s'%(m,b)
-print 'slope for frequency:', m
-pl.plot(lin_power, lin_power*m + b,label = 'frequencu(GHz) = %s * power(mW) + %s'%(m,b))
-pl.xlabel('drive power(mW)')
+#n=19
+#m,b = np.polyfit(lin_power[0:n],omega_c[0:n]/1e9,1)
+#print 'frequencu(GHz) = %s * power(mW) + %s'%(m,b)
+#print 'slope for frequency:', m
+#pl.plot(lin_power, lin_power*m + b,label = 'frequencu(GHz) = %s * power(mW) + %s'%(m,b))
+#pl.xlabel('drive power(mW)')
 pl.ylabel('frequency(GHz)')
 pl.legend(loc='upper right')
 
@@ -201,23 +227,23 @@ pl.figure()
 pl.scatter(lin_power, Q_result, label='total Q')
 #    pl.xlabel('field(T)')
 #    pl.xlabel('different measurement')
-pl.xlabel('drive power (mW)')
+#pl.xlabel('drive power (mW)')
 pl.ylabel('Q')
 pl.legend(loc='upper right')
 
 
 pl.figure()
 pl.errorbar(lin_power, kappa_a/1000000, yerr = kappa_a_err/1000000, fmt ='o', label='kappa_tot')
-n=6
-m,b = np.polyfit(lin_power[0:n],kappa_a[0:n]/1e6,1)
-pl.plot(lin_power, lin_power*m + b)
-print 'slope for kappa:', m
-pl.xlabel('drive power (mW)')
+#n=6
+#m,b = np.polyfit(lin_power[0:n],kappa_a[0:n]/1e6,1)
+#pl.plot(lin_power, lin_power*m + b)
+#print 'slope for kappa:', m
+#pl.xlabel('drive power (mW)')
 pl.ylabel('linewidth(MHz)')
 pl.legend(loc='upper right')
 
 
 pl.figure()
 pl.errorbar(lin_power, kappa_prod, yerr = kappa_prod_err, fmt ='o', label='kappa_prod')
-pl.xlabel('drive power (mW)')
+#pl.xlabel('drive power (mW)')
 pl.legend(loc='upper right')

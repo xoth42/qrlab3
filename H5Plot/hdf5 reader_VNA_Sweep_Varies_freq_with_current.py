@@ -22,10 +22,13 @@ from matplotlib import gridspec
 filepath = 'C:\_Data\\'
 #hdf5_name = 'VNAtestJan30.hdf5'
 #hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
-hdf5_name = 'FMR_RT_0515.hdf5'
+hdf5_name = '0531cooldown_FMR.hdf5'
+hdf5_name = '0531cooldown_FMR - Copy.hdf5'
 #hdf5_name = 'FMR_RT_0515 - Copy.hdf5'
-date = '20190530'
-time = '155703'
+
+date = '20190607'
+time = '130705'
+
 #experiment = 'Power_Sweep_Varies_freq_VNA'
 experiment = 'Current_Sweep_Varies_freq_VNA'
 #experiment = 'Current_Sweep_VNA'
@@ -34,7 +37,17 @@ fit_S11 = False
 seperate_fitting_figure = True
 
 #xlabel = 'current(mA)'
-xlabel = 'different measurements'
+#xlabel = 'different measurements'
+xlabel= 'field (T)'
+
+subtract =True
+
+if subtract:
+#    hdf5_name_s = '0531cooldown_FMR.hdf5'
+    hdf5_name_s = hdf5_name
+    date_s = '20190607'
+    time_s = '131321'
+    experiment_s = 'Current_Sweep_Varies_freq_VNA'
 
 def S21(params, x, y):
     est = np.sqrt(params['kappa_prod'])/(-1j*(x-params['omega_c'])-(params['kappa_a'])/2.0 )
@@ -69,6 +82,23 @@ currents = exp['currents'].value
 
 real = exp['realS21'].value
 imag = exp['imaginaryS21'].value
+
+if subtract:
+    f_s = h5.File(filepath + hdf5_name_s, 'r')
+    exp_s = f_s['/' + date_s + '/' + time_s + '_' + experiment_s]
+    y_keys_s = exp_s.keys()
+    #print(y_keys)
+    
+    #y_keys.remove(x_key)
+    #y_keys.remove(x2_key)
+    freq_s = exp_s['freqs'].value
+
+    currents_s = exp_s['currents'].value
+    
+    real_s = exp_s['realS21'].value
+    imag_s = exp_s['imaginaryS21'].value
+    real = real - real_s
+    imag = imag - imag_s
 
 '''Conversion factor from Yoko current in mA to actual magnetic field in mT'''
 #if current.any() < 0.5:
@@ -133,7 +163,7 @@ for i in range(len(real))[0:]:
         if np.max(np.abs(datas)) < limit_for_off:
             params.add('roff',value = 0)#,vary = False)
             params.add('ioff',value = 0)#, vary = False)
-        params.add('phi',value = -1, max = np.pi, min = -np.pi)#,vary = False)
+        params.add('phi',value = 0, max = np.pi, min = -np.pi)#,vary = False)
                 
     #    datas = realdata[0,:]+ 1j*imagdata[0,:]    
         result = lmfit.minimize(S21, params, args=(freqs[i], datas))

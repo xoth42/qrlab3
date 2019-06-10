@@ -10,6 +10,7 @@ import objectsharer as objsh
 import time
 import lmfit
 from matplotlib import gridspec
+
 import os
 import config
 import time
@@ -40,9 +41,7 @@ def S11(params, x, y):
     
         
 def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
-
     fn = None
-
     if fig is None:
         fig = plt.figure()
         gs = gridspec.GridSpec(1, 2, width_ratios=[1,1])
@@ -54,9 +53,13 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
     if fit_S12:
         params = lmfit.Parameters()
 
-        params.add('kappa_prod', value= (np.max(np.abs(datas))*1e6)**2.001, min = 0)#,vary = False)
-        params.add('omega_c', value=freqs[np.argmax(np.abs(datas))]*1.0001,min = freqs[np.argmax(np.abs(datas))]*0.998, max = freqs[np.argmax(np.abs(datas))] * 1.002)#,vary = False)
-        params.add('kappa_a', value=2e6, min = 0)#, max = 4e6)#,vary = False)
+
+
+        params.add('kappa_prod', value= (np.max(np.abs(datas))*0.5e6)**2.001, min = 0)#,vary = False)
+        params.add('omega_c', value=freqs[np.argmax(np.abs(datas))]*1.00002,min = freqs[np.argmax(np.abs(datas))]*0.9998, max = freqs[np.argmax(np.abs(datas))] * 1.0002)#,vary = False)
+        params.add('kappa_a', value=1e6, min = 0)#, max = 4e6)#,vary = False)
+
+
 
         if np.max(np.abs(datas)) < limit_for_off:
             params.add('roff',value = np.real(datas[0]))#,vary = False)
@@ -96,6 +99,7 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
         fitdatadB = 20*np.log10(np.abs(fitdata))
 
 
+
     fig.axes[0].plot(freqs/float(1e9), datasdB )
 #    fig.axes[0].set_title(figname)
     plt.suptitle(figname)
@@ -106,6 +110,7 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
     
     
 #    if plot_type == 1:
+
 
 
     fig.axes[1].plot( datas.real, datas.imag)
@@ -131,17 +136,20 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
         return result.params
 class SingleTrace(Measurement1D):
 
-    def __init__(self,freqs, average_factor, avelimit, fit_S12, fit_S11, **kwargs):
+    def __init__(self,freqs, average_factor, avelimit, if_bandwidth, fit_S12, fit_S11, **kwargs):
         self.freqs =freqs
 #        self.meas_info = meas_info
 #        self.device_info = device_info
 #        plot_type = SPEC
         self.average_factor = average_factor
         self.avelimit = avelimit
+        self.if_bandwidth = if_bandwidth
         self.fit_S12 = fit_S12
         self.fit_S11 = fit_S11
         self.fig = None
+
         self.fit_params = None
+
 
 #        self.plot_type = plot_type
 
@@ -171,7 +179,7 @@ class SingleTrace(Measurement1D):
 #            avelimit = 1
 #        if avelimit >999:
 #            avelimit = 999
-            
+        VNA.set_if_bandwidth(self.if_bandwidth)    
         ave = self.avelimit
         VNA.set_average_factor(ave)
         count = 0
@@ -250,6 +258,7 @@ class SingleTrace(Measurement1D):
                 self.fig.axes[0].plot(freqs/1e9, 20*np.log10(np.abs(datas)))
                 self.fig.axes[1].plot(reals, imags)
 
+
                 self.fig.axes[1].set_aspect('equal', 'box')
 
 #                plt.show()
@@ -271,7 +280,9 @@ class SingleTrace(Measurement1D):
                 self.fig.axes[0].plot(freqs/1e9, 20*np.log10(np.abs(datas)))
                 self.fig.axes[1].plot(reals, imags)
 
+
                 self.fig.axes[1].set_aspect('equal', 'box')
+
 
 #                self.fig.axes[0].plot(freqs/1e9, 20*np.log10(np.abs(datas)))
 #                plt.show()
@@ -288,6 +299,7 @@ class SingleTrace(Measurement1D):
 #        fig = plt.figure()
         
 
+
         self.fit_params = analysis(self.freqdata, self.realdata, self.imagdata, self.fit_S12, self.fit_S11,figname = self.figname, fig=self.fig)
 
         
@@ -301,6 +313,7 @@ class SingleTraceNoAsync(Measurement1D):
         self.fit_S12 = fit_S12
         self.fit_S11 = fit_S11
         self.fig = None
+
         self.fit_params = None
 
 #        self.plot_type = plot_type
@@ -354,7 +367,9 @@ class SingleTraceNoAsync(Measurement1D):
         self.fig.axes[0].plot(freqs/1e9, 20*np.log10(np.abs(datas)))
         self.fig.axes[1].plot(reals, imags)
 
+
         self.fig.axes[1].set_aspect('equal', 'box')
+
 
 #                plt.show()
         self.fig.canvas.draw()
@@ -367,5 +382,6 @@ class SingleTraceNoAsync(Measurement1D):
     def analyze(self):
 #        fig = plt.figure()
         
+
         self.fit_params = analysis(self.freqdata, self.realdata, self.imagdata, self.fit_S12, self.fit_S11, figname = self.figname, fig=self.fig)
 

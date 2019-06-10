@@ -140,30 +140,30 @@ class Power_Sweep_VNA(Measurement1D):
         if avelimit >999:
             avelimit = 999
             
-        if self.average_factor < avelimit:
-            avelimit = self.average_factor
             
         VNA.set_average_factor(avelimit)
         VNA.set_if_bandwidth(self.if_bandwidth)
         
         for ipower, power in enumerate(self.powers):
-#            VNA.set_power(power)
+            VNA.set_power(power)
 #            if power == -31:
 #                SCqubit.set_rf_on(False)
 #            else:
 #                SCqubit.set_rf_on(True)                
 #            SCqubit.set_power(power)
 #            time.sleep(0.5)
+            if self.average_factor[ipower] < avelimit:
+                avelimit = self.average_factor[ipower]
             ave = avelimit
-            if self.average_factor > avelimit:
+            if self.average_factor[ipower] > avelimit:
                 VNA.set_average_factor(ave)
             count = 0
     
-            while count < self.average_factor:
+            while count < self.average_factor[ipower]:
                 ave = avelimit
                 
-                if (self.average_factor-count) < avelimit:
-                    ave = self.average_factor-count
+                if (self.average_factor[ipower]-count) < avelimit:
+                    ave = self.average_factor[ipower]-count
                     VNA.set_average_factor(ave)
                 
 #                reals = []

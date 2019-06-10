@@ -204,23 +204,29 @@ class rndm(Measurement1D):
                     
         for j in range(self.num_cal_points):
             s.append(self.seq)
-            s.append(r(np.pi, X_AXIS))   
-            s.append(Combined([
+            temp_seq = Sequence()
+            temp_seq.append(r(np.pi, X_AXIS))   
+            temp_seq.append(Combined([
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
-            s.append(Delay(2000))
+            temp_seq.append(Delay(1000))
+            s.append(Join(temp_seq))
+        print('appended calibration pi pulses')
         
 #        s.append(Delay(100000))
         
         for j in range(self.num_cal_points):
             s.append(self.seq)
+            temp_seq = Sequence()
             s.append(Delay(80))   
-            s.append(Combined([
+            temp_seq.append(Combined([
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
-            s.append(Delay(2000)) 
+            temp_seq.append(Delay(1000))
+            s.append(Join(temp_seq))
+        print('appended calibration ground state')
 
 #This for loop is for Z pi gate that is composed of delay only:
             
@@ -254,27 +260,35 @@ class rndm(Measurement1D):
         for n in range(self.start, self.stop+1, self.step):
             s.append(self.seq)
             
+            temp_seq = Sequence()            
             for i in range(2*n):
                 if rotation_list[i] in ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B4', 'B5', 'B6']:
-                    s.append(self.seq_table(rotation_list[i]))
-                    s.append(Delay(5))
+                    temp_seq.append(self.seq_table(rotation_list[i]))
+#                    s.append(Delay(5))
                 if rotation_list[i] in ['B3', 'B7']:
-                    s.append(r(np.pi, X_AXIS))
-                    s.append(r(np.pi, Y_AXIS))
-                    s.append(Delay(5))
-                
-            s.append(self.seq_table(correction_list[n-1]))
-            s.append(Delay(5))
+                    temp_seq.append(r(np.pi, X_AXIS))
+                    temp_seq.append(r(np.pi, Y_AXIS))
+#                    s.append(Delay(5))
+                if i%100==99:
+                    s.append(Join(temp_seq))
+                    temp_seq = Sequence()
+     
+            temp_seq.append(self.seq_table(correction_list[n-1]))
+#            temp_seq.append(Delay(5))
 #            if self.postseq is not None:
 #                s.append(self.postseq)
-            s.append(Combined([
+            temp_seq.append(Combined([
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
-            s.append(Delay(2000))
+            temp_seq.append(Delay(1000))
+            s.append(Join(temp_seq))
             
         s = self.get_sequencer(s)
+        time_before_render = time.time()
+        print('before render', time_before_render)
         seqs = s.render()
+        print('after render', time.time() - time_before_render)
 
         return seqs
 

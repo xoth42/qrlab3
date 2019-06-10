@@ -51,7 +51,7 @@ class Spectroscopy_Keysight(Measurement1D):
         self.data.create_dataset('powers', data=ro_powers)
         self.data.create_dataset('freqs', data=q_freqs)
         self.ampdata = self.data.create_dataset('amplitudes', shape=[len(ro_powers),len(q_freqs)])
-        self.phasedata = self.data.create_dataset('phases', shape=[len(ro_powers),len(q_freqs)])
+        self.phasedata = self.data.create_dataset('phases', shape=[len(ro_powers),len(q_freqs)]) 
 
     def generate(self):
         s = Sequence(self.seq)
@@ -125,12 +125,11 @@ class Spectroscopy_Keysight(Measurement1D):
                 ret = dig.take_avg_shot()
                 #Yingying to add a main loop, suggesting to help with the spectroscopy crash
                 
-#                try:
-#                    while not wait.is_valid():
-#                        objsh.helper.backend.main_loop(100)
-#                        dig.do_get_status()
-#                except:
-#                    print 'error with async'
+                try:
+                    while not ret.is_valid():
+                        objsh.helper.backend.main_loop(100)
+                except:
+                    dig.set_interrupt(True)
 
                 dig.release_buf()
 

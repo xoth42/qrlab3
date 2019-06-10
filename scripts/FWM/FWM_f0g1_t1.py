@@ -105,7 +105,7 @@ class FWM_f0g1_t1(Measurement1D):
                     Constant(int(dt), self.amp, chan=self.ef_info.sideband_channels[1])  #ef drive
                 ]))
         
-            s.append(Delay(1e3))
+            s.append(Delay(0.5e3))
     
             if self.postseq:
                 s.append(self.postseq)
