@@ -300,7 +300,7 @@ class Yokogawa_7651_new(Instrument):
             raise CurrentError('Not in current mode')
             return               
         i = self.do_get_current()
-        i_step = .001 / 1000
+        i_step = .0005 / 1000
 #        bigger = np.max((abs(i),abs(i_target)))
 #        self.do_set_current_range(bigger)
         if (i/1000 < i_target /1000 ):   

@@ -2,7 +2,10 @@ import matplotlib
 matplotlib.interactive(True)
 
 #
+import mclient
+reload(mclient)
 from mclient import instruments
+
 VNA = instruments['VNA']
 Yoko = instruments['Yoko']
 
@@ -11,11 +14,35 @@ import datetime
 import time
 import matplotlib.pyplot as pl
 import objectsharer as objsh
+from matplotlib import gridspec
+#from matplotlib.colorbar import Colorbar
 
+currents = np.linspace(0,0.1,101)
+freqs = np.linspace(8e9,9e9,1601)
+average_factor = 50
+Sij = ['S11','S21','S12','S22']
+#timelimit = 16 # breaks long time measurement to severals 16 seconds.
+main_loop_time = 100
+IF_bandwidth = 50000
+fig_name = 'test'
+
+VNA.set_if_bandwidth('%s'%(IF_bandwidth))
+VNA.set_timeout(40000)
+#avelimit = int(timelimit/VNA.get_sweep_time())
+avelimit = 10
+if avelimit<1:
+    avelimit = 1
+if avelimit >999:
+    avelimit = 999
+    
+if average_factor < avelimit:
+    avelimit = average_factor
+    
+VNA.set_average_factor(avelimit)
 
 #date = datetime.datetime.now()
 datasrv = objsh.helper.find_object('dataserver')
-filename = 'c:/_data/YIG_Copper_Cavity_sweep_test.hdf5'
+filename = 'c:/_data/test.hdf5'
 datafile = datasrv.get_file(filename)
 ts = time.localtime()
 tstr = time.strftime('%Y%m%d/%H%M%S', ts)
@@ -23,32 +50,18 @@ datafile._timestamp_str = tstr
 datafile._groupname = '%s_%s'  % (tstr, 'test')
 datagroup = datafile.create_group(datafile._groupname)
 datagroup.set_attrs(
-    title='test with VNA.set_format in main loop',
-    comment='just test'
+    title='test with VNA',
+    comment='with YOKO, VNA data',
+    Sij_list = Sij,
+    VNA_IF_bandwidth = VNA.get_if_bandwidth(),
+    total_average_factor = average_factor,
+    mainlooptime = main_loop_time,
+    stop_at = '0/%s'%(len(currents)),
+    VNA_average_factor = avelimit,   
 )
 
 
 
-
-
-#Make sure to check that repeat is off for Yoko GS200
-#To do manually, press 'Program' key and press repeat is the left most option on screen
-
-
-
-#Vi = 4.0
-#Vf = 5.7
-#I_i = 0.0 #Current - switched to controlling current on 2/1/19
-#I_f = 0.2
-#
-#
-##step = 1e-3
-#step = 0.0004
-#sleeptime = 0.05
-currents = np.linspace(0,0.98,981)
-freqs = np.linspace(8e9,9e9,1601)
-average_factor = 1
-Sij = ['S11']#,'S21','S12','S22']
 
 datagroup.create_dataset('currents', data=currents)
 datagroup.create_dataset('freqs', data = freqs)
@@ -62,39 +75,20 @@ for i, sij in enumerate(Sij):
     realdata[i] = datagroup.create_dataset('real%s'%(sij), shape=[len(currents),len(freqs)])
     imagdata[i] = datagroup.create_dataset('imaginary%s'%(sij), shape=[len(currents),len(freqs)])
 
-#foldername = 'C:\Users\WangLab\Documents\\yingying\\circulator\\20190109' 
-#foldername = r"C:\Users\WangLab\Documents\TConnolly\calibrated_circulator\transition1-3"
-#filename = '%s\\circulator_S11_4_14_%s_%s_%s_7.5mm_pins_port3_terminated_%s-%s-%s.txt'%(foldername,Vi,Vf,step,date.hour,date.minute,date.second)
-#Check and change angle before running angular experiments
-#filename = '%s\\s11_2_term%s-%s-%s_Date_%s-%s_%s-%s-%s.txt'%(foldername,I_i,I_f,step,date.month,date.day,date.hour,date.minute,date.second)
 
-  #magnetic field step
-#range = yoko.select_voltage_range(10)
-#yoko.do_set_source_range(range)
-
-#m = Mi  
-#v = Vi
-#VNA.set_s_param('S11')
 
 Yoko.do_set_output_state(0)
 VNA.set_start_freq(freqs[0])
 VNA.set_stop_freq(freqs[-1])
 VNA.set_points(len(freqs))
-timelimit = 16 # breaks long time measurement to severals 300 seconds.
-avelimit = int(timelimit/VNA.get_sweep_time())
 
-if avelimit<1:
-    avelimit = 1
-if avelimit >999:
-    avelimit = 999
     
-if average_factor < avelimit:
-    avelimit = average_factor
-    
-VNA.set_average_factor(avelimit)
+xs,ys = np.meshgrid(currents, freqs)
+dcurrents = currents[1] - currents[0]
 
 for icurrent, current in enumerate(currents):
     Yoko.do_set_current(current)
+    datagroup.set_attrs(stop_at = '%s/%s'%(icurrent +1, len(currents)))
 #    time.sleep(0.5)
     ave = avelimit
     if average_factor > avelimit:
@@ -108,8 +102,8 @@ for icurrent, current in enumerate(currents):
             ave = average_factor-count
             VNA.set_average_factor(ave)
         
-        reals = []
-        imags = []
+#        reals = []
+#        imags = []
 
 
 #            VNA.set_trigger_source('internal')
@@ -133,18 +127,17 @@ for icurrent, current in enumerate(currents):
 #                        a= a + 1
                 
 #                    time.sleep(0.1)
-                objsh.helper.backend.main_loop(100)
-                VNA.set_format('REAL')
+                objsh.helper.backend.main_loop(main_loop_time)
+                VNA.set_format('MLOG')
         except:
             print 'error with async'
-#                VNA.set_interrupt(True)
 #        '''
 
 #            print 'ok8'
         for i, sij in enumerate(Sij):
             VNA.set_s_param(sij)
             prev_fmt = VNA.get_format()
-            freqs = VNA.do_get_xaxis()
+#            freqs = VNA.do_get_xaxis()
             VNA.set_format('REAL')
             ret = VNA.do_get_yaxes()
             reals = ret[0]
@@ -152,6 +145,8 @@ for icurrent, current in enumerate(currents):
             ret = VNA.do_get_yaxes()
             imags = ret[0]
             VNA.set_format(prev_fmt)
+#            reals = np.random.random_sample(len(freqs))
+#            imags = np.random.random_sample(len(freqs))
         
 
             if count == 0:
@@ -160,7 +155,11 @@ for icurrent, current in enumerate(currents):
         #        print freqs
         #        print self.freqdata
                 realdata[i][icurrent,:] = reals
+#                print('real:',realdata[i][icurrent,:])
+#                print datagroup.keys()
+#                objsh.helper.backend.connect_to('tcp://127.0.0.1:55556')
                 imagdata[i][icurrent,:] = imags
+#                print('imag:',imagdata[i][icurrent,:])
     
     
             else:
@@ -170,80 +169,102 @@ for icurrent, current in enumerate(currents):
                 imagdata[i][icurrent,:] = imags
 
 
-            VNA.set_trigger_source('internal')
+        VNA.set_trigger_source('internal')
         count = count + ave
         print '%s averages done' %(count)
     
     print 'current = %.04fmA done ' % (current)
     
+
+    if icurrent == 0:
+        fig = pl.figure()
+        if len(Sij) == 1:
+            fig.add_subplot(111)
+#            fig.axes[0].title = Sij[0]
+        else:
+            gs = gridspec.GridSpec((len(Sij)-1)/2 + 1, 2)
+            gs.update(wspace=0.4, hspace=0.35)
+        for i in range(len(Sij)):
+            if not len(Sij) == 1:
+                fig.add_subplot(gs[i])
+            fig.axes[i].set_title(Sij[i])
+            fig.axes[i].set_xlim(xs.min(), xs.max()+dcurrents)
+            fig.axes[i].set_ylim(ys.min(), ys.max())
+
+    for i in range(len(Sij)):
+        z1 = 20*np.log10(realdata[i][icurrent,:]**2 + imagdata[i][icurrent,:]**2)
+        z1 = z1[:,None].T
+        z2 = 20*np.log10(realdata[i][icurrent,:]**2 + imagdata[i][icurrent,:]**2)
+        z2 = z2[:,None].T
+        z = np.concatenate([z1,z2])
+        z = np.transpose(z)
+        x = np.zeros((len(freqs),2))
+        x[:,0] = currents[icurrent]                                                                
+        x[:,1] = currents[icurrent]+dcurrents
+        y = np.zeros((2,len(freqs)))
+        y[0] = y[1] = freqs
+        y = np.transpose(y)
+        fig.axes[i].pcolormesh(x, y, z)#, vmin=-80, vmax=0)
+        print np.min(z)
+#        fig.axes[i].set_xlim(xs.min(), xs.max())
+#        fig.axes[i].set_ylim(ys.min(), ys.max())
+        fig.canvas.draw()
+
     
+print datagroup.get_fullname()
 
 
+fig = pl.figure()
+a=[0,0,0,0]
+
+if len(Sij) == 1:
+#    gs=[0]
+    gs= gridspec.GridSpec(1 , 1)
+#            fig.axes[0].title = Sij[0]
+else:
+    gs = gridspec.GridSpec((len(Sij)-1)/2 + 1, 2)
+    gs.update(wspace=0.5, hspace=0.4)
     
-#    Yoko.do_set_source_range('10E+0') # fixes range problem
-#    Yoko.set_voltage_ramp(level, slew = 10) # slew is rate of change of voltage
-#    Yoko.do_set_current(I)
-#    time.sleep(sleeptime)
-#    
-#    
-#    #mag.do_set_field(N) #commmand for using arduino power supply  
-#    Mag.append(I)
-#    
-#    datanew = VNA.do_get_data()
-#    valuenew = datanew[0]
-#    phasenew = datanew[1]
-#    valuenew = valuenew[:,None].T
-#    phasenew = phasenew[:,None].T
-#
-#    value = np.concatenate([value,valuenew])
-#    phase = np.concatenate([phase,phasenew])
-#    
-#    I = I+step
-##    s_params = ['S11','S21','S12','S22']
-#
-##    for sij in s_params:
-##        VNA.set_s_param(sij)
-##        print('done')
-#    
-#    
-##print Mag
-##Yoko.do_set_voltage(0)
-##Yoko.set_voltage_ramp(0,slew=1) #Only for YOKO GS200
-#
-#
-##axis = axis / float(1000000000)
-#X, Y = np.meshgrid(Mag, axis)
-#Z = np.transpose(value)
-#phase = np.transpose(phase)
+field = np.zeros(len(currents))     
+for i in range(len(currents)):
+    #Current-field relationship input below, for driving Yoko in current mode - BS, 3/20/19
+    if currents[i] < 0.5:
+        field[i] = currents[i]*529.37 + 0.49
+    else:
+        field[i] = -268.93 * (currents[i])**2 + 839.69*currents[i]-88.67
 
-#save the data as a file
-#to_save = [X, Y, Z, phase]
-#with file(filename,'w') as outfile:
-#    outfile.write('# new slice\n')
-#
-#    # Iterating through a ndimensional array produces slices along
-#    # the last axis. This is equivalent to data[i,:,:] in this case
-#    for data_slice in to_save:
-#
-#        # The formatting string indicates that I'm writing out
-#        # the values in left-justified columns 7 characters in width
-#        # with 2 decimal places.  
-#        np.savetxt(outfile, data_slice, fmt='%-7.7f')
-#
-#        # Writing out a break to indicate different slices...
-#        outfile.write('# New slice\n')
-#
-#pl.figure()
-#pl.pcolormesh(X, Y, Z)
-#pl.colorbar()
-#pl.xlabel('Magnetic Field Current (mA)')
-#pl.ylabel('Frequency')
-#pl.show()   
-#
-#vlist = np.arange(I,I_i,-step) 
-#for i in vlist[1:]:
-#    print i
-#    Yoko.do_set_current(i)
-#    time.sleep(0.1)
+ampdata = np.zeros((len(Sij),len(currents), len(freqs)))
+ampdata_a = np.zeros((len(Sij),len(freqs), len(currents)))
+xs,ys = np.meshgrid(field, freqs/float(1e9))
+gss=[0,0,0,0]
+for k in range(len(Sij)):
+#    if not len(Sij) == 1:
+    gss[k] = gridspec.GridSpecFromSubplotSpec(1,2, subplot_spec=gs[k],width_ratios = (19,1))        
+    fig.add_subplot(gss[k][0])
+    fig.axes[k].set_title('%s%s'%(fig_name,Sij[k]))
+    fig.axes[k].set_xlim(xs.min(), xs.max()+currents[1] - currents[0])
+    fig.axes[k].set_ylim(ys.min(), ys.max())
+    
+#        ampdata = np.zeros((len(realdata),len(currentdata[0,:]), len(freqdata[0,:])))
+#    imag = np.zeros((len(self.currents),len(self.freqs)))
+    for i in range(len(currents)):
+        ampdata[k][i] = 20*np.log10(np.sqrt(realdata[k][i,:]**2 + imagdata[k][i,:]**2))
+#        ampdata[k][i] = imagdata[k][i,:]
+#    print Z
+#    field_a, freqdata = np.meshgrid(field, freqs)
+    ampdata_a[k] = np.transpose(ampdata[k])
+#    print ampdata_a[k]
+#    phase = np.transpose(phase)
+    a[k]=fig.axes[k].pcolormesh(xs, ys, ampdata_a[k])
+#    Colorbar(ax = fig.axes[k], mappable = a, orientation = 'horizontal', ticklocation = 'top')
+#    pl.colorbar( a[k] )#, ax = gs[k/2, k%2] )
+    fig.axes[k].set_xlabel('Magnetic Field(mT)')
+    fig.axes[k].set_ylabel('Frequency(GHz)')
+
+
+for k in range(len(Sij)):
+    fig.add_subplot(gss[k][1])
+    pl.colorbar( a[k],fig.axes[len(Sij)+k])
+
 
     

@@ -86,7 +86,6 @@ class ROCavSpectroscopy_keysight(Measurement1D):
 
     def generate(self):
         s = Sequence()
-        print('readout pulse length', self.readout_info.pulse_len)
 
         s.append(self.seq)
         if self.qubit_pulse:
@@ -130,6 +129,7 @@ class ROCavSpectroscopy_keysight(Measurement1D):
        # alz.set_interrupt(False)
 
         seqs = self.generate()
+        self.stop_awgs()
         self.load(seqs)
         self.start_awgs()
 

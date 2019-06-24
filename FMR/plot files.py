@@ -15,9 +15,9 @@ import re
 import numpy as np
 import matplotlib.pyplot as pl
 import glob
-foldername = 'S21 0.02T'
+#foldername = 'S21 0.02T'
 #filepath = 'C:\Users\WangLab\Documents\\FMR 11032018\\different modes\\%s'%(foldername) 
-filepath = 'C:\Users\WangLab\Documents\\12042018 cooldown\\power sweep\\%s'%(foldername) 
+filepath = 'C:\Users\Wang_Lab\Documents\yingying\\0418cooldown\RT' 
 filelist = glob.glob(r'%s\*.txt'%(filepath))
 #pl.title('temperature dependence')
 line=np.empty(len(filelist))
@@ -50,6 +50,6 @@ for filename in filelist:
             x = new_data[0] 
             y = new_data[1] 
             phase2 = new_data[2]
-            pl.plot(x,y,label=filename[len(filepath):])
+            pl.plot(x,y,label=filename[len(filepath):len(filepath)+8])
 pl.legend()            
 pl.show()

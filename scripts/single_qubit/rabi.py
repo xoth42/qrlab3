@@ -12,6 +12,9 @@ FIT_AMP         = 'AMP'         # Fit simple sine wave
 FIT_AMPFUNC     = 'AMPFUNC'     # Try to fit amplitude curve based on pi/2 and pi amp
 FIT_PARABOLA    = 'PARABOLA'    # Fit a parabola (to determine min/max pos)
 
+
+center_amp_list =[] #Ebru
+
 def fit_amprabi(params, x, data):
     est = params['ofs'].value - params['amp'].value * np.cos(2*np.pi*x / params['period'].value + params['phase'].value)
     return data  - est
@@ -27,6 +30,7 @@ def analysis(meas, data=None, fig=None):
     xs = meas.amps
 
     fig.axes[0].plot(xs, ys, 'ks', ms=3)
+    
 
     amp0 = (np.min(ys) - np.max(ys)) / 2
 #    if ys[0]>np.average(ys):
@@ -38,7 +42,10 @@ def analysis(meas, data=None, fig=None):
     params = lmfit.Parameters()
     params.add('ofs', value=np.average(ys))
     params.add('amp', value=amp0)
-    params.add('phase', value=0, vary=False)#min=-np.pi, max=np.pi)
+    params.add('phase', value=0, vary=False)
+    #For RB better pi_amp tuning 
+#    params.add('amp', value=amp0) 
+#    params.add('phase', value=-np.pi, min=-np.pi, max=np.pi)
 
     if meas.fit_type == FIT_AMPFUNC:
         pi_amp = period0 * meas.repeat_pulse / 2
@@ -49,6 +56,8 @@ def analysis(meas, data=None, fig=None):
         txt = ''
         fig.axes[0].plot(xs, -fit_amprabi_func(result.params, xs, 0, meas), label='fit')
         fig.axes[1].plot(xs, fit_amprabi_func(result.params, xs, ys, meas), marker='s')
+
+
 
     else:
         if meas.fix_period is not None:
@@ -67,9 +76,17 @@ def analysis(meas, data=None, fig=None):
         fig.axes[0].plot(xs, -fit_amprabi(result.params, xs, 0))
         fig.axes[1].plot(xs, fit_amprabi(result.params, xs, ys), marker='s')
 
+
+        temporaryy = -fit_amprabi(result.params, xs, 0)
+        print(-fit_amprabi(result.params, xs, 0))
+        print(xs[np.argmin(temporaryy)], 'min of the fit')
+        center_amp_list.append(xs[np.argmin(temporaryy)])
+#        print(min_x, 'This is the value')
+        
 #    lmfit.report_fit(params)
     lmfit.report_fit(result.params)
-
+    print ((11*np.pi - result.params['phase'].value ) * result.params['period'].value/(2*np.pi))# Chen 4/3
+    
     fig.axes[0].set_ylabel('Intensity [AU]')
     fig.axes[0].set_xlabel('Pulse amplitude')
     fig.axes[0].legend(loc=0)
@@ -99,7 +116,7 @@ class Rabi(Measurement1D):
         super(Rabi, self).__init__(len(amps), infos=qubit_info, **kwargs)
         self.data.create_dataset('amps', data=amps)
 
-    def generate(self):
+    def generate(self):  #That is the original generate function 
         s = Sequence()
 
         for i, amp in enumerate(self.amps):
@@ -117,7 +134,7 @@ class Rabi(Measurement1D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
-            s.append(Delay(2000))
+            s.append(Delay(9000))
 
 
 
@@ -125,6 +142,30 @@ class Rabi(Measurement1D):
         seqs = s.render()
         return seqs
 
+#    def generate(self): #Ebru: I am playing with this one
+#        s = Sequence()
+#        s.append(Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan))  #acquisition
+#        for i, amp in enumerate(self.amps):
+#            s.append(self.seq)           
+#            if self.selective==1:
+#                s.append(Repeat(self.qubit_info.rotate_selective(0, self.r_axis, amp=amp), self.repeat_pulse))
+#            elif self.selective==0.5:
+#                s.append(Repeat(self.qubit_info.rotate_quasilective(0, self.r_axis, amp=amp), self.repeat_pulse))
+#            else:
+#                s.append(Repeat(self.qubit_info.rotate(0, self.r_axis, amp=amp), self.repeat_pulse))
+#            if self.postseq is not None:
+#                s.append(self.postseq)
+#            s.append(Delay(200))
+#            s.append(Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan))
+#            s.append(Delay(2000))
+#
+#
+#
+#        s = self.get_sequencer(s)
+#        seqs = s.render()
+#        return seqs
+    
+    
     def analyze(self, data=None, fig=None):
         if self.fit_type == FIT_PARABOLA:
             if self.repeat_pulse%2 == 0:

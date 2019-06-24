@@ -3,11 +3,44 @@ import matplotlib.pyplot as plt
 from pulseseq.sequencer import *
 from pulseseq.pulselib import *
 from measurement import Measurement1D
+import lmfit
 #import lmfit
+
+def linear_fit(params, x, data):
+    est = params['m']*x + params['n']
+    return (data-est)
+
+def linear_fit2(params, x):
+    est = params['m']*x + params['n']
+    return est
+
+
+
+
+#Ebru: I added linear fit to make it easier to pin down the crossing point
+    
 
 def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
     xs = meas.xs
+    drag_y = meas.get_ys()
+    drag_y1, drag_y2 = np.split(drag_y, 2)      #Splitting the measurement result in two to fit them separately
+    xs1, xs2 = np.split(xs,2)
+
+    
+    params = lmfit.Parameters()
+    params.add('m', value=0)
+    params.add('n', value=0)
+    result1 = lmfit.minimize(linear_fit, params, args=(xs1,drag_y1))
+    result2 = lmfit.minimize(linear_fit, params, args=(xs2,drag_y2))
+    
+    lmfit.report_fit(result1.params)
+    lmfit.report_fit(result2.params)
+    plt.figure()
+    plt.plot(xs1, linear_fit2(result1.params, xs1), color='r')
+    plt.plot(xs2, linear_fit2(result2.params, xs2), color='b')
+    plt.plot(xs1, drag_y1, color='r')
+    plt.plot(xs2, drag_y2, color='b')
 
 
 class drag_test(Measurement1D):
@@ -31,6 +64,7 @@ class drag_test(Measurement1D):
         r = self.qubit_info.rotate
 
         for i, coeff in enumerate(self.coeffs):
+            print(self.coeffs[i])
             s.append(self.seq)
 #            s.append(r(np.pi/2, X_AXIS, drag=coeff))     #This is AllXY#10
 #            s.append(Delay(40))
@@ -46,6 +80,7 @@ class drag_test(Measurement1D):
                 ]))
             s.append(Delay(2000))
         for i, coeff in enumerate(self.coeffs):
+            print(self.coeffs[i])
             s.append(self.seq)
             s.append(r(np.pi/2, Y_AXIS, drag=coeff))      #This is AllXY#11
             s.append(Delay(20))
@@ -66,5 +101,5 @@ class drag_test(Measurement1D):
         return seqs
 
     def analyze(self, data=None, fig=None):
-#        self.fit_params = analysis(self, data, fig)
+        self.fit_params = analysis(self, data, fig)
         return #self.fit_params['tau'].value

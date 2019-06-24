@@ -22,13 +22,14 @@ class Keysight_DIG(Instrument):
 
 
 
-    def __init__(self, name, chassis=0, slot=3, DIG_PRODUCT = "M3102A", trigger_period = 200, trigger_only = False, awg_list = [7, 8, 10], **kwargs):
+    def __init__(self, name, chassis=0, slot=3, DIG_PRODUCT = "M3102A", trigger_period = 200, trigger_only = False, awg_list = [7, 8, 10], 
+                 nsamples=1000, naverages = 1000, **kwargs):
         super(Keysight_DIG, self).__init__(name)
         self._timeout = DEFAULT_TIMEOUT
         self._main_channel=1
         self._ref_channel=2
-        self._nsamples=1000
-        self._naverages=1000
+        self._nsamples=nsamples
+        self._naverages=naverages
         self._main_delay=0
         self._ref_delay=0
         self._if_period=10
@@ -447,7 +448,10 @@ class Keysight_DIG(Instrument):
     def setup_experiment(self, num_points, ntransfers = None):
         if ntransfers is None:
             if self._naverages % 10 == 0:
-                self._ntransfers = self._naverages/100
+                if num_points >= 10:
+                    self._ntransfers = self._naverages/100
+                else:
+                    self._ntransfers = self._naverages/2000  # May 2019: Less frequent update when number of points is small
             else:
                 self._ntransfers = self._naverages
         elif(self._naverages % ntransfers == 0):

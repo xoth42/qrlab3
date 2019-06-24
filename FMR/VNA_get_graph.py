@@ -45,6 +45,7 @@ elif axis[len(axis) - 1] > 10 **6:
 
 pl.plot(xaxis, data[0], label = filename[0:-8] + fm)
 pl.savefig('C:\Users\wanglab\Documents\juliang\%s.png'%(filename))
+
 pl.ylabel('dB')
 pl.show()
 pl.legend()

@@ -105,7 +105,10 @@ def rdm_rotations(n_gates):
     
 
 def correct_rdm_rot(rot_list):
-    d=np.matrix([[1,5,2,0,4,3],[3,0,2,5,4,1],[2,1,5,3,0,4],[4,1,0,3,5,2],[5,3,2,1,4,0],[5,3,2,1,4,0],[5,1,4,3,2,0],[5,1,4,3,2,0],[0,1,2,3,4,5],[0,1,2,3,4,5],[0,1,2,3,4,5]])
+    #This one is for Z gate with delay
+#    d=np.matrix([[1,5,2,0,4,3],[3,0,2,5,4,1],[2,1,5,3,0,4],[4,1,0,3,5,2],[5,3,2,1,4,0],[5,3,2,1,4,0],[5,1,4,3,2,0],[5,1,4,3,2,0],[0,1,2,3,4,5],[0,1,2,3,4,5],[0,1,2,3,4,5]])
+    #This one is for composite pulse Z gate
+    d=np.matrix([[1,5,2,0,4,3],[3,0,2,5,4,1],[2,1,5,3,0,4],[4,1,0,3,5,2],[5,3,2,1,4,0],[5,3,2,1,4,0],[5,1,4,3,2,0],[5,1,4,3,2,0],[0,3,4,1,2,5],[0,3,4,1,2,5],[0,1,2,3,4,5]])
    
     a=[0]
 
@@ -201,64 +204,39 @@ class rndm(Measurement1D):
                     
         for j in range(self.num_cal_points):
             s.append(self.seq)
-            s.append(r(np.pi, X_AXIS))   
-            s.append(Combined([
+            temp_seq = Sequence()
+            temp_seq.append(r(np.pi, X_AXIS))   
+            temp_seq.append(Combined([
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
-            s.append(Delay(2000))
+            temp_seq.append(Delay(1000))
+            s.append(Join(temp_seq))
+        print('appended calibration pi pulses')
         
 #        s.append(Delay(100000))
         
         for j in range(self.num_cal_points):
             s.append(self.seq)
+            temp_seq = Sequence()
             s.append(Delay(80))   
-            s.append(Combined([
+            temp_seq.append(Combined([
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
-            s.append(Delay(2000)) 
+            temp_seq.append(Delay(1000))
+            s.append(Join(temp_seq))
+        print('appended calibration ground state')
 
 #This for loop is for Z pi gate that is composed of delay only:
             
-            
-        for n in range(self.start, self.stop+1, self.step):
-            s.append(self.seq)
-            
-            for i in range(2*n):
-                s.append(self.seq_table(rotation_list[i]))
-                s.append(Delay(5))
-                
-            s.append(self.seq_table(correction_list[n-1]))
-            s.append(Delay(5))
-#            if self.postseq is not None:
-#                s.append(self.postseq)
-            s.append(Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ]))
-            s.append(Delay(2000))
-            
-        s = self.get_sequencer(s)
-        seqs = s.render()
-
-        return seqs
-
-#This is the for loop to be used for the compound pulse for Z pi and Z -pi:
-#What it does is that it plays 'B1' (X, pi) and 'B2' (Y, pi) consecutively rather than a delay.
-        
-#                    
+#            
 #        for n in range(self.start, self.stop+1, self.step):
 #            s.append(self.seq)
 #            
 #            for i in range(2*n):
-#                if rotation_list[i] in ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B4', 'B5', 'B6']:
-#                    s.append(self.seq_table(rotation_list[i]))
-#                    s.append(Delay(5))
-#                if rotation_list[i] in ['B3', 'B7']:
-#                    s.append(r(np.pi, X_AXIS))
-##                    s.append(r(np.pi, Y_AXIS))
-#                    s.append(Delay(5))
+#                s.append(self.seq_table(rotation_list[i]))
+#                s.append(Delay(5))
 #                
 #            s.append(self.seq_table(correction_list[n-1]))
 #            s.append(Delay(5))
@@ -274,6 +252,45 @@ class rndm(Measurement1D):
 #        seqs = s.render()
 #
 #        return seqs
+
+#This is the for loop to be used for the compound pulse for Z pi and Z -pi:
+#What it does is that it plays 'B1' (X, pi) and 'B2' (Y, pi) consecutively rather than a delay.
+        
+                    
+        for n in range(self.start, self.stop+1, self.step):
+            s.append(self.seq)
+            
+            temp_seq = Sequence()            
+            for i in range(2*n):
+                if rotation_list[i] in ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B4', 'B5', 'B6']:
+                    temp_seq.append(self.seq_table(rotation_list[i]))
+#                    s.append(Delay(5))
+                if rotation_list[i] in ['B3', 'B7']:
+                    temp_seq.append(r(np.pi, X_AXIS))
+                    temp_seq.append(r(np.pi, Y_AXIS))
+#                    s.append(Delay(5))
+                if i%100==99:
+                    s.append(Join(temp_seq))
+                    temp_seq = Sequence()
+     
+            temp_seq.append(self.seq_table(correction_list[n-1]))
+#            temp_seq.append(Delay(5))
+#            if self.postseq is not None:
+#                s.append(self.postseq)
+            temp_seq.append(Combined([
+                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+                ]))
+            temp_seq.append(Delay(1000))
+            s.append(Join(temp_seq))
+            
+        s = self.get_sequencer(s)
+        time_before_render = time.time()
+        print('before render', time_before_render)
+        seqs = s.render()
+        print('after render', time.time() - time_before_render)
+
+        return seqs
 
 
 

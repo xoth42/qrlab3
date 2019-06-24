@@ -1,3 +1,15 @@
+"""
+Time domaign measurement of the f0g1 drive scheme. First prepares qubit in e
+then drives both the ef transition and the f0g1 transition at the same time.
+Fits the curve like a t1 to extract the rate of the transition. 
+
+Needs the fwm drive generator set properly before this is run (power and 
+frequency). Needs a gatable generator or a switch.
+
+Jeff Gertler
+"""
+
+
 import numpy as np
 from math import factorial
 import matplotlib.pyplot as plt
@@ -83,17 +95,17 @@ class FWM_f0g1_t1(Measurement1D):
         for dt in self.delays:
             s.append(self.seq)
             
-            s.append(r(np.pi, 0))
+            s.append(r(np.pi, 0)) #pulse qubit to e
             
-            print(dt, self.fwm_channel, self.amp, self.ef_info.sideband_channels[0])
-            if int(dt) != 0:
+            
+            if int(dt) != 0: # stops weird bug of constant(0) failing
                 s.append(Combined([
-                    Constant(int(dt), 1, chan=self.fwm_channel),
-                    Constant(int(dt), self.amp, chan=self.ef_info.sideband_channels[0]),
-                    Constant(int(dt), self.amp, chan=self.ef_info.sideband_channels[1])
+                    Constant(int(dt), 1, chan=self.fwm_channel), # triger switch to allow fmw drive
+                    Constant(int(dt), self.amp, chan=self.ef_info.sideband_channels[0]), #ef drive
+                    Constant(int(dt), self.amp, chan=self.ef_info.sideband_channels[1])  #ef drive
                 ]))
         
-            s.append(Delay(1e3))
+            s.append(Delay(0.5e3))
     
             if self.postseq:
                 s.append(self.postseq)
@@ -103,9 +115,7 @@ class FWM_f0g1_t1(Measurement1D):
             ]))
             s.append(Delay(1000))
 
-        print(s)
         s = self.get_sequencer(s)
-        print(s)
         seqs = s.render()
         return seqs
 

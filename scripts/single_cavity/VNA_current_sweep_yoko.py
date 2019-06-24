@@ -7,108 +7,134 @@ Created on Thu Mar 14 16:51:43 2019
 
 #import mclient
 from measurement import Measurement1D
-import matplotlib.pyplot as plt
-from pulseseq.sequencer import *
-from pulseseq.pulselib import *
+import matplotlib.pyplot as pl
+#from pulseseq.sequencer import *
+#from pulseseq.pulselib import *
 from lib.math import fit
 import objectsharer as objsh
 import time
 import numpy as np
+from matplotlib import gridspec
 #
 #SPEC   = 0
 #POWER  = 1
 
-def analysis(currentdata, freqdata, realdata, imagdata, fig_name, Sij, fig=None):
-    if fig is None:
-        fig = plt.figure()
-        
-    currents =  currentdata[0,:] 
-    field = np.zeros(len(currents))     
-    for i in range(len(currents)):
-        #Current-field relationship input below, for driving Yoko in current mode - BS, 3/20/19
-        if currents[i] < 0.5:
-            field[i] = currents[i]*529.37 + 0.49
-        else:
-            field[i] = -268.93 * (currents[i])**2 + 839.69*currents[i]-88.67
-#        The statements below are for driving the Yoko in voltage mode
-#        if currents[i] < 5:
-#            field[i] = currents[i]*60
-#        else:
-#            field[i] = -2.709 * (currents[i])**2 + 86.171*currents[i]-63.13
+def analysis(currents, freqs, realdata, imagdata, fig_name, full_fig_name, Sij, fig=None):
+    fig = pl.figure()
+    a=[0,0,0,0]
     
-#    field_a = field *(float(56)/float(60))  #1V is 60mT near the pole, and 56mT around the center
-     
-
-#    print X
-#    print Y
-    ampdata = np.zeros((len(realdata),len(currentdata[0,:]), len(freqdata[0,:])))
-    ampdata_a = np.zeros((len(realdata),len(freqdata[0,:]), len(currentdata[0,:])))
-    for k in range(len(realdata)):
+    if len(Sij) == 1:
+    #    gs=[0]
+        gs= gridspec.GridSpec(1 , 1)
+    #            fig.axes[0].title = Sij[0]
+    else:
+        gs = gridspec.GridSpec((len(Sij)-1)/2 + 1, 2)
+        gs.update(wspace=0.5, hspace=0.4)
         
-#        ampdata = np.zeros((len(realdata),len(currentdata[0,:]), len(freqdata[0,:])))
+    currents = np.concatenate((currents, np.zeros(1) + currents[1]-currents[0] + currents[-1]))
+    ampdata = np.zeros((len(Sij),len(currents), len(freqs)))
+    ampdata_a = np.zeros((len(Sij),len(freqs), len(currents)))
+    xs,ys = np.meshgrid(currents, freqs/float(1e9))
+    gss=[0,0,0,0]
+    for k in range(len(Sij)):
+    #    if not len(Sij) == 1:
+        gss[k] = gridspec.GridSpecFromSubplotSpec(1,2, subplot_spec=gs[k],width_ratios = (19,1))        
+        fig.add_subplot(gss[k][0])
+        fig.axes[k].set_title('%s%s'%(fig_name,Sij[k]))
+        fig.axes[k].set_xlim(xs.min(), xs.max())
+        fig.axes[k].set_ylim(ys.min(), ys.max())
+        
+    #        ampdata = np.zeros((len(realdata),len(currentdata[0,:]), len(freqdata[0,:])))
     #    imag = np.zeros((len(self.currents),len(self.freqs)))
-        for i in range(len(currents)):
-            ampdata[k][i] = 20*np.log10(np.sqrt(realdata[k][i,:]**2 + imagdata[k][0,:]**2))
+        for i in range(len(currents)-1):
+            ampdata[k][i] = 20*np.log10(np.sqrt(realdata[k][i,:]**2 + imagdata[k][i,:]**2))
+            
+        ampdata[k][len(currents)-1] = 20*np.log10(np.sqrt(realdata[k][i,:]**2 + imagdata[k][i,:]**2))
     #    print Z
-        field_a, freqdata = np.meshgrid(field, freqdata[0,:])
         ampdata_a[k] = np.transpose(ampdata[k])
-        freqGHz = freqdata/float(10**9)
+    #    print ampdata_a[k]
     #    phase = np.transpose(phase)
-        plt.figure(k)
-        plt.pcolormesh(field_a, freqGHz, ampdata_a[k])
-        plt.colorbar()
-        plt.title('%s%s'%(fig_name,Sij[i]))
-        plt.xlabel('Magnetic Field(mT)')
-        plt.ylabel('Frequency(GHz)')
+        a[k]=fig.axes[k].pcolormesh(xs, ys, ampdata_a[k],vmin = np.max([np.min(ampdata_a[k]),-200]))
+    #    Colorbar(ax = fig.axes[k], mappable = a, orientation = 'horizontal', ticklocation = 'top')
+    #    pl.colorbar( a[k] )#, ax = gs[k/2, k%2] )
+        fig.axes[k].set_xlabel('currents(mA)')
+        fig.axes[k].set_ylabel('Frequency(GHz)')
+    
+    
+    for k in range(len(Sij)):
+        fig.add_subplot(gss[k][1])
+        pl.colorbar( a[k],fig.axes[len(Sij)+k])
+        
+    pl.suptitle(full_fig_name)
 
+class Current_Sweep_VNA(Measurement1D):
 
-class Current_Sweep_YOKO(Measurement1D):
-
-    def __init__(self, currents, freqs, average_factor,Sij, fig_name, **kwargs):
+    def __init__(self, currents, freqs, average_factor,avelimit,if_bandwidth, Sij, fig_name,comment, **kwargs):
         self.currents = currents
 #        print 'self.currents', self.currents
         self.freqs = freqs
         self.average_factor = average_factor
+        self.avelimit = avelimit
+        self.if_bandwidth = if_bandwidth
         self.Sij = Sij
         self.fig_name = fig_name
+        self.comment = comment
+        self.dcurrents = currents[1] - currents[0]
 #        self.sleeptime_field = sleeptime_field
 #        self.plot_type = plot_type
 #
-        super(Current_Sweep_YOKO, self).__init__(1, **kwargs)
+        super(Current_Sweep_VNA, self).__init__(1, **kwargs)
+#        self.set_attrs(
+#            title=self.fig_name,
+#            comment=self.comment,
+#            Sij_list = self.Sij,
+#            VNA_IF_bandwidth = if_bandwidth,
+#            total_average_factor = average_factor,
+#            mainlooptime = 100,
+#            stop_at = '0/%s'%(len(self.currents)),
+#            avelimit = self.avelimit,   
+#        )
         print self.data.get_fullname()
-#        self.data.create_dataset('currents', data=self.currents)
+        self.full_fig_name = self.data.get_fullname()
+        self.data.create_dataset('currents', data=self.currents)
+        self.data.create_dataset('freqs', data=self.freqs)
+        
+    
 #        self.currentdata = self.data.create_dataset('currents', shape=[1,len(self.currents)])
 #        self.freqdata = self.data.create_dataset('freqs', shape=[1,len(self.freqs)])
 ##        self.ampdata = self.data.create_dataset('amplitudes', shape=[len(self.currents),len(freqs)])
 ##        self.phasedata = self.data.create_dataset('phases', shape=[len(self.currents),len(freqs)])
 #        print self.freqdata.get_fullname()
-#        self.realdata = [0,0,0,0]
-#        self.imagdata = [0,0,0,0]
-#        for i, sij in enumerate(self.Sij):
-#            
-#            self.realdata[i] = self.data.create_dataset('real%s'%(sij), shape=[len(self.currents),len(freqs)])
-#            self.imagdata[i]= self.data.create_dataset('imaginary%s'%(sij), shape=[len(self.currents),len(freqs)])
+        self.realdata = [0,0,0,0]
+        self.imagdata = [0,0,0,0]
+        for i, sij in enumerate(self.Sij):
+            
+            self.realdata[i] = self.data.create_dataset('real%s'%(sij), shape=[len(self.currents),len(freqs)])
+            self.imagdata[i]= self.data.create_dataset('imaginary%s'%(sij), shape=[len(self.currents),len(freqs)])
 #        
         
     def measure(self):
         # Generate and load sequences
         VNA = self.instruments['VNA']
         Yoko = self.instruments['Yoko']
+#        SCqubit = self.instruments['SCqubit']
 
 
         VNA.set_start_freq(self.freqs[0])
         VNA.set_stop_freq(self.freqs[-1])
         VNA.set_points(len(self.freqs))
+        VNA.set_s_param(self.Sij[0])
         Freqs = VNA.do_get_xaxis()
-#        if not (Freqs == self.freqs).all():
-#            print 'error in setting frequency'
+        if not (Freqs == self.freqs).all():
+            print 'error in setting frequency'
 #            break
 #        self.freqdata[0,:] = Freqs
 #        self.currentdata[0,:] = self.currents
         
-        
-        timelimit = 16 # breaks long time measurement to severals 16 seconds.
-        avelimit = int(timelimit/VNA.get_sweep_time())
+        xs,ys = np.meshgrid(self.currents, self.freqs)
+#        timelimit = 16 # breaks long time measurement to severals 16 seconds.
+#        avelimit = int(timelimit/VNA.get_sweep_time())
+        avelimit = self.avelimit
         if avelimit<1:
             avelimit = 1
         if avelimit >999:
@@ -118,12 +144,17 @@ class Current_Sweep_YOKO(Measurement1D):
             avelimit = self.average_factor
             
         VNA.set_average_factor(avelimit)
+        VNA.set_if_bandwidth(self.if_bandwidth)
         
         for icurrent, current in enumerate(self.currents):
-#            Yoko.do_set_current(current)
-            time.sleep(0.5)
+            if icurrent == 0 or np.abs(self.dcurrents) > 0.002:
+                Yoko.do_ramp_current(current)
+                time.sleep(1)
+            Yoko.do_set_current(current)
+
+            time.sleep(1)
             ave = avelimit
-            if self.average_factor > avelimit
+            if self.average_factor > avelimit:
                 VNA.set_average_factor(ave)
             count = 0
     
@@ -134,17 +165,17 @@ class Current_Sweep_YOKO(Measurement1D):
                     ave = self.average_factor-count
                     VNA.set_average_factor(ave)
                 
-                reals = []
-                imags = []
+#                reals = []
+#                imags = []
         
         
     #            VNA.set_trigger_source('internal')
     #            VNA.set_average_factor(40)
     
                 VNA.set_trigger_source('BUS')
-                VNA.write('INIT:CONT ON')
+#                VNA.write('INIT:CONT ON')
         
-                VNA.set_averaging_trigger(1)
+#                VNA.set_averaging_trigger(1)
                 VNA.trigger()
                 
                 wait = VNA.opc(async=True) # wait for completion
@@ -159,6 +190,7 @@ class Current_Sweep_YOKO(Measurement1D):
                         
     #                    time.sleep(0.1)
                         objsh.helper.backend.main_loop(100)
+                        VNA.set_format('MLOG')
                 except:
                     print 'error with async'
     #                VNA.set_interrupt(True)
@@ -166,9 +198,10 @@ class Current_Sweep_YOKO(Measurement1D):
         
     #            print 'ok8'
                 for i, sij in enumerate(self.Sij):
-                    VNA.set_s_param(sij)
+                    if len(self.Sij) > 1:  
+                        VNA.set_s_param(sij)
                     prev_fmt = VNA.get_format()
-                    freqs = VNA.do_get_xaxis()
+#                    freqs = VNA.do_get_xaxis()
                     VNA.set_format('REAL')
                     ret = VNA.do_get_yaxes()
                     reals = ret[0]
@@ -183,31 +216,63 @@ class Current_Sweep_YOKO(Measurement1D):
         #        phases=ret[1]
         #        print 'F = %.03f GHz --> amp = %.1f, angle = %.01f' % (freq / 1e9, np.abs(IQ), np.angle(IQ, deg=True))
         
-#                    if count == 0:
-#                        
-#    #                    self.freqdata[0,:] = freqs
-#                #        print freqs
-#                #        print self.freqdata
-#                        self.realdata[i][icurrent,:] = reals
-#                        self.imagdata[i][icurrent,:] = imags
-#            
-#            
-#                    else:
-#                        reals =( reals *ave + self.realdata[i][icurrent,:] * count)/float(ave+count)
-#                        imags =( imags *ave + self.imagdata[i][icurrent,:] * count)/float(ave+count)
-#                        self.realdata[i][icurrent,:] = reals
-#                        self.imagdata[i][icurrent,:] = imags
+                    if count == 0:
+                        
+    #                    self.freqdata[0,:] = freqs
+                #        print freqs
+                #        print self.freqdata
+                        self.realdata[i][icurrent,:] = reals
+                        self.imagdata[i][icurrent,:] = imags
+            
+            
+                    else:
+                        reals =( reals *ave + self.realdata[i][icurrent,:] * count)/float(ave+count)
+                        imags =( imags *ave + self.imagdata[i][icurrent,:] * count)/float(ave+count)
+                        self.realdata[i][icurrent,:] = reals
+                        self.imagdata[i][icurrent,:] = imags
     
     
-#                VNA.set_trigger_source('internal')
+                VNA.set_trigger_source('internal')
                 count = count + ave
                 print '%s averages done' %(count)
             
             print 'current = %.04fmA done ' % (current)
-
+            if icurrent == 0:
+                self.fig = pl.figure()
+                if len(self.Sij) == 1:
+                    gs = gridspec.GridSpec(1, 1)
+        #            fig.axes[0].title = Sij[0]
+                else:
+                    gs = gridspec.GridSpec((len(self.Sij)-1)/2 + 1, 2)
+                    gs.update(wspace=0.4, hspace=0.35)
+                for i in range(len(self.Sij)):
+                    self.fig.add_subplot(gs[i])
+                    self.fig.axes[i].set_title('%s%s'%(self.fig_name,self.Sij[i]))
+                    self.fig.axes[i].set_xlim(xs.min(), xs.max()+self.dcurrents)
+                    self.fig.axes[i].set_ylim(ys.min(), ys.max())
+                pl.suptitle(self.full_fig_name)
+            for i in range(len(self.Sij)):
+                z1 = 10*np.log10(self.realdata[i][icurrent,:]**2 + self.imagdata[i][icurrent,:]**2)
+                z1 = z1[:,None].T
+                z2 = 10*np.log10(self.realdata[i][icurrent,:]**2 + self.imagdata[i][icurrent,:]**2)
+                z2 = z2[:,None].T
+                z = np.concatenate([z1,z2])
+                z = np.transpose(z)
+                x = np.zeros((len(self.freqs),2))
+                x[:,0] = self.currents[icurrent]
+                x[:,1] = self.currents[icurrent]+self.dcurrents
+                y = np.zeros((2,len(self.freqs)))
+                y[0] = y[1] = self.freqs
+                y = np.transpose(y)
+                self.fig.axes[i].pcolormesh(x, y, z,vmax=np.max(z),vmin = np.max([np.min(z),-200]))
+                print np.max(z), np.min(z)
+        #        fig.axes[i].set_xlim(xs.min(), xs.max())
+        #        fig.axes[i].set_ylim(ys.min(), ys.max())
+                self.fig.canvas.draw()
 
 #        print 'self.ampdata\n', self.ampdata
-#        self.analyze()
-
+        self.analyze()
+        print self.data.get_fullname()
+#        Yoko.do_ramp_current(0)
     def analyze(self):
-        analysis(self.currentdata, self.freqdata, self.realdata, self.imagdata, self.fig_name,self.Sij, fig=None)
+        analysis(self.currents, self.freqs, self.realdata, self.imagdata, self.fig_name,self.full_fig_name, self.Sij, fig = None)

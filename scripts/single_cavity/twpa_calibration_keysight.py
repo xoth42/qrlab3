@@ -24,13 +24,16 @@ import numpy as np
 
 def analysis(twpa_powers, twpa_freqs, ampdata, ax=None):
     if ax is None:
-        ax = plt.figure().add_subplot(111)
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
     data = ampdata[:]
     x, y = np.meshgrid(np.append(twpa_powers, 2* twpa_powers[-1] - twpa_powers[-2]),
                    np.append(twpa_freqs, 2* twpa_freqs[-1] - twpa_freqs[-2]))
-    ax.pcolormesh(x, y, data.T)
+    img = ax.pcolormesh(x, y, data.T)
+    fig.colorbar(img)
     ax.set_xlabel('twpa powers')
     ax.set_ylabel('twpa frequencies')
+#    ax.set_zlabel('RO peak transmission amplitude')
     
     print('max power', twpa_powers[np.unravel_index(data.argmax(), data.shape)[0]],
           'max_freq',  twpa_freqs[np.unravel_index(data.argmax(), data.shape)[1]])
@@ -110,19 +113,27 @@ class twpa_calibration_keysight(Measurement1D):
         for i_twpa_power, twpa_power in enumerate(self.twpa_powers):
             self.twpa_pump.set_power(twpa_power)
             print 'twpa_power = %s' % (twpa_power, )
-            time.sleep(2)
+            time.sleep(0.1)
             for i_twpa_freq, twpa_freq in enumerate(self.twpa_freqs):
                 self.twpa_pump.set_frequency(twpa_freq)
-                time.sleep(2)
+                time.sleep(0.1)
                     
                 dig.setup_avg_shot()
                 dig.arm()
                 dig.start_hvi()
-                ret = dig.take_avg_shot()
+                ret = dig.take_avg_shot(async = True)
                 dig.stop_hvi()
                 dig.release_buf()
 
-                IQ = np.average(ret)
+                try:
+                    while not ret.is_valid():
+                        objsh.helper.backend.main_loop(100)
+                except Exception, e:
+#                    alz.set_interrupt(True)
+                    print 'Error: %s' % (str(e), )
+                    return
+
+                IQ = np.average(ret.get())
                 print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (twpa_freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
                 print 'I,Q = %.03f, %.03f' % (np.real(IQ), np.imag(IQ))
 

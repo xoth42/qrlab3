@@ -34,7 +34,7 @@ def analysis(meas, data=None, fig=None):
 
 class FT1Measurement(Measurement1D):
 
-    def __init__(self, ge_info, ef_info, delays, **kwargs):
+    def __init__(self, ge_info, ef_info, delays, seq=None, **kwargs):
         self.ge_info = ge_info
         self.ef_info = ef_info
         self.delays = delays
@@ -42,6 +42,9 @@ class FT1Measurement(Measurement1D):
 
         super(FT1Measurement, self).__init__(len(delays), infos=(ge_info, ef_info), **kwargs)
         self.data.create_dataset('delays', data=delays)
+        if seq is None:             #Ebru:Added the seq part for cooling
+            seq = Trigger(250)
+        self.seq = seq        
 
     def generate(self):
         s = Sequence()
@@ -50,15 +53,16 @@ class FT1Measurement(Measurement1D):
         r_ef = self.ef_info.rotate
         for i, dt in enumerate(self.delays):
             s.append(Join([
-                Trigger(dt=250),
+                self.seq,   #Ebru: Changed Trigger(dt=250) to self.seq for cooling
                 r(np.pi, 0),
                 r_ef(np.pi, 0),
             ]))
             s.append(Delay(dt))
-            s.append(r(np.pi/2, 0))
+#            s.append(r(np.pi/2, 0))
             # For Al better to do ef-pi, ge-pi to get contrast
-#            s.append(r_ef(np.pi,0))
-#            s.append(r(np.pi,0))
+            s.append(r_ef(np.pi,0))
+            s.append(r(np.pi,0))
+            s.append(r_ef(np.pi/2,0)) #fluxonium
             s.append(self.get_readout_pulse())
             s.append(Delay(1000))
 
