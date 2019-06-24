@@ -264,6 +264,10 @@ instruments = objsh.helper.find_object('instruments')
 datasrv = objsh.helper.find_object('dataserver')
 datadir = 'c:/_data'
 
+<<<<<<< HEAD
 filename = 'c:/_data/June19PumpCat.hdf5'
+=======
+filename = 'c:/_data/0531cooldown_FMR.hdf5'
+>>>>>>> 7e7130bcd7004c5071410b4cc45dc1635104b275
 
 datafile = datasrv.get_file(filename)

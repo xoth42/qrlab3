@@ -4,10 +4,16 @@ Created on Fri Jun 29 15:47:32 2018
 
 @author: Wang_Lab
 """
+import matplotlib
+matplotlib.interactive(True)
+#X=[0,1,2,3,4,5,6,7,8,9,10,10.3,10.4,10.5]
+#
+#Y=[0,58,120,181,242,300,354,407,454,494,527,536.9,539.9,543]
 
-X=[0,1,2,3,4,5,6,7,8,9,10,10.3,10.4,10.5]
+X = [0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.05, 1.1]
+Y = [0, 5.2, 26.8, 53.8, 106.5, 159.6, 212.2, 264.9, 316.7, 367.3, 411.6, 449.6, 482, 496.6, 509.3]
 
-Y=[0,58,120,181,242,300,354,407,454,494,527,536.9,539.9,543]
+N = 8 #number of linear points
 import lmfit
 import numpy as np
 from scipy.optimize import curve_fit
@@ -15,20 +21,22 @@ from scipy.optimize import curve_fit
 X= np.asarray(X)
 import matplotlib.pyplot as pl
 
-#def fitting(params, x, data):
-#    est = params['c'] + params['b'] * x + params['a'] * x **2
-#    return data - est
-#
-#pl.figure()
-#pl.scatter(X,Y,marker = 's')
-#pl.plot(X[0:6],60*X[0:6],'--')
-#
-#params = lmfit.Parameters()
-#params.add('a', value=-4)
-#params.add('b', value=40)
-#params.add('c', value=0)
-xs = X[5:]
-ys = Y[5:]
+
+pl.figure()
+pl.scatter(X,Y,marker = 's')
+#pl.xlabel('YOKO current(mA)')
+#pl.ylabel('magnetic field(mT)')
+x = X[0: N]
+y = Y[0: N]
+
+def linear_fit(x, k):
+    return k*x
+sigma = np.ones(len(x))
+popt, pcov = curve_fit(linear_fit, x, y, p0=500, sigma=sigma)
+pl.plot(x, linear_fit(x, popt[0]), label ="$f(x)=k*x | k=%.3f" % (popt[0]) )
+
+xs = X[N-1:]
+ys = Y[N-1:]
 #result = lmfit.minimize(fitting, params,  args=(xs, ys))
 #lmfit.report_fit(result.params)
 ##pl.plot(xs,ys-fitting(result.params, xs,ys),'--')
@@ -41,10 +49,16 @@ def model_func(x, a, b, c):
     return a*x**2 + b*x + c 
 sigma = np.ones(len(xs))
 sigma[[0]] = 0.01
-popt, pcov = curve_fit(model_func, xs, ys, p0=(-4 ,40, 0), sigma=sigma)
+ys[0] = xs[0] * popt[0]
+popt, pcov = curve_fit(model_func, xs, ys, p0=(-40 ,400, 0), sigma=sigma)
 pl.plot(xs, model_func(xs, popt[0], popt[1], popt[2]))
 text = "$f(x)=a*x^2 + b*x+c$ | a=%.3f, b=%.3f, c=%.3f" % (popt[0],popt[1],popt[2])
-pl.annotate(text, xy=(0.03, 0.93), xycoords='axes fraction', fontsize=12)
-pl.xlim([0,11])
+pl.annotate(text, xy=(0.03, 0.85), xycoords='axes fraction', fontsize=12)
+pl.xlim([0,1.1])
 pl.ylim([0,600])
+
+
 pl.grid()
+
+pl.legend()
+pl.show()

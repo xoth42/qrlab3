@@ -76,7 +76,7 @@ def analysis(meas, data=None, fig=None):
     params.add('amp', value=amp0, min=0)
     params.add('tau', value=xs[-1], min=10, max=200000)
     params.add('freq', value=f0, min=0)
-    params.add('phi0', value=-np.pi/2.0, min=-1.2*np.pi, max=1.2*np.pi)
+    params.add('phi0', value=np.pi/2.0, min=-1.2*np.pi, max=1.2*np.pi)
     params.add('slope', value=0)
     result = lmfit.minimize(t2_fit_tilted, params, args=(xs, ys))
     lmfit.report_fit(result.params)
@@ -137,7 +137,7 @@ def analysis(meas, data=None, fig=None):
 class EFT2Measurement(Measurement1D):
 
     def __init__(self, ge_info, ef_info, delays, detune=0, echotype=ECHO_NONE, necho=1, double_freq=False,
-                 postseq=None, laser_power = None, **kwargs):
+                 postseq=None, seq=None, laser_power = None, **kwargs):
         self.ge_info = ge_info
         self.ef_info = ef_info
         self.delays = delays
@@ -146,6 +146,9 @@ class EFT2Measurement(Measurement1D):
         self.echotype = echotype
         self.necho = necho
         self.double_freq=double_freq
+        if seq is None:             #Dario: changed back to how other measurements are done
+            seq = Trigger(250)
+        self.seq = seq   
         self.postseq = postseq
 
         super(EFT2Measurement, self).__init__(len(delays), infos=(ge_info, ef_info), **kwargs)
@@ -226,7 +229,7 @@ class EFT2Measurement(Measurement1D):
             elen = 0
 
         for i, dt in enumerate(self.delays):
-            s.append(Trigger(dt=250))
+            s.append(self.seq) #Ebru: Changed Trigger(dt=250) to self.seq 
             s.append(Pad(r_ge(np.pi, X_AXIS), 250, PAD_LEFT))
             s.append(r_ef(np.pi/2, X_AXIS))
 
@@ -259,7 +262,7 @@ class EFT2Measurement(Measurement1D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
-            s.append(Delay(1000))
+            s.append(Delay(4000))
 
         s = self.get_sequencer(s)
         seqs = s.render()

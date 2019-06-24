@@ -71,15 +71,17 @@ if 0: # Cavity disp calibration
     bla
 
 
+
 if 0: # Cavity T1
     from single_cavity import cavT1
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
 #    xs = np.concatenate((np.linspace(0e3, 50e3, 26), np.linspace(60e3, 1250e3, 55)))
-    t1 = cavT1.CavT1(qubit_info, cavity_infoB, 1.5, np.linspace(0, 1800e3, 51),
+
+    t1 = cavT1.CavT1(qubit_info, cavity_infoA, 1, np.linspace(0, 1400e3, 51),
                      proj_num=0, seq=None, postseq=None, bgcor=False, force_a0 = True 
 #                     extra_info=[ef_info,]
                      )
-    t1.measure_keysight()
+    t1.measure()
     ys = t1.get_ys()
     bla
     
@@ -114,23 +116,25 @@ if 0: #Cavity T2
 
 
 if 0: # Cavity spec
-    from single_cavity import cavspectroscopy_keysight
-    cav_freq = 6.185e9-100e6
-#    cav_freq = 5.418e9
-    freq_range = 10.0e6
-    cspec = cavspectroscopy_keysight.CavSpectroscopy(mclient.instruments['SCbob'], qubit_info, cavity_infoB, [np.pi], 
+
+    from single_cavity import cavspectroscopy
+    cav_freq = 3966e6
+    freq_range = 30e6
+    cspec = cavspectroscopy.CavSpectroscopy(mclient.instruments['SCalice'], qubit_info, cavity_infoA, [np.pi], 
                                             np.linspace(cav_freq-freq_range, cav_freq+freq_range, 51), plot_seqs=False)
 
     #This amplitude is NOT capped at 1 like on the qubit spec
     cspec.measure()
     bla
 
+
 if 1: #SSB cavspec
     from single_cavity import ssbcavspec
-    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoB, np.linspace(-4e6, 4e6, 31),
+
+    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoA, np.linspace(-1e6, 1e6, 51),
 #                                  postseq=efpi, extra_info=[ef_info,]
                                   )
-    cspec.measure_keysight()
+    cspec.measure()
     bla
     
 if 0: #cavity stark shift

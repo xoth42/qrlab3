@@ -8,9 +8,8 @@ import copy
 import mclient
 import lmfit
 
-def fit_timerabi(params, x, data):
-    decay = np.exp(-x / params['decay'].value)
-    est = params['ofs'].value - params['amp'].value * np.cos(2*np.pi*x / params['period'].value) * decay
+def fit_amprabi(params, x, data):  # 5/19 corrected the fit function.  Was using a timerabi function, how?
+    est = params['ofs'].value - params['amp'].value * np.cos(2*np.pi*x / params['period'].value + params['phase'].value)
     return data  - est
 
 def analysis(meas, data=None, fig=None, period=None):
@@ -29,21 +28,21 @@ def analysis(meas, data=None, fig=None, period=None):
     params = lmfit.Parameters()
     params.add('ofs', value=np.average(ys))
     params.add('amp', value=amp0)
+    params.add('phase', value=0, vary=False)
     if period is not None:
         params.add('period', value=period, min=0, vary=False)
     else:
         params.add('period', value=period0, min=0)
-    params.add('decay', value=1e9, min=0, vary=False)
-    result = lmfit.minimize(fit_timerabi, params, args=(xs, ys))
+    result = lmfit.minimize(fit_amprabi, params, args=(xs, ys))
     lmfit.report_fit(result.params)
 
     txt = 'Amp = %.03f +- %.03e\nPeriod = %.03f +- %.03e\nPi amp = %.05f' % (result.params['amp'].value, result.params['amp'].stderr, result.params['period'].value, result.params['period'].stderr, result.params['period'].value/2 )
-    fig.axes[0].plot(xs, -fit_timerabi(result.params, xs, 0), label=txt)
+    fig.axes[0].plot(xs, -fit_amprabi(result.params, xs, 0), label=txt)
     fig.axes[0].set_ylabel('Intensity [AU]')
     fig.axes[0].set_xlabel('Pulse area')
     fig.axes[0].legend(loc=0)
 
-    fig.axes[1].plot(xs, fit_timerabi(result.params, xs, ys), marker='s')
+    fig.axes[1].plot(xs, fit_amprabi(result.params, xs, ys), marker='s')
     fig.canvas.draw()
     return result.params
 
@@ -89,7 +88,7 @@ class EFRabi(Measurement1D):
                 add = Join([add, r(np.pi, 0), Delay(5)])
             add = Join([add, r_ef(0, 0, amp = amp), Delay(5)])
             if self.second_pi:
-                add = Join([add, r(np.pi, 0), Delay(250)])
+                add = Join([add, r(np.pi, 0), Delay(5)]) # What? Why was this Delay 250? 5/28/2019
 #            marker_switch = Constant(, 1, chan=self.)
             s.append(add)
             s.append(Combined([

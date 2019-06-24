@@ -6,6 +6,7 @@ Created on Thu Mar 29 11:11:02 2018
 """
 
 import types
+import objectsharer as objsh
 
 from instrument import Instrument
 
@@ -52,6 +53,13 @@ class AMI_430(Instrument):
         self.field = field
         self.ser.write('CONFigure:FIELD:TARGet %s;'%(field)) #sets field target
         self.ser.write('RAMP;') #tells magnet to go to the target
+#        try:
+#            while not abs(float(self.do_get_field()) - field) < 0.0005:
+#
+#                objsh.helper.backend.main_loop(100)
+#
+#        except:
+#            print 'error in ramping field'
     
     def do_get_current(self):
         self.ser.write('CURRent:MAGnet?;')

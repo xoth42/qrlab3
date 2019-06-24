@@ -437,9 +437,11 @@ class Measurement(object):
             if self.print_progress:
                 logging.info('Acquiring...')
             while not ret.is_valid() and not self._interrupted:
-                objsh.helper.backend.main_loop(20) 
+                objsh.helper.backend.main_loop(20, origin=0) #DARIO 4/2/19 testing stuff;Alazar crashing
+#                print 'before processEvents'
                 QtWidgets.QApplication.processEvents()
-            print 'Done with take experiment'
+#                print(ret.is_valid(), time.time())
+#            print 'Done with take experiment'
             if self._interrupted:
                 alz.set_interrupt(True)
         except Exception, e:
@@ -668,7 +670,7 @@ class Measurement(object):
                 s = pulseseq.sequencer.Sequencer()
                 s.print_seqs(seqs)
             
-            logging.info('Loading sequence...')
+            logging.info('Loading sequence...') 
             self.load(seqs)
             if self.release_seqs:
                 self.seqs = None

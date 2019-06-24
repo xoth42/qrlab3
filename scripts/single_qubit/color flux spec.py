@@ -44,11 +44,11 @@ from single_qubit import spectroscopy_keysight
 #To do manually, press 'Program' key and press repeat is the left most option on screen
 qubit_freq = 950.5e6
 freq_range1= 10e6
-freq_range2 = 20e6
-freq_points = 31
+freq_range2 = 100e6
+freq_points = 201
 results = []
 min_result = []
-ramp_currents = np.linspace(49.2e-3, 49.4e-3, 21) #units are in A
+ramp_currents = np.linspace(5.95e-3, 6.05e-3, 15) #units are in A
 fxn_freq=[]
 current = ramp_currents[0]
 Yoko.do_set_current(current)
@@ -58,7 +58,7 @@ time.sleep(.2)
 
 #
 spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['QK'], qubit_info,
-                                 np.linspace(qubit_freq-freq_range1, qubit_freq+freq_range2, freq_points), [-18],
+                                 np.linspace(qubit_freq-freq_range1, qubit_freq+freq_range2, freq_points), [10],
                                  plen=2000, amp=0.01, plot_seqs=False) #1=1ns
 
 
@@ -127,19 +127,19 @@ plt.colorbar()
 plt.xlabel('Coil Current (mA)')
 plt.ylabel('Frequency (GHZ)')
 plt.show()
-to_save = [X, Y, Z]
-
-with open('colorflux_4march_01','w') as outfile:
-    outfile.write('# Array\n')
-
-    # Iterating through a ndimensional array produces slices along
-    # the last axis. This is equivalent to data[i,:,:] in this case
-    for data_slice in to_save:
-
-        # The formatting string indicates that I'm writing out
-        # the values in left-justified columns 7 characters in width
-        # with 2 decimal places.
-        np.savetxt(outfile, data_slice, fmt='%-7.7f')
-
-        # Writing out a break to indicate different slices...
-        outfile.write('# New slice\n')
+#to_save = [X, Y, Z]
+#
+#with open('colorflux_4march_01','w') as outfile:
+#    outfile.write('# Array\n')
+#
+#    # Iterating through a ndimensional array produces slices along
+#    # the last axis. This is equivalent to data[i,:,:] in this case
+#    for data_slice in to_save:
+#
+#        # The formatting string indicates that I'm writing out
+#        # the values in left-justified columns 7 characters in width
+#        # with 2 decimal places.
+#        np.savetxt(outfile, data_slice, fmt='%-7.7f')
+#
+#        # Writing out a break to indicate different slices...
+#        outfile.write('# New slice\n')

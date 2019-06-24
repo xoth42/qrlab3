@@ -228,6 +228,10 @@ class SC5511A(Instrument):
             flags=Instrument.FLAG_GETSET, units='Hz',
             minval=self._min_freq, maxval=self._max_freq,
             display_scale=6, value = device_rf_params.rf1_freq)
+#        self.add_parameter('rf2_frequency', type=types.FloatType,
+#            flags=Instrument.FLAG_GETSET, units='MHz',
+#            minval=self._min_freq, maxval=3000,
+#            display_scale=6, value = device_rf_params.rf2_freq)
         self.add_parameter('power', type=types.FloatType,
             flags=Instrument.FLAG_GETSET, units='dBm',
             minval=self._min_power, maxval=self._max_power,
@@ -294,6 +298,14 @@ class SC5511A(Instrument):
 
     def do_set_frequency(self, freq_Hz):
         return lb_dll.sc5511a_set_freq(self._handle, ctypes.c_ulonglong(int(freq_Hz)))
+    
+#    def do_get_rf2_frequency(self):
+#        device_rf_params = device_rf_params_t()        
+#        lb_dll.sc5511a_get_rf_parameters(self._handle, device_rf_params) #Dario working on rf2
+#        return float(device_rf_params.rf2_freq)
+#
+#    def do_set_rf2_frequency(self, freq_MHz):
+#        return lb_dll.sc5511a_set_rf2_freq(self._handle, ctypes.c_ushort(freq_MHz)) #Dario working on rf2
 
     def do_get_power(self):
         device_rf_params = device_rf_params_t()        
@@ -313,6 +325,19 @@ class SC5511A(Instrument):
             return lb_dll.sc5511a_set_output(self._handle, 1)
         else:
             return lb_dll.sc5511a_set_output(self._handle, 0)
+        
+#    def do_set_rf2_on(self, val): #Dario working on rf2
+#        if(val):
+#            return lb_dll.sc5511a_set_rf2_standby(self._handle, 0)
+#        else:
+#            return lb_dll.sc5511a_set_rf2_standby(self._handle, 1)
+#        
+#    def do_set_rf1_standby(self, val): #Dario working on rf2
+#        if(val):
+#            return lb_dll.sc5511a_set_standby(self._handle, 1)
+#        else:
+#            return lb_dll.sc5511a_set_standby(self._handle, 0)
+            
 
     def do_get_ext_locked(self):
         return True

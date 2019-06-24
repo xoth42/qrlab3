@@ -98,9 +98,15 @@ class Yokogawa_7651_new(Instrument):
 
         self.add_parameter('output_state', type=types.IntType,
                            flags=Instrument.FLAG_GETSET,
-                           format_map={1: 'on', 0: 'off'})
-        self.add_parameter('source_type',
+                          )
+        self.add_parameter('source_type', type=types.StringType,
                            flags=Instrument.FLAG_GETSET)
+        self.add_parameter('voltage_range', type=types.FloatType,
+                            flags=Instrument.FLAG_GETSET, units='V',
+                            )
+        self.add_parameter('current_range', type=types.FloatType,
+                            flags=Instrument.FLAG_GETSET, units='V',
+                            )
         # self.add_parameter('voltage_range', type=types.IntType,
         #                    flags=Instrument.FLAG_GETSET, units='V',
         #                    format_map={2: '10 mV',
@@ -122,26 +128,42 @@ class Yokogawa_7651_new(Instrument):
         self.add_parameter('current', type=types.FloatType,
                            flags=Instrument.FLAG_GETSET, maxval=120,
                            minval=-120, units='mA')
+        self.add_parameter('ramp_current', type=types.FloatType,
+                           flags=Instrument.FLAG_GETSET, maxval=120,
+                           minval=-120, units='mA')
         self.add_parameter('voltage', type=types.FloatType,
                    flags=Instrument.FLAG_GETSET, units='V',
                    minvalue=-30.0, maxvalue=30.0)
-        self.add_parameter('polarity', type=types.IntType,
-                           flags=Instrument.FLAG_GETSET,
-                           format_map={0: 'positive',
-                                       1: 'negative',
-                                       2: 'invert'})
-        self.add_parameter('output_data_value', type=types.StringType,
-                           flags=Instrument.FLAG_GET)
+        self.add_parameter('ramp_voltage', type=types.FloatType,
+                   flags=Instrument.FLAG_GETSET, units='V',
+                   minvalue=-30.0, maxvalue=30.0)
+#        self.add_parameter('polarity', type=types.IntType,
+#                           flags=Instrument.FLAG_GETSET,
+#                           format_map={0: 'positive',
+#                                       1: 'negative',
+#                                       2: 'invert'})
+#        self.add_parameter('output_data_value', type=types.StringType,
+#                           flags=Instrument.FLAG_GET)
 
     def do_get_output(self):
         return self.output.recieve()
 
     def do_set_output_state(self, state):
         if state not in [0, 1]:
-            raise StateWrongValueError("Output state can be 0 or 1, nothing "
-                                       "else.")
+            raise StateWrongValueError("Output state can be 0 or 1, nothing else.")
         self.output_state.send(state)
 #        self.output = state
+
+    def do_get_output_state(self):
+
+        state = self.status.recieve()
+        digit = re.findall("[-+]?[.]?[\d]+(?:,\d\d\d)*[\.]?\d*(?:[eE][-+]?\d+)?", state)
+        digit = float(digit[-1])
+        state = bin(int(digit))
+        if len(state) < 5:
+            return 0
+        else:       
+            return int(state[-5])
         
 # Useful Functions --------------------------------------------
 
@@ -167,8 +189,8 @@ class Yokogawa_7651_new(Instrument):
     
     def do_get_voltage(self):
         if (self.do_get_source_type() != 'voltage'):
-            raise VoltageError('Not in voltage mode')
-            return
+#            raise VoltageError('Not in voltage mode')
+            return None
         strng = self.do_get_output()
         digit = re.findall("[-+]?[.]?[\d]+(?:,\d\d\d)*[\.]?\d*(?:[eE][-+]?\d+)?", strng)
         digit = float(digit[0])
@@ -184,7 +206,9 @@ class Yokogawa_7651_new(Instrument):
         if (self.do_get_source_type() != 'voltage'):
             self.do_set_source_type('voltage')
 #        self.voltage_function.send()
-        self.auto_range_value.send(voltage)
+        if np.abs(voltage) > np.abs(self.get_voltage_range()):
+            raise VoltageError('%0.6f is out of voltage limit!')
+        self.range_value.send(voltage)
         
     def do_ramp_voltage(self,vtarget):
         if (self.do_get_source_type() != 'voltage'):
@@ -192,8 +216,8 @@ class Yokogawa_7651_new(Instrument):
             return               
         v = self.do_get_voltage()
         vstep = .01
-        bigger = np.max((abs(v),abs(vtarget)))
-        self.do_set_voltage_range(bigger)
+#        bigger = np.max((abs(v),abs(vtarget)))
+#        self.do_set_voltage_range(bigger)
         if (v < vtarget):   
             while (v+vstep <= vtarget):
                 self.range_value.send(v+vstep)
@@ -202,6 +226,13 @@ class Yokogawa_7651_new(Instrument):
             while (v-vstep >= vtarget):
                 self.range_value.send(v-vstep)
                 v = self.do_get_voltage()
+        self.do_set_voltage(vtarget)
+                
+    def do_set_ramp_voltage(self,v_target):
+        self.do_ramp_voltage(v_target)
+    
+    def do_get_ramp_voltage(self):
+        self.do_get_voltage()
 
     def do_set_voltage_range(self,R):
         R = abs(R)
@@ -221,7 +252,25 @@ class Yokogawa_7651_new(Instrument):
         else:
             raise VoltageError('Range not supported!!!')
 
+    def do_get_voltage_range(self):
+        if (self.do_get_source_type() != 'voltage'):
+#            raise VoltageError('Not in voltage mode')
+            return None
+        strng = self.do_get_output()
         
+        if ( strng[7] == '.' and strng[13] == '-' and strng[14] == '3'):
+            return 0.01
+        if ( strng[8] == '.' and strng[13] == '-' and strng[14] == '3'):
+            return 0.1
+        if ( strng[6] == '.' and strng[13] == '+' and strng[14] == '0'):
+            return 1
+        if ( strng[7] == '.' and strng[13] == '+' and strng[14] == '0'):
+            return 10     
+        if ( strng[8] == '.' and strng[13] == '+' and strng[14] == '0'):
+            return 30
+        else:
+            raise VoltageError('Range not found!!!')   
+      
 # Current Functions:
 # IMPORTANT NOTE:
     # All current values are in units of mA!!! (-Alex S. 5/1/19)
@@ -233,33 +282,36 @@ class Yokogawa_7651_new(Instrument):
         if (self.do_get_source_type() != 'current'):
             self.do_set_source_type('current')
 #        self.current_function.send()
-        self.auto_range_value.send(current / 1000)
+        if np.abs(current) > np.abs(self.get_current_range()):
+            raise CurrentError('%0.6f is out of current limit!')
+        self.range_value.send(current / 1000)
 
     def do_get_current(self):
         if (self.do_get_source_type() != 'current'):
-            raise CurrentError('Not in current mode')
-            return
+#            raise CurrentError('Not in current mode')
+            return None
         strng = self.do_get_output()
         digit = re.findall("[-+]?[.]?[\d]+(?:,\d\d\d)*[\.]?\d*(?:[eE][-+]?\d+)?", strng)
-        digit = float(digit[0])
+        digit = float(digit[0]) * 1000
         return digit
 
     def do_ramp_current(self,i_target):
-        if (self.do_get_source_type() != 'voltage'):
+        if (self.do_get_source_type() != 'current'):
             raise CurrentError('Not in current mode')
             return               
         i = self.do_get_current()
-        i_step = .0001
-        bigger = np.max((abs(i),abs(i_target)))
-        self.do_set_current_range(bigger)
-        if (i < i_target):   
-            while (i+i_step <= i_target):
-                self.range_value.send(i+i_step)
+        i_step = .0005 / 1000
+#        bigger = np.max((abs(i),abs(i_target)))
+#        self.do_set_current_range(bigger)
+        if (i/1000 < i_target /1000 ):   
+            while (i/1000+i_step <= i_target / 1000):
+                self.range_value.send(i/1000+i_step)
                 i = self.do_get_current()
-        if (i > i_target):
-            while (i-i_step >= i_target):
-                self.range_value.send(i-i_step)
-                i = self.do_get_current()
+        if (i /1000> i_target / 1000):
+            while (i/1000-i_step >= i_target / 1000):
+                self.range_value.send(i/1000-i_step)
+                i = self.do_get_current()                
+        self.range_value.send(i_target/1000)
 
     def do_set_current_range(self,R):
         R = abs(R)
@@ -275,7 +327,29 @@ class Yokogawa_7651_new(Instrument):
         else:
             raise VoltageError('Range not supported!!!')
        
+    def do_get_current_range(self):
+        if (self.do_get_source_type() != 'current'):
+#            raise CurrentError('Not in current mode')
+            return None
+        strng = self.do_get_output()
         
+        if ( strng[6] == '.'):
+            return 1
+        if ( strng[7] == '.'):
+            return 10        
+        if ( strng[8] == '.'):
+            return 100
+        else:
+            raise currentError('Range not found!!!')  
+            
+            
+    def do_set_ramp_current(self,i_target):
+        self.do_ramp_current(i_target)
+    
+    def do_get_ramp_current(self):
+        self.do_get_current()
+        
+    
 
     def do_set_polarity(self, polarity):
         if polarity not in range(0, 3):

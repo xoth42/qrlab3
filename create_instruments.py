@@ -9,14 +9,14 @@ from mclient import instruments
 
 #SC = instruments.create('SC', 'SC5511A', devid='100016B5')
 
-#Yoko = instruments.create('Yoko','Yokogawa_7651',address='GPIB1::6::INSTR')
-#print 'Yoko OK'
+Yoko = instruments.create('Yoko','Yokogawa_7651_new',address='GPIB1::6::INSTR')
+print 'Yoko OK'
 
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1', clock=1e9, refsrc='EXT', reffreq=10e6)
-'''
+
 VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
 print 'VNA OK'
-'''
+
 #Magnet = instruments.create('Magnet','AMI_430')
 #print 'Magnet OK'
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='TCPIP0::172.30.56.25::4000::SOCKET')
@@ -58,12 +58,11 @@ print 'VNA OK'
 #
 #
 #
-'''
 readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
                              IQe_radius= 1 , rfsource1='brick3', rfsource2='brick2',
                              pulse_len=1000, readout_chan='3m1', acq_chan='4m2')
 
-
+'''
 #AWG2 = instruments.create('AWG2', 'Tektronix_AWG5014C', address='AWG2',
 #                          clock=1e9, refsrc='EXT', reffreq=10e6)
 

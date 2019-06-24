@@ -14,9 +14,9 @@ import os
 #mpl.rcParams['figure.figsize']=[5,3.5]
 #mpl.rcParams['axes.color_cycle'] = ['b', 'g', 'r', 'c', 'm', 'k']
 VNA = mclient.instruments['VNA']
+Magnet = mclient.instruments['Magnet']
 
-
-Yoko = mclient.instruments['Yoko']
+#Yoko = mclient.instruments['Yoko']
 #print 'OK1'
 #if 0: #get single trace from VNA
 #    from scripts.single_cavity import VNA_single_trace
@@ -49,37 +49,58 @@ if 0: #sweep voltage Yoko and get 2D plot
     
 if 0: #sweep current Yoko and get 2D plot
     from scripts.single_cavity import VNA_current_sweep_yoko 
-    Yoko.do_set_output_state(0)
+
+#    Yoko.do_set_output_state(0)
     VNA.set_timeout(40000)
     VNA.do_enable_averaging(True)
     VNA.set_averaging_trigger(1)
     VNA.set_trigger_source('internal')
-    ro = VNA_current_sweep_yoko.Current_Sweep_YOKO(currents = np.linspace(0,0.1,11), freqs = np.linspace(8.0e9, 9.0e9, 1601),
+    ro = VNA_current_sweep_yoko.Current_Sweep_VNA(currents = np.linspace(0.45,0.6,201), freqs = np.linspace(7.5e9, 9e9, 1601),
                                                    average_factor =1, avelimit = 1,if_bandwidth = 1000, Sij =['S21'],fig_name ='test',comment = 'with Yoko, and VNA data')
     #we can take all 4 S params data at the same time when VNA is calibrated, if not, we can only take the data with same output ports at the same time. 
     ro.measure()
     pl.show()
     bla
 
+    
+if 0: #sweep current and changing frequency
+    from scripts.single_cavity import current_sweep_varies_freq_VNA
+    VNA.set_timeout(40000)
+    VNA.do_enable_averaging(True)
+    VNA.set_averaging_trigger(1)
+    VNA.set_trigger_source('internal')
 
 if 0: #sweep field and get 2D plot
+    a = np.linspace(0.5225, 0.5235,11)
+    center_freq = 13.3* (a - a[0]) + 8.22
+    center_freq = center_freq * 1e9
+
+    ro = current_sweep_varies_freq_VNA.Current_Sweep_Varies_freq_VNA(currents = a, center_freqs = center_freq, span = 20e6, VNA_points = 1601,
+                                                   average_factor =1, avelimit =1,if_bandwidth =50000, Sij =['S21'],fig_name ='current sweep for 550 ',comment = 'yig cavity measurement')
+
+    #we can take all 4 S params data at the same time when VNA is calibrated, if not, we can only take the data with same output ports at the same time. 
+    ro.measure()
+    pl.show()
+    bla
+
+if 0: #sweep sets of field ranges and get 2D plot
     from scripts.single_cavity import Magnet_sweep_VNA
     VNA.set_timeout(40000)
     VNA.do_enable_averaging(True)
     VNA.set_averaging_trigger(1)
     VNA.set_trigger_source('internal')
     
-    a = [0,0,0,0]
-    a[0] = np.linspace(0,0.1,101)
-    a[1] = np.linspace(0.1,0,101)
-    a[2] = np.linspace(0,-0.1,101)
-    a[3] = np.linspace(-0.1,0,101)
-    for i in range(4):
+    a = [0]
+    a[0] = np.linspace(0.23,0.3,51)
+#    a[1] = np.linspace(0.1,0,101)
+#    a[2] = np.linspace(0,-0.1,101)
+#    a[3] = np.linspace(-0.1,0,101)
+    for i in range(len(a)):
         
     #    a= np.log10(a)*10
     #    a[0] = -11
-        ro = Magnet_sweep_VNA.Magnet_Sweep_VNA(fields = a[i], freqs = np.linspace(5.5665e9, 5.5725e9, 101),
-                                                       average_factor =10, avelimit =3,if_bandwidth = 10, Sij =['S21'],fig_name ='field sweep',comment = 'qubit in waveguide')
+        ro = Magnet_sweep_VNA.Magnet_Sweep_VNA(fields = a[i], freqs = np.linspace(7e9, 9e9, 1601),
+                                                       average_factor =1, avelimit =1,if_bandwidth = 1000, Sij =['S21'],fig_name ='field sweep',comment = 'Yig cavity')
         #we can take all 4 S params data at the same time when VNA is calibrated, if not, we can only take the data with same output ports at the same time. 
         ro.measure()
         pl.show()
@@ -91,11 +112,14 @@ if 0: #sweep power and get 2D plot
     VNA.do_enable_averaging(True)
     VNA.set_averaging_trigger(1)
     VNA.set_trigger_source('internal')
-    a = np.linspace(-80,-50,7)
+
+    a = np.linspace(-40,0,2)
 #    a= np.log10(a)*10
 #    a[0] = -11
-    ro = power_sweep_VNA.Power_Sweep_VNA(powers = a, freqs = np.linspace(5.567e9, 5.577e9, 401),
-                                                   average_factor =250, avelimit =5,if_bandwidth = 100, Sij =['S21'],fig_name ='no pump',comment = 'qubit in waveguide')
+    average_factor = np.ceil(np.power(10, -a/10 - 1.5))
+    average_factor [0] = 100
+    ro = power_sweep_VNA.Power_Sweep_VNA(powers = a, freqs = np.linspace(8.127e9, 8.137e9, 101),
+                                                   average_factor = average_factor, avelimit =2,if_bandwidth = 10, Sij =['S21'],fig_name ='power sweep of 330 ',comment = 'yig cavity')
     #we can take all 4 S params data at the same time when VNA is calibrated, if not, we can only take the data with same output ports at the same time. 
     ro.measure()
     pl.show()
@@ -103,10 +127,12 @@ if 0: #sweep power and get 2D plot
 
 if 0: #sweep power and changing frequency
     from scripts.single_cavity import power_sweep_varies_freq_VNA
+
     VNA.set_timeout(40000)
     VNA.do_enable_averaging(True)
     VNA.set_averaging_trigger(1)
     VNA.set_trigger_source('internal')
+
     a = np.linspace(0,1,21)
     center_freq = -0.1739* a + 5.5604
     center_freq = center_freq * 1e9
@@ -114,6 +140,7 @@ if 0: #sweep power and changing frequency
     a[0] = -14
     ro = power_sweep_varies_freq_VNA.Power_Sweep_Varies_freq_VNA(powers = a, center_freqs = center_freq, span = 30e6, VNA_points = 401,
                                                    average_factor =500, avelimit =10,if_bandwidth = 100, Sij =['S21'],fig_name ='pump power sweep ',comment = 'power sweep for qubit in waveguide')
+
     #we can take all 4 S params data at the same time when VNA is calibrated, if not, we can only take the data with same output ports at the same time. 
     ro.measure()
     pl.show()
@@ -121,7 +148,7 @@ if 0: #sweep power and changing frequency
 
 
 
-if 0: #get single trace from VNA, for long meaasurements
+if 1: #get single trace from VNA, for long meaasurements
     from scripts.single_cavity import VNA_single_trace_V2
 #    print 'OK2'
     VNA.set_timeout(40000)
@@ -129,7 +156,11 @@ if 0: #get single trace from VNA, for long meaasurements
     VNA.set_averaging_trigger(1)
     VNA.set_trigger_source('internal')
 
-    ro = VNA_single_trace_V2.SingleTrace(freqs = np.linspace(5.5639e9, 5.5739e9, 401), average_factor = 40, avelimit = 2, fit_S12 = 0, fit_S11 =0)
+
+
+    ro = VNA_single_trace_V2.SingleTrace(freqs = np.linspace(7.397e9, 7.407e9, 101), average_factor =2, avelimit = 2, if_bandwidth = 10, fit_S12 = 1, fit_S11 =0)
+
+
 
 
 #    print 'ok3'
@@ -142,7 +173,8 @@ if 0: #get single trace from VNA, for long meaasurements
     bla 
 
 
-if 1: #get single trace from VNA, withoout waiting, just take screenshot and fit it.
+
+if 0: #get single trace from VNA, withoout waiting, just take screenshot and fit it.
     from scripts.single_cavity import VNA_single_trace_V2
 #    print 'OK2'
     freqs = VNA.do_get_xaxis()
@@ -246,4 +278,3 @@ if 0: #sweep field to
     
 #    magnet.do_set_field(0)
     bla
-

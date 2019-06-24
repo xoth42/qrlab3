@@ -18,8 +18,8 @@ alz = mclient.instruments['alazar']
 #alz = mclient.instruments['alazar']
 alz.set_ch1_range('40mV')
 alz.set_ch2_range('40mV')
-alz.set_nsamples(4800)
-alz.set_naverages(2000)
+alz.set_nsamples(1600)
+alz.set_naverages(1000)
 alz.set_ch1_coupling('AC')
 alz.set_ch2_coupling('AC')
 alz.set_clock_source('EXT10M')
@@ -31,19 +31,19 @@ alz.setup_channels()
 alz.setup_trigger()
 
 
-if 1:
+if 0:
         alz.setup_shots(1)
         buf = alz.take_raw_shots()
         plt.figure()
         nsamp = alz.get_nsamples()
         plt.plot(buf[:nsamp], label='A')
-#        plt.plot(buf[nsamp:2*nsamp], label='B')
+        plt.plot(buf[nsamp:2*nsamp], label='B')
 #        plt.plot(buf)
         plt.suptitle('Raw single shot')
         plt.legend()
         plt.xlabel('Time [ns]')
         plt.show()
-#        print alz.get_ch1_range()
+        print alz.get_ch1_range()
 
     
 #alz.set_naverages(5)
@@ -102,7 +102,7 @@ if 0:
         
 
 if 1:
-        alz.setup_avg_shot(5000)
+        alz.setup_avg_shot(20000)
         buf = alz.take_avg_shot(timeout=50000)
     
         print('plotting')
@@ -110,16 +110,17 @@ if 1:
         plt.suptitle('Average demodulated shot')
     
         plt.subplot(211)
-        plt.plot(np.real(buf))
-        plt.plot(np.imag(buf))
-        plt.plot(np.abs(buf))
+        plt.plot(np.real(buf), label = 'I')
+        plt.plot(np.imag(buf),label = 'Q')
+        plt.plot(np.abs(buf),label = 'amplitude')
         plt.xlabel('IF period #')
-    
+        plt.legend()
         plt.subplot(212)
         plt.plot(np.real(buf), np.imag(buf))
         plt.xlabel('I')
         plt.ylabel('Q')
         plt.show()
+        
         
 #        plt.figure()
 #        plt.plot(np.angle(buf, deg=True))

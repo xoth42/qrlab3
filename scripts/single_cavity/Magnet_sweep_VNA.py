@@ -149,6 +149,15 @@ class Magnet_Sweep_VNA(Measurement1D):
         for ifield, field in enumerate(self.fields):
                
             Magnet.do_set_field(field)
+            time.sleep(1)
+            if ifield == 0 or self.dfields > 0.005:
+                try:
+                    while not abs(float(Magnet.do_get_field()) - field) < 0.0005:
+        
+                        objsh.helper.backend.main_loop(100)
+        
+                except:
+                    print 'error in ramping field'
 
             ave = avelimit
             if self.average_factor > avelimit:
@@ -233,7 +242,7 @@ class Magnet_Sweep_VNA(Measurement1D):
                 count = count + ave
                 print '%s averages done' %(count)
             
-            print 'field = %.04fdB done ' % (field)
+            print 'field = %.05fT done ' % (field)
             if ifield == 0:
                 self.fig = pl.figure()
                 if len(self.Sij) == 1:

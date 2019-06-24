@@ -31,8 +31,10 @@ class Contrast_Normalization(Measurement1D):
         s = Sequence()
 
         r = self.qubit_info.rotate
+#Ebru: I messed wih those initial rotations
+#        init_states = [Delay(80), Delay(80), Delay(80),Delay(80), Delay(80), r(np.pi, X_AXIS), r(np.pi, X_AXIS), r(np.pi, X_AXIS), r(np.pi, X_AXIS),  r(np.pi, X_AXIS) ]
+        init_states = [r(np.pi, X_AXIS), r(np.pi, X_AXIS), r(np.pi, X_AXIS), r(np.pi, X_AXIS),  r(np.pi, X_AXIS),r(np.pi, X_AXIS), r(np.pi, X_AXIS), r(np.pi, X_AXIS), r(np.pi, X_AXIS),  r(np.pi, X_AXIS) ]
 
-        init_states = [Delay(80), Delay(80), Delay(80),Delay(80), Delay(80), r(np.pi, X_AXIS), r(np.pi, X_AXIS), r(np.pi, X_AXIS), r(np.pi, X_AXIS),  r(np.pi, X_AXIS) ]
         for init_state in init_states:
             s.append(self.seq)
             s.append(init_state) #prepare x or y or z

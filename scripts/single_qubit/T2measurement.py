@@ -59,9 +59,9 @@ def analysis(meas, data=None, fig=None):
     params.add('tau', value=xs[-1], min=10, max=2e5)
     params.add('freq', value=f0, min=0)
     if meas.echotype == ECHO_NONE:
-        params.add('phi0', value=np.pi/2, min=-1.2*np.pi, max=1.2*np.pi)  #Changed to plus sign for accommodate for amplitude RO, need a good LT solution
+        params.add('phi0', value=-np.pi/2, min=-1.2*np.pi, max=1.2*np.pi, vary=False)  #Changed to plus sign for accommodate for amplitude RO, need a good LT solution
     elif meas.echotype == ECHO_HAHN:
-        params.add('phi0', value=-np.pi/2, min=-1.2*np.pi, max=1.2*np.pi) #DARIO added to fit better for echo vs plain T2
+        params.add('phi0', value=np.pi/2, min=-1.2*np.pi, max=1.2*np.pi) #DARIO added to fit better for echo vs plain T2
     result = lmfit.minimize(t2_fit, params, args=(xs, ys))
 #    lmfit.report_fit(params)
 #    result2 = lmfit.minimize(t2_fit, result.params, args=(xs,ys))
@@ -246,7 +246,8 @@ class T2Measurement(Measurement1D):
 
             # Plain T2
             else:
-                s.append(Delay(dt))
+                s.append(Delay(dt)) # Very temporary, recover today Chen
+#                s.append(Constant(int(dt), 1, chan='8m1'))
 
             # Measurement pulse
             angle = dt * 1e-9 * self.detune * 2 * np.pi
@@ -270,13 +271,50 @@ class T2Measurement(Measurement1D):
 #                Repeat(Constant(5000, 1, chan='1m1'), 60),     # Readout pump tone switch
 #                Repeat(Constant(5000, 0.0001, chan=5), 60),         # Qubit/Readout master switch
 #            ]))
-#Ebru: adding the 1000 delay
-            s.append(Delay(20000))
+
+            s.append(Delay(4000))
+          
         s = self.get_sequencer(s)
         seqs = s.render()
 #        s.plot_seqs(seqs)
 
         return seqs
+    
+    
+  
+#    def generate_new(self):
+#        s = Sequence()
+#
+#        r = self.qubit_info.rotate
+#        e = self.get_echo_pulse()
+##        if e:
+##            elen = e.get_length()
+##            e = Pad(e, 250, PAD_BOTH)
+##            epadlen = e.get_length() - elen
+##        else:
+##            elen = 0
+#        
+#
+#        for i, dt in enumerate(self.delays):
+#            angle = dt * 1e-9 * self.detune * 2 * np.pi
+#            if(dt == 0):
+#                s.append(Join([self.seq, r(np.pi/2, X_AXIS), r(-np.pi/2, angle),
+#                        Combined([
+#                            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+#                            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#                        ]), Delay(5000)]))
+#            else:
+#                s.append(Join([self.seq, r(np.pi/2, X_AXIS), Delay(dt), r(-np.pi/2, angle),
+#                        Combined([
+#                            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+#                            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#                        ]), Delay(5000)]))
+#        s = self.get_sequencer(s)
+#        seqs = s.render()
+##        s.plot_seqs(seqs)
+#
+#        return seqs
+      
 
     def analyze(self, data=None, fig=None):
         self.fit_params = analysis(self, data, fig)
