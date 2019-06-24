@@ -580,16 +580,16 @@ real part is applied to I and the imaginary part to Q.
 
         for i in range(N):
 #            print "You have to get here, right?"
-            if objsh.helper.backend:
-                #objsh.helper.backend.main_loop(0, origin=1)
-                objsh.helper.backend.main_loop_alz(0, origin=1)
+#            if objsh.helper.backend:
+#                objsh.helper.backend.main_loop(0, origin=1) 
+#                objsh.helper.backend.main_loop_alz(0, origin=1) #DARIO 4/4 Alazar doesn't appear to need this call to the main loop
 
             if self.get_interrupt():
                 self.end_capture()
                 logging.info('Capture interrupted')
                 raise Exception('Capture interrupted')
                 
-#            print "We are in get_next_buffer in Alazar_Daemon"
+            #print "We are in get_next_buffer in Alazar_Daemon"
             buf = self._card.get_next_buffer(timeout=timeout)
             if buf is not None:
                 return buf

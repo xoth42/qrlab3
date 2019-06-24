@@ -36,10 +36,10 @@ qbrick = mclient.instruments['qbrick']
 #refbrick = mclient.instruments['refFG']
 
 
-currents = np.linspace(0.06, -0.06, 13)
+currents = np.linspace(0, 0.1, 11)
 yoko.set_output_state(1) 
 ssbspec_freqs = np.linspace(-1.5e6, 1.5e6, 101) #range of points to check each ssbspec
-qbrick_freq = 5160.75e6
+qbrick_freq = 6305.75e6
 #RObrick_freq = 7348.8e6
 #w = 30
 #w_selective = 300

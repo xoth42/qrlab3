@@ -108,7 +108,7 @@ class ROCavSpectroscopy(Measurement1D):
             Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
         ]))
     
-        s.append(Delay(1000))
+        s.append(Delay(1500)) # Chen 5/4 to battle with the minimum pulse length requirement of 2000
 
 
         s = self.get_sequencer(s)

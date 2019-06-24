@@ -385,7 +385,7 @@ def start(qt=False):
         import signal
         for sig in (signal.SIGABRT, signal.SIGINT, signal.SIGTERM):
             signal.signal(sig, lambda *args: dataserv.quit())
-        zbe.main_loop()
+        zbe.main_loop(origin=6)
 
 if __name__ == "__main__":
     import os

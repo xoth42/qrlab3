@@ -62,23 +62,23 @@ if 0: # Cavity disp calibration
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
     seq = sequencer.Trigger(250)
 
-    disp = cavdisp.CavDisp(qubit_info, cavity_infoA, 2.5, 31, 0, seq=None,
-                           delay=0, bgcor=True, update=False, generate=True,
+    disp = cavdisp.CavDisp(qubit_info, cavity_infoA, 2, 31, 0, seq=None,
+                           delay=0, bgcor=False, update=False, generate=True,
 #                           Qswitch_infoA=Qswitch_infoB, Qswitch_infoB=Qswitch_infoB,
 #                           extra_info=[Qswitch_infoA, Qswitch_infoB,],
                           )
-    disp.measure_keysight()
+    disp.measure()
     bla
 
 if 0: # Cavity T1
     from single_cavity import cavT1
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
 #    xs = np.concatenate((np.linspace(0e3, 50e3, 26), np.linspace(60e3, 1250e3, 55)))
-    t1 = cavT1.CavT1(qubit_info, cavity_infoA, 2, np.linspace(0, 1400e3, 51),
-                     proj_num=0, seq=None, postseq=None, bgcor=True, force_a0 = True 
+    t1 = cavT1.CavT1(qubit_info, cavity_infoA, 2, np.linspace(0, 1500e3, 51),
+                     proj_num=0, seq=None, postseq=None, bgcor=False, force_a0 = True 
 #                     extra_info=[ef_info,]
                      )
-    t1.measure_keysight()
+    t1.measure()
     ys = t1.get_ys()
     bla
 
@@ -110,10 +110,10 @@ if 0: #Cavity T2
 
 
 if 0: # Cavity spec
-    from single_cavity import cavspectroscopy_keysight
+    from single_cavity import cavspectroscopy
     cav_freq = 3966e6
-    freq_range = 2e6
-    cspec = cavspectroscopy_keysight.CavSpectroscopy(mclient.instruments['SCalice'], qubit_info, cavity_infoA, [np.pi], 
+    freq_range = 30e6
+    cspec = cavspectroscopy.CavSpectroscopy(mclient.instruments['SCalice'], qubit_info, cavity_infoA, [np.pi], 
                                             np.linspace(cav_freq-freq_range, cav_freq+freq_range, 51), plot_seqs=False)
 
     #This amplitude is NOT capped at 1 like on the qubit spec
@@ -123,12 +123,12 @@ if 0: # Cavity spec
 
 
 
-if 0: #SSB cavspec
+if 1: #SSB cavspec
     from single_cavity import ssbcavspec
-    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoA, np.linspace(-5e6, 5e6, 51),
+    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoA, np.linspace(-10e6, 10e6, 51),
 #                                  postseq=efpi, extra_info=[ef_info,]
                                   )
-    cspec.measure_keysight()
+    cspec.measure()
     bla
     
     

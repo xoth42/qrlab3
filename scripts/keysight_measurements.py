@@ -50,14 +50,14 @@ if 0: # test digitizer DEMODULATED
     bla
 
 
-if 0: # cav spec
+if 1: # cav spec
     from single_cavity import rocavspectroscopy_keysight
 
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate(np.pi, 0)])
     rofreq = 6.92625e9
 #    rofreq = 6945e6
     freq_range = 2.0e6
-    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(5, 9, 3),
+    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(2, 9, 1),
                                              np.linspace(rofreq-freq_range, rofreq+freq_range, 50),
 #                                             np.linspace(rofreq, rofreq+freq_range, 1), 
                                              qubit_pulse=False, seq=None)
@@ -128,7 +128,7 @@ if 0: # SSB spec
     
     for i in range(1):
         seq = sequencer.Trigger(600)
-        spec = ssbspec.SSBSpec(qubit_info, np.linspace(-30e6, 30e6, 81), seq=seq, plot_seqs=False, proj_func='phase')
+        spec = ssbspec.SSBSpec(qubit_info, np.linspace(-5e6, 5e6, 81), seq=seq, plot_seqs=False, proj_func='phase')
         spec.measure_keysight()
 #        plt.close()
     bla
@@ -391,7 +391,7 @@ if 0: # AllXY
 #    for i in range(5): plt.plot(allxy_result[i])
 #    bla
     
-if 1: # Randomized benchmarking   
+if 0: # Randomized benchmarking   
 
     from scripts.single_qubit import randbench
     from scripts.single_qubit import contrast_normalization  #This part is is only necessary when we want a separate ground and excited state measurement before the RB.

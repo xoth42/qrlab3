@@ -121,6 +121,7 @@ class CavDisp(Measurement1D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
+                s.append(Delay(2000))
 
             if self.QswA is not None or self.QswB is not None:
                 s.append(Repeat(Delay(1000), 30))   # wait for alazar acquisition to finish
@@ -132,6 +133,7 @@ class CavDisp(Measurement1D):
                     Repeat(Constant(7000, 1, chan='1m1'), 100),     # Readout pump tone switch
 #                    Repeat(Constant(7000, 0.0001, chan=5), 100),         # Qubit/Readout master switch
                     ]))
+           
 
         s = self.get_sequencer(s)
         seqs = s.render()
