@@ -15,12 +15,13 @@ from matplotlib import gridspec
 filepath = 'C:\_Data\\'
 #hdf5_name = 'VNAtestJan30.hdf5'
 #hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
-hdf5_name = '20190322 Cooldown - Copy.hdf5'
-date = '20190507'
-time = '124013'
+hdf5_name = 'April9Fluxonium.hdf5'
+date = '20190515'
+time = '124550'
 experiment = 'Power_Sweep_VNA'
 
 fit_S12 = True
+
 fit_S11 = False
 
 
@@ -95,7 +96,7 @@ if fit_S12 or fit_S11:
     kappa_prod = np.zeros(len(real))
     kappa_prod_err = np.zeros(len(real))
 
-for i in range(len(real)):
+for i in range(len(real))[:2]:
     fig.axes[1].plot(real[i],imag[i], label= 'power = %sdB'%(powers[i]))
     fig.axes[0].plot(freq/1e9,mag[i], label= 'power = %sdB'%(powers[i]))
     

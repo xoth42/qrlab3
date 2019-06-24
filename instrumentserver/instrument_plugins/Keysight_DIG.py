@@ -485,6 +485,7 @@ class Keysight_DIG(Instrument):
         avgs = np.zeros(self._npoints, dtype = np.complex64)
                 
         self._capturing = True 
+        self.set_interrupt(False)
         self.emit('start-capture')
         for i in range(self._ntransfers):
 #            print('Acquiring %d/%d', i+1, self._ntransfers)

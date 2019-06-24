@@ -271,7 +271,7 @@ class T2Measurement(Measurement1D):
 #                Repeat(Constant(5000, 0.0001, chan=5), 60),         # Qubit/Readout master switch
 #            ]))
 #Ebru: adding the 1000 delay
-            s.append(Delay(5000))
+            s.append(Delay(20000))
         s = self.get_sequencer(s)
         seqs = s.render()
 #        s.plot_seqs(seqs)

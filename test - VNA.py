@@ -62,7 +62,7 @@ if 0: #sweep current Yoko and get 2D plot
     bla
 
 
-if 0: #sweep power and get 2D plot
+if 0: #sweep field and get 2D plot
     from scripts.single_cavity import Magnet_sweep_VNA
     VNA.set_timeout(40000)
     VNA.do_enable_averaging(True)
@@ -91,11 +91,11 @@ if 0: #sweep power and get 2D plot
     VNA.do_enable_averaging(True)
     VNA.set_averaging_trigger(1)
     VNA.set_trigger_source('internal')
-    a = np.linspace(0,1,101)
+    a = np.linspace(-80,-50,7)
 #    a= np.log10(a)*10
 #    a[0] = -11
-    ro = power_sweep_VNA.Power_Sweep_VNA(powers = a, freqs = np.linspace(5.5665e9, 5.5725e9, 101),
-                                                   average_factor =10, avelimit =3,if_bandwidth = 10, Sij =['S21'],fig_name ='no pump',comment = 'qubit in waveguide')
+    ro = power_sweep_VNA.Power_Sweep_VNA(powers = a, freqs = np.linspace(5.567e9, 5.577e9, 401),
+                                                   average_factor =250, avelimit =5,if_bandwidth = 100, Sij =['S21'],fig_name ='no pump',comment = 'qubit in waveguide')
     #we can take all 4 S params data at the same time when VNA is calibrated, if not, we can only take the data with same output ports at the same time. 
     ro.measure()
     pl.show()
@@ -142,11 +142,11 @@ if 0: #get single trace from VNA, for long meaasurements
     bla 
 
 
-if 0: #get single trace from VNA, withoout waiting, just take screenshot and fit it.
+if 1: #get single trace from VNA, withoout waiting, just take screenshot and fit it.
     from scripts.single_cavity import VNA_single_trace_V2
 #    print 'OK2'
     freqs = VNA.do_get_xaxis()
-    ro = VNA_single_trace_V2.SingleTraceNoAsync(freqs, fit_S12 = 1, fit_S11 =0)
+    ro = VNA_single_trace_V2.SingleTraceNoAsync(freqs, fit_S12 = 0, fit_S11 =0)
 
     ro.measure()
 

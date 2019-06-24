@@ -117,7 +117,7 @@ class Power_Sweep_VNA(Measurement1D):
         # Generate and load sequences
         VNA = self.instruments['VNA']
 #        Yoko = self.instruments['Yoko']
-        SCqubit = self.instruments['SCqubit']
+#        SCqubit = self.instruments['SCqubit']
 
 
         VNA.set_start_freq(self.freqs[0])
@@ -147,7 +147,7 @@ class Power_Sweep_VNA(Measurement1D):
         VNA.set_if_bandwidth(self.if_bandwidth)
         
         for ipower, power in enumerate(self.powers):
-#            VNA.set_power(power)
+            VNA.set_power(power)
 #            if power == -31:
 #                SCqubit.set_rf_on(False)
 #            else:

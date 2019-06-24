@@ -107,7 +107,9 @@ class CavDisp_switch(Measurement1D):
 
                 s.append(self.seq)
                 s.append(Constant(int(500), 1, chan=self.switch_channel))
-                s.append(c(np.abs(alpha), np.angle(alpha)))
+                s.append(Combined([c(np.abs(alpha), np.angle(alpha)),
+                                   Constant(int(self.cav_info.w*4), 1, chan=self.switch_channel)
+                                   ]))
                 if i_bg == 0:
                     s.append(r(np.pi, X_AXIS))
                 else:
