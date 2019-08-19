@@ -1,15 +1,14 @@
 import mclient
 reload(mclient)
 import numpy as np
-from pulseseq import sequencer, pulselib
-import matplotlib
-#matplotlib.rcParams['backend'] = 'Qt4Agg'
-#matplotlib.rcParams['backend.qt4'] = 'PyQt4'
-import matplotlib.pyplot as plt
-#from t1t2_plotting import smart_T1_delays
+from pulseseq import sequencer#, pulselib
+#import matplotlib.pyplot as plt
 import os
-import time
-import math
+os.chdir(r'C:/qrlab/scripts')
+
+
+import matplotlib.pyplot as plt
+
 
 #alz = mclient.instruments['alazar']
 #fg = mclient.instruments['funcgen']
@@ -26,7 +25,8 @@ ef_info = mclient.get_qubit_info('qubit1ef')
 
 #cavity_infoR = mclient.get_qubit_info('cavity1R')
 #cavity_infoA = mclient.get_qubit_info('cavityAlice')
-cavity_infoB = mclient.get_qubit_info('cavityBob')
+cavity_infoB = mclient.get_qubit_info('cavityB')
+#cavity_infoR = mclient.get_qubit_info('cavityR')
 #Qswitch_info1A = mclient.get_qubit_info('Qswitch1A')
 #Qswitch_info1B = mclient.get_qubit_info('Qswitch1B')
 
@@ -62,7 +62,7 @@ if 0: # Cavity disp calibration
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
     seq = sequencer.Trigger(250)
 
-    disp = cavdisp.CavDisp(qubit_info, cavity_infoB, 2.5, 41, 0, seq=None,
+    disp = cavdisp.CavDisp(qubit_info, cavity_infoR, 2.5, 41, 0, seq=None,
                            delay=0, bgcor=False, update=False, generate=True,
 #                           Qswitch_infoA=Qswitch_infoB, Qswitch_infoB=Qswitch_infoB,
 #                           extra_info=[Qswitch_infoA, Qswitch_infoB,],
@@ -77,31 +77,22 @@ if 0: # Cavity T1
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
 #    xs = np.concatenate((np.linspace(0e3, 50e3, 26), np.linspace(60e3, 1250e3, 55)))
 
-    t1 = cavT1.CavT1(qubit_info, cavity_infoA, 1, np.linspace(0, 1400e3, 51),
+    t1 = cavT1.CavT1(qubit_info, cavity_infoB, 0.5, np.linspace(0, 1600e3, 51),
                      proj_num=0, seq=None, postseq=None, bgcor=False, force_a0 = True 
 #                     extra_info=[ef_info,]
                      )
-    t1.measure()
-    ys = t1.get_ys()
+    t1.measure_keysight()
+#    ys = t1.get_ys()
     bla
-    
 
-    
 
-if 0:# Cavity T2
+if 1:# Cavity T2
     from single_cavity import cavT2
-    dataA = []
-    
-    detune = .5e3
-    ct2b = cavT2.CavT2(qubit_info, cavity_infoB, .7, np.linspace(0e3, 200e3, 101), detune=detune, seq=None,
+    detune = 20e3
+    ct2 = cavT2.CavT2(qubit_info, cavity_infoB, .7, np.linspace(5e3, 600e3, 120), detune=detune, seq=None,
                        postseq=None, bgcor=False, extra_info=[qubit_info,])
-    ct2b.measure_keysight()
-    dataA.append(ct2b.get_ys())
-
-#    for i in range(10):
-#        t2 = cavT2.CavT2(qubit_info, cavity_infoA, 1.0, np.linspace(0, 1.0e6, 101), detune=10e3, seq=None,
-#                         postseq=efpi, bgcor=False, extra_info=[ef_info,])
-#        t2.measure()
+    ct2.measure_keysight()
+    bla
     
 if 0: #Cavity T2
     from single_cavity import cavT2
@@ -128,13 +119,13 @@ if 0: # Cavity spec
     bla
 
 
-if 1: #SSB cavspec
-    from single_cavity import ssbcavspec
-
-    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoA, np.linspace(-1e6, 1e6, 51),
+if 0: #SSB cavspec
+    from single_cavity import ssbcavspec 
+    
+    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoR, np.linspace(-2e6, 2e6, 51),
 #                                  postseq=efpi, extra_info=[ef_info,]
                                   )
-    cspec.measure()
+    cspec.measure_keysight()
     bla
     
 if 0: #cavity stark shift
@@ -164,9 +155,9 @@ if 0: # Measure cavity photon population
     
 
 
-if 0: #Sideband modulated number splitting:
+if 1: #Sideband modulated number splitting:
     from single_qubit import ssbspec
-    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoB.rotate(1, 0)])
+    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoB.rotate(.5, 0)])
     spec = ssbspec.SSBSpec(qubit_info, #np.linspace(-30e6, 10e6, 21),
                            np.linspace(-5e6, 1e6, 101),
 #                           np.concatenate((np.linspace(-3e6, -5e6, 15),np.linspace(-6.5e6, -9.5e6, 20), np.linspace(-1.5e6, 1.5e6, 15))),
@@ -307,7 +298,7 @@ if 0: # Ramsey revival to calibrate wigner tomo
                                      seq = seq, extra_info = cavity_infoB)
     rr.measure_keysight()
 
-if 1: # Wigner function by displaced parity for cavity B
+if 0: # Wigner function by displaced parity for cavity B
     from scripts.single_cavity import WignerbyParity
 #    seq = sequencer.Join([prepareB, geph(pi/2,0), sequencer.Delay(950), cB(1.65, -pi*0.175),
 #                          geqs(pi,0), cB(-1.65, -pi*0.02)])

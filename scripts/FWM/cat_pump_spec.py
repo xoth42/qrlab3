@@ -43,10 +43,10 @@ def analysis(meas, data=None, fig=None):
     
 class cat_pump_spec(Measurement1D):
 
-    def __init__(self, qubit_info, qubit1bob2_info, fwm_gen, delay, freqs, power, amp, fwm_channel, 
+    def __init__(self, qubit_info, select_info, fwm_gen, delay, freqs, power, amp, fwm_channel, 
                  fwm_info=None, bgcor=False, seq=None, postseq=None, saveas=None, **kwargs):
         self.qubit_info = qubit_info
-        self.qubit1bob2_info = qubit1bob2_info
+        self.select_info = select_info
         self.fwm_gen = fwm_gen
         self.delay = delay
         self.freqs = freqs
@@ -67,7 +67,7 @@ class cat_pump_spec(Measurement1D):
         if bgcor:
             npoints *= 2
             
-        super(cat_pump_spec, self).__init__(npoints, infos=(qubit_info, qubit1bob2_info, fwm_info), residuals=False, **kwargs)
+        super(cat_pump_spec, self).__init__(npoints, infos=(qubit_info, select_info, fwm_info), residuals=False, **kwargs)
 
         self.ampdata = self.data.create_dataset('amplitudes', shape=[len(freqs)])
         self.phasedata = self.data.create_dataset('phases', shape=[len(freqs)])
@@ -82,7 +82,7 @@ class cat_pump_spec(Measurement1D):
     
     def generate(self):
         s = Sequence()
-        r = self.qubit1bob2_info.rotate_selective
+        r = self.select_info.rotate_selective
       
         s.append(self.seq)
         
@@ -91,16 +91,14 @@ class cat_pump_spec(Measurement1D):
             s.append(Combined([
                 Constant(int(self.delay), 1, chan=self.fwm_channel),
                 Constant(int(self.delay), self.amp, chan=self.qubit_info.sideband_channels[0]),
-                Constant(int(self.delay), self.amp, chan=self.qubit_info.sideband_channels[1])
             ]))
-            s.append(Delay(50e3))
+            s.append(Delay(5e3))
         else:
             s.append(Combined([
                 Constant(int(self.delay), 1, chan=self.fwm_channel),
                 Constant(int(self.delay), self.amp, chan=self.fwm_info.sideband_channels[0]),
-                Constant(int(self.delay), self.amp, chan=self.fwm_info.sideband_channels[1])
             ]))
-            s.append(Delay(50e3))
+            s.append(Delay(5e3))
     
         
         s.append(r(np.pi, X_AXIS))

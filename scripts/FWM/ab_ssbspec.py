@@ -25,7 +25,7 @@ def analysis(meas, data=None, fig=None):
     fig.axes[0].set_ylabel('Intensity (AU)')
     fig.canvas.draw()
 
-class cat_pump_ssbspec(Measurement1D):
+class ab_ssbspec(Measurement1D):
 
     def __init__(self, qubit_info, fwm_info, qubit1bob2_info, detunings, delay, ge_amp, fwm_amp, fwm_switch, 
                  pulsed = False, seq=None, postseq=None, bgcor=False, coplay_delay=0, **kwargs):
@@ -50,7 +50,7 @@ class cat_pump_ssbspec(Measurement1D):
         npoints = len(detunings)
         if bgcor:
             npoints += 1
-        super(cat_pump_ssbspec, self).__init__(npoints, residuals=False, infos=(qubit_info, fwm_info, qubit1bob2_info), **kwargs)
+        super(ab_ssbspec, self).__init__(npoints, residuals=False, infos=(qubit_info, fwm_info, qubit1bob2_info), **kwargs)
         self.data.create_dataset('detunings', data=detunings)
         self.data.set_attrs(
             ge_amp=ge_amp,
@@ -103,7 +103,7 @@ class cat_pump_ssbspec(Measurement1D):
                                         Constant(int(self.delay), 1, chan=self.fwm_switch),
                                         ])
                             ]))
-            s.append(Delay(8e3))
+            s.append(Delay(5e3))
             s.append(rq1b2(np.pi, X_AXIS))
 
 
@@ -120,7 +120,7 @@ class cat_pump_ssbspec(Measurement1D):
     
 
     def get_ys(self, data=None):
-        ys = super(cat_pump_ssbspec, self).get_ys(data)
+        ys = super(ab_ssbspec, self).get_ys(data)
         if self.bgcor:
             return ys[1:] - ys[0]
         return ys

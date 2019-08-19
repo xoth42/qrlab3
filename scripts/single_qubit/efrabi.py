@@ -49,7 +49,7 @@ def analysis(meas, data=None, fig=None, period=None):
 class EFRabi(Measurement1D):
 
     def __init__(self, ge_info, ef_info, amps, first_pi=True, second_pi=True, selective=False,
-                 update=False, seq=None, extra_info=None, laser_power = None,
+                 update=False, seq=None, laser_power = None,
                  force_period=None, postseq = None,
                  **kwargs):
         self.ge_info = ge_info

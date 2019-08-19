@@ -92,20 +92,20 @@ class ROCavSpectroscopy_keysight_catpumptest(Measurement1D):
         s.append(self.seq)
 
         s.append(Combined([
-            Constant(2000, 1, chan='4m1'),
-            Constant(2000, 0.75, chan=self.fwm_info.sideband_channels[0]),
+            Constant(5000, 1, chan='4m1'),
+            Constant(5000, 0.1, chan=self.fwm_info.sideband_channels[0]),
         ]))
 
         s.append(Combined([
             Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
             Constant(self.readout_info.pulse_len, 1, chan='4m1'),
-            Constant(self.readout_info.pulse_len, 0.75, chan=self.fwm_info.sideband_channels[0]),
+            Constant(self.readout_info.pulse_len, 0.1, chan=self.fwm_info.sideband_channels[0]),
         ]))
 
         s.append(Combined([
             Constant(2000, 1, chan='4m1'),
-            Constant(2000, 0.75, chan=self.fwm_info.sideband_channels[0]),
+            Constant(2000, 0.2, chan=self.fwm_info.sideband_channels[0]),
         ]))
 
     

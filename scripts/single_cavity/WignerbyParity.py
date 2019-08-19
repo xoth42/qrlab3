@@ -13,8 +13,11 @@ def analysis(meas, data=None, fig=None):
     plt.sca(ax)
     
     if meas.bgcor == True:
-        vmax = 20
-        #vmax = max(np.absolute(zs.flatten())) # sorry this is not done yet.
+#        vmax = meas.zmax
+        if meas.zmax is not None:
+            vmax = meas.zmax
+        else:
+            vmax = max(np.absolute(zs.flatten())) # sorry this is not done yet.
         vmin = -vmax
     else:
         zavg=(meas.zmin+meas.zmax)/2.0

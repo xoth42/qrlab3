@@ -37,6 +37,7 @@ class Keysight_DIG(Instrument):
         self._interrupt = False
         self._capturing = False
         self._awg_list = awg_list #DARIO 1/31 dynamic slot assignment
+        self._trigger_only = trigger_only
         
         self._name = name
         self._chassis = chassis
@@ -354,9 +355,9 @@ class Keysight_DIG(Instrument):
         return self._trigger_period
     
     def do_set_trigger_period(self, trigger_period):
-        self._trigger_period = trigger_period
-        self._hvi = self.load_hvi()
-        
+        self.__init__(self._name, chassis = self._chassis, slot = self._slot, 
+                      trigger_period = trigger_period, trigger_only = self._trigger_only,
+                      naverages = self._naverages, nsamples = self._nsamples)
 
     ###############################################
     # Acquizition Methods

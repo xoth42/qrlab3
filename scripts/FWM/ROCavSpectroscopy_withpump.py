@@ -31,7 +31,7 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, ax=None):
         pos = fs[np.argmax(amps)]
         p0 = [np.min(amps), w0*h0, pos, w0]
         p = f.fit(p0)
-        txt = 'Center = %.03f MHz, FWHM = %.03f MHz' % (p[2]/1e6, p[3]/1e6)
+        txt = 'Center = %.03f MHz' % (p[2]/1e6,)
         print 'Fit gave: %s' % (txt,)
 #        plt.plot(fs/1e6, f.func(p, fs), label=txt)
 
@@ -58,9 +58,10 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, ax=None):
         ax.set_xlabel('Power [dB]')
         ax2.set_xlabel('Power [dB]')
 
-class ROCavSpectroscopy_keysight(Measurement1D):
+class ROCavSpectroscopy(Measurement1D):
 
-    def __init__(self, qubit_info, powers, freqs, plot_type=None, qubit_pulse=False, seq=None,  **kwargs):
+    def __init__(self, qubit_info, fwm_info, powers, freqs, fwm_amp, plot_type=None, qubit_pulse=False, seq=None, 
+                 **kwargs):
         self.qubit_info = qubit_info
         self.freqs = freqs
         self.powers = powers
@@ -68,7 +69,8 @@ class ROCavSpectroscopy_keysight(Measurement1D):
         if seq is None:
             seq = Trigger(250)
         self.seq = seq
-
+        self.fwm_info = fwm_info
+        self.fwm_amp = fwm_amp
 
         if plot_type is None:
             if len(powers) > len(freqs):
@@ -77,7 +79,7 @@ class ROCavSpectroscopy_keysight(Measurement1D):
                 plot_type = SPEC
         self.plot_type = plot_type
 
-        super(ROCavSpectroscopy_keysight, self).__init__(1, infos=(qubit_info,), **kwargs)
+        super(ROCavSpectroscopy, self).__init__(1, infos=(qubit_info, fwm_info,), **kwargs)
         self.data.create_dataset('powers', data=powers)
         self.data.create_dataset('freqs', data=freqs)
         self.ampdata = self.data.create_dataset('amplitudes', shape=(len(powers),len(freqs)))
@@ -88,30 +90,23 @@ class ROCavSpectroscopy_keysight(Measurement1D):
         s = Sequence()
 
         s.append(self.seq)
-        if self.qubit_pulse:
-#            s.append(Delay(2000))
-            s.append(self.qubit_info.rotate(np.pi, 0))
-#            s.append(Join([
-#                self.seq,
-#                self.qubit_info.rotate(np.pi, 0),
-#            ]))
-#        else:
-#            s.append(Combined([
-#                Constant(1, 0, chan=self.qubit_info.channels[1]),
-#                Constant(1, 0, chan=self.qubit_info.channels[0])
-#            ]))
+
+        s.append(Combined([
+            Constant(5000, 1, chan='13m1'),
+            Constant(5000, self.fwm_amp, chan=self.fwm_info.sideband_channels[0]),
+        ]))
 
         s.append(Combined([
             Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+            Constant(self.readout_info.pulse_len, 1, chan='13m1'),
+            Constant(self.readout_info.pulse_len, self.fwm_amp, chan=self.fwm_info.sideband_channels[0]),
         ]))
 
-#        s.append(Combined([
-#            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.acq_chan)),
-#            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.readout_chan_I)),
-#            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.readout_chan_Q)),
-#        ]))
-
+        s.append(Combined([
+            Constant(2000, 1, chan='13m1'),
+            Constant(2000, self.fwm_amp, chan=self.fwm_info.sideband_channels[0]),
+        ]))
     
         s.append(Delay(2000))
 
@@ -120,9 +115,6 @@ class ROCavSpectroscopy_keysight(Measurement1D):
         return seqs
 
 
-   # def dig_load(self, seqs, run=False, ntries=1):
-        #A rewrite of the load function in measurement to deal with the new 
-        #keysight AWGs.
     def measure(self):
         # Generate and load sequences
         dig = self.instruments['dig']
@@ -134,8 +126,8 @@ class ROCavSpectroscopy_keysight(Measurement1D):
         self.start_awgs()
 
         for ipower, power in enumerate(self.powers):
-            self.readout_info.rfsource1.set_power(power)
             print 'Power = %s' % (power, )
+            self.readout_info.rfsource1.set_power(power)
             time.sleep(2)
 
             amps = []
@@ -145,7 +137,7 @@ class ROCavSpectroscopy_keysight(Measurement1D):
                 self.readout_info.rfsource1.set_frequency(freq)
                 self.readout_info.rfsource2.set_frequency(freq+50e6)
                 time.sleep(0.1)
-
+                
                 ''' the parameter to setup avg shots shouldn't be naverages.
                     naverages is already used inside of the driver. the N parameter passed
                     tells the digitizer how many different points there will be in a measument.

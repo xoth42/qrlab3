@@ -6,7 +6,6 @@ import matplotlib
 #matplotlib.rcParams['backend'] = 'Qt4Agg'
 #matplotlib.rcParams['backend.qt4'] = 'PyQt4'
 import matplotlib.pyplot as plt
-#from t1t2_plotting import smart_T1_delays
 import os
 import time
 import math
@@ -15,90 +14,65 @@ import math
 dig = mclient.instruments['dig']
 
 qubit_info = mclient.get_qubit_info('qubit1ge')
-#qubit_g2_info = mclient.get_qubit_info('qubit1ge_g2')
-
 ef_info = mclient.get_qubit_info('qubit1ef')
+
 #fwm_info = mclient.get_qubit_info('FWM_info') 
 #fwm_e2g4_info = mclient.get_qubit_info('FWM_e2g4_info') 
 
-#cavity_infoR = mclient.get_qubit_info('cavity1R')
-cavity_infoA = mclient.get_qubit_info('cavityAlice')
-cavity_infoB = mclient.get_qubit_info('cavityBob')
-#fwm_info1 = mclient.get_qubit_info('fwm_info1')
-#fwm_info2 = mclient.get_qubit_info('fwm_info2')
-#Qswitch_info1A = mclient.get_qubit_info('Qswitch1A')
-#Qswitch_info1B = mclient.get_qubit_info('Qswitch1B')
-
-#qubit_info2 = mclient.get_qubit_info('qDblCoax2')
-#ef_info2 = mclient.get_qubit_info('eDblCoax2')
-#cavity_info2A = mclient.get_qubit_info('cavity2A')
-#cavity_info2B = mclient.get_qubit_info('cavity2B')
+#cavity_infoA = mclient.get_qubit_info('cavityA')
+cavity_infoB = mclient.get_qubit_info('cavityB')
+#cavity_infoR = mclient.get_qubit_info('cavityR')
 
 #cA = cavity_infoA.rotate
-#cB = cavity_infoB.rotate
+cB = cavity_infoB.rotate
 ge = qubit_info.rotate
 ges= qubit_info.rotate_selective
 
-#ef = ef_info.rotate
-#efs= ef_info.rotate_selective
-#efpi = sequencer.Sequence(ef_info.rotate(np.pi, 0))
 
-if 0: #switched cavity ssb
-    from scripts.cavity_switch import ssbcavspec_switch
-    ssb = ssbcavspec_switch.SSBCavSpec_switch(qubit_info, cavity_infoB, np.linspace(-2e6, 2e6, 51), '3m1')
-#    ssb = ssbcavspec_switch.SSBCavSpec_switch(qubit_info, cavity_infoA, np.linspace(-0e6, 0e6, 11), '14m1', plot_seqs = False)
-    ssb.measure_keysight()
-    bla
-
-if 0: # Cavity disp calibration with switch
-    from scripts.cavity_switch import cavdisp_switch
-#    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
-    seq = sequencer.Trigger(250)
-
-    disp = cavdisp_switch.CavDisp_switch(qubit_info, cavity_infoB, '3m1', 2.5, 31, 0, seq=None,
-                           delay=0, bgcor=False, update=False, generate=True,
-#                           Qswitch_infoA=Qswitch_infoB, Qswitch_infoB=Qswitch_infoB,
-#                           extra_info=[Qswitch_infoA, Qswitch_infoB,],
-                          )
-    disp.measure_keysight()
-    bla
-
-if 1: #cavity ssb
+if 0: #cavity ssb
     from scripts.single_cavity import ssbcavspec
-#    ssb = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoB, np.linspace(-2e6, 2e6, 51))
-    ssb = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoA, np.linspace(-2e6, 2e6, 51), plot_seqs = False)
+    ssb = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoB, np.linspace(-2e6, 2e6, 51))
+#    ssb = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoA, np.linspace(-2e6, 2e6, 51), plot_seqs = False)
     ssb.measure_keysight()
     bla
 
-if 1: # Cavity disp calibration
+if 0: # Cavity disp calibration
     from scripts.single_cavity import cavdisp
-#    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
     seq = sequencer.Trigger(250)
-
-    disp = cavdisp.CavDisp(qubit_info, cavity_infoA, 2.5, 31, 0, seq=None,
-                           delay=0, bgcor=True, update=False, generate=True, plot_seqs=False
-#                           Qswitch_infoA=Qswitch_infoB, Qswitch_infoB=Qswitch_infoB,
-#                           extra_info=[Qswitch_infoA, Qswitch_infoB,],
-                          )
+    disp = cavdisp.CavDisp(qubit_info, cavity_infoB, 2.5, 51, 0, seq=None,
+                           delay=0, bgcor=True, update=False, generate=True, plot_seqs=False )
     disp.measure_keysight()
     bla
 
-
-if 0: # Cavity T1 with switch
-    fwm_gen = mclient.instruments['SCpump']
-#    fwm_gen.set_power(power)
-#    fwm_gen.set_frequency(shift_freq[i, j])
-    from scripts.cavity_switch import cavT1_switch
-#    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
-#    xs = np.concatenate((np.linspace(0e3, 50e3, 26), np.linspace(60e3, 1250e3, 55)))
-    t1 = cavT1_switch.CavT1_switch(qubit_info, cavity_infoB, fwm_gen, '3m1', 1.5, 
-                                   np.linspace(0e3, 700e3, 51),
-#                                   np.array([450e3, 450e3, 450e3, 450e3, 450e3]),
-                     proj_num=0, seq=None, postseq=None, bgcor=False, force_a0 = True 
-#                     extra_info=[ef_info,]
-                     )
+if 0: # Cavity T1
+    from scripts.single_cavity import cavT1
+    t1 = cavT1.CavT1(qubit_info, cavity_infoB, 1.5,
+                     np.linspace(0e3, 1600e3, 51),
+                     proj_num=0, seq=None, postseq=None, bgcor=False, force_a0 =True )
     t1.measure_keysight()
     bla
+
+if 0:# Cavity T2
+    from scripts.single_cavity import cavT2    
+    detune = 20e3
+    ct2b = cavT2.CavT2(qubit_info, cavity_infoB, .7, np.linspace(4e3, 600e3, 101), detune=detune, seq=None,
+                       postseq=None, bgcor=False, extra_info=[qubit_info,])
+    ct2b.measure_keysight()
+    bla
+    
+if 0: # Number splitting
+    from single_qubit import ssbspec
+    seq = sequencer.Sequence()
+    seq.append(sequencer.Trigger(500))
+    seq.append(cB(1.2,0))
+#            seq.append(sequencer.Combined([
+#                        cA(1.2,0), cB(0.7,0)]))
+    spec = ssbspec.SSBSpec(qubit_info, np.concatenate((
+                                        np.linspace(-7e6, 1e6, 51),
+                                       )), 
+                           seq=seq, plot_seqs=False, extra_info = [cavity_infoB])#
+    spec.measure_keysight()
+    bla                
 
 if 0: #g1-f0 cavity cooling
     fwm_gen = mclient.instruments['SCfwm']
@@ -127,6 +101,51 @@ if 0: #g1-f0 cavity cooling
 
 # delay time was 5e3
 
+if 0: #Fock 0 to 1 dissipation
+    from single_qubit import ssbspec
+    dt = 500e3
+    drive_amp = 2e-3  #target 25kHz rabi rate  #sigma 400 has pi amp = 9.1e-3 or Rabi rate of 500 kHz
+    freq = 7339.10e6 + 6081.13e6 - 4788.48e6 + 71e6
+#    MXG = instruments['MXG']
+    MXG.set_frequency(freq)
+    seq = sequencer.Sequence()
+    seq.append(sequencer.Trigger(500))
+    seq.append(cB(1.8, 0))
+    seq.append(sequencer.Combined([
+            sequencer.Constant(int(dt), 1, chan='4m1'),
+            sequencer.Constant(int(dt), drive_amp, chan=qubit_info.sideband_channels[0]),
+        ]))
+    seq.append(sequencer.Delay(1e3))
+    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-5e6, 2.5e6, 51),
+                           seq=seq, plot_seqs=False, extra_info=[cavity_infoB])
+    spec.measure_keysight()
+    bla   
+    
+    
+if 1: # Fock 0 to 1 time domain
+#    dig.set_naverages(8000)    
+    fwm_info = mclient.get_qubit_info('FWM_info')
+    qubit_b0 = mclient.get_qubit_info('qubit_b0')
+    qubit_b1 = mclient.get_qubit_info('qubit_b1')
+    qubit_b2 = mclient.get_qubit_info('qubit_b2')    
+    
+    MXG = mclient.instruments['MXG']
+        
+    from FWM import ab_time_domain
+
+    drive_amps = np.linspace(1e-3, 0.003, 1)
+    delays = np.linspace(0e3, 30e3, 21)
+    
+    for drive_amp in drive_amps:
+        ab_t = ab_time_domain.ab_time_domain(fwm_info, qubit_b0,
+                                           [qubit_info, qubit_b1, qubit_b2],
+                                           delays, drive_amp, '4m1', fwm_amp = 0.5,
+                                           plot_seqs=False,
+                                           bgcor=True, seq=None)
+        ab_t.measure_keysight()
+    bla
+    
+
 if 0: # q func test
     from scripts.single_cavity import Qfunction
     Qfun = Qfunction.QFunction(qubit_info, amax=1, N=10, amaxx=None, Nx=None, amaxy=None, Ny=None,
@@ -135,7 +154,7 @@ if 0: # q func test
 
 if 0: # fwm spec
     import FWM_spec
-    fwm_gen = mclient.instruments['PumpBrick']
+    fwm_gen = mclient.instruments['MXG']
     target = 5063.3e6 - 100e6 + 67e6 - 11.0258e6#5.219e9
 #    target = 5.02602e9
     for power in [.1]:
@@ -193,8 +212,6 @@ if 0: # abt mixing and then qubit ssb
         spec.measure_keysight()
     bla
 
-    
-
 
 if 0: # abt mixing
     os.chdir(r'C:/qrlab/scripts/FWM/')
@@ -207,9 +224,7 @@ if 0: # abt mixing
                           xvec, xvec, 0, which_cavity = 'b', seq=None, saveas=None, 
                           plot_seqs=True, generate = True)
     abt.measure_keysight()
-'''
 
-'''
 if 0: #abt time domain 
     
     fwm_gen = mclient.instruments['SCfwm']
@@ -221,15 +236,6 @@ if 0: #abt time domain
     abt_t1 = FWM_abt_t1.FWM_abt_t1(qubit1bob1_info, cavity_infoA, 
                                     delays, .7, '4m1', '3m1')
     abt_t1.measure_keysight()
-
-
-
-if 0: #spec to find cavity stark shift
-    import FWM_SSBCavSpec
-    spec = FWM_SSBCavSpec.FWM_SSBCavSpec(qubit_info, cavity_infoA, fwm_info1, 
-                                         1000, .5, np.linspace(-10e6, 2e6, 21),
-                                         plot_seqs = True)
-    spec.measure_keysight()
 
 
 if 0: # f0 - g1 fwm test
@@ -267,93 +273,7 @@ if 0: # f0 - g1 time domain test
                          amp, '2m1', plot_seqs = False)
             t1s[i, j] = f0g1_t1.measure_keysight()
 
-if 0: # f0 - g1 fwm test (Juliang)
-    fwm_gen = mclient.instruments['SCpump']
-#    target = 4.96386e9 * 2 - 221.2e6 - 6.92618e9   this is original set values (juliang)
-#    target = 4.96356e9 * 2 - 221.2e6 + 6.92618e9    4.96356e9 is the frequency at the center
-#    target = 6.926e9
-    target = 4.96310e9 * 2 - 221.2e6 - 6.92605e9
-#    freqs = np.linspace(target-3e6, target+3e6, 50)    this is original set values (juliang)
-    freqs = np.linspace(target-3.0e6, target+4e6, 51)
-#    amps = [.01, .02, .04, .08]
-#    powers = [0, 5, 10, 15]
-#    amps = [.002, .003, .004, .005, .006, .007]    # Jeff's 
-    amps=.035   
-#    powers = [10, 12.5, 15]     #Jeff's
-    powers=14     
-#    shift_freq = np.zeros((len(amps), len(powers)))
-    from FWM import FWM_f0g1
-#    for i, amp in enumerate(amps):
-#        for j, power in enumerate(powers):
-    f0g1 = FWM_f0g1.FWM_f0g1(qubit_info, ef_info, fwm_gen, 5e3, 
-                         freqs, power, amp, '2m1')
-    f0g1.measure()
-#            shift_freq[i, j] = f0g1.xs[np.argmax(f0g1.ampdata[:])]
-        
-        
-if 0: # f0 - g1 time domain test (Juliang)
-    fwm_gen = mclient.instruments['SCpump']
-    delays = np.linspace(0, 10e3, 151)
-    from FWM import FWM_f0g1_t1
-    amps = [.002, .003, .004, .005, .006, .007]
-    powers = [10, 12.5, 15]
-    t1s = np.zeros_like(shift_freq)
-#    for i, amp in enumerate(amps):
-#        for j, power in enumerate(powers):
-    fwm_gen.set_power(power)
-    fwm_gen.set_frequency(shift_freq[i, j])
-    f0g1_t1 = FWM_f0g1_t1.FWM_f0g1_t1(qubit_info, ef_info, fwm_gen, delays, 
-                 amp, '2m1', plot_seqs = False)
-    t1s[i, j] = f0g1_t1.measure_keysight()
-    
-    
 
-            
-if 0: # Cat pumping spec qbt2(Juliang)
-#    fwm_gen = mclient.instruments['SCfwm']
-    qubit1bob2_info = mclient.get_qubit_info('qubit1bob2')
-#    w_q=5024.11e6
-#    w_b=6082.2e6
-    w_b=6082.2e6
-#    target = 2 * w_b - w_q
-    delta_f=2*1.0e6
-#    delta_f=0
-#    freqs = np.linspace(w_b-delta_f, w_b+delta_f, 51)
-    freqs = np.linspace(w_b-delta_f, w_b+delta_f, 51)    
-#    powers = [-20, -10, 0]
-    powers = [15]
-    amps_fwm = [0.6]
-    amps_qubit=[0.05]   
-#    amps_qubit=[0.01, 0.03, 0.05]
-#    amps_qubit=[0.001, 0.005, 0.008]
-#    shift_freq = np.zeros(len(powers))
-    from FWM import cat_pump_spec_qbt2
-    for i, power in enumerate(powers):
-        for j, amp_fwm in enumerate(amps_fwm): 
-            for k, amp_qubit in enumerate(amps_qubit):
-                cat_pump_qbt2_spec = cat_pump_spec_qbt2.cat_pump_spec_qbt2(qubit_info, qubit1bob2_info, fwm_info, SCbob, 500e3,
-                             freqs, power, amp_qubit, amp_fwm, '4m1')
-                cat_pump_qbt2_spec.measure()
-#        shift_freq[i] = g1f0.xs[np.argmax(g1f0.ampdata[:])]
-            
-if 0: #cat pumping time domain (juliang)
-    
-    fwm_gen = mclient.instruments['SCbob']
-    qubit1bob2_info = mclient.get_qubit_info('qubit1bob2')
-    delays = np.linspace(0, 200e3, 51)
-    from FWM import cat_pump_t1_qbt2
-    powers = np.linspace(15, 10, 1)
-    amps = np.linspace(.6, .6, 1)
-    amp_qubit=0.03
-#    shift_freq = np.zeros(len(powers))
-    for i, power in enumerate(powers):
-        fwm_gen.set_power(power)
-        for j, amp_fwm in enumerate(amps_fwm): 
-            cat_p_t1_qbt2 = cat_pump_t1_qbt2.cat_pump_t1_qbt2(qubit_info, qubit1bob2_info, fwm_info,
-                                               delays, amp_qubit, amp_fwm, '4m1')
-            cat_p_t1_qbt2.measure_keysight()            
-            
-    
 if 0: # Cat pumping ssbspec
     from FWM import cat_pump_ssbspec
     qubit1bob2_info = mclient.get_qubit_info('qubit1bob2')
@@ -572,43 +492,42 @@ if 0: # cav transmission (sweeping RO freq) with FWM
 
     rofreq = 7.33971e9
     freq_range = 0.5e6
-    fwm_info = mclient.get_qubit_info('FWM_info')
-    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate(np.pi, 0)])
-    
+    fwm_info = mclient.get_qubit_info('FWM_info')    
     ro = ROCavSpectroscopy_withpump.ROCavSpectroscopy(qubit_info, fwm_info, np.linspace(4, 9, 1),
                                              np.linspace(rofreq-freq_range, rofreq+freq_range, 41), fwm_amp=0.95,
-                                             qubit_pulse=False, seq=None, plot_seqs=False)
+                                             qubit_pulse=False, seq=None, plot_seqs=True)
     ro.measure()
     bla
     
 if 0: # EF rabi after FWM pumping
     from single_qubit import efrabi
-    pump_info = mclient.get_qubit_info('pump_info')
+    cavity_infoR = mclient.get_qubit_info('CavityR')
     fwm_info = mclient.get_qubit_info('FWM_info')    
-    dt = 30e3
+    dt = 50e3
     fwm_amp = 0.1
-    pump_amp = 0.005
-    seq = sequencer.Sequence()
-    seq.append(sequencer.Trigger(250))
-    seq.append(sequencer.Constant(500, 1, chan='4m1'))
-    seq.append(sequencer.Combined([
-            sequencer.Constant(int(dt), 1, chan='4m1'),
-            sequencer.Constant(int(dt), pump_amp, chan=pump_info.sideband_channels[0]),
-            sequencer.Constant(int(dt), fwm_amp, chan=fwm_info.sideband_channels[0]),
-        ]))
-    seq.append(sequencer.Delay(8e3))
-
-    dig = mclient.instruments['dig']
-    dig.set_naverages(2000)
-    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.3, 0.3, 5), plot_seqs=True, selective=False, seq=seq, 
-                        postseq = None, extra_info=[pump_info, fwm_info])
-    efr.measure_keysight()
-#    period = efr.fit_params['period'].value
-#    dig.set_naverages(4000)
-#    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.3, 0.3, 51), first_pi=False, selective=False, force_period=period, seq=seq,
-#                        postseq = None, extra_info = [pump_info, fwm_info])
-#    efr.measure_keysight()
-#    dig.set_naverages(2000)
+    drive_amp = 0.008
+    for delay_time in [10e3, 30e3, 40e3, 60e3, 80e3]:
+        seq = sequencer.Sequence()
+        seq.append(sequencer.Trigger(250))
+        seq.append(sequencer.Constant(500, 1, chan='13m1'))
+        seq.append(sequencer.Combined([
+                sequencer.Constant(int(dt), 1, chan='13m1'),
+                sequencer.Constant(int(dt), drive_amp, chan=cavity_infoR.sideband_channels[0]),
+    #            sequencer.Constant(int(dt), fwm_amp, chan=fwm_info.sideband_channels[0]),
+            ]))
+        seq.append(sequencer.Delay(delay_time))
+    
+        dig = mclient.instruments['dig']
+        dig.set_naverages(1000)
+        efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.3, 0.3, 21), plot_seqs=True, selective=False, seq=seq, 
+                            postseq = None, extra_info=cavity_infoR )
+        efr.measure_keysight()
+        period = efr.fit_params['period'].value
+        dig.set_naverages(3000)
+        efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.3, 0.3, 51), first_pi=False, selective=False, force_period=period, seq=seq,
+                            postseq = None, extra_info=cavity_infoR )
+        efr.measure_keysight()
+        dig.set_naverages(1000)
     bla    
     
     
@@ -635,139 +554,79 @@ if 0: # a b ssbspec
     bla
     
 if 0: # Cat pumping spec
-    fwm_gen = mclient.instruments['ROFG']
+    fwm_gen = mclient.instruments['MXG']
 #    qubit1bob2_info = mclient.get_qubit_info('qubit1bob2')
-    bob1alice1 = mclient.get_qubit_info('bob1alice1')
-    bob2alice2 = mclient.get_qubit_info('bob2alice2')
-    pump_info = mclient.get_qubit_info('pump_info')
+    qubit_a1b1 = mclient.get_qubit_info('qubit_a1b1')
+    qubit_a2b2 = mclient.get_qubit_info('qubit_a2b2')
+    cavity_infoR = mclient.get_qubit_info('cavityR')
 #    w_q=5024.11e6
     w_r=7339.71e6
     w_b=6082.2e6
 #    target = 2 * w_b - w_r
-    target = 2804.525e6 #4.8247e9
-    freqs = np.linspace(target-0.2e6, target+0.2e6, 41)
+    target = 2804.40e6 #4.8247e9
+    freqs = np.linspace(target-0.15e6, target+0.15e6, 41)
 #    powers = [-20, -10, 0]
 #    powers = [8]
-    powers = [11.6]
-    amps = [.005]
+    powers = [12.5]
+    amps = [.010]
     
 #    shift_freq = np.zeros(len(powers))
     from FWM import cat_pump_spec
     for i, power in enumerate(powers):
         for j, amp in enumerate(amps): 
-            spec = cat_pump_spec.cat_pump_spec(qubit_info, qubit_info, fwm_gen, 30e3,
-                         freqs, power, amp, '4m1', fwm_info=pump_info, plot_seqs=False)
+            spec = cat_pump_spec.cat_pump_spec(qubit_info, qubit_info, fwm_gen, 10e3,
+                         freqs, power, amp, '13m1', fwm_info=cavity_infoR, plot_seqs=True)
             spec.measure()
 #        shift_freq[i] = g1f0.xs[np.argmax(g1f0.ampdata[:])]            
     bla
    
     
 if 0: # ab pumping then qubit ssb
+    dig.set_naverages(10000)
     from single_qubit import ssbspec
-    pump_info = mclient.get_qubit_info('pump_info')
     fwm_info = mclient.get_qubit_info('FWM_info')
 #    delay_times=[10e3, 30e3, 50e3, 80e3]
-    delay_times=np.linspace(3e3, 18e3, 6)
-    pump_amps = [0.013]#, 0.005, .01, 0.015]   # 0.01 for pulse mode
-    fwm_amps = [0.04]#, 0.02, 0.3, 0.4]   # 0.8 for pulse mode
-    delay_qubit = [5e3]
-    for delay_q in delay_qubit:
-        for dt in delay_times:
-            for pump_amp in pump_amps:
-                for fwm_amp in fwm_amps:
-                    seq = sequencer.Sequence()
-                    seq.append(sequencer.Trigger(250))
-                    seq.append(sequencer.Constant(500, 1, chan='4m1'))
-                    seq.append(sequencer.Combined([
-                            sequencer.Constant(int(dt), 1, chan='4m1'),
-                            sequencer.Constant(int(dt), pump_amp, chan=pump_info.sideband_channels[0]),
-                        ]))
-                    seq.append(sequencer.Delay(delay_q))
-                    spec = ssbspec.SSBSpec(qubit_info, np.concatenate((
-                                                        np.linspace(-20e6, 1e6, 106),
-                                                       )), 
-                                           seq=seq, plot_seqs=False, extra_info = [pump_info, fwm_info])
-                    spec.measure_keysight()
-    bla
-                
-                
-if 0: #ab time domain 
-    bob1alice1 = mclient.get_qubit_info('bob1alice1')
-    bob2alice2 = mclient.get_qubit_info('bob2alice2')
-    bob3alice3 = mclient.get_qubit_info('bob3alice3')
-    pump_info = mclient.get_qubit_info('pump_info')
-    fwm_info = mclient.get_qubit_info('FWM_info')
-        
-    ROFG.set_power(11.6)
-    SCpump.set_frequency(7303.62e6)
-    delays = np.linspace(1e3, 50e3, 51)
-    from FWM import ab_time_domain
-
-    pump_amps = np.linspace(0.008, 0.014, 1)   # 0.01 for pulse mode
-    fwm_amps = [0.1]   # 0.8 for pulse mode    
-    for pump_amp in pump_amps:
-        for FWM_freq in np.linspace(2804.54e6, 2804.53e6, 1):
-            #    shift_freq = np.zeros(len(powers))
-            ROFG.set_frequency(FWM_freq)
-            time.sleep(.1)
-
-            for fwm_amp in fwm_amps:
-                ab_t = ab_time_domain.ab_time_domain(fwm_info, pump_info,
-                                                   [qubit_info, bob1alice1, bob2alice2],# bob3alice3],
-                                                   delays, fwm_amp, pump_amp, '4m1', plot_seqs=False, 
-                                                   bgcor=True)
-                ab_t.measure_keysight()
-
-    bla
-
-
-    
-if 0: #ab pump decay
-    dig.set_naverages(500)
-    bob1alice1 = mclient.get_qubit_info('bob1alice1')
-    bob2alice2 = mclient.get_qubit_info('bob2alice2')
-    bob3alice3 = mclient.get_qubit_info('bob3alice3')
-    pump_info = mclient.get_qubit_info('pump_info')
-    fwm_info = mclient.get_qubit_info('FWM_info')
-    
-    delays = np.linspace(0, 40e3, 41)
-    from FWM import ab_pump_decay
-
-    pump_amps = [0.008]
-    fwm_amps = [0.1]
-    for FWM_freq in np.linspace(2804.53e6, 2804.55e6, 1):        
-    #    shift_freq = np.zeros(len(powers))
-        ROFG.set_frequency(FWM_freq)
-        time.sleep(.1)
-
-        for pump_amp in pump_amps:
-            for fwm_amp in fwm_amps:
-                ab_t = ab_pump_decay.ab_time_domain(fwm_info, pump_info,
-                                                   [qubit_info, bob1alice1, bob2alice2],# bob3alice3],
-                                                   delays, 20e3, fwm_amp, pump_amp, '4m1', measdelay=5e3, plot_seqs=False, 
-                                                   bgcor=True)
-                ab_t.measure_keysight()
-    bla
-
-if 0: # ab pumping decay and then qubit ssb
-    from single_qubit import ssbspec
-    pump_info = mclient.get_qubit_info('pump_info')
-    fwm_info = mclient.get_qubit_info('FWM_info')
-#    delay_times=[10e3, 30e3, 50e3, 80e3]
-    delay_times=np.linspace(10e3, 30e3, 3)
-    pump_amps = [0.008]#, 0.005, .01, 0.015]   # 0.01 for pulse mode
-#    fwm_amps = [0.04]#, 0.02, 0.3, 0.4]   # 0.8 for pulse mode
-    delay_qubit = [5e3]
-    pumptime = 20e3
+    pump_times=np.linspace(26e3, 18e3, 1)
+    drive_amps = [0.015]#, 0.005, .01, 0.015]   # 0.01 for pulse mode
     measdelay = 5e3
-    for dt in delay_times:
-        for pump_amp in pump_amps:
+    for dt in pump_times:
+        for drive_amp in drive_amps:
             seq = sequencer.Sequence()
             seq.append(sequencer.Trigger(250))
-            seq.append(sequencer.Constant(500, 1, chan='4m1'))
+#            seq.append(sequencer.Combined([
+#                        cA(1.2,0), cB(0.7,0)]))
+            seq.append(sequencer.Constant(int(dt), 1, chan='13m1'))
             seq.append(sequencer.Combined([
-                    sequencer.Constant(int(pumptime), 1, chan='4m1'),
-                    sequencer.Constant(int(pumptime), pump_amp, chan=pump_info.sideband_channels[0]),
+                    sequencer.Constant(int(dt), 1, chan='13m1'),
+                    sequencer.Constant(int(dt), drive_amp, chan=cavity_infoR.sideband_channels[0]),
+                ]))
+            seq.append(sequencer.Delay(measdelay))
+            spec = ssbspec.SSBSpec(qubit_info, np.concatenate((
+                                                np.linspace(-19e6, 1e6, 121),
+                                               )), 
+                                   seq=seq, plot_seqs=False, extra_info = [cavity_infoR, fwm_info])#, cavity_infoA, cavity_infoB])
+            spec.measure_keysight()
+    bla                
+                
+if 0: # ab pumping decay and then qubit ssb
+    from single_qubit import ssbspec
+    
+    cavity_infoR = mclient.get_qubit_info('cavityR')
+    fwm_info = mclient.get_qubit_info('FWM_info')
+#    delay_times=[10e3, 30e3, 50e3, 80e3]
+    delay_times=np.linspace(12e3, 30e3, 1)
+    drive_amps = [0.015]#, 0.005, .01, 0.015]   # 0.01 for pulse mode
+#    fwm_amps = [0.04]#, 0.02, 0.3, 0.4]   # 0.8 for pulse mode
+    pumptime = 12e3
+    measdelay = 5e3
+    for dt in delay_times:
+        for drive_amp in drive_amps:
+            seq = sequencer.Sequence()
+            seq.append(sequencer.Trigger(250))
+            seq.append(sequencer.Constant(500, 1, chan='13m1'))
+            seq.append(sequencer.Combined([
+                    sequencer.Constant(int(pumptime), 1, chan='13m1'),
+                    sequencer.Constant(int(pumptime), drive_amp, chan=cavity_infoR.sideband_channels[0]),
                 ]))
 #            seq.append(sequencer.Constant(int(dt), 1, chan='4m1'))
             seq.append(sequencer.Delay(dt))
@@ -775,7 +634,77 @@ if 0: # ab pumping decay and then qubit ssb
             spec = ssbspec.SSBSpec(qubit_info, np.concatenate((
                                                 np.linspace(-14e6, 1e6, 76),
                                                )), 
-                                   seq=seq, plot_seqs=False, extra_info = [pump_info, fwm_info])
+                                   seq=seq, plot_seqs=False, extra_info = [cavity_infoR, fwm_info])
             spec.measure_keysight()
     bla
-                
+
+if 1: #ab time domain 
+    dig.set_naverages(8000)    
+    qubit_a1b1 = mclient.get_qubit_info('qubit_a1b1')
+    qubit_a2b2 = mclient.get_qubit_info('qubit_a2b2')
+#    qubit_a2b1 = mclient.get_qubit_info('qubit_a2b1')
+    qubit_a3b3 = mclient.get_qubit_info('qubit_a3b3')
+    fwm_info = mclient.get_qubit_info('FWM_info')
+    qubit_b1 = mclient.get_qubit_info('qubit_b1')
+    qubit_b2 = mclient.get_qubit_info('qubit_b2')    
+    qubit_a1 = mclient.get_qubit_info('qubit_a1')
+    qubit_a2 = mclient.get_qubit_info('qubit_a2')    
+    
+    MXG = mclient.instruments['MXG']
+        
+    from FWM import ab_time_domain
+
+#    FWM_settings = {6: 2804.98e6}#{4.5:2805.05e6, 10.7:2804.62e6, 2:2805.13e6, 9.5: 2804.69e6}
+    drive_amps = np.linspace(0.008, 0.016, 5)   # 0.0001 to mimic zero for pump without drive, probably easier to just turn SCres off
+    delays = np.linspace(0e3, 40e3, 21)
+    
+    for drive_amp in drive_amps:
+        for FWM_freq in np.linspace(2804.36e6, 2804.42e6, 7):
+#        for FWM_power in FWM_settings.keys():
+#            MXG.set_power(FWM_power)
+#            MXG.set_frequency(FWM_settings[FWM_power])
+            MXG.set_frequency(FWM_freq)
+            time.sleep(.1)
+#            seq = sequencer.Sequence()
+#            seq.append(sequencer.Trigger(250))
+#            seq.append(sequencer.Combined([
+#                        cA(1.2,0), cB(0.7,0)]))
+            ab_t = ab_time_domain.ab_time_domain(fwm_info, cavity_infoR,
+                                               [qubit_info, qubit_a1b1, qubit_a2b2],
+#                                               [qubit_info, qubit_a1, qubit_a1b1, qubit_a2b1],
+                                               delays, drive_amp, '13m1', plot_seqs=False, 
+                                               bgcor=True, seq=None,)# extra_info = [cavity_infoA, cavity_infoB] )
+            ab_t.measure_keysight()
+    bla
+
+    
+if 1: #ab pump decay
+    dig.set_naverages(8000)
+    qubit_a1b1 = mclient.get_qubit_info('qubit_a1b1')
+    qubit_a2b2 = mclient.get_qubit_info('qubit_a2b2')
+#    qubit_a3b3 = mclient.get_qubit_info('bob3alice3')
+    fwm_info = mclient.get_qubit_info('FWM_info')
+    
+    from FWM import ab_pump_decay
+
+    delays = np.concatenate((np.linspace(0e3, 28e3, 15), np.linspace(30e3, 130e3, 21)))
+#    delays = np.linspace(0, 50e3, 11)
+    drive_amps = [0.015]
+    fwm_amp = 0.1
+    pump_times = [25e3]
+    FWM_settings = {4.5:2805.05e6}#{10.7:2804.62e6}#{6: 2804.98e6, 2:2805.13e6} 
+    for FWM_power in FWM_settings.keys():
+        MXG.set_power(FWM_power)
+        MXG.set_frequency(FWM_settings[FWM_power])
+        time.sleep(.1)
+
+        for drive_amp in drive_amps:
+            for pump_time in pump_times:
+                ab_t = ab_pump_decay.ab_time_domain(fwm_info, cavity_infoR,
+                                                   [qubit_info, qubit_a1b1, qubit_a2b2],# bob3alice3],
+                                                   delays, pump_time, fwm_amp, drive_amp, '13m1', measdelay=5e3, 
+                                                   plot_seqs=False, 
+                                                   bgcor=True)
+                ab_t.measure_keysight()
+    bla
+

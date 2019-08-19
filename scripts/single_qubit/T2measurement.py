@@ -59,7 +59,7 @@ def analysis(meas, data=None, fig=None):
     params.add('tau', value=xs[-1], min=10, max=2e5)
     params.add('freq', value=f0, min=0)
     if meas.echotype == ECHO_NONE:
-        params.add('phi0', value=-np.pi/2, min=-1.2*np.pi, max=1.2*np.pi, vary=False)  #Changed to plus sign for accommodate for amplitude RO, need a good LT solution
+        params.add('phi0', value=np.pi/2, min=-1.2*np.pi, max=1.2*np.pi, vary=True)  #Changed to plus sign for accommodate for amplitude RO, need a good LT solution
     elif meas.echotype == ECHO_HAHN:
         params.add('phi0', value=np.pi/2, min=-1.2*np.pi, max=1.2*np.pi) #DARIO added to fit better for echo vs plain T2
     result = lmfit.minimize(t2_fit, params, args=(xs, ys))
@@ -272,8 +272,8 @@ class T2Measurement(Measurement1D):
 #                Repeat(Constant(5000, 0.0001, chan=5), 60),         # Qubit/Readout master switch
 #            ]))
 
-            s.append(Delay(4000))
-          
+            s.append(Delay(10000))
+        s = Join(s)
         s = self.get_sequencer(s)
         seqs = s.render()
 #        s.plot_seqs(seqs)

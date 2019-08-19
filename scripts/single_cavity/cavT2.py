@@ -192,7 +192,7 @@ class CavT2(Measurement1D):
             disp=disp,
         )
 
-    def generate(self): # JEFF swaping the generate functions bc the new one is way too confusing
+    def generate_old(self): # JEFF swaping the generate functions bc the new one is way too confusing
         s = Sequence()
 
         r = self.qubit_info.rotate_selective
@@ -225,14 +225,14 @@ class CavT2(Measurement1D):
         seqs = s.render(debug=False)
         return seqs
 
-    def generate_new(self):
+    def generate(self):
         s = Sequence()
 
         r = self.qubit_info.rotate_selective
         c = self.cav_info.rotate
 
         self.disp = 0.561
-        self.disp2 = -0.24
+        self.disp2 = -0.24 #should be -0.26?
         self.disp3 = 0.82
 
         for i, delay in enumerate(self.delays):
@@ -242,16 +242,16 @@ class CavT2(Measurement1D):
 
                 s.append(self.seq)
 
-                s.append(c(0.561,0))
+                s.append(c(self.disp,0))
                 s.append(r(np.pi, X_AXIS))
-                s.append(r(np.pi, X_AXIS))
-                s.append(c(-0.24,0))
+                s.append(r(np.pi, Y_AXIS))
+                s.append(c(self.disp2,0))
 
                 if delay > 0:
                     s.append(Delay(delay))
 
                 dphi = 2 * np.pi * self.detune * delay * 1e-9 + np.pi
-                s.append(c(0.82,dphi))
+                s.append(c(self.disp3,dphi))
 
                 if not bg:
                     s.append(r(np.pi, X_AXIS))
