@@ -70,7 +70,7 @@ class CavDisp(Measurement1D):
         self.QswA = Qswitch_infoA
         self.QswB = Qswitch_infoB
         if seq is None:
-            seq = Trigger(250)
+            seq = Trigger(500)
         self.seq = seq
         self.postseq = postseq
         self.proj_num = proj_num

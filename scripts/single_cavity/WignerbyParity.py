@@ -159,5 +159,4 @@ class WignerFunction(Measurement2D):
         return ys
 
     def analyze(self, data=None, fig=None):
-        print(data.shape)
         self.fit_params = analysis(self, data, fig)

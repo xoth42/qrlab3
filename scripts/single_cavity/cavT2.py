@@ -110,7 +110,7 @@ def analysis(meas, data=None, fig=None):
     params.add('amp', value=amp0, min=0)
     params.add('tau', value=xs[-1], min=10, max=4e6)
     params.add('freq', value=f0, min=0)
-    params.add('phi0', value=0, min=-1.2*np.pi, max=1.2*np.pi)
+    params.add('phi0', value=np.pi*0.5, min=-1.2*np.pi, max=1.2*np.pi)
     result = lmfit.minimize(t2_fit, params, args=(xs, ys))
     lmfit.report_fit(result.params)
 
@@ -232,8 +232,8 @@ class CavT2(Measurement1D):
         c = self.cav_info.rotate
 
         self.disp = 0.561
-        self.disp2 = -0.24 #should be -0.26?
-        self.disp3 = 0.82
+        self.disp2 = -0.24 #-0.24 should be -0.26?
+        self.disp3 = 0.81
 
         for i, delay in enumerate(self.delays):
             for bg in (0, 1):
@@ -243,8 +243,8 @@ class CavT2(Measurement1D):
                 s.append(self.seq)
 
                 s.append(c(self.disp,0))
-                s.append(r(np.pi, X_AXIS))
-                s.append(r(np.pi, Y_AXIS))
+                s.append(r(2*np.pi, X_AXIS))
+#                s.append(r(np.pi, Y_AXIS))
                 s.append(c(self.disp2,0))
 
                 if delay > 0:
@@ -263,10 +263,46 @@ class CavT2(Measurement1D):
                         Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                         Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
-
+                s.append(Delay(93e3))
+    
         s = self.get_sequencer(s)
         seqs = s.render(debug=False)
         return seqs
+    
+    def generate_kerrtest(self):
+        s = Sequence()
+
+        r = self.qubit_info.rotate_selective
+        c = self.cav_info.rotate
+
+        for i, delay in enumerate(self.delays):
+            for bg in (0, 1):
+                if bg and not self.bgcor:
+                    continue
+
+                s.append(self.seq)
+
+                if delay > 0:
+                    s.append(Delay(delay))
+
+                s.append(c(.8,0))
+
+                if not bg:
+                    s.append(r(np.pi, X_AXIS))
+
+                if self.postseq:
+                    s.append(self.postseq)
+
+                s.append(Combined([
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+                ]))
+                s.append(Delay(2e3))
+    
+        s = self.get_sequencer(s)
+        seqs = s.render(debug=False)
+        return seqs
+
 
     def get_ys(self, data=None):
         ys = super(CavT2, self).get_ys(data)

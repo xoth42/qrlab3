@@ -18,27 +18,39 @@ import lmfit
 import math
 import time
 import objectsharer as objsh
+from lib.math import fit
 
 
 def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
     xs = meas.freqs
+
+    f = fit.Lorentzian(xs, ys)
+    h0 = np.max(ys)-np.min(ys)
+    w0 = 0.05e6
+    pos = xs[np.argmax(ys)]
+    p0 = [np.min(ys), w0*h0, pos, w0]
+    p = f.fit(p0)
+    txt = 'Center = %.03f MHz, FWHM = %.03f MHz' % (p[2]/1e6, p[3]/1e6)
+    print 'Fit gave: %s' % (txt,)
+
     fig.axes[0].plot(xs/1e6, ys, '.')
     fig.axes[0].set_xlabel('Detuning (MHz)')
     fig.axes[0].set_ylabel('Intensity (AU)')
     fig.canvas.draw()
+    return p[2]
 
 
 class poly_fwm_ssbspec(Measurement1D):
 
-    def __init__(self, qubit_info, fwm_infos, freqs, delay_t, ge_amp, fwm_amps,
+    def __init__(self, qubit_info, comb_list, freqs, delay_t, post_delay = 1e3,
                  seq=None, postseq=None, bgcor=False, **kwargs):
         self.qubit_info = qubit_info
-        self.fwm_infos = fwm_infos
+        self.comb_list = comb_list
         self.freqs = freqs
         self.delay_t = delay_t
-        self.ge_amp = ge_amp
-        self.fwm_amps = fwm_amps
+        self.post_delay = post_delay
+        
         self.bgcor = bgcor
         if seq is None:
             seq = Trigger(500)
@@ -46,11 +58,13 @@ class poly_fwm_ssbspec(Measurement1D):
         self.postseq = postseq
         self.xs = freqs / 1e6       # For plot
 
+        # Setup all the temporary infos. We need these two add the pulses on the same channels
+        infos = [comb.info for comb in comb_list]         
 
         npoints = len(freqs)
         if bgcor:
-            npoints += 1
-        super(poly_fwm_ssbspec, self).__init__(npoints, residuals=False, infos=[qubit_info] + fwm_infos, **kwargs)
+            npoints *= 2
+        super(poly_fwm_ssbspec, self).__init__(npoints, residuals=False, infos=[qubit_info] + infos, **kwargs)
         self.data.create_dataset('freqs', data=freqs)
 
     def generate(self):
@@ -58,36 +72,27 @@ class poly_fwm_ssbspec(Measurement1D):
         
         r = self.qubit_info.rotate_selective
         
-        for i, df in enumerate(self.freqs):
-            s.append(self.seq)
-            poly_seq = []
-            for i, fwm_info in enumerate(self.fwm_infos):
-                g = DetunedSum(Square, self.delay_t, chans=fwm_info.sideband_channels)
-                if df != 0:
-                    period = 1e9 / df
-                else:
-                    period = 1e50
-                g.add(self.fwm_amps[i], period)
-                poly_seq += [g()]
-            g = DetunedSum(Square, self.delay_t, chans=self.qubit_info.sideband_channels)
-            if df != 0:
-                period = 1e9 / df
-            else:
-                period = 1e50
-            g.add(self.ge_amp, period)
-            poly_seq += [g()]
-                    
-            s.append(Combined(poly_seq))
-            s.append(Delay(50e3))
-            s.append(r(np.pi, X_AXIS))
-    
-            if self.postseq:
-                s.append(self.postseq)
-            s.append(Combined([
-                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-            ]))
-            s.append(Delay(2000))
+        for df in self.freqs:
+            for i_bg in range(2):
+                if i_bg == 1 and not self.bgcor:
+                    continue
+                s.append(self.seq)
+                poly_seq = []
+                for comb in self.comb_list:
+                    poly_seq += comb.get_poly_seq(self.delay_t - comb.sigma*4, df)
+                        
+                s.append(Combined(poly_seq))
+                s.append(Delay(self.post_delay))
+                if i_bg == 0:
+                    s.append(r(np.pi, X_AXIS))
+        
+                if self.postseq:
+                    s.append(self.postseq)
+                s.append(Combined([
+                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+                ]))
+                s.append(Delay(2000))
                 
         s = self.get_sequencer(s)
         seqs = s.render()
@@ -96,10 +101,10 @@ class poly_fwm_ssbspec(Measurement1D):
     def get_ys(self, data=None):
         ys = super(poly_fwm_ssbspec, self).get_ys(data)
         if self.bgcor:
-            return ys[1:] - ys[0]
+            return ys[::2] - ys[1::2]
         return ys
 
     def analyze(self, data=None, fig=None):
-        analysis(self, data, fig)
-        self.fig = fig
+        return analysis(self, data, fig)
+        
 

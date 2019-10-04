@@ -21,6 +21,10 @@ import time
 import objectsharer as objsh
 
 
+def exp_decay(params, x, data):
+    est = params['ofs'] + params['amplitude'] * np.exp(-x / params['tau'].value)
+    return data - est
+
 def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
     xs = meas.delays
@@ -28,26 +32,46 @@ def analysis(meas, data=None, fig=None):
     
     for i, info in enumerate(meas.qubit_list):
         if meas.bgcor:
-            fig.axes[0].plot(xs/1e3, ys[i*num_delays : (i+1)*num_delays] - ys[-num_delays:], ms=3, label = info.insname)
+            YS =  ys[i*num_delays : (i+1)*num_delays] - ys[-num_delays:]
         else:
-            fig.axes[0].plot(xs/1e3, ys[i*num_delays : (i+1)*num_delays], ms=3, label = info.insname)
+            YS =  ys[i*num_delays : (i+1)*num_delays]
+
+        fig.axes[0].plot(xs/1e3, YS, ms=3, label = info.insname)
         
+        Xs = xs[4:num_delays]
+        YS = YS[4:num_delays]
+        params = lmfit.Parameters()
+        params.add('ofs', value=np.min(YS))
+        params.add('amplitude', value=np.max(YS))
+        params.add('tau', value=Xs[-1]/2.0, min=50.0)
+        result = lmfit.minimize(exp_decay, params, args=(Xs, YS))
+#        lmfit.report_fit(params)
+#        result2 = lmfit.minimize(exp_decay, result.params, args=(xs,ys))
+        lmfit.report_fit(result.params)
+
+        fig.axes[0].plot(Xs/1e3, -exp_decay(result.params, Xs, 0), label='Fit, tau = %.03f us +/- %.03f us '%(result.params['tau'].value/1000.0, result.params['tau'].stderr/1000.0))
+        fig.axes[0].legend(loc=0)
+        fig.axes[0].set_ylabel('Intensity [AU]')
+        fig.axes[0].set_xlabel('Time [us]')        
+                
 
     fig.axes[0].legend(loc=0)
     fig.axes[0].set_ylabel('Intensity [AU]')
     fig.axes[0].set_xlabel('Time [us]')
 
     fig.canvas.draw()
+    
+    return result.params['tau'].value/1000.0
 
 
 class poly_time_domain(Measurement1D):
 
-    def __init__(self, drive_infos, drive_amps, qubit_list, delays, 
+    def __init__(self, comb_list, qubit_list, delays, post_delay = 1e3,
                  seq=None, postseq=None, bgcor=False, **kwargs):
-        self.drive_infos = drive_infos
+        self.comb_list = comb_list
         self.qubit_list = qubit_list
         self.delays = delays
-        self.drive_amps = drive_amps
+        self.post_delay = post_delay
         self.bgcor = bgcor
         if seq is None:
             seq = Trigger(500)
@@ -62,12 +86,16 @@ class poly_time_domain(Measurement1D):
         self.xs = np.tile(xs_single, n_rep)
         npoints = len(self.delays) * n_rep
         
-        super(poly_time_domain, self).__init__(npoints, infos=drive_infos + qubit_list, **kwargs)
+        infos = [comb.info for comb in comb_list]
+        
+        super(poly_time_domain, self).__init__(npoints, infos=infos + qubit_list, **kwargs)
         
         self.ampdata = self.data.create_dataset('amplitudes', shape=[len(delays)])
         self.data.create_dataset('delays', data=self.delays)
         self.data.set_attrs(
-            drive_amps = drive_amps,
+                fwm_amps = comb_list[0].amps,
+                ge_amps = comb_list[1].amps,
+                stark_shift = comb_list[0].stark_shift
         )
 
     def generate(self):
@@ -80,11 +108,11 @@ class poly_time_domain(Measurement1D):
                 s.append(self.seq)
                 if dt > 0:
                     poly_seq = []
-                    for i, drive_info in enumerate(self.drive_infos):
-                        poly_seq += [Constant(int(dt), self.drive_amps[i], chan=drive_info.sideband_channels[0])]
+                    for comb in self.comb_list:
+                        poly_seq += comb.get_poly_seq(dt - comb.sigma*4, 0)
                         
                     s.append(Combined(poly_seq))
-                s.append(Delay(1e3))
+                s.append(Delay(self.post_delay))
                 s.append(r(np.pi, X_AXIS))
         
                 if self.postseq:
@@ -100,11 +128,11 @@ class poly_time_domain(Measurement1D):
                 s.append(self.seq)
                 if dt > 0:
                     poly_seq = []
-                    for i, drive_info in enumerate(self.drive_infos):
-                        poly_seq += [Constant(int(dt), self.drive_amps[i], chan=drive_info.sideband_channels[0])]
+                    for comb in self.comb_list:
+                        poly_seq += comb.get_poly_seq(dt - comb.sigma*4, 0)
                         
-                s.append(Combined(poly_seq))
-                s.append(Delay(1e3))
+                    s.append(Combined(poly_seq))
+                s.append(Delay(self.post_delay))
                 
                 if self.postseq:
                     s.append(self.postseq)
@@ -119,6 +147,5 @@ class poly_time_domain(Measurement1D):
         return seqs
 
     def analyze(self, data=None, fig=None):
-        analysis(self, data, fig)
-        return None
+        return analysis(self, data, fig)
 
