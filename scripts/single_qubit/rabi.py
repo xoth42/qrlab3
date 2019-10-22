@@ -202,7 +202,7 @@ class Rabi(Measurement1D):
                 if self.pi2_amp:
                     mclient.instruments[self.qubit_info.insname].set_pi2_amp(self.pi2_amp)
 
-        return self.pi_amp
+        return self.pi_amp,
 
     ''' JEFF. Used to populate data in measuremnt from hdf5 file instead of a measurement for analysis. '''
     def load_data(self, filepath, exp_path):

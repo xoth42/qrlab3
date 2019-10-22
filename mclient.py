@@ -264,6 +264,6 @@ instruments = objsh.helper.find_object('instruments')
 datasrv = objsh.helper.find_object('dataserver')
 datadir = 'c:/_data'
 
-filename = 'c:/_data/0531cooldown_FMR.hdf5'
+filename = 'c:/_data/0827cooldown_Circulator_cavity.hdf5'
 
 datafile = datasrv.get_file(filename)

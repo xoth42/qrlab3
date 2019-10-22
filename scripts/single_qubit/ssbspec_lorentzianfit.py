@@ -13,9 +13,11 @@ def analysis(meas, data=None, fig=None):
     
     
     f= fit.Lorentzian(xs, ys)
-    h0 = np.min(ys)/2.0
+#    h0 = np.min(ys)/2.0
+    h0 = np.max(ys)/2.0
     w0 = 2e6
-    pos = xs[np.argmin(ys)]
+#    pos = xs[np.argmin(ys)]
+    pos = xs[np.argmax(ys)]
     p0 = [np.mean(ys), w0*h0, pos, w0]
     p=f.fit(p0)
     txt = 'Center = %.03f MHz' % (-p[2]/1e6,)

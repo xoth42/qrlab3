@@ -6,9 +6,9 @@ from measurement import Measurement1D
 #import lmfit
 
 
-array = np.array([1.4571449, -3.5474763, 2.850724, -0.6950667, -5.04537])
-
-print()
+#array = np.array([1.4571449, -3.5474763, 2.850724, -0.6950667, -5.04537])
+#
+#print()
 
 #sols = np.array([3.96, -5.52,  4.37,  -1.15, -5.63])
 #
@@ -54,8 +54,8 @@ class Qubit_Pop(Measurement1D):
         self.seq = seq
         self.postseq = postseq
 
-        super(Qubit_Pop, self).__init__(5, infos=(qubit_info, ef_info), **kwargs)
-        self.data.create_dataset('sequence', data=[range(0,5)])
+        super(Qubit_Pop, self).__init__(14, infos=(qubit_info, ef_info), **kwargs)
+        self.data.create_dataset('sequence', data=[range(0,14)])
 #        self.data.set_attrs()
 
 
@@ -74,6 +74,37 @@ class Qubit_Pop(Measurement1D):
             ]))
         s.append(Delay(2000))   
         
+        s.append(self.seq)
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+        s.append(Delay(2000)) 
+
+ 
+
+
+        '''0-1 0-1'''
+        s.append(self.seq)
+        s.append(r(np.pi, X_AXIS))
+        s.append(r(np.pi, X_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+        s.append(Delay(2000))   
+        
+        s.append(self.seq)
+        s.append(r(np.pi, X_AXIS))
+        s.append(r(np.pi, X_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+        s.append(Delay(2000)) 
+
+
+        
         '''0-1 Pi pulse'''
         s.append(self.seq)
         s.append(r(np.pi, X_AXIS))
@@ -82,6 +113,17 @@ class Qubit_Pop(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ]))
         s.append(Delay(2000)) 
+
+        s.append(self.seq)
+        s.append(r(np.pi, X_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+        s.append(Delay(2000))
+
+
+
         
         '''1-2 Pi pulse'''
         s.append(self.seq)
@@ -91,7 +133,17 @@ class Qubit_Pop(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ]))
         s.append(Delay(2000))        
-        
+
+        s.append(self.seq)
+        s.append(r_ef(np.pi, X_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+        s.append(Delay(2000)) 
+
+
+        s.append(Delay(2000))         
         '''0-1, 1-2 Pi Pulse'''
         s.append(self.seq)
         s.append(r(np.pi, X_AXIS))
@@ -101,7 +153,17 @@ class Qubit_Pop(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ])) 
         s.append(Delay(2000))
-        
+
+        s.append(self.seq)
+        s.append(r(np.pi, X_AXIS))
+        s.append(r_ef(np.pi, X_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ])) 
+        s.append(Delay(2000))
+
+   
         '''1-2, 0-1 Pi Pulse'''
         s.append(self.seq)
         s.append(r_ef(np.pi, X_AXIS))
@@ -112,6 +174,42 @@ class Qubit_Pop(Measurement1D):
                 Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
             ])) 
         s.append(Delay(2000))
+        
+        s.append(self.seq)
+        s.append(r_ef(np.pi, X_AXIS))
+        s.append(r(np.pi, X_AXIS))
+        
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ])) 
+        s.append(Delay(2000))
+       
+        '''0-1,1-2,0-1 Pulse'''
+        s.append(self.seq)
+        s.append(r(np.pi, X_AXIS))
+        s.append(r_ef(np.pi, X_AXIS))
+        s.append(r(np.pi, X_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ])) 
+        s.append(Delay(2000))
+
+        s.append(self.seq)
+        s.append(r(np.pi, X_AXIS))
+        s.append(r_ef(np.pi, X_AXIS))
+        s.append(r(np.pi, X_AXIS))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ])) 
+        s.append(Delay(2000))
+
+        
+        
+        
+        
         s = self.get_sequencer(s)
         seqs = s.render()
 

@@ -22,10 +22,10 @@ filepath = 'C:\_Data\\'
 #hdf5_name = 'VNAtestJan30.hdf5'
 #hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
 #hdf5_name = 'FMR_RT_0515.hdf5'
-hdf5_name = '0531Cooldown_FMR - Copy.hdf5'
-date = '20190605'
-time = '142530'
-experiment = 'Magnet_Sweep_VNA'
+hdf5_name = '0531Cooldown_FMR.hdf5'
+date = '20190618'
+time = '121301'
+experiment = 'Current_Sweep_VNA'
 
 ''' Primary x axis and secondary if 2d'''
 #x_key = 'freqs'
@@ -39,8 +39,8 @@ y_keys = exp.keys()
 #y_keys.remove(x_key)
 #y_keys.remove(x2_key)
 freq = exp['freqs'].value
-field = exp['fields'].value
-#currents = exp['currents'].value
+#field = exp['fields'].value
+currents = exp['currents'].value
 real = exp['realS21'].value
 imag = exp['imaginaryS21'].value
 
@@ -53,8 +53,9 @@ imag = exp['imaginaryS21'].value
 '''Plot'''
 pl.figure()
 figname = ''
-field = field * 1000
+#field = field * 1000
 #field = np.zeros(len(currents))
+field = currents
 #for i in range(len(currents)):
 #    if currents[i] < 0.5:
 #        field[i] = 530.731*currents[i]
@@ -73,21 +74,22 @@ pl.colorbar()
 #pl.title('YIG FMR Spectrum, S11 Measurement')
 pl.xlabel('Magnetic Field(mT)')
 pl.ylabel('Frequency(GHz)')
-x = field
-Ms = 178 *1.15
-k = 1.008
-off = 0.63
-pl.plot(x, k*28.025*x/1000+off, color = 'b') #110
-pl.plot(x, k*28.025*(x+Ms*(0.4-0.333333))/1000+off, color = 'r') #220
-pl.plot(x, k*28.025*(x+Ms*(0.428571-0.333333))/1000+off, color = 'r') #330
-pl.plot(x, k*28.025*(x+Ms*(0.444444-0.333333))/1000+off, color = 'r') #440
-pl.plot(x, k*28.025*(x+Ms*(0.454545-0.333333))/1000+off, color = 'r') #550
-pl.plot(x, k*28.025*(x+Ms*(0.285714-0.333333))/1000+off, color = 'r') #320
-pl.plot(x, k*28.025*(x+Ms*(0.2-0.333333))/1000+off, color = 'r') #210
-pl.show()
+if 0:
+    x = field
+    Ms = 178 *1.15
+    k = 1.008
+    off = 0.63
+    pl.plot(x, k*28.025*x/1000+off, color = 'b') #110
+    pl.plot(x, k*28.025*(x+Ms*(0.4-0.333333))/1000+off, color = 'r') #220
+    pl.plot(x, k*28.025*(x+Ms*(0.428571-0.333333))/1000+off, color = 'r') #330
+    pl.plot(x, k*28.025*(x+Ms*(0.444444-0.333333))/1000+off, color = 'r') #440
+    pl.plot(x, k*28.025*(x+Ms*(0.454545-0.333333))/1000+off, color = 'r') #550
+    pl.plot(x, k*28.025*(x+Ms*(0.285714-0.333333))/1000+off, color = 'r') #320
+    pl.plot(x, k*28.025*(x+Ms*(0.2-0.333333))/1000+off, color = 'r') #210
+    pl.show()
 
 
-if 1: # fitting seperate modes
+if 0: # fitting seperate modes
 
     def S21(params, x, y):
             est = np.sqrt(params['kappa_prod'])/(1j*(x-params['omega_c'])-(params['kappa_a'])/2.0 )

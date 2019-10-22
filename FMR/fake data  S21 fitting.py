@@ -8,13 +8,13 @@ import numpy as np
 import matplotlib.pyplot as pl
 import lmfit
 
-kappa_1 = 1e5
-kappa_2 = 1e5
+kappa_1 = 1e6
+kappa_2 = 1e6
 omega_c = 8.5e9
 kappa_a = 2e6
 g = 200e6
 omega_fmr = 7.5e9
-kappa_fmr = 3e6
+kappa_fmr = 1e6
 
 
 def S21(params, x, y):
@@ -31,9 +31,9 @@ def S21(params, x, y):
 #    np.sqrt((y.real - est.real)**2 + (y.imag - est.imag)**2)
 #x = np.arange(7.5e9, 8.5e9, 0.00001e9)
 
-m_lst = np.arange(7.7e9,8.4e9,0.05e9)
+m_lst = np.arange(8e9,8.45e9,0.5e9)
 span1 = 4e8
-span = 10e6
+span = 1500e6
  
     
 line=np.empty(len(m_lst))
@@ -57,103 +57,107 @@ for omega_fmr in m_lst:
     print omega_fmr
     print x[np.argmin(abs(y))]
     omega_fmr1 = x[np.argmax(abs(y))]
-    x = np.linspace(omega_fmr1 - span/2, omega_fmr1 + span/2, 1601)
+    x = np.linspace(omega_fmr1 - span/2, omega_fmr1 + span/2, 16001)
     y = np.sqrt(kappa_1 *kappa_2)/(1j*(x-omega_c)-kappa_a/2 +g**2/(1j*(x-omega_fmr)-kappa_fmr/2))
 #    y_bg = np.sqrt(kappa_1 *kappa_2)/(1j*(x-omega_c)-kappa_a/2)
-    y = y - y_bg
-
-      
-    #pl.suptitle('fitting for %s'%(foldername))
+#    y = y - y_bg
     
-    
-    #            y = y * np.exp(-1j*phase2)
-    
-    params = lmfit.Parameters()
-    params.add('kappa_prod', value= 1e7, min = 0)
-    params.add('omega_c', value=omega_fmr1)
-    params.add('kappa_a', value=2e6, min = 0)
-    params.add('roff',value = 0)
-    params.add('ioff',value = 0)
-    params.add('phi',value = 0, max = np.pi, min = -np.pi)
-#    params.add('kappa_fmr', value= 2e6, min = 0)
-#    params.add('omega_fmr', value=omega_fmr)
-#    params.add('g', value=2e7, min = 0)
-    
-    result = lmfit.minimize(S21, params, args=(x, y))
-    
-#    lmfit.report_fit(result.params)
-    
-    y1 = np.sqrt(result.params['kappa_prod'].value)/(1j*(x-result.params['omega_c'].value)-(result.params['kappa_a'].value)/2.0)# + params['g']**2/(1j *(x-result.params['omega_fmr'].value)-result.params['kappa_fmr'].value/2) )
-    y1 = y1 + result.params['roff'].value + 1j*result.params['ioff'].value
-#    y1 = y1 * np.exp(1j*result.params['phi'].value)
-    #            *(1-result.params['Asym'].value*(x-result.params['omega_c'].value)/(result.params['kappa_a'].value/2.0))
-    
-#    pl.figure()
+#    y = 1/y
+     
+#    #pl.suptitle('fitting for %s'%(foldername))
+#    
+#    
+#    #            y = y * np.exp(-1j*phase2)
+#    
+#    params = lmfit.Parameters()
+#    params.add('kappa_prod', value= 1e7, min = 0)
+#    params.add('omega_c', value=omega_fmr1)
+#    params.add('kappa_a', value=2e6, min = 0)
+#    params.add('roff',value = 0)
+#    params.add('ioff',value = 0)
+#    params.add('phi',value = 0, max = np.pi, min = -np.pi)
+##    params.add('kappa_fmr', value= 2e6, min = 0)
+##    params.add('omega_fmr', value=omega_fmr)
+##    params.add('g', value=2e7, min = 0)
+#    
+##    result = lmfit.minimize(S21, params, args=(x, y))
+#    
+##    lmfit.report_fit(result.params)
+#    
+#    y1 = np.sqrt(result.params['kappa_prod'].value)/(1j*(x-result.params['omega_c'].value)-(result.params['kappa_a'].value)/2.0)# + params['g']**2/(1j *(x-result.params['omega_fmr'].value)-result.params['kappa_fmr'].value/2) )
+#    y1 = y1 + result.params['roff'].value + 1j*result.params['ioff'].value
+##    y1 = y1 * np.exp(1j*result.params['phi'].value)
+#    #            *(1-result.params['Asym'].value*(x-result.params['omega_c'].value)/(result.params['kappa_a'].value/2.0))
+#    
+##    pl.figure()
+#
+#
+##    y1 = 1/y1
     pl.subplot(121)
     pl.plot(x,np.abs(y))
-    pl.plot(x, np.abs(y1),'--')
+#    pl.plot(x, np.abs(y1),'--')
     
     
     pl.subplot(122)
     pl.plot(y.real,y.imag)
     pl.ylabel('Q')
     pl.xlabel('I')
-    pl.plot(np.real(y1), np.imag(y1),'--')
+#    pl.plot(np.real(y1), np.imag(y1),'--')
     pl.legend()
     
     
     
-    temp[i] = m_lst[i]
-   # temp[i] = temp[i]*1000
-
-    
-    line[i] = result.params['kappa_a'].value/float(1000000)
-    err[i]= (result.params['kappa_a'].stderr)/float(1000000)
-    feq[i] = result.params['omega_c'].value/float(1000000000)
-    ferr[i]=result.params['omega_c'].stderr/float(1000000000)
-    roff[i] = result.params['roff'].value
-    ioff[i] = result.params['ioff'].value
-    totalQ[i] = (result.params['omega_c'].value/line[i]/float(1000000))
-
-    i = i + 1
-    
-    
-pl.figure()
-pl.errorbar(temp,line,yerr=err,fmt='o',label='kappa_a')
-
-pl.legend()
-
-pl.ylabel('linewidth(MHz)')
-pl.xlabel('Magnetic Field')
-print np.average(line)
-
-
-
-feq = feq *1e9
-pl.figure()
-pl.scatter(feq, roff, label = 'roff')
-pl.scatter(feq, ioff, label = 'ioff')
-##    pl.savefig('%s\%s_roff.jpg'%(figpath,figname))
-#    pl.legend()
-#    for i in range(len(roff)-1):
-#        if np.abs(roff[i+1]-roff[i])>0.0001 or np.abs(ioff[i+1]-ioff[i])>0.0001:
-#            roff[i+1] = roff[i]
-#            ioff[i+1] = ioff[i]
-#    mr,br=np.polyfit(feq,roff,1)
-#    pl.plot(feq,mr*feq+br)
-#    print 'roff = %s*x + %s'%(mr,br)
-#    
-#    mi,bi=np.polyfit(feq,ioff,1)
-#    pl.plot(feq,mi*feq+bi)    
-#    print 'ioff = %s*x + %s'%(mi,bi)
-#pl.figure()
-#pl.errorbar(temp,feq,yerr=ferr,fmt='o')
+#    temp[i] = m_lst[i]
+#   # temp[i] = temp[i]*1000
 #
-#pl.ylabel('frequency(GHz)')
+#    
+#    line[i] = result.params['kappa_a'].value/float(1000000)
+#    err[i]= (result.params['kappa_a'].stderr)/float(1000000)
+#    feq[i] = result.params['omega_c'].value/float(1000000000)
+#    ferr[i]=result.params['omega_c'].stderr/float(1000000000)
+#    roff[i] = result.params['roff'].value
+#    ioff[i] = result.params['ioff'].value
+#    totalQ[i] = (result.params['omega_c'].value/line[i]/float(1000000))
+#
+#    i = i + 1
+#    
+    
+#pl.figure()
+#pl.errorbar(temp,line,yerr=err,fmt='o',label='kappa_a')
+#
+#pl.legend()
+#
+#pl.ylabel('linewidth(MHz)')
 #pl.xlabel('Magnetic Field')
-
-
-pl.figure()
-pl.scatter(temp,totalQ)
-pl.ylabel('Total Q')
-pl.xlabel('Magnetic Field')
+#print np.average(line)
+#
+#
+#
+#feq = feq *1e9
+#pl.figure()
+#pl.scatter(feq, roff, label = 'roff')
+#pl.scatter(feq, ioff, label = 'ioff')
+###    pl.savefig('%s\%s_roff.jpg'%(figpath,figname))
+##    pl.legend()
+##    for i in range(len(roff)-1):
+##        if np.abs(roff[i+1]-roff[i])>0.0001 or np.abs(ioff[i+1]-ioff[i])>0.0001:
+##            roff[i+1] = roff[i]
+##            ioff[i+1] = ioff[i]
+##    mr,br=np.polyfit(feq,roff,1)
+##    pl.plot(feq,mr*feq+br)
+##    print 'roff = %s*x + %s'%(mr,br)
+##    
+##    mi,bi=np.polyfit(feq,ioff,1)
+##    pl.plot(feq,mi*feq+bi)    
+##    print 'ioff = %s*x + %s'%(mi,bi)
+##pl.figure()
+##pl.errorbar(temp,feq,yerr=ferr,fmt='o')
+##
+##pl.ylabel('frequency(GHz)')
+##pl.xlabel('Magnetic Field')
+#
+#
+#pl.figure()
+#pl.scatter(temp,totalQ)
+#pl.ylabel('Total Q')
+#pl.xlabel('Magnetic Field')
