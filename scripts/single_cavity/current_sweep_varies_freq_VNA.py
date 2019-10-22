@@ -155,8 +155,11 @@ class Current_Sweep_Varies_freq_VNA(Measurement1D):
         for icurrent, current in enumerate(self.currents):
 
 
-#            Yoko.do_ramp_current(current)
+
+            Yoko.do_ramp_current(current)
+
 #            Magnet.do_set_field(current)
+
             time.sleep(2)
 
             VNA.set_center_freq(self.center_freqs[icurrent])

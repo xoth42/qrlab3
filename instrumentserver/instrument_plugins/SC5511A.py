@@ -243,9 +243,9 @@ class SC5511A(Instrument):
 #            flags=Instrument.FLAG_GETSET, value = 'fixed')
         self.add_parameter('rf_on', type=types.BooleanType,
             flags=Instrument.FLAG_GETSET, value = True)
-        self.add_parameter('ext_locked', type=types.BooleanType,
-            flags=Instrument.FLAG_GET, value = True)
-        
+#        self.add_parameter('ext_locked', type=types.BooleanType,
+#            flags=Instrument.FLAG_GET, value = True)
+#        
         
         
         '''
@@ -339,8 +339,8 @@ class SC5511A(Instrument):
 #            return lb_dll.sc5511a_set_standby(self._handle, 0)
             
 
-    def do_get_ext_locked(self):
-        return True
+#    def do_get_ext_locked(self):
+#        return True
     
     
     

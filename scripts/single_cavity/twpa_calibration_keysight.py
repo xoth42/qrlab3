@@ -42,7 +42,8 @@ def analysis(twpa_powers, twpa_freqs, ampdata, ax=None):
 
 class twpa_calibration_keysight(Measurement1D):
 
-    def __init__(self, qubit_info, power, freq, twpa_powers, twpa_freqs, twpa_pump, plot_type=None, qubit_pulse=False, seq=None,  **kwargs):
+    def __init__(self, qubit_info, power, freq, twpa_powers, twpa_freqs, twpa_pump, snr=False,
+                 plot_type=None, qubit_pulse=False, seq=None,  **kwargs):
         self.qubit_info = qubit_info
         self.freq = freq
         self.power = power
@@ -50,6 +51,7 @@ class twpa_calibration_keysight(Measurement1D):
         self.twpa_freqs = twpa_freqs
         self.twpa_pump = twpa_pump
         self.qubit_pulse = qubit_pulse
+        self.snr = snr
         if seq is None:
             seq = Trigger(250)
         self.seq = seq
@@ -62,7 +64,8 @@ class twpa_calibration_keysight(Measurement1D):
         self.data.create_dataset('twpa_powers', data=twpa_powers)
         self.data.create_dataset('twpa_freqs', data=twpa_freqs)
         self.ampdata = self.data.create_dataset('amplitudes', shape=(len(twpa_powers),len(twpa_freqs)))
-
+        self.stddata = self.data.create_dataset('deviations', shape=(len(twpa_powers),len(twpa_freqs)))
+        self.snrdata = self.data.create_dataset('snr', shape=(len(twpa_powers),len(twpa_freqs)))
 
     def generate(self):
         s = Sequence(self.seq)
@@ -109,7 +112,7 @@ class twpa_calibration_keysight(Measurement1D):
         self.load(seqs)
         self.start_awgs()
 
-
+        naverages = dig.get_naverages()
         for i_twpa_power, twpa_power in enumerate(self.twpa_powers):
             self.twpa_pump.set_power(twpa_power)
             print 'twpa_power = %s' % (twpa_power, )
@@ -117,31 +120,41 @@ class twpa_calibration_keysight(Measurement1D):
             for i_twpa_freq, twpa_freq in enumerate(self.twpa_freqs):
                 self.twpa_pump.set_frequency(twpa_freq)
                 time.sleep(0.1)
+
+                IQ = np.zeros(50, dtype=complex)
+                for j in range(50):
+                    dig.setup_avg_shot()
+                    dig.arm()
+                    dig.start_hvi()
+                    ret = dig.take_avg_shot(async = True)
+                    dig.stop_hvi()
+                    dig.release_buf()
+        
+                    try:
+                        while not ret.is_valid():
+                            objsh.helper.backend.main_loop(100)
+                    except Exception, e:
+        #                    alz.set_interrupt(True)
+                        print 'Error: %s' % (str(e), )
+                        return
                     
-                dig.setup_avg_shot()
-                dig.arm()
-                dig.start_hvi()
-                ret = dig.take_avg_shot(async = True)
-                dig.stop_hvi()
-                dig.release_buf()
-
-                try:
-                    while not ret.is_valid():
-                        objsh.helper.backend.main_loop(100)
-                except Exception, e:
-#                    alz.set_interrupt(True)
-                    print 'Error: %s' % (str(e), )
-                    return
-
-                IQ = np.average(ret.get())
-                print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (twpa_freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
-                print 'I,Q = %.03f, %.03f' % (np.real(IQ), np.imag(IQ))
-
+                    IQ[j] = np.average(ret.get())
+#                    time.sleep(0.1)
+                IQ_avg = IQ.mean()
+                IQ_std = np.std(IQ)
+                print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (twpa_freq / 1e6, np.real(IQ_avg), np.abs(IQ_avg), np.angle(IQ_avg, deg=True))
+#                print 'I,Q = %.03f, %.03f' % (np.real(IQ_avg), np.imag(IQ_avg))
+                print 'std = %.03f' % (IQ_std)
+                print 'SNR = %.02f' % (np.abs(IQ_avg)/IQ_std/ np.sqrt(naverages))
  
-                self.ampdata[i_twpa_power,i_twpa_freq] = np.abs(IQ)
+                self.ampdata[i_twpa_power,i_twpa_freq] = np.abs(IQ_avg)
+                self.stddata[i_twpa_power,i_twpa_freq] = IQ_std
+                self.snrdata[i_twpa_power,i_twpa_freq] = np.abs(IQ_avg)/IQ_std/ np.sqrt(naverages)
                     
         
         self.analyze()
 
     def analyze(self, data=None, ax=None):
+        if self.snr:
+            self.ampdata = self.snrdata[:]
         analysis(self.twpa_powers, self.twpa_freqs, self.ampdata)

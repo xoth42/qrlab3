@@ -384,6 +384,55 @@ class DetunedGaussians(DetunedSum):
             amp = area / np.sqrt(np.pi) / self.sigma
         super(DetunedGaussians, self).add(amp, period, phases)
 
+class DetunedGaussSquare(object): # JEFF 
+    '''
+    Makes detuend gauss square pusles. Works like the detuned gauss but with a
+    width and sigma parameter.
+    '''
+
+    LAST_ID = 0
+
+    def __init__(self, width, sigma, chans=(1,2), **kwargs):
+        self.width = width
+        self.sigma = sigma
+        self.chans = chans
+        self.kwargs = kwargs
+        self._pulses = []
+
+    def add(self, amp, period, phases=(0,-np.pi/2), IQamps=(1,1)):
+        self._pulses.append((amp, period, phases, IQamps))
+
+    def get_pulse(self, phi0=0):
+        '''
+        Return a Combined pulse with activity in both I/Q channels.
+        '''
+        bufs = {}
+        for amp, period, phases, IQamps in self._pulses:
+            pulse = GaussSquare(self.width, amp, self.sigma, chan='_0', **self.kwargs).generate(0, '_0')
+            buflen = len(pulse.get_data())
+            phis = 2 * np.pi * np.arange(0, buflen) / period + phi0
+            for ichan, chan in enumerate(self.chans):
+                data = pulse.get_data() * np.cos(phis + phases[ichan]) * IQamps[ichan]
+                if chan not in bufs:
+                    bufs[chan] = data
+                else:
+                    bufs[chan] += data
+
+        items = []
+        for ichan, chan in enumerate(self.chans):
+            name = 'detGaussSquare%d_ch%s' % (DetunedGaussSquare.LAST_ID, chan)
+            items.append(Pulse(name, bufs[chan], chan=chan))
+
+        DetunedGaussSquare.LAST_ID += 1
+        return Combined(items)
+
+    def __call__(self, phi0=0):
+        return self.get_pulse(phi0=phi0)
+
+
+
+
+
 #########################################
 # Pulse modifiers
 #########################################
@@ -579,6 +628,21 @@ class SQRotation:
         p0 = SQPulse(w, sign * h * np.cos(phase), self.ptype, npi_2, chan=self.chans[0])
         p1 = SQPulse(w, sign * h * np.sin(phase), self.ptype, npi_2, chan=self.chans[1])
         return Combined([p0, p1])
+    
+class CSVPulse(Pulse): # JEFF added to do grape pulses
+    def __init__(self, filename, amp, chan=1, pre_delay=0, post_delay=0):
+        ys = amp * np.loadtxt(filename)
+        YS = np.concatenate((np.zeros(pre_delay), ys, np.zeros(post_delay)))
+        YS[-1] = 0.
+        name = 'csv(%s,%.5f)' % (filename, amp)
+        super(CSVPulse, self).__init__(name, YS, chan=chan)
+
+class DataPulse(Pulse): # JEFF added to do grape pulses
+    def __init__(self, data, amp, chan=1, chop=4.):
+        ys = amp * data
+        ys[-1] = 0.
+        name = 'data(%.5f)' % (amp)
+        super(DataPulse, self).__init__(name, ys, chan=chan)
 
 #########################################
 # Composite pulse schemes

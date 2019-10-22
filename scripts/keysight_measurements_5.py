@@ -122,11 +122,11 @@ if 0: # cav transmission
 
 if 1: # cav trans with qubit brick on and off
     from single_cavity import rocavspec_qubitge
-#    qubit_source = mclient.instruments['SC_qubit2']
-    qubit_source = mclient.instruments['qubitbrick']
+    qubit_source = mclient.instruments['SC_qubit2']
+#    qubit_source = mclient.instruments['qubitbrick']
     rofreq = 10.935e9
     freq_range = 5e6
-    ro = rocavspec_qubitge.ROCavSpec_Qubitge(qubit_source, qubit_info, np.linspace(6, 10, 1),
+    ro = rocavspec_qubitge.ROCavSpec_Qubitge(qubit_source, qubit2_info, np.linspace(6, 10, 1),
                                              np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
                                              qubit_pulse=True,seq=None)#,extra_info=[ef2_info])
     ro.measure()  

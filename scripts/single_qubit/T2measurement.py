@@ -35,7 +35,7 @@ def double_sin_fit(params, x, data):
     fit function: of + a1 * exp(-tau1 * x) * sin(f1 * x + phi1) + a2 * exp(-tau2 * x) * cos(f2 * x + phi2)
     '''
     exp1 = np.exp(-(x / params['tau'].value))
-    exp2 = np.exp(-(x / params['tau2'].value))
+    exp2 = np.exp(-(x / params['tau'].value))#exp2 = np.exp(-(x / params['tau2'].value))  #Chen changed to single tau for both frequencies 8/24/19
     sin1 = np.sin(2 * np.pi * x * params['freq'].value + params['phi0'].value)
     sin2 = np.sin(2 * np.pi * x * params['freq2'].value + params['phi2'].value)
     est = params['ofs'].value + params['amp'].value * exp1 * sin1 + params['amp2'].value * exp2 * sin2
@@ -59,7 +59,9 @@ def analysis(meas, data=None, fig=None):
     params.add('tau', value=xs[-1], min=10, max=2e5)
     params.add('freq', value=f0, min=0)
     if meas.echotype == ECHO_NONE:
-        params.add('phi0', value=-np.pi/2, min=-1.2*np.pi, max=1.2*np.pi)  #Changed to plus sign for accommodate for amplitude RO, need a good LT solution
+
+        params.add('phi0', value=np.pi/2, min=-1.2*np.pi, max=1.2*np.pi, vary=True)  #Changed to plus sign for accommodate for amplitude RO, need a good LT solution
+
     elif meas.echotype == ECHO_HAHN:
         params.add('phi0', value=-np.pi/2, min=-1.2*np.pi, max=1.2*np.pi) #DARIO added to fit better for echo vs plain T2
     result = lmfit.minimize(t2_fit, params, args=(xs, ys))
@@ -102,13 +104,13 @@ def analysis(meas, data=None, fig=None):
         params3.add('freq', value=params['freq'].value, min=0)
         params3.add('phi0', value=params['phi0'].value, min=-1.2*np.pi, max=1.2*np.pi)
         params3.add('amp2', value=result.params['amp'].value, min=0)
-        params3.add('tau2', value=result.params['tau'].value, min=10, max=200000)
+#        params3.add('tau2', value=result.params['tau'].value, min=10, max=200000)
         params3.add('freq2', value=result.params['freq'].value, min=0)
         params3.add('phi2', value=result.params['phi0'].value, min=-1.2*np.pi, max=1.2*np.pi)
 
         result = lmfit.minimize(double_sin_fit, params3, args=(xs,ys))
         lmfit.report_fit(result.params)
-        text = 'Fit, tau1=%.03f us, df1=%.03f kHz, amp1=%.02f \nFit, tau2=%.03f us, df2=%.03f kHz, amp2=%.02f'%(result.params['tau'].value/1000, result.params['freq'].value*1e6, result.params['amp'].value, result.params['tau2'].value/1000, result.params['freq2'].value*1e6, result.params['amp2'].value)
+        text = 'Fit, tau1=%.03f us, df1=%.03f kHz, amp1=%.02f \nFit, tau2=%.03f us, df2=%.03f kHz, amp2=%.02f'%(result.params['tau'].value/1000, result.params['freq'].value*1e6, result.params['amp'].value, result.params['tau'].value/1000, result.params['freq2'].value*1e6, result.params['amp2'].value)
         fig.axes[0].plot(xs/1e3, -double_sin_fit(result.params, xs, 0), label=text)
         fig.axes[0].legend()
         fig.axes[0].set_ylabel('Intensity [AU]')
@@ -122,7 +124,7 @@ def analysis(meas, data=None, fig=None):
 class T2Measurement(Measurement1D):
 
     def __init__(self, qubit_info, delays, detune=0, echotype=ECHO_NONE, necho=1,
-                 double_freq=False, laser_power = None, seq=None, postseq=None, Qswitch_infoA=None, Qswitch_infoB=None, **kwargs):
+                 double_freq=False, seq=None, postseq=None, selective=False, Qswitch_infoA=None, Qswitch_infoB=None, **kwargs):
         self.qubit_info = qubit_info
         self.delays = delays
         self.xs = delays / 1e3        # For plotting purposes
@@ -130,11 +132,11 @@ class T2Measurement(Measurement1D):
         self.echotype = echotype
         self.necho = necho
         self.double_freq=double_freq
-        self.laser_power = laser_power
         if seq is None:
             seq = Trigger(250)
         self.seq = seq
         self.postseq = postseq
+        self.selective = selective     # Added 9/29 for Ramsey measuring chi
         self.QswA = Qswitch_infoA
         self.QswB = Qswitch_infoB
 
@@ -145,10 +147,12 @@ class T2Measurement(Measurement1D):
             echotype=echotype,
             necho=necho
         )
-#        self.data.set_attrs(laser_power =self.laser_power)
 
     def get_echo_pulse(self):
-        r = self.qubit_info.rotate
+        if self.selective == False:
+            r = self.qubit_info.rotate
+        else:
+            r = self.qubit_info.rotate_selective
 
         if self.echotype == ECHO_NONE:
             return None
@@ -206,7 +210,10 @@ class T2Measurement(Measurement1D):
     def generate(self):
         s = Sequence()
 
-        r = self.qubit_info.rotate
+        if self.selective == False:
+            r = self.qubit_info.rotate
+        else:
+            r = self.qubit_info.rotate_selective
         e = self.get_echo_pulse()
 #        if e:
 #            elen = e.get_length()
@@ -274,6 +281,7 @@ class T2Measurement(Measurement1D):
 #Ebru: adding the 1000 delay
             s.append(Delay(9000))
           
+
         s = self.get_sequencer(s)
         seqs = s.render()
 #        s.plot_seqs(seqs)

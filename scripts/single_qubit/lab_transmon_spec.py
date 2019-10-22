@@ -36,10 +36,12 @@ SC_Qubit = mclient.instruments['SC_Qubit']
 #refbrick = mclient.instruments['refFG']
 
 
+
 currents = np.linspace(-4.9352, -4.7352, 5)
 yoko.set_output_state(1) 
 ssbspec_freqs = np.linspace(-20e6, 20e6, 201) #range of points to check each ssbspec
 qubit_drive_freq = 5445.725e6
+
 #RObrick_freq = 7348.8e6
 #w = 30
 #w_selective = 300

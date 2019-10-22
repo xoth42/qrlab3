@@ -437,9 +437,11 @@ class Measurement(object):
             if self.print_progress:
                 logging.info('Acquiring...')
             while not ret.is_valid() and not self._interrupted:
-                objsh.helper.backend.main_loop(20) 
+                objsh.helper.backend.main_loop(20, origin=0) #DARIO 4/2/19 testing stuff;Alazar crashing
+#                print 'before processEvents'
                 QtWidgets.QApplication.processEvents()
-            print 'Done with take experiment'
+#                print(ret.is_valid(), time.time())
+#            print 'Done with take experiment'
             if self._interrupted:
                 alz.set_interrupt(True)
         except Exception, e:
@@ -1000,10 +1002,10 @@ class Measurement2D(Measurement):
         fig = self.get_figure()
         fig.axes[0].clear()
         if hasattr(self, 'xs') and hasattr(self, 'ys'):
-            zs = zs.reshape((len(self.xs), len(self.ys)))
+            zs = zs.reshape((len(self.ys), len(self.xs)))
             xs, ys = self.get_plotxsys()
             if self.style == STYLE_IMAGE:
-                fig.axes[0].pcolormesh(xs, ys, zs)
+                fig.axes[0].pcolormesh(xs, ys, zs, cmap=plt.get_cmap('RdBu'))
                 fig.axes[0].set_xlim(xs.min(), xs.max())
                 fig.axes[0].set_ylim(ys.min(), ys.max())
                 fig.canvas.draw()

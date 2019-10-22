@@ -129,12 +129,12 @@ class Rabi(Measurement1D):
                 s.append(Repeat(self.qubit_info.rotate(0, self.r_axis, amp=amp), self.repeat_pulse))
             if self.postseq is not None:
                 s.append(self.postseq)
-            s.append(Delay(20))
+            s.append(Delay(100))
             s.append(Combined([
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
-            s.append(Delay(9000))
+            s.append(Delay(2000))
 
 
 

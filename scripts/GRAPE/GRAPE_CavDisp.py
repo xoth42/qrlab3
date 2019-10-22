@@ -41,7 +41,7 @@ def analysis(meas, data=None, fig=None):
     fig.axes[0].plot(xs, ys, 'ks', ms=3)
     ofs0 = np.min(ys)
     amp0 = (np.max(ys) - np.min(ys)) * np.sign(ys[0]-ys[-1])
-    scaling0 = 1
+    scaling0 = .001
     print 'Amplitude estimate: %.03f ' % (amp0)
 
     fPoiss = PoissonFit(meas.proj_num, xs, ys)
@@ -61,20 +61,20 @@ def analysis(meas, data=None, fig=None):
     fig.canvas.draw()
     return p[1]
 
-class CavDisp_switch(Measurement1D):
+class GRAPE_CavDisp(Measurement1D):
 
-    def __init__(self, qubit_info, cav_info, switch_channel, dmax, N, proj_num, seq=None, postseq=None,
-                 delay=0, bgcor=True, update=False, Qswitch_infoA=None, Qswitch_infoB=None, **kwargs):
+    def __init__(self, qubit_info, cav_info, dmax, N, proj_num, filename, seq=None, postseq=None,
+                 delay=0, bgcor=False, update=False, Qswitch_infoA=None, Qswitch_infoB=None, **kwargs):
         self.qubit_info = qubit_info
         self.cav_info = cav_info
-        self.switch_channel=switch_channel
         self.QswA = Qswitch_infoA
         self.QswB = Qswitch_infoB
         if seq is None:
-            seq = Trigger(250)
+            seq = Trigger(500)
         self.seq = seq
         self.postseq = postseq
         self.proj_num = proj_num
+        self.filename = filename
         self.delay = delay
         self.bgcor = bgcor
         self.update_ins = update
@@ -84,7 +84,7 @@ class CavDisp_switch(Measurement1D):
         npoints = len(self.displacements)
         if self.bgcor:
             npoints *= 2
-        super(CavDisp_switch, self).__init__(npoints, infos=(qubit_info, cav_info), **kwargs)
+        super(GRAPE_CavDisp, self).__init__(npoints, infos=(qubit_info, cav_info), **kwargs)
         self.data.create_dataset('displacements', data=self.displacements)
         self.data.set_attrs(
             delay=delay,
@@ -99,15 +99,19 @@ class CavDisp_switch(Measurement1D):
         s = Sequence()
 
         r = self.qubit_info.rotate_selective
-        c = self.cav_info.rotate
+        
+        re_data = np.real(np.loadtxt(self.filename, dtype = complex))
+        im_data = np.imag(np.loadtxt(self.filename, dtype = complex))
         for i, alpha in enumerate(self.displacements):
             for i_bg in range(2):
                 if i_bg == 1 and not self.bgcor:
                     continue
 
                 s.append(self.seq)
-                s.append(Constant(int(500), 1, chan=self.switch_channel))
-                s.append(c(np.abs(alpha), np.angle(alpha)))
+                s.append(Combined([DataPulse(re_data, alpha, chan=self.cav_info.sideband_channels[0]),
+                                   DataPulse(im_data, alpha, chan=self.cav_info.sideband_channels[1])
+                                   ]))
+
                 if i_bg == 0:
                     s.append(r(np.pi, X_AXIS))
                 else:
@@ -123,6 +127,7 @@ class CavDisp_switch(Measurement1D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
+                s.append(Delay(2000))
 
             if self.QswA is not None or self.QswB is not None:
                 s.append(Repeat(Delay(1000), 30))   # wait for alazar acquisition to finish
@@ -134,13 +139,14 @@ class CavDisp_switch(Measurement1D):
                     Repeat(Constant(7000, 1, chan='1m1'), 100),     # Readout pump tone switch
 #                    Repeat(Constant(7000, 0.0001, chan=5), 100),         # Qubit/Readout master switch
                     ]))
+           
 
         s = self.get_sequencer(s)
         seqs = s.render()
         return seqs
 
     def get_ys(self, data=None):
-        ys = super(CavDisp_switch, self).get_ys(data)
+        ys = super(GRAPE_CavDisp, self).get_ys(data)
         if self.bgcor:
             return ys[::2] - ys[1::2]
         return ys

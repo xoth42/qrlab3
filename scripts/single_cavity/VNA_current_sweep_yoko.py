@@ -273,6 +273,6 @@ class Current_Sweep_VNA(Measurement1D):
 #        print 'self.ampdata\n', self.ampdata
         self.analyze()
         print self.data.get_fullname()
-        Yoko.do_ramp_current(0)
+#        Yoko.do_ramp_current(0)
     def analyze(self):
         analysis(self.currents, self.freqs, self.realdata, self.imagdata, self.fig_name,self.full_fig_name, self.Sij, fig = None)

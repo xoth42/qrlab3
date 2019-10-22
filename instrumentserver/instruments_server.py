@@ -92,7 +92,7 @@ class Instruments(object):
             params[name] = ins.get_parameter_values(async=True)
 
         # Wait for replies
-        backend.main_loop(1000, wait_for=params.values())
+        backend.main_loop(1000, wait_for=params.values(), origin=3)
 
         # Remove timed-out queries
         for name in params.keys():
@@ -146,7 +146,7 @@ class Instruments(object):
         logging.debug('Waiting for instrument...')
         ins = WaitForInstrument(self, name)
         start = time.time()
-        ret = backend.main_loop(waittime, wait_for=ins)
+        ret = backend.main_loop(waittime, wait_for=ins, origin=5)
         end = time.time()
         if not ins.is_valid():
             raise Exception('Timed out')
@@ -259,5 +259,5 @@ else:
     backend = objsh.backend
 
 backend.start_server(addr='127.0.0.1', port=55555)
-backend.main_loop()
+backend.main_loop(origin=4)
 

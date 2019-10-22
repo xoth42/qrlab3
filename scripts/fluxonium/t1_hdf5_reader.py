@@ -1,31 +1,22 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun May 19 23:34:46 2019
+Created on Sun July 10 23:34:46 2019
 
 @author: Wang_Lab
 """
 
 '''
-Reading data from ssb spec HDF5 file to fit lorentzian cruves to get cavity
-temperatures. Requires the path information to be filled out. Also requires
+Reading data from ab time domain decay data from HDF5 file to perform analysis. 
+
+fit lorentzian cruves to get cavity temperatures. Requires the path information to be filled out. Also requires
 the min_x and max_x to be specified for the lorentaizn peak you want to fit.
 Take amplitude values to calculate the temp.
 
-Jeff Gertler
+Chen Wang
 '''
-
-
 
 import os
 import time
-if 0:
-    os.system(r'C:\qrlab\start.bat')
-    time.sleep(1)
-
-
-import mclient
-from mclient import instruments
-
 import h5py as h5
 import numpy as np
 import matplotlib.pyplot as pl
@@ -34,16 +25,17 @@ import json
 from scripts.single_qubit import T1measurement
 
 
-
 ''' Path to the .hdf5 file '''
+
 filepath = 'C:\Users\Wang_Lab\Desktop\hdf5_copies'
 hdf5_name = '\Aug19DblCavity_copy.hdf5'
 #hdf5_name = '20190204 Cooldown.hdf5'
 date = '20190731'
 time = '235546'
+
 #time = '143054'
 
-experiment = 'T1Measurement'
+experiment = 'ab_time_domain'
 
 ''' Primary x axis and secondary if 2d'''
 x_key = 'gates'

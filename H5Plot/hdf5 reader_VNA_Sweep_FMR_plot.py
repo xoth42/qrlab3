@@ -21,11 +21,13 @@ from matplotlib import gridspec
 filepath = 'C:\_Data\\'
 #hdf5_name = 'VNAtestJan30.hdf5'
 #hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
+
 #hdf5_name = 'FMR_RT_0515.hdf5'
 hdf5_name = '0531Cooldown_FMR.hdf5'
 date = '20190618'
 time = '121301'
 experiment = 'Current_Sweep_VNA'
+
 
 ''' Primary x axis and secondary if 2d'''
 #x_key = 'freqs'
@@ -65,8 +67,8 @@ field = currents
 
 mag = 10*np.log10(real**2 + imag**2)
 Z = np.transpose(mag)
-#X,Y = np.meshgrid(field, freq)
-X,Y = np.meshgrid(field, freq/1e9)
+X,Y = np.meshgrid(currents, freq/1e9)
+#X,Y = np.meshgrid(field, freq/1e9)
 pl.xlim(X.min(), X.max())
 pl.ylim(Y.min(), Y.max())
 pl.pcolormesh(X,Y,Z)
@@ -74,6 +76,7 @@ pl.colorbar()
 #pl.title('YIG FMR Spectrum, S11 Measurement')
 pl.xlabel('Magnetic Field(mT)')
 pl.ylabel('Frequency(GHz)')
+
 if 0:
     x = field
     Ms = 178 *1.15
