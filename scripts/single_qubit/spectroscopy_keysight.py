@@ -5,6 +5,8 @@ from pulseseq.pulselib import *
 from lib.math import fit
 import time
 import objectsharer as objsh
+import os
+import config
 
 SPEC   = 0
 POWER  = 1
@@ -23,12 +25,13 @@ class Spectroscopy_Keysight(Measurement1D):
     pulse.
     '''
 
-    def __init__(self, qubit_rfsource, qubit_info, q_freqs, ro_powers,
-                 plen=1000, amp=1, seq=None, postseq=None,
+    def __init__(self, qubit_rfsource, qubit_info,  q_freqs, ro_powers,
+                 plen, amp=1, seq=None, postseq=None,
                  pow_delay=1, freq_delay=0.1, plot_type=None,
                  **kwargs):
         self.qubit_rfsource = qubit_rfsource
         self.qubit_info = qubit_info
+#        self.ef_info = ef_info
         self.ro_powers = ro_powers
         self.q_freqs = q_freqs
         self.plen = plen
@@ -61,22 +64,9 @@ class Spectroscopy_Keysight(Measurement1D):
             Constant(self.plen, self.amp, chan=chs[0]),
             Constant(self.plen, self.amp, chan=chs[1]),
         ])) 
-#        s.append(Constant(self.plen, 1, chan='3m1'))
-        
-        s.append(Delay(100))
-
-        if self.postseq:
-            s.append(self.postseq)
-            
-        s.append(Combined([
-            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-        ])) 
-
-###Ebru    
-#        s = Sequence(self.seq)
-#        s.append(Constant(self.plen, 1, chan='3m1'))  
+#        s.append(Constant(self.plen, 1, chan='3m1'))        
 #        s.append(Delay(100))
+#
 #        if self.postseq:
 #            s.append(self.postseq)
 #            
@@ -84,6 +74,24 @@ class Spectroscopy_Keysight(Measurement1D):
 #            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
 #            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
 #        ])) 
+
+##Ebru    THIS NEEDS TO BE CHANGED BACK TO NORMAL
+#        s = Sequence(self.seq)
+#        r = self.qubit_info.rotate
+#        r_ef = self.ef_info.rotate
+#        s.append(r(np.pi, 0))
+#        s.append(r_ef(np.pi, 0))        
+#        s.append(Constant(self.plen, 1, chan='3m1'))  
+        
+        
+#        s.append(Delay(100))
+        if self.postseq:
+            s.append(self.postseq)
+            
+        s.append(Combined([
+            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+        ])) 
           
 
 
@@ -186,3 +194,10 @@ class Spectroscopy_Keysight(Measurement1D):
             ax1.set_xlabel('Power [dB]')
             ax2.set_xlabel('Power [dB]')
 #        plt.savefig('out/' + str(int(self.q_freqs[0]/1e6)) + '.png')
+        ## Yingying add it to save the figure        
+        fn = os.path.join(config.datadir, 'images/%s_qubitspec.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
+        fdir = os.path.split(fn)[0]
+        if not os.path.isdir(fdir):
+            os.makedirs(fdir)
+        kwargs = dict()
+        plt.savefig(fn, **kwargs)

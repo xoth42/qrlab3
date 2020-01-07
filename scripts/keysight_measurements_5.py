@@ -18,18 +18,25 @@ import os
 import time
 import math
 import lmfit
-
+import time
+import datetime
 
 qubit_info = mclient.get_qubit_info('qubit1ge')
 ef_info = mclient.get_qubit_info('qubit1ef')
+qubit2_info = mclient.get_qubit_info('qubit2ge')
+ef2_info = mclient.get_qubit_info('qubit2ef')
+fwm_info = mclient.get_qubit_info('fwm_info1')
+fwm2_info = mclient.get_qubit_info('fwm_info2')
 #qubit03_info = mclient.get_qubit_info('qubit1_03')
 #qubit14_info = mclient.get_qubit_info('qubit1_14')
+readout_info = mclient.get_readout_info('readout')
 #cavity_infoA = mclient.get_qubit_info('cavityAlice')
 #RO_info = mclient.get_qubit_info('RO')
 #qubit2_info = mclient.get_qubit_info('cavityAlice')
 os.chdir(r'C:/qrlab/scripts')
 
-#cool_time=30e3
+
+#cool_time=10e3
 #cool = sequencer.Combined([sequencer.Constant(int(cool_time), 0.04, chan=ef_info.sideband_channels[0]),
 #                           sequencer.Constant(int(cool_time), 0.04, chan=ef_info.sideband_channels[1]),
 #                           sequencer.Constant(int(cool_time), 1, chan='3m1')])
@@ -44,19 +51,140 @@ if 0: # test digitizer
     plt.legend()
     plt.show()
     bla
-
+    
+if 0: # test digitizer DEMODULATED
+    dig = mclient.instruments['dig']
+    avgs = dig.test_dig_demod(2500, 40000)
+    print(np.shape(avgs))
+    plt.figure()
+    plt.plot(np.real(avgs), label = 'real')
+    plt.plot(np.imag(avgs), label = 'imag')
+    plt.plot(np.abs(avgs), label = 'abs')
+    plt.legend() 
+    plt.show()
+    plt.figure()
+    plt.plot(np.real(avgs),np.imag(avgs)) 
+    plt.show()
+    bla
 if 0: # cav transmission
     from single_cavity import rocavspectroscopy_keysight
 #    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])
+#    seq = sequencer.Sequence([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0), ef2_info.rotate(np.pi, 0)])
 #    Yoko.do_set_current(-0.00175)
-    rofreq = 7608.5e6
+    rofreq = 10.935e9
+    freq_range = 10e6
+    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit2_info, np.linspace(6, 10, 1),
+                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
+                                             qubit_pulse=False, seq=None)#,extra_info=[ef2_info])
+    ro.measure()
+    
+##by Yingying
+#    plt.close()
+#    plt.close()
+#    plt.figure('amp215')
+#    label = ' qubit in g state'
+#    plt.plot(ro.freqs, ro.ampdata[0],label = label) 
+#    plt.legend()
+#    plt.figure('phase215')
+#    plt.plot(ro.freqs, ro.phasedata[0],label = label)   
+#    plt.legend()
+#    ga = ro.ampdata[0]
+#    gp = ro.phasedata[0]
+#    g = ga * np.exp(1j*(gp/180 * np.pi))
+#    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit2_info, np.linspace(6, 10, 1),
+#                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
+#                                             qubit_pulse=False, seq=None)#,extra_info=[ef2_info])
+#    ro.measure()
+##    plt.close()
+##    plt.close()
+#    plt.figure('amp215')
+#    label = ' qubit in g state'
+#    plt.plot(ro.freqs, ro.ampdata[0],label = label) 
+#    plt.legend()
+#    plt.figure('phase215')
+#    plt.plot(ro.freqs, ro.phasedata[0],label = label)   
+#    plt.legend()
+#    ea = ro.ampdata[0]
+#    ep = ro.phasedata[0]
+#    e = ea * np.exp(1j*(ep/180 * np.pi))
+#    
+#    diff_c = np.sum(np.abs(e-g))/np.sum(np.abs(g))
+#    diff_a = np.sum(ea - ga)/np.sum(ga)
+#    print('diff_c  = %s / %s = %s'%(np.sum(np.abs(e-g)),np.sum(np.abs(g)), diff_c))
+#    print('diff_a  = %s / %s = %s'%(np.sum(ea - ga),np.sum(ga), diff_a))
+#    
+#by Yingying
+#    max_freq = ro.fit_params[2]
+#    print max_freq
+#    readout_info.rfsource1.set_frequency(ro.fit_params[2])
+#    readout_info.rfsource2.set_frequency(ro.fit_params[2]+50e6)
+    bla
+
+if 1: # cav trans with qubit brick on and off
+    from single_cavity import rocavspec_qubitge
+    qubit_source = mclient.instruments['SC_qubit2']
+#    qubit_source = mclient.instruments['qubitbrick']
+    rofreq = 10.935e9
+    freq_range = 5e6
+    ro = rocavspec_qubitge.ROCavSpec_Qubitge(qubit_source, qubit2_info, np.linspace(6, 10, 1),
+                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
+                                             qubit_pulse=True,seq=None)#,extra_info=[ef2_info])
+    ro.measure()  
+#    ea_on = ro.ampedata[0]
+#    ep_on = ro.phaseedata[0]
+#    e_on = ea_on * np.exp(1j*(ep_on/180 * np.pi))
+#    ea_off = ro.ampgdata[0]
+#    ep_off = ro.phasegdata[0]
+#    e_off = ea_off * np.exp(1j*(ep_off/180 * np.pi))
+#
+#
+#    ro = rocavspec_qubitge.ROCavSpec_Qubitge(qubit_source, qubit2_info, np.linspace(6, 10, 1),
+#                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
+#                                             qubit_pulse=False,seq=None)#,extra_info=[ef2_info])
+#    ro.measure()  
+#    ga_on = ro.ampedata[0]
+#    gp_on = ro.phaseedata[0]
+#    g_on = ga_on * np.exp(1j*(gp_on/180 * np.pi))
+#    ga_off = ro.ampgdata[0]
+#    gp_off = ro.phasegdata[0]
+#    g_off = ga_off * np.exp(1j*(gp_off/180 * np.pi))    
+#    
+#    print('\n')
+#    diff_c_e = np.sum(np.abs(e_on-e_off))/np.sum(np.abs(e_off))
+#    diff_a_e = np.sum(ea_on - ea_off)/np.sum(ea_off)
+#    print('diff_c_e  = %s / %s = %s'%(np.sum(np.abs(e_on-e_off)),np.sum(np.abs(e_off)), diff_c_e))
+#    print('diff_a_e  = %s / %s = %s'%(np.sum(ea_on - ea_off),np.sum(ea_off), diff_a_e))    
+#    
+#    diff_c_g = np.sum(np.abs(g_on-g_off))/np.sum(np.abs(g_off))
+#    diff_a_g = np.sum(ga_on - ga_off)/np.sum(ga_off)
+#    print('diff_c_g  = %s / %s = %s'%(np.sum(np.abs(g_on-g_off)),np.sum(np.abs(g_off)), diff_c_g))
+#    print('diff_a_g  = %s / %s = %s'%(np.sum(ga_on - ga_off),np.sum(ga_off), diff_a_g))    
+#    
+#    diff_c_off = np.sum(np.abs(e_off-g_off))/np.sum(np.abs(g_off))
+#    diff_a_off = np.sum(ea_off - ga_off)/np.sum(ga_off)
+#    print('diff_c_off  = %s / %s = %s'%(np.sum(np.abs(e_off-g_off)),np.sum(np.abs(g_off)), diff_c_off))
+#    print('diff_a_off  = %s / %s = %s'%(np.sum(ea_off - ga_off),np.sum(ga_off), diff_a_off))
+#    
+#    diff_c_sub = np.sum(np.abs((e_on-e_off)-(g_on-g_off)))/np.sum(np.abs(g_off))
+#    diff_a_sub = np.sum((ea_on-ea_off) - (ga_on-ga_off))/np.sum(ga_off)
+#    print('diff_c_sub  = %s / %s = %s'%(np.sum(np.abs((e_on-e_off)-(g_on-g_off))),np.sum(np.abs(g_off)), diff_c_sub))
+#    print('diff_a_sub  = %s / %s = %s'%(np.sum((ea_on-ea_off) - (ga_on-ga_off)), np.sum(ga_off),diff_a_sub))
+#    
+    bla
+if 0: # sweeping flux to find phase 
+    from single_cavity import flux_phase_sweep
+#    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])
+#    Yoko.do_set_current(-0.00175)
+    Yoko = mclient.instruments['Yoko']
+    rofreq = 7549.0e6
     freq_range = 20e6
-    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(0, 0, 1),
-                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 51),
+    ccenter = 0e-3
+    crange = 4e-3
+    ro = flux_phase_sweep.flux_phase_sweep(qubit_info, np.linspace(-5, 0, 1),
+                                             np.linspace(ccenter-crange, ccenter+crange, 201), current_source=Yoko,
                                              qubit_pulse=False, seq=None)
     ro.measure()
     bla
-    
     
 if 0: # calibrate TWPA
     SC_TWPApump = mclient.instruments['SC_TWPApump']
@@ -77,7 +205,7 @@ if 0:
     freq_range = 15e6
     ro = rocavspectroscopy_keysight_IQmod.ROCavSpectroscopy(qubit_info, RO_info, np.linspace(-10, -20, 3),
                                              np.linspace(rofreq-freq_range, rofreq+freq_range, 55),
-                                               plen=20000, amp=0.0001, qubit_pulse=False)
+                                               plen=20000, amp=0.3, qubit_pulse=False)
     ro.measure()
     bla
     
@@ -85,45 +213,73 @@ if 0:
 if 0: #     qubit spectroscopy
     from single_qubit import spectroscopy_keysight
 #    from scripts.single_qubit import spectroscopy_IQ
-    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate(np.pi, 0)])
-    postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
-    qubit_freq = 965e6
+#    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate(np.pi, 0), ef_info.rotate(np.pi, 0)])
+#    postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
+#    for i in [-20,-15,-10,-5,0,5]:
+#        for a in [0.001, 0.01, 0.05, 0.1, 0.5]:
+    qubit_freq =8.6935e9
+        
+    freq_range = 0e6
+#    for current in np.linspace(-8, -10, 5):
+#        yoko.do_set_current(current)
+    spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['SC_qubit2'], qubit2_info,
+                                         np.linspace(qubit_freq-freq_range,
+                                                     qubit_freq+freq_range, 4), [6],
+                                         plen=50000, amp=0.1, seq=None, postseq=None, plot_seqs=False)
+    spec.measure()
+    bla
 
-    freq_range = 35e6
-    spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['QK'], qubit_info, 
-                                     np.linspace(qubit_freq-freq_range,
-                                                 qubit_freq+freq_range, 71),
-                                     [0],
-                                     plen=30000, amp=0.08, extra_info=qubit_info, seq=seq, postseq=postseq, plot_seqs=False) 
-
+if 0: #     use qubit spectroscopy to find FWM freq
+    from single_qubit import spectroscopy_keysight
+#    from scripts.single_qubit import spectroscopy_IQ
+    seq = sequencer.Sequence([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0), ef2_info.rotate(np.pi, 0)])
+    postseq = sequencer.Sequence(qubit2_info.rotate(np.pi/2, 0))
+#    for i in [-20,-15,-10,-5,0,5]:
+#        for a in [0.001, 0.01, 0.05, 0.1, 0.5]:
+    ROfreq = 10933e6
+    ge = 8893.5e6
+    ef = 8417e6 
+    FWM_freq = np.abs(ROfreq - ge - ef) + 100e6
+        
+    freq_range = 20e6
+#    for current in np.linspace(-8, -10, 5):
+#        yoko.do_set_current(current)
+    spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['qubit2FWMbrick'], fwm2_info,
+                                         np.linspace(FWM_freq-freq_range,
+                                                     FWM_freq+freq_range, 11), [6],
+                                         plen=1000, amp=0.2, seq=seq, postseq=None, plot_seqs=None,extra_info=[qubit2_info, ef2_info])
     spec.measure()
     bla
 
 if 0: # Qubit spec with phase correction
     from single_qubit import spectroscopy_keysight_phasecorrection
+#    for i in [0,-3,-6,-9,-12]:
 #    from scripts.single_qubit import spectroscopy_IQ
-    qubit_freq = 946.889e6
-    freq_range = 100e6
-    spec = spectroscopy_keysight_phasecorrection.Spectroscopy_Keysight_phasecorrection(mclient.instruments['QK'], qubit_info,
-                                     np.linspace(qubit_freq-freq_range, qubit_freq+freq_range*10, 1101), [10],
-                                     plen=50000, amp=0.001, plot_seqs=False) #1=1ns
+    qubit_freq = 437.6e6
+    freq_range = 30e6
+    for i in [1000]:
+        spec = spectroscopy_keysight_phasecorrection.Spectroscopy_Keysight_phasecorrection(mclient.instruments['QK'], qubit_info,
+                                     np.linspace(qubit_freq-freq_range, qubit_freq+freq_range, 71), [0],
+                                     plen=i, amp=0.05, plot_seqs=False) #1=1ns
 
 #    spec = spectroscopy_IQ.Spectroscopy_IQ(client.instruments['gen'], qubit_info,
 #                                     np.linspace(702e6, 710e6, 81), [-30],
 #                                    plen=250*100, amp=0.1, ssb=False, plot_seqs=False)
 
-    spec.measure()
+        spec.measure()
     
     bla    
     
     
 
-if 1: # SSB spec
+if 0: # SSB spec
     from single_qubit import ssbspec
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
-    for i in range(1):
+    for i in range(1):        
+#        RObrick.do_set_power(i)
         seq = sequencer.Trigger(600)
-        spec = ssbspec.SSBSpec(qubit_info, np.linspace(-5e6, 5e6, 101), seq=None, plot_seqs=False, proj_func='phase')
+#        seq = Join([seq, qubit2_info.rotate(np.pi/2, X_AXIS)])
+        spec = ssbspec.SSBSpec(qubit2_info, np.linspace(-2e6, 2e6, 101), seq=seq, plot_seqs=False, proj_func='phase')
         spec.measure_keysight()
 #        plt.close()
     bla
@@ -131,7 +287,7 @@ if 1: # SSB spec
 if 0: # SSB spec with lorentzian fit
     from single_qubit import ssbspec_lorentzianfit
     seq = sequencer.Trigger(600)
-    spec = ssbspec_lorentzianfit.SSBSpec_lorentzianfit(qubit_info, np.linspace(-30e6, 30e6, 201), seq=seq, plot_seqs=False, proj_func='phase')
+    spec = ssbspec_lorentzianfit.SSBSpec_lorentzianfit(qubit_info, np.linspace(-46, 20e6, 81), seq=seq, plot_seqs=False, proj_func='phase')
     spec.measure_keysight()
     center = spec.center
     height = spec.height
@@ -163,27 +319,32 @@ if 0: #Multiple times SSB spec
         spec.measure_keysight()
         data_sum = data_sum + spec.get_ys()
         data_avg = data_sum / (i+2)
-    plt.figure()
-    plt.plot(freq_array, data_avg)
-    bla
-     
-    
+#    plt.figure()
+#    plt.plot(freq_array, data_avg)
+#    bla
+#     
+#    
 if 0: # Power Rabi-Calibrate pi pulse
 
+#    for cool_time in [1e3,5e3,10e3,30e3]:
+#        for amp in [0.01, 0.01,0.02,0.04,0.08]:
+#    cool = sequencer.Combined([sequencer.Constant(int(cool_time), amp, chan=ef_info.sideband_channels[0]),
+#                                   sequencer.Constant(int(cool_time), amp, chan=ef_info.sideband_channels[1]),
+#                                   sequencer.Constant(int(cool_time), 1, chan='3m1')])
+#    seq = sequencer.Sequence([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0), ef2_info.rotate(np.pi, 0)])
+#    postseq = sequencer.Sequence(ef2_info.rotate(np.pi/2, 0))
     from single_qubit import rabi
     import time
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
-    for i in range(1):
-        tr = rabi.Rabi(qubit_info, 
-#                       np.linspace(-0.24, -0.20, 81), selective=False,
-                       np.linspace(-0.6, 0.6, 81), selective=False,
-#                       np.linspace(-0.26, -0.18, 101), selective=False,
-#                       np.linspace(-0.47,-0.41, 81), selective=False,                   
-                       plot_seqs=False, generate=True, repeat_pulse=5, seq=None,
-                       update=False, #extra_info=ef_info,
-                       proj_func='phase'
-                       )
-        tr.measure_keysight()
+    tr = rabi.Rabi(qubit_info, 
+        #                       np.linspace(-0.2, -0.20, 81), selective=False,
+                               np.linspace(-0.5, 0.5, 81), selective=False,
+#                               np.linspace(-0.004, 0.004, 81), selective=True,
+        #                       np.linspace(-0.47,-0.41, 81), selective=False,                   
+                               plot_seqs=False, generate=True, repeat_pulse=1,# seq=seq,postseq = postseq,
+                               update=True, #extra_info=[qubit2_info, ef2_info],
+                               proj_func='phase')
+    tr.measure_keysight()
 
     bla
 
@@ -226,6 +387,7 @@ if 0: # Pi Amp Tuning
 
     
 if 0: # T1
+
     from single_qubit import T1measurement
 
 #    t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 250e3, 121), 
@@ -233,10 +395,10 @@ if 0: # T1
 #                          ef_info.rotate(np.pi, 0), sequencer.Constant(4000, 1, chan='3m1'), sequencer.Delay(250)])
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
 
-    t1 = T1measurement.T1Measurement(qubit_info, #np.linspace(0, 0.8e3, 100),
-#                                     np.concatenate((np.linspace(0.1e3, 1.9e3, 31), np.linspace(2e3, 20e3, 56), np.linspace(21e3, 450e3, 60))),
-                                     np.concatenate((np.linspace(0.1e3, 10e3, 31), np.linspace(11e3, 100e3, 56), np.linspace(105e3, 450e3, 60))),
-                                     double_exp=True, generate=True, plot_seqs=False, proj_func='phase', seq=None)    
+    t1 = T1measurement.T1Measurement(qubit2_info, #np.linspace(0, 500e3, 101),
+                                         np.linspace(0, 20e3, 101),
+#                                         np.concatenate((np.linspace(0.1e3, 1e3, 41), np.linspace(1.01e3, 15e3, 76))),
+                                         double_exp=False, generate=True, plot_seqs=False, proj_func='amplitude', seq=None)    
     t1.measure_keysight()
     bla
 
@@ -258,15 +420,54 @@ if 0:
 
 if 0: #T2
     from single_qubit import T2measurement
-#    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
+#    seq = sequencer.Join([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0)])
     for i in range(1):
-        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 12e3, 101), detune=0.8e6, double_freq=False, generate=True, 
-                                         seq=None, postseq=None, proj_func='phase')
+        t2 = T2measurement.T2Measurement(qubit2_info, np.linspace(0, 5e3, 101), detune=1e6, double_freq=False, generate=True, 
+                                         seq=None, postseq=None, proj_func='amplitude') #extra_info=[qubit2_info])
 #        t2 = T2measurement.T2Measurement(qubit_info, np.concatenate((np.linspace(0.1e3, 2.6e3, 81), np.linspace(2.61e3, 10e3, 81))), detune=0.5e6, double_freq=False, generate=True, 
 #                                         seq=seq, extra_info=ef_info, postseq=None, proj_func='phase')
 
         
         t2.measure_keysight()
+    bla
+
+if 0: # Ramsey qubit 2 rabi sweep
+    from single_qubit import T2measurementforramsey
+#    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
+    amplitudes = np.linspace(-0.2, 0.2, 11)
+    detunes = []
+    for amplitude in amplitudes:
+        t2 = T2measurementforramsey.T2MeasurementforRamsey(qubit_info, qubit2_info, amplitude, 
+                                                           np.linspace(0, 5e3, 101), detune=2e6, double_freq=False, generate=True, 
+                                                           seq=None, postseq=None, proj_func='phase')
+#        t2 = T2measurement.T2Measurement(qubit_info, np.concatenate((np.linspace(0.1e3, 2.6e3, 81), np.linspace(2.61e3, 10e3, 81))), detune=0.5e6, double_freq=False, generate=True, 
+#                                         seq=seq, extra_info=ef_info, postseq=None, proj_func='phase')
+
+        
+        t2.measure_keysight()
+        detunes.append(t2.fit_params['freq'].value*1e3)
+    plt.figure()
+    plt.plot(amplitudes, detunes)
+    bla
+
+    
+if 0: # Ramsey flux sweep
+    from single_qubit import T2measurement
+#    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
+    currents = np.linspace(-0.1, -0.3, 11)
+    detunes = []
+    for current in currents:
+        yoko.do_set_current(current)
+        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 5e3, 101), detune=1e6, double_freq=False, generate=True, 
+                                         seq=None, postseq=None, proj_func='amplitude')
+#        t2 = T2measurement.T2Measurement(qubit_info, np.concatenate((np.linspace(0.1e3, 2.6e3, 81), np.linspace(2.61e3, 10e3, 81))), detune=0.5e6, double_freq=False, generate=True, 
+#                                         seq=seq, extra_info=ef_info, postseq=None, proj_func='phase')
+
+        
+        t2.measure_keysight()
+        detunes.append(t2.fit_params['freq'].value*1e3)
+    plt.figure()
+    plt.plot(currents, detunes)
     bla
     
 if 0: 
@@ -315,31 +516,31 @@ if 0: # T2echo
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
 #    postseq = sequencer.Delay(500)
 #    for i in range (5):
-    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 30e3, 101), detune=0.3e6, echotype = T2measurement.ECHO_HAHN, necho=1, 
+    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 5e3, 101), detune=2e6, echotype = T2measurement.ECHO_HAHN, necho=1, 
                                      plot_seqs = False, generate=True, proj_func='phase', seq=None)
     t2.measure_keysight()
     bla
     
 if 0: # EF Qubit spec 
     from scripts.single_qubit import spectroscopy_keysight
-    ef_freq = 2645e6
+    ef_freq = 3.679e9
     freq_range = 10e6
-    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate(np.pi, 0)])
-    postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
-    spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['efBrick'], ef_info, np.linspace(ef_freq-freq_range, ef_freq+freq_range,101), [10],
-                                     plen=50000, amp=0.01,
-                                     seq=seq, postseq=postseq,
+#    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate(np.pi, 0)])
+#    postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
+    spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['efBrick'], ef_info, np.linspace(ef_freq-freq_range, ef_freq+freq_range,21), [0],
+                                     plen=1000, amp=0.12,
+                                     seq=None, postseq=None,
                                      extra_info=qubit_info, plot_seqs=False)
     spec.measure()
     bla
     
 if 0: # EF SSBspec
     from single_qubit import ssbspec
-    seq = sequencer.Sequence([sequencer.Trigger(400), qubit_info.rotate(np.pi, 0)])
+    seq = sequencer.Sequence([sequencer.Trigger(400), qubit2_info.rotate(np.pi, 0)])
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate_selective(np.pi, 0)])
-    postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
+    postseq = sequencer.Sequence(qubit2_info.rotate(np.pi, 0))
 #    postseq = sequencer.Sequence(qubit_info.rotate_selective(np.pi, 0))
-    spec = ssbspec.SSBSpec(ef_info, np.linspace(-5e6, 5e6, 121), seq=seq, postseq = postseq, extra_info=qubit_info, plot_seqs=False, generate=True, proj_func='phase')
+    spec = ssbspec.SSBSpec(ef2_info, np.linspace(-10e6, 10e6, 101), seq=seq, postseq = postseq, extra_info=qubit2_info, plot_seqs=False, generate=True, proj_func='phase')
     spec.measure_keysight()
     bla
     
@@ -354,37 +555,95 @@ if 0: # EF rabi
 #                                   sequencer.Constant(int(cool_time), 0.1, chan=ef_info.sideband_channels[1]),
 #                                   sequencer.Constant(int(cool_time), 1, chan='3m1')])
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
-    dig.set_naverages(4000)
-    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.7, 0.7, 101), first_pi=True, second_pi=True, seq=None, generate=True, update=True,
+    dig.set_naverages(5000)
+    efr = efrabi.EFRabi(qubit2_info, ef2_info, np.linspace(-0.4, 0.4, 101), first_pi=True,second_pi=True, seq=None, generate=True, update=True,
                             proj_func='phase')
     efr.measure_keysight()
     period = efr.fit_params['period'].value
-    dig.set_naverages(20000)
-    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.7, 0.7, 101), first_pi=False, second_pi=True, selective=False, seq=None, generate=True,
-                            force_period = period, proj_func='phase')
-    efr.measure_keysight()
-    dig.set_naverages(4000)
-    bla
-    
-if 0: # FT1
-    from single_qubit import FT1measurement
-    #ft1times = np.zeros(len(range(20)))
-    for i in range(1):
-        seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
-        ft1 = FT1measurement.FT1Measurement(qubit_info, ef_info, np.linspace(0, 10e3, 101), seq=None, proj_func='phase')
-        ft1.measure_keysight()
-        #ft1times[i] = ft1.analyze()
-        #plt.close()
-        
+#    dig.set_naverages(10000)
+#    efr = efrabi.EFRabi(qubit2_info, ef2_info, np.linspace(-0.4, 0.4, 101), first_pi=False, second_pi=True, selective=False, seq=None, generate=True,
+#                            force_period = period, proj_func='phase')
+#    efr.measure_keysight()
+#    dig.set_naverages(5000)
     bla
 
+if 0: # FT1 
+    from single_qubit import FT1measurement
+    fwm = mclient.instruments['qubit2FWMbrick']
+
+    for i in range(1):
+#        seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
+        ft1 = FT1measurement.FT1Measurement(qubit2_info, ef2_info, np.linspace(0, 30e3, 101), seq=None, proj_func='phase')
+#        ft1 = FT1measurement.FT1Measurement(qubit_info, ef_info, np.concatenate((np.linspace(0, 1e3, 31), np.linspace(1.01e3, 5e3, 31))), seq=None, proj_func='phase')
+
+        ft1.measure_keysight()
+
+
+    bla
+    
+if 0: # FT1 sweep
+    from single_qubit import FT1measurement
+    fwm = mclient.instruments['qubit2FWMbrick']
+    freq = np.linspace(6.37e9,6.385e9,31)
+    powers = np.linspace(-5,10,4)
+    for power in powers:
+        fwm.set_power(power)
+        ft1times = np.zeros(len(freq))
+        for i in range(len(freq)):
+            fwm.set_frequency(freq[i])
+    #        seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
+            ft1 = FT1measurement.FT1Measurement(qubit2_info, ef2_info, np.linspace(0, 30e3, 101), seq=None, proj_func='phase')
+    #        ft1 = FT1measurement.FT1Measurement(qubit_info, ef_info, np.concatenate((np.linspace(0, 1e3, 31), np.linspace(1.01e3, 5e3, 31))), seq=None, proj_func='phase')
+    
+    
+    
+            ft1.measure_keysight()
+            ft1times[i] = ft1.analyze()
+            plt.close()
+        plt.figure()
+        plt.plot(freq, ft1times/1000,label = 'power: %sdB'%(power))    
+        plt.ylabel('FT1')
+        plt.legend()
+    bla
+    
+if 1: # FT1 with fwm
+    from single_qubit import FT1withFwm
+    fwm_gen = mclient.instruments['qubit2FWMbrick']
+#    postseq = sequencer.Sequence(sequencer.Delay(5))
+    postseq = sequencer.Sequence(ef2_info.rotate(np.pi/2, 0))
+    amps = np.linspace(0.6,1,9)
+    freqs = np.linspace(6.505e9, 6.515e9, 11)
+    plt.figure()
+    for freq in freqs:
+        fwm_gen.set_frequency(freq)
+        ft1times = np.zeros(len(amps))
+        ft1err = np.zeros(len(amps))
+        for i in range(len(amps)):
+    #        seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
+            ft1 = FT1withFwm.FT1withFWM(qubit2_info, ef2_info, fwm2_info, fwm_pulse=True, delays = np.linspace(0, 2e3, 101), 
+                                        amp = amps[i], seq=None, postseq = postseq, 
+                                        proj_func='phase')
+    #        ft1 = FT1measurement.FT1Measurement(qubit_info, ef_info, np.concatenate((np.linspace(0, 1e3, 31), np.linspace(1.01e3, 5e3, 31))), seq=None, proj_func='phase')
+    
+            ft1.measure_keysight()
+            ft1times[i] = ft1.fit_params['tau'].value
+            ft1err[i] = ft1.fit_params['tau'].stderr
+            plt.close()
+#        plt.figure()
+        plt.errorbar(amps, ft1times/1000,yerr = ft1err/1000,marker = 'o',label = 'g vs (e or f) freq = %s GHz'%(freq/1e9 - 0.14)) 
+    plt.xlabel('amps')
+    plt.ylabel('FT1(us)')
+    plt.legend()
+
+
+    bla
 if 0: # EFT2
     from scripts.single_qubit import EFT2measurement # frequency stability of |f> vs |e>
     for i in range(1):
 #        seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
         seq = sequencer.Sequence(sequencer.Trigger(250))
-        eft2 = EFT2measurement.EFT2Measurement(qubit_info, ef_info, np.linspace(0, 1.5e3, 101), detune=3e6, double_freq=False, plot_seqs = False, echotype = EFT2measurement.ECHO_NONE,
-                                               proj_func='phase')
+        eft2 = EFT2measurement.EFT2Measurement(qubit_info, ef_info, np.linspace(0, 6e3, 101), detune=1e6, double_freq=False, plot_seqs = False, echotype = EFT2measurement.ECHO_NONE,
+                                               proj_func='amplitude')
         eft2.measure_keysight()
 
 def dynamic_ssb(qubit_info, step = .1e6, plotting = True):
@@ -449,7 +708,7 @@ if 0: #
     
     p_seq = sequencer.Sequence(sequencer.Delay(80))
     
-    cn = contrast_normalization.Contrast_Normalization(qubit_info, process_seq=p_seq, generate=True, proj_func='phase')  #seq=seq was added
+    cn = contrast_normalization.Contrast_Normalization(qubit_info, ef_info, seq=None, process_seq=None, generate=True, proj_func='phase')  #seq=seq was added
     
     cn.measure_keysight()
 
@@ -578,7 +837,7 @@ if 0: # Detuning Error Test
 
 
     
-if 1: # Randomized benchmarking
+if 0: # Randomized benchmarking
 
     from scripts.single_qubit import randbench
     from scripts.single_qubit import contrast_normalization
@@ -810,30 +1069,31 @@ if 0: # stark shift measurments
         pumpFG.set_rf_on(False)       
     
 if 0: # f0 - g1 fwm test
-    fwm_gen = mclient.instruments['f0g1brick']
-    ROfreq = 7608.5e6
-    ge = 944.546e6 - 100e6
-    ef = 2648.8e6 - 100e6
-    target_freq = ROfreq - ge - ef
-    freq_range1 = 30e6
-    freq_range2 = 30e6
+    fwm_gen = mclient.instruments['qubit2FWMbrick']
+#    ROfreq = 10936.2e6
+#    ge = 6877.3e6
+#    ef = 6783.1e6 
+#    target_freq = np.abs(ROfreq - ge - ef)
+    target_freq = 6.4785e9
+    freq_range1 = 10e6
+    freq_range2 = 10e6
     freqs = np.linspace(target_freq - freq_range1, target_freq + freq_range2, 101)
-    amps = [.1] 
-    powers = [5]
+    amps = [.5] 
+    powers = [10]
     shift_freq = np.zeros((len(amps), len(powers)))
     from FWM import FWM_f0g1
     for i, amp in enumerate(amps):
         for j, power in enumerate(powers):
             f0g1 = FWM_f0g1.FWM_f0g1(qubit_info, ef_info, fwm_gen, 1e3, 
-                         freqs, power, amp, '3m1')
+                         freqs, power, amp, fwm2_info.sideband_channels[0])
             f0g1.measure()
             shift_freq[i, j] = f0g1.xs[np.argmax(f0g1.ampdata[:])]
             
 if 0: # Qubit population
     from single_qubit import qubit_pop
-    dig.set_naverages(10000)
-    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
-    qp = qubit_pop.Qubit_Pop(qubit_info, ef_info, generate=True, seq=seq, proj_func='phase')
+    dig.set_naverages(300000)
+#    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
+    qp = qubit_pop.Qubit_Pop(qubit_info, ef_info, generate=True, seq=None, proj_func='phase')
     qp.measure_keysight()
     print(qp.get_ys())
     
@@ -845,4 +1105,22 @@ if 0: #f0 - g1 time domain
     f0g1.measure_keysight()
 
 
-    
+if 0: # RO photon number measurement
+    from single_qubit import T2measurement
+
+#    seq = sequencer.Join([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0)])
+#    noise_powers = -2
+    t2_results = np.zeros(10)
+    t2_errs = np.zeros(10)
+#    for j in range(len(noise_powers)):
+#        SC_noise.do_set_power(noise_powers[j])
+    for i in range(5):
+        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 0.35e3, 101), detune=15e6, double_freq=False, generate=True, 
+                                         seq=None, postseq=None, proj_func='amplitude') #extra_info=[qubit2_info])
+#        t2 = T2measurement.T2Measurement(qubit_info, np.concatenate((np.linspace(0.1e3, 2.6e3, 81), np.linspace(2.61e3, 10e3, 81))), detune=0.5e6, double_freq=False, generate=True, 
+#                                         seq=seq, extra_info=ef_info, postseq=None, proj_func='phase')
+        t2.measure_keysight()
+        t2_results[i] = t2.fit_params['tau'].value
+        t2_errs[i] = t2.fit_params['tau'].stderr
+        plt.close()
+    bla    

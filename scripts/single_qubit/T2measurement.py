@@ -45,7 +45,7 @@ def analysis(meas, data=None, fig=None):
     xs = meas.delays
     ys, fig = meas.get_ys_fig(data, fig)
 
-    fig.axes[0].plot(xs/1e3, ys, 'ks', ms=3)
+    fig.axes[0].plot(xs/1e3, ys, 'ks', ms=3, linestyle='-', markerfacecolor='red')
 
     amp0 = (np.max(ys) - np.min(ys)) / 2
     fftys = np.abs(np.fft.fft(ys - np.average(ys)))
@@ -55,11 +55,13 @@ def analysis(meas, data=None, fig=None):
 
     params = lmfit.Parameters()
     params.add('ofs', value=np.average(ys))
-    params.add('amp', value=amp0, min=0)
+    params.add('amp', value=amp0, min=0.1)
     params.add('tau', value=xs[-1], min=10, max=2e5)
     params.add('freq', value=f0, min=0)
     if meas.echotype == ECHO_NONE:
+
         params.add('phi0', value=np.pi/2, min=-1.2*np.pi, max=1.2*np.pi, vary=True)  #Changed to plus sign for accommodate for amplitude RO, need a good LT solution
+
     elif meas.echotype == ECHO_HAHN:
         params.add('phi0', value=-np.pi/2, min=-1.2*np.pi, max=1.2*np.pi) #DARIO added to fit better for echo vs plain T2
     result = lmfit.minimize(t2_fit, params, args=(xs, ys))
@@ -281,6 +283,7 @@ class T2Measurement(Measurement1D):
 
             s_temp += [Delay(2000)]
             s.append(Join(s_temp))
+
         s = self.get_sequencer(s)
         seqs = s.render()
 #        s.plot_seqs(seqs)

@@ -88,6 +88,7 @@ class FWM_f0g1(Measurement1D):
         # Generate and load sequences
         dig = self.instruments['dig']
         self.fwm_gen.set_power(self.power)
+#        self.fwm_gen.set_ch1_power(self.power)
 
         seqs = self.generate()
         self.load(seqs)
@@ -97,7 +98,9 @@ class FWM_f0g1(Measurement1D):
         phases = []
         for freq in self.freqs:
 #                self.cav_source.set_rf1_freq(freq) #JEFF Wrong syntax
+            
             self.fwm_gen.set_frequency(freq)
+#            self.fwm_gen.set_ch1_frequency(freq)  # Yingying for two channal SC
 #                self.cav_source.set_rf_on(True)
             time.sleep(0.2)
 

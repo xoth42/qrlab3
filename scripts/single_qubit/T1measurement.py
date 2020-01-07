@@ -19,7 +19,7 @@ def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
     xs = meas.delays
 
-    fig.axes[0].plot(xs/1e3, ys, 'ks', ms=3)
+    fig.axes[0].plot(xs/1e3, ys, 'ks', ms=3, linestyle='-', markerfacecolor='red' )
 
     if meas.double_exp == False:
         params = lmfit.Parameters()
@@ -30,12 +30,15 @@ def analysis(meas, data=None, fig=None):
 #        lmfit.report_fit(params)
 #        result2 = lmfit.minimize(exp_decay, result.params, args=(xs,ys))
         lmfit.report_fit(result.params)
-
+       
         fig.axes[0].plot(xs/1e3, -exp_decay(result.params, xs, 0), label='Fit, tau = %.03f us +/- %.03f us '%(result.params['tau'].value/1000.0, result.params['tau'].stderr/1000.0))
         fig.axes[0].legend(loc=0)
         fig.axes[0].set_ylabel('Intensity [AU]')
         fig.axes[0].set_xlabel('Time [us]')
         fig.axes[1].plot(xs, exp_decay(result.params, xs, ys), marker='s')
+
+
+
 
     else:
         params = lmfit.Parameters()
@@ -46,16 +49,19 @@ def analysis(meas, data=None, fig=None):
         params.add('tau2', value=xs[-1]/50.0, min=50.0)  ##Chen, fine tune the initial guess a bit 4/27/19
         result = lmfit.minimize(double_exp_decay, params, args=(xs, ys))
         lmfit.report_fit(result.params)
+        fig.suptitle('T1 Measurement', fontsize=30)
 
         weight1 = result.params['amplitude'].value / (result.params['amplitude'].value + result.params['amplitude2'].value)*100
         weight2 = 100-weight1
         text = 'Fit, tau = %.03f us +/- %.03f us (%.01f%%)\n     tau2 = %.03f us +/- %.03f us (%.01f%%)'%(
                 result.params['tau'].value/1000.0, result.params['tau'].stderr/1000.0, weight1, result.params['tau2'].value/1000.0, result.params['tau2'].stderr/1000.0, weight2)
         fig.axes[0].plot(xs/1e3, -double_exp_decay(result.params, xs, 0), label=text)
-        fig.axes[0].legend(loc=0)
-        fig.axes[0].set_ylabel('Intensity [AU]')
-        fig.axes[0].set_xlabel('Time [us]')
+        fig.axes[0].legend(loc=0, fontsize=20)
+        fig.axes[0].tick_params(labelsize=20)
+        fig.axes[0].set_ylabel('Intensity [AU]', fontsize=24)
+        fig.axes[0].set_xlabel('Time [us]', fontsize=24)
         fig.axes[1].plot(xs, double_exp_decay(result.params, xs, ys), marker='s')
+        fig.delaxes(fig.axes[1])
 
     fig.canvas.draw()
     meas.fit_params = result.params
