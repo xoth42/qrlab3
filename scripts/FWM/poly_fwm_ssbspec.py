@@ -26,17 +26,24 @@ def analysis(meas, data=None, fig=None):
     xs = meas.freqs
 
     f = fit.Lorentzian(xs, ys)
-    h0 = np.max(ys)-np.min(ys)
-    w0 = 0.05e6
-    pos = xs[np.argmax(ys)]
-    p0 = [np.min(ys), w0*h0, pos, w0]
-    p = f.fit(p0)
+    if 0:
+        h0 = np.max(ys)-np.min(ys)
+        w0 = 0.05e6
+        pos = xs[np.argmax(ys)]
+        p0 = [np.min(ys), w0*h0, pos, w0]
+    if 1:
+        h0 = np.min(ys)-np.max(ys)
+        w0 = 0.05e6
+        pos = xs[np.argmin(ys)]
+        p0 = [np.max(ys), w0*h0, pos, w0]
+        p = f.fit(p0)
     txt = 'Center = %.03f MHz, FWHM = %.03f MHz' % (p[2]/1e6, p[3]/1e6)
     print 'Fit gave: %s' % (txt,)
 
     fig.axes[0].plot(xs/1e6, ys, '.')
     fig.axes[0].set_xlabel('Detuning (MHz)')
     fig.axes[0].set_ylabel('Intensity (AU)')
+    fig.axes[0].plot(xs/1e6, f.func(p, xs), label=txt)
     fig.canvas.draw()
     return p[2]
 

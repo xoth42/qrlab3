@@ -52,9 +52,9 @@ class poly_fwm_ssbspec2d(Measurement2D):
         if bgcor: npoints *= 2
         
         infos = [comb.info for comb in [comb1, comb2]]
-        self.temp_infos = []
-        for comb in [comb1, comb2]:
-            infos += comb.get_temp_infos()
+#        self.temp_infos = []
+#        for comb in [comb1, comb2]:
+#            infos += comb.get_temp_infos()
 
         super(poly_fwm_ssbspec2d, self).__init__(npoints, residuals=False, infos=[qubit_info] + infos, **kwargs)
         self.data.set_attrs(

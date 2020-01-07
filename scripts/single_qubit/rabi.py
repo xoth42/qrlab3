@@ -78,7 +78,7 @@ def analysis(meas, data=None, fig=None):
 
 
         temporaryy = -fit_amprabi(result.params, xs, 0)
-        print(-fit_amprabi(result.params, xs, 0))
+#        print(-fit_amprabi(result.params, xs, 0))
         print(xs[np.argmin(temporaryy)], 'min of the fit')
         center_amp_list.append(xs[np.argmin(temporaryy)])
 #        print(min_x, 'This is the value')

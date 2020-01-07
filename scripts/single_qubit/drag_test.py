@@ -64,7 +64,6 @@ class drag_test(Measurement1D):
         r = self.qubit_info.rotate
 
         for i, coeff in enumerate(self.coeffs):
-            print(self.coeffs[i])
             s.append(self.seq)
 #            s.append(r(np.pi/2, X_AXIS, drag=coeff))     #This is AllXY#10
 #            s.append(Delay(40))
@@ -80,7 +79,6 @@ class drag_test(Measurement1D):
                 ]))
             s.append(Delay(2000))
         for i, coeff in enumerate(self.coeffs):
-            print(self.coeffs[i])
             s.append(self.seq)
             s.append(r(np.pi/2, Y_AXIS, drag=coeff))      #This is AllXY#11
             s.append(Delay(20))

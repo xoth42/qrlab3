@@ -66,6 +66,8 @@ class twpa_calibration_keysight(Measurement1D):
         self.ampdata = self.data.create_dataset('amplitudes', shape=(len(twpa_powers),len(twpa_freqs)))
         self.stddata = self.data.create_dataset('deviations', shape=(len(twpa_powers),len(twpa_freqs)))
         self.snrdata = self.data.create_dataset('snr', shape=(len(twpa_powers),len(twpa_freqs)))
+        
+#        self.comparraydata = np.zeros([len(twpa_powers),len(twpa_freqs)])
 
     def generate(self):
         s = Sequence(self.seq)
@@ -101,7 +103,7 @@ class twpa_calibration_keysight(Measurement1D):
     def measure(self):
 
         dig = self.instruments['dig']
-        dig.start_hvi()
+#        dig.start_hvi()
 
 
         self.readout_info.rfsource1.set_power(self.power)
@@ -121,27 +123,30 @@ class twpa_calibration_keysight(Measurement1D):
                 self.twpa_pump.set_frequency(twpa_freq)
                 time.sleep(0.1)
 
-                IQ = np.zeros(50, dtype=complex)
-                for j in range(50):
+                IQ = np.zeros(360, dtype=complex)
+                for j in range(360):
                     dig.setup_avg_shot()
                     dig.arm()
                     dig.start_hvi()
-                    ret = dig.take_avg_shot(async = True)
+#                    ret = dig.take_avg_shot(async = True)
+                    ret = dig.take_avg_shot()
                     dig.stop_hvi()
                     dig.release_buf()
         
-                    try:
-                        while not ret.is_valid():
-                            objsh.helper.backend.main_loop(100)
-                    except Exception, e:
-        #                    alz.set_interrupt(True)
-                        print 'Error: %s' % (str(e), )
-                        return
+#                    try:
+#                        while not ret.is_valid():
+#                            objsh.helper.backend.main_loop(100)
+#                    except Exception, e:
+#        #                    alz.set_interrupt(True)
+#                        print 'Error: %s' % (str(e), )
+#                        return
                     
-                    IQ[j] = np.average(ret.get())
+#                    IQ[j] = np.average(ret.get())
+                    IQ[j] = np.average(ret)
 #                    time.sleep(0.1)
                 IQ_avg = IQ.mean()
-                IQ_std = np.std(IQ)
+                IQnd = IQ.reshape(36,10)
+                IQ_std = np.std(IQnd.mean(0))*6
                 print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (twpa_freq / 1e6, np.real(IQ_avg), np.abs(IQ_avg), np.angle(IQ_avg, deg=True))
 #                print 'I,Q = %.03f, %.03f' % (np.real(IQ_avg), np.imag(IQ_avg))
                 print 'std = %.03f' % (IQ_std)
@@ -150,7 +155,7 @@ class twpa_calibration_keysight(Measurement1D):
                 self.ampdata[i_twpa_power,i_twpa_freq] = np.abs(IQ_avg)
                 self.stddata[i_twpa_power,i_twpa_freq] = IQ_std
                 self.snrdata[i_twpa_power,i_twpa_freq] = np.abs(IQ_avg)/IQ_std/ np.sqrt(naverages)
-                    
+                self.IQ=IQ
         
         self.analyze()
 

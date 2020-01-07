@@ -629,6 +629,33 @@ class SQRotation:
         p1 = SQPulse(w, sign * h * np.sin(phase), self.ptype, npi_2, chan=self.chans[1])
         return Combined([p0, p1])
     
+#class CSVRotation(object):
+#    def __init__(self, filename, amp, chans=(0,1), drag=0, **kwargs):
+#        self.filename = filename
+#        self.amp = amp
+#        self.chans = chans
+#        self.kwargs = kwargs
+#        self.drag = drag
+#
+#    def __call__(self, phase, drag=None):
+#        '''
+#        Generate a rotation pulse of angle <alpha> around axis <phase>.
+#        If <amp> is specified that amplitude is used and <alpha> is ignored.
+#        '''
+#
+#        if drag is None:
+#            drag = self.drag
+#        p0 = CSVPulse(self.filename, self.amp * np.cos(phase), chan=self.chans[0], **self.kwargs)
+#        p1 = CSVPulse(self.filename, self.amp * np.sin(phase), chan=self.chans[1], **self.kwargs)
+#        if drag:
+#            p0d = p0.data + drag * derivative(p1.data)
+#            p1d = p1.data - drag * derivative(p0.data)
+#            p0 = Pulse('dragI(%s,%.5f)'%(p0.name, drag), p0d, chan=self.chans[0])
+#            p1 = Pulse('dragQ(%s,%.5f)'%(p1.name, drag), p1d, chan=self.chans[1])
+#
+#        return Combined([p0, p1])
+    
+
 class CSVPulse(Pulse): # JEFF added to do grape pulses
     def __init__(self, filename, amp, chan=1, pre_delay=0, post_delay=0):
         ys = amp * np.loadtxt(filename)
@@ -638,10 +665,10 @@ class CSVPulse(Pulse): # JEFF added to do grape pulses
         super(CSVPulse, self).__init__(name, YS, chan=chan)
 
 class DataPulse(Pulse): # JEFF added to do grape pulses
-    def __init__(self, data, amp, chan=1, chop=4.):
-        ys = amp * data
+    def __init__(self, data, amp = 0, chan=1, chop=4., phase = 0, filename='None'):
+        ys = data
         ys[-1] = 0.
-        name = 'data(%.5f)' % (amp)
+        name = 'data(%s,%.5f,%.5f)' % (filename, amp, phase)
         super(DataPulse, self).__init__(name, ys, chan=chan)
 
 #########################################

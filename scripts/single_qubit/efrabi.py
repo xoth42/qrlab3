@@ -91,6 +91,8 @@ class EFRabi(Measurement1D):
                 add = Join([add, r(np.pi, 0), Delay(5)]) # What? Why was this Delay 250? 5/28/2019
 #            marker_switch = Constant(, 1, chan=self.)
             s.append(add)
+            if self.postseq:
+                s.append(self.postseq)
             s.append(Combined([
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),

@@ -31,10 +31,10 @@ def analysis(meas, data=None, fig=None):
 
 class GRAPE_optimize(Measurement2D):
 
-    def __init__(self, qubit_info, qubit_a4_info, cavity_info, qubit_amps, cavity_amps, seq=None, 
+    def __init__(self, qubit_info, qubit_probe, cavity_info, qubit_amps, cavity_amps, seq=None, 
                  postseq=None, bgcor=False, zmin=None, zmax=None, **kwargs):
         self.qubit_info = qubit_info
-        self.qubit_a4_info = qubit_a4_info
+        self.qubit_probe = qubit_probe
         self.cavity_info = cavity_info
         self.qubit_amps = qubit_amps
         self.cavity_amps = cavity_amps
@@ -45,36 +45,54 @@ class GRAPE_optimize(Measurement2D):
         self.seq = seq
         self.postseq = postseq
         self.bgcor= bgcor
+        self.t_ge = 354
         self.zmin=zmin
         self.zmax=zmax
         
         npoints = len(qubit_amps) * len(cavity_amps)
         if self.bgcor:
             npoints *= 2
-        super(GRAPE_optimize, self).__init__(npoints, infos=[qubit_info, qubit_a4_info, cavity_info], **kwargs)
+        super(GRAPE_optimize, self).__init__(npoints, infos=[qubit_info, qubit_probe, cavity_info], **kwargs)
         self.data.create_dataset('qubit_amps', data=qubit_amps)
         self.data.create_dataset('cavity_amps', data=cavity_amps)
         self.ampdata = self.data.create_dataset('amplitudes', shape=(len(qubit_amps),len(cavity_amps)))
 
     def generate(self):
         
-        r_a4 = self.qubit_a4_info.rotate_selective
+        r_p = self.qubit_probe.rotate
         s = Sequence()
-        for cavity_amp in self.cavity_amps:
-            for qubit_amp in self.qubit_amps:
+        for cav_amp in self.cavity_amps:
+            for qt_amp in self.qubit_amps:
                 for i_bg in range(2):
                     if i_bg == 1 and not self.bgcor:
                         continue
                     s.append(self.seq)
                     
-                    s.append(Combined([CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\envelope_fock_0_4_transmon_1000ns.csv', 
-                                                        qubit_amp, chan=self.qubit_info.sideband_channels[0]),
-                                       CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\envelope_fock_0_4_cavity_1000ns.csv', 
-                                                        cavity_amp, chan=self.cavity_info.sideband_channels[0])
-                                      ]))
-    #                s.append(Delay(20000))
+                    time_shift = 13
+                    mod4_qt_I = Join([CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\encoding_unitary_transmon_1000ns.csv', 
+                                                                        qt_amp, chan=self.qubit_info.sideband_channels[0]),
+                                                Constant(time_shift, 0, chan=self.qubit_info.sideband_channels[0])])
+                    
+                    mod4_qt_Q = Join([CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\encoding_unitary_transmon_q_1000ns.csv', 
+                                                                        qt_amp, chan=self.qubit_info.sideband_channels[1]),
+                                                Constant(time_shift, 0, chan=self.qubit_info.sideband_channels[1])])
+                    
+                    mod4_cav_I = Join([Constant(time_shift, 0, chan=self.cavity_info.sideband_channels[0]),
+                                                 CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\encoding_unitary_cavity_1000ns.csv', 
+                                                                        cav_amp, chan=self.cavity_info.sideband_channels[0])])
+                    
+                    mod4_cav_Q = Join([Constant(time_shift, 0, chan=self.cavity_info.sideband_channels[1]),
+                                                 CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\encoding_unitary_cavity_q_1000ns.csv', 
+                                                                        cav_amp, chan=self.cavity_info.sideband_channels[1])])
+                    mod4_encode = Combined([mod4_qt_I, mod4_qt_Q, mod4_cav_I, mod4_cav_Q])
+    
+                    s.append(mod4_encode)
                     if i_bg == 0:
-                        s.append(r_a4(np.pi, X_AXIS))
+#                        s.append(Delay(200))                        
+                        s.append(r_p(np.pi/2, X_AXIS))
+                        s.append(Delay(self.t_ge))
+                        s.append(r_p(-np.pi/2, X_AXIS))
+#                        s.append(r_p(np.pi, X_AXIS))  # Chen changed this to a qubit temp measurement
                         
                     if self.postseq is not None:
                         s.append(self.postseq)
