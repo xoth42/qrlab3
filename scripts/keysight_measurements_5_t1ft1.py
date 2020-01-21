@@ -23,14 +23,13 @@ import datetime
 
 qubit_info = mclient.get_qubit_info('qubit1ge')
 ef_info = mclient.get_qubit_info('qubit1ef')
-qubit2_info = mclient.get_qubit_info('qubit2ge')
-ef2_info = mclient.get_qubit_info('qubit2ef')
+#qubit2_info = mclient.get_qubit_info('qubit2ge')
+#ef2_info = mclient.get_qubit_info('qubit2ef')
 #fwm_info = mclient.get_qubit_info('fwm_info1')
 #fwm2_info = mclient.get_qubit_info('fwm_info2')
 #qubit03_info = mclient.get_qubit_info('qubit1_03')
 #qubit14_info = mclient.get_qubit_info('qubit1_14')
 readout_info = mclient.get_readout_info('readout')
-readout = mclient.instruments['readout']
 #cavity_infoA = mclient.get_qubit_info('cavityAlice')
 #RO_info = mclient.get_qubit_info('RO')
 #qubit2_info = mclient.get_qubit_info('cavityAlice')
@@ -44,7 +43,7 @@ os.chdir(r'C:/qrlab/scripts')
 
 if 0: # test digitizer
     dig = mclient.instruments['dig']
-    data = dig.test_dig(5000, 1, 1, 1)
+    data = dig.test_dig(1000, 1, 1000, 1)
     print(np.shape(data))
     plt.figure()
     plt.plot(data[0][0][:], label = 'sig')
@@ -55,7 +54,7 @@ if 0: # test digitizer
     
 if 0: # test digitizer DEMODULATED
     dig = mclient.instruments['dig']
-    avgs = dig.test_dig_demod(2500, 40000)
+    avgs = dig.test_dig_demod(1000, 1000)
     print(np.shape(avgs))
     plt.figure()
     plt.plot(np.real(avgs), label = 'real')
@@ -67,122 +66,19 @@ if 0: # test digitizer DEMODULATED
     plt.plot(np.real(avgs),np.imag(avgs)) 
     plt.show()
     bla
-if 1: # cav transmission
-
+if 0: # cav transmission
     from single_cavity import rocavspectroscopy_keysight
 #    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])
-    seq = sequencer.Sequence([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0), ef2_info.rotate(np.pi, 0)])
+#    seq = sequencer.Sequence([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0), ef2_info.rotate(np.pi, 0)])
 #    Yoko.do_set_current(-0.00175)
-    rofreq = 10.715e9
-    freq_range = 10e6
-    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(-3,0, 1),
+    rofreq = 7930e6
+    freq_range = 15e6
+    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(-30, -40, 11),
                                              np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
                                              qubit_pulse=False, seq=None)#,extra_info=[ef2_info])
     ro.measure()
     
-#    figure_name = '-0.03T '
-#    
-#    plt.figure('amp%s'%(figure_name))
-#    plt.plot(ro.freqs,ro.ampdata[0],label = 'g, SS off')
-#    plt.figure('phase%s'%(figure_name))
-#    plt.plot(ro.freqs,ro.phasedata[0],label = 'g')
-#    
-#    
-#    
-#    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(5,10,1),
-#                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
-#                                             qubit_pulse=True, seq=None)#,extra_info=[ef2_info])
-#    ro.measure()
-#    plt.figure('amp%s'%(figure_name))
-#    plt.plot(ro.freqs,ro.ampdata[0],label = 'qubit 1 in e')
-#    plt.figure('phase%s'%(figure_name))
-#    plt.plot(ro.freqs,ro.phasedata[0],label = 'qubit 1 in e')
-#    
-#    
-#    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit2_info, np.linspace(5,10, 1),
-#                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
-#                                             qubit_pulse=True, seq=None)#,extra_info=[ef2_info])
-#    ro.measure()
-#
-#    plt.figure('amp%s'%(figure_name))
-#    plt.plot(ro.freqs,ro.ampdata[0],label = 'qubit 2 in e')
-#    plt.legend()
-#    fn = os.path.join(r'C:\_Data', 'images/%s_amp%s.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime()),figure_name))
-#    fdir = os.path.split(fn)[0]
-#    if not os.path.isdir(fdir):
-#        os.makedirs(fdir)
-#    kwargs = dict()
-#    plt.savefig(fn, **kwargs)
-#    plt.figure('phase%s'%(figure_name))
-#    plt.plot(ro.freqs,ro.phasedata[0],label = 'qubit 2 in e')
-#    plt.legend()
-#    fn = os.path.join(r'C:\_Data', 'images/%s_phase%s.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime()),figure_name))
-#    fdir = os.path.split(fn)[0]
-#    if not os.path.isdir(fdir):
-#        os.makedirs(fdir)
-#    kwargs = dict()
-#    plt.savefig(fn, **kwargs)
-##by Yingying
-##    ro_freq = ro.fit_params[2]
-##    print ro_freq
-#    ro_freq = 10.7128e9
-#    power = 10
-#    readout_info.rfsource1.set_frequency(ro_freq)
-#    readout_info.rfsource1.set_power(power)
-#    readout_info.rfsource2.set_frequency(ro_freq+50e6)
-##    bla
 
-if 0: # cav trans with qubit brick on and off
-    from single_cavity import rocavspec_qubitge
-    qubit_source = mclient.instruments['SC_qubit']
-#    qubit_source = mclient.instruments['qubitbrick']
-    rofreq = 10.713e9
-    freq_range = 8e6
-    ro = rocavspec_qubitge.ROCavSpec_Qubitge(qubit_source, qubit_info, np.linspace(0, 10, 1),
-                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 161),
-                                             qubit_pulse=True,seq=None)#,extra_info=[ef2_info])
-    ro.measure()  
-#    ea_on = ro.ampedata[0]
-#    ep_on = ro.phaseedata[0]
-#    e_on = ea_on * np.exp(1j*(ep_on/180 * np.pi))
-#    ea_off = ro.ampgdata[0]
-#    ep_off = ro.phasegdata[0]
-#    e_off = ea_off * np.exp(1j*(ep_off/180 * np.pi))
-#
-#
-#    ro = rocavspec_qubitge.ROCavSpec_Qubitge(qubit_source, qubit2_info, np.linspace(6, 10, 1),
-#                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
-#                                             qubit_pulse=False,seq=None)#,extra_info=[ef2_info])
-#    ro.measure()  
-#    ga_on = ro.ampedata[0]
-#    gp_on = ro.phaseedata[0]
-#    g_on = ga_on * np.exp(1j*(gp_on/180 * np.pi))
-#    ga_off = ro.ampgdata[0]
-#    gp_off = ro.phasegdata[0]
-#    g_off = ga_off * np.exp(1j*(gp_off/180 * np.pi))    
-#    
-#    print('\n')
-#    diff_c_e = np.sum(np.abs(e_on-e_off))/np.sum(np.abs(e_off))
-#    diff_a_e = np.sum(ea_on - ea_off)/np.sum(ea_off)
-#    print('diff_c_e  = %s / %s = %s'%(np.sum(np.abs(e_on-e_off)),np.sum(np.abs(e_off)), diff_c_e))
-#    print('diff_a_e  = %s / %s = %s'%(np.sum(ea_on - ea_off),np.sum(ea_off), diff_a_e))    
-#    
-#    diff_c_g = np.sum(np.abs(g_on-g_off))/np.sum(np.abs(g_off))
-#    diff_a_g = np.sum(ga_on - ga_off)/np.sum(ga_off)
-#    print('diff_c_g  = %s / %s = %s'%(np.sum(np.abs(g_on-g_off)),np.sum(np.abs(g_off)), diff_c_g))
-#    print('diff_a_g  = %s / %s = %s'%(np.sum(ga_on - ga_off),np.sum(ga_off), diff_a_g))    
-#    
-#    diff_c_off = np.sum(np.abs(e_off-g_off))/np.sum(np.abs(g_off))
-#    diff_a_off = np.sum(ea_off - ga_off)/np.sum(ga_off)
-#    print('diff_c_off  = %s / %s = %s'%(np.sum(np.abs(e_off-g_off)),np.sum(np.abs(g_off)), diff_c_off))
-#    print('diff_a_off  = %s / %s = %s'%(np.sum(ea_off - ga_off),np.sum(ga_off), diff_a_off))
-#    
-#    diff_c_sub = np.sum(np.abs((e_on-e_off)-(g_on-g_off)))/np.sum(np.abs(g_off))
-#    diff_a_sub = np.sum((ea_on-ea_off) - (ga_on-ga_off))/np.sum(ga_off)
-#    print('diff_c_sub  = %s / %s = %s'%(np.sum(np.abs((e_on-e_off)-(g_on-g_off))),np.sum(np.abs(g_off)), diff_c_sub))
-#    print('diff_a_sub  = %s / %s = %s'%(np.sum((ea_on-ea_off) - (ga_on-ga_off)), np.sum(ga_off),diff_a_sub))
-#    
-    bla
 if 0: # sweeping flux to find phase 
     from single_cavity import flux_phase_sweep
 #    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])
@@ -229,15 +125,16 @@ if 0: #     qubit spectroscopy
 #    postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
 #    for i in [-20,-15,-10,-5,0,5]:
 #        for a in [0.001, 0.01, 0.05, 0.1, 0.5]:
-    qubit_freq =10.7e9
+    
+    qubit_freq = 4703e6
         
-    freq_range = 10e6
+    freq_range = 5e6
 #    for current in np.linspace(-8, -10, 5):
 #        yoko.do_set_current(current)
-    spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['SS_drive'], ef2_info,
+    spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['SC_qubit'], qubit_info,
                                          np.linspace(qubit_freq-freq_range,
-                                                     qubit_freq+freq_range, 2), [10],
-                                         plen=50000, amp=0.1, seq=None, postseq=None, plot_seqs=False)
+                                                     qubit_freq+freq_range, 51), [-33],
+                                         plen=50000, amp=0.01, seq=None, postseq=None, plot_seqs=False)
     spec.measure()
     bla
 
@@ -291,7 +188,7 @@ if 0: # SSB spec
 #        RObrick.do_set_power(i)
         seq = sequencer.Trigger(600)
 #        seq = Join([seq, qubit2_info.rotate(np.pi/2, X_AXIS)])
-        spec = ssbspec.SSBSpec(qubit_info, np.linspace(-20e6, 20e6, 101), seq=seq, plot_seqs=False, proj_func='projection')
+        spec = ssbspec.SSBSpec(qubit_info, np.linspace(-2e6, 2e6, 101), seq=seq, plot_seqs=False, proj_func='phase')
         spec.measure_keysight()
 #        plt.close()
     bla
@@ -299,29 +196,13 @@ if 0: # SSB spec
 if 0: # SSB spec with lorentzian fit
     from single_qubit import ssbspec_lorentzianfit
     seq = sequencer.Trigger(600)
-    spec = ssbspec_lorentzianfit.SSBSpec_lorentzianfit(qubit_info, np.linspace(-4e6, 4e6, 81), seq=seq, plot_seqs=False, proj_func='projection')
+    spec = ssbspec_lorentzianfit.SSBSpec_lorentzianfit(qubit_info, np.linspace(-8e6, 2e6, 81), seq=seq, plot_seqs=False, proj_func='phase')
     spec.measure_keysight()
     center = spec.center
     height = spec.height
     width = spec.width
     bla
-    
-if 0: # SSB spec with gaussian fit
-    from single_qubit import ssbspec_gaussianfit
-    seq = sequencer.Trigger(600)
-    spec = ssbspec_gaussianfit.SSBSpec_Gaussianfit(qubit_info, np.linspace(-20e6, 20e6, 81), seq=seq, plot_seqs=False, proj_func='projection')
-    spec.measure_keysight()
-    
-    bla
 
-if 0: # SSB spec with Stark Shift tone with gaussian fit
-    from single_qubit import ssbspec_gaussianfit_SS
-    seq = sequencer.Trigger(600)
-    spec = ssbspec_gaussianfit_SS.SSBSpec_Gaussianfit_SS(qubit_info, np.linspace(-20e6, 20e6, 81), seq=seq, plot_seqs=False, proj_func='projection')
-    spec.measure_keysight()
-    
-    bla
-    
 if 0: # Check histogramming  #THIS DOES NOT WORK, IT NEEDS TO BE IMPLEMENTED TO KEYSIGHT
     from single_qubit import rabi
 #    dig.set_naverages(50000)
@@ -364,28 +245,18 @@ if 0: # Power Rabi-Calibrate pi pulse
 #    postseq = sequencer.Sequence(ef2_info.rotate(np.pi/2, 0))
     from single_qubit import rabi
     import time
-    update_proj = True
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
-    tr = rabi.Rabi(qubit2_info, 
-#                               np.linspace(-0.5, 0.5, 81), selective=False,
+    tr = rabi.Rabi(qubit_info, 
+#                               np.linspace(-0.2, -0.20, 81), selective=False,
                                np.linspace(-0.6, 0.6, 81), selective=False,
-#                               np.linspace(-0.1, 0.1, 81), selective=True,
 #                               np.linspace(-0.03, 0.03, 81), selective=True,
+#                               np.linspace(-0.006, 0.006, 81), selective=True,
         #                       np.linspace(-0.47,-0.41, 81), selective=False,                   
                                plot_seqs=False, generate=True, repeat_pulse=1,# seq=seq,postseq = postseq,
                                update=True, #extra_info=[qubit2_info, ef2_info],
-                               proj_func='projection')
+                               proj_func='phase')
     tr.measure_keysight()
-    
-    if update_proj:
-        if np.abs(tr.avg_data[np.argmax(abs(tr.avg_data))] - tr.avg_data[len(tr.amps)/2]) < np.abs(tr.avg_data[np.argmin(abs(tr.avg_data))] - tr.avg_data[len(tr.amps)/2]):
-            readout.set_IQg(tr.avg_data[np.argmax(abs(tr.avg_data))])
-            readout.set_IQe(tr.avg_data[np.argmin(abs(tr.avg_data))])
-            
-        else:
-            readout.set_IQg(tr.avg_data[np.argmin(abs(tr.avg_data))])
-            readout.set_IQe(tr.avg_data[np.argmax(abs(tr.avg_data))])
-        print abs(tr.avg_data[np.argmax(abs(tr.avg_data))]- tr.avg_data[np.argmin(abs(tr.avg_data))])
+
     bla
 
 if 0: # Pi/2 pulse train
@@ -435,10 +306,10 @@ if 0: # T1
 #                          ef_info.rotate(np.pi, 0), sequencer.Constant(4000, 1, chan='3m1'), sequencer.Delay(250)])
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
 
-    t1 = T1measurement.T1Measurement(qubit2_info, #np.linspace(0, 500e3, 101),
-                                         np.linspace(0e3, 50e3, 101),
+    t1 = T1measurement.T1Measurement(qubit_info, #np.linspace(0, 500e3, 101),
+                                         np.linspace(0e3, 20e3, 101),
 #                                         np.concatenate((np.linspace(5e3, 5e3, 50), np.linspace(6e3, 6e3, 51))),
-                                         double_exp=False, generate=True, plot_seqs=False, proj_func='projection', seq=None)    
+                                         double_exp=False, generate=True, plot_seqs=False, proj_func='phase', seq=None)    
     t1.measure_keysight()
     bla
 
@@ -447,7 +318,7 @@ if 0: # T1 - alternating pi-pulse and saturation T1
 
     t1 = T1_alternate_pi_saturation.T1Measurement(qubit_info, #np.linspace(0, 0.8e3, 100),
                                      np.concatenate((np.linspace(0.1e3, 10e3, 21), np.linspace(11e3, 150e3, 26), np.linspace(155e3, 650e3, 30))),
-                                     double_exp=True, generate=True, plot_seqs=False, proj_func='projection', seq=None)    
+                                     double_exp=True, generate=True, plot_seqs=False, proj_func='phase', seq=None)    
     t1.measure_keysight()
     bla
 
@@ -462,8 +333,8 @@ if 0: #T2
     from single_qubit import T2measurement
 #    seq = sequencer.Join([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0)])
     for i in range(1):
-        t2 = T2measurement.T2Measurement(qubit2_info, np.linspace(0, 5e3, 101), detune=1e6, double_freq=False, generate=True, 
-                                         seq=None, postseq=None, proj_func='projection') #extra_info=[qubit2_info])
+        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 3e3, 101), detune=2e6, double_freq=False, generate=True, 
+                                         seq=None, postseq=None, proj_func='phase') #extra_info=[qubit2_info])
 #        t2 = T2measurement.T2Measurement(qubit_info, np.concatenate((np.linspace(0.1e3, 2.6e3, 81), np.linspace(2.61e3, 10e3, 81))), detune=0.5e6, double_freq=False, generate=True, 
 #                                         seq=seq, extra_info=ef_info, postseq=None, proj_func='phase')
 
@@ -576,15 +447,15 @@ if 0: # EF Qubit spec
     
 if 0: # EF SSBspec
     from single_qubit import ssbspec
-    seq = sequencer.Sequence([sequencer.Trigger(400), qubit2_info.rotate(np.pi, 0)])
+    seq = sequencer.Sequence([sequencer.Trigger(400), qubit_info.rotate(np.pi, 0)])
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate_selective(np.pi, 0)])
-    postseq = sequencer.Sequence(qubit2_info.rotate(np.pi, 0))
+    postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
 #    postseq = sequencer.Sequence(qubit_info.rotate_selective(np.pi, 0))
-    spec = ssbspec.SSBSpec(ef2_info, np.linspace(-20e6, 20e6, 101), seq=seq, postseq = postseq, extra_info=qubit2_info, plot_seqs=False, generate=True, proj_func='projection')
+    spec = ssbspec.SSBSpec(ef_info, np.linspace(-10e6, 10e6, 101), seq=seq, postseq = postseq, extra_info=qubit_info, plot_seqs=False, generate=True, proj_func='phase')
     spec.measure_keysight()
     bla
     
-if 0: # EF rabi 
+if 1: # EF rabi 
     from single_qubit import efrabi
 #    dig = mclient.instruments['dig']
 #    cool_time = 25e3
@@ -595,16 +466,16 @@ if 0: # EF rabi
 #                                   sequencer.Constant(int(cool_time), 0.1, chan=ef_info.sideband_channels[1]),
 #                                   sequencer.Constant(int(cool_time), 1, chan='3m1')])
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
-    dig.set_naverages(3000)
-    efr = efrabi.EFRabi(qubit2_info, ef2_info, np.linspace(-0.7, 0.7, 101), first_pi=True,second_pi=True, seq=None, generate=True, update=True,
-                            proj_func='projection')
+    dig.set_naverages(1000)
+    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.4, 0.4, 101), first_pi=True,second_pi=True, seq=None, generate=True, update=True,
+                            proj_func='phase')
     efr.measure_keysight()
     period = efr.fit_params['period'].value
     dig.set_naverages(10000)
-    efr = efrabi.EFRabi(qubit2_info, ef2_info, np.linspace(-0.7, 0.7, 101), first_pi=False, second_pi=True, selective=False, seq=None, generate=True,
-                            force_period = period, proj_func='projection')
+    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.4, 0.4, 101), first_pi=False, second_pi=True, selective=False, seq=None, generate=True,
+                            force_period = period, proj_func='phase')
     efr.measure_keysight()
-    dig.set_naverages(3000)
+    dig.set_naverages(1000)
     bla
 
 if 0: # FT1 
@@ -613,7 +484,7 @@ if 0: # FT1
 
     for i in range(1):
 #        seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
-        ft1 = FT1measurement.FT1Measurement(qubit2_info, ef2_info, np.linspace(0, 30e3, 101), seq=None, proj_func='projection')
+        ft1 = FT1measurement.FT1Measurement(qubit2_info, ef2_info, np.linspace(0, 30e3, 101), seq=None, proj_func='phase')
 #        ft1 = FT1measurement.FT1Measurement(qubit_info, ef_info, np.concatenate((np.linspace(0, 1e3, 31), np.linspace(1.01e3, 5e3, 31))), seq=None, proj_func='phase')
 
         ft1.measure_keysight()
@@ -945,6 +816,26 @@ if 0: # Randomized benchmarking - DIAGNOSTICS
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
 if 0: # stark shift measurments
     try:
@@ -1144,112 +1035,3 @@ if 0: # RO photon number measurement
         t2_errs[i] = t2.fit_params['tau'].stderr
         plt.close()
     bla    
-    
-if 0: ##Stark Shift
-    freqs = np.linspace(10.711e9,10.711e9,5)
-    freq_range = np.linspace(-7e6, 2e6, 81)
-    powers= [9]
-    phase = np.zeros((len(freqs),len(freq_range)))
-    phase0 = np.zeros((len(freqs),len(freq_range)))
-    fit_freq = np.zeros(len(freqs))
-    fit_freq0 = np.zeros(len(freqs))
-    fit_freq_err = np.zeros(len(freqs))
-    fit_freq0_err = np.zeros(len(freqs))
-    SSdrive = mclient.instruments['SS_drive']
-    for ifreq, freq in enumerate(freqs):
-        SSdrive.set_power(powers[0])
-        SSdrive.set_frequency(freq)
-        time.sleep(0.1)
-        SSdrive.set_rf_on(True)
-        time.sleep(0.1)
-    
-        from single_qubit import ssbspec_gaussianfit_SS
-    
-        seq = sequencer.Trigger(600)
-        spec = ssbspec_gaussianfit_SS.SSBSpec_Gaussianfit_SS(qubit2_info, freq_range, seq=seq, plot_seqs=False, proj_func='projection')
-        spec.measure_keysight()
-        for j in range(len(freq_range)):
-             phase[ifreq][j] = spec.pp_data[j] 
-             
-        
-        if np.max(phase[ifreq]) - np.min(phase[ifreq])>300:
-            for iphase in range(len(phase[ifreq])):
-                if phase[ifreq][iphase] > 0:
-                    phase[ifreq][iphase] = phase[ifreq][iphase] -360
-                    
-        
-        phase[ifreq] = phase[ifreq] - np.average(phase[ifreq])            
-            
-             
-        fit_freq[ifreq] = spec.fit_params['freq'].value
-        fit_freq_err[ifreq] = spec.fit_params['freq'].stderr
-        plt.close()
-        
-        
-        
-        
-        SSdrive.set_rf_on(False)
-        time.sleep(0.1)
-        from single_qubit import ssbspec_gaussianfit
-    
-        seq = sequencer.Trigger(600)
-        
-        spec = ssbspec_gaussianfit.SSBSpec_Gaussianfit(qubit2_info, freq_range, seq=seq, plot_seqs=False, proj_func='projection')
-        spec.measure_keysight()
-        for j in range(len(freq_range)):
-             phase0[ifreq][j] = spec.pp_data[j] 
-    
-        
-        if np.max(phase0[ifreq]) - np.min(phase0[ifreq])>300:
-            for iphase in range(len(phase0[ifreq])):
-                if phase0[ifreq][iphase] > 0:
-                    phase0[ifreq][iphase] = phase0[ifreq][iphase] -360
-                    
-        
-        phase0[ifreq] = phase0[ifreq] - np.average(phase0[ifreq])            
-            
-             
-        fit_freq0[ifreq] = spec.fit_params['freq'].value
-        fit_freq0_err[ifreq] = spec.fit_params['freq'].stderr
-        plt.close()
-    freqsplot = np.concatenate([freqs, np.asarray([freqs[1] - freqs[0] + freqs[-1]])])  
-    freq_rangeplot = np.concatenate([freq_range, np.asarray([freq_range[1] - freq_range[0] + freq_range[-1]])])      
-    X, Y = np.meshgrid(freqsplot, freq_rangeplot)
-    Zp = np.transpose(phase)
-    plt.figure()
-    plt.pcolormesh(X,Y,Zp)
-    plt.title('phase, power = %s dB'%(powers[0]))
-    plt.colorbar()
-    fn = os.path.join(r'C:\_Data', 'images/%s_phase.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
-    fdir = os.path.split(fn)[0]
-    if not os.path.isdir(fdir):
-        os.makedirs(fdir)
-    kwargs = dict()
-    plt.savefig(fn, **kwargs) 
-    Zp0 = np.transpose(phase0)
-    plt.figure()
-    plt.pcolormesh(X,Y,Zp0)
-    plt.title('phase SSdrive off, power = %s dB'%(powers[0]))
-    plt.colorbar()
-    fn = os.path.join(r'C:\_Data', 'images/%s_phase0.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
-    fdir = os.path.split(fn)[0]
-    if not os.path.isdir(fdir):
-        os.makedirs(fdir)
-    kwargs = dict()
-    plt.savefig(fn, **kwargs)
-    
-    plt.figure()
-    plt.errorbar(freqs/1e6, fit_freq/1e6, yerr = fit_freq_err/1e6,label = 'SS on, %.03f +/- %.03f MHz'%(np.average(fit_freq/1e6),np.average(fit_freq_err/1e6)))
-    plt.errorbar(freqs/1e6, fit_freq0/1e6, yerr = fit_freq0_err/1e6,label = 'SS off, %.03f +/- %.03f MHz'%(np.average(fit_freq0/1e6),np.average(fit_freq0_err/1e6)))
-    plt.ylabel('MHz')
-    plt.legend()
-    fn = os.path.join(r'C:\_Data', 'images/%s_fit_freqs.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
-    fdir = os.path.split(fn)[0]
-    if not os.path.isdir(fdir):
-        os.makedirs(fdir)
-    kwargs = dict()
-    plt.savefig(fn, **kwargs)
-        
-        
-        
-        

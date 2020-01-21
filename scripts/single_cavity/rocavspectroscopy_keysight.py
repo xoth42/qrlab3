@@ -36,6 +36,7 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, ax=None):
         txt = 'Center = %.03f MHz, FWHM = %.03f MHz' % (p[2]/1e6, p[3]/1e6)
         print 'Fit gave: %s' % (txt,)
 #        plt.plot(fs/1e6, f.func(p, fs), label=txt)
+        ax.plot(fs/1000000, p[0] + p[1]/np.pi *(p[3]/2/((fs-p[2])**2 + (p[3]/2)**2)), '--',label = 'freq = %s MHz\n kappa = %s MHz'%(p[2]/1e6,p[3]/1e6))
         ax2.plot(fs/1000000, p[0] + p[1]/np.pi *(p[3]/2/((fs-p[2])**2 + (p[3]/2)**2)), '--',label = 'freq = %s MHz\n kappa = %s MHz'%(p[2]/1e6,p[3]/1e6))
 #yingying add fitting plot
         plt.legend()
@@ -125,9 +126,13 @@ class ROCavSpectroscopy_keysight(Measurement1D):
 #            ]))
 
         s.append(Combined([
-            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+            Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
+            Join([Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),Delay(200)]),
         ]))
+#        s.append(Combined([
+#            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+#        ]))
 
 #        s.append(Combined([
 #            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.acq_chan)),
