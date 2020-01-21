@@ -323,6 +323,8 @@ class Keysight_AWG(Instrument):
         <m1> and <m2>.
         '''
         wave_data = data[:]
+#        np.savetxt(wname + '.txt', data)
+#        print('TEST OF SEQUENCE LOADING', wname)
 #        print(wave_data)
 
 #        print(wave_data.flags.writeable)

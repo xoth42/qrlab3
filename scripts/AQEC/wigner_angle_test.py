@@ -30,7 +30,24 @@ def double_gaussian(params, x, data):
 #                                + params['amp'] * np.exp(-np.power(x - 2 * np.pi, 2.) / (2 * np.power(params['sigma'], 2.))))
 #    est = np.roll(est, int(params['phase'] / (2 * np.pi) * len(x)))
     return data - est
+
+def quadruple_gaussian(params, x, data):
+    dx = np.min([np.abs(x - params['phase']), np.abs(x - params['phase'] - np.pi/2),
+                 np.abs(x - params['phase'] - np.pi), np.abs(x - params['phase'] - np.pi * 3/2)], axis = 0)  #This has been corrected to -np.pi
+    est = (params['background'] + params['amp'] * np.exp(-np.power(dx, 2.) / (2 * np.power(params['sigma'], 2.)))
+                                + params['amp'] * np.exp(-np.power(np.pi/2 - dx, 2.) / (2 * np.power(params['sigma'], 2.)))
+                                + params['amp'] * np.exp(-np.power(np.pi - dx, 2.) / (2 * np.power(params['sigma'], 2.)))
+                                + params['amp'] * np.exp(-np.power(np.pi *3/2 - dx, 2.) / (2 * np.power(params['sigma'], 2.))))
     
+    return data - est
+
+def cosine(params, x, data):
+    est = params['background'] + params['amp'] * np.cos(2*(x-params['phase']))
+    return data  - est   
+
+def cosine4(params, x, data):
+    est = params['background'] + params['amp'] * np.cos(4*(x-params['phase']))
+    return data  - est  
 
 def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
@@ -40,24 +57,94 @@ def analysis(meas, data=None, fig=None):
 #    fig.axes[0].legend(loc=0)
     fig.axes[0].set_ylabel('Intensity [AU]')
     fig.axes[0].set_xlabel('Angle [radians]')
-    if meas.fit:
+    if meas.fit == 2:
         phase = xs[np.argmin(ys)]
         if phase > np.pi:
             phase -= np.pi
         
         params = lmfit.Parameters()
-        params.add('background', value=0, vary=False)
-        params.add('amp', value=np.min(ys), max = 0)
-        params.add('sigma', value=np.pi/8, min=0)
+        params.add('background', value=max(ys), max = max(ys)+abs(max(ys))*0.5)
+        params.add('amp', value=np.min(ys)-np.max(ys), max = 0)
+        params.add('sigma', value=np.pi/8, min=0, max=np.pi/5)
         params.add('phase', value=phase, min=0, max=np.pi)
             
         result = lmfit.minimize(double_gaussian, params, args=(xs, ys))
         lmfit.report_fit(result.params)
     
         fig.axes[0].plot(xs, -double_gaussian(result.params, xs, 0))
-        fig.canvas.draw()
-        
+        fig.canvas.draw()    
         return result
+    
+    elif meas.fit == 4:
+        phase = xs[np.argmin(ys)]
+        if phase > np.pi:
+            phase -= np.pi
+        if phase > np.pi/2:
+            phase -= np.pi/2
+        
+        params = lmfit.Parameters()
+        params.add('background', value=max(ys), max = max(ys)+abs(max(ys))*0.5)
+        params.add('amp', value=np.min(ys)-np.max(ys), max = 0)
+        params.add('sigma', value=np.pi/8, min=0, max=np.pi/5)
+        params.add('phase', value=phase, min=0, max=np.pi/2)
+            
+        result = lmfit.minimize(quadruple_gaussian, params, args=(xs, ys))
+        lmfit.report_fit(result.params)
+    
+        fig.axes[0].plot(xs, -quadruple_gaussian(result.params, xs, 0))
+        fig.canvas.draw()
+        return result
+    
+    elif meas.fit == 20:
+        phase = xs[np.argmin(ys)]
+        if phase > np.pi:
+            phase -= np.pi
+        
+        params = lmfit.Parameters()
+        params.add('background', value=np.mean(ys))
+        params.add('amp', value=(np.min(ys)-np.max(ys))/2)
+        params.add('phase', value=phase, min=0, max=np.pi)
+            
+        result = lmfit.minimize(cosine, params, args=(xs, ys))
+        lmfit.report_fit(result.params)
+        if result.params['amp'] > 0:
+            result.params['amp'] = -result.params['amp']
+            if result.params['phase']>np.pi/2:
+                result.params['phase']-=np.pi/2
+            else:
+                result.params['phase']+=np.pi/2
+    
+        fig.axes[0].plot(xs, -cosine(result.params, xs, 0))
+        fig.canvas.draw()    
+        return result
+
+    elif meas.fit == 40:
+        phase = xs[np.argmin(ys)]
+        if phase > np.pi:
+            phase -= np.pi
+        if phase > np.pi/2:
+            phase -= np.pi/2
+        
+        params = lmfit.Parameters()
+        params.add('background', value=np.mean(ys))
+        params.add('amp', value=(np.min(ys)-np.max(ys))/2)
+        params.add('phase', value=phase, min=0, max=np.pi*0.7)
+            
+        result = lmfit.minimize(cosine4, params, args=(xs, ys))
+        lmfit.report_fit(result.params)
+        if result.params['phase']>np.pi/2:
+            result.params['phase'] -=np.pi/2
+        if result.params['amp'] > 0:
+            result.params['amp'] = -result.params['amp']
+            if result.params['phase']>np.pi/4:
+                result.params['phase']-=np.pi/4
+            else:
+                result.params['phase']+=np.pi/4
+        
+        fig.axes[0].plot(xs, -cosine4(result.params, xs, 0))
+        fig.canvas.draw()    
+        return result
+    
     fig.canvas.draw()
     return None
 
@@ -76,7 +163,7 @@ class wigner_angle_test(Measurement1D):
         self.bgcor = bgcor
         self.fit = fit
         if seq is None:
-            seq = Trigger(500)
+            seq = [Trigger(500)]
         self.seq = seq
         self.postseq = postseq
     
@@ -104,28 +191,29 @@ class wigner_angle_test(Measurement1D):
                 if i_bg == 1 and not self.bgcor:
                     continue
 
-                s.append(self.seq)
-                s.append(c(self.alpha, angle))
+                temp_seq = self.seq[:]
+                temp_seq += [c(self.alpha, angle)]
 
                 if i_bg == 0:
-                    s.append(ge(np.pi/2, X_AXIS))
+                    temp_seq += [ge(np.pi/2, X_AXIS)]
                     if self.t_ge > 0:
-                        s.append(Delay(self.t_ge))
-                    s.append(ge(np.pi/2, X_AXIS))
+                        temp_seq += [Delay(self.t_ge)]
+                    temp_seq += [ge(np.pi/2, X_AXIS)]
                 else:
-                    s.append(ge(np.pi/2, X_AXIS))
+                    temp_seq += [ge(np.pi/2, X_AXIS)]
                     if self.t_ge > 0:
-                        s.append(Delay(self.t_ge))
-                    s.append(ge(-np.pi/2, X_AXIS))
+                        temp_seq += [Delay(self.t_ge)]
+                    temp_seq += [ge(-np.pi/2, X_AXIS)]
 
                 if self.delay:
-                    s.append(Delay(self.delay))
+                    temp_seq += [Delay(self.delay)]
 
-                s.append(Combined([
+                temp_seq += [Combined([
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ]))
-                s.append(Delay(800))
+                ])]
+                temp_seq += [Delay(800)]
+                s.append(Join(temp_seq))
 
         s = self.get_sequencer(s)
         seqs = s.render(debug=False)

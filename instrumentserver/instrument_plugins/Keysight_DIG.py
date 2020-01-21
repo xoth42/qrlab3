@@ -357,7 +357,8 @@ class Keysight_DIG(Instrument):
     def do_set_trigger_period(self, trigger_period):
         self.__init__(self._name, chassis = self._chassis, slot = self._slot, 
                       trigger_period = trigger_period, trigger_only = self._trigger_only,
-                      naverages = self._naverages, nsamples = self._nsamples)
+                      naverages = self._naverages, nsamples = self._nsamples,
+                      awg_list = self._awg_list)
 
     ###############################################
     # Acquizition Methods

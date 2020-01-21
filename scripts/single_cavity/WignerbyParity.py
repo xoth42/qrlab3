@@ -41,7 +41,8 @@ class WignerFunction(Measurement2D):
     def __init__(self, qubit_info, ef_info, cav_info, xs, ys, t_ge=0, t_gf=0,
                  #amax=None, N=None, amaxx=None, Nx=None, amaxy=None, Ny=None,
                  cav_switch=None, seq=None, delay=0, saveas=None, bgcor=False,
-                 zmin=None, zmax=None, Qswitch_infoA=None, Qswitch_infoB=None, **kwargs):
+                 zmin=None, zmax=None, Qswitch_infoA=None, Qswitch_infoB=None, 
+                 rotation=0, **kwargs):
         self.qubit_info = qubit_info
         self.ef_info = ef_info
         self.cav_info = cav_info
@@ -50,7 +51,7 @@ class WignerFunction(Measurement2D):
         self.QswA = Qswitch_infoA
         self.QswB = Qswitch_infoB
         if seq is None:
-            seq = Trigger(250)
+            seq = [Trigger(250)]
         self.seq = seq
         self.delay = delay
         self.saveas = saveas
@@ -58,6 +59,7 @@ class WignerFunction(Measurement2D):
         self.cav_switch = cav_switch
         self.zmin=zmin
         self.zmax=zmax
+        self.rotation=rotation
 
 #        if amaxx is not None:
 #            xs = np.linspace(-amaxx, amaxx, Nx)
@@ -83,6 +85,61 @@ class WignerFunction(Measurement2D):
         )
 
     def generate(self):
+        '''
+        If bg = True generate background measurement, i.e. without qubit pi pulse
+        '''
+
+        s = Sequence()
+
+        ge = self.qubit_info.rotate
+        ef = self.ef_info.rotate
+        c = self.cav_info.rotate
+        for i, alpha in enumerate(self.displacements.flatten()):
+            for i_bg in range(2):
+                    
+                if i_bg == 1 and not self.bgcor:
+                    continue
+
+                temp_seq = self.seq[:]
+
+                temp_seq += [c(np.abs(alpha), np.angle(alpha) - self.rotation)]
+
+                if i_bg == 0:
+                    temp_seq += [ge(np.pi/2, X_AXIS)]
+                    if self.t_ge > 0:
+                        temp_seq += [Delay(self.t_ge)]
+                    if self.t_gf > 0:
+                        temp_seq += [ef(np.pi, X_AXIS)]
+                        temp_seq += [Delay(self.t_gf)]
+                        temp_seq += [ef(np.pi, X_AXIS)]
+                    temp_seq += [ge(np.pi/2, X_AXIS)]
+                else:
+#                    s.append(ge(np.pi/2, Y_AXIS))
+                    temp_seq += [ge(np.pi/2, X_AXIS)]
+                    if self.t_ge > 0:
+                        temp_seq += [Delay(self.t_ge)]
+                    if self.t_gf > 0:
+                        temp_seq += [ef(np.pi, X_AXIS)]
+                        temp_seq += [Delay(self.t_gf)]
+                        temp_seq += [ef(np.pi, X_AXIS)]
+                    temp_seq += [ge(-np.pi/2, X_AXIS)]
+
+                if self.delay:
+                    temp_seq += [Delay(self.delay)]
+
+                temp_seq += [Combined([
+                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+                ])]
+                temp_seq += [Delay(2000)]
+                s.append(Join(temp_seq))
+
+        s = self.get_sequencer(s)
+        seqs = s.render(debug=False)
+        return seqs
+
+
+    def generate_old(self):
         '''
         If bg = True generate background measurement, i.e. without qubit pi pulse
         '''

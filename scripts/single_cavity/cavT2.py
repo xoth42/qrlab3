@@ -7,8 +7,10 @@ import mclient
 from measurement import Measurement1D
 from pulseseq.sequencer import *
 from pulseseq.pulselib import *
+from pulseseq import OCTlib
 import lmfit
 import math
+
 
 def t2_fit(params, x, data):
     '''
@@ -110,7 +112,7 @@ def analysis(meas, data=None, fig=None):
     params.add('amp', value=amp0, min=0)
     params.add('tau', value=xs[-1], min=10, max=4e6)
     params.add('freq', value=f0, min=0)
-    params.add('phi0', value=np.pi*0.5, min=-1.2*np.pi, max=1.2*np.pi)
+    params.add('phi0', value=np.pi*0, min=-1.2*np.pi, max=1.2*np.pi)
     result = lmfit.minimize(t2_fit, params, args=(xs, ys))
     lmfit.report_fit(result.params)
 
@@ -168,7 +170,7 @@ def analysis(meas, data=None, fig=None):
 
 class CavT2(Measurement1D):
 
-    def __init__(self, qubit_info, cav_info, disp, delays, detune=0, seq=None, postseq=None,
+    def __init__(self, qubit_info, cav_info, disp, delays, detune=0, echo=False, seq=None, postseq=None,
                  double_freq=False, bgcor=False, **kwargs):
         self.qubit_info = qubit_info
         self.cav_info = cav_info
@@ -178,10 +180,11 @@ class CavT2(Measurement1D):
         self.double_freq=double_freq
         self.bgcor = bgcor
         if seq is None:
-            seq = Trigger(250)
+            seq = [Trigger(250)]
         self.seq = seq
         self.postseq = postseq
         self.xs = self.delays/1e3
+        self.echo = echo
 
         npoints = len(self.delays)
         if bgcor:
@@ -192,40 +195,55 @@ class CavT2(Measurement1D):
             disp=disp,
         )
 
-    def generate_old(self): # JEFF swaping the generate functions bc the new one is way too confusing
+    def generate(self): # NEW OCT 01 encoding/decoding
+        cav_amp = 115
+        qt_amp = 44
+        time_shift = 11    
+        lib = OCTlib.octlib(qt_amp, cav_amp, time_shift, self.qubit_info, self.cav_info)
+        
         s = Sequence()
-
-        r = self.qubit_info.rotate_selective
+        r = self.qubit_info.rotate
         c = self.cav_info.rotate
         for i, delay in enumerate(self.delays):
             for bg in (0, 1):
                 if bg and not self.bgcor:
                     continue
 
-                s.append(self.seq)
-                s.append(c(np.abs(self.disp), np.angle(self.disp)))
-                if delay > 0:
-                    s.append(Delay(delay))
-
-                dphi = 2 * np.pi * self.detune * delay * 1e-9 + np.pi
-                s.append(c(np.abs(self.disp), np.angle(self.disp)+dphi))
+                temp_seq = self.seq[:]
+                temp_seq += [r(np.pi/2, 0)]
+                temp_seq += [lib.fock01_encode()]
+                if self.echo:
+                    if delay > 0:
+                        temp_seq += [Delay(delay/2.0)]
+                    temp_seq += [lib.fock01_encode()]
+                    temp_seq += [r(np.pi, 0)]
+                    temp_seq += [lib.fock01_encode()]
+                    if delay > 0:
+                        temp_seq += [Delay(delay/2.0)]
+                else:
+                    if delay > 0:
+                        temp_seq += [Delay(delay)]
+                temp_seq += [lib.fock01_encode()]
+                
 
                 if not bg:
-                    s.append(r(np.pi, X_AXIS))
+                    angle = delay * 1e-9 * self.detune * 2 * np.pi
+                    temp_seq += [r(-np.pi/2, angle)]
 
                 if self.postseq:
-                    s.append(self.postseq)
+                    temp_seq += [self.postseq]
 
-                s.append(Combined([
+                temp_seq += [Combined([
                         Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                         Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ]))
+                ])]
+                s.append(Join(temp_seq))
 
         s = self.get_sequencer(s)
         seqs = s.render(debug=False)
         return seqs
 
-    def generate(self):
+    def generate_old(self): #SNAP 01 
         s = Sequence()
 
         r = self.qubit_info.rotate_selective
@@ -240,68 +258,37 @@ class CavT2(Measurement1D):
                 if bg and not self.bgcor:
                     continue
 
-                s.append(self.seq)
+                temp_seq = self.seq[:]
 
-                s.append(c(self.disp,0))
-                s.append(r(2*np.pi, X_AXIS))
+                temp_seq += [c(self.disp,0)]
+                temp_seq += [r(2*np.pi, X_AXIS)]
 #                s.append(r(np.pi, Y_AXIS))
-                s.append(c(self.disp2,0))
+                temp_seq += [c(self.disp2,0)]
 
                 if delay > 0:
-                    s.append(Delay(delay))
+                    temp_seq += [Delay(delay)]
 
                 dphi = 2 * np.pi * self.detune * delay * 1e-9 + np.pi
-                s.append(c(self.disp3,dphi))
+                temp_seq += [c(self.disp3,dphi)]
 
                 if not bg:
-                    s.append(r(np.pi, X_AXIS))
+                    temp_seq += [r(np.pi, X_AXIS)]
 
                 if self.postseq:
-                    s.append(self.postseq)
+                    temp_seq += [self.postseq]
 
-                s.append(Combined([
+                temp_seq += [Combined([
                         Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                         Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ]))
-                s.append(Delay(93e3))
+                ])]
+                temp_seq += [Delay(93e3)]
+                s.append(Join(temp_seq))
     
         s = self.get_sequencer(s)
         seqs = s.render(debug=False)
         return seqs
     
-    def generate_kerrtest(self):
-        s = Sequence()
 
-        r = self.qubit_info.rotate_selective
-        c = self.cav_info.rotate
-
-        for i, delay in enumerate(self.delays):
-            for bg in (0, 1):
-                if bg and not self.bgcor:
-                    continue
-
-                s.append(self.seq)
-
-                if delay > 0:
-                    s.append(Delay(delay))
-
-                s.append(c(.8,0))
-
-                if not bg:
-                    s.append(r(np.pi, X_AXIS))
-
-                if self.postseq:
-                    s.append(self.postseq)
-
-                s.append(Combined([
-                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ]))
-                s.append(Delay(2e3))
-    
-        s = self.get_sequencer(s)
-        seqs = s.render(debug=False)
-        return seqs
 
 
     def get_ys(self, data=None):
