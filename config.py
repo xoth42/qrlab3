@@ -12,7 +12,9 @@ awg_fileload = False
 dot_awg_path = 'Z:\\_AWG\\ECS\\123.awg'
 
 # Force generation of these channels even if no sequence present
-required_channels = (1, 2, 3, 4)
+
+required_channels = (1, 2, 3, 4, 7, 8, 13, 14)
+
 
 #slave_triggers = (('4m1', 475),)
 # marker delay

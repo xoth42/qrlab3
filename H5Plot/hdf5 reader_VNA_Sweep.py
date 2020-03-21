@@ -15,26 +15,17 @@ from matplotlib import gridspec
 filepath = 'C:\_Data\\'
 #hdf5_name = 'VNAtestJan30.hdf5'
 #hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
-<<<<<<< HEAD
 hdf5_name = '0827cooldown_circualtor_VNA.hdf5'
-=======
 
-hdf5_name = '0531cooldown_FMR.hdf5'
->>>>>>> d7e227cc5ab250d97979656155e81201eb0f0eae
-#hdf5_name = '0531cooldown_FMR - Copy.hdf5'
-date = '20190913'
-time = '022547'
+date = '20191128'
+time = '233939'
 experiment = 'Power_Sweep_VNA'
 
-<<<<<<< HEAD
-fit_S12 = False
-=======
 fit_S12 = True
 
->>>>>>> d7e227cc5ab250d97979656155e81201eb0f0eae
 fit_S11 = False
 fit_S12_two_modes_V2 = False
-fit_S12_two_modes_V3 = True
+fit_S12_two_modes_V3 = False
 
 subtract = False
 
@@ -165,7 +156,7 @@ if fit_S12 or fit_S11 or fit_S12_two_modes_V2 or fit_S12_two_modes_V3:
 
 
 
-for i in range(len(real))[0:7]:
+for i in range(len(real))[:]:
 
     fig.axes[1].plot(real[i],imag[i], label= 'power = %sdB'%(powers[i]))
     fig.axes[0].plot(freq/1e9,mag[i], label= 'power = %sdB'%(powers[i]))
@@ -175,8 +166,8 @@ for i in range(len(real))[0:7]:
 
     
 
-    freqs = freq
-    datas = real[i] + 1j*imag[i]
+    freqs = freq[400:800]
+    datas = real[i][400:800] + 1j*imag[i][400:800]
     
 #    freqs = freqs[0:300]
 #    datas = datas[0:300]
@@ -184,15 +175,15 @@ for i in range(len(real))[0:7]:
         params = lmfit.Parameters()
         params.add('kappa_prod', value= (np.max(np.abs(datas))*0.5e6)**2.001, min = 0)#,vary = False)
         params.add('omega_c', value=freqs[np.argmax(np.abs(datas))]*1.0001,min = freqs[np.argmax(np.abs(datas))]*0.9998, max = freqs[np.argmax(np.abs(datas))] * 1.0002)#,vary = False)
-        params.add('kappa_a', value=1e6, min = 0)#, max = 4e6)#,vary = False)
+        params.add('kappa_a', value=10e6, min = 0)#, max = 4e6)#,vary = False)
         if np.max(np.abs(datas)) < limit_for_off:
-            params.add('roff',value = 1e-5)#,vary = False)
-            params.add('ioff',value = 1e-5)#, vary = False)
-        params.add('phi',value = -1, max = np.pi, min = -np.pi)#,vary = False)
+            params.add('roff',value = -1e-4)#,vary = False)
+            params.add('ioff',value = -1e-4)#, vary = False)
+        params.add('phi',value = -3, max = np.pi*1.5, min = -np.pi*1.5)#,vary = False)
                 
     #    datas = realdata[0,:]+ 1j*imagdata[0,:]    
         result = lmfit.minimize(S21, params, args=(freqs, datas))
-#        lmfit.report_fit(result.params)
+        lmfit.report_fit(result.params)
 #        print ('total Q: ',result.params['omega_c'].value/result.params['kappa_a'].value)
         print ('kappa_tot: ',result.params['kappa_a'].value/1000000, 'MHz')
         fitdata = np.sqrt(result.params['kappa_prod'].value)/(-1j*(freqs-result.params['omega_c'].value)-(result.params['kappa_a'].value)/2.0 )
