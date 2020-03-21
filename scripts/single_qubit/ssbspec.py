@@ -27,7 +27,7 @@ def analysis(meas, data=None, fig=None):
     params.add('amp2', value=(np.min(ys)-np.max(ys))/1.3, max=0)
     params.add('sigma', value=(xs[-1]-xs[0])/12, max=(xs[-1]-xs[0])/2)
     params.add('center1', value=xs[np.argmin(ys)], min=xs[0], max=xs[-1])
-    params.add('center2', value=(xs[np.argmin(ys)]+xs[0])/2, min=xs[0], max=xs[-1])
+    params.add('center2', value=(xs[np.argmin(ys)]+xs[-1])/2, min=xs[0], max=xs[-1])
         
     result = lmfit.minimize(double_gaussian, params, args=(xs, ys))
     lmfit.report_fit(result.params)

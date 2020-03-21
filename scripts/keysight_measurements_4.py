@@ -82,15 +82,16 @@ if 0: # Quantum Jump
 
 if 0: # cav transmission
     from single_cavity import rocavspectroscopy_keysight
-#    rofreq = 7337.62e6
+    dig.set_naverages(2500)
     rofreq = 7337.62e6
-    freq_range = 0.8e6
-    
-    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(5, 1, 1),
-                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 61),
-#                                             np.linspace(rofreq, rofreq+freq_range, 1), 
-                                             qubit_pulse=False, seq=None)
-    ro.measure()
+    freq_range = 1.0e6
+
+    for i in range(1):    
+        ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(5, 1, 1),
+                                                 np.linspace(rofreq-freq_range, rofreq+freq_range, 81),
+    #                                             np.linspace(rofreq, rofreq+freq_range, 1), 
+                                                 qubit_pulse=False, seq=None)
+        ro.measure()
     bla
     
      
@@ -123,11 +124,11 @@ if 0: # Calibrate TWPA SNR
         ax.set_ylabel('twpa frequencies')
 
     from single_qubit import rabi
-    twpa_powers = np.linspace(-4.2, -4.0, 1)
-    freq = 7.9205e9
-    freq_range = 0e6
-    twpa_freqs = np.linspace(freq-freq_range, freq+freq_range, 3)
-    naverages = 2000
+    twpa_powers = np.linspace(-4.2, -4.0, 5)
+    freq = 7.918e9
+    freq_range = 3e6
+    twpa_freqs = np.linspace(freq-freq_range, freq+freq_range, 7)
+    naverages = 3000
 
     ampdata = np.zeros([len(twpa_powers), len(twpa_freqs)])
     stddata = np.zeros([len(twpa_powers), len(twpa_freqs)])
@@ -136,9 +137,9 @@ if 0: # Calibrate TWPA SNR
     SCqubit.set_rf_on(False)
     
     for i, p in enumerate(twpa_powers):
-        TWPApump.set_power(p)
+        SCTWPA.set_power(p)
         for j, f in enumerate(twpa_freqs):
-            TWPApump.set_frequency(f)
+            SCTWPA.set_frequency(f)
             tr = rabi.Rabi(qubit_info, 
                    np.linspace(-0.9, 0.9, 41), selective=False,
                    plot_seqs=False, generate=True, repeat_pulse=1, update=False, seq=None)    
@@ -207,7 +208,7 @@ if 0: # qubit SSB spec
     spec = ssbspec.SSBSpec(qubit_info, np.concatenate((
 #                                        np.linspace(-10e6, 1e6, 121),
 #                                       np.linspace(-7.0e6, -6e6, 31), 
-                                       np.linspace(-0.08e6, 0.08e6, 81),
+                                       np.linspace(-5e6, 5e6, 81),
                                        )), 
                            seq=None, plot_seqs=False, 
 #                           extra_info = [cavity_infoB, qubit_b0s, qubit_b2s, qubit_b4s, fwm_info, fwm_info_b2, fwm_info_b4]
@@ -261,14 +262,15 @@ if 0: # T1
     t1.measure_keysight()
 #    bla
 
-if 1: # T2
+if 0: # T2
     from single_qubit import T2measurement
-    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0e3, 40e3, 101), detune=0.3e6, 
+    dig.set_naverages(1500)
+    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0e3, 30e3, 121), detune=0.3e6, 
 #    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 3.9e3, 81), detune=2e6, 
-                                     double_freq=False, generate=True, seq=None,
+                                     double_freq=True, generate=True, seq=None,
                                      plot_seqs=False)
     t2.measure_keysight()
-    bla
+bla
     
 if 0: # T2echo
     from single_qubit import T2measurement

@@ -111,7 +111,11 @@ def analysis(meas, data=None, fig=None):
     params.add('ofs', value=off0)
     params.add('amp', value=amp0, min=0)
     params.add('tau', value=xs[-1], min=10, max=4e6)
-    params.add('freq', value=f0, min=0)
+    if meas.detune < 0.1e3:
+        params.add('freq', value=0, vary=False)#f0, min=0)
+    else:
+        params.add('freq', value=f0, min=0)
+        
     params.add('phi0', value=np.pi*0, min=-1.2*np.pi, max=1.2*np.pi)
     result = lmfit.minimize(t2_fit, params, args=(xs, ys))
     lmfit.report_fit(result.params)

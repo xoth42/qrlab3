@@ -59,12 +59,12 @@ Qswitchseq = sequencer.Join([sequencer.Repeat(sequencer.Delay(100), 100),
 #            Repeat(Constant(250, 1, chan=5), 800),      # Qubit/Readout master switch
             ])])
 '''
-#if 1: # Cavity disp calibration
-from single_cavity import cavdisp
+if 0: # Cavity disp calibration
+    from single_cavity import cavdisp
 
-for i in range(5):
+#for i in range(5):
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
-    dig.set_trigger_period(3000)
+    dig.set_trigger_period(2000)
     disp = cavdisp.CavDisp(qubit_info, cavity_infoA, 2.5, 41, 0, seq=None,
                            delay=0, bgcor=True, update=False, generate=True,
                            plot_seqs = False
@@ -88,14 +88,19 @@ if 0: # Cavity T1
 #    ys = t1.get_ys()
     bla
 
-if 0: # Cavity T2
+if 1: # Cavity T2
     dig.set_naverages(1000)
     from single_cavity import cavT2
     detune = 10e3
     ct2 = cavT2.CavT2(qubit_info, cavity_infoA, .7, np.linspace(0, 500e3, 41), detune=detune, seq=None,
-#    ct2 = cavT2.CavT2(qubit_info, cavity_infoA, .7, np.linspace(0, 3.99e3, 51), detune=2e6, seq=None,
                        postseq=None, bgcor=False)
     ct2.measure_keysight()
+
+    detune = 0.01e3
+    ct2 = cavT2.CavT2(qubit_info, cavity_infoA, .7, np.linspace(0, 600e3, 41), detune=detune, seq=None,
+                       postseq=None, bgcor=False)
+    ct2.measure_keysight()
+    bla
 
 if 0: # Cavity T2E
     from single_cavity import cavT2

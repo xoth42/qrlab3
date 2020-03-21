@@ -263,11 +263,8 @@ class T2_AQEC(Measurement1D):
         seqs = s.render()
 #        s.plot_seqs(seqs)
 
-        return seqs
-    
-    
-      
+        return seqs              
 
     def analyze(self, data=None, fig=None):
         self.fit_params = analysis(self, data, fig)
-        return self.fit_params['tau'].value
+        return self.fit_params['freq'].value

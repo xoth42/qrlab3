@@ -264,7 +264,7 @@ instruments = objsh.helper.find_object('instruments')
 datasrv = objsh.helper.find_object('dataserver')
 datadir = 'c:/_data'
 
-filename = 'c:/_data/AQEC-01-2020.hdf5'
+filename = 'c:/_data/AQEC-02-2020.hdf5'
 
 
 

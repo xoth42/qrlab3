@@ -84,44 +84,63 @@ class octlib(object):
                          ])
 
     def mod4_decode(self, phase = 0, secondary = False): # 3000 is the new decoding, 1000 is the old, 2000 is bad
+        dt_0 = '3000'
+        dt_pi = '2000'
+        
+        
         combined_path = self.filepath + '\decoding_unitary'
         if secondary:
-            data = self.cav_amp * np.loadtxt(combined_path + '_cavity_3000ns_2.csv') - 1.0j* self.cav_amp * np.loadtxt(combined_path + '_cavity_q_3000ns_2.csv')
+            data = (self.cav_amp * np.loadtxt(combined_path + '_cavity_' + dt_pi + 'ns_pi.csv') 
+                    - 1.0j* self.cav_amp * np.loadtxt(combined_path + '_cavity_q_' + dt_pi + 'ns_pi.csv'))
         else:
-            data = self.cav_amp * np.loadtxt(combined_path + '_cavity_3000ns.csv') - 1.0j* self.cav_amp * np.loadtxt(combined_path + '_cavity_q_3000ns.csv')
+#            data = self.cav_amp * np.loadtxt(combined_path + '_cavity_1000ns.csv') - 1.0j* self.cav_amp * np.loadtxt(combined_path + '_cavity_q_1000ns.csv')
+            data = (self.cav_amp * np.loadtxt(combined_path + '_cavity_' + dt_0 + 'ns.csv') 
+                    - 1.0j* self.cav_amp * np.loadtxt(combined_path + '_cavity_q_' + dt_0 + 'ns.csv'))
+#            phase += np.pi/2
         data *= np.exp(-1.0j*phase)
         cav_i = np.real(data)
         cav_q = np.imag(data)
         
         if secondary:
-            return Combined([Join([CSVPulse(combined_path + '_transmon_3000ns_2.csv', self.qt_amp, chan=self.qubit_info.sideband_channels[0]),
+            return Combined([Join([CSVPulse(combined_path + '_transmon_' + dt_pi + 'ns_pi.csv', self.qt_amp, chan=self.qubit_info.sideband_channels[0]),
                                    Constant(self.time_shift, 0, chan=self.qubit_info.sideband_channels[0])]),
-                             Join([CSVPulse(combined_path + '_transmon_q_3000ns_2.csv', self.qt_amp, chan=self.qubit_info.sideband_channels[1]),
+                             Join([CSVPulse(combined_path + '_transmon_q_' + dt_pi + 'ns_pi.csv', self.qt_amp, chan=self.qubit_info.sideband_channels[1]),
                                    Constant(self.time_shift, 0, chan=self.qubit_info.sideband_channels[1])]),
                              Join([Constant(self.time_shift, 0, chan=self.cav_info.sideband_channels[1]),
                                    DataPulse(cav_i, amp = self.cav_amp, chan=self.cav_info.sideband_channels[1], phase = phase,
-                                             filename = combined_path + '_cavity_3000ns_2.csv')]),
+                                             filename = combined_path + '_cavity_' + dt_pi + 'ns_pi.csv')]),
                              Join([Constant(self.time_shift, 0, chan=self.cav_info.sideband_channels[0]),
                                    DataPulse(cav_q, amp = self.cav_amp, chan=self.cav_info.sideband_channels[0], phase = phase,
-                                             filename = combined_path + '_cavity_q_3000ns_2.csv')]),
+                                             filename = combined_path + '_cavity_q_' + dt_pi + 'ns_pi.csv')]),
                              ])
         else:
-            return Combined([Join([CSVPulse(combined_path + '_transmon_3000ns.csv', self.qt_amp, chan=self.qubit_info.sideband_channels[0]),
+#            return Combined([Join([CSVPulse(combined_path + '_transmon_1000ns.csv', self.qt_amp, chan=self.qubit_info.sideband_channels[0]),
+#                                   Constant(self.time_shift, 0, chan=self.qubit_info.sideband_channels[0])]),
+#                             Join([CSVPulse(combined_path + '_transmon_q_1000ns.csv', self.qt_amp, chan=self.qubit_info.sideband_channels[1]),
+#                                   Constant(self.time_shift, 0, chan=self.qubit_info.sideband_channels[1])]),
+#                             Join([Constant(self.time_shift, 0, chan=self.cav_info.sideband_channels[1]),
+#                                   DataPulse(cav_i, amp = self.cav_amp, chan=self.cav_info.sideband_channels[1], phase = phase,
+#                                             filename = combined_path + '_cavity_1000ns.csv')]),
+#                             Join([Constant(self.time_shift, 0, chan=self.cav_info.sideband_channels[0]),
+#                                   DataPulse(cav_q, amp = self.cav_amp, chan=self.cav_info.sideband_channels[0], phase = phase,
+#                                             filename = combined_path + '_cavity_q_1000ns.csv')]),
+#                             ])
+            return Combined([Join([CSVPulse(combined_path + '_transmon_' + dt_0 + 'ns.csv', self.qt_amp, chan=self.qubit_info.sideband_channels[0]),
                                    Constant(self.time_shift, 0, chan=self.qubit_info.sideband_channels[0])]),
-                             Join([CSVPulse(combined_path + '_transmon_q_3000ns.csv', self.qt_amp, chan=self.qubit_info.sideband_channels[1]),
+                             Join([CSVPulse(combined_path + '_transmon_q_' + dt_0 + 'ns.csv', self.qt_amp, chan=self.qubit_info.sideband_channels[1]),
                                    Constant(self.time_shift, 0, chan=self.qubit_info.sideband_channels[1])]),
                              Join([Constant(self.time_shift, 0, chan=self.cav_info.sideband_channels[1]),
                                    DataPulse(cav_i, amp = self.cav_amp, chan=self.cav_info.sideband_channels[1], phase = phase,
-                                             filename = combined_path + '_cavity_3000ns.csv')]),
+                                             filename = combined_path + '_cavity_' + dt_0 + 'ns.csv')]),
                              Join([Constant(self.time_shift, 0, chan=self.cav_info.sideband_channels[0]),
                                    DataPulse(cav_q, amp = self.cav_amp, chan=self.cav_info.sideband_channels[0], phase = phase,
-                                             filename = combined_path + '_cavity_q_3000ns.csv')]),
+                                             filename = combined_path + '_cavity_q_' + dt_0 + 'ns.csv')]),
                              ])
-
-    def mod4_decode2(self, phase = 0, secondary = False): # 3000 is the new decoding, 1000 is the old, 2000 is bad
+    
+    def mod4_decode2(self, phase = 0, secondary = False): # just the secondary decoding
         combined_path = self.filepath + '\decoding_unitary'
 #        if secondary:
-        data = self.cav_amp * np.loadtxt(combined_path + '_cavity_3000ns_2.csv') - 1.0j* self.cav_amp * np.loadtxt(combined_path + '_cavity_q_3000ns_2.csv')
+        data = self.cav_amp * np.loadtxt(combined_path + '_cavity_2000ns_pi.csv') - 1.0j* self.cav_amp * np.loadtxt(combined_path + '_cavity_q_2000ns_pi.csv')
 #        else:
 #            data = self.cav_amp * np.loadtxt(combined_path + '_cavity_3000ns.csv') - 1.0j* self.cav_amp * np.loadtxt(combined_path + '_cavity_q_3000ns.csv')
         data *= np.exp(-1.0j*phase)
@@ -129,16 +148,16 @@ class octlib(object):
         cav_q = np.imag(data)
         
 #        if secondary:
-        return Combined([Join([CSVPulse(combined_path + '_transmon_3000ns_2.csv', self.qt_amp, chan=self.qubit_info.sideband_channels[0]),
+        return Combined([Join([CSVPulse(combined_path + '_transmon_2000ns_pi.csv', self.qt_amp, chan=self.qubit_info.sideband_channels[0]),
                                Constant(self.time_shift, 0, chan=self.qubit_info.sideband_channels[0])]),
-                         Join([CSVPulse(combined_path + '_transmon_q_3000ns_2.csv', self.qt_amp, chan=self.qubit_info.sideband_channels[1]),
+                         Join([CSVPulse(combined_path + '_transmon_2_2000ns_pi.csv', self.qt_amp, chan=self.qubit_info.sideband_channels[1]),
                                Constant(self.time_shift, 0, chan=self.qubit_info.sideband_channels[1])]),
                          Join([Constant(self.time_shift, 0, chan=self.cav_info.sideband_channels[1]),
                                DataPulse(cav_i, amp = self.cav_amp, chan=self.cav_info.sideband_channels[1], phase = phase,
-                                         filename = combined_path + '_cavity_3000ns_2.csv')]),
+                                         filename = combined_path + '_cavity_2000ns_pi.csv')]),
                          Join([Constant(self.time_shift, 0, chan=self.cav_info.sideband_channels[0]),
                                DataPulse(cav_q, amp = self.cav_amp, chan=self.cav_info.sideband_channels[0], phase = phase,
-                                         filename = combined_path + '_cavity_q_3000ns_2.csv')]),
+                                         filename = combined_path + '_cavity_q_2000ns_pi.csv')]),
                          ])
 #        else:
 #            return Combined([Join([CSVPulse(combined_path + '_transmon_3000ns.csv', -self.qt_amp, chan=self.qubit_info.sideband_channels[0]),
