@@ -39,11 +39,10 @@ ge = mclient.instruments['qubit1ge']
 #qubit2_info = mclient.get_qubit_info('cavityAlice')
 os.chdir(r'C:/qrlab/scripts')
 
-start_freq = 944500000
-start_current =2e-3
-#start_current = 1.99e-3  #This is the flux point in question for the frequency above
-stop_current = 3e-3
-current_step=0.02e-3
+start_freq = 840e6
+start_current = 0.14e-3  #This is the flux point in question for the frequency above
+stop_current = 0.14e-3
+current_step=0.00e-3
 qbrick.set_frequency(start_freq)
 
 from single_qubit import ssbspec
@@ -54,22 +53,52 @@ Yoko.do_set_current(current)
 time.sleep(.2)
 
 seq = sequencer.Trigger(600)
-spec = ssbspec.SSBSpec(qubit_info, np.linspace(-5e6, 35e6, 101), seq=None, plot_seqs=False, proj_func='phase')
+spec = ssbspec.SSBSpec(qubit_info, np.linspace(-30e6, 30e6, 81), seq=None, plot_seqs=False, proj_func='phase')
 spec.measure_keysight()
 
 current = current + current_step
+
 Yoko.do_set_current(current)
 time.sleep(.2)
 
 while current < stop_current:
         seq = sequencer.Trigger(600)
-        spec = ssbspec.SSBSpec(qubit_info, np.linspace(-5e6, 35e6, 101), seq=None, plot_seqs=False, proj_func='phase')
+        spec = ssbspec.SSBSpec(qubit_info, np.linspace(-30e6, 30e6, 81), seq=None, plot_seqs=False, proj_func='phase')
         spec.measure_keysight()
         current = current + current_step
         Yoko.do_set_current(current)
         plt.close('all')
 
 
+
+#start_freq = 4e9
+#current=0.146e-3
+##start_current = 1.99e-3  #This is the flux point in question for the frequency above
+#stop_freq=4.5e9
+#freq_step=50e6
+#Yoko.do_set_current(current)
+#qbrick.set_frequency(start_freq)
+#freq = start_freq
+#from single_qubit import ssbspec
+#
+#
+#time.sleep(.2)
+#
+#seq = sequencer.Trigger(600)
+#spec = ssbspec.SSBSpec(qubit_info, np.linspace(-50e6, 50e6, 151), seq=None, plot_seqs=False, proj_func='phase')
+#spec.measure_keysight()
+#
+#freq = freq + freq_step
+#qbrick.set_frequency(freq)
+#time.sleep(.2)
+#
+#while freq < stop_freq:
+#        seq = sequencer.Trigger(600)
+#        spec = ssbspec.SSBSpec(qubit_info, np.linspace(-50e6, 50e6, 151), seq=None, plot_seqs=False, proj_func='phase')
+#        spec.measure_keysight()
+#        freq = freq + freq_step
+#        qbrick.set_frequency(freq)
+#        plt.close('all')
 
 
 

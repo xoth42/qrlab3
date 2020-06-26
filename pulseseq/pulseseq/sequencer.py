@@ -1098,7 +1098,12 @@ class Pulse(Instruction):
 #            name = 'delay1'
 #            repeat *= len(data)
 #            data = np.array([0,])
-
+        self.name = name
+        self.data = data
+        self.chan = chan
+        self.trigger = trigger
+        self.repeat = repeat
+        super(Pulse, self).__init__()
         if name in Pulse.pulse_data:
             if data is None:
                 data = Pulse.pulse_data[name]
@@ -1114,17 +1119,12 @@ class Pulse(Instruction):
             # Only check range if pulse not defined yet
             self.check_range(data)
 
-        self.name = name
-        self.data = data
-        self.chan = chan
-        self.trigger = trigger
-        self.repeat = repeat
-        super(Pulse, self).__init__()
+        
 
     def check_range(self, data):
         if np.count_nonzero(np.abs(data) > 1) != 0:
             val = data[np.argmax(np.abs(data))]
-            msg = 'Pulse %s contains value larger than +-1: %.03f' % (name, val)
+            msg = 'Pulse ' + self.name + ' contains value larger than +-1: ' + str(val)
             if Pulse.RANGE_ACTION == WARN:
                 print msg
             elif Pulse.RANGE_ACTION == RAISE:

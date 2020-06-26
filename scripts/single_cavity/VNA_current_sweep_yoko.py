@@ -147,12 +147,12 @@ class Current_Sweep_VNA(Measurement1D):
         VNA.set_if_bandwidth(self.if_bandwidth)
         
         for icurrent, current in enumerate(self.currents):
-            if icurrent == 0 or np.abs(self.dcurrents) > 0.002:
-                Yoko.do_ramp_current(current)
-                time.sleep(1)
+#            if icurrent == 0 or np.abs(self.dcurrents) > 0.002:
+#                Yoko.do_ramp_current(current)
+#                time.sleep(1)
             Yoko.do_set_current(current)
 
-            time.sleep(1)
+#            time.sleep(1)
             ave = avelimit
             if self.average_factor > avelimit:
                 VNA.set_average_factor(ave)

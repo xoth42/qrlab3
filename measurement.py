@@ -1002,10 +1002,10 @@ class Measurement2D(Measurement):
         fig = self.get_figure()
         fig.axes[0].clear()
         if hasattr(self, 'xs') and hasattr(self, 'ys'):
-            zs = zs.reshape((len(self.xs), len(self.ys)))
+            zs = zs.reshape((len(self.ys), len(self.xs)))
             xs, ys = self.get_plotxsys()
             if self.style == STYLE_IMAGE:
-                fig.axes[0].pcolormesh(xs, ys, zs)
+                fig.axes[0].pcolormesh(xs, ys, zs, cmap=plt.get_cmap('RdBu'))
                 fig.axes[0].set_xlim(xs.min(), xs.max())
                 fig.axes[0].set_ylim(ys.min(), ys.max())
                 fig.canvas.draw()

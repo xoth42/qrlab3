@@ -76,7 +76,7 @@ def analysis(meas, data=None, fig=None):
     params.add('amp', value=amp0, min=0)
     params.add('tau', value=xs[-1], min=10, max=200000)
     params.add('freq', value=f0, min=0)
-    params.add('phi0', value=np.pi/2.0, min=-1.2*np.pi, max=1.2*np.pi)
+    params.add('phi0', value=-np.pi/2.0, min=-1.2*np.pi, max=1.2*np.pi)
     params.add('slope', value=0)
     result = lmfit.minimize(t2_fit_tilted, params, args=(xs, ys))
     lmfit.report_fit(result.params)
@@ -115,7 +115,7 @@ def analysis(meas, data=None, fig=None):
         params3.add('tau', value=params['tau'].value, min=10, max=200000)
         params3.add('freq', value=params['freq'].value, min=0)
         params3.add('phi1', value=params['phi0'].value, min=-1.2*np.pi, max=1.2*np.pi)
-        params3.add('amp2', value=result.params['amp'].value, min=0)
+        params3.add('amp2', value=result.params['amp'].value, min=0.05)
         params3.add('tau2', value=result.params['tau'].value, min=10, max=200000)
         params3.add('freq2', value=result.params['freq'].value, min=0)
         params3.add('phi2', value=result.params['phi0'].value, min=-1.2*np.pi, max=1.2*np.pi)
@@ -262,7 +262,7 @@ class EFT2Measurement(Measurement1D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
-            s.append(Delay(4000))
+            s.append(Delay(10000))
 
         s = self.get_sequencer(s)
         seqs = s.render()

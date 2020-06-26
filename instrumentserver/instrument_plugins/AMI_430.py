@@ -51,6 +51,8 @@ class AMI_430(Instrument):
     
     def do_set_field(self, field):
         self.field = field
+        if self.field > 0.1:
+            raise ValueError('setting field larger than 0.1T')
         self.ser.write('CONFigure:FIELD:TARGet %s;'%(field)) #sets field target
         self.ser.write('RAMP;') #tells magnet to go to the target
 #        try:
@@ -76,3 +78,28 @@ class AMI_430(Instrument):
         
     def do_ramp_zero(self):
         self.ser.write('ZERO;') #puts the programmer into zeroing current mode'''
+        
+    def do_set_PSwitch(self,state):
+        self.ser.write('PSwitch %s;'%(state))
+#        self.ser.write('CONFigure:PSwitch:INSTalled?;')
+#        self.PSwitch = self.ser.read(size=20) #size TBD
+#
+#        return self.PSwitch
+         
+    def do_get_PSwitch(self):
+        self.ser.write('PSwitch?;')
+        self.PSwitch = self.ser.read(size = 8)
+        
+        return self.PSwitch
+    
+    def do_get_Lock_PSwitch(self):
+        self.ser.write('LOCK:PSwitch:CONTRol?;')
+        self.Lock_PSwitch = self.ser.read(size = 8)
+        
+        return self.Lock_PSwitch
+        
+    def IDN(self):
+        self.ser.write('*IDN?;')
+        self.IDN = self.ser.read(size = 8)
+        
+        return self.IDN

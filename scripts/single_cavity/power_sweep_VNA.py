@@ -117,7 +117,7 @@ class Power_Sweep_VNA(Measurement1D):
         # Generate and load sequences
         VNA = self.instruments['VNA']
 #        Yoko = self.instruments['Yoko']
-        SCqubit = self.instruments['SCqubit']
+#        SCqubit = self.instruments['SCqubit']
 
 
         VNA.set_start_freq(self.freqs[0])

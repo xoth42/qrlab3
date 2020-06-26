@@ -36,19 +36,19 @@ qubit_info = mclient.get_qubit_info('qubit1ge')
 #readout_info = mclient.get_readout_info()
 #Yoko = mclient.instruments['Yoko']
 #
-#from single_qubit import spectroscopy_keysight_phasecorrection
+from single_qubit import spectroscopy_keysight_phasecorrection
 from single_qubit import spectroscopy_keysight
 #from scripts.single_qubit import spectroscopy_phasecorrection
 
 #Make sure to check that repeat is off for Yoko GS200
 #To do manually, press 'Program' key and press repeat is the left most option on screen
-qubit_freq = 950.5e6
+qubit_freq = 438e6
 freq_range1= 10e6
-freq_range2 = 100e6
-freq_points = 201
+freq_range2 = 50e6
+freq_points = 61
 results = []
 min_result = []
-ramp_currents = np.linspace(5.95e-3, 6.05e-3, 15) #units are in A
+ramp_currents = np.linspace(-0.65e-3, -0.45e-3, 61) #units are in A
 fxn_freq=[]
 current = ramp_currents[0]
 Yoko.do_set_current(current)
@@ -57,14 +57,14 @@ time.sleep(.2)
 
 
 #
-spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['QK'], qubit_info,
-                                 np.linspace(qubit_freq-freq_range1, qubit_freq+freq_range2, freq_points), [10],
-                                 plen=2000, amp=0.01, plot_seqs=False) #1=1ns
+#spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['QK'], qubit_info,
+#                                 np.linspace(qubit_freq-freq_range1, qubit_freq+freq_range2, freq_points), [-10],
+#                                 plen=15000, amp=0.00001, plot_seqs=False) #1=1ns
 
 
-#spec = spectroscopy_keysight_phasecorrection.Spectroscopy_Keysight_phasecorrection(mclient.instruments['QK'], qubit_info,
-#                                 np.linspace(qubit_freq-freq_range1, qubit_freq+freq_range2, freq_points), [-18],
-#                                 plen=10000, amp=0.08, plot_seqs=False) #1=1ns
+spec = spectroscopy_keysight_phasecorrection.Spectroscopy_Keysight_phasecorrection(mclient.instruments['QK'], qubit_info,
+                                 np.linspace(qubit_freq-freq_range1, qubit_freq+freq_range2, freq_points), [-5],
+                                 plen=1000, amp=0.02, plot_seqs=False) #1=1ns
 
 #
 #spec = spectroscopy_keysight_phasecorrection.Spectroscopy_Keysight_phasecorrection(mclient.instruments['QK'], qubit_info,
@@ -83,14 +83,14 @@ for current in ramp_currents[1:]:
     #yoko1.do_set_current(current)
     Yoko.do_set_current(current)
     time.sleep(.2)
-    spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['QK'], qubit_info,
-                                     np.linspace(qubit_freq-freq_range1, qubit_freq+freq_range2, freq_points), [-18],
-                                     plen=2000, amp=0.01, plot_seqs=False) #1=1ns
+#    spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['QK'], qubit_info,
+#                                     np.linspace(qubit_freq-freq_range1, qubit_freq+freq_range2, freq_points), [-5],
+#                                     plen=10000, amp=0.00001, plot_seqs=False) #1=1nss
 
 
-#    spec = spectroscopy_keysight_phasecorrection.Spectroscopy_Keysight_phasecorrection(mclient.instruments['QK'], qubit_info,
-#                                     np.linspace(qubit_freq-freq_range1, qubit_freq+freq_range2, freq_points), [-18],
-#                                     plen=10000, amp=0.08, plot_seqs=False) #1=1ns
+    spec = spectroscopy_keysight_phasecorrection.Spectroscopy_Keysight_phasecorrection(mclient.instruments['QK'], qubit_info,
+                                 np.linspace(qubit_freq-freq_range1, qubit_freq+freq_range2, freq_points), [-5],
+                                 plen=1000, amp=0.02, plot_seqs=False)
 #    
     
 #    spec = spectroscopy_keysight_phasecorrection.Spectroscopy_Keysight_phasecorrection(mclient.instruments['QK'], qubit_info,

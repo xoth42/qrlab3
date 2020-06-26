@@ -17,6 +17,10 @@ class CompiledHVI(object):
 #        self.assignHardware(1, 0, 10) #DARIO 1/17/19 changed for different slot arrangement on the third
 #                                                                   (digitizer-less) chassis
 #        self.assignHardware(2, 0, 10)
+            
+#        self.assignHardware(0, 0, 7)
+#        self.assignHardware(1, 0, 8)
+        
 
         self.hvi.compile()
         self.hvi.load()

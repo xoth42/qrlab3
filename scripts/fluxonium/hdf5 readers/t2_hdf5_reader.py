@@ -37,10 +37,10 @@ from scripts.single_qubit import T2measurement
 
 ''' Path to the .hdf5 file '''
 filepath = 'C:\Users\Wang_Lab\Desktop\hdf5_copies'
-hdf5_name = '\April9Fluxonium_2julycopy.hdf5'
+hdf5_name = '\Aug19DblCavity_copy.hdf5'
 #hdf5_name = '20190204 Cooldown.hdf5'
-date = '20190528'
-time = '045702'
+date = '20190801'
+time = '004730'
 #time = '143054'
 
 experiment = 'T2Measurement'
@@ -58,10 +58,10 @@ exp = f['/' + date + '/' + time + '_' + experiment]
 
 
 qubit_info = mclient.get_qubit_info('qubit1ge')
+xs = exp['delays'].value
 
-
-t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 5e3, 101), detune=2e6, double_freq=False, generate=True, 
-                                         seq=None, extra_info=ef_info, postseq=None, proj_func='phase', keep_data=False)
+t2 = T2measurement.T2Measurement(qubit_info, xs, detune=2e6, double_freq=False, generate=True, 
+                                         seq=None, postseq=None, proj_func='phase', keep_data=False)
 
 
 

@@ -12,7 +12,9 @@ import types
 from instrument import Instrument
 from windfreak import SynthHD
 
-synth = SynthHD('COM10')
+synth = SynthHD('COM10')     #For computer 6
+
+#synth = SynthHD('COM3')   #For computer 4
     
 
 channel_index = 0 #using the RF A port on windfreak

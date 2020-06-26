@@ -77,7 +77,7 @@ def analysis_standard(meas, data=None, fig=None):
         params.add('alpha0', value=meas.disp, vary=False)
     else:
         params.add('alpha0', value=meas.disp)
-    params.add('nth', value=0, min=0, max=0.4)
+    params.add('nth', value=0.00, min=0, max=0.4, vary=False)
     params.add('tau', value=xs[-1]/4.0, min=0)
     result = lmfit.minimize(poisson_decay_fit_func, params, args=(xs, ys, meas.proj_num))
     lmfit.report_fit(result.params)

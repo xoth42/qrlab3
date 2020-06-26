@@ -128,13 +128,11 @@ class SC5506A(Instrument):
         self.dev_num = ctypes.c_char_p(devid)
         lb_dll.sc5506a_OpenDevice.restype = ctypes.POINTER(ctypes.c_int)
         phandle = win.HANDLE()
-#        phandle = ctypes.POINTER(ctypes.c_void_p)
-        print(phandle)
+#        phandle = ctypes.POINTER(ctypes.c_voidp)
 #        print(phandle, ctypes.byref(phandle))
         lb_dll.sc5506a_OpenDevice(self.dev_num, ctypes.byref(phandle))
-        print(phandle, phandle.value)
+#        print(phandle, phandle.value)
         self._handle = phandle.value
-        print(self._handle)
         
         
         deviceParams = deviceParams_t() 

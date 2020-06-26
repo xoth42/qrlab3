@@ -57,8 +57,8 @@ import ctypes
 user32 = ctypes.windll.user32
 resolution_x = user32.GetSystemMetrics(0)
 resolution_y = user32.GetSystemMetrics(1)
-root_window.maxsize(width=resolution_x / 2, height=resolution_y - 70)
-root_window.minsize(width=resolution_x / 2, height=resolution_y - 70)
+root_window.maxsize(width=resolution_x/2, height=resolution_y - 70)
+root_window.minsize(width=resolution_x/2, height=resolution_y - 70)
 
 
 def window_close(*args):
@@ -88,7 +88,7 @@ def fetch_instruments():
     :return:
     '''
     instr = objsh.helper.find_object('instruments')
-    return instr.list_instruments()
+    return [x for x in instr.list_instruments() if 'temp' not in x]
 
 
 # A list with the names of the currently active instruments as entries.

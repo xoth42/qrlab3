@@ -78,7 +78,7 @@ def analysis(meas, data=None, fig=None):
 
 
         temporaryy = -fit_amprabi(result.params, xs, 0)
-        print(-fit_amprabi(result.params, xs, 0))
+#        print(-fit_amprabi(result.params, xs, 0))
         print(xs[np.argmin(temporaryy)], 'min of the fit')
         center_amp_list.append(xs[np.argmin(temporaryy)])
 #        print(min_x, 'This is the value')
@@ -132,12 +132,12 @@ class Rabi(Measurement1D):
                 s.append(Repeat(self.qubit_info.rotate(0, self.r_axis, amp=amp), self.repeat_pulse))
             if self.postseq is not None:
                 s.append(self.postseq)
-            s.append(Delay(20))
+            s.append(Delay(100))
             s.append(Combined([
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
-            s.append(Delay(9000))
+            s.append(Delay(2000))
 
 
 
@@ -205,7 +205,8 @@ class Rabi(Measurement1D):
                 if self.pi2_amp:
                     mclient.instruments[self.qubit_info.insname].set_pi2_amp(self.pi2_amp)
 
-        return self.pi_amp, self.fit_params['amp'].value
+
+        return self.pi_amp,
 
     ''' JEFF. Used to populate data in measuremnt from hdf5 file instead of a measurement for analysis. '''
     def load_data(self, filepath, exp_path):
