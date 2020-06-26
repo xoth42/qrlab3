@@ -18,7 +18,7 @@ def analysis(meas, data=None, fig=None, period=None):
 
     fig.axes[0].plot(xs, ys, 'ks', ms=3)
 
-    amp0 = (np.max(ys) - np.min(ys)) / 2
+    amp0 = (np.min(ys) - np.max(ys)) / 2
 #    if ys[0]>np.average(ys):
 #        amp0 = -amp0
     fftys = np.abs(np.fft.fft(ys - np.average(ys)))
@@ -49,7 +49,7 @@ def analysis(meas, data=None, fig=None, period=None):
 class EFRabi(Measurement1D):
 
     def __init__(self, ge_info, ef_info, amps, first_pi=True, second_pi=True, selective=False,
-                 update=False, seq=None, laser_power = None,
+                 update=False, seq=None, repeat_pulse=1, laser_power = None,
                  force_period=None, postseq = None,
                  **kwargs):
         self.ge_info = ge_info
@@ -61,6 +61,7 @@ class EFRabi(Measurement1D):
         self.update_ins = update
         self.force_period = force_period
         self.selective = selective
+        self.repeat_pulse = repeat_pulse
         self.laser_power = laser_power
         self.postseq = postseq
         if seq is None:
@@ -86,7 +87,7 @@ class EFRabi(Measurement1D):
             add = self.seq
             if self.first_pi:
                 add = Join([add, r(np.pi, 0), Delay(5)])
-            add = Join([add, r_ef(0, 0, amp = amp), Delay(5)])
+            add = Join([add, Repeat(r_ef(0, 0, amp = amp), self.repeat_pulse), Delay(5)])
             if self.second_pi:
                 add = Join([add, r(np.pi, 0), Delay(5)]) # What? Why was this Delay 250? 5/28/2019
 #            marker_switch = Constant(, 1, chan=self.)

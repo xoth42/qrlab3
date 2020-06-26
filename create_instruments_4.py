@@ -9,27 +9,27 @@ if 1:
 from mclient import instruments
 
 
-chi2 = 2.655e6
+WF_xxx = instruments.create('WF_xxx', 'WFT1153', serial = '1153')
 
 
-dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period = 3000, trigger_only = False,
+dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period = 100, trigger_only = False,
                          naverages = 1000, nsamples = 2000, awg_list = [7, 8, 9])
 
 AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PRODUCT = "M3202A", 
                           amps = [1.5,1.5,1.5,1.5], ofs = [0, 0, 0.0, 0])
  
 AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 8,  AWG_PRODUCT = "M3202A",
-                          amps = [1, 1, 1.5, 1.5], ofs = [0.014, .009, 0.0266, -.1255]) #[.020, 0.026, 0.022, .01]) 
+                          amps = [1, 1, 1.5, 1.5], ofs = [0.0159, .0115, 0.043, -.084]) #[.020, 0.026, 0.022, .01]) 
 
 AWG3 = instruments.create('AWG3', 'Keysight_AWG', chassis = 0, slot = 9,  AWG_PRODUCT = "M3202A",
-                          amps = [1.5, 1.452, 1, 1], ofs = [0.006, -0.011, 0.042, 0.024]) 
+                          amps = [1.5, 1.452, 1, 1], ofs = [0.002, -0.011, 0.042, 0.024]) 
 
 #AWG4 = instruments.create('AWG4', 'Keysight_AWG', chassis = 0, slot = 10,  AWG_PRODUCT = "M3202A",
 #                          amps = [1.5, 1.5, 1.5, 1.5], ofs = [0, 0, 0.0389, -.1145]) 
 
-SCTWPA = instruments.create('SCTWPA', 'SC5511A', devid='100016B5')    # 3
+SCalice = instruments.create('SCalice', 'SC5511A', devid='100016B5')    # 3
 
-SCalice = instruments.create('SCalice', 'SC5511A', devid='10001D30')    # 6
+#SCalice = instruments.create('SCalice', 'SC5511A', devid='10001D30')    # 6
 
 SCqubit = instruments.create('SCqubit', 'SC5511A', devid='100016B6')  #4
 
@@ -42,7 +42,7 @@ BrickRO = instruments.create('BrickRO', 'LabBrick_RFSource', serial=18239,
 BrickRef = instruments.create('BrickRef', 'LabBrick_RFSource', serial=14510,
                               use_extref=True) 
 
-MXG = instruments.create('MXG', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270811::0::INSTR')
+MXG = instruments.create('MXGbob', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270811::0::INSTR')
 
 readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
                            IQe_radius= 1 , rfsource1='BrickRO', rfsource2='BrickRef',
@@ -51,26 +51,26 @@ readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
 
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                              deltaf=-100e6,
-                              pi_amp=0.854,
-                              pi2_amp=0.3995,
+                              pi_amp=.774,
+                              pi2_amp=0,
                               drag=-0.292,
                               pi_amp_quasilective=0.0630,
-                              pi_amp_selective=0.00909,
+                              pi_amp_selective=0.0383,
                               rotation='Gaussian',
-                              w=6,
+                              w=20,
                               w_quasilective=60,
-                              w_selective=500,
+                              w_selective=300,
                               channels='5,6',
                               sideband_channels='I1,Q1',
                               sideband_phase=0)
 
 qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
-                            deltaf=-301.220e6,
-                            pi_amp=0.306,
-                            pi_amp_selective= 0.00587,
+                            deltaf=-303.91e6,
+                            pi_amp=0.846,
+                            pi_amp_selective= 0.0456,
                             rotation='Gaussian',
-                            w=10,
-                            w_selective=500,
+                            w=12,
+                            w_selective=200,
                             channels='5,6',
                             sideband_channels='I2,Q2',
                             sideband_phase=0)
@@ -88,31 +88,45 @@ qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
 
 cavityA = instruments.create('cavityA', 'Qubit_Info',
                             deltaf=56e6,
-                            pi_amp=.830,
+                            pi_amp=1.092,
                             pi_amp_selective=0.05,
                             rotation='Gaussian',
                             channels='7,8',
                             sideband_channels='I7,Q7',
                             sideband_phase=0,
-                            w=30,
+                            w=25,
+                            w_selective=400,
+                            marker_bufwidth=250,
+                            marker_ofs=0)
+
+
+cavityB = instruments.create('cavityB', 'Qubit_Info',
+                            deltaf=-100e6,
+                            pi_amp=1.012,
+                            pi_amp_selective=0.05,
+                            rotation='Gaussian',
+                            channels='9,10',
+                            sideband_channels='I8,Q8',
+                            sideband_phase=0,
+                            w=200,
                             w_selective=400,
                             marker_bufwidth=250,
                             marker_ofs=0)
 
 # stark shifted cavity to track the rotation durring AQEC
-cavityAs = instruments.create('cavityAs', 'Qubit_Info',
-#                            deltaf=56e6-2.85e3,#16.9e3,
-                            deltaf=56e6-18.22e3,#16.9e3,
-                            pi_amp=.833,
-                            pi_amp_selective=0.05,
-                            rotation='Gaussian',
-                            channels='7,8',
-                            sideband_channels='I8,Q8',
-                            sideband_phase=0,
-                            w=30,
-                            w_selective=400,
-                            marker_bufwidth=250,
-                            marker_ofs=0)
+#cavityAs = instruments.create('cavityAs', 'Qubit_Info',
+##                            deltaf=56e6-2.85e3,#16.9e3,
+#                            deltaf=56e6-18.22e3,#16.9e3,
+#                            pi_amp=.833,
+#                            pi_amp_selective=0.05,
+#                            rotation='Gaussian',
+#                            channels='7,8',
+#                            sideband_channels='I8,Q8',
+#                            sideband_phase=0,
+#                            w=30,
+#                            w_selective=400,
+#                            marker_bufwidth=250,
+#                            marker_ofs=0)
 
 #cavityR = instruments.create('cavityR', 'Qubit_Info',
 #                            deltaf=-50e6,#16.9e3,
@@ -144,7 +158,7 @@ cavityAs = instruments.create('cavityAs', 'Qubit_Info',
 #                            marker_ofs=0)
 
 
-
+'''
 qubit_a1 = instruments.create('qubit_a1', 'Qubit_Info',
                               deltaf=-100e6-chi2*0.5,
                               pi_amp=1.000,
@@ -250,6 +264,11 @@ qubit_a7 = instruments.create('qubit_a7', 'Qubit_Info',
                               channels='5,6',
                               sideband_channels='I17,Q17',
                               sideband_phase=0)
+'''
+
+
+
+
 
 #qubit_a0s = instruments.create('qubit_a0s', 'Qubit_Info',
 #                             deltaf=-100.00e6-FWM_info_SS,
@@ -296,23 +315,23 @@ qubit_a7 = instruments.create('qubit_a7', 'Qubit_Info',
 #                              sideband_channels='I42,Q42',
 #                              sideband_phase=0)         
 
-FWM_info = instruments.create('FWM_info', 'Qubit_Info',
-                              deltaf=-60.09e6,
-                              pi_amp=0.642,
-                              pi2_amp=0,
-                              drag=0,
-                              pi_amp_quasilective=0.0102,
-                              pi_amp_selective=0.014,
-                              rotation='SQUARE',
-                              rotation_selective = 'SQUARE',
-                              w=5,
-                              w_quasilective=100,
-                              w_selective=300,
-                              channels='9,10',
-                              sideband_channels='I20,Q20',
-                              sideband_phase=.08,
-                              marker_bufwidth=1500,
-                              marker_ofs=0)
+#FWM_info = instruments.create('FWM_info', 'Qubit_Info',
+#                              deltaf=-60.09e6,
+#                              pi_amp=0.642,
+#                              pi2_amp=0,
+#                              drag=0,
+#                              pi_amp_quasilective=0.0102,
+#                              pi_amp_selective=0.014,
+#                              rotation='SQUARE',
+#                              rotation_selective = 'SQUARE',
+#                              w=5,
+#                              w_quasilective=100,
+#                              w_selective=300,
+#                              channels='9,10',
+#                              sideband_channels='I20,Q20',
+#                              sideband_phase=.08,
+#                              marker_bufwidth=1500,
+#                              marker_ofs=0)
 
 #FWM_info_a2 = instruments.create('FWM_info_a2', 'Qubit_Info',
 #                              deltaf=-57.56e6+FWM_info_SS,
