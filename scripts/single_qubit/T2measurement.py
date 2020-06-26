@@ -55,13 +55,14 @@ def analysis(meas, data=None, fig=None):
 
     params = lmfit.Parameters()
     params.add('ofs', value=np.average(ys))
-    params.add('amp', value=amp0, min=0)
+    params.add('amp', value=amp0, min=0.1)
     params.add('tau', value=xs[-1], min=10, max=2e5)
     params.add('freq', value=f0, min=0)
-    if meas.echotype == ECHO_NONE:
-        params.add('phi0', value=-np.pi/2, min=-1.2*np.pi, max=1.2*np.pi, vary=False)  #Changed to plus sign for accommodate for amplitude RO, need a good LT solution
-    elif meas.echotype == ECHO_HAHN:
-        params.add('phi0', value=np.pi/2, min=-1.2*np.pi, max=1.2*np.pi) #DARIO added to fit better for echo vs plain T2
+    if (ys[0]+ys[1])/2.0 > ys.mean(): #Use the first two points to guess if we start from pi/2 or -pi/2 phase
+        phi_init = np.pi/2
+    else:
+        phi_init = -np.pi/2        
+    params.add('phi0', value=phi_init, min=-1.2*np.pi, max=1.2*np.pi)  
     result = lmfit.minimize(t2_fit, params, args=(xs, ys))
 #    lmfit.report_fit(params)
 #    result2 = lmfit.minimize(t2_fit, result.params, args=(xs,ys))
@@ -124,6 +125,7 @@ class T2Measurement(Measurement1D):
     def __init__(self, qubit_info, delays, detune=0, echotype=ECHO_NONE, necho=1,
                  double_freq=False, laser_power = None, seq=None, postseq=None, Qswitch_infoA=None, Qswitch_infoB=None, **kwargs):
         self.qubit_info = qubit_info
+#        self.qubit_pre = qubit_pre
         self.delays = delays
         self.xs = delays / 1e3        # For plotting purposes
         self.detune = detune
@@ -207,6 +209,7 @@ class T2Measurement(Measurement1D):
         s = Sequence()
 
         r = self.qubit_info.rotate
+#        pre = self.qubit_pre.rotate
         e = self.get_echo_pulse()
 #        if e:
 #            elen = e.get_length()
@@ -217,6 +220,7 @@ class T2Measurement(Measurement1D):
 
         for i, dt in enumerate(self.delays):
             s.append(self.seq)
+#            s.append(pre(np.pi, X_AXIS))
             s.append(r(np.pi/2, X_AXIS))#s.append(Pad(r(np.pi/2, X_AXIS), 250, PAD_LEFT))
 
             # We want echos: <tau> (<tau> <echo> <tau>)^n <tau>
@@ -271,8 +275,7 @@ class T2Measurement(Measurement1D):
 #                Repeat(Constant(5000, 1, chan='1m1'), 60),     # Readout pump tone switch
 #                Repeat(Constant(5000, 0.0001, chan=5), 60),         # Qubit/Readout master switch
 #            ]))
-#Ebru: adding the 1000 delay
-            s.append(Delay(4000))
+            s.append(Delay(9000))   # to satisfy minimum sequence length of 20000
           
         s = self.get_sequencer(s)
         seqs = s.render()

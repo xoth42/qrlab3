@@ -24,8 +24,8 @@ class Spectroscopy(Measurement1D):
     '''
 
     def __init__(self, qubit_rfsource, qubit_info, q_freqs, ro_powers,
-                 plen=1000, amp=1, seq=None, postseq=None,
-                 pow_delay=1, freq_delay=1, plot_type=None,
+                 plen, amp, seq=None, postseq=None,
+                 pow_delay=1, freq_delay=0.1, plot_type=None,
                  **kwargs):
         self.qubit_rfsource = qubit_rfsource
         self.qubit_info = qubit_info
@@ -69,10 +69,32 @@ class Spectroscopy(Measurement1D):
 #        return seqs
         
     def generate(self):
+        #Ebru - I will switch back to normal after trying
         s = Sequence(self.seq)
-        chs = self.qubit_info.sideband_channels       
+        chs = self.qubit_info.sideband_channels   
+        
+#        for i in range(4): #Chen 10/5 temporary test
+#            s.append(Constant(self.plen,1, chan='3m1'))
+#            s.append(Delay(80))
+#            s.append(Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan)) 
+#            s.append(Delay(5000))
+                
         s.append(Constant(self.plen, self.amp, chan=chs[0]))
+#        s.append(Constant(self.plen, self.amp, chan=chs[1]))
+#        s.append(Constant(self.plen,1, chan='3m1'))
+        s.append(Delay(80))
+        #till here, it is what it was
 
+#        s = Sequence(self.seq)
+#        r = self.qubit_info.rotate
+#
+#        
+#        #Cooling tone for a certain length 
+#
+#        s.append(r(np.pi, X_AXIS))                
+#        s.append(Constant(self.plen,1, chan='3m1'))
+#        s.append(Delay(80))       
+#
         
         if self.postseq:
             s.append(self.postseq)

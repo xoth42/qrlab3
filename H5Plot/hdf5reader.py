@@ -4,7 +4,7 @@ if 0:
     os.system(r'C:\qrlab\start.bat')
     time.sleep(1)
 
-from pulseseq import sequencer, pulselib
+#from pulseseq import sequencer, pulselib
 #from scripts.single_qubit import rabi
 from scripts.single_cavity import WignerbyParity
     
@@ -19,10 +19,10 @@ import json
 
 ''' Path to the .hdf5 file '''
 filepath = 'C:/_Data/'
-hdf5_name = 'LabTransmonOct8.hdf5'
-date = '20181231'
-time = '071234'
-experiment = 'WignerFunction'
+hdf5_name = '20190204 Cooldown.hdf5'
+date = '20190211'
+time = '122331'
+experiment = 'T1Measurement'
 
 ''' Primary x axis and secondary if 2d'''
 x_key = 'displacements'

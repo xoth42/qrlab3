@@ -198,7 +198,7 @@ if 1: # T1_FT1 switching flux
         RO_power_A = 10
         
         '''Settings for measuring |f> lifetime at f_max (flux B)'''
-        B_current = -0.06
+        B_current = -0.049
         qubitge_drive_freq_B = 6305.876e6
         RO_freq_B = 8304.45e6
         RO_power_B = 10
@@ -226,7 +226,7 @@ if 1: # T1_FT1 switching flux
         start_time = list(str(datetime.datetime.now())[:19])
         start_time[13] = '-'
         start_time[16] = '-'
-        yoko.do_set_output_state(1)
+        Yoko.do_set_output_state(1)
 #        alz.set_naverages(2500)
         for i in range(N):
             print '###############'

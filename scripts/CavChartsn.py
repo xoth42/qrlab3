@@ -62,7 +62,7 @@ if 1: # Cavity disp calibration
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
     seq = sequencer.Trigger(250)
 
-    disp = cavdisp.CavDisp(qubit_info, cavity_infoA, 2.5, 41, 0, seq=None,
+    disp = cavdisp.CavDisp(qubit_info, qubit2_info, 2.5, 41, 0, seq=None,
                            delay=0, bgcor=False, update=False, generate=True,
 #                           Qswitch_infoA=Qswitch_infoB, Qswitch_infoB=Qswitch_infoB,
 #                           extra_info=[Qswitch_infoA, Qswitch_infoB,],

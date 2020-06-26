@@ -384,6 +384,7 @@ class DetunedGaussians(DetunedSum):
             amp = area / np.sqrt(np.pi) / self.sigma
         super(DetunedGaussians, self).add(amp, period, phases)
 
+
 #########################################
 # Pulse modifiers
 #########################################

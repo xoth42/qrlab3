@@ -60,6 +60,7 @@ class EFRabi(Measurement1D):
         self.xs = amps
         self.update_ins = update
         self.force_period = force_period
+
         self.selective = selective
         self.laser_power = laser_power
         self.postseq = postseq

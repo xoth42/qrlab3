@@ -25,9 +25,9 @@ def analysis(meas, data=None, fig=None):
 
     fig.axes[0].plot(xs, ys, 'ks', ms=3)
 
-    amp0 = (np.min(ys) - np.max(ys)) / 2
-#    if ys[0]>np.average(ys):
-#        amp0 = -amp0
+    amp0 = (np.max(ys) - np.min(ys)) / 2
+    if ys[0]>np.average(ys):
+        amp0 = -amp0
     fftys = np.abs(np.fft.fft(ys - np.average(ys)))
     fftfs = np.fft.fftfreq(len(ys), xs[1]-xs[0])
     period0 = 1 / np.abs(fftfs[np.argmax(fftys)])
@@ -101,12 +101,13 @@ class TimeRabi(Measurement1D):
 #            s.append(g())
             
             chs = self.qubit_info.sideband_channels
-            s.append(Combined([
-                Constant(int(plen), self.amp, chan=chs[0]),
-                Constant(int(plen), self.amp, chan=chs[1])
-            ]))
-
-
+            if plen > 0:
+                s.append(Constant(int(plen), self.amp, chan=chs[0]),)
+#            s.append(Combined([
+#                Constant(int(plen), self.amp, chan=chs[0]),
+#                Constant(int(plen), self.amp, chan=chs[1])
+#            ]))
+            
             if self.postseq:
                 s.append(self.postseq)
             s.append(Combined([

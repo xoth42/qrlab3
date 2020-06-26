@@ -7,25 +7,40 @@ from pulseseq.pulselib import *
 
 def analysis(meas, data=None, fig=None):
     zs, fig = meas.get_ys_fig(data, fig)
-    zs = zs.reshape(len(meas.xs), len(meas.ys))
+    zs = zs.reshape(len(meas.ys), len(meas.xs))
     xs, ys = meas.get_plotxsys()
     ax = fig.axes[0]
     plt.sca(ax)
-    pc = ax.pcolormesh(xs, ys, zs, cmap=plt.get_cmap('RdBu'))
-    fig.colorbar(pc)
-
-    ax.set_xlim(xs.min()), xs.max()
+    
+    if meas.bgcor == True:
+        vmax = 1    # was 20, set to 0.7 for scaling (juliang)
+        #vmax = max(np.absolute(zs.flatten())) # sorry this is not done yet.
+        vmin = -vmax
+    else:
+        zavg=(meas.zmin+meas.zmax)/2.0
+        diff = max(max(zs.flatten())-zavg, zavg-min(zs.flatten()))
+        vmax = zavg+diff
+        vmin = zavg-diff
+    
+    pc = ax.pcolormesh(xs, ys, zs, vmin=vmin, vmax=vmax, cmap=plt.get_cmap('RdBu'))
+    fig.colorbar(pc, format = '%.1f', ticks=[-1, -.5, 0, .5, 1])
+#    pc.ticks([-1,0,1])
+    ax.set_xlim(xs.min(), xs.max())
     ax.set_ylim(ys.min(), ys.max())
+#    if meas.zmin is not None and meas.zmax is not None:  (was trying to force set data range for color bar)
+#        ax.set_zlim(meas.zmin, meas.zmax())
     ax.set_xlabel(r'$Re \{\alpha \}$')
     ax.set_ylabel(r'$Im \{\alpha \}$')
+    ax.xaxis.set_ticks_position('top')   # to move the x ticks to top (juliang)
+    ax.xaxis.set_label_position('top')# to move the x label to top (juliang)
     fig.canvas.draw()
 
 class WignerFunction(Measurement2D):
 
-    def __init__(self, qubit_info, ef_info, cav_info, t_ge=0, t_gf=0,
-                 amax=None, N=None, amaxx=None, Nx=None, amaxy=None, Ny=None,
-                 seq=None, delay=0, saveas=None, bgcor=False,
-                 Qswitch_infoA=None, Qswitch_infoB=None, **kwargs):
+    def __init__(self, qubit_info, ef_info, cav_info, xs, ys, t_ge=0, t_gf=0,
+                 #amax=None, N=None, amaxx=None, Nx=None, amaxy=None, Ny=None,
+                 cav_switch=None, seq=None, delay=0, saveas=None, bgcor=False,
+                 zmin=None, zmax=None, Qswitch_infoA=None, Qswitch_infoB=None, **kwargs):
         self.qubit_info = qubit_info
         self.ef_info = ef_info
         self.cav_info = cav_info
@@ -39,14 +54,17 @@ class WignerFunction(Measurement2D):
         self.delay = delay
         self.saveas = saveas
         self.bgcor = bgcor
+        self.cav_switch = cav_switch
+        self.zmin=zmin
+        self.zmax=zmax
 
-        if amaxx is not None:
-            xs = np.linspace(-amaxx, amaxx, Nx)
-            ys = np.linspace(-amaxy, amaxy, Ny)
-        else:
-            Nx, Ny = N, N
-            xs = np.linspace(-amax, amax, N)
-            ys = xs
+#        if amaxx is not None:
+#            xs = np.linspace(-amaxx, amaxx, Nx)
+#            ys = np.linspace(-amaxy, amaxy, Ny)
+#        else:
+#            Nx, Ny = N, N
+#            xs = np.linspace(-amax, amax, N)
+#            ys = xs
 
         XS, YS = np.meshgrid(xs, ys)
         self.displacements = -(XS + 1j*YS)
@@ -79,7 +97,15 @@ class WignerFunction(Measurement2D):
                 if i_bg == 1 and not self.bgcor:
                     continue
 
-                s.append(Join([self.seq, c(np.abs(alpha), np.angle(alpha))]))
+
+                s.append(self.seq)
+                if self.cav_switch is not None:
+                    s.append(Constant(500, 1, chan=self.cav_switch))
+                    s.append(Combined([c(np.abs(alpha), np.angle(alpha)),
+                                       Constant(int(self.cav_info.w*4), 1, chan=self.cav_switch)]))
+                else:
+                    s.append(c(np.abs(alpha), np.angle(alpha)))
+
                 if i_bg == 0:
                     s.append(ge(np.pi/2, X_AXIS))
                     if self.t_ge > 0:
@@ -90,7 +116,15 @@ class WignerFunction(Measurement2D):
                         s.append(ef(np.pi, X_AXIS))
                     s.append(ge(np.pi/2, X_AXIS))
                 else:
-                    s.append(ge(np.pi/2, Y_AXIS))
+#                    s.append(ge(np.pi/2, Y_AXIS))
+                    s.append(ge(np.pi/2, X_AXIS))
+                    if self.t_ge > 0:
+                        s.append(Delay(self.t_ge))
+                    if self.t_gf > 0:
+                        s.append(ef(np.pi, X_AXIS))
+                        s.append(Delay(self.t_gf))
+                        s.append(ef(np.pi, X_AXIS))
+                    s.append(ge(-np.pi/2, X_AXIS))
 
                 if self.delay:
                     s.append(Delay(self.delay))
@@ -124,5 +158,5 @@ class WignerFunction(Measurement2D):
         return ys
 
     def analyze(self, data=None, fig=None):
-        print(data.shape)
+#        print(data.shape)   # for debugging (juliang)
         self.fit_params = analysis(self, data, fig)

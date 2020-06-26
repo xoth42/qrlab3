@@ -61,8 +61,8 @@ class SSBSpec(Measurement1D):
             if self.postseq:
                 s.append(self.postseq)
             s.append(ro)
-            #Ebru, adding the 20000 delay
-            s.append(Delay(20000))
+            #Ebru, adding the 20000 delay, Chen changed to 2000 
+            s.append(Delay(4000))
         s = self.get_sequencer(s)
         seqs = s.render()
         return seqs

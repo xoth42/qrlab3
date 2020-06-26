@@ -57,12 +57,13 @@ class FT1Measurement(Measurement1D):
                 r(np.pi, 0),
                 r_ef(np.pi, 0),
             ]))
-            s.append(Delay(dt))
+            if dt > 0:
+                s.append(Delay(dt))
 #            s.append(r(np.pi/2, 0))
             # For Al better to do ef-pi, ge-pi to get contrast
-            s.append(r_ef(np.pi,0))
-            s.append(r(np.pi,0))
-            s.append(r_ef(np.pi/2,0)) #fluxonium
+#            s.append(r_ef(np.pi,0))
+#            s.append(r(np.pi,0))
+#            s.append(r_ef(np.pi/2,0)) #fluxonium
             s.append(self.get_readout_pulse())
             s.append(Delay(1000))
 

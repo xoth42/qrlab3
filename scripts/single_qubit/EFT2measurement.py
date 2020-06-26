@@ -254,7 +254,7 @@ class EFT2Measurement(Measurement1D):
             angle = dt * 1e-9 * self.detune * 2 * np.pi
 #            s.append(Pad(r_ef(np.pi/2, angle), 250, PAD_RIGHT))
 #            s.append(Pad(r_ge(np.pi, X_AXIS), 250, PAD_RIGHT))
-            s.append(Join([r_ef(np.pi/2, angle), r_ge(np.pi, X_AXIS)]))
+            s.append(Join([r_ef(-np.pi/2, angle), r_ge(-np.pi, X_AXIS)]))
 
             if self.postseq:
                 s.append(self.postseq)
