@@ -158,10 +158,10 @@ if 0: # Cavity speco
     bla
 
 
-if 0: #SSB cavspec
+if 1: #SSB cavspec
     from single_cavity import ssbcavspec 
-    
-    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoA, np.linspace(-2e6, 2e6, 61),
+    dig.set_naverages(5000)
+    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoA, np.linspace(-5e6, 5e6, 201),
 #                                  postseq=efpi, extra_info=[ef_info,]
                                   )
     cspec.measure_keysight()
