@@ -12,7 +12,11 @@ import types
 from instrument import Instrument
 from windfreak import SynthHD
 
-    
+
+synth = SynthHD('COM10')     #For computer 6
+
+#synth = SynthHD('COM3')   #For computer 4
+ 
 
 
 class WFT1153(Instrument):

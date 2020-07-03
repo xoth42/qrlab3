@@ -32,9 +32,9 @@ def analysis(meas, data=None, fig=None):
     fig.axes[0].plot(xs, ys, 'ks', ms=3)
     
 
-    amp0 = (np.min(ys) - np.max(ys)) / 2
-#    if ys[0]>np.average(ys):
-#        amp0 = -amp0
+    amp0 = (np.max(ys) - np.min(ys)) / 2
+    if ys[len(ys)/2]>np.average(ys):
+        amp0 = -amp0
     fftys = np.abs(np.fft.fft(ys - np.average(ys)))
     fftfs = np.fft.fftfreq(len(ys), xs[1]-xs[0])
     period0 = 1 / np.abs(fftfs[np.argmax(fftys)])
@@ -92,6 +92,7 @@ def analysis(meas, data=None, fig=None):
     fig.axes[0].legend(loc=0)
 
     fig.canvas.draw()
+
     return result.params
 
 class Rabi(Measurement1D):
@@ -99,6 +100,7 @@ class Rabi(Measurement1D):
     def __init__(self, qubit_info, amps, update=False, seq=None, r_axis=0, fix_phase=True,
                  fix_period=None, repeat_pulse=1, postseq=None, selective=False, fit_type=FIT_AMP, **kwargs):
         self.qubit_info = qubit_info
+#        self.qubit_pre = qubit_pre
         self.amps = amps
         self.xs = amps
         self.update_ins = update
@@ -113,14 +115,15 @@ class Rabi(Measurement1D):
         self.fit_type = fit_type
         self.selective = selective
 
-        super(Rabi, self).__init__(len(amps), infos=qubit_info, **kwargs)
+        super(Rabi, self).__init__(len(amps), infos=(qubit_info), **kwargs)
         self.data.create_dataset('amps', data=amps)
 
     def generate(self):  #That is the original generate function 
         s = Sequence()
-
+#        r2 = self.qubit_pre.rotate
         for i, amp in enumerate(self.amps):
             s.append(self.seq)
+#            s.append(r2(np.pi, X_AXIS))
             if self.selective==1:
                 s.append(Repeat(self.qubit_info.rotate_selective(0, self.r_axis, amp=amp), self.repeat_pulse))
             elif self.selective==0.5:
@@ -201,6 +204,7 @@ class Rabi(Measurement1D):
                     mclient.instruments[self.qubit_info.insname].set_pi_amp(self.pi_amp)
                 if self.pi2_amp:
                     mclient.instruments[self.qubit_info.insname].set_pi2_amp(self.pi2_amp)
+
 
         return self.pi_amp,
 
