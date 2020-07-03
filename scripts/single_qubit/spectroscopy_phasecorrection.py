@@ -5,7 +5,7 @@ from pulseseq.pulselib import *
 from lib.math import fit
 import time
 import objectsharer as objsh
-
+import mclient
 SPEC   = 0
 POWER  = 1
 
@@ -70,10 +70,10 @@ class Spectroscopy_phasecorrection(Measurement1D):
     
     def generate(self):
         s = Sequence(self.seq)
-#        chs = self.qubit_info.sideband_channels
-#        s.append(Constant(self.plen, self.amp. chan=chs[0]))
-        s.append(Constant(self.plen, 1, chan='3m1'))
-        s.append(Delay(150))
+        chs = self.qubit_info.sideband_channels
+        s.append(Constant(self.plen, self.amp, chan=chs[0]))
+#        s.append(Constant(self.plen, 1, chan='3m1'))
+        s.append(Delay(100))
         if self.postseq:
             s.append(self.postseq)
 

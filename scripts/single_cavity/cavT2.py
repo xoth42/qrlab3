@@ -111,8 +111,12 @@ def analysis(meas, data=None, fig=None):
     params.add('ofs', value=off0)
     params.add('amp', value=amp0, min=0)
     params.add('tau', value=xs[-1], min=10, max=4e6)
-    params.add('freq', value=f0, min=0)
-    params.add('phi0', value=np.pi*0, min=-1.2*np.pi, max=1.2*np.pi)
+    if meas.detune < 0.1e3:
+        params.add('freq', value=0, vary=False)#f0, min=0)
+    else:
+        params.add('freq', value=f0, min=0)
+        
+    params.add('phi0', value=-np.pi, min=-1.2*np.pi, max=1.2*np.pi)
     result = lmfit.minimize(t2_fit, params, args=(xs, ys))
     lmfit.report_fit(result.params)
 
@@ -195,7 +199,7 @@ class CavT2(Measurement1D):
             disp=disp,
         )
 
-    def generate(self): # NEW OCT 01 encoding/decoding
+    def generate_oct(self): # NEW OCT 01 encoding/decoding
         cav_amp = 115
         qt_amp = 44
         time_shift = 11    
@@ -243,7 +247,7 @@ class CavT2(Measurement1D):
         seqs = s.render(debug=False)
         return seqs
 
-    def generate_old(self): #SNAP 01 
+    def generate(self): #SNAP 01 
         s = Sequence()
 
         r = self.qubit_info.rotate_selective

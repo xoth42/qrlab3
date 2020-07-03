@@ -15,11 +15,14 @@ import config
 SPEC   = 0
 POWER  = 1
 
-def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, ax=None):
+def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, square_amps=True, ax=None):
     if ax is None:
         ax = plt.figure().add_subplot(111)
     ax2 = ax.twinx()
 
+    if square_amps:
+        ampdata = ampdata[:]**2
+        
     if plot_type == SPEC:
         for ipower, power in enumerate(powers):
             ax.plot(freqs/1e6, ampdata[ipower,:], label='Power %.02f dB'%power)
@@ -33,7 +36,7 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, ax=None):
         pos = fs[np.argmax(amps)]
         p0 = [np.min(amps), w0*h0, pos, w0]
         p = f.fit(p0)
-        txt = 'Center = %.03f MHz, FWHM = %.03f MHz' % (p[2]/1e6, p[3]/1e6)
+        txt = 'Center = %.03f MHz, FWHM = %.03f MHz, off = %.03f' % (p[2]/1e6, p[3]/1e6, p[0])
         print 'Fit gave: %s' % (txt,)
 #        plt.plot(fs/1e6, f.func(p, fs), label=txt)
         ax.plot(fs/1000000, p[0] + p[1]/np.pi *(p[3]/2/((fs-p[2])**2 + (p[3]/2)**2)), '--',label = 'freq = %s MHz\n kappa = %s MHz'%(p[2]/1e6,p[3]/1e6))

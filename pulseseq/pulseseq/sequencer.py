@@ -39,7 +39,7 @@ PAD_CENTER    = 2
     TODO: make this shit dynamic so it doesn't need to be reset
 '''
 
-MINLEN        =2000
+MINLEN        = 2000
 
 IGNORE        = 0
 WARN          = 1
@@ -1800,8 +1800,8 @@ class ModulateSequence(SequenceOperation):
         if np.count_nonzero(data) == 0:
             return el
 
-        if el.repeat > 1 and np.abs(len(el.get_data()) % self.if_period) > 1e-4:
-            raise ValueError('Unable to modulate repeated blocks not a multiple of if_period')
+#        if el.repeat > 1 and np.abs(len(el.get_data()) % self.if_period) > 1e-4:  EBRU COMMENTED THIS OUT
+#            raise ValueError('Unable to modulate repeated blocks not a multiple of if_period')
 
         phi0 = float(now % self.if_period) / self.if_period * 2 * np.pi + self.phase
         phis = np.linspace(0, 2*np.pi*len(data)/self.if_period, len(data), endpoint=False)

@@ -200,6 +200,7 @@ if 0: # T1_FT1 switching flux
         qubitge_drive_freq_B = 6734.77e6
         RO_freq_B = 8160.5e6
 #        RO_power_B = 10
+
         
         '''These are the values you need to do the T1 measurement at the non f_max flux bias point'''
         Yoko.do_set_current(A_current)
@@ -224,7 +225,7 @@ if 0: # T1_FT1 switching flux
         start_time = list(str(datetime.datetime.now())[:19])
         start_time[13] = '-'
         start_time[16] = '-'
-        yoko.do_set_output_state(1)
+        Yoko.do_set_output_state(1)
 #        alz.set_naverages(2500)
         for i in range(N):
             print '###############'

@@ -33,21 +33,28 @@ def analysis(meas, data=None, fig=None):
     xs = meas.values
     ys1 = ys[:n]
     ys2 = ys[n:2*n]
-    ys1b = ys[2*n:3*n]
-    ys2b = ys[3*n:4*n]
-    Ys = (ys1-ys1b+ys2-ys2b)/2
+    ys3 = ys[2*n:3*n]
+    ys4 = ys[3*n:4*n]
+    ys1b = ys[4*n:5*n]
+    ys2b = ys[5*n:6*n]
+    ys3b = ys[6*n:7*n]
+    ys4b = ys[7*n:8*n]
+    Ys = (ys1-ys1b+ys2-ys2b+ys3-ys3b+ys4-ys4b)/4
 
     fig.axes[0].clear()
 #    fig.axes[0].plot(xs, Ys, '.')
     fig.axes[0].plot(xs, Ys)
     pf = np.polyfit(xs, Ys, 2)
     optimal = -pf[1]/pf[0]/2.0
-    txt = 'optimal at = %.03f' % (optimal)
+    ymax = pf[2]-pf[1]**2/4/pf[0]
+    txt = 'optimal at %.03f, max = %.03f' % (optimal, ymax)
     fig.axes[0].plot(xs, pf[0]*xs*xs + pf[1]*xs + pf[2], label=txt)
     fig.axes[1].plot(xs, Ys-(pf[0]*xs*xs + pf[1]*xs + pf[2]))
-    fig.axes[0].set_xlabel(meas.parameter)
+    fig.axes[1].set_xlabel(meas.parameter)
+#    plt.xlabel(meas.parameter)
+    fig.axes[0].legend()
 
-    return optimal
+    return [optimal, ymax]
 
 
 class loptimize(Measurement1D):
@@ -81,8 +88,8 @@ class loptimize(Measurement1D):
         self.seq = seq
         self.postseq = postseq
     
-        self.xs = np.tile(self.values, 2)
-        npoints = len(self.values)*2
+        self.xs = np.tile(self.values, 4)
+        npoints = len(self.values)*4
 
         if self.bgcor:
             npoints = npoints*2
@@ -98,9 +105,9 @@ class loptimize(Measurement1D):
         r = self.qubit_info.rotate
         s = Sequence()
 
-        for i_bg in range(4):
+        for i_bg in range(8):
                     
-            if i_bg > 1 and not self.bgcor:
+            if i_bg >= 4 and not self.bgcor:
                 continue
             
             for value in self.values:
@@ -127,25 +134,33 @@ class loptimize(Measurement1D):
                 
                 s_temp = [self.seq]
                 
-                if i_bg%2 == 0:
+                if i_bg%4 == 0:
                     s_temp += [self.lib.mod4_prep('+x')]
-                else:
+                elif i_bg%4 == 1:
                     s_temp += [self.lib.mod4_prep('+y')]
+                elif i_bg%4 == 2:
+                    s_temp += [self.lib.mod4_prep('-x')]
+                elif i_bg%4 == 3:
+                    s_temp += [self.lib.mod4_prep('-y')]
      
                 poly_seq = []
                 for c in self.comb_list:
                     poly_seq += c.get_poly_seq(self.pump_time - c.sigma*4, 0)
                 s_temp += [Combined(poly_seq)]
                     
-                if i_bg == 0 or i_bg == 1:               
+                if i_bg < 4:               
                     s_temp += [self.lib.mod4_decode(phase = self.phase)]
                 else:
                     s_temp += [self.lib.mod4_decode(phase = self.phase-np.pi/2)]
 
-                if i_bg%2 == 0:
+                if i_bg%4 == 0:
                     s_temp += [r(np.pi/2, -Y_AXIS)]
-                else:
+                elif i_bg%4 == 1:
                     s_temp += [r(np.pi/2, X_AXIS)]
+                elif i_bg%4 == 2:
+                    s_temp += [r(np.pi/2, Y_AXIS)]
+                elif i_bg%4 == 3:
+                    s_temp += [r(-np.pi/2, X_AXIS)]
                 
                 if self.postseq:
                     s_temp += [self.postseq]

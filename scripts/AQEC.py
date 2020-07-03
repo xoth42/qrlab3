@@ -15,7 +15,7 @@ qubit_info = mclient.get_qubit_info('qubit1ge')
 ef_info = mclient.get_qubit_info('qubit1ef')
 cavity_infoA = mclient.get_qubit_info('cavityA')
 #cavity_infoR = mclient.get_qubit_info('cavityR')
-cavity_infoAs = mclient.get_qubit_info('cavityAs')
+#cavity_infoAs = mclient.get_qubit_info('cavityAs')
 dig = mclient.instruments['dig']
 
 fwm_info = mclient.get_qubit_info('FWM_info')
@@ -29,7 +29,7 @@ qubit_a6 = mclient.get_qubit_info('qubit_a6')
 qubit_a7 = mclient.get_qubit_info('qubit_a7')
 
 cA = cavity_infoA.rotate
-cAs = cavity_infoAs.rotate
+#cAs = cavity_infoAs.rotate
 ge = qubit_info.rotate
 geqs = qubit_info.rotate_quasilective
 ges = qubit_info.rotate_selective
@@ -37,13 +37,13 @@ ges_a1 = qubit_a1.rotate_selective
 ges_a2 = qubit_a2.rotate_selective
 ges_a3 = qubit_a3.rotate_selective
 
-chi2 = 2.666e6
-chi2s = 2.677e6
+chi2 = 2.655e6
+chi2s = 2.679e6
 chi2n = 2.675e6
 
 cav_amp = 114.8
 qt_amp = 43.3
-time_shift = 11    
+time_shift = 11  
 lib = OCTlib.octlib(qt_amp, cav_amp, time_shift, qubit_info, cavity_infoA)
 
 #ss = 2.091e6   #AQEC condition #1 ~8us rates circa 9/26
@@ -99,12 +99,27 @@ lib = OCTlib.octlib(qt_amp, cav_amp, time_shift, qubit_info, cavity_infoA)
 #                      vary = [-1]*4, stark_shift = -ss, phases =[np.pi-0.75, -0.10,  0.12, -0.10])
 
 
-ss = 2.918e6   #oxy  
-fwm_comb4 = OCTlib.comb(fwm_info, [0, chi2s, chi2s*2, chi2s*3], [x*0.2 for x in [1.22, 1.00, 0.64, 0.49]], vary = [1]*4, stark_shift = ss,
+#ss = 2.918e6   #oxy  
+#fwm_comb4 = OCTlib.comb(fwm_info, [0, chi2s, chi2s*2, chi2s*3], [x*0.2 for x in [1.22, 1.00, 0.64, 0.49]], vary = [1]*4, stark_shift = ss,
+#                   phases = [np.pi, 0, 0, 0])
+#ge_comb4 = OCTlib.comb(qubit_info, [0, -chi2s, -chi2s*2, -chi2s*3], [y*1.0e-3 for y in [0.770, 1.314, 1.114, 0.991]], 
+#                  vary = [-1]*4, stark_shift = -ss, phases = [2.46, -0.14, -0.05, -0.45])
+#rot_speed4 = 18.79
+
+
+ss1 = 2.900e6
+fwm_comb1 = OCTlib.comb(fwm_info, [0, chi2s, chi2s*2, chi2s*3], [x*0.2 for x in [1.22, 1.00, 0.64, 0.49]], vary = [1]*4, stark_shift = ss1,
+                       phases = [np.pi, 0, 0, 0])
+ge_comb1 = OCTlib.comb(qubit_info, [0, -chi2s, -chi2s*2, -chi2s*3], [y*1.0e-3 for y in [1.06, 1.54, 1.29, 1.12]], 
+                      vary = [-1]*4, stark_shift = -ss1, phases = [np.pi-0.66, -0.14, 0.29, 0.30])
+rot_speed1 = 18.82
+
+
+ss = 2.868e6     #OMP
+fwm_comb5 = OCTlib.comb(fwm_info, [0, chi2s, chi2s*2, chi2s*3], [x*0.2 for x in [1.22, 1.00, 0.64, 0.49]], vary = [1]*4, stark_shift = ss,
                    phases = [np.pi, 0, 0, 0])
-ge_comb4 = OCTlib.comb(qubit_info, [0, -chi2s, -chi2s*2, -chi2s*3], [y*1.0e-3 for y in [0.770, 1.314, 1.114, 0.991]], 
-                  vary = [-1]*4, stark_shift = -ss, phases = [2.46, -0.14, -0.05, -0.45])
-rot_speed4 = 18.79
+ge_comb5 = OCTlib.comb(qubit_info, [0, -chi2s, -chi2s*2, -chi2s*3], [y*1.0e-3 for y in [0.98, 1.52, 1.27, 1.14]], 
+                  vary = [-1]*4, stark_shift = -ss, phases = [2.576, -0.14, -0.116, -0.49])
 
 
 if 0: # poly ssbspec to find stark shift
@@ -253,32 +268,30 @@ if 0: # Measure all four e-o rates
 #    bla
     
 
-if 0: # SSB after e-o dissipation
+if 1: # SSB after e-o dissipation
     from single_qubit import ssbspec
-
-    dig.set_trigger_period(1000)
-    dig.set_naverages(4000)
-    dt = 20e3
-    infos = [fwm_comb.info, ge_comb.info]
+    dig.set_trigger_period(2000)
+    dig.set_naverages(6000)
+    times = [1.7e6]#np.arange(20e3, 40e3, 1e3)
+    infos = [fwm_comb5.info, ge_comb5.info]
 #    seq = [sequencer.Join([sequencer.Trigger(200), lib.prekerr()])]
 #    seq = [sequencer.Join([sequencer.Trigger(200), lib.mod4_prep('+x')])]    
 #    seq = [sequencer.Join([sequencer.Trigger(200), ge(np.pi/2, 0), lib.fock01_encode()])]
 #    seq = [sequencer.Trigger(200), lib.fock_state('02')]
-    seq = [sequencer.Trigger(200)]
-    if dt>0:
-        poly_seq = sequencer.Combined(fwm_comb.get_poly_seq(dt - fwm_comb.sigma*4, 0) + ge_comb.get_poly_seq(dt - ge_comb.sigma*4, 0))
-        seq += [poly_seq]
-#        seq += [sequencer.Delay(dt)]
-        
-    spec = ssbspec.SSBSpec(qubit_info, np.concatenate((
-#                                        np.linspace(-2.95e6, -2.35e6, 15),
-#                                        np.linspace(-2.2e6, -0.45e6, 15),
-                                        np.linspace(-4e6, 1e6, 61),
-                                        )), 
-                            seq=sequencer.Join(seq), 
-                            extra_info = infos + [cavity_infoA]
-                            )
-    spec.measure_keysight()
+    for dt in times:
+        seq = [sequencer.Trigger(200)]
+        if dt>0:
+#            poly_seq = sequencer.Combined(fwm_comb5.get_poly_seq(dt - fwm_comb5.sigma*4, 0) + ge_comb5.get_poly_seq(dt - ge_comb5.sigma*4, 0))
+            poly_seq = sequencer.Sequence(fwm_comb5.get_poly_seq(dt - fwm_comb5.sigma*4, 0))
+            seq += [poly_seq]
+            
+        spec = ssbspec.SSBSpec(qubit_info, np.concatenate((
+                                            np.linspace(-4.5e6, 0.5e6, 101),
+                                            )), 
+                                seq=sequencer.Join(seq), 
+                                extra_info = infos + [cavity_infoA]
+                                )
+        spec.measure_keysight()
     bla    
 
 if 0: # Q function w/ e-o dissipation on coherence state
@@ -300,17 +313,18 @@ if 0: # Q function w/ e-o dissipation on coherence state
 
 if 0: # W function after e-o dissipation on prepared state
     from scripts.single_cavity import WignerbyParity
-    dig.set_naverages(2000)
+    dig.set_naverages(200)
+    dig.set_trigger_period(2500)
 #    times = np.linspace(55e3, 70e3, 10)
     times = np.array([142e3])
-#    infos = [fwm_comb.info, ge_comb.info]
+    infos = [fwm_comb1.info, ge_comb1.info]
     bloch = [
 #         '-z', 
 #         '+z',
 #         '-x', 
-#         '+x', 
+         '+x', 
 #         '-y',
-         '+y',
+#         '+y',
          ]
 
     for i, state in enumerate(bloch):
@@ -319,30 +333,30 @@ if 0: # W function after e-o dissipation on prepared state
             rotation = 18.22/1e3*(dt/1e3+1.1)*2*np.pi  #18.22 kHz rotating frame, 1us for effective time of state prep+Wigner prep
             seq = [sequencer.Join([sequencer.Trigger(200), lib.mod4_prep(state)])]
             if dt>0:
-#                poly_seq = sequencer.Combined(fwm_comb.get_poly_seq(dt - fwm_comb.sigma*4, 0) + ge_comb.get_poly_seq(dt - ge_comb.sigma*4, 0))
-#                seq += [poly_seq]
-                seq += [sequencer.Delay(dt)]
+                poly_seq = sequencer.Combined(fwm_comb1.get_poly_seq(dt - fwm_comb1.sigma*4, 0) + ge_comb1.get_poly_seq(dt - ge_comb1.sigma*4, 0))
+                seq += [poly_seq]
+#                seq += [sequencer.Delay(dt)]
             
-#            Wfun = WignerbyParity.WignerFunction(qubit_a4, ef_info, cavity_infoA, 
-#                                     xs = np.linspace(-2,2,15), ys = np.linspace(-2,2,15),
-#                                     t_ge=356, t_gf=0,
-#                                     seq=seq, delay=5, bgcor=True, zmax=100, zmin=-100, 
-#                                     extra_info = infos+ [qubit_info],
-#                                     rotation = rotation
-#                                     )
-#            Wfun.measure_keysight()
+            Wfun = WignerbyParity.WignerFunction(qubit_a4, ef_info, cavity_infoA, 
+                                     xs = np.linspace(-2,2,25), ys = np.linspace(-2,2,25),
+                                     t_ge=356, t_gf=0,
+                                     seq=seq, delay=5, bgcor=True, zmax=100, zmin=-100, 
+                                     extra_info = infos+ [qubit_info],
+                                     rotation = rotation
+                                     )
+            Wfun.measure_keysight()
             
-            n = 35
-            full_range = np.linspace(-2.5, 2.5, n)
-            for i in range(2,5):
-                Wfun = WignerbyParity.WignerFunction(qubit_a4, ef_info, cavity_infoAs, 
-                                         xs = full_range[i*n/5: (i+1)*n/5], ys = full_range,
-                                         t_ge=356, t_gf=0,
-                                         seq=seq, delay=5, bgcor=True, zmax=100, zmin=-100, 
-                                         extra_info = [qubit_info, cavity_infoA],
-#                                         rotation = rotation
-                                         )
-                Wfun.measure_keysight()
+#            n = 35
+#            full_range = np.linspace(-2.5, 2.5, n)
+#            for i in range(2,5):
+#                Wfun = WignerbyParity.WignerFunction(qubit_a4, ef_info, cavity_infoAs, 
+#                                         xs = full_range[i*n/5: (i+1)*n/5], ys = full_range,
+#                                         t_ge=356, t_gf=0,
+#                                         seq=seq, delay=5, bgcor=True, zmax=100, zmin=-100, 
+#                                         extra_info = [qubit_info, cavity_infoA],
+##                                         rotation = rotation
+#                                         )
+#                Wfun.measure_keysight()
             
     bla
     
@@ -402,12 +416,12 @@ if 0: # W function after e-o dissipation on fock superposition
     
 if 0: # Calibrate selective pi pulse at different photon numbers
     from single_qubit import rabi
-    tr = rabi.Rabi(qubit_a2, 
-#                   np.linspace(0.8, 0.9, 51), selective=False,    
-                  np.linspace(-0.025, 0.025, 51), selective=True,
+    tr = rabi.Rabi(qubit_a4, 
+                   np.linspace(-0.8, 0.8, 51), selective=False,    
+#                  np.linspace(-0.025, 0.025, 51), selective=True,
 #                   np.linspace(-0.1, 0.1, 41), selective=.5,
-                   plot_seqs=False, generate=True, repeat_pulse=1, update=False, 
-                   seq=None,
+                   plot_seqs=False, generate=True, repeat_pulse=2, update=False, 
+                   seq=sequencer.Join([sequencer.Trigger(200), lib.fock_state_two_file('4')]),
                    extra_info=[cavity_infoA, qubit_info])
     tr.measure_keysight()
     bla
@@ -714,12 +728,6 @@ if 0: # Preekerr Optimization
     dig.set_naverages(1500)
     dig.set_trigger_period(2500)    
     
-    ss = 2.842e6     #AQEC condition #MO
-    fwm_comb = OCTlib.comb(fwm_info, [0, chi2s, chi2s*2, chi2s*3], [x*0.2 for x in [1.22, 1.00, 0.64, 0.49]], vary = [1]*4, stark_shift = ss,
-                       phases = [np.pi, 0, 0, 0])
-    ge_comb = OCTlib.comb(qubit_info, [0, -chi2s, -chi2s*2, -chi2s*3], [y*1.0e-3 for y in [1.07, 1.50, 1.27, 1.12]], 
-                      vary = [-1]*4, stark_shift = -ss, phases = [np.pi-0.84, -0.20, 0.14, -0.10])
-    
 #    pc = prekerr_calibrate.prekerr_calibrate(qubit_info, cavity_infoA, lib, [fwm_comb, ge_comb], #pump_time=72e3,
 #                                           phases = np.linspace(0, np.pi, 25))
 #    params = pc.measure_keysight()
@@ -738,11 +746,11 @@ if 0: # Preekerr Optimization
         
     dig.set_naverages(4000)
     dig.set_trigger_period(2000)
-#    
-#    for parameter in ['ge_phase_2', 'ge_phase_0', 'ge_phase_3']:
-#        po = prekerr_optimize.prekerr_optimize(qubit_info, cavity_infoA, lib, [fwm_comb, ge_comb], 
-#                                          parameter, np.linspace(-0.7, 0.7, 26), phase = phase-np.pi/2)
-#        po.measure_keysight()
+    
+    for parameter in ['ge_phase_2', 'ge_phase_0', 'ge_phase_3']:
+        po = prekerr_optimize.prekerr_optimize(qubit_info, cavity_infoA, lib, [fwm_comb, ge_comb], 
+                                          parameter, np.linspace(-0.7, 0.7, 26), phase = phase-np.pi/2)
+        po.measure_keysight()
     
     for parameter in ['ge_amp_1', 'ge_amp_2']:
         po = prekerr_optimize.prekerr_optimize(qubit_info, cavity_infoA, lib, [fwm_comb, ge_comb], 
@@ -761,6 +769,8 @@ if 0: # Preekerr Optimization
 #    po.measure_keysight()
 #        
     bla
+    
+    
         
 if 0: #T2 with AQEC on any pre-seq
     from AQEC import CavT2_AQEC
@@ -789,79 +799,109 @@ if 0: #T2 with AQEC on any pre-seq
     
 if 0: # test Q function
     from scripts.single_cavity import Qfunction
-    seq = [sequencer.Trigger(200), lib.mod4_prep('+z')]
-    Qfun = Qfunction.QFunction(qubit_info, cavity_infoA, amax=2.2, N=15, amaxx=None, Nx=None, amaxy=None, Ny=None,
-                               seq=seq, delay=0, saveas=None, bgcor=False)
-    Qfun.measure_keysight()
+    states = ['04', '06', '26']
+    dt = 25e3
+    dig.set_trigger_period(3000)
+    dig.set_naverages(1000)   
+    for state in states: 
+        seq = [sequencer.Trigger(200), lib.fock_state(state)]
+        poly_seq = sequencer.Combined(fwm_comb.get_poly_seq(dt - fwm_comb.sigma*4, 0) + ge_comb.get_poly_seq(dt - ge_comb.sigma*4, 0))
+        seq += [poly_seq]
+        Qfun = Qfunction.QFunction(qubit_info, cavity_infoA, amax=2.5, N=17, amaxx=None, Nx=None, amaxy=None, Ny=None,
+                                   seq=sequencer.Join(seq), delay=0, saveas=None, bgcor=False)
+        Qfun.measure_keysight()
 
 
 
-if 0: # bloch time tests for fig4
+if 1: # bloch time tests for fig4
     from AQEC import time_bloch
-    rep = 1
-    bloch = [[sequencer.Trigger(200)],  
-#             [sequencer.Trigger(200), ge(np.pi, 0)],  
-#             [sequencer.Trigger(200), ge(np.pi/2, 0)], 
-#             [sequencer.Trigger(200), ge(np.pi/2, np.pi/2)], 
-#             [sequencer.Trigger(200), ge(np.pi/2, np.pi)], 
-#             [sequencer.Trigger(200), ge(np.pi/2, np.pi*3/2)]
+    rep = 10
+    bloch = [
+            [sequencer.Trigger(200)],  
+             [sequencer.Trigger(200), ge(np.pi, 0)],  
+             [sequencer.Trigger(200), ge(np.pi/2, 0)], 
+             [sequencer.Trigger(200), ge(np.pi/2, np.pi/2)], 
+             [sequencer.Trigger(200), ge(np.pi/2, np.pi)], 
+             [sequencer.Trigger(200), ge(np.pi/2, np.pi*3/2)]
              ]
-    bloch_targets = [[0, 0, -1], 
-#                     [0, 0, 1], [0, 1, 0], [-1, 0, 0], [0, -1, 0],  [-1, 0, 0], 
-                     ]
-    for j in range(rep):
-        dig.set_trigger_period(3000)
-        dig.set_naverages(1000)   
-        for i, seq in enumerate(bloch[:]):
+#    bloch = ['-y', 
+#             '+y', '-x',  '+x', '-z', '+z'
+#             ]
 
-            times = np.linspace(0, 300e3, 6)
+    bloch_targets = [[-1, 0, 0],
+                     [1, 0, 0], 
+                     [0, 1, 0], 
+                     [0, -1, 0], 
+                     [0, 0, -1],  [0, 0, 1], 
+                     ]
+    rot_speed = 0
+    for j in range(rep):
+        
+        for i, seq in enumerate(bloch[:]):
+            dig.set_trigger_period(2000)
+            dig.set_naverages(4000)   
+            times = np.linspace(0, 250e3, 20)
+#            times = np.arange(0, 250e3, 70.4e3)
+#            times = np.linspace(40e3, 90e3, 10)
+#            rotations = times/1.0e6 * 2*np.pi*rot_speed
             tb = time_bloch.time_bloch(qubit_info, times, seq = seq + [lib.fock01_encode()], target_state = 'purity',
-                                       postseq = lib.fock01_encode,
+                                       postseq = lib.fock01_encode,               
+#            tb = time_bloch.time_bloch(qubit_info, times, seq = [sequencer.Trigger(200), lib.mod4_prep(seq)], target_state = 'purity',
+#                                       postseq = lib.mod4_decode,
                                        g_value = 150, e_value = 22,
                                        extra_info = [cavity_infoA],
-                                       secondary_decode = False,
-                                       t2_check = lib.fock01_encode())
-            tb.measure_keysight()           
-    
+                                       secondary_decode = True,
+                                       t2_check = None,
+#                                       rotations = rotations
+                                       )
+            tb.measure_keysight()  
+            
+            dig.set_trigger_period(500)
+            times = np.linspace(0, 150e3, 20)
+            tb = time_bloch.time_bloch(qubit_info, times, seq = seq, target_state = 'purity',
+                                       g_value = 150, e_value = 22,
+                                       extra_info = [cavity_infoA],
+                                       secondary_decode = True,
+                                       t2_check = None)
+            tb.measure_keysight()        
     
     
 if 0: # time bloch tester
     from AQEC import time_bloch
     dig.set_trigger_period(2500)
     dig.set_naverages(2500)
-    for i, state in enumerate(['-y']):
+    for i, state in enumerate(['-x']):
  
-        fwm_comb, ge_comb = fwm_comb4, ge_comb4
-        times = np.arange(0, 300e3, 72e3)
-#        times = np.array([0.0, 72e3])
-        rotations = times/1.0e6 * 2*np.pi*rot_speed4
+        fwm_comb, ge_comb = fwm_comb1, ge_comb1
+        dig.set_naverages(1000)
+        times = np.arange(0, 240e3, 36e3)
+        rotations = times/1.0e6 * 2*np.pi*rot_speed1
         seq = [sequencer.Join([sequencer.Trigger(200), lib.mod4_prep(state)])]
         tb = time_bloch.time_bloch(qubit_info, times, seq = seq, target_state = 'purity',
                                    postseq = lib.mod4_decode, background_fidelity = 0.001,
-                                   comb_list = [fwm_comb, ge_comb], g_value = 150, e_value = 22,
+                                   comb_list = [fwm_comb, ge_comb], g_value = 170, e_value = 3,
                                    rotations = rotations, extra_info = [cavity_infoA],
-                                   secondary_decode = False, 
-                                   t2_check = lib.fock01_encode,
+                                   secondary_decode = True, #t2_check = lib.fock01_encode
                                    )
-        tb.measure_keysight()  
+        tb.measure_keysight() 
         
         
         
-if 1: # Qubit t2 with AQEC
+if 0: # Qubit t2 with AQEC
     from AQEC import T2_AQEC
     ss = 2.918e6
     comb_offset = 50e6
-    fwm_comb_t2 = OCTlib.comb(fwm_info, [x+comb_offset for x in [0, chi2s, chi2s*2, chi2s*3]], [x*0.23 for x in [1.22, 1.00, 0.64, 0.49]], vary = [1]*4, stark_shift = ss,
-                       phases = [np.pi, 0, 0, 0])
+    fwm_comb_t2 = OCTlib.comb(fwm_info, [x+comb_offset for x in [0, chi2s, chi2s*2, chi2s*3]], [x*0.22 for x in [1.77, 0, 0, 0]],#[1.22, 1.00, 0.64, 0.49]], 
+                              vary = [1]*4, stark_shift = ss, phases = [np.pi, 0, 0, 0])
 #    ge_comb_t2 = OCTlib.comb(qubit_info, [0, -chi2s, -chi2s*2, -chi2s*3], [y*1e-3 for y in [0.770, 1.314, 1.114, 0.991]], 
 #                      vary = [-1]*4, stark_shift = -ss, phases = [2.46, -0.14, -0.05, -0.45])
     rot_speed4 = 18.79
     
-    dig.set_trigger_period(3000)
-    dig.set_naverages(4000)
-    
-    t2 = T2_AQEC.T2_AQEC(qubit_info, np.linspace(1e3, 20e3, 101), [fwm_comb_t2], detune=2.7e6, 
-                                     double_freq=False, generate=True, seq=None,
-                                     plot_seqs=False)
-    t2.measure_keysight()
+    dig.set_trigger_period(500)
+    dig.set_naverages(2000)
+    for i in range(1):
+        t2 = T2_AQEC.T2_AQEC(qubit_info, np.linspace(1e3, 20e3, 101), [fwm_comb_t2], detune=2.7e6, 
+                                         double_freq=False, generate=True, seq=None,
+                                         plot_seqs=False)
+        t2.measure_keysight()
     bla

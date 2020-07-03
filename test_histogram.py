@@ -9,10 +9,10 @@ qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')
 ef_info = mclient.get_qubit_info('qubit1ef')
 #gf_info = mclient.get_qubit_info('Qubit1gf')
-cavity_info1A = mclient.get_qubit_info('cavity1A')
-cavity_info1B = mclient.get_qubit_info('cavity1B')
+#cavity_info1A = mclient.get_qubit_info('cavity1A')
+#cavity_info1B = mclient.get_qubit_info('cavity1B')
 alz = mclient.instruments['alazar']
-ag1 = mclient.instruments['ag1_RO']
+#ag1 = mclient.instruments['ag1_RO']
 #laser_info = mclient.instruments['laserfg']
 #voltages =np.linspace(0.4, 1.2, 1)
 
@@ -29,7 +29,7 @@ if 1:
     tr.measure()
 #    print "Testing outputing average I, Q:", np.average(tr.shot_data[:])
 #    seq = sequencer.Join([sequencer.Trigger(250),sequencer.Combined([cavity_info1A.rotate(3, 0), cavity_info1B.rotate(0.01, 0)])])
-    tr = rabi.Rabi(qubit_info, [0.00,], seq=None, histogram=True, title='|g>', extra_info=[cavity_info1A, cavity_info1B,])
+    tr = rabi.Rabi(qubit_info, [0.00,], seq=None, histogram=True, title='|g>')
     tr.measure()
 #    postseq = sequencer.Sequence(ef_info.rotate(np.pi,0))
 #    tr = rabi.Rabi(qubit_info, [qubit_info.pi_amp,], postseq=postseq, histogram=True, title='|f>', extra_info=ef_info)

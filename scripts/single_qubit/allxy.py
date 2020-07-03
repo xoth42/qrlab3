@@ -23,7 +23,6 @@ class All_XY(Measurement1D):
     def generate(self):
         s = Sequence()
 
-
         r = self.qubit_info.rotate
         wait = Delay(5)
 
