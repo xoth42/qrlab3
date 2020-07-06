@@ -1222,7 +1222,7 @@ if 0: # FT1
 
 
     bla
-if 1: # FT1 mixer
+if 0: # FT1 mixer
     from single_qubit import FT1measurement_mixer
 #    fwm = mclient.instruments['qubit2FWMbrick']
 
