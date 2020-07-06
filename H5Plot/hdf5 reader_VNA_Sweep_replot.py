@@ -30,12 +30,12 @@ filepath = 'C:\_Data\\'
 #hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
 hdf5_name = '0827cooldown_circualtor_VNA.hdf5'
 
-date = '20191126'
+date = '20191125'
 time = '125050'
 experiment = 'Power_Sweep_VNA'
 
-#fields = np.linspace(0, 0.05,26)
-fields = np.linspace(0.05, 0.002,13)
+fields = np.linspace(0, 0.05,26)
+#fields = np.linspace(0.05, 0.002,13)
 
 ''' Primary x axis and secondary if 2d'''
 #x_key = 'freqs'
@@ -60,9 +60,9 @@ kappa_prod2 = np.zeros(len(fields))
 kappa_prod2_err = np.zeros(len(fields))
 phi21 = np.zeros(len(fields))
 phi21_err = np.zeros(len(fields))
-#timelist = ['182908','185023','191139','193255','195410','201527','203643','205759','211915','214032','220149','222305','224423',
-#            '230540','232657','234815','000932','003049','005207','011324','013442','015601','021719','023837','025955','032114']
-timelist = ['190211','193554','200936','204319','211703','215046','222429','225812','233156','000540','003923','011308','014652']
+timelist = ['182908','185023','191139','193255','195410','201527','203643','205759','211915','214032','220149','222305','224423',
+            '230540','232657','234815','000932','003049','005207','011324','013442','015601','021719','023837','025955','032114']
+#timelist = ['190211','193554','200936','204319','211703','215046','222429','225812','233156','000540','003923','011308','014652']
 for itime, time in enumerate(timelist):
     if int(time) < 120000:
         date1 = str(int(date) + 1)
@@ -139,6 +139,7 @@ for itime, time in enumerate(timelist):
     
     fig.axes[0].plot(freqs/float(1e9), np.abs(fitdata),'--' )
     fig.axes[1].plot(fitdata.real,fitdata.imag, '--')
+    pl.close()
     xlist[itime] = fields[itime]
     kappa_a[itime] = result.params['kappa_a'].value
     kappa_a_err[itime] = result.params['kappa_a'].stderr
@@ -174,55 +175,32 @@ pl.ylabel('Frequency(GHz)')
 f.close()
     
     
-lin_power = xlist
-#lin_power = np.power(10,xlist/10)
-#lin_power[0] = 0
 pl.figure()
-pl.errorbar(lin_power, omega_c/1e9, yerr =omega_c_err/1e9, fmt ='o', label='frequency')
-pl.errorbar(lin_power, omega_c2/1e9, yerr =omega_c2_err/1e9, fmt ='o', label='frequency')
-#    pl.xlabel('field(T)')
-#    pl.xlabel('different measurement')
-#n=19
-#m,b = np.polyfit(lin_power[0:n],omega_c[0:n]/1e9,1)
-#print 'frequencu(GHz) = %s * power(mW) + %s'%(m,b)
-#print 'slope for frequency:', m
-#pl.plot(lin_power, lin_power*m + b,label = 'frequencu(GHz) = %s * power(mW) + %s'%(m,b))
-#pl.xlabel('drive power(mW)')
+pl.errorbar(xlist, omega_c/1e9, yerr =omega_c_err/1e9, fmt ='o', label='frequency')
+pl.errorbar(xlist, omega_c2/1e9, yerr =omega_c2_err/1e9, fmt ='o', label='frequency')
+
 pl.ylabel('frequency(GHz)')
 pl.legend(loc='upper right')
 
-#pl.figure()
-#pl.scatter(lin_power, Q_result, label='total Q')
-##    pl.xlabel('field(T)')
-##    pl.xlabel('different measurement')
-##pl.xlabel('drive power (mW)')
-#pl.ylabel('Q')
-#pl.legend(loc='upper right')
+
 
 
 pl.figure()
-pl.errorbar(lin_power, kappa_a/1000000, yerr = kappa_a_err/1000000, fmt ='o', label='kappa_tot')
-pl.errorbar(lin_power, kappa_a2/1000000, yerr = kappa_a2_err/1000000, fmt ='o')
-#n=6
-#m,b = np.polyfit(lin_power[0:n],kappa_a[0:n]/1e6,1)
-#pl.plot(lin_power, lin_power*m + b)
-#print 'slope for kappa:', m
-#pl.xlabel('drive power (mW)')
+pl.errorbar(xlist, kappa_a/1000000, yerr = kappa_a_err/1000000, fmt ='o', label='kappa_tot')
+pl.errorbar(xlist, kappa_a2/1000000, yerr = kappa_a2_err/1000000, fmt ='o')
 pl.ylabel('linewidth(MHz)')
 pl.legend(loc='upper right')
 
 #
 pl.figure()
-pl.errorbar(lin_power, kappa_prod, yerr = kappa_prod_err, fmt ='o', label='kappa_prod')
-pl.errorbar(lin_power, kappa_prod2, yerr = kappa_prod2_err, fmt ='o')
-#pl.xlabel('drive power (mW)')
+pl.errorbar(xlist, kappa_prod, yerr = kappa_prod_err, fmt ='o', label='kappa_prod')
+pl.errorbar(xlist, kappa_prod2, yerr = kappa_prod2_err, fmt ='o')
 pl.legend(loc='upper right')    
     
     
 pl.figure()
-pl.errorbar(lin_power,phi21, yerr = phi21_err, fmt ='o', label='phi21')
-#pl.xlabel('drive power (mW)')
-pl.legend(loc='upper right') 
+pl.errorbar(xlist,phi21, yerr = phi21_err, fmt ='o', label='phi21')
+pl.legend(loc='upper right')
 
 
 

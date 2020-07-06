@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Jul  4 18:09:21 2020
+
+@author: Wang_Lab
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from pulseseq.sequencer import *
@@ -5,12 +12,6 @@ from pulseseq.pulselib import *
 from lib.math import fit
 from lmfit.models import LinearModel, LorentzianModel
 from measurement import Measurement1D
-import lmfit
-
-def Gaussfit(params, x, y):
-    est = params['Amp'] * np.exp(-(x-params['freq'])**2/(2 * params['kappa']**2)) + params['off']
-    
-    return y - est
 
 def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
@@ -22,36 +23,30 @@ def analysis(meas, data=None, fig=None):
             if ys[iphase] > 0:
                 ys[iphase] = ys[iphase] -360    
     
-
-
-    
-    params = lmfit.Parameters()
-
-
+    f= fit.Lorentzian(xs, ys)
+#    f= fit.Gaussian(xs, ys)
     if np.max(ys) + np.min(ys) < 2 * np.average(ys):
-#    if 0:
-        params.add('Amp', value= -(np.max(ys)-np.min(ys)))
-        params.add('freq', value=-xs[np.argmin(ys)])
-    else:
+#    if 1:
         
-        params.add('Amp', value= (np.max(ys)-np.min(ys)))
-        params.add('freq', value=-xs[np.argmax(ys)])
-
-    params.add('kappa', value=1.01e6, min = 0)#, max = 4e6)#,vary = False)
-    params.add('off', value = np.average(ys))
-
-            
-#    datas = realdata[0,:]+ 1j*imagdata[0,:]    
-    result = lmfit.minimize(Gaussfit, params, args=(-xs,ys))
-    lmfit.report_fit(result.params)
-    meas.center = result.params['freq'].value
-    print ('fit freq: %s +/- %s  '%(result.params['freq'].value,result.params['freq'].stderr))
-
-
-    fig.axes[0].plot(-xs/1e6, -Gaussfit(result.params, -xs, 0), label='fit freq: %s +/- %s Hz '%(result.params['freq'].value,result.params['freq'].stderr))
+        h0 = -(np.max(ys)-np.min(ys))/2
+        w0 = 1e6
+        pos = xs[np.argmin(ys)]
+    else:
+        h0 = (np.max(ys)-np.min(ys))/2
+        w0 = 1e6
+        pos = xs[np.argmax(ys)]     
+#    pos = xs[np.argmax(ys)]
+    p0 = [np.mean(ys), w0*h0, pos, w0]
+    p=f.fit(p0)
+    txt = 'Center = %.03f MHz' % (-p[2]/1e6,)
+    meas.height=f.get_height()
+#    print(meas.height)
+    meas.center = -p[2]/1e6
+    print(meas.center)
+    meas.width = f.get_fwhm
+#    print 'Fit gave: %s' % (txt,)
+    fig.axes[0].plot(-xs/1e6, f.func(p,xs), label=txt)
     fig.axes[0].legend()
-    
-    meas.fit_params = result.params
     
     
 #    
@@ -83,10 +78,11 @@ def analysis(meas, data=None, fig=None):
 #            txt = 'Center = %.03f MHz' % (p[2]/1e6,)
 #            print 'Fit gave: %s' % (txt,)
 #            ax1.plot(fs/1e6, f.func(p, fs), label=txt)
-class SSBSpec_Gaussianfit_SS(Measurement1D):
+class SSBSpec_lorentzianfit_mixer(Measurement1D):
 
-    def __init__(self, qubit_info, detunings, amp, channel, seq=None, postseq=None, bgcor=False, coplay_delay=0, **kwargs):
+    def __init__(self, qubit_info, mixer_info, detunings, seq=None, postseq=None, bgcor=False, coplay_delay=0, **kwargs):
         self.qubit_info = qubit_info
+        self.mixer_info = mixer_info
         if seq is None:
             seq = Trigger(250)
         self.seq = seq
@@ -98,21 +94,20 @@ class SSBSpec_Gaussianfit_SS(Measurement1D):
         self.height = 0
         self.center = 0
         self.width=0
-        self.amp = amp
-        self.channel = channel
 
         npoints = len(detunings)
         if bgcor:
             npoints += 1
-        super(SSBSpec_Gaussianfit_SS, self).__init__(npoints, residuals=False, infos=(qubit_info,), **kwargs)
+        super(SSBSpec_lorentzianfit_mixer, self).__init__(npoints, residuals=False, infos=(qubit_info,mixer_info), **kwargs)
         self.data.create_dataset('detunings', data=detunings)
 
     def generate(self):
         s = Sequence()
 
-        ro =Combined([
-            Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
-            Join([Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+        ro = Combined([
+                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+                    Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0])
         ])
 
         if self.bgcor:
@@ -127,27 +122,17 @@ class SSBSpec_Gaussianfit_SS(Measurement1D):
             else:
                 period = 1e50
             g.add(self.qubit_info.pi_amp_selective, period)
-            
-            delaytime = 10000
-            delaytime2 = 30
-            pulselen = int(4 * self.qubit_info.w_selective + delaytime+delaytime2)
-#            pulselen = 40000
-            gS = Combined([
-                    Join([Delay(delaytime),g(),Delay(delaytime2)]),
-                    Constant(pulselen , self.amp, chan = self.channel),
-            ])
 
             s.append(Join([
                 self.seq,
-                gS,
-                Delay(100)
+                g(),
             ]))
 
             if self.postseq:
                 s.append(self.postseq)
             s.append(ro)
             #Ebru, adding the 20000 delay
-            s.append(Delay(200))
+            s.append(Delay(20000))
 
         s = self.get_sequencer(s)
         seqs = s.render()
@@ -155,7 +140,7 @@ class SSBSpec_Gaussianfit_SS(Measurement1D):
     
 
     def get_ys(self, data=None):
-        ys = super(SSBSpec_Gaussianfit_SS, self).get_ys(data)
+        ys = super(SSBSpec_lorentzianfit_mixer, self).get_ys(data)
         if self.bgcor:
             return ys[1:] - ys[0]
         return ys

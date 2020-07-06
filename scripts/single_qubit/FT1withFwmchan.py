@@ -39,18 +39,18 @@ def analysis(meas, data=None, fig=None):
     fig.canvas.draw()
     return result.params
 
-class FT1withFWM(Measurement1D):
+class FT1withFWMCHAN(Measurement1D):
 
-    def __init__(self, ge_info, ef_info, fwm_info,  fwm_pulse, delays,amp = None, seq=None,postseq=None, **kwargs):
+    def __init__(self, ge_info, ef_info,  fwm_pulse, delays,amp = None, seq=None,postseq=None, **kwargs):
         self.ge_info = ge_info
         self.ef_info = ef_info
-        self.fwm_info = fwm_info
+#        self.fwm_info = fwm_info
         self.fwm_pulse = fwm_pulse
         self.delays = delays
         self.amp = amp
         self.xs = delays / 1e3      # For plotting purposes
 
-        super(FT1withFWM, self).__init__(len(delays), infos=(ge_info, ef_info, fwm_info), **kwargs)
+        super(FT1withFWMCHAN, self).__init__(len(delays), infos=(ge_info, ef_info), **kwargs)
         self.data.create_dataset('delays', data=delays)
         if seq is None:             #Ebru:Added the seq part for cooling
             seq = Trigger(250)
@@ -79,10 +79,9 @@ class FT1withFWM(Measurement1D):
 #                        Constant(int(dt), amp, chan=chs[0]),
 #                        Constant(int(dt), amp, chan=chs[1]),
 #                ])) 
-#                    s.append(Constant(int(dt), amp, chan = '7m1'))
-                    s.append(Constant(int(dt), amp, chan = self.fwm_info.sideband_channels[0]))
+                    s.append(Constant(int(dt), amp, chan = '7m1'))
                     
-            s.append(Delay(200))
+            s.append(Delay(100))
             if self.postseq is None:
                 s.append(r(np.pi/2, 0))
             else:

@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue May 26 16:11:34 2020
+
+@author: Wang_Lab
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from pulseseq.sequencer import *
@@ -44,7 +51,6 @@ def analysis(meas, data=None, fig=None):
 #    datas = realdata[0,:]+ 1j*imagdata[0,:]    
     result = lmfit.minimize(Gaussfit, params, args=(-xs,ys))
     lmfit.report_fit(result.params)
-    meas.center = result.params['freq'].value
     print ('fit freq: %s +/- %s  '%(result.params['freq'].value,result.params['freq'].stderr))
 
 
@@ -83,9 +89,9 @@ def analysis(meas, data=None, fig=None):
 #            txt = 'Center = %.03f MHz' % (p[2]/1e6,)
 #            print 'Fit gave: %s' % (txt,)
 #            ax1.plot(fs/1e6, f.func(p, fs), label=txt)
-class SSBSpec_Gaussianfit_SS(Measurement1D):
+class SSBSpec_Gaussianfit_SS_fwm(Measurement1D):
 
-    def __init__(self, qubit_info, detunings, amp, channel, seq=None, postseq=None, bgcor=False, coplay_delay=0, **kwargs):
+    def __init__(self, qubit_info, fwm_info, detunings, seq=None, postseq=None, bgcor=False, coplay_delay=0, **kwargs):
         self.qubit_info = qubit_info
         if seq is None:
             seq = Trigger(250)
@@ -98,13 +104,12 @@ class SSBSpec_Gaussianfit_SS(Measurement1D):
         self.height = 0
         self.center = 0
         self.width=0
-        self.amp = amp
-        self.channel = channel
+        self.fwm_info=fwm_info
 
         npoints = len(detunings)
         if bgcor:
             npoints += 1
-        super(SSBSpec_Gaussianfit_SS, self).__init__(npoints, residuals=False, infos=(qubit_info,), **kwargs)
+        super(SSBSpec_Gaussianfit_SS_fwm, self).__init__(npoints, residuals=False, infos=(qubit_info,fwm_info), **kwargs)
         self.data.create_dataset('detunings', data=detunings)
 
     def generate(self):
@@ -134,7 +139,7 @@ class SSBSpec_Gaussianfit_SS(Measurement1D):
 #            pulselen = 40000
             gS = Combined([
                     Join([Delay(delaytime),g(),Delay(delaytime2)]),
-                    Constant(pulselen , self.amp, chan = self.channel),
+                    Constant(pulselen , self.fwm_info.pi_amp , chan = self.fwm_info.sideband_channels[0]),
             ])
 
             s.append(Join([
@@ -155,7 +160,7 @@ class SSBSpec_Gaussianfit_SS(Measurement1D):
     
 
     def get_ys(self, data=None):
-        ys = super(SSBSpec_Gaussianfit_SS, self).get_ys(data)
+        ys = super(SSBSpec_Gaussianfit_SS_fwm, self).get_ys(data)
         if self.bgcor:
             return ys[1:] - ys[0]
         return ys

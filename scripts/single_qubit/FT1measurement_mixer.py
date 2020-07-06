@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Oct 16 13:01:11 2019
+Created on Sat Jul  4 18:53:00 2020
 
 @author: Wang_Lab
 """
@@ -39,30 +39,28 @@ def analysis(meas, data=None, fig=None):
     fig.canvas.draw()
     return result.params
 
-class FT1withFWM(Measurement1D):
 
-    def __init__(self, ge_info, ef_info, fwm_info,  fwm_pulse, delays,amp = None, seq=None,postseq=None, **kwargs):
+class FT1Measurement_mixer(Measurement1D):
+
+    def __init__(self, ge_info, ef_info, mixer_info, delays, seq=None, **kwargs):
         self.ge_info = ge_info
         self.ef_info = ef_info
-        self.fwm_info = fwm_info
-        self.fwm_pulse = fwm_pulse
+        self.mixer_info = mixer_info
         self.delays = delays
-        self.amp = amp
         self.xs = delays / 1e3      # For plotting purposes
 
-        super(FT1withFWM, self).__init__(len(delays), infos=(ge_info, ef_info, fwm_info), **kwargs)
+        super(FT1Measurement_mixer, self).__init__(len(delays), infos=(ge_info, ef_info, mixer_info), **kwargs)
         self.data.create_dataset('delays', data=delays)
         if seq is None:             #Ebru:Added the seq part for cooling
             seq = Trigger(250)
-        self.seq = seq   
-        self.postseq = postseq
+        self.seq = seq        
 
     def generate(self):
         s = Sequence()
-        if self.amp is None:
-            amp = 1
-        else:
-            amp = self.amp
+#        s.append(Constant(250, 0, chan=4))
+#        s.append(Constant(250, 1, chan='4m1'))
+        
+        
         r = self.ge_info.rotate
         r_ef = self.ef_info.rotate
         for i, dt in enumerate(self.delays):
@@ -71,29 +69,33 @@ class FT1withFWM(Measurement1D):
                 r(np.pi, 0),
                 r_ef(np.pi, 0),
             ]))
-            if dt > 0:
-                if self.fwm_pulse is False:
-                    s.append(Delay(dt))
-                else:
-#                    s.append(Combined([
-#                        Constant(int(dt), amp, chan=chs[0]),
-#                        Constant(int(dt), amp, chan=chs[1]),
-#                ])) 
-#                    s.append(Constant(int(dt), amp, chan = '7m1'))
-                    s.append(Constant(int(dt), amp, chan = self.fwm_info.sideband_channels[0]))
-                    
-            s.append(Delay(200))
-            if self.postseq is None:
-                s.append(r(np.pi/2, 0))
-            else:
-                s.append(self.postseq)
-            # For Al better to do ef-pi, ge-pi to get contrast
-#            s.append(r_ef(np.pi,0))
-#            s.append(r(np.pi,0))
-#            s.append(r_ef(np.pi/2,0)) #fluxonium
+#            s.append(Combined([
+#                    Constant(25000, 0.1, chan=self.qubit_info.sideband_channels[0]),
+#                    Constant(25000, 0.1, chan=self.qubit_info.sideband_channels[1]),
+#            ]))
+            s.append(Delay(dt))
+            s.append(r(np.pi/2, 0))
+
+#            if self.postseq is not None:
+#                s.append(self.postseq)
+#            s.append(self.get_readout_pulse())
             
-            s.append(self.get_readout_pulse())
+#            s.append(Delay(20))
+            s.append(Combined([
+                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+                    Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0])
+            ]))
             s.append(Delay(2000))
+            #Ebru: changed the delay from 1000 to 20000.
+
+#            s.append(Repeat(Delay(1000), 20))   # wait for alazar acquisition to finish
+#            s.append(Combined([
+#                Repeat(Constant(8000, 0.4, chan=self.QswB.sideband_channels[0]), 70),
+#                Repeat(Constant(8000, 0.4, chan=self.QswB.sideband_channels[1]), 70),
+#                Repeat(Constant(8000, 1, chan='1m1'), 70),     # Readout pump tone switch
+#                Repeat(Constant(8000, 0.0001, chan=5), 70),         # Qubit/Readout master switch
+#            ]))
 
         s = self.get_sequencer(s)
         seqs = s.render()
@@ -101,4 +103,4 @@ class FT1withFWM(Measurement1D):
 
     def analyze(self, data=None, fig=None):
         self.fit_params = analysis(self, data, fig)
-        return self.fit_params
+        return self.fit_params['tau'].value
