@@ -7,25 +7,31 @@ if 1:
 
 from mclient import instruments
 
-#SC = instruments.create('SC', 'SC5511A', devid='100016B5')
+#SC = instruments.create('SC', 'SC5511A', devid='10001D2F')
 
-Yoko = instruments.create('Yoko','Yokogawa_7651_new',address='GPIB1::6::INSTR')
-print 'Yoko OK'
+#Yoko = instruments.create('Yoko','Yokogawa_7651',address='GPIB1::6::INSTR')
+#print 'Yoko OK'
 
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1', clock=1e9, refsrc='EXT', reffreq=10e6)
+#AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='GPIB0::1::INSTR', clock=1e9, refsrc='INT', reffreq=10e6)
+
+
+
+
 
 VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
 print 'VNA OK'
 
-#Magnet = instruments.create('Magnet','AMI_430')
-#print 'Magnet OK'
+Magnet = instruments.create('Magnet','AMI_430')
+print 'Magnet OK'
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='TCPIP0::172.30.56.25::4000::SOCKET')
 #Yoko = instruments.create('Yoko','Yokogawa_7651_new',address='GPIB1::6::INSTR') # No. 2 
 #print 'Yoko OK'
-#
-#brick1 = instruments.create('brick1', 'LabBrick_RFSource', serial=14510, use_extref=True) # qubit
-#brick2 = instruments.create('brick2', 'LabBrick_RFSource', serial=14511, use_extref=True) # ref
-#brick3 = instruments.create('brick3', 'LabBrick_RFSource', serial=14524, use_extref=True) # RO
+##
+#SC_qubit2FWM = instruments.create('SC_qubit2FWM', 'SC5511A', devid='10001D30')
+#SC_qubit = instruments.create('SC_qubit', 'SC5511A', devid='10001D31') # qubit
+#refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511, use_extref=True) # ref
+#RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=19151, use_extref=True) # RO
 #brick3 = instruments.create('brick3', 'LabBrick_RFSource', devid='3') # RO
 #
 #
@@ -35,18 +41,18 @@ print 'VNA OK'
 #
 #fg = instruments.create('funcgen', 'BNC_FuncGen645', address='GPIB1::30')
 #
-##Setup Alazar
-##alz = instruments.create('alazar', 'Alazar_Daemon')
-#alz.set_ch1_range('400mV')
+#Setup Alazar
+#alz = instruments.create('alazar', 'Alazar_Daemon')
+#alz.set_ch1_range('40mV')
 #alz.set_ch2_range('40mV')
-#alz.set_nsamples(3200)
-#alz.set_naverages(10)
+#alz.set_nsamples(1600)
+#alz.set_naverages(1000)
 #alz.set_ch1_coupling('AC')
 #alz.set_ch2_coupling('AC')
-##alz.set_clock_source('EXT10M')
+#alz.set_clock_source('EXT10M')
 ##alz.set_sample_rate('1GEXT10')
 ##alz.set_clock_source('EXT10M')
-#alz.set_clock_source('INT')
+##alz.set_clock_source('INT')
 #alz.set_sample_rate('1G')
 #alz.set_engJ_trig_src('EXT')
 #alz.set_engJ_trig_lvl(128+5)
@@ -54,13 +60,13 @@ print 'VNA OK'
 ##alz.setup_clock()
 #alz.setup_channels()
 #alz.setup_trigger()
-#
-#
-#
-#
+##
+##
+##
+##
 readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
-                             IQe_radius= 1 , rfsource1='brick3', rfsource2='brick2',
-                             pulse_len=1000, readout_chan='3m1', acq_chan='4m2')
+                             IQe_radius= 1 , rfsource1='RObrick', rfsource2='refbrick',
+                             pulse_len=1000, readout_chan='1m1', acq_chan='2m1')
 
 '''
 #AWG2 = instruments.create('AWG2', 'Tektronix_AWG5014C', address='AWG2',
@@ -89,33 +95,33 @@ ag2 = instruments.create('ag2', 'Agilent_N5183A', address='GPIB1::22')
 #
 '''
 
-'''
+
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                             deltaf=-100e6,
-                            pi_amp=0.06777,
+                            pi_amp=0.25,
                             pi2_amp=0.03385,
                             pi_amp_quasilective=0.027025,
-                            pi_amp_selective=5.4298e-3,
+                            pi_amp_selective=0.05,
                             rotation='Gaussian',
-                            w=20,
+                            w=100,
                             w_quasilective=100,
                             w_selective=500,
-                            channels='3,4',
+                            channels='1,2',
                             sideband_channels='I1,Q1',
                             sideband_phase=0.106814)
-'''
-#qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
-#                            deltaf=-277.004e6,
-#                            pi_amp=0.4976,
-#                            pi_amp_quasilective=0.02,
-#                            pi_amp_selective=4.100e-3,
-#                            rotation='Gaussian',
-#                            w=5,
-#                            w_quasilective=100,
-#                            w_selective=500,
-#                            channels='5,6',
-#                            sideband_channels='I16,Q16',
-#                            sideband_phase=0.174140)
+
+qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
+                            deltaf=-385e6,
+                            pi_amp=0.4976,
+                            pi_amp_quasilective=0.02,
+                            pi_amp_selective=0.1,
+                            rotation='Gaussian',
+                            w=100,
+                            w_quasilective=100,
+                            w_selective=500,
+                            channels='1,2',
+                            sideband_channels='I2,Q2',
+                            sideband_phase=0.174140)
 #qubit1gf = instruments.create('qubit1gf', 'Qubit_Info',
 #                            deltaf=-186.93e6,
 #                            marker_channel='5m2',

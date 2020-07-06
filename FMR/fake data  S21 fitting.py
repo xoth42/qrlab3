@@ -11,10 +11,10 @@ import lmfit
 kappa_1 = 1e5
 kappa_2 = 1e5
 omega_c = 8.5e9
-kappa_a = 2e6
-g = 200e6
+kappa_a = 1.5e6
+g = 20e6
 omega_fmr = 7.5e9
-kappa_fmr = 3e6
+kappa_fmr = 1e6
 
 
 def S21(params, x, y):
@@ -31,9 +31,9 @@ def S21(params, x, y):
 #    np.sqrt((y.real - est.real)**2 + (y.imag - est.imag)**2)
 #x = np.arange(7.5e9, 8.5e9, 0.00001e9)
 
-m_lst = np.arange(7.7e9,8.4e9,0.05e9)
-span1 = 4e8
-span = 10e6
+m_lst = np.arange(8.5e9,8.6e9,0.2e9)
+span1 = 2e8
+span = 30e6
  
     
 line=np.empty(len(m_lst))
@@ -52,15 +52,15 @@ i=0
 pl.figure()   
 for omega_fmr in m_lst:
     
-    x = np.linspace(omega_fmr - span1/2, omega_fmr + span1/2, 1601)
-    y = np.sqrt(kappa_1 *kappa_2)/(1j*(x-omega_c)-kappa_a/2 +g**2/(1j*(x-omega_fmr)-kappa_fmr/2))
+    x = np.linspace(omega_fmr - span1/2, omega_fmr + span1/2, 101)
+    y =np.sqrt(kappa_1 *kappa_2)/(1j*(x-(omega_c))-kappa_a/2 +g**2/(1j*(x-omega_fmr)-kappa_fmr/2))
     print omega_fmr
-    print x[np.argmin(abs(y))]
+    print x[np.argmax(abs(y))]
     omega_fmr1 = x[np.argmax(abs(y))]
-    x = np.linspace(omega_fmr1 - span/2, omega_fmr1 + span/2, 1601)
+    x = np.linspace(omega_fmr1 - span/2, omega_fmr1 + span/2,401)
     y = np.sqrt(kappa_1 *kappa_2)/(1j*(x-omega_c)-kappa_a/2 +g**2/(1j*(x-omega_fmr)-kappa_fmr/2))
 #    y_bg = np.sqrt(kappa_1 *kappa_2)/(1j*(x-omega_c)-kappa_a/2)
-    y = y - y_bg
+#    y = y - y_bg
 
       
     #pl.suptitle('fitting for %s'%(foldername))
@@ -69,21 +69,22 @@ for omega_fmr in m_lst:
     #            y = y * np.exp(-1j*phase2)
     
     params = lmfit.Parameters()
-    params.add('kappa_prod', value= 1e7, min = 0)
-    params.add('omega_c', value=omega_fmr1)
-    params.add('kappa_a', value=2e6, min = 0)
+    params.add('kappa_prod', value= 1e11, min = 0)
+    params.add('omega_c', value=omega_fmr)
+    params.add('kappa_a', value=1.1e6, min = 0)
+#    params.add('g', value= 30e6, min = 0)
+#    params.add('omega_fmr', value=omega_fmr-4e6)
+#    params.add('kappa_fmr', value=1.5e6, min = 0)
     params.add('roff',value = 0)
     params.add('ioff',value = 0)
     params.add('phi',value = 0, max = np.pi, min = -np.pi)
-#    params.add('kappa_fmr', value= 2e6, min = 0)
-#    params.add('omega_fmr', value=omega_fmr)
-#    params.add('g', value=2e7, min = 0)
+
     
     result = lmfit.minimize(S21, params, args=(x, y))
     
-#    lmfit.report_fit(result.params)
+    lmfit.report_fit(result.params)
     
-    y1 = np.sqrt(result.params['kappa_prod'].value)/(1j*(x-result.params['omega_c'].value)-(result.params['kappa_a'].value)/2.0)# + params['g']**2/(1j *(x-result.params['omega_fmr'].value)-result.params['kappa_fmr'].value/2) )
+    y1 = np.sqrt(result.params['kappa_prod'].value)/(1j*(x-result.params['omega_c'].value)-(result.params['kappa_a'].value)/2.0)# + result.params['g'].value**2/(1j *(x-result.params['omega_fmr'].value)-result.params['kappa_fmr'].value/2) )
     y1 = y1 + result.params['roff'].value + 1j*result.params['ioff'].value
 #    y1 = y1 * np.exp(1j*result.params['phi'].value)
     #            *(1-result.params['Asym'].value*(x-result.params['omega_c'].value)/(result.params['kappa_a'].value/2.0))
@@ -118,21 +119,21 @@ for omega_fmr in m_lst:
     i = i + 1
     
     
-pl.figure()
-pl.errorbar(temp,line,yerr=err,fmt='o',label='kappa_a')
+#pl.figure()
+#pl.errorbar(temp,line,yerr=err,fmt='o',label='kappa_a')
+#
+#pl.legend()
+#
+#pl.ylabel('linewidth(MHz)')
+#pl.xlabel('Magnetic Field')
+#print np.average(line)
 
-pl.legend()
 
-pl.ylabel('linewidth(MHz)')
-pl.xlabel('Magnetic Field')
-print np.average(line)
-
-
-
-feq = feq *1e9
-pl.figure()
-pl.scatter(feq, roff, label = 'roff')
-pl.scatter(feq, ioff, label = 'ioff')
+#
+#feq = feq *1e9
+#pl.figure()
+#pl.scatter(feq, roff, label = 'roff')
+#pl.scatter(feq, ioff, label = 'ioff')
 ##    pl.savefig('%s\%s_roff.jpg'%(figpath,figname))
 #    pl.legend()
 #    for i in range(len(roff)-1):
@@ -153,7 +154,7 @@ pl.scatter(feq, ioff, label = 'ioff')
 #pl.xlabel('Magnetic Field')
 
 
-pl.figure()
-pl.scatter(temp,totalQ)
-pl.ylabel('Total Q')
-pl.xlabel('Magnetic Field')
+#pl.figure()
+#pl.scatter(temp,totalQ)
+#pl.ylabel('Total Q')
+#pl.xlabel('Magnetic Field')

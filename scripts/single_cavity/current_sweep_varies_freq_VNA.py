@@ -125,7 +125,7 @@ class Current_Sweep_Varies_freq_VNA(Measurement1D):
         # Generate and load sequences
         VNA = self.instruments['VNA']
 #        Yoko = self.instruments['Yoko']
-        Magnet = self.instruments['Magnet']
+#        Magnet = self.instruments['Magnet']
 #        SCqubit = self.instruments['SCqubit']
 
         VNA.set_s_param(self.Sij[0])
@@ -156,12 +156,25 @@ class Current_Sweep_Varies_freq_VNA(Measurement1D):
 
 
 
-            Yoko.do_ramp_current(current)
-
+#            Yoko.do_ramp_current(current)
+#            time.sleep(2)
 #            Magnet.do_set_field(current)
-
+            
+            
+#            if icurrent== 0 or self.dcurrents > 0.002:
+#                try:
+#                    while not abs(Magnet.do_get_field() - current) < 0.0005:
+#        
+#                        objsh.helper.backend.main_loop(100)
+#        
+#                except:
+#                    print 'error in ramping field'
+#            if icurrent == 0 :
+#                VNA.set_power(-5)
+#            else:
+#                VNA.set_power(0)
+                    
             time.sleep(2)
-
             VNA.set_center_freq(self.center_freqs[icurrent])
 #            time.sleep(0.5)
             ave = avelimit

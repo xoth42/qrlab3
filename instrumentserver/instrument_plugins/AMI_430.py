@@ -16,7 +16,7 @@ class AMI_430(Instrument):
     def __init__(self, name, **kwargs):
         super(AMI_430, self).__init__(name)
         
-        self.ser = serial.Serial('COM3', 
+        self.ser = serial.Serial('COM8', 
                                  baudrate= 115200, 
                                  parity=serial.PARITY_NONE, 
                                  stopbits= serial.STOPBITS_ONE, 
@@ -63,7 +63,7 @@ class AMI_430(Instrument):
     
     def do_get_current(self):
         self.ser.write('CURRent:MAGnet?;')
-        self.current = self.ser.read(size=8) #size TBD
+        self.current = self.ser.read(size=20) #size TBD
         return self.current
         
     def do_set_current(self, current):
@@ -76,3 +76,28 @@ class AMI_430(Instrument):
         
     def do_ramp_zero(self):
         self.ser.write('ZERO;') #puts the programmer into zeroing current mode'''
+        
+    def do_set_PSwitch(self,state):
+        self.ser.write('PSwitch %s;'%(state))
+#        self.ser.write('CONFigure:PSwitch:INSTalled?;')
+#        self.PSwitch = self.ser.read(size=20) #size TBD
+#
+#        return self.PSwitch
+         
+    def do_get_PSwitch(self):
+        self.ser.write('PSwitch?;')
+        self.PSwitch = self.ser.read(size = 8)
+        
+        return self.PSwitch
+    
+    def do_get_Lock_PSwitch(self):
+        self.ser.write('LOCK:PSwitch:CONTRol?;')
+        self.Lock_PSwitch = self.ser.read(size = 8)
+        
+        return self.Lock_PSwitch
+        
+    def IDN(self):
+        self.ser.write('*IDN?;')
+        self.IDN = self.ser.read(size = 20)
+        
+        return self.IDN

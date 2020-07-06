@@ -15,11 +15,15 @@ import objectsharer as objsh
 import time
 import numpy as np
 from matplotlib import gridspec
+import os
+import config
 #
 #SPEC   = 0
 #POWER  = 1
 
+# creates plot
 def analysis(powers, freqs, realdata, imagdata, fig_name, full_fig_name, Sij, fig=None):
+    fn = None
     fig = pl.figure()
     a=[0,0,0,0]
     
@@ -40,7 +44,7 @@ def analysis(powers, freqs, realdata, imagdata, fig_name, full_fig_name, Sij, fi
     #    if not len(Sij) == 1:
         gss[k] = gridspec.GridSpecFromSubplotSpec(1,2, subplot_spec=gs[k],width_ratios = (19,1))        
         fig.add_subplot(gss[k][0])
-        fig.axes[k].set_title('%s%s'%(fig_name,Sij[k]))
+        fig.axes[k].set_title('%s'%(fig_name))
         fig.axes[k].set_xlim(xs.min(), xs.max())
         fig.axes[k].set_ylim(ys.min(), ys.max())
         
@@ -66,6 +70,13 @@ def analysis(powers, freqs, realdata, imagdata, fig_name, full_fig_name, Sij, fi
         pl.colorbar( a[k],fig.axes[len(Sij)+k])
         
     pl.suptitle(full_fig_name)
+    if fn is None:
+        fn = os.path.join(config.datadir, 'images/%s_Power_Sweep_VNA.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
+    fdir = os.path.split(fn)[0]
+    if not os.path.isdir(fdir):
+        os.makedirs(fdir)
+    kwargs = dict()
+    fig.savefig(fn, **kwargs)
 
 class Power_Sweep_VNA(Measurement1D):
 
@@ -117,8 +128,9 @@ class Power_Sweep_VNA(Measurement1D):
         # Generate and load sequences
         VNA = self.instruments['VNA']
 #        Yoko = self.instruments['Yoko']
-        SCqubit = self.instruments['SCqubit']
-
+#        SC = self.instruments['SC_qubit2FWM']
+#        brick2 = self.instruments['brick2']
+#        brick3 = self.instruments['brick3']
 
         VNA.set_start_freq(self.freqs[0])
         VNA.set_stop_freq(self.freqs[-1])
@@ -141,22 +153,26 @@ class Power_Sweep_VNA(Measurement1D):
             avelimit = 999
             
             
-        VNA.set_average_factor(avelimit)
+#        VNA.set_average_factor(avelimit)
         VNA.set_if_bandwidth(self.if_bandwidth)
         
         for ipower, power in enumerate(self.powers):
+            avelimit = self.avelimit
+#            brick3.set_power(power)
+#            SC.set_power(power)
             VNA.set_power(power)
 #            if power == -31:
 #                SCqubit.set_rf_on(False)
 #            else:
 #                SCqubit.set_rf_on(True)                
-#            SCqubit.set_power(power)
-#            time.sleep(0.5)
+#            brick2.set_frequency(power)
+            time.sleep(10)
             if self.average_factor[ipower] < avelimit:
                 avelimit = self.average_factor[ipower]
             ave = avelimit
-            if self.average_factor[ipower] > avelimit:
-                VNA.set_average_factor(ave)
+            VNA.set_average_factor(avelimit)
+#            if self.average_factor[ipower] > avelimit:
+#                VNA.set_average_factor(ave)
             count = 0
     
             while count < self.average_factor[ipower]:
@@ -201,7 +217,7 @@ class Power_Sweep_VNA(Measurement1D):
                 for i, sij in enumerate(self.Sij):
                     if len(self.Sij) > 1:  
                         VNA.set_s_param(sij)
-                    prev_fmt = VNA.get_format()
+#                    prev_fmt = VNA.get_format()
 #                    freqs = VNA.do_get_xaxis()
                     VNA.set_format('REAL')
                     ret = VNA.do_get_yaxes()
@@ -209,7 +225,7 @@ class Power_Sweep_VNA(Measurement1D):
                     VNA.set_format('IMAG')
                     ret = VNA.do_get_yaxes()
                     imags = ret[0]
-                    VNA.set_format(prev_fmt)
+                    VNA.set_format('MLOG')
                 
         #        ret = VNA.do_get_data()
 #                VNA.set_trigger_source('internal')
@@ -248,7 +264,7 @@ class Power_Sweep_VNA(Measurement1D):
                     gs.update(wspace=0.4, hspace=0.35)
                 for i in range(len(self.Sij)):
                     self.fig.add_subplot(gs[i])
-                    self.fig.axes[i].set_title('%s%s'%(self.fig_name,self.Sij[i]))
+                    self.fig.axes[i].set_title('%s'%(self.fig_name))
                     self.fig.axes[i].set_xlim(xs.min(), xs.max()+self.dpowers)
                     self.fig.axes[i].set_ylim(ys.min(), ys.max())
         
@@ -272,6 +288,7 @@ class Power_Sweep_VNA(Measurement1D):
                 self.fig.canvas.draw()
 
 #        print 'self.ampdata\n', self.ampdata
+        pl.close()
         self.analyze()
         print self.data.get_fullname()
         
