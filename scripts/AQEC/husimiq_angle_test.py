@@ -36,6 +36,7 @@ def quadruple_gaussian(params, x, data):
     
     return data - est
 
+
 def cosine(params, x, data):
     est = params['background'] + params['amp'] * np.cos(2*(x-params['phase']))
     return data  - est   
@@ -61,7 +62,7 @@ def analysis(meas, data=None, fig=None):
         params.add('background', value=max(ys), max = max(ys)+abs(max(ys))*0.2)
         params.add('amp', value=np.min(ys)-np.max(ys), max = 0)
         params.add('sigma', value=np.pi/8, min=0, max=np.pi/3)
-        params.add('phase', value=np.pi, min=-np.pi/50, max=np.pi+np.pi/50)
+        params.add('phase', value=phase, min=-np.pi/10, max=np.pi+np.pi/10)
             
         result = lmfit.minimize(double_gaussian, params, args=(xs, ys))
         lmfit.report_fit(result.params)
@@ -81,7 +82,7 @@ def analysis(meas, data=None, fig=None):
         params.add('background', value=max(ys), max = max(ys)+abs(max(ys))*0.5)
         params.add('amp', value=np.min(ys)-np.max(ys), max = 0)
         params.add('sigma', value=np.pi/8, min=0, max=np.pi/5)
-        params.add('phase', value=phase, min=0, max=np.pi/2)
+        params.add('phase', value=phase, min=-np.pi/10, max=np.pi/2+np.pi/10)
             
         result = lmfit.minimize(quadruple_gaussian, params, args=(xs, ys))
         lmfit.report_fit(result.params)

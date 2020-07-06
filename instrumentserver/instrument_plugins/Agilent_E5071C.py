@@ -155,7 +155,7 @@ class Agilent_E5071C(SCPI_Instrument):
 
     def do_multipoint_sweep(self, start, stop, step):
         n_points = self.get_points()
-        span = n_points * step
+        span = (n_points - 1) * step
         for start in np.arange(start, stop, span):
             self.set_start_freq(start)
             self.set_stop_freq(start + span)

@@ -34,6 +34,8 @@ def analysis(meas, data=None, fig=None):
 #        ax.set_zlim(meas.zmin, meas.zmax())
     ax.set_xlabel(r'$Re \{\alpha \}$')
     ax.set_ylabel(r'$Im \{\alpha \}$')
+    ax.xaxis.set_ticks_position('top')   # to move the x ticks to top (juliang)
+    ax.xaxis.set_label_position('top')# to move the x label to top (juliang)
     fig.canvas.draw()
 
 class WignerFunction(Measurement2D):

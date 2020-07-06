@@ -140,7 +140,7 @@ class ROCavSpectroscopy(Measurement1D):
             phases = []
 
             for ifreq, freq in enumerate(self.freqs):
-                self.readout_info.rfsource1.set_frequency(freq)
+                self.readout_info.rfsource1.do_set_frequency(freq)
                 self.readout_info.rfsource2.set_frequency(freq+50e6)
                 time.sleep(.5)
                 

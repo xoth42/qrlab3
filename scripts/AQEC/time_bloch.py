@@ -150,11 +150,11 @@ def analysis(meas, data=None, fig=None):
         equators = (ys[6*num_delays : 7*num_delays] + ys[7*num_delays : 8*num_delays])*0.5
         print equators
         
-        pf = np.polyfit(meas.delays, equators, 1)
-        eq_values = pf[0]*meas.delays + pf[1]
-        e_values = meas.e_value * np.ones(num_delays)
-        g_values = eq_values*2 - meas.e_value
-        print g_values
+#        pf = np.polyfit(meas.delays, equators, 1)
+        eq_value = np.mean(equators)#pf[0]*meas.delays + pf[1]
+        e_value = meas.e_value #* np.ones(num_delays)
+        g_value = eq_value*2 - meas.e_value
+        print g_value
 #        pf = np.polyfit(meas.delays, equators, 2)
 #        eq_values = pf[0]*meas.delays**2 + pf[1]*meas.delays + pf[2]                
 #        e_values = meas.e_value
@@ -162,8 +162,8 @@ def analysis(meas, data=None, fig=None):
     
 #        proj_plus = ys[6*num_delays : 7*num_delays]
 #        proj_minus = ys[7*num_delays : 8*num_delays]
-        proj_minus = (g_values - ys[6*num_delays : 7*num_delays]) / (g_values - e_values) * 2 - 1 
-        proj_plus = (g_values - ys[7*num_delays : 8*num_delays]) / (g_values - e_values) * 2 - 1
+        proj_minus = (g_value - ys[6*num_delays : 7*num_delays]) / (g_value - e_value) * 2 - 1 
+        proj_plus = (g_value - ys[7*num_delays : 8*num_delays]) / (g_value - e_value) * 2 - 1
         proj = (proj_plus-proj_minus)/2.0
         fig.axes[1].plot(meas.delays/1e3, proj, 's')
     

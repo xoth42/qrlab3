@@ -8,11 +8,11 @@ import lmfit
 
 ''' Path to the .hdf5 file '''
 filepath = 'C:/_Data/'
-hdf5_name = 'AQEC-11-2019.hdf5'
-start_date = 20191209
-end_date = 20191211
-start_time = 184704
-end_time = 211252
+hdf5_name = 'AQEC-01-2020.hdf5'
+start_date = 20200208
+end_date = 20200212
+start_time = 170631
+end_time = 0
 
 
 
@@ -164,16 +164,17 @@ for i, name in enumerate(t202_list):
     fit = t202_analysis(delays, data)
     values_t202[i] = fit['tau'].value
     std_t202[i] = fit['tau'].stderr
-    
-threshold = 1000
 
-times_t2 = times_t2[values_t2 > threshold]
-std_t2 = std_t2[values_t2 > threshold]
-values_t2 = values_t2[values_t2 > threshold]
+min_t2 = 200000
+max_t2 = 1000000
 
-times_t202 = times_t202[values_t202 > threshold]
-std_t202 = std_t202[values_t202 > threshold]
-values_t202 = values_t202[values_t202 > threshold]
+times_t2 = times_t2[(values_t2 > min_t2) & (values_t2 < max_t2)]
+std_t2 = std_t2[(values_t2 > min_t2) & (values_t2 < max_t2)]
+values_t2 = values_t2[(values_t2 > min_t2) & (values_t2 < max_t2)]
+
+times_t202 = times_t202[(values_t202 > min_t2) & (values_t202 < max_t2)]
+std_t202 = std_t202[(values_t202 > min_t2) & (values_t202 < max_t2)]
+values_t202 = values_t202[(values_t202 > min_t2) & (values_t202 < max_t2)]
 
 pl.figure()
 pl.errorbar(times_t2/3600, values_t2, yerr = std_t2, label = 't2', fmt = '.')

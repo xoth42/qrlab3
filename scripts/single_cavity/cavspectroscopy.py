@@ -5,6 +5,7 @@ from pulseseq.pulselib import *
 from lib.math import fit
 import objectsharer as objsh
 import time
+import numpy as np
 
 SPEC   = 0
 POWER  = 1
@@ -129,6 +130,51 @@ class CavSpectroscopy(Measurement1D):
             self.phasedata[idisp,:] = phases
 
         self.analyze()
+
+    def measure_keysight(self):
+        dig = self.instruments['dig']
+
+        for idisp, disp in enumerate(self.cav_disps):
+            seqs = self.generate(disp)
+            self.stop_awgs()
+            self.load(seqs)
+            self.start_awgs()
+            
+            
+            amps = []
+            phases = []
+            for freq in self.cav_freqs:
+#                self.cav_source.set_rf1_freq(freq) #JEFF Wrong syntax
+                self.cav_source.set_frequency(freq)
+                time.sleep(0.2)
+                
+                dig.setup_avg_shot()
+                dig.arm()
+                dig.start_hvi()
+                ret = dig.take_avg_shot()
+                
+                try:
+                    while not ret.is_valid():
+                        objsh.helper.backend.main_loop(100)
+                except:
+                    dig.set_interrupt(True)
+
+                dig.release_buf()
+
+
+                IQ = np.average(ret)
+                amps.append(np.abs(IQ))
+                phases.append(np.angle(IQ, deg=True))
+                print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
+
+            self.ampdata[idisp,:] = amps
+            self.phasedata[idisp,:] = phases
+
+        self.analyze()
+
+
+
+
 
     def analyze(self):
         fig = self.create_figure()

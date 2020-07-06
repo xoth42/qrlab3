@@ -130,6 +130,7 @@ class T2Measurement(Measurement1D):
     def __init__(self, qubit_info, delays, detune=0, echotype=ECHO_NONE, necho=1,
                  double_freq=False, seq=None, postseq=None, selective=False, Qswitch_infoA=None, Qswitch_infoB=None, **kwargs):
         self.qubit_info = qubit_info
+#        self.qubit_pre = qubit_pre
         self.delays = delays
         self.xs = delays / 1e3        # For plotting purposes
         self.detune = detune

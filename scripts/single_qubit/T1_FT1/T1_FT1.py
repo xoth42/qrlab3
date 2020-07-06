@@ -21,10 +21,8 @@ ge = mclient.instruments['qubit1ge']
 ef = mclient.instruments['qubit1ef']
 ge2 = mclient.instruments['qubit2ge']
 
-dig = mclient.instruments['dig']
-
 yoko = mclient.instruments['yoko']
-SC_Qubit = mclient.instruments['SC_Qubit']
+SCqubit = mclient.instruments['SCqubit']
 RObrick = mclient.instruments['RObrick']
 refbrick = mclient.instruments['refbrick']
 
@@ -192,16 +190,17 @@ if 0: # T1_FT1 switching flux
         refbrick = mclient.instruments['SCref']
         
         '''Settings for measuring |e> lifetime detuned from f_max (flux A)'''
-        A_current = 2.46
-        qubitge_drive_freq_A = 6048.126e6
-        RO_freq_A = 8303e6
-        RO_power_A = 10
+        A_current = 3.365
+        qubitge_drive_freq_A = 6734.77e6
+        RO_freq_A =  8154e6
+#        RO_power_A = 10
         
         '''Settings for measuring |f> lifetime at f_max (flux B)'''
-        B_current = -0.06
-        qubitge_drive_freq_B = 6305.876e6
-        RO_freq_B = 8304.45e6
-        RO_power_B = 10
+        B_current = 0
+        qubitge_drive_freq_B = 6734.77e6
+        RO_freq_B = 8160.5e6
+#        RO_power_B = 10
+
         
         '''These are the values you need to do the T1 measurement at the non f_max flux bias point'''
         Yoko.do_set_current(A_current)
@@ -226,7 +225,7 @@ if 0: # T1_FT1 switching flux
         start_time = list(str(datetime.datetime.now())[:19])
         start_time[13] = '-'
         start_time[16] = '-'
-        yoko.do_set_output_state(1)
+        Yoko.do_set_output_state(1)
 #        alz.set_naverages(2500)
         for i in range(N):
             print '###############'
@@ -498,18 +497,18 @@ if 1: # T1_FT1 (new)
                                  np.logspace(4, 5, num=31)))
         
         '''Settings for measuring |e> lifetimes detuned from f_max '''
-        detuned_currents = np.linspace(-4.7674, -4.6674, 5)
-        RO_freq_detuned = 8276.6e6
+        detuned_currents = np.linspace(3.315, 3.415, 5)
+        RO_freq_detuned = 8154e6
         
         
         '''Settings for measuring |f> lifetime at sweet_spot (ss)'''
-        ss_current = -0.15
-        RO_freq_ss = 8278e6
+        ss_current = 0
+        RO_freq_ss = 8160.5e6
         
         
         '''Constant settings'''
-        SC_Qubit.set_frequency(5715.652e6)
-        RObrick.set_power(-5)
+        SCqubit.set_frequency(6734.77e6)
+#        RObrick.set_power(-5)
         
         RObrick.set_frequency(RO_freq_detuned)
         refbrick.set_frequency(RO_freq_detuned + 50e6)
@@ -519,7 +518,7 @@ if 1: # T1_FT1 (new)
         start_time[13] = '-'
         start_time[16] = '-'
         yoko.do_set_output_state(1)
-        dig.set_naverages(2500)
+        alz.set_naverages(1500)
         for j in range(N):
             print '###############'
             print j
@@ -530,7 +529,7 @@ if 1: # T1_FT1 (new)
                 '''Find range of detuned frequencies to drive'''
                 ssbspec_freqs = np.linspace(-15e6, 15e6, 151)
                 w_q = np.zeros_like(detuned_currents)
-                dig.set_naverages(1000)
+                alz.set_naverages(1000)
                 for k in range(len(detuned_currents)):
             
                     yoko.do_set_current(detuned_currents[k])
@@ -541,23 +540,23 @@ if 1: # T1_FT1 (new)
                     from scripts.single_qubit import ssbspec
                     seq = sequencer.Trigger(250)        
                     spec = ssbspec.SSBSpec(qubit2_info, ssbspec_freqs, seq=seq, plot_seqs=False)
-                    spec.measure_keysight()
-                    drive_freq = SC_Qubit.get_frequency()
+                    spec.measure()
+                    drive_freq = SCqubit.get_frequency()
                     w_q[k] = ssbspec_freqs[np.argmin(spec.get_ys())]
                     plt.close()
                     time.sleep(1)
-                dig.set_naverages(2500)
+                alz.set_naverages(1500)
             for k in range(len(detuned_currents)):
                 yoko.do_set_current(detuned_currents[k])
                 time.sleep(.5)
-                ge2.set('deltaf', -373.237e6 + w_q[k])
+                ge2.set('deltaf', -353.3e6 + w_q[k])
                 
             
             
                 '''Do the T1 measurement and save the fit parameters'''
                 t1 = T1measurement.T1Measurement(qubit2_info, t1delays, double_exp=False, generate=True, plot_seqs=False,
                                                  proj_func='amplitude')
-                t1.measure_keysight()
+                t1.measure()
                 t1_results[j][k] = t1.fit_params['tau'].value/1000
                 t1_errs[j][k] = t1.fit_params['tau'].stderr/1000
                 plt.close()
@@ -572,7 +571,7 @@ if 1: # T1_FT1 (new)
             '''Do the FT1 measurement and save the fit parameters'''
             ft1 = FT1measurement.FT1Measurement(qubit_info, ef_info, ft1delays, generate=True,
                                                 proj_func='amplitude')
-            ft1.measure_keysight()
+            ft1.measure()
             ft1_result[j] = ft1.fit_params['tau'].value/1000
             ft1_err[j] = ft1.fit_params['tau'].stderr/1000
             plt.close()
@@ -580,7 +579,7 @@ if 1: # T1_FT1 (new)
             '''Do a T1 measurement at f_max'''
             t1 = T1measurement.T1Measurement(qubit_info, t1Bdelays, double_exp=False, generate=True, plot_seqs=False,
                                              proj_func='amplitude')
-            t1.measure_keysight()
+            t1.measure()
             t1B_result[j] = t1.fit_params['tau'].value/1000
             t1B_err[j] = t1.fit_params['tau'].stderr/1000
             plt.close()
@@ -602,7 +601,7 @@ if 1: # T1_FT1 (new)
 #        print('Average percent error on %.0f FT1 measurements was %.03f:' %(int(N), np.average(ft1_err/ft1_result)))
 #        print('Average percent error on %.0f T1(B) measurements was %.03f:' %(int(N), np.average(t1B_err/t1B_result)))
 #        
-        main_filepath = 'C:/Users/Wang_Lab/Documents/DRosenstock/t1ft1/full curve results/switching_flux/'
+        main_filepath = 'C:/Users/WangLabPC7/Documents/DRosenstock/t1ft1/'
         time_stamp = start_time + list(str(' to ')) + end_time
         save_filepath = main_filepath + ''.join(time_stamp) + '/'
             

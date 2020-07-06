@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 """
 Created on Tue Feb 18 17:34:58 2020
@@ -14,66 +15,85 @@ import os
 #fields = lin_power
 #j = 0
 fields = np.linspace(0, 0.05,26)
-
+ 
 def TwoModesFitting(params, fields, ws):
     wa_p = []
     wb_p = []
     for field in fields:
         H = np.array([[params['wa']-1j*params['wai'], 0,   params['ga'], params['ga2']], 
                       [0,  params['wb']-1j*params['wbi'], -params['ga'], params['ga2']],
-                      [params['ga'],-params['ga'],  params['wp'], 1j*field * params['k']],
-                      [params['ga2'],params['ga2'], -1j*field*params['k'], params['wn'] - 1j *params['wni']]])
+                      [params['ga'],-params['ga'],  params['wp'], 1j*field * params['k']+ params['g']],
+                      [params['ga2'],params['ga2'], -1j*field*params['k']+ params['g'], params['wn'] - 1j *params['wni']/2]])
     
     
     
         e,v =LA.eig(H)
-        if e[2] < e[3]:
-            wa_p.append(e[2])
-            wb_p.append(e[3])
+#        m = np.argmax(v[0])
+#        n = np.argmax(v[1])
+#        wa_p = 
+        if e[2] > 10.85 or e[3] > 10.85:
+            wb_p.append(min(e[2],e[3]))
+            wa_p.append(max(e[0],e[1]))
+        elif e[2] <10.8 or e[3] <10.8:
+            wb_p.append(min(e[1],e[0]))
+            wa_p.append(max(e[2],e[3]))
         else:
-            wa_p.append(e[3])
-            wb_p.append(e[2])
+            if e[2] < e[3]:
+                wa_p.append(e[2])
+                wb_p.append(e[3])
+            else:
+                wa_p.append(e[3])
+                wb_p.append(e[2])
             
     est1= np.concatenate((np.asarray(wa_p),np.asarray(wb_p)))
-#    est = np.concatenate((np.real(est1),-np.imag(est1)))
-    est = np.real(est1)
- 
-    return ws - est
+    est = np.concatenate((np.real(est1),-np.imag(est1)))
+#    est = np.real(est1)
+    off = ws - est
+#    print off
+    off[len(off)/2:] = off[len(off)/2:]/ws[len(off)/2:]
+    off[:len(off)/2] = off[:len(off)/2]/ws[len(off)/2:]
+    return off
 
 
 
 params = lmfit.Parameters()
-params.add('wa', value=10.811)
+params.add('wa', value=10.806)
 params.add('wb', value=10.811)
-params.add('wai', value=0.0015)
-params.add('wbi', value=0.0007)
-params.add('wp', value=10.619)#,vary = False)
-params.add('wn', value=10.9,max = 11.5)
-params.add('wni', value=0.3)
+params.add('wai', value=0.00, vary = False)
+params.add('wbi', value=0, vary = False)
+params.add('wp', value=10.719, max = 10.85)#,vary = False)
+params.add('wn', value=10.9)#,max= 11.5,min = 10.9)
+params.add('wni', value=0.6)
 params.add('ga', value=0.02)
 #params.add('gb', value=0.02)
 params.add('ga2', value=0.008)
 #params.add('gb2', value=0.008)
-params.add('k', value = 12)
+params.add('k', value = 8,vary = False)
+params.add('g',value = 0.01)
 
-omega_c = freq1[0]
-omega_c2 = freq2[0]
-omega_c_err =  freq1_err[0]
-omega_c2_err =  freq2_err[0]
-
+#omega_c = freq1[0]
+#omega_c2 = freq2[0]
+#omega_c_err =  freq1_err[0]
+#omega_c2_err =  freq2_err[0]
+data = np.loadtxt('C:\Users\WangLab\Documents\yingying\cavity freqs and kappas.txt')
+data = data*1e9
+data[len(data)/2:]=data[len(data)/2:]/2
 #data = np.concatenate((omega_c/1e9, omega_c2/1e9,kappa_a/1e9,kappa_a2/1e9))
-data = np.concatenate((freq1[0], freq2[0]))
-result = lmfit.minimize(TwoModesFitting, params, args=(fields, data))
+#data = np.concatenate((freq1[0], freq2[0]))
+result = lmfit.minimize(TwoModesFitting, params, args=(fields, data/1e9))
 lmfit.report_fit(result.params)
+omega_c = data[0:26]
+omega_c2 = data[26:52]
+kappa_a = data[52:78]
+kappa_a2 = data[78:104]
 
-
-pl.figure()
-pl.errorbar(fields, omega_c/1e9, yerr =omega_c_err/1e9, fmt ='o', label='data')
-pl.errorbar(fields, omega_c2/1e9, yerr =omega_c2_err/1e9, fmt ='o', label='data')
-pl.plot(fields, -TwoModesFitting(result.params, fields, 0)[0:len(fields)],label = 'fitting')
-pl.plot(fields, -TwoModesFitting(result.params, fields, 0)[len(fields):2*len(fields)],label = 'fitting')
-pl.ylabel('frequency(GHz)')
-pl.legend(loc='upper right')
+#pl.figure()
+#pl.errorbar(fields, omega_c/1e9, yerr =omega_c_err/1e9, fmt ='o', label='data')
+#pl.errorbar(fields, omega_c2/1e9, yerr =omega_c2_err/1e9, fmt ='o', label='data')
+#pl.plot(fields, -TwoModesFitting(result.params, fields, np.zeros(len(data)))[0:len(fields)],label = 'fitting')
+#pl.plot(fields, -TwoModesFitting(result.params, fields, np.zeros(len(data)))[len(fields):2*len(fields)],label = 'fitting')
+#pl.ylabel('frequency(GHz)')
+#pl.legend(loc='upper right')
 
 
 
@@ -81,19 +101,51 @@ pl.legend(loc='upper right')
 #pl.figure()
 #pl.errorbar(fields, kappa_a/1e9, yerr = kappa_a_err/1e9, fmt ='o', label='kappa_tot data')
 #pl.errorbar(fields, kappa_a2/1e9, yerr = kappa_a2_err/1e9, fmt ='o')
-#pl.plot(fields, -TwoModesFitting(result.params, fields, 0)[2*len(fields):3*len(fields)],label = 'fitting')
-#pl.plot(fields, -TwoModesFitting(result.params, fields, 0)[3*len(fields):4*len(fields)],label = 'fitting')
+#pl.plot(fields, -TwoModesFitting(result.params, fields, np.zeros(len(data)))[2*len(fields):3*len(fields)]/5,label = 'fitting')
+#pl.plot(fields, -TwoModesFitting(result.params, fields, np.zeros(len(data)))[3*len(fields):4*len(fields)]/5,label = 'fitting')
 #pl.ylabel('linewidth(MHz)')
 #pl.legend(loc='upper right')
 
 
 
+w1 = []
+w2 = []
+w3 = []
+w4 = []
+
+for field in fields:
+    H = np.array([[result.params['wa'].value-1j*result.params['wai'].value, 0,   result.params['ga'].value, result.params['ga2'].value], 
+                  [0,  result.params['wb'].value-1j*result.params['wbi'].value, -result.params['ga'].value, result.params['ga2'].value],
+                  [result.params['ga'].value,-result.params['ga'].value,  result.params['wp'].value, 1j*field *result.params['k'].value+ result.params['g'].value],
+                  [result.params['ga2'].value,result.params['ga2'].value, -1j*field*result.params['k'].value+ result.params['g'].value, result.params['wn'].value - 1j *result.params['wni'].value/2]])
 
 
 
+    e,v =LA.eig(H)
+    w1.append(e[0])
+    w2.append(e[1])
+    w3.append(e[2])
+    w4.append(e[3])
+    
+pl.figure()
+#pl.errorbar(fields, omega_c/1e9, yerr =omega_c_err/1e9, fmt ='o', label='data')
+#pl.errorbar(fields, omega_c2/1e9, yerr =omega_c2_err/1e9, fmt ='o', label='data')
+pl.scatter(fields, omega_c/1e9, label='data')
+pl.scatter(fields, omega_c2/1e9,  label='data')
+pl.plot(fields, np.real(w1))
+pl.plot(fields, np.real(w2))
+pl.plot(fields, np.real(w3))
+pl.plot(fields, np.real(w4))
 
-
-
+pl.figure()
+#pl.errorbar(fields, kappa_a/1e9, yerr = kappa_a_err/1e9, fmt ='o', label='kappa_tot data')
+#pl.errorbar(fields, kappa_a2/1e9, yerr = kappa_a2_err/1e9, fmt ='o')
+pl.scatter(fields, kappa_a/1e9,  label='kappa_tot data')
+pl.scatter(fields, kappa_a2/1e9,)
+pl.plot(fields, -np.imag(w1))
+pl.plot(fields, -np.imag(w2))
+pl.plot(fields,- np.imag(w3))
+pl.plot(fields,- np.imag(w4))
 
 '''
 k = 12    
@@ -233,4 +285,5 @@ pl.plot(off)
 #pl.plot(deltalist,-np.imag(wa_p),label = ' mode b') 
 #pl.plot(deltalist,-np.imag(wb_p)+0.0012,label = 'imag\n mode a')
 #pl.plot(deltalist,-np.imag(wa_p)+0.0012,label = ' mode b') 
+
 '''

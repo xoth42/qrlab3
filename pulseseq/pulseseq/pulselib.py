@@ -384,6 +384,7 @@ class DetunedGaussians(DetunedSum):
             amp = area / np.sqrt(np.pi) / self.sigma
         super(DetunedGaussians, self).add(amp, period, phases)
 
+
 class DetunedGaussSquare(object): # JEFF 
     '''
     Makes detuend gauss square pusles. Works like the detuned gauss but with a

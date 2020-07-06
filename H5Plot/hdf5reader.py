@@ -4,7 +4,7 @@ if 0:
     os.system(r'C:\qrlab\start.bat')
     time.sleep(1)
 
-from pulseseq import sequencer, pulselib
+#from pulseseq import sequencer, pulselib
 #from scripts.single_qubit import rabi
 from scripts.single_cavity import WignerbyParity
     
