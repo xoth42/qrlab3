@@ -11,7 +11,7 @@ def analysis(meas, data=None, fig=None):
     xs, ys = meas.get_plotxsys()
     ax = fig.axes[0]
     plt.sca(ax)
-    pc = ax.pcolormesh(xs, ys, zs)
+    pc = ax.pcolormesh(xs, ys, zs, cmap=plt.get_cmap('RdBu'))
     fig.colorbar(pc)
 
     ax.set_xlim(xs.min()), xs.max()
@@ -24,18 +24,21 @@ class QFunction(Measurement2D):
 
     def __init__(self, qubit_info, cav_info,
                  amax=None, N=None, amaxx=None, Nx=None, amaxy=None, Ny=None,
-                 seq=None, postseq=None, delay=0, saveas=None, bgcor=False, Qswitch_infoA=None, Qswitch_infoB=None, **kwargs):
+                 seq=None, postseq=None, delay=0, saveas=None, bgcor=False, Qswitch_infoA=None, Qswitch_infoB=None, 
+                 cav_switch=None, **kwargs):
         self.qubit_info = qubit_info
         self.cav_info = cav_info
         self.QswA = Qswitch_infoA
         self.QswB = Qswitch_infoB
         if seq is None:
-            seq = Trigger(250)
+            seq = Trigger(500)
         self.seq = seq
         self.postseq = postseq
         self.delay = delay
         self.saveas = saveas
         self.bgcor = bgcor
+        self.cav_switch = cav_switch
+
 
         if amaxx is not None:
             xs = np.linspace(-amaxx, amaxx, Nx)
@@ -73,8 +76,16 @@ class QFunction(Measurement2D):
             for i_bg in range(2):
                 if i_bg == 1 and not self.bgcor:
                     continue
-
-                s.append(Join([self.seq, c(np.abs(alpha), np.angle(alpha))]))
+                
+                s.append(self.seq)
+                
+                if self.cav_switch is not None:
+                    s.append(Constant(500, 1, chan=self.cav_switch))
+                    s.append(Combined([c(np.abs(alpha), np.angle(alpha)),
+                                       Constant(int(self.cav_info.w*4), 1, chan=self.cav_switch)]))
+                else:
+                    s.append(c(np.abs(alpha), np.angle(alpha)))
+                
                 if i_bg == 0:
                     s.append(rs(np.pi, X_AXIS))
 
@@ -88,6 +99,10 @@ class QFunction(Measurement2D):
                 ]))
                 s.append(Delay(800))
                 
+                
+
+                    
+            '''  
             if self.QswA is not None or self.QswB is not None:
                 s.append(Repeat(Delay(1000), 30))   # wait for alazar acquisition to finish
                 s.append(Combined([
@@ -98,6 +113,7 @@ class QFunction(Measurement2D):
                     Repeat(Constant(7000, 1, chan='1m1'), 100),     # Readout pump tone switch
                     Repeat(Constant(7000, 0.0001, chan=5), 100),         # Qubit/Readout master switch
                     ]))
+            '''
 
         s = self.get_sequencer(s)
 #        import cProfile

@@ -108,7 +108,7 @@ class ROCavSpectroscopy(Measurement1D):
             Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
         ]))
     
-        s.append(Delay(1000))
+        s.append(Delay(1500)) # Chen 5/4 to battle with the minimum pulse length requirement of 2000
 
 
         s = self.get_sequencer(s)
@@ -140,7 +140,7 @@ class ROCavSpectroscopy(Measurement1D):
             phases = []
 
             for ifreq, freq in enumerate(self.freqs):
-                self.readout_info.rfsource1.set_frequency(freq)
+                self.readout_info.rfsource1.do_set_frequency(freq)
                 self.readout_info.rfsource2.set_frequency(freq+50e6)
                 time.sleep(.5)
                 

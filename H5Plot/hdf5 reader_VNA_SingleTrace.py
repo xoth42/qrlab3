@@ -24,6 +24,7 @@ from matplotlib import gridspec
 filepath = 'C:\_Data\\'
 #hdf5_name = 'VNAtestJan30.hdf5'
 #hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
+
 hdf5_name = '0626cooldown_circualtor_VNA - Copy.hdf5'
 #hdf5_name = '0612cooldown_FMR - Copy.hdf5'
 date = '20200629'
@@ -31,12 +32,15 @@ time = '231307'
 experiment = 'SingleTrace'
 #experiment = 'SingleTraceNoAsync'
 
+
 fit_S12 = False
 fit_S11 = False
 fit_S12_two_modes = False
+
 fit_S12_two_modes_V2 = False
 fit_S12_two_modes_V3= False
 fit_S12_three_modes= True
+
 fft = False
 subtract = False
 if subtract:
@@ -45,7 +49,9 @@ if subtract:
     date_s = '20190815'
     time_s = '161707'
     experiment_s = 'SingleTrace'
+
 #    experiment_s = 'SingleTraceNoAsync'
+
 def S21(params, x, y):
     est = np.sqrt(params['kappa_prod'])/(-1j*(x-params['omega_c'])-(params['kappa_a'])/2.0 )
     if np.max(np.abs(y)) < limit_for_off:
@@ -79,6 +85,7 @@ def S21_two_modes_V2(params, x, y):
     est = est * np.exp(1j*params['phi'])
 
     return np.sqrt((y.real - est.real)**2 + (y.imag - est.imag)**2)
+
     #np.abs(y) - np.abs(est)
     #np.sqrt((y.real - est.real)**2 + (y.imag - est.imag)**2)
 def S21_two_modes_V3(params, x, y):
@@ -97,6 +104,7 @@ def S21_three_modes(params, x, y):
     est = est + np.sqrt(params['kappa_prod3'])/(-1j*(x-params['omega_c3'])-(params['kappa_a3'])/2.0 ) * np.exp(1j*(params['phi31']+params['phi1']))
 
     return np.sqrt((y.real - est.real)**2 + (y.imag - est.imag)**2) 
+
     
 limit_for_off =1
 
@@ -166,6 +174,8 @@ fig.axes[0].plot(freq[0]/1e9,mag[0])
 
 freqs = freq[0]
 
+
+
 #
 #freqs = freqs[0:1500]
 #datas = datas[0][0:1500]
@@ -214,6 +224,7 @@ if fit_S12_two_modes:
     if np.max(np.abs(datas)) < limit_for_off:
         params.add('roff',value = 0)#,vary = False)
         params.add('ioff',value = 0)#, vary = False)
+
     params.add('phi',value = 1.5, max = np.pi, min = -np.pi)#,vary = False)
             
 
@@ -343,9 +354,18 @@ if fit_S12_three_modes:
     fig.axes[0].plot(freqs/float(1e9), np.abs(fitdata),'--' )
     fig.axes[1].plot(fitdata.real,fitdata.imag, '--')
 if fit_S12 or fit_S11 or fit_S12_two_modes or fit_S12_two_modes_V2 :
+
     fig.axes[0].plot(freqs/float(1e9), fitdatadB,'--' )
     fig.axes[1].plot(fitdata.real,fitdata.imag, '--', label = 'total Q = %s\n kappa_tot = %sMHz'%(result.params['omega_c'].value/result.params['kappa_a'].value, result.params['kappa_a'].value/1e6))
-
+    fig.axes[1].plot(fitdata.real[0:len(fitdata)/2],fitdata.imag[0:len(fitdata)/2], '--')
+    fig.axes[1].plot(datas[0].real[0:len(fitdata)/2],datas[0].imag[0:len(fitdata)/2])
+    if fit_S12_two_modes_V2:
+         fig.axes[0].plot(freqs/float(1e9), fitdatadB1,'--' )
+         fig.axes[0].plot(freqs/float(1e9), fitdatadB2,'--' )
+         
+    if fit_S12_two_modes_V3:
+         fig.axes[1].plot(fitdata1.real,fitdata1.imag)
+         fig.axes[1].plot(fitdata2.real,fitdata2.imag )
 #    pl.xlabel('freq(GHz)')
 
 fig.axes[1].set_aspect('equal', 'box')
@@ -359,5 +379,7 @@ if fft:
     pl.figure()
     pl.loglog(np.abs(FFT)**2,'.')
     pl.show()
+
     
     
+

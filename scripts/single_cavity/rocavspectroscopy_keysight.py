@@ -9,15 +9,20 @@ from lib.math import fit
 import objectsharer as objsh
 import time
 import numpy as np
+import os
+import config
 
 SPEC   = 0
 POWER  = 1
 
-def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, ax=None):
+def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, square_amps=True, ax=None):
     if ax is None:
         ax = plt.figure().add_subplot(111)
     ax2 = ax.twinx()
 
+    if square_amps:
+        ampdata = ampdata[:]**2
+        
     if plot_type == SPEC:
         for ipower, power in enumerate(powers):
             ax.plot(freqs/1e6, ampdata[ipower,:], label='Power %.02f dB'%power)
@@ -31,20 +36,35 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, ax=None):
         pos = fs[np.argmax(amps)]
         p0 = [np.min(amps), w0*h0, pos, w0]
         p = f.fit(p0)
-        txt = 'Center = %.03f MHz' % (p[2]/1e6,)
+        txt = 'Center = %.03f MHz, FWHM = %.03f MHz, off = %.03f' % (p[2]/1e6, p[3]/1e6, p[0])
         print 'Fit gave: %s' % (txt,)
 #        plt.plot(fs/1e6, f.func(p, fs), label=txt)
-
+        ax.plot(fs/1000000, p[0] + p[1]/np.pi *(p[3]/2/((fs-p[2])**2 + (p[3]/2)**2)), '--',label = 'freq = %s MHz\n kappa = %s MHz'%(p[2]/1e6,p[3]/1e6))
+        ax2.plot(fs/1000000, p[0] + p[1]/np.pi *(p[3]/2/((fs-p[2])**2 + (p[3]/2)**2)), '--',label = 'freq = %s MHz\n kappa = %s MHz'%(p[2]/1e6,p[3]/1e6))
+#yingying add fitting plot
         plt.legend()
         plt.ylabel('Intensity [AU]')
         plt.xlabel('Frequency [MHz]')
-        
+        ## Yingying add it to save the figure 
+        fn = os.path.join(config.datadir, 'images/%s_cavspecamp.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
+        fdir = os.path.split(fn)[0]
+        if not os.path.isdir(fdir):
+            os.makedirs(fdir)
+        kwargs = dict()
+        plt.savefig(fn, **kwargs)
         plt.figure()
         for ipower, power in enumerate(powers):
             plt.plot(freqs/1e6, phasedata[ipower,:], label='Power %.02f dB'%power)
         plt.ylabel('Phase Angle')
         plt.xlabel('Frequency [MHz]')
-
+        ## Yingying add it to save the figure 
+        fn = os.path.join(config.datadir, 'images/%s_cavspecphase.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
+        fdir = os.path.split(fn)[0]
+        if not os.path.isdir(fdir):
+            os.makedirs(fdir)
+        kwargs = dict()
+        plt.savefig(fn, **kwargs)
+        return p
     if plot_type == POWER:
 #        ax1 = f.add_subplot(2,1,1)
 #        ax2 = f.add_subplot(2,1,2)
@@ -57,6 +77,13 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, ax=None):
         ax2.set_ylabel('Angle [deg]')
         ax.set_xlabel('Power [dB]')
         ax2.set_xlabel('Power [dB]')
+## Yingying add it to save the figure        
+        fn = os.path.join(config.datadir, 'images/%s_cavspec.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
+        fdir = os.path.split(fn)[0]
+        if not os.path.isdir(fdir):
+            os.makedirs(fdir)
+        kwargs = dict()
+        plt.savefig(fn, **kwargs)
 
 class ROCavSpectroscopy_keysight(Measurement1D):
 
@@ -102,9 +129,13 @@ class ROCavSpectroscopy_keysight(Measurement1D):
 #            ]))
 
         s.append(Combined([
-            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+            Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
+            Join([Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),Delay(200)]),
         ]))
+#        s.append(Combined([
+#            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+#        ]))
 
 #        s.append(Combined([
 #            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.acq_chan)),
@@ -230,4 +261,5 @@ class ROCavSpectroscopy_keysight(Measurement1D):
     def analyze(self, data=None, ax=None):
         pax = ax if (ax is not None) else plt.figure().add_subplot(111)
         ampdata = data if (data is not None) else self.ampdata
-        analysis(self.powers, self.freqs, ampdata, self.phasedata, self.plot_type, ax=pax)
+        self.fit_params = analysis(self.powers, self.freqs, ampdata, self.phasedata, self.plot_type, ax=pax)
+#Yingying add return fitting params

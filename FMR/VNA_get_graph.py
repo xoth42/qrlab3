@@ -19,11 +19,14 @@ VNA = instruments['VNA']
 
 import matplotlib.pyplot as pl 
 date = datetime.datetime.now()
-
-filename = '%sdB_%s_%s_%s'%(VNA.get_power(),date.hour,date.minute,date.second)
+Sij = 'S11'
+VNA.set_s_param(Sij)
+filename = '%s_%s_%s_%s'%(Sij,date.hour,date.minute,date.second)
 
 print filename
+
 newpath = r'C:\Users\WangLab\Documents\\yingying\\0612cooldown\\%s.txt'%(filename)
+
 
 
 if not os.path.exists(os.path.dirname(newpath)):
@@ -31,6 +34,9 @@ if not os.path.exists(os.path.dirname(newpath)):
     os.makedirs(os.path.dirname(newpath))
 
 data = VNA.do_get_yaxes()
+
+fm = VNA.get_format() 
+
 axis = VNA.do_get_xaxis()
 
 pl.figure()
@@ -42,7 +48,8 @@ elif axis[len(axis) - 1] > 10 **6:
     pl.xlabel('frequency(MHZ)')
 
 
-pl.plot(xaxis, data[0], label = filename[0:7])
+pl.plot(xaxis, data[0], label = filename[0:-8] + fm)
+pl.savefig('C:\Users\wanglab\Documents\juliang\%s.png'%(filename))
 
 pl.ylabel('')
 pl.show()

@@ -121,9 +121,11 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
     fig.axes[1].plot( datas.real, datas.imag)
 #    fig.axes[1].plot( datas.real[0:100], datas.imag[0:100])
     if fit_S12:
+
         fig.axes[1].plot(fitdata.real,fitdata.imag, '--',label = 'total Q = %s\n kappa_tot = %sMHz\n freq = %sGHz'%(result.params['omega_c'].value/result.params['kappa_a'].value, result.params['kappa_a'].value/1e6, result.params['omega_c'].value/1e9))
 #        fig.axes[1].plot(fitdata.real[0:100],fitdata.imag[0:100], '--')
     
+
     if fit_S11:
         fig.axes[1].plot(fitdata.real,fitdata.imag, '--',label = 'total Q = %s\n coupling Q = %s\n internal Q = %s\n freq = %sGHz'%(result.params['omega_c'].value/result.params['kappa_a'].value, result.params['omega_c'].value/result.params['kappa_1'].value, q_i,result.params['omega_c'].value/1e9))
     plt.xlabel('I')

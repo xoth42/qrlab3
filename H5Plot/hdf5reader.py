@@ -4,7 +4,7 @@ if 0:
     os.system(r'C:\qrlab\start.bat')
     time.sleep(1)
 
-from pulseseq import sequencer, pulselib
+#from pulseseq import sequencer, pulselib
 #from scripts.single_qubit import rabi
 from scripts.single_cavity import WignerbyParity
     
@@ -19,9 +19,9 @@ import json
 
 ''' Path to the .hdf5 file '''
 filepath = 'C:/_Data/'
-hdf5_name = 'LabTransmonOct8.hdf5'
-date = '20181231'
-time = '071234'
+hdf5_name = 'April9Fluxonium.hdf5'
+date = '20190621'
+time = '152837'
 experiment = 'WignerFunction'
 
 ''' Primary x axis and secondary if 2d'''
@@ -37,7 +37,6 @@ y_keys.remove(x_key)
 #y_keys.remove(x2_key)
 
 
-    
 qubit_info = mclient.get_qubit_info('qubit1ge')
 ef_info = mclient.get_qubit_info('qubit1ef')
 #qubit2_info = mclient.get_qubit_info('qubit2tone')
@@ -53,11 +52,12 @@ cavity_infoB = mclient.get_qubit_info('cavityBob')
 #qubit_info = mclient.get_qubit_info('qubit1ge')
     
 tr = WignerbyParity.WignerFunction(qubit_info, ef_info, cavity_infoB, t_ge=300, t_gf=0,
-                                         amax=1.0, N=11, amaxx=None, Nx=None, amaxy=None, Ny=None,
+                                         amax=1.75, N=15, amaxx=None, Nx=None, amaxy=None, Ny=None,
                                          seq=None, delay=5, saveas=None, bgcor=False)
 tr.displacements = exp[x_key].value
-data = exp['avg_pp'].value[::2] - exp['avg_pp'].value[1::2]
-data /= 80
+data = exp['avg_pp'].value
+#data = exp['avg_pp'].value[::2] - exp['avg_pp'].value[1::2]
+#data /= 80
 tr.avg_data = exp['avg']
 tr.analyze(data = data)
 

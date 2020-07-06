@@ -159,8 +159,10 @@ class Magnet_Sweep_VNA(Measurement1D):
         for ifield, field in enumerate(self.fields):
                
             Magnet.do_set_field(field)
+
             
             time.sleep(10)
+
             if ifield == 0 or self.dfields > 0.005:
                 try:
                     while not abs(float(Magnet.do_get_field()) - field) < 0.0005:

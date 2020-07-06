@@ -237,7 +237,7 @@ class ObjectSharer(object):
         self.backend = backend
 
     def interact(self, delay=DEFAULT_TIMEOUT, wait_for=None):
-        self.backend.main_loop(delay=delay, wait_for=wait_for)
+        self.backend.main_loop(delay=delay, wait_for=wait_for, origin=1)
 
     def call(self, client, obj_name, func_name, *args, **kwargs):
         is_signal = kwargs.get(OS_SIGNAL, False)
@@ -270,7 +270,7 @@ class ObjectSharer(object):
         if async:
             return async_reply
 
-        ret = self.backend.main_loop(delay=timeout, wait_for=async_reply)
+        ret = self.backend.main_loop(delay=timeout, wait_for=async_reply, origin=2)
 
         if ret:
             val = async_reply.get()
@@ -998,7 +998,7 @@ class ZMQBackend(object):
         if addr not in self.addr_to_uid_map:
             logger.debug('Waiting for hello reply from server...')
             hello = AsyncHelloReply(addr)
-            self.main_loop(delay=delay, wait_for=hello)
+            self.main_loop(delay=delay, wait_for=hello, origin=7)
             if not hello.is_valid():
                 raise TimeoutError('Connection to %s timed out; no reply received' % addr)
 
@@ -1097,6 +1097,9 @@ class ZMQBackend(object):
             endtime = None
         else:
             endtime = start + delay / 1000.0
+            
+#        print("inside main_loop(), delay = " + str(delay) + "\n start = " 
+#              + str(start) + ", endtime = " + str(endtime) + ", origin = " + str(origin))
 
             
         # Convert wait_for to a list
@@ -1114,7 +1117,7 @@ class ZMQBackend(object):
         poller.register(self.srv, flags=zmq.POLLIN)
         
         while True:
-
+#            print("at top of while loop")
             # Set curdelay based on end time
             if endtime is not None:
                 curdelay = endtime - time.time()
@@ -1144,7 +1147,7 @@ class ZMQBackend(object):
             try:
                 info = pickle.loads(msgs[1])
             except Exception, e:
-
+            
                 logger.warning('Unable to decode object: %s %s', str(e), msgs[1].decode('string_escape'))
 
                 return
@@ -1171,6 +1174,7 @@ class ZMQBackend(object):
                     return True
 
             # Check whether we timed out
+            logger.debug('Bottom of while loop, checking for timeouts: %s %s', str(endtime), str(time.time())) #DARIO 5/24/19 debugging "hanging" alazar crash
             if endtime is not None and time.time() >= endtime:
                 return False
                 

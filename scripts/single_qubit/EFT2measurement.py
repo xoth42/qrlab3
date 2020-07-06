@@ -115,7 +115,7 @@ def analysis(meas, data=None, fig=None):
         params3.add('tau', value=params['tau'].value, min=10, max=200000)
         params3.add('freq', value=params['freq'].value, min=0)
         params3.add('phi1', value=params['phi0'].value, min=-1.2*np.pi, max=1.2*np.pi)
-        params3.add('amp2', value=result.params['amp'].value, min=0)
+        params3.add('amp2', value=result.params['amp'].value, min=0.05)
         params3.add('tau2', value=result.params['tau'].value, min=10, max=200000)
         params3.add('freq2', value=result.params['freq'].value, min=0)
         params3.add('phi2', value=result.params['phi0'].value, min=-1.2*np.pi, max=1.2*np.pi)
@@ -254,7 +254,7 @@ class EFT2Measurement(Measurement1D):
             angle = dt * 1e-9 * self.detune * 2 * np.pi
 #            s.append(Pad(r_ef(np.pi/2, angle), 250, PAD_RIGHT))
 #            s.append(Pad(r_ge(np.pi, X_AXIS), 250, PAD_RIGHT))
-            s.append(Join([r_ef(np.pi/2, angle), r_ge(np.pi, X_AXIS)]))
+            s.append(Join([r_ef(-np.pi/2, angle), r_ge(-np.pi, X_AXIS)]))
 
             if self.postseq:
                 s.append(self.postseq)
@@ -262,7 +262,7 @@ class EFT2Measurement(Measurement1D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
-            s.append(Delay(4000))
+            s.append(Delay(10000))
 
         s = self.get_sequencer(s)
         seqs = s.render()

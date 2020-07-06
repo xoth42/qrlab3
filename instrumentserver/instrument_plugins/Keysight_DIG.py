@@ -22,7 +22,7 @@ class Keysight_DIG(Instrument):
 
 
 
-    def __init__(self, name, chassis=0, slot=3, DIG_PRODUCT = "M3102A", trigger_period = 200, trigger_only = False, awg_list = [7, 8, 10], 
+    def __init__(self, name, chassis=0, slot=3, DIG_PRODUCT = "M3102A", trigger_period = 200, trigger_only = False, awg_list = [7, 8, 9, 10], 
                  nsamples=1000, naverages = 1000, **kwargs):
         super(Keysight_DIG, self).__init__(name)
         self._timeout = DEFAULT_TIMEOUT
@@ -37,6 +37,7 @@ class Keysight_DIG(Instrument):
         self._interrupt = False
         self._capturing = False
         self._awg_list = awg_list #DARIO 1/31 dynamic slot assignment
+        self._trigger_only = trigger_only
         
         self._name = name
         self._chassis = chassis
@@ -354,9 +355,10 @@ class Keysight_DIG(Instrument):
         return self._trigger_period
     
     def do_set_trigger_period(self, trigger_period):
-        self._trigger_period = trigger_period
-        self._hvi = self.load_hvi()
-        
+        self.__init__(self._name, chassis = self._chassis, slot = self._slot, 
+                      trigger_period = trigger_period, trigger_only = self._trigger_only,
+                      naverages = self._naverages, nsamples = self._nsamples,
+                      awg_list = self._awg_list)
 
     ###############################################
     # Acquizition Methods
@@ -488,6 +490,7 @@ class Keysight_DIG(Instrument):
         avgs = np.zeros(self._npoints, dtype = np.complex64)
                 
         self._capturing = True 
+        self.set_interrupt(False)
         self.emit('start-capture')
         for i in range(self._ntransfers):
 #            print('Acquiring %d/%d', i+1, self._ntransfers)

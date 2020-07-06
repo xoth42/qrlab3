@@ -19,7 +19,7 @@ def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
     xs = meas.delays
 
-    fig.axes[0].plot(xs/1e3, ys, 'ks', ms=3)
+    fig.axes[0].plot(xs/1e3, ys, 'ks', ms=3, linestyle='-', markerfacecolor='red' )
 
     if meas.double_exp == False:
         params = lmfit.Parameters()
@@ -30,12 +30,15 @@ def analysis(meas, data=None, fig=None):
 #        lmfit.report_fit(params)
 #        result2 = lmfit.minimize(exp_decay, result.params, args=(xs,ys))
         lmfit.report_fit(result.params)
-
+       
         fig.axes[0].plot(xs/1e3, -exp_decay(result.params, xs, 0), label='Fit, tau = %.03f us +/- %.03f us '%(result.params['tau'].value/1000.0, result.params['tau'].stderr/1000.0))
         fig.axes[0].legend(loc=0)
         fig.axes[0].set_ylabel('Intensity [AU]')
         fig.axes[0].set_xlabel('Time [us]')
         fig.axes[1].plot(xs, exp_decay(result.params, xs, ys), marker='s')
+
+
+
 
     else:
         params = lmfit.Parameters()

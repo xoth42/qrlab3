@@ -12,6 +12,7 @@ import time
 VNA = mclient.instruments['VNA']
 Magnet = mclient.instruments['Magnet']
 
+
 Yoko = mclient.instruments['Yoko']
 
 VNA.set_timeout(40000)
@@ -25,6 +26,7 @@ if 0: #sweep current Yoko and get 2D plot
     
     ro = VNA_current_sweep_yoko.Current_Sweep_VNA(currents = np.linspace(-0.1,0.1,201), freqs = np.linspace(8e9, 12e9, 1601),
                                                    average_factor =1, avelimit = 1,if_bandwidth = 1000, Sij =['S21','S12'],fig_name ='circulator port 3 and port 1(weak pins) ',comment = '')
+
     ro.measure()
     pl.show()
     bla
@@ -34,6 +36,7 @@ if 0: #sweep current Yoko and get 2D plot
 # watch out for current_sweep_varies_freq_VNA edits
 if 0: #sweep current and changing frequency
     from scripts.single_cavity import current_sweep_varies_freq_VNA
+
 
     swept_parameter =  np.linspace(0,19,20)
 #    center_freq = 27.74* (a - 0.31) + 8.414
@@ -110,6 +113,7 @@ if 0: #sweep  field ranges and get 2D plot
 
 
     
+
 if 0: #sweep power and get 2D plot
 #    time.sleep(500)
 #    Magnet.do_set_PSwitch(0)
@@ -139,6 +143,7 @@ if 0: #sweep power and get 2D plot
         print (np.sum(average_factor)*1.5 + len(power)*10)/3600
         ro = power_sweep_VNA.Power_Sweep_VNA(powers = power, freqs = np.linspace(swept_frequency[i][0],swept_frequency[i][1] , 1601),
                                                        average_factor = average_factor, avelimit = 10,if_bandwidth =1000, Sij =['S21'],fig_name ='0T S32 power sweep',comment = '')
+
         ro.measure()
         pl.show()
     bla
@@ -159,7 +164,9 @@ if 0:
     VNA.set_power(-34)
     powers = [4,3,2,1,0,-1,-2,-3,-4]
     
+
     drive_freqs = np.linspace(5.478e9,5.49e9,25)
+
 
     for power in powers: 
         SC_qubit2FWM.set_power(power)
@@ -195,12 +202,14 @@ if 0: #sweep power and changing frequency
 
 
 
-if 1: #get single trace from VNA, for long meaasurements
+if 0: #get single trace from VNA, for long meaasurements
     from scripts.single_cavity import VNA_single_trace_V2
+
     center_freq = 10.80e9
     half_span = 50e6
     ro = VNA_single_trace_V2.SingleTrace(freqs = np.linspace(center_freq - half_span, center_freq + half_span, 401), 
                                          average_factor =2000, avelimit = 50, if_bandwidth = 1000, fit_S12 = 1, fit_S11 =0)
+
     ro.measure()
     pl.show()
     bla 
@@ -236,7 +245,7 @@ if 0: #get single trace from VNA, for long meaasurements
         pl.legend()
     bla 
 
-if 0: #get single trace from VNA, withoout waiting, just take screenshot and fit it.
+if 1: #get single trace from VNA, withoout waiting, just take screenshot and fit it.
     from scripts.single_cavity import VNA_single_trace_V2
     
     freqs = VNA.do_get_xaxis()

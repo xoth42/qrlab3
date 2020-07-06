@@ -10,12 +10,25 @@ def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
     xs = meas.detunings
 
-    
+    if np.max(ys) - np.min(ys)>300:# and meas.proj_func is 'phase':
+
+        for iphase in range(len(ys)):
+            if ys[iphase] > 0:
+                ys[iphase] = ys[iphase] -360    
     
     f= fit.Lorentzian(xs, ys)
-    h0 = np.min(ys)/2.0
-    w0 = 2e6
-    pos = xs[np.argmin(ys)]
+#    f= fit.Gaussian(xs, ys)
+    if np.max(ys) + np.min(ys) < 2 * np.average(ys):
+#    if 1:
+        
+        h0 = -(np.max(ys)-np.min(ys))/2
+        w0 = 1e6
+        pos = xs[np.argmin(ys)]
+    else:
+        h0 = (np.max(ys)-np.min(ys))/2
+        w0 = 1e6
+        pos = xs[np.argmax(ys)]     
+#    pos = xs[np.argmax(ys)]
     p0 = [np.mean(ys), w0*h0, pos, w0]
     p=f.fit(p0)
     txt = 'Center = %.03f MHz' % (-p[2]/1e6,)

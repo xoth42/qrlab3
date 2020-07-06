@@ -51,6 +51,8 @@ class AMI_430(Instrument):
     
     def do_set_field(self, field):
         self.field = field
+        if self.field > 0.1:
+            raise ValueError('setting field larger than 0.1T')
         self.ser.write('CONFigure:FIELD:TARGet %s;'%(field)) #sets field target
         self.ser.write('RAMP;') #tells magnet to go to the target
 #        try:
@@ -98,6 +100,8 @@ class AMI_430(Instrument):
         
     def IDN(self):
         self.ser.write('*IDN?;')
+
         self.IDN = self.ser.read(size = 20)
         
         return self.IDN
+

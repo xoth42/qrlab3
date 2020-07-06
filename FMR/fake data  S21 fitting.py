@@ -8,8 +8,8 @@ import numpy as np
 import matplotlib.pyplot as pl
 import lmfit
 
-kappa_1 = 1e5
-kappa_2 = 1e5
+kappa_1 = 1e6
+kappa_2 = 1e6
 omega_c = 8.5e9
 kappa_a = 1.5e6
 g = 20e6
@@ -31,9 +31,11 @@ def S21(params, x, y):
 #    np.sqrt((y.real - est.real)**2 + (y.imag - est.imag)**2)
 #x = np.arange(7.5e9, 8.5e9, 0.00001e9)
 
+
 m_lst = np.arange(8.5e9,8.6e9,0.2e9)
 span1 = 2e8
 span = 30e6
+
  
     
 line=np.empty(len(m_lst))
@@ -57,6 +59,7 @@ for omega_fmr in m_lst:
     print omega_fmr
     print x[np.argmax(abs(y))]
     omega_fmr1 = x[np.argmax(abs(y))]
+
     x = np.linspace(omega_fmr1 - span/2, omega_fmr1 + span/2,401)
     y = np.sqrt(kappa_1 *kappa_2)/(1j*(x-omega_c)-kappa_a/2 +g**2/(1j*(x-omega_fmr)-kappa_fmr/2))
 #    y_bg = np.sqrt(kappa_1 *kappa_2)/(1j*(x-omega_c)-kappa_a/2)
@@ -90,20 +93,22 @@ for omega_fmr in m_lst:
     #            *(1-result.params['Asym'].value*(x-result.params['omega_c'].value)/(result.params['kappa_a'].value/2.0))
     
 #    pl.figure()
+
     pl.subplot(121)
     pl.plot(x,np.abs(y))
-    pl.plot(x, np.abs(y1),'--')
+#    pl.plot(x, np.abs(y1),'--')
     
     
     pl.subplot(122)
     pl.plot(y.real,y.imag)
     pl.ylabel('Q')
     pl.xlabel('I')
-    pl.plot(np.real(y1), np.imag(y1),'--')
+#    pl.plot(np.real(y1), np.imag(y1),'--')
     pl.legend()
     
     
     
+
     temp[i] = m_lst[i]
    # temp[i] = temp[i]*1000
 
@@ -143,18 +148,53 @@ for omega_fmr in m_lst:
 #    mr,br=np.polyfit(feq,roff,1)
 #    pl.plot(feq,mr*feq+br)
 #    print 'roff = %s*x + %s'%(mr,br)
+
 #    
-#    mi,bi=np.polyfit(feq,ioff,1)
-#    pl.plot(feq,mi*feq+bi)    
-#    print 'ioff = %s*x + %s'%(mi,bi)
+    
 #pl.figure()
-#pl.errorbar(temp,feq,yerr=ferr,fmt='o')
+#pl.errorbar(temp,line,yerr=err,fmt='o',label='kappa_a')
 #
-#pl.ylabel('frequency(GHz)')
+#pl.legend()
+#
+#pl.ylabel('linewidth(MHz)')
 #pl.xlabel('Magnetic Field')
+#print np.average(line)
+#
+#
+#
+#feq = feq *1e9
+#pl.figure()
+#pl.scatter(feq, roff, label = 'roff')
+#pl.scatter(feq, ioff, label = 'ioff')
+###    pl.savefig('%s\%s_roff.jpg'%(figpath,figname))
+##    pl.legend()
+##    for i in range(len(roff)-1):
+##        if np.abs(roff[i+1]-roff[i])>0.0001 or np.abs(ioff[i+1]-ioff[i])>0.0001:
+##            roff[i+1] = roff[i]
+##            ioff[i+1] = ioff[i]
+##    mr,br=np.polyfit(feq,roff,1)
+##    pl.plot(feq,mr*feq+br)
+##    print 'roff = %s*x + %s'%(mr,br)
+##    
+##    mi,bi=np.polyfit(feq,ioff,1)
+##    pl.plot(feq,mi*feq+bi)    
+##    print 'ioff = %s*x + %s'%(mi,bi)
+##pl.figure()
+##pl.errorbar(temp,feq,yerr=ferr,fmt='o')
+##
+##pl.ylabel('frequency(GHz)')
+##pl.xlabel('Magnetic Field')
+#
+#
+#pl.figure()
+#pl.scatter(temp,totalQ)
+#pl.ylabel('Total Q')
+#pl.xlabel('Magnetic Field')
+
 
 
 #pl.figure()
 #pl.scatter(temp,totalQ)
 #pl.ylabel('Total Q')
 #pl.xlabel('Magnetic Field')
+

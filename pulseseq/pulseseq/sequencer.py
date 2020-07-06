@@ -41,7 +41,6 @@ PAD_CENTER    = 2
 
 MINLEN        = 2000
 
-
 IGNORE        = 0
 WARN          = 1
 RAISE         = 2
@@ -1099,7 +1098,12 @@ class Pulse(Instruction):
 #            name = 'delay1'
 #            repeat *= len(data)
 #            data = np.array([0,])
-
+        self.name = name
+        self.data = data
+        self.chan = chan
+        self.trigger = trigger
+        self.repeat = repeat
+        super(Pulse, self).__init__()
         if name in Pulse.pulse_data:
             if data is None:
                 data = Pulse.pulse_data[name]
@@ -1115,17 +1119,12 @@ class Pulse(Instruction):
             # Only check range if pulse not defined yet
             self.check_range(data)
 
-        self.name = name
-        self.data = data
-        self.chan = chan
-        self.trigger = trigger
-        self.repeat = repeat
-        super(Pulse, self).__init__()
+        
 
     def check_range(self, data):
         if np.count_nonzero(np.abs(data) > 1) != 0:
             val = data[np.argmax(np.abs(data))]
-            msg = 'Pulse %s contains value larger than +-1: %.03f' % (name, val)
+            msg = 'Pulse ' + self.name + ' contains value larger than +-1: ' + str(val)
             if Pulse.RANGE_ACTION == WARN:
                 print msg
             elif Pulse.RANGE_ACTION == RAISE:
@@ -1801,8 +1800,8 @@ class ModulateSequence(SequenceOperation):
         if np.count_nonzero(data) == 0:
             return el
 
-        if el.repeat > 1 and np.abs(len(el.get_data()) % self.if_period) > 1e-4:
-            raise ValueError('Unable to modulate repeated blocks not a multiple of if_period')
+#        if el.repeat > 1 and np.abs(len(el.get_data()) % self.if_period) > 1e-4:  EBRU COMMENTED THIS OUT
+#            raise ValueError('Unable to modulate repeated blocks not a multiple of if_period')
 
         phi0 = float(now % self.if_period) / self.if_period * 2 * np.pi + self.phase
         phis = np.linspace(0, 2*np.pi*len(data)/self.if_period, len(data), endpoint=False)
