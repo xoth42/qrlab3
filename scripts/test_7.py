@@ -31,7 +31,7 @@ if 0:
 qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')
 qubit2_info = mclient.get_qubit_info('qubit2ge')
-ef_info = mclient.get_qubit_info('qubit1ef')
+#ef_info = mclient.get_qubit_info('qubit1ef')
 #cavity_info = mclient.get_qubit_info('cavityBob')
 #cavity_info = mclient.get_qubit_info('cavityRO')
 #cavity_info = mclient.get_qubit_info('cavityAlice')
@@ -294,7 +294,7 @@ if 0: # Check histogramming
     tr.measure()
 
 
-if 1: # T1
+if 0: # T1
     from scripts.single_qubit import T1measurement
 #    alz.set_naverages(5000)
 #    t1times = np.zeros(len(range(1000)))
@@ -335,7 +335,7 @@ if 0: # T2echo
     t2.measure()
     bla
 
-if 1: # FT1
+if 0: # FT1
     from scripts.single_qubit import FT1measurement
     #ft1times = np.zeros(len(range(20)))
     for i in range(1):
@@ -615,3 +615,8 @@ if 0:
         alz.set_naverages(8000)
         t2e = T2measurement.T2Measurement(qubit_info, np.linspace(0.3e3, 40e3, 100), detune=200e3, echotype = T2measurement.ECHO_HAHN)
         t2e.measure()
+
+if 1: # Two-Qubit Randomized Benchmarking
+    from scripts.fluxonium import TwoQ_RB
+    TwoQ = TwoQ_RB.TwoQubit_RB(qubit_info, qubit2_info, N_cliffords=10)
+    TwoQ.measure()

@@ -13,7 +13,7 @@ instruments.remove('dig')
 dig = instruments.create('dig', 'Keysight_DIG', chassis = 1, slot = 3, trigger_period = 100, 
                          trigger_only = True, awg_list = [7])
 
-yoko = instruments.create('yoko', 'Yokogawa_7651_old', address = 'GPIB0::3::INSTR')
+#yoko = instruments.create('yoko', 'Yokogawa_7651_old', address = 'GPIB0::3::INSTR')
 #yoko = instruments.create('yoko', 'Yokogawa_7651_new', address = 'GPIB0::3::INSTR')
 #signalhound = instruments.create('signalhound', 'SignalHoundSM200A', 'S/N 18104217')
 #ROFG = instruments.create('ROFG', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270811::0::INSTR')
@@ -33,17 +33,17 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                               sideband_phase=0)
 
 
-qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
-                            deltaf=-353.3e6,
-                            pi_amp=0.07,
-                            pi_amp_selective=0.01,
-                            rotation='Gaussian',
-                            w=20,
-                            w_selective=500,
-                            channels='1,2',
-                            sideband_channels='I2,Q2',
-                            sideband_phase=0)
-#
+#qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
+#                            deltaf=-353.3e6,
+#                            pi_amp=0.07,
+#                            pi_amp_selective=0.01,
+#                            rotation='Gaussian',
+#                            w=20,
+#                            w_selective=500,
+#                            channels='1,2',
+#                            sideband_channels='I2,Q2',
+#                            sideband_phase=0)
+##
 qubit2ge = instruments.create('qubit2ge', 'Qubit_Info',
                              deltaf=-353.3e6,
                               pi_amp=0.104,
@@ -63,15 +63,15 @@ readout = instruments.create('readout', 'Readout_Info', IQe=(18.69+25.6j), IQg=(
                            IQe_radius= 1 , rfsource1='RObrick', rfsource2='refbrick',
                          pulse_len=1000, readout_chan='3m1', acq_chan='4m1')
 
-refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511,
-                          use_extref=True)
+#refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14510,
+#                          use_extref=True)
 #RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=17912,
 #                            use_extref=True) #qubits
 RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=19151,
                             use_extref=True) #qubits
 #SCref = instruments.create('SCref', 'SC5511A', devid='10001D2F')
 ########### temp for mixer test
-SCqubit = instruments.create('SCqubit', 'SC5511A', devid='10001D31')
+#SCqubit = instruments.create('SCqubit', 'SC5511A', devid='10001D31')
 #SCref = instruments.create('SCRe', 'SC5511A', devid='100016B5')
 ###########
 #SCref = instruments.create('SCref', 'SC5511A', devid='10001C09')
