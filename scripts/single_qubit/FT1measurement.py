@@ -65,7 +65,7 @@ class FT1Measurement(Measurement1D):
 #            s.append(r(np.pi,0))
 #            s.append(r_ef(np.pi/2,0)) #fluxonium
             s.append(self.get_readout_pulse())
-            s.append(Delay(1000))
+            s.append(Delay(2000))
 
         s = self.get_sequencer(s)
         seqs = s.render()

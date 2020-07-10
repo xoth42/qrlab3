@@ -28,8 +28,8 @@ def analysis(meas, data=None, fig=None):
     params = lmfit.Parameters()
 
 
-#    if np.max(ys) + np.min(ys) < 2 * np.average(ys):
-    if 0:
+    if np.max(ys) + np.min(ys) < 2 * np.average(ys):
+#    if 0:
         params.add('Amp', value= -(np.max(ys)-np.min(ys)))
         params.add('freq', value=-xs[np.argmin(ys)])
     else:
@@ -37,17 +37,18 @@ def analysis(meas, data=None, fig=None):
         params.add('Amp', value= (np.max(ys)-np.min(ys)))
         params.add('freq', value=-xs[np.argmax(ys)])
 
-    params.add('kappa', value=1.51e6, min = 0)#, max = 4e6)#,vary = False)
+    params.add('kappa', value=1.01e6, min = 0)#, max = 4e6)#,vary = False)
     params.add('off', value = np.average(ys))
 
             
 #    datas = realdata[0,:]+ 1j*imagdata[0,:]    
     result = lmfit.minimize(Gaussfit, params, args=(-xs,ys))
     lmfit.report_fit(result.params)
-    print ('fit freq: %s +/- %s  '%(result.params['freq'].value/1e6,result.params['freq'].stderr/1e6))
+    meas.center = result.params['freq'].value
+    print ('fit freq: %s +/- %s  '%(result.params['freq'].value,result.params['freq'].stderr))
 
 
-    fig.axes[0].plot(-xs/1e6, -Gaussfit(result.params, -xs, 0), label='fit freq: %s +/- %s MHz '%(result.params['freq'].value/1e6,result.params['freq'].stderr/1e6))
+    fig.axes[0].plot(-xs/1e6, -Gaussfit(result.params, -xs, 0), label='fit freq: %s +/- %s Hz '%(result.params['freq'].value,result.params['freq'].stderr))
     fig.axes[0].legend()
     
     meas.fit_params = result.params
@@ -84,7 +85,7 @@ def analysis(meas, data=None, fig=None):
 #            ax1.plot(fs/1e6, f.func(p, fs), label=txt)
 class SSBSpec_Gaussianfit_SS(Measurement1D):
 
-    def __init__(self, qubit_info, detunings, seq=None, postseq=None, bgcor=False, coplay_delay=0, **kwargs):
+    def __init__(self, qubit_info, detunings, amp, channel, seq=None, postseq=None, bgcor=False, coplay_delay=0, **kwargs):
         self.qubit_info = qubit_info
         if seq is None:
             seq = Trigger(250)
@@ -97,6 +98,8 @@ class SSBSpec_Gaussianfit_SS(Measurement1D):
         self.height = 0
         self.center = 0
         self.width=0
+        self.amp = amp
+        self.channel = channel
 
         npoints = len(detunings)
         if bgcor:
@@ -131,7 +134,7 @@ class SSBSpec_Gaussianfit_SS(Measurement1D):
 #            pulselen = 40000
             gS = Combined([
                     Join([Delay(delaytime),g(),Delay(delaytime2)]),
-                    Constant(pulselen , 1, chan = '7m1'),
+                    Constant(pulselen , self.amp, chan = self.channel),
             ])
 
             s.append(Join([

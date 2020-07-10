@@ -1,0 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jul 18 10:54:37 2019
+
+@author: WangLab
+"""
+
+Data_freq = np.linspace(9e9,12e9,31)

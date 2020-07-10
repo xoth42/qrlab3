@@ -30,7 +30,7 @@ import datetime
 Magnet = mclient.instruments['Magnet']
 #f= open("C:\Users\Wang_Lab\Documents\yingying\%s.txt"%(time.strftime('%Y%m%d_%H%M%S', time.localtime())),"w+")
 #fields = [-0.035,0.035,-0.04,0.04,-0.045,0.045,-0.05,0.05]
-fields=[0]
+fields=[0.03]
 #powers_list = [[-23,0],[-25,0],[-18,10]]
 powers_list = [[0, 0]]
 #freqs = np.linspace(10.65e9,10.9e9,51)
@@ -43,7 +43,7 @@ freqs_list = [np.linspace(10.711e9,10.711e9,150)] #, np.linspace(10.708e9,10.716
 #freqs = np.linspace(10.8e9,10.804e9,5)
 SSdrive = mclient.instruments['SS_drive']
 freq_range = np.linspace(-30e6, 3e6, 81)
-freq_range2 = np.linspace(-15e6, 1e6, 81)
+freq_range2 = np.linspace(-7e6, 4e6, 81)
 
 do_cav_spec = True
 
@@ -77,7 +77,7 @@ for ifield, field in enumerate(fields):
                                              np.linspace(rofreq-freq_r, rofreq+freq_r, 101),
                                              qubit_pulse=False, seq=None)#,extra_info=[ef2_info])
         ro.measure()
-        max_freq = 10.7174e9
+        max_freq = 10.711e9
 #        max_freq = ro.freqs[np.argmax(ro.ampdata[0])]
         print max_freq
         readout_info.rfsource1.set_frequency(max_freq)
@@ -151,7 +151,7 @@ for ifield, field in enumerate(fields):
     
 
     
-            dig.set_naverages(40000)    
+            dig.set_naverages(30000)    
                 
             from single_qubit import ssbspec_gaussianfit
     
@@ -183,7 +183,7 @@ for ifield, field in enumerate(fields):
            
     
 
-            dig.set_naverages(20000)
+            dig.set_naverages(30000)
     
     
             from single_qubit import ssbspec_gaussianfit
@@ -241,7 +241,7 @@ for ifield, field in enumerate(fields):
             os.makedirs(fdir)
         kwargs = dict()
         pl.savefig(fn, **kwargs) 
-        Zp0 = np.transpose(phase20)
+
        
         pl.close()
         pl.close()

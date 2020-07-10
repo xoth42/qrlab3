@@ -4,6 +4,8 @@ Created on Mon May 20 11:54:00 2019
 
 @author: WangLab
 """
+import matplotlib
+matplotlib.interactive(True)
 import os
 import time
 import lmfit 
@@ -19,14 +21,14 @@ from matplotlib import gridspec
 ''' Path to the .hdf5 file '''
 #filepath = 'C:\\Users\\WangLab\\Documents\\yingying\\'
 filepath = 'C:\_Data\\'
-#hdf5_name = 'VNAtestJan30.hdf5'
-#hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
 
-#hdf5_name = 'FMR_RT_0515.hdf5'
-hdf5_name = '0531Cooldown_FMR.hdf5'
-date = '20190618'
-time = '121301'
-experiment = 'Current_Sweep_VNA'
+
+hdf5_name = '0612cooldown_FMR.hdf5'
+#hdf5_name = '0808Cooldown_FMR - Copy.hdf5'
+date = '20190617'
+time = '135125'
+experiment = 'Magnet_Sweep_VNA'
+
 
 
 ''' Primary x axis and secondary if 2d'''
@@ -67,8 +69,8 @@ field = currents
 
 mag = 10*np.log10(real**2 + imag**2)
 Z = np.transpose(mag)
-X,Y = np.meshgrid(currents, freq/1e9)
-#X,Y = np.meshgrid(field, freq/1e9)
+#X,Y = np.meshgrid(currents, freq/1e9)
+X,Y = np.meshgrid(field, freq/1e9)
 pl.xlim(X.min(), X.max())
 pl.ylim(Y.min(), Y.max())
 pl.pcolormesh(X,Y,Z)
@@ -76,6 +78,7 @@ pl.colorbar()
 #pl.title('YIG FMR Spectrum, S11 Measurement')
 pl.xlabel('Magnetic Field(mT)')
 pl.ylabel('Frequency(GHz)')
+
 
 if 0:
     x = field
@@ -90,6 +93,7 @@ if 0:
     pl.plot(x, k*28.025*(x+Ms*(0.285714-0.333333))/1000+off, color = 'r') #320
     pl.plot(x, k*28.025*(x+Ms*(0.2-0.333333))/1000+off, color = 'r') #210
     pl.show()
+
 
 
 if 0: # fitting seperate modes

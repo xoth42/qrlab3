@@ -4,19 +4,19 @@ Created on Wed Nov 13 11:40:50 2019
 
 @author: Wang_Lab
 """
-
-import os
-import time
-if 0:
-    os.system(r'C:\qrlab\start.bat')
-    time.sleep(1)
-
-from pulseseq import sequencer, pulselib
-#from scripts.single_qubit import rabi
-from scripts.single_cavity import WignerbyParity
+#
+#import os
+#import time
+#if 0:
+#    os.system(r'C:\qrlab\start.bat')
+#    time.sleep(1)
+#
+#from pulseseq import sequencer, pulselib
+##from scripts.single_qubit import rabi
+#from scripts.single_cavity import WignerbyParity
     
-import mclient
-from mclient import instruments
+#import mclient
+#from mclient import instruments
 
 import h5py as h5
 import numpy as np
@@ -32,10 +32,10 @@ def Gaussfit(params, x, y):
 
 ''' Path to the .hdf5 file '''
 filepath = 'C:/_Data/'
-hdf5_name = '1122cooldown_Circulator_cavity - Copy.hdf5'
-date = '20200110'
-time = '184456'
-experiment = 'SSBSpec_Gaussianfit_SS'
+hdf5_name = '1122cooldown_Circulator_cavity - Copy (2).hdf5'
+date = '20191210'
+time = '153250'
+experiment = 'SSBSpec_Gaussianfit'
 
 ''' Primary x axis and secondary if 2d'''
 x_key = 'detunings'
@@ -67,9 +67,9 @@ if 0:
 else:
     
     params.add('Amp', value= (np.max(ys)-np.min(ys)))
-    params.add('freq', value=xs[np.argmax(ys)])
+    params.add('freq', value=-1)#xs[np.argmax(ys)])
 
-params.add('kappa', value=1.5e6, min = 0)#, max = 4e6)#,vary = False)
+params.add('kappa', value=01e6, min = 0)#, max = 4e6)#,vary = False)
 params.add('off', value = np.average(ys))
 
         

@@ -1,0 +1,201 @@
+;===========================================================================
+;  This file was generated using:
+;  NI-VISA Driver Development Wizard version 4.1
+;===========================================================================
+;
+;  This file is for use with Windows Vista. This will not work on Windows
+;  XP/2000.  This Windows Setup Information File contains the information
+;  NI-VISA needs in order to access your instrument.  Do not modify the
+;  contents of this file unless you are sure about what you are doing.
+;
+;===========================================================================
+;
+;  Installation:
+;  To apply the contents of this file to a system's settings, right-click
+;  this file and choose "Install".  If the device was plugged in before this
+;  file is installed, the device will need to be removed from the "Unknown
+;  Devices" class in the Windows Device Manager.
+;
+;===========================================================================
+;
+;  Removal:
+;  At installation, Windows copies the file into the %SystemRoot%\inf
+;  directory using the alternate filename oem##.inf.  You may have
+;  to search all the files to find the one from which this is copied.
+;  Remove that file and its associated .pnf file (if it exists) from
+;  %SystemRoot%\inf.  Either reboot the computer, or perform a
+;  "Scan for hardware changes" from the Windows Device Manager.
+;
+;===========================================================================
+
+[Version]
+Signature=$WINDOWS NT$
+Class=visaUsbDevice
+ClassGUID={A3330EDF-239D-4206-833B-1D58952613D5}
+Provider=%Vendor0%
+DriverVer=11/17/2017,2.0.1.1
+CatalogFile=sci_usb_nivisa.cat
+
+;===========================================================================
+;  Default Installer
+;===========================================================================
+
+[DefaultInstall]
+CopyINF=sci_usb_nivisa.inf
+
+[DestinationDirs]
+
+[SourceDisksNames]
+
+[SourceDisksFiles]
+
+;===========================================================================
+;  Class Installer
+;===========================================================================
+
+[ClassInstall32]
+AddReg=AddClass_AddReg
+
+[AddClass_AddReg]
+HKR,,,0,%DeviceClassString%
+HKR,,Icon,,"-20"
+
+;===========================================================================
+
+[Manufacturer]
+%Vendor1%=USBList,NTamd64
+
+[USBList]
+%SC5303A_DeviceName% = USB_Install, USB\VID_277C&PID_0007
+%SC5306A_DeviceName% = USB_Install, USB\VID_277C&PID_000C
+%SC5306B_DeviceName% = USB_Install, USB\VID_277C&PID_0020
+%SC5308A_DeviceName% = USB_Install, USB\VID_277C&PID_0024
+%SC5313A_DeviceName% = USB_Install, USB\VID_277C&PID_0011
+%SC5315A_DeviceName% = USB_Install, USB\VID_277C&PID_001D
+%SC5318A_DeviceName% = USB_Install, USB\VID_277C&PID_0028
+%SC5321A_DeviceName% = USB_Install, USB\VID_277C&PID_0029
+%SC5360A_DeviceName% = USB_Install, USB\VID_277C&PID_0014
+%SC5360B_DeviceName% = USB_Install, USB\VID_277C&PID_001F
+%SC5406A_DeviceName% = USB_Install, USB\VID_277C&PID_0015
+%SC5406B_DeviceName% = USB_Install, USB\VID_277C&PID_0021
+%SC5408A_DeviceName% = USB_Install, USB\VID_277C&PID_0025
+%SC5413A_DeviceName% = USB_Install, USB\VID_277C&PID_0016
+%SC5421A_DeviceName% = USB_Install, USB\VID_277C&PID_002A
+%SC5501A_DeviceName% = USB_Install, USB\VID_277C&PID_001A
+%SC5503A_DeviceName% = USB_Install, USB\VID_277C&PID_0017
+%SC5503B_DeviceName% = USB_Install, USB\VID_277C&PID_0023
+%SC5506A_DeviceName% = USB_Install, USB\VID_277C&PID_0018
+%SC5506B_DeviceName% = USB_Install, USB\VID_277C&PID_0022
+%SC5511A_DeviceName% = USB_Install, USB\VID_277C&PID_001E
+%SC5511B_DeviceName% = USB_Install, USB\VID_277C&PID_0026
+%SC5511C_DeviceName% = USB_Install, USB\VID_277C&PID_0027
+%SC5511D_DeviceName% = USB_Install, USB\VID_277C&PID_002B
+%SC5513A_DeviceName% = USB_Install, USB\VID_277C&PID_002C
+%SC5513B_DeviceName% = USB_Install, USB\VID_277C&PID_002D
+%SC5513C_DeviceName% = USB_Install, USB\VID_277C&PID_002E
+%SC800_DeviceName% = USB_Install, USB\VID_277C&PID_001C
+
+[USBList.NTamd64]
+%SC5303A_DeviceName% = USB_Install, USB\VID_277C&PID_0007
+%SC5306A_DeviceName% = USB_Install, USB\VID_277C&PID_000C
+%SC5306B_DeviceName% = USB_Install, USB\VID_277C&PID_0020
+%SC5308A_DeviceName% = USB_Install, USB\VID_277C&PID_0024
+%SC5313A_DeviceName% = USB_Install, USB\VID_277C&PID_0011
+%SC5315A_DeviceName% = USB_Install, USB\VID_277C&PID_001D
+%SC5318A_DeviceName% = USB_Install, USB\VID_277C&PID_0028
+%SC5321A_DeviceName% = USB_Install, USB\VID_277C&PID_0029
+%SC5360A_DeviceName% = USB_Install, USB\VID_277C&PID_0014
+%SC5360B_DeviceName% = USB_Install, USB\VID_277C&PID_001F
+%SC5406A_DeviceName% = USB_Install, USB\VID_277C&PID_0015
+%SC5406B_DeviceName% = USB_Install, USB\VID_277C&PID_0021
+%SC5408A_DeviceName% = USB_Install, USB\VID_277C&PID_0025
+%SC5413A_DeviceName% = USB_Install, USB\VID_277C&PID_0016
+%SC5421A_DeviceName% = USB_Install, USB\VID_277C&PID_002A
+%SC5501A_DeviceName% = USB_Install, USB\VID_277C&PID_001A
+%SC5503A_DeviceName% = USB_Install, USB\VID_277C&PID_0017
+%SC5503B_DeviceName% = USB_Install, USB\VID_277C&PID_0023
+%SC5506A_DeviceName% = USB_Install, USB\VID_277C&PID_0018
+%SC5506B_DeviceName% = USB_Install, USB\VID_277C&PID_0022
+%SC5511A_DeviceName% = USB_Install, USB\VID_277C&PID_001E
+%SC5511B_DeviceName% = USB_Install, USB\VID_277C&PID_0026
+%SC5511C_DeviceName% = USB_Install, USB\VID_277C&PID_0027
+%SC5511D_DeviceName% = USB_Install, USB\VID_277C&PID_002B
+%SC5513A_DeviceName% = USB_Install, USB\VID_277C&PID_002C
+%SC5513B_DeviceName% = USB_Install, USB\VID_277C&PID_002D
+%SC5513C_DeviceName% = USB_Install, USB\VID_277C&PID_002E
+%SC800_DeviceName% = USB_Install, USB\VID_277C&PID_001C
+
+[PreCopySection]
+HKR,,NoSetupUI,,1
+
+[Usb_Install]
+Include = winusb.inf
+Needs = WINUSB.NT
+
+[Usb_Install.hw]
+AddReg=WinUsb_Inst_HW_AddReg
+
+[Usb_Install.Services]
+Addservice = WinUsb, 0x00000002, WinUsb_AddService
+
+[WinUsb_AddService]
+DisplayName    = %WinUsb_Service_DisplayName%
+ServiceType    = %SERVICE_KERNEL_DRIVER%
+StartType      = %SERVICE_DEMAND_START%
+ErrorControl   = %SERVICE_ERROR_NORMAL%
+ServiceBinary  = %12%\WinUSB.sys
+
+[WinUsb_Inst_HW_AddReg]
+HKR,,DeviceInterfaceGUIDs, 0x10000,"{761ED34A-CCFA-416b-94BB-33486DB1F5D5}"
+
+[Strings]
+Vendor0="SIGNALCORE INC"
+Vendor1="SIGNALCORE INC"
+DeviceClassString="SIGNALCORE USB Devices"
+WinUsb_Service_DisplayName="WinUSB Driver"
+; Downconverters
+SC5303A_DeviceName="SC5303A RF Downconverter"
+SC5306A_DeviceName="SC5306A RF Downconverter"
+SC5306B_DeviceName="SC5306B RF Downconverter"
+SC5308A_DeviceName="SC5308A RF Downconverter"
+SC5313A_DeviceName="SC5313A RF IQ Demodulator"
+SC5315A_DeviceName="SC5315A RF IQ Demodulator"
+SC5318A_DeviceName="SC5318A KuKa Downconverter"
+SC5321A_DeviceName="SC5321A KuKa IQ Demodulator"
+SC5360A_DeviceName="SC5360A RF Downconverter"
+SC5360B_DeviceName="SC5360B RF Downconverter"
+
+; Upconverters
+SC5406A_DeviceName="SC5406A RF Upconverter"
+SC5406B_DeviceName="SC5406B RF Upconverter"
+SC5408A_DeviceName="SC5408A RF Upconverter"
+SC5413A_DeviceName="SC5413A RF IQ Modulator"
+SC5421A_DeviceName="SC5421A KuKa IQ Modulator"
+
+; Sources
+SC5501A_DeviceName="SC5501A Signal Source"
+SC5503A_DeviceName="SC5503A Signal Source"
+SC5503B_DeviceName="SC5503B Signal Source"
+SC5506A_DeviceName="SC5506A Signal Source"
+SC5506B_DeviceName="SC5506B Signal Source"
+SC5511A_DeviceName="SC5511A Signal Source"
+SC5511B_DeviceName="SC5511B Signal Source"
+SC5511C_DeviceName="SC5511C Signal Source"
+SC5511D_DeviceName="SC5511D Signal Source"
+SC5513A_DeviceName="SC5513A ULP Signal Source"
+SC5513B_DeviceName="SC5513B ULP Signal Source"
+SC5513C_DeviceName="SC5513C ULP Signal Source"
+SC800_DeviceName="SC800 NanoSynth Signal Source"
+
+SERVICE_BOOT_START = 0x0
+SERVICE_SYSTEM_START = 0x1
+SERVICE_AUTO_START = 0x2
+SERVICE_DEMAND_START = 0x3
+SERVICE_DISABLED = 0x4
+
+SERVICE_KERNEL_DRIVER = 0x1
+SERVICE_ERROR_IGNORE = 0x0
+SERVICE_ERROR_NORMAL = 0x1
+SERVICE_ERROR_SEVERE = 0x2
+SERVICE_ERROR_CRITICAL = 0x3
+

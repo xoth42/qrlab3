@@ -16,7 +16,7 @@ class AMI_430(Instrument):
     def __init__(self, name, **kwargs):
         super(AMI_430, self).__init__(name)
         
-        self.ser = serial.Serial('COM3', 
+        self.ser = serial.Serial('COM8', 
                                  baudrate= 115200, 
                                  parity=serial.PARITY_NONE, 
                                  stopbits= serial.STOPBITS_ONE, 
@@ -65,7 +65,7 @@ class AMI_430(Instrument):
     
     def do_get_current(self):
         self.ser.write('CURRent:MAGnet?;')
-        self.current = self.ser.read(size=8) #size TBD
+        self.current = self.ser.read(size=20) #size TBD
         return self.current
         
     def do_set_current(self, current):
@@ -100,6 +100,8 @@ class AMI_430(Instrument):
         
     def IDN(self):
         self.ser.write('*IDN?;')
-        self.IDN = self.ser.read(size = 8)
+
+        self.IDN = self.ser.read(size = 20)
         
         return self.IDN
+

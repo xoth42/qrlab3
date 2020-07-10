@@ -41,7 +41,7 @@ def analysis(meas, data=None, fig=None):
 
 class FT1withFWM(Measurement1D):
 
-    def __init__(self, ge_info, ef_info, fwm_info, fwm_pulse, delays,amp = None, seq=None,postseq=None, **kwargs):
+    def __init__(self, ge_info, ef_info, fwm_info,  fwm_pulse, delays,amp = None, seq=None,postseq=None, **kwargs):
         self.ge_info = ge_info
         self.ef_info = ef_info
         self.fwm_info = fwm_info
@@ -60,7 +60,7 @@ class FT1withFWM(Measurement1D):
     def generate(self):
         s = Sequence()
         if self.amp is None:
-            amp = self.fwm_info.pi_amp
+            amp = 1
         else:
             amp = self.amp
         r = self.ge_info.rotate
@@ -79,7 +79,8 @@ class FT1withFWM(Measurement1D):
 #                        Constant(int(dt), amp, chan=chs[0]),
 #                        Constant(int(dt), amp, chan=chs[1]),
 #                ])) 
-                    s.append(Constant(int(dt), amp, chan=self.fwm_info.sideband_channels[0]))
+#                    s.append(Constant(int(dt), amp, chan = '7m1'))
+                    s.append(Constant(int(dt), amp, chan = self.fwm_info.sideband_channels[0]))
                     
             s.append(Delay(200))
             if self.postseq is None:
@@ -92,7 +93,7 @@ class FT1withFWM(Measurement1D):
 #            s.append(r_ef(np.pi/2,0)) #fluxonium
             
             s.append(self.get_readout_pulse())
-            s.append(Delay(1000))
+            s.append(Delay(2000))
 
         s = self.get_sequencer(s)
         seqs = s.render()
