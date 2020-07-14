@@ -100,7 +100,7 @@ class Rabi(Measurement1D):
     def __init__(self, qubit_info, amps, update=False, seq=None, r_axis=0, fix_phase=True,
                  fix_period=None, repeat_pulse=1, postseq=None, selective=False, fit_type=FIT_AMP, **kwargs):
         self.qubit_info = qubit_info
-#        self.qubit_pre = qubit_pre
+#        self.qubit2_info = qubit2_info
         self.amps = amps
         self.xs = amps
         self.update_ins = update
@@ -123,7 +123,7 @@ class Rabi(Measurement1D):
 #        r2 = self.qubit_pre.rotate
         for i, amp in enumerate(self.amps):
             s.append(self.seq)
-#            s.append(r2(np.pi, X_AXIS))
+#            s.append(self.qubit2_info.rotate(np.pi,0))
             if self.selective==1:
                 s.append(Repeat(self.qubit_info.rotate_selective(0, self.r_axis, amp=amp), self.repeat_pulse))
             elif self.selective==0.5:

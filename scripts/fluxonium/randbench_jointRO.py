@@ -17,33 +17,47 @@ import time
 
 def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
-    xs = meas.xs
+    xs = np.zeros(len(meas.xs)/4)
+    for i in range(len(meas.xs)/4):
+        xs[i] = meas.xs[4*i]
+    
+    y2d = ys.reshape(len(ys)/4,4)
+    y1s = y2d[:,0]
+    y2s = y2d[:,1]
+    y3s = y2d[:,2]
+    y4s = y2d[:,3]
+   
+    fig.axes[0].clear()   
+    fig.axes[0].plot(xs, y1s, 'bs', ms=3, color='r', linestyle = '-', label='none')
+    fig.axes[0].plot(xs, y2s, 'rs', ms=3, color = 'b', linestyle = '-', label= 'pi pulse on 1')    
+    fig.axes[0].plot(xs, y3s, 'bs', ms=3, color= 'g', linestyle = '-', label = 'pi pulse on 2')
+    fig.axes[0].plot(xs, y4s, 'rs', ms=3, color='y', linestyle = '-', label = 'pi pulse on both')    
+    fig.axes[0].legend()
+    fig.canvas.draw()
 
-
-#def seq_table(symbol):
-#    if symbol == 'A1':
-#        return r(np.pi/2, X_AXIS)
-#    elif symbol == 'A2':
-#        return r(np.pi/2, Y_AXIS)
-#    elif symbol == 'A3':
-#        return r(-np.pi/2, X_AXIS)
-#    elif symbol == 'A4':
-#        return r(-np.pi/2, Y_AXIS)
-#    elif symbol == 'B1':
-#        return r(np.pi, X_AXIS)
-#    elif symbol == 'B2':
-#        return r(np.pi, Y_AXIS)
-#    elif symbol == 'B3':            #Z(PI)
-#        return Delay(40)
-#    elif symbol == 'B4':            #Identity
-#        return Delay(40)
-#    elif symbol == 'B5':
-#        return r(-np.pi, X_AXIS)
-#    elif symbol == 'B6':
-#        return r(-np.pi, Y_AXIS)
-#    elif symbol == 'B7':
-#        return Delay(40)            #Z(-PI)
-
+    ys = meas.avg_data   # We now pull complex data to process populations at this point  
+    y2d = ys.reshape(len(ys)/4,4)
+    y1s = y2d[:,0]
+    y2s = y2d[:,1]
+    y3s = y2d[:,2]
+    y4s = y2d[:,3]    
+    #3 is the number of calibration point here
+    calibration_qubit1_excited = (y1s[:3] + y2s[:3] + y3s[:3] + y4s[:3])/4
+    calibration_qubit2_excited = (y1s[3:6] + y2s[3:6] + y3s[3:6] + y4s[3:6])/4
+    calibration_bothqubits_excited = (y1s[6:9] + y2s[6:9] + y3s[6:9] + y4s[6:9])/4
+    calibration_ground = (y1s[9:12] + y2s[9:12] + y3s[9:12] + y4s[9:12])/4
+    Veg = np.mean(calibration_qubit1_excited)
+    Vge = np.mean(calibration_qubit2_excited)
+    Vee = np.mean(calibration_bothqubits_excited)
+    Vgg = np.mean(calibration_ground)
+    print Veg, Vge, Vee, Vgg
+    
+    Pg_cplx = 1- ((y1s[12:] + y3s[12:]) - (Vge + Vgg))/ (Veg-Vgg+Vee-Vge) 
+    fig2, axes2 = plt.subplots(2)
+    axes2[0].plot(xs[12:], np.real(Pg_cplx))
+    axes2[1].plot(xs[12:], np.imag(Pg_cplx))
+#
+    return Pg_cplx
 
 def rdm_rotations(n_gates):
     k=[]
@@ -164,23 +178,25 @@ def correct_rdm_rot(rot_list):
 
 class rndm(Measurement1D):
 
-    def __init__(self, qubit_info, num_cal_points, n_gates_start, n_gates_stop, n_gates_step, seq=None, postseq=None, **kwargs):
+    def __init__(self, qubit_info, qubit2_info, num_cal_points, n_gates_start, n_gates_stop, n_gates_step, seq=None, postseq=None, **kwargs):
         self.qubit_info = qubit_info
-        
+        self.qubit2_info = qubit2_info
         self.num_cal_points = num_cal_points
         
         if seq is None:
             seq = Trigger(250)
-        self.xs = np.append(np.array(range(1,2*num_cal_points+1,1)),np.array(range(n_gates_start + 2*num_cal_points, n_gates_stop+2*num_cal_points +1, n_gates_step)))                                  
+        XS= np.append(np.array(range(-4*num_cal_points,0)), np.array(range(n_gates_start, n_gates_stop+1, n_gates_step)))                                  
+        self.xs = np.array([XS,XS,XS,XS]).transpose().flatten()    # For plotting purposes
+
         self.start = n_gates_start
         self.stop = n_gates_stop
         self.step = n_gates_step
         n_gates = (n_gates_stop-n_gates_start)/n_gates_step+1
         self.seq = seq
         self.postseq = postseq
-        n_points = n_gates + 2*num_cal_points
-        super(rndm, self).__init__(n_points, infos=(qubit_info,), **kwargs)
-        self.data.create_dataset('number_of_gates', data=np.linspace(1, n_points, n_points))
+        n_points = n_gates + 4*num_cal_points
+        super(rndm, self).__init__(4*n_points, infos=(qubit_info,qubit2_info), **kwargs)
+        self.data.create_dataset('gates', data=np.linspace(1, n_points, n_points))
 #        self.data.set_attrs()
 
 
@@ -193,73 +209,82 @@ class rndm(Measurement1D):
         print rotation_list
         print correction_list
          
-#        for j in range(self.num_cal_points):
-#            s.append(self.seq)
-#            s.append(Delay(80))   
-#            s.append(Combined([
-#                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-#                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-#                ]))
-#            s.append(Delay(2000))        
+       
                     
         for j in range(self.num_cal_points):
             s.append(self.seq)
+
             temp_seq = Sequence()
-            temp_seq.append(r(np.pi, X_AXIS))   
-            temp_seq.append(Combined([
-                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ]))
-            temp_seq.append(Delay(1000))
-            s.append(Join(temp_seq))
-        print('appended calibration pi pulses')
-        
-#        s.append(Delay(100000))
-        
+            temp_seq.append(self.qubit_info.rotate(np.pi,0))   
+            for i in range(4):
+
+
+                s.append(self.seq)
+                s.append(Join(temp_seq))
+                s.append(Combined([
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+                    ]))
+                s.append(Delay(1000))
+        print('appended calibration pi pulses qubit 1')
+
+
         for j in range(self.num_cal_points):
             s.append(self.seq)
+
+            temp_seq = Sequence()
+            temp_seq.append(self.qubit2_info.rotate(np.pi,0))   
+            for i in range(4):
+
+
+                s.append(self.seq)
+                s.append(Join(temp_seq))
+                s.append(Combined([
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+                    ]))
+                s.append(Delay(1000))
+        print('appended calibration pi pulses qubit 2')
+
+
+        for j in range(self.num_cal_points):
+            s.append(self.seq)
+
+            temp_seq = Sequence()
+            temp_seq.append(Combined([self.qubit_info.rotate(np.pi,0),self.qubit2_info.rotate(np.pi,0)]))   
+            for i in range(4):
+
+
+                s.append(self.seq)
+                s.append(Join(temp_seq))
+                s.append(Combined([
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+                    ]))
+                s.append(Delay(1000))
+        print('appended calibration pi pulses for both qubits')
+
+        
+        
+        for j in range(self.num_cal_points):
+
             temp_seq = Sequence()
             s.append(Delay(24))   
-            temp_seq.append(Combined([
-                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ]))
-            temp_seq.append(Delay(1000))
-            s.append(Join(temp_seq))
+            for i in range(4):
+                s.append(self.seq)
+                s.append(Join(temp_seq))
+                s.append(Combined([
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+                    ]))
+                s.append(Delay(1000))
         print('appended calibration ground state')
 
-#This for loop is for Z pi gate that is composed of delay only:
-            
-#            
-#        for n in range(self.start, self.stop+1, self.step):
-#            s.append(self.seq)
-#            
-#            for i in range(2*n):
-#                s.append(self.seq_table(rotation_list[i]))
-#                s.append(Delay(5))
-#                
-#            s.append(self.seq_table(correction_list[n-1]))
-#            s.append(Delay(5))
-##            if self.postseq is not None:
-##                s.append(self.postseq)
-#            s.append(Combined([
-#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-#                ]))
-#            s.append(Delay(2000))
-#            
-#        s = self.get_sequencer(s)
-#        seqs = s.render()
-#
-#        return seqs
 
-#This is the for loop to be used for the compound pulse for Z pi and Z -pi:
-#What it does is that it plays 'B1' (X, pi) and 'B2' (Y, pi) consecutively rather than a delay.
-        
+
                     
         for n in range(self.start, self.stop+1, self.step):
-            s.append(self.seq)
-            
+#            s.append(self.seq)
             temp_seq = Sequence()            
             for i in range(2*n):
                 if rotation_list[i] in ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B4', 'B5', 'B6']:
@@ -268,22 +293,26 @@ class rndm(Measurement1D):
                 if rotation_list[i] in ['B3', 'B7']:
                     temp_seq.append(r(np.pi, X_AXIS))
                     temp_seq.append(r(np.pi, Y_AXIS))
-#                    s.append(Delay(5))
-                if i%100==99:
-                    s.append(Join(temp_seq))
-                    temp_seq = Sequence()
      
             temp_seq.append(self.seq_table(correction_list[n-1]))
 #            temp_seq.append(Delay(5))
 #            if self.postseq is not None:
 #                s.append(self.postseq)
-            temp_seq.append(Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ]))
-            temp_seq.append(Delay(1000))
-            s.append(Join(temp_seq))
-            
+#            for ROpostseq in [None, None, None, None]:
+            for ROpostseq in [None, self.qubit_info.rotate(np.pi,0), self.qubit2_info.rotate(np.pi,0),
+                              Combined([self.qubit_info.rotate(np.pi,0),self.qubit2_info.rotate(np.pi,0)])]:
+                
+                
+                s.append(self.seq)            
+                s.append(Join(temp_seq))
+                if ROpostseq is not None:
+                    s.append(ROpostseq)
+                s.append(Combined([
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+                    ]))
+                s.append(Delay(1000))
+
         s = self.get_sequencer(s)
         time_before_render = time.time()
         print('before render', time_before_render)
@@ -325,5 +354,6 @@ class rndm(Measurement1D):
             return Delay(24)            #Z(-PI)
 
     def analyze(self, data=None, fig=None):
-#        self.fit_params = analysis(self, data, fig)
-        return #self.fit_params['tau'].value
+        self.Pg_cplx = analysis(self, data, fig)
+        return self.Pg_cplx
+#self.fit_params['tau'].value

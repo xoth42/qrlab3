@@ -2,6 +2,7 @@ from measurement import Measurement1D
 import matplotlib.pyplot as plt
 from pulseseq.sequencer import *
 from pulseseq.pulselib import *
+import numpy as np
 from lib.math import fit
 import time
 import objectsharer as objsh
@@ -23,8 +24,8 @@ class Cooling_tune_brickonoff(Measurement1D):
     pulse.
     '''
 
-    def __init__(self, cool_rfsource, qubit_rfsource, qubit_info, cool_freqs, cool_powers, seq=None, postseq=None,
-                 pow_delay=1, freq_delay=1, plot_type=None,
+    def __init__(self, cool_rfsource, qubit_rfsource, qubit_info, cool_freqs, cool_powers, cool_channel, seq=None, postseq=None,
+                 pow_delay=0.5, freq_delay=0.2, plot_type=None,
                  **kwargs):
         self.cool_rfsource = cool_rfsource
         self.qubit_rfsource = qubit_rfsource
@@ -33,6 +34,7 @@ class Cooling_tune_brickonoff(Measurement1D):
         self.cool_freqs = cool_freqs
         self.pow_delay = pow_delay
         self.freq_delay = freq_delay
+        self.cool_channel = cool_channel
         if seq is None:
             seq = Trigger(250)
         self.seq = seq
@@ -68,9 +70,10 @@ class Cooling_tune_brickonoff(Measurement1D):
     
     def generate(self):
         s = Sequence(self.seq)
-        chs = self.qubit_info.sideband_channels
+        s.append(Constant(int(8e3),1,chan=self.cool_channel))
+        s.append(Delay(150))
         s.append(self.qubit_info.rotate(np.pi,0))
-        s.append(Delay(100))
+        s.append(Delay(5))
         if self.postseq:
             s.append(self.postseq)
 
@@ -100,6 +103,7 @@ class Cooling_tune_brickonoff(Measurement1D):
 
         for ipower, power in enumerate(self.cool_powers):
             self.cool_rfsource.set_power(power)
+            print 'Cooling power P = %.03f dBm' % (power) 
             time.sleep(self.pow_delay)
 
             amps = []
@@ -108,6 +112,7 @@ class Cooling_tune_brickonoff(Measurement1D):
             phases=[]
             for freq in self.cool_freqs:
                 self.cool_rfsource.set_frequency(freq)
+                self.qubit_rfsource.set_rf_on(0)
                 time.sleep(self.freq_delay)
 
                 alz.setup_avg_shot(alz.get_naverages())
@@ -123,13 +128,11 @@ class Cooling_tune_brickonoff(Measurement1D):
                 IQ = np.average(ret.get())
                 amps.append(np.abs(IQ))
                 phases1.append(np.angle(IQ, deg=True))
-                print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
+                print 'qubit off F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
                 
-#                self.qubit_rfsource.do_set_rf_on(0)
-                self.qubit_rfsource.set_rf_on(0)
 
-               
-                time.sleep(1)
+                self.qubit_rfsource.set_rf_on(1)
+                time.sleep(self.freq_delay)
 
                 alz.setup_avg_shot(alz.get_naverages())
                 ret = alz.take_avg_shot(async=True)
@@ -144,21 +147,14 @@ class Cooling_tune_brickonoff(Measurement1D):
                 IQ = np.average(ret.get())
 
                 phases2.append(np.angle(IQ, deg=True))
-                print 'brick off F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
-                                
-#                self.qubit_rfsource.do_set_rf_on(1)
-                self.qubit_rfsource.set_rf_on(1)
-                            
+                print 'qubit on F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
 
-                
             m=len(amps)
             for i in range(m):
-
                 phases.append(phases1[i] - phases2[i])
                 
             self.ampdata[ipower,:] = amps
-            self.phasedata[ipower,:] = phases
-                
+            self.phasedata[ipower,:] = phases                
 
         self.analyze()
 
