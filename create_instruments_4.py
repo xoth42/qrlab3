@@ -9,8 +9,10 @@ if 1:
 from mclient import instruments
 
 
-WF_xxx = instruments.create('WF_xxx', 'WFT1153', serial = '1153')
-
+#WF_ro = instruments.create('WF_ro', 'WFT1153', serial = '1153')
+#WF_ref = instruments.create('WF_ref', 'WFT1153_ch2')
+#WF_ref.do_set_rfsource('WF_ro')
+#bla
 
 dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period = 100, trigger_only = False,
                          naverages = 1000, nsamples = 2000, awg_list = [7, 8, 9])
@@ -65,7 +67,7 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                               sideband_phase=0)
 
 qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
-                            deltaf=-303.91e6,
+                            deltaf=-302850000.0,
                             pi_amp=0.846,
                             pi_amp_selective= 0.0456,
                             rotation='Gaussian',

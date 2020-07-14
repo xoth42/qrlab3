@@ -13,7 +13,7 @@ class CompiledHVI(object):
         self.identifier = self.hvi.open(HVI_path_str)
         self.error(self.identifier)
         for i in range(len(awg_list)):
-            self.assignHardware(i, 0, awg_list[i]) #DARIO 1/31 dynamic slot assignment
+            self.assignHardware(i, 1, awg_list[i]) #DARIO 1/31 dynamic slot assignment
 #        self.assignHardware(1, 0, 10) #DARIO 1/17/19 changed for different slot arrangement on the third
 #                                                                   (digitizer-less) chassis
 #        self.assignHardware(2, 0, 10)
