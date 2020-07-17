@@ -138,10 +138,20 @@ class Rabi_mixer(Measurement1D):
             if self.postseq is not None:
                 s.append(self.postseq)
             s.append(Delay(100))
-            s.append(Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                    Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0])
+            if self.mixer_info.deltaf == 0:
+            
+                s.append(Combined([
+                    Join([Delay(300),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
+                    Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+        #            Join([Delay(100),self.mixer_info.rotate(np.pi, 0),Delay(200)])
+                    Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
+                ]))
+            else:
+                s.append(Combined([
+                    Join([Delay(300),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
+                    Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+                    Join([Delay(100),self.mixer_info.rotate(np.pi, 0),Delay(200)])
+    #                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
                 ]))
             s.append(Delay(2000))
 

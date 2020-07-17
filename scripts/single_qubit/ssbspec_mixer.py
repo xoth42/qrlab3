@@ -13,50 +13,56 @@ from measurement import Measurement1D
 from lib.math import fit
 import lmfit
 
-def double_gaussian(params, x, data):
-    dx1 = x-params['center1']
-    dx2 = x-params['center2']
-    est = (params['background'] + params['amp1'] * np.exp(-np.power(dx1, 2.) / (2 * np.power(params['sigma'], 2.)))
-                                + params['amp2'] * np.exp(-np.power(dx2, 2.) / (2 * np.power(params['sigma'], 2.))))
-    return data - est
+#def double_gaussian(params, x, data):
+#    dx1 = x-params['center1']
+#    dx2 = x-params['center2']
+#    est = (params['background'] + params['amp1'] * np.exp(-np.power(dx1, 2.) / (2 * np.power(params['sigma'], 2.)))
+#                                + params['amp2'] * np.exp(-np.power(dx2, 2.) / (2 * np.power(params['sigma'], 2.))))
+#    return data - est
 
 def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
-    xs = -meas.detunings
-    fig.axes[0].plot(xs/1e6, ys, '.')
+    xs = meas.detunings
+    fig.axes[0].plot(-xs/1e6, ys, '.')
     fig.axes[0].set_xlabel('Detuning (MHz)')
     fig.axes[0].set_ylabel('Intensity (AU)')
     fig.canvas.draw()
 
-    params = lmfit.Parameters()
-    params.add('background', value=max(ys), max=max(ys)+np.absolute(max(ys))*0.5)
-    params.add('amp1', value=(np.min(ys)-np.max(ys))/1.2, max=0)
-    params.add('amp2', value=(np.min(ys)-np.max(ys))/1.3, max=0)
-    params.add('sigma', value=(xs[-1]-xs[0])/12, max=(xs[-1]-xs[0])/2)
-    params.add('center1', value=xs[np.argmin(ys)], min=xs[0], max=xs[-1])
-    params.add('center2', value=(xs[np.argmin(ys)]+xs[0])/2, min=xs[0], max=xs[-1])
+#    params = lmfit.Parameters()
+#    params.add('background', value=max(ys), max=max(ys)+np.absolute(max(ys))*0.5)
+#    params.add('amp1', value=(np.min(ys)-np.max(ys))/1.2, max=0)
+#    params.add('amp2', value=(np.min(ys)-np.max(ys))/1.3, max=0)
+#    params.add('sigma', value=(xs[-1]-xs[0])/12, max=(xs[-1]-xs[0])/2)
+#    params.add('center1', value=xs[np.argmin(ys)], min=xs[0], max=xs[-1])
+#    params.add('center2', value=(xs[np.argmin(ys)]+xs[0])/2, min=xs[0], max=xs[-1])
+#        
+#    result = lmfit.minimize(double_gaussian, params, args=(xs, ys))
+#    lmfit.report_fit(result.params)
+#
+#    fig.axes[0].plot(xs/1e6, -double_gaussian(result.params, xs, 0))
+#    fig.canvas.draw()
         
-    result = lmfit.minimize(double_gaussian, params, args=(xs, ys))
-    lmfit.report_fit(result.params)
-
-    fig.axes[0].plot(xs/1e6, -double_gaussian(result.params, xs, 0))
-    fig.canvas.draw()
-        
-#    f = fit.Lorentzian(xs, ys)
-#    if 0:
-#        h0 = np.max(ys)-np.min(ys)
-#        w0 = 0.05e6
-#        pos = xs[np.argmax(ys)]
-#        p0 = [np.min(ys), w0*h0, pos, w0]
-#    if 1:
-#        h0 = np.min(ys)-np.max(ys)
-#        w0 = 0.05e6
-#        pos = xs[np.argmin(ys)]
-#        p0 = [np.max(ys), w0*h0, pos, w0]
-#        p = f.fit(p0)
-#    txt = 'Center = %.03f MHz, FWHM = %.03f MHz' % (/1e6, p[3]/1e6)
-#    plt.plot(-xs/1e6, f.func(p, xs), label=txt)
-#    print 'Fit gave: %s' % (txt,)
+    f = fit.Lorentzian(xs, ys)
+    if 0:
+        h0 = np.max(ys)-np.min(ys)
+        w0 = 0.05e6
+        pos = xs[np.argmax(ys)]
+        p0 = [np.min(ys), w0*h0, pos, w0]
+    if 1:
+        h0 = np.min(ys)-np.max(ys)
+        w0 = 0.05e6
+        pos = xs[np.argmin(ys)]
+        p0 = [np.max(ys), w0*h0, pos, w0]
+        p = f.fit(p0)
+    meas.height=f.get_height()
+#    print(meas.height)
+    meas.center = -p[2]/1e6
+    print(meas.center)
+    meas.width = f.get_fwhm
+    txt = 'Center = %.03f MHz, FWHM = %.03f MHz' % (-p[2]/1e6, p[3]/1e6)
+    plt.plot(-xs/1e6, f.func(p, xs), label=txt)
+    plt.legend()
+    print 'Fit gave: %s' % (txt,)
 
 class SSBSpec_mixer(Measurement1D):
 
@@ -82,11 +88,21 @@ class SSBSpec_mixer(Measurement1D):
     def generate(self):
         s = Sequence()
 
-        ro = Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                    Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0])
-        ])
+        if self.mixer_info.deltaf == 0:
+            
+            ro = (Combined([
+                Join([Delay(300),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
+                Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+    #            Join([Delay(100),self.mixer_info.rotate(np.pi, 0),Delay(200)])
+                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
+            ]))
+        else:
+            ro = (Combined([
+                Join([Delay(300),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
+                Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+                Join([Delay(100),self.mixer_info.rotate(np.pi, 0),Delay(200)])
+#                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
+            ]))
 
         if self.bgcor:
             plen = self.qubit_info.rotate_selective.base(np.pi, 0).get_length()

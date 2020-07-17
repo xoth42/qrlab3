@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat Jun 20 13:25:58 2020
+Created on Tue Jul 14 16:50:02 2020
+
+@author: Wang_Lab
+"""
+
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Jul  4 14:01:08 2020
 
 @author: Wang_Lab
 """
@@ -22,7 +29,7 @@ import config
 SPEC   = 0
 POWER  = 1
 
-def analysis(powers, freqs, amp1, amp2 , phase1, ampdata, phasedata=None, plot_type=POWER, ax=None):
+def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, ax=None):
     if ax is None:
         ax = plt.figure().add_subplot(111)
     ax2 = ax.twinx()
@@ -46,9 +53,7 @@ def analysis(powers, freqs, amp1, amp2 , phase1, ampdata, phasedata=None, plot_t
         ax.plot(fs/1000000, p[0] + p[1]/np.pi *(p[3]/2/((fs-p[2])**2 + (p[3]/2)**2)), '--',label = 'freq = %s MHz\n kappa = %s MHz'%(p[2]/1e6,p[3]/1e6))
         ax2.plot(fs/1000000, p[0] + p[1]/np.pi *(p[3]/2/((fs-p[2])**2 + (p[3]/2)**2)), '--',label = 'freq = %s MHz\n kappa = %s MHz'%(p[2]/1e6,p[3]/1e6))
 #yingying add fitting plot
-        title = 'amp 1 = %s , amp 2 = %s , phase1 = %s'%(amp1,amp2,phase1)
         plt.legend()
-        plt.title(title)
         plt.ylabel('Intensity [AU]')
         plt.xlabel('Frequency [MHz]')
         ## Yingying add it to save the figure 
@@ -91,17 +96,14 @@ def analysis(powers, freqs, amp1, amp2 , phase1, ampdata, phasedata=None, plot_t
         kwargs = dict()
         plt.savefig(fn, **kwargs)
 
-class AsymROCavSpectroscopy_keysight(Measurement1D):
+class ROCavSpectroscopy_keysight_mixer_cw(Measurement1D):
 
-    def __init__(self, qubit_info, powers, mixer_info1, mixer_info2, freqs, plot_type=None, qubit_pulse=False, seq=None,  **kwargs):
+    def __init__(self, qubit_info, mixer_info, powers, freqs, plot_type=None, qubit_pulse=False, seq=None,  **kwargs):
         self.qubit_info = qubit_info
         self.freqs = freqs
-#        print(freqs)
         self.powers = powers
-#        print(powers)
-        self.mixer_info1 = mixer_info1
-        self.mixer_info2 = mixer_info2
         self.qubit_pulse = qubit_pulse 
+        self.mixer_info = mixer_info
         if seq is None:
             seq = Trigger(250)
         self.seq = seq
@@ -114,7 +116,7 @@ class AsymROCavSpectroscopy_keysight(Measurement1D):
                 plot_type = SPEC
         self.plot_type = plot_type
 
-        super(AsymROCavSpectroscopy_keysight, self).__init__(1, infos=(qubit_info,mixer_info1,mixer_info2), **kwargs)
+        super(ROCavSpectroscopy_keysight_mixer_cw, self).__init__(1, infos=(qubit_info,mixer_info), **kwargs)
         self.data.create_dataset('powers', data=powers)
         self.data.create_dataset('freqs', data=freqs)
         self.ampdata = self.data.create_dataset('amplitudes', shape=(len(powers),len(freqs)))
@@ -124,10 +126,10 @@ class AsymROCavSpectroscopy_keysight(Measurement1D):
     def generate(self):
         s = Sequence()
 
-#        s.append(self.seq)
-        if self.qubit_pulse:
-#            s.append(Delay(2000))
-            s.append(self.qubit_info.rotate(np.pi, 0))
+        s.append(self.seq)
+#        if self.qubit_pulse:
+##            s.append(Delay(2000))
+#            s.append(self.qubit_info.rotate(np.pi, 0))
 #            s.append(Join([
 #                self.seq,
 #                self.qubit_info.rotate(np.pi, 0),
@@ -137,45 +139,40 @@ class AsymROCavSpectroscopy_keysight(Measurement1D):
 #                Constant(1, 0, chan=self.qubit_info.channels[1]),
 #                Constant(1, 0, chan=self.qubit_info.channels[0])
 #            ]))
-        s.append(self.seq)
-#        s.append(Combined([
-#            Join([Delay(300),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
-#            Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
-##            Join([Delay(100),self.mixer_info1.rotate(np.pi, 0),Delay(200)]),
-#            Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info1.pi_amp, chan=self.mixer_info1.channels[0]),Delay(200)]),
-#            Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info2.pi_amp, chan=self.mixer_info2.channels[0]),Delay(200)]),
-##            Join([Delay(100),self.mixer_info2.rotate(np.pi, 0),Delay(200)]),
-#        ]))
-        if self.mixer_info1.deltaf == 0:
+        if self.qubit_pulse == True:
+            cw_amp = 1
+        else:
+            cw_amp = 0
         
+        if self.mixer_info.deltaf == 0:
+            
             s.append(Combined([
-                Join([Delay(300),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
-                Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+                Join([Delay(1300),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),Delay(1000)]),
+                Join([Delay(1000),Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(1200)]),
     #            Join([Delay(100),self.mixer_info.rotate(np.pi, 0),Delay(200)])
-                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info1.pi_amp, chan=self.mixer_info1.channels[0]),Delay(200)]),
-                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info2.pi_amp, chan=self.mixer_info2.channels[0]),Delay(200)]),
-                
+                Join([Delay(1100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(1200)]),
+                Constant(self.readout_info.pulse_len + 2300, cw_amp, chan=self.qubit_info.sideband_channels[0])
             ]))
         else:
             s.append(Combined([
-                Join([Delay(300),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
-                Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
-                Join([Delay(100),self.mixer_info1.rotate(np.pi, 0),Delay(200)]),
-                Join([Delay(100),self.mixer_info2.rotate(np.pi, 0),Delay(200)])
+                Join([Delay(1300),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),Delay(1000)]),
+                Join([Delay(1000),Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(1200)]),
+                Join([Delay(1100),self.mixer_info.rotate(np.pi, 0),Delay(1200)]),
+                Constant(self.readout_info.pulse_len + 2300, cw_amp, chan=self.qubit_info.sideband_channels[0])
 #                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
-            ]))
-    #        s.append(Combined([
-    #            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-    #            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-    #        ]))
+            ]))            
+#        s.append(Combined([
+#            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+#        ]))
+
+#        s.append(Combined([
+#            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.acq_chan)),
+#            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.readout_chan_I)),
+#            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.readout_chan_Q)),
+#        ]))
+
     
-    #        s.append(Combined([
-    #            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.acq_chan)),
-    #            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.readout_chan_I)),
-    #            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.readout_chan_Q)),
-    #        ]))
-    
-        
         s.append(Delay(2000))
 
         sequencer = self.get_sequencer(s)
@@ -205,7 +202,7 @@ class AsymROCavSpectroscopy_keysight(Measurement1D):
             phases = []
 
             for ifreq, freq in enumerate(self.freqs):
-                self.readout_info.rfsource1.set_frequency(freq-self.mixer_info1.deltaf)
+                self.readout_info.rfsource1.set_frequency(freq-self.mixer_info.deltaf)
                 self.readout_info.rfsource2.set_frequency(freq+50e6)
                 time.sleep(0.1)
 
@@ -293,5 +290,5 @@ class AsymROCavSpectroscopy_keysight(Measurement1D):
     def analyze(self, data=None, ax=None):
         pax = ax if (ax is not None) else plt.figure().add_subplot(111)
         ampdata = data if (data is not None) else self.ampdata
-        self.fit_params = analysis(self.powers, self.freqs, self.mixer_info1.pi_amp, self.mixer_info2.pi_amp, self.mixer_info1.sideband_phase, ampdata, self.phasedata, self.plot_type, ax=pax)
+        self.fit_params = analysis(self.powers, self.freqs, ampdata, self.phasedata, self.plot_type, ax=pax)
 #Yingying add return fitting params
