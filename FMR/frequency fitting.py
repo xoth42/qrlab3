@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 """
 Created on Tue Feb 18 17:34:58 2020
@@ -14,36 +13,44 @@ import lmfit
 import os
 #fields = lin_power
 #j = 0
-fields = np.linspace(0, 0.05,26)
+#fields = np.linspace(0, 0.05,26)
  
 def TwoModesFitting(params, fields, ws):
     wa_p = []
     wb_p = []
-    for field in fields:
+    for i, field in enumerate(fields):
         H = np.array([[params['wa']-1j*params['wai'], 0,   params['ga'], params['ga2']], 
                       [0,  params['wb']-1j*params['wbi'], -params['ga'], params['ga2']],
                       [params['ga'],-params['ga'],  params['wp'], 1j*field * params['k']+ params['g']],
-                      [params['ga2'],params['ga2'], -1j*field*params['k']+ params['g'], params['wn'] - 1j *params['wni']/2]])
+                      [params['ga2'],params['ga2'], -1j*field*params['k']+ params['g'], params['wn'] - 1j *params['wni']]])
     
     
     
         e,v =LA.eig(H)
-#        m = np.argmax(v[0])
+        m = np.argsort(abs(v[0]))
+        if abs(e[m[2]] - ws[i]) < abs(e[m[3]] - ws[i]):
+            wa_p.append(e[m[2]])
+            wb_p.append(e[m[3]])
+        else:
+            wa_p.append(e[m[3]])
+            wb_p.append(e[m[2]])
+                
+        
 #        n = np.argmax(v[1])
 #        wa_p = 
-        if e[2] > 10.85 or e[3] > 10.85:
-            wb_p.append(min(e[2],e[3]))
-            wa_p.append(max(e[0],e[1]))
-        elif e[2] <10.8 or e[3] <10.8:
-            wb_p.append(min(e[1],e[0]))
-            wa_p.append(max(e[2],e[3]))
-        else:
-            if e[2] < e[3]:
-                wa_p.append(e[2])
-                wb_p.append(e[3])
-            else:
-                wa_p.append(e[3])
-                wb_p.append(e[2])
+#        if e[2] > 10.85 or e[3] > 10.85:
+#            wb_p.append(min(e[2],e[3]))
+#            wa_p.append(max(e[0],e[1]))
+#        elif e[2] <10.8 or e[3] <10.8:
+#            wb_p.append(min(e[1],e[0]))
+#            wa_p.append(max(e[2],e[3]))
+#        else:
+#            if e[2] < e[3]:
+#                wa_p.append(e[2])
+#                wb_p.append(e[3])
+#            else:
+#                wa_p.append(e[3])
+#                wb_p.append(e[2])
             
     est1= np.concatenate((np.asarray(wa_p),np.asarray(wb_p)))
     est = np.concatenate((np.real(est1),-np.imag(est1)))
@@ -57,35 +64,44 @@ def TwoModesFitting(params, fields, ws):
 
 
 params = lmfit.Parameters()
-params.add('wa', value=10.806)
-params.add('wb', value=10.811)
+vary_params = True
+params.add('wa', value=10.811, vary = vary_params)
+params.add('wb', value=10.806, vary = vary_params)
 params.add('wai', value=0.00, vary = False)
 params.add('wbi', value=0, vary = False)
-params.add('wp', value=10.719, max = 10.85)#,vary = False)
-params.add('wn', value=10.9)#,max= 11.5,min = 10.9)
-params.add('wni', value=0.6)
-params.add('ga', value=0.02)
+params.add('wp', value=10.7, vary = vary_params)#,vary = False)
+params.add('wn', value=10.8, vary = vary_params)#,max= 11.5,min = 10.9)
+params.add('wni', value=0.1, vary = vary_params)
+params.add('ga', value=0.03, vary = vary_params)
 #params.add('gb', value=0.02)
-params.add('ga2', value=0.008)
+params.add('ga2', value=0.009, vary = vary_params)
 #params.add('gb2', value=0.008)
 params.add('k', value = 8,vary = False)
-params.add('g',value = 0.01)
+params.add('g',value = -0.077, vary = vary_params)
 
 #omega_c = freq1[0]
 #omega_c2 = freq2[0]
 #omega_c_err =  freq1_err[0]
 #omega_c2_err =  freq2_err[0]
-data = np.loadtxt('C:\Users\WangLab\Documents\yingying\cavity freqs and kappas.txt')
-data = data*1e9
-data[len(data)/2:]=data[len(data)/2:]/2
+
 #data = np.concatenate((omega_c/1e9, omega_c2/1e9,kappa_a/1e9,kappa_a2/1e9))
 #data = np.concatenate((freq1[0], freq2[0]))
+#data = np.loadtxt('C:\Users\WangLab\Documents\yingying\cavity freqs and kappas.txt')
+#data = np.loadtxt('C:\Users\WangLab\Documents\yingying\\0317cooldown_cavity freqs and kappas.txt')
+data = np.loadtxt('C:\Users\WangLab\Documents\yingying\\0317cooldown_S21 cavity freqs and kappas.txt')
+#data = data*1e9
+bad_data_i = 0
+bad_data_f = 0
+fields = np.linspace(0, -0.05,26)
+omega_c = data[bad_data_i:len(data)/4 - bad_data_f]
+omega_c2 = data[len(data)/4 +bad_data_i:len(data)/2-bad_data_f]
+kappa_a = data[len(data)/2 +bad_data_i:len(data)*3/4-bad_data_f]
+kappa_a2 = data[len(data)*3/4 +bad_data_i:len(data)-bad_data_f]
+                
+data = np.concatenate([omega_c,omega_c2,kappa_a/2,kappa_a2/2])
 result = lmfit.minimize(TwoModesFitting, params, args=(fields, data/1e9))
 lmfit.report_fit(result.params)
-omega_c = data[0:26]
-omega_c2 = data[26:52]
-kappa_a = data[52:78]
-kappa_a2 = data[78:104]
+
 
 #pl.figure()
 #pl.errorbar(fields, omega_c/1e9, yerr =omega_c_err/1e9, fmt ='o', label='data')
@@ -117,7 +133,7 @@ for field in fields:
     H = np.array([[result.params['wa'].value-1j*result.params['wai'].value, 0,   result.params['ga'].value, result.params['ga2'].value], 
                   [0,  result.params['wb'].value-1j*result.params['wbi'].value, -result.params['ga'].value, result.params['ga2'].value],
                   [result.params['ga'].value,-result.params['ga'].value,  result.params['wp'].value, 1j*field *result.params['k'].value+ result.params['g'].value],
-                  [result.params['ga2'].value,result.params['ga2'].value, -1j*field*result.params['k'].value+ result.params['g'].value, result.params['wn'].value - 1j *result.params['wni'].value/2]])
+                  [result.params['ga2'].value,result.params['ga2'].value, -1j*field*result.params['k'].value+ result.params['g'].value, result.params['wn'].value - 1j *result.params['wni'].value]])
 
 
 
@@ -140,8 +156,8 @@ pl.plot(fields, np.real(w4))
 pl.figure()
 #pl.errorbar(fields, kappa_a/1e9, yerr = kappa_a_err/1e9, fmt ='o', label='kappa_tot data')
 #pl.errorbar(fields, kappa_a2/1e9, yerr = kappa_a2_err/1e9, fmt ='o')
-pl.scatter(fields, kappa_a/1e9,  label='kappa_tot data')
-pl.scatter(fields, kappa_a2/1e9,)
+pl.scatter(fields, kappa_a/2e9,  label='kappa_tot/2 data')
+pl.scatter(fields, kappa_a2/2e9,)
 pl.plot(fields, -np.imag(w1))
 pl.plot(fields, -np.imag(w2))
 pl.plot(fields,- np.imag(w3))
@@ -285,5 +301,4 @@ pl.plot(off)
 #pl.plot(deltalist,-np.imag(wa_p),label = ' mode b') 
 #pl.plot(deltalist,-np.imag(wb_p)+0.0012,label = 'imag\n mode a')
 #pl.plot(deltalist,-np.imag(wa_p)+0.0012,label = ' mode b') 
-
 '''

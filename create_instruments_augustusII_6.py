@@ -25,12 +25,12 @@ dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_p
 
 #
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
-                              deltaf=163.6e6,
-                              pi_amp=0.075, 
-                              pi2_amp=0,
-                              drag=0,
+                              deltaf=216.31e6,
+                              pi_amp=0.0685, 
+                              pi2_amp=0.0347,
+                              drag=-0.18,
                               pi_amp_quasilective=.0253, #.0356,
-                              pi_amp_selective=.00113,
+                              pi_amp_selective=.001025,
                               rotation='Gaussian',
                               w=6,
                               w_quasilective=160, #120,
@@ -42,8 +42,8 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 
 
 qubit1ge_2 = instruments.create('qubit1ge_2', 'Qubit_Info',
-                              deltaf=163.6e6,
-                              pi_amp=0.148, 
+                              deltaf=216.31e6,
+                              pi_amp=0.34622, 
                               pi2_amp=0,
                               drag=0,
                               pi_amp_quasilective=.0253, #.0356,
@@ -86,10 +86,10 @@ qubit1ge_2 = instruments.create('qubit1ge_2', 'Qubit_Info',
 
 
 qubit2ge = instruments.create('qubit2ge', 'Qubit_Info',
-                              deltaf=-325700000.0,
-                              pi_amp=0.11,
-                              pi2_amp=0.00,
-                              drag=0,
+                              deltaf=-378.65e6,
+                              pi_amp=0.113,
+                              pi2_amp=0.0553,
+                              drag=0.3,
                               pi_amp_quasilective=.0253, #.0356,
                               pi_amp_selective=0.001624,
                               rotation='Gaussian',
@@ -102,8 +102,8 @@ qubit2ge = instruments.create('qubit2ge', 'Qubit_Info',
 
 
 qubit2ge_2 = instruments.create('qubit2ge_2', 'Qubit_Info',
-                              deltaf=-325700000.0,
-                              pi_amp=0.2906,
+                              deltaf=-378.65e6,
+                              pi_amp=0.3476,
                               pi2_amp=0.0,
                               drag=0,
                               pi_amp_quasilective=.0253, #.0356,
@@ -122,11 +122,11 @@ AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 8,
 
 AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 7,
                               AWG_PRODUCT = "M3202A",
-                              amps = [1.45,1.45,1,1], ofs = [0.005, 0.018, 0.087, -0.048])
+                              amps = [1.45,1.45,1,1], ofs = [0.016, 0.013, 0.087, -0.048])
 
 AWG3 = instruments.create('AWG3', 'Keysight_AWG', chassis = 0, slot = 9,
                               AWG_PRODUCT = "M3202A",
-                              amps = [1.34,1.5,1.5,1.5], ofs = [0.03, 0.0168, 0, 0])
+                              amps = [1.34,1.5,1.5,1.5], ofs = [0.004, -0.026, 0, 0])
 
 
 cool = instruments.create('cool', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270760::INSTR')
@@ -153,9 +153,9 @@ WF_xxx = instruments.create('WF_xxx', 'WFT1153', serial = '1153')
 instruments.remove('alz')
 alz = instruments.create('alazar', 'Alazar_Daemon')
 alz.set_ch1_range('400mV')
-alz.set_ch2_range('40mV')
+alz.set_ch2_range('400mV')
 alz.set_nsamples(1600)
-alz.set_naverages(2000)
+alz.set_naverages(5000)
 alz.set_ch1_coupling('AC')
 alz.set_ch2_coupling('AC')
 #alz.set_clock_source('EXT10M')

@@ -19,30 +19,24 @@ from mclient import instruments
 
 #
 instruments.remove('dig')
+
 dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period=100,nsamples=500, naverages=6000, awg_list = [7, 8])
+
+
 
 #dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period = 100, trigger_only = False,
 #                         naverages = 1000, nsamples = 2500)
 
 AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PRODUCT = "M3202A", 
-                          amps = [1.5,1.5,1.5,1.5], ofs = [0.5, 0, 0.012,0.025])
+                          amps = [1.5,1.5,1.5,1.5], ofs = [0.5, 0, 0.001,-0.01])
 
 #AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PRODUCT = "M3202A", 
-#                          amps = [1.5,1.5,1.5,1.5], ofs = [0.5, 0, 0.012, 0.025])
+#                          amps = [1.5,1.5,1.5,1.5], ofs = [0.5, 0, 0.021, 0.015])
 
 
 AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 8,  AWG_PRODUCT = "M3202A", 
-                         amps = [1.5,1.5,1.5,1.5], ofs = [0.041, -0.002, -0.0059, 0.0048])
+                          amps = [1.5,1.5,1.5,1.5], ofs = [0.0693, 0.0125, -0.0059, 0.0048])
 
-#AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PRODUCT = "M3202A", 
-#                          amps = [1.5,1.5,1.5,1.5], ofs = [0.5, 0, 0.041, -0.002])
-#
-##AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PRODUCT = "M3202A", 
-##                          amps = [1.5,1.5,1.5,1.5], ofs = [0.5, 0, 0.021, 0.015])
-#
-#
-#AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 8,  AWG_PRODUCT = "M3202A", 
-#                         amps = [1.5,1.5,1.5,1.5], ofs = [0.012,0.025, -0.0059, 0.0048])
 #AWG3 = instruments.create('AWG3', 'Keysight_AWG', chassis = 0, slot = 10,  AWG_PRODUCT = "M3202A", 
 #                          amps = [1,1,1,1], ofs = [0.0045, -0.002, 0, 0])
 
@@ -100,9 +94,9 @@ qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
 
 #AWG1.do_set_waveform_delay(200000)
 #bla
-
+#instruments.remove('Magnet')
 Magnet = instruments.create('Magnet','AMI_430')
-print 'Magnet OK'
+#print 'Magnet OK'
 #instruments.remove('Magnet')
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='TCPIP0::172.30.56.25::4000::SOCKET')
 #
@@ -133,8 +127,7 @@ print 'Magnet OK'
 RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=14524, use_extref=True) #readout
 
 
-#SC_qubit2FWM = instruments.create('SC_qubit2FWM', 'SC5506A', devid= '10001FA3')
-SC_qubit2FWM = instruments.create('SC_qubit2FWM', 'SC5511A', devid= '10001D30')
+#SC_qubit1FWM = instruments.create('SC_qubit1FWM', 'SC5506A', devid= '10001FA3')
 #SSdrive = instruments.create('SSdrive', 'SC5511A', devid= '10001C09')#qubit 2
 SC_ref = instruments.create('SC_ref', 'SC5511A', devid= '10001C09')#qubit 2
 SS_drive = instruments.create('SS_drive', 'SC5511A', devid= '10001D2F')
@@ -143,6 +136,7 @@ readout = instruments.create('readout', 'Readout_Info', IQe=(30.69-48.9j), IQg=(
                              pulse_len=300, readout_chan='1m1', acq_chan='2m1')
 
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
+
                              deltaf=98.8e6,
                               pi_amp=0.4325,#0.404,  # 0.1594,
                               pi2_amp=0,
@@ -152,6 +146,7 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                               rotation='Gaussian',
                               rotation_selective = 'Square',
                               w=5,
+
                               w_quasilective=100,
                               w_selective=10,
                               channels='3,4',
@@ -164,7 +159,7 @@ qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
                             pi_amp_quasilective=0.02,
                             pi_amp_selective=0.02131,
                             rotation='Gaussian',
-                            w=5,
+                            w=7,
                             w_quasilective=100,
                             w_selective=100,
                             channels='3,4',
@@ -172,6 +167,7 @@ qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
                             sideband_phase=0)
 
 qubit2ge = instruments.create('qubit2ge', 'Qubit_Info',
+
                              deltaf=190.5e6,
                               pi_amp=0.23,
 #                             pi_amp = 0.742,
@@ -185,18 +181,18 @@ qubit2ge = instruments.create('qubit2ge', 'Qubit_Info',
                               w_quasilective=100,
                               w_selective=80,
                               channels='5,6',
-                              sideband_channels='I3,Q3',
-                              sideband_phase=0.2)
+                              sideband_channels='I1,Q1',
+                              sideband_phase=1.02)
 #
 qubit2ef = instruments.create('qubit2ef', 'Qubit_Info',
-                            deltaf=-301.2e6,
-                            pi_amp=0.1947,
-                            pi_amp_quasilective=0.14,
-                            pi_amp_selective=0.0761,
+                            deltaf=-390.9e6,
+                            pi_amp=0.5063,
+                            pi_amp_quasilective=0.02,
+                            pi_amp_selective=0.07,
                             rotation='Gaussian',
-                            w=80,
+                            w=40,
                             w_quasilective=100,
-                            w_selective=200,
+                            w_selective=1000,
                             channels='5,6',
                             sideband_channels='I4,Q4',
                             sideband_phase=0.2)
@@ -434,10 +430,10 @@ ag2 = instruments.create('ag2', 'Agilent_N5183A', address='GPIB1::22')
 
 #fwm_info1 = instruments.create('fwm_info1', 'Qubit_Info',
 #                            deltaf=-100e6,
-#                            pi_amp=1,
+#                            pi_amp=.785,
 #                            pi_amp_selective=0.01,
 #                            rotation='Square',
-#                            channels='7',
+#                            channels='7,8',
 #                            sideband_channels='I5,Q5',
 #                            sideband_phase=2.33,
 #                            w=10,

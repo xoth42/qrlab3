@@ -15,11 +15,11 @@ from pulseseq.pulselib import *
 
 def analysis(meas, data=None, fig=None):
     zs, fig = meas.get_ys_fig(data, fig)
-    zs = zs.reshape(len(meas.xs), len(meas.ys))
+    zs = zs.reshape(len(meas.ys), len(meas.xs))
     xs, ys = meas.get_plotxsys()
     ax = fig.axes[0]
     plt.sca(ax)
-    pc = ax.pcolormesh(xs, ys, zs)#, cmap=plt.get_cmap('RdBu'))
+    pc = ax.pcolormesh(xs, ys, zs, cmap=plt.get_cmap('RdBu'))
     fig.colorbar(pc)
 
     ax.set_xlim(xs.min()), xs.max()
@@ -30,26 +30,27 @@ def analysis(meas, data=None, fig=None):
 
 
 
-class CRtuning_ampvsphase(Measurement2D):
+class Single_qubit_tune(Measurement2D):
 
 #The purpose here is to sweep over the relative phase and rel_amp
 
-    def __init__(self, qubit_info, qubit_info2, qubit2_info,  rel_amps, rel_phases, times=1000, amp=0.35, phase=0, sigma=5, update=False, seq=None, r_axis=0, fix_phase=True,
-                 fix_period=None, repeat_pulse=1, postseq=None, selective=False, control_pi=False, **kwargs):
+    def __init__(self, qubit_info, qubit_info2,  amps, amps2, qubit1_rotation_angle = np.pi, update=False, seq=None, r_axis=0, fix_phase=True,
+                 fix_period=None, repeat_pulse=1, postseq=None, selective=False, **kwargs):
+
+
         self.qubit_info = qubit_info
         self.qubit_info2 = qubit_info2
-        self.qubit2_info = qubit2_info
-        self.times = times
+        
+        self.amps = amps
+        self.amps2= amps2
+#        self.phases = phases
 #        self.xs = np.array([times,times]).transpose().flatten() / 1e3      # For plotting purposes
-        self.rel_amps = rel_amps
-        self.rel_phases = rel_phases
 
 
-        self.xs=rel_amps
-        self.ys=rel_phases
+        self.xs=amps
+        self.ys=amps2
 
-        self.amp = amp
-        self.phase = phase
+        self.qubit1_rotation_angle = qubit1_rotation_angle
         self.update_ins = update
         if seq is None:
             seq = Trigger(1000)
@@ -60,8 +61,6 @@ class CRtuning_ampvsphase(Measurement2D):
         self.repeat_pulse = repeat_pulse
         self.r_axis = r_axis
         self.selective = selective
-        self.sigma = sigma
-        self.control_pi=control_pi
 
         
         XS, YS = np.meshgrid(self.xs, self.ys)
@@ -69,7 +68,7 @@ class CRtuning_ampvsphase(Measurement2D):
 
         npoints = self.two_axes.size
         
-        super(CRtuning_ampvsphase, self).__init__(npoints, infos=(qubit_info,qubit_info2, qubit2_info), **kwargs)
+        super(Single_qubit_tune, self).__init__(npoints, infos=(qubit_info,qubit_info2), **kwargs)
         self.data.create_dataset('two_axes', data=self.two_axes, dtype=np.complex)
 
 
@@ -82,37 +81,15 @@ class CRtuning_ampvsphase(Measurement2D):
         chs = self.qubit_info.sideband_channels
         chs2 = self.qubit_info2.sideband_channels
 
-        for rel_amps in self.rel_amps:
-            for rel_phases in self.rel_phases:
+        for amp in self.amps:
+            for amps2 in self.amps2:
             
-            
-                s.append(self.seq)    
-    
+                s.append(self.seq)
 #                if plen > 0:
-                g=(Combined([
-        #                GaussSquare(int(plen), ampI, self.sigma, chan=chs[0]),
-        #                GaussSquare(int(plen), ampQ, self.sigma, chan=chs[1]),
-        #                GaussSquare(int(plen), ampIc, self.sigma, chan=chs2[0]),
-        #                GaussSquare(int(plen), ampQc, self.sigma, chan=chs2[1]),            
-                        Constant(self.times, self.amp * np.cos(self.phase), chan=chs[0]),
-                        Constant(self.times, self.amp * np.sin(self.phase), chan=chs[1]),
-                        Constant(self.times, self.amp *rel_amps * np.cos(self.phase + rel_phases), chan=chs2[0]),
-                        Constant(self.times, self.amp *rel_amps * np.sin(self.phase + rel_phases), chan=chs2[1]),              
-                    ]))
-    #this part out for the moment
+                g=(Combined([self.qubit_info.rotate(0, 0, amp=amp), self.qubit_info2.rotate(0, 0, amps2)]))
+#                g=self.qubit_info.rotate(self.qubit1_rotation_angle,0)
 
-
-
-
-                if self.control_pi==True:
-             
-#                     s.append(Join[(self.qubit2_info.rotate(np.pi,0), g ,self.qubit2_info.rotate(np.pi,0))])
-                     s.append(self.qubit2_info.rotate(np.pi,0))
-                     s.append(g)
-                     s.append(self.qubit2_info.rotate(np.pi,0))
-
-                else:
-                     s.append(g)
+                s.append(g)
                 
                 if self.postseq:
                     s.append(self.postseq)
@@ -130,7 +107,7 @@ class CRtuning_ampvsphase(Measurement2D):
 
 
     def get_ys(self, data=None):
-        ys = super(CRtuning_ampvsphase, self).get_ys(data)
+        ys = super(Single_qubit_tune, self).get_ys(data)
         return ys
 
     def analyze(self, data=None, fig=None):

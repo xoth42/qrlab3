@@ -14,6 +14,7 @@ from mclient import instruments
 #WF_ref.do_set_rfsource('WF_ro')
 #bla
 
+
 dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period = 100, trigger_only = False,
                          naverages = 1000, nsamples = 2000, awg_list = [7, 8, 9])
 

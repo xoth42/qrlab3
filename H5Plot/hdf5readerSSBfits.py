@@ -30,19 +30,17 @@ filepath = 'C:\_Data\\'
 #hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
 hdf5_name = '1122cooldown_Circulator_cavity - Copy (2).hdf5'
 
-#date = '20200121'
-date = '20200225'
+date = '20200117'
+#date2 = '20191210'
 
 #fields = np.linspace(0, 0.05,26)
-#freqs = np.linspace(10.708,10.716,17)
-#freqs = np.linspace(1,17*19,17*19)
-freqs = np.linspace(10.71,10.712,5)
-#freqs = np.linspace(1,60,60)
+#freqs = np.linspace(10.708,10.72,13)
+freqs = np.linspace(1,20,20)
 
 ''' Primary x axis and secondary if 2d'''
 #x_key = 'freqs'
 #x2_key = 'powers'
-#datas = np.zeros([len(fields),1601],dtype = complex)
+datas = np.zeros([len(fields),1601],dtype = complex)
 
 
 nrows = 2 
@@ -58,7 +56,7 @@ j =0
 for i, title in enumerate(f[date].keys()):
 #    print int(title[0:6])
 #    print int(title[0:6]) <= 020617
-    if title[7:14] == 'SSBSpec' and int(title[0:6]) <= int('093924') and int(title[0:6]) >= int('093203'):
+    if title[7:14] == 'SSBSpec' and int(title[0:6]) <= int('144558') and int(title[0:6]) >= int('132401'):
         print title
         exp = f[date][title]
         y_keys = exp.keys()
@@ -79,9 +77,8 @@ for i, title in enumerate(f[date].keys()):
         params = lmfit.Parameters()
         
         
-        if np.max(ys) + np.min(ys) < 2 * np.average(ys):
-#        if 1:
-#        if j%2 == 0:
+        #    if np.max(ys) + np.min(ys) < 2 * np.average(ys):
+        if 1:
             params.add('Amp', value= -(np.max(ys)-np.min(ys)))
             params.add('freq', value=xs[np.argmin(ys)])
         else:
@@ -89,7 +86,7 @@ for i, title in enumerate(f[date].keys()):
             params.add('Amp', value= (np.max(ys)-np.min(ys)))
             params.add('freq', value=xs[np.argmax(ys)])
         
-        params.add('kappa', value=1.01e6, min = 0)#, max = 4e6)#,vary = False)
+        params.add('kappa', value=5e6, min = 0)#, max = 4e6)#,vary = False)
         params.add('off', value = np.average(ys))
         
                 
@@ -109,54 +106,38 @@ for i, title in enumerate(f[date].keys()):
         fig.axes[0].set_xlabel('Detuning (MHz)')
         fig.axes[0].set_ylabel('Intensity (AU)')
         fig.canvas.draw()
-        fn = os.path.join(r'C:\Users\Wang_Lab\Documents\yingying\11222019cooldown', 'fitting1\%s%s.png'%(title,j))
-        fdir = os.path.split(fn)[0]
-        if not os.path.isdir(fdir):
-            os.makedirs(fdir)
-        kwargs = dict()
-        pl.savefig(fn, **kwargs)
+#        pl.show()
+#        time.sleep(1)
         pl.close()
         
-#        if j <nrows*len(freqs):
-        if 1:
+        if j <nrows*len(freqs):
             SS[j%nrows][j/nrows] = result.params['freq'].value/1e6
             SS_err[j%nrows][j/nrows] = result.params['freq'].stderr/1e6
-#            amp[j%nrows][j/nrows] = result.params['off'].value      #np.average(ys)
-#            amp_err[j%nrows][j/nrows] =result.params['off'].stderr#np.sqrt( np.sum((ys+Gaussfit(result.params, xs, 0))**2/((len(ys)-1)*len(ys))))
-#        else:
-#            SSn[j%nrows][j/nrows-len(freqs)] = result.params['freq'].value/1e6
-#            SSn_err[j%nrows][j/nrows-len(freqs)] = result.params['freq'].stderr/1e6
+            amp[j%nrows][j/nrows] = result.params['off'].value      #np.average(ys)
+            amp_err[j%nrows][j/nrows] =result.params['off'].stderr#np.sqrt( np.sum((ys+Gaussfit(result.params, xs, 0))**2/((len(ys)-1)*len(ys))))
+        else:
+            SSn[j%nrows][j/nrows-len(freqs)] = result.params['freq'].value/1e6
+            SSn_err[j%nrows][j/nrows-len(freqs)] = result.params['freq'].stderr/1e6
         j = j+1
         
 pl.figure()
-pl.title('Stark Shift freq')
 for i in range(len(SS)):
     pl.errorbar(freqs,SS[i],yerr = SS_err[i])
-fn = os.path.join(r'C:\Users\Wang_Lab\Documents\yingying\11222019cooldown', 'fitting1\\fitting_result.png')
-fdir = os.path.split(fn)[0]
-if not os.path.isdir(fdir):
-    os.makedirs(fdir)
-kwargs = dict()
-pl.savefig(fn, **kwargs)
-#pl.figure()
-#pl.title('amp ')
-#for i in range(len(SS)):
-#    pl.errorbar(freqs,amp[i],yerr = amp_err[i])
-##pl.errorbar(freqs,-SS[0] * 0.62,yerr = SS_err[0]* 0.62,label = 'qubit1 * 0.62')
-##pl.errorbar(freqs,-SS[1]*20,yerr = SS_err[1]*20,label ='qubit2 *20' )
-#pl.legend()
+pl.figure()
+for i in range(len(SS)):
+    pl.errorbar(freqs,amp[i],yerr = amp_err[i])
 #pl.figure()
 #for i in range(len(SS)):
 #    pl.errorbar(freqs,SSn[i],yerr = SSn_err[i])
-        
-f.close()
-
+#        
+#f.close()
+#
 #pl.figure()
 #pl.errorbar(freqs, (SSn[2]-np.average(SSn[3]))/(SS[2]-np.average(SS[3])), yerr = np.sqrt((SS_err[2]/SS[2])**2 + (SSn_err[2]/SSn[2])**2),label = '%sT'%(fieldlist[k] ))
 #pl.legend()
 
 
-#field = 0.034
+#field = 0.014
 #k = int(np.where(fieldlist ==field)[0])
 #SSdatap[k] = SS
 #SSdatan[k] = SSn
@@ -170,53 +151,4 @@ f.close()
 #    pl.errorplot(freqs, n/p, yerr = np.sqrt((SS_errlabel = '%sT'%(fieldlist[k] ))
 #    pl.legend()
 ##save data
-#np.savez(r'C:\Users\Wang_Lab\Documents\yingying\SS_0212', a = SSdatap, b = SSdatap_err, c = SSdatan, d = SSdatan_err)
-#np.savez(r'C:\Users\Wang_Lab\Documents\yingying\SSn_0217', a = SS, b = SS_err)
-#fieldmesh, freqmesh = np.meshgrid(fieldlist,freqs)
-#SSq2 = SSdatan[:,2,:]
-#SSq2 = (SSdatan[:,2,:]-np.average(SSdatan[:,3,:]))/(SSdatap[:,2,:]-np.average(SSdatap[:,3,:]))
-#pl.figure()
-#pl.pcolormesh(fieldmesh,freqmesh,np.transpose(SSq2),vmax = 10, vmin = 1)
-#pl.colorbar()
-#pl.xlabel('field(T)')
-#pl.ylabel('Stark Shift freq(MHz)')
-#pl.legend()
-
-
-#SS_on = SS[0]
-#SS0 = SS[1]
-#SS_on = SS_on.reshape(19,17)
-#SS0 = SS0.reshape(19,17)
-#SS0_ave = SS0
-#for i in range(len(SS0)):
-#    a = np.average(SS0[i])
-#    for j in range(len(SS0[0])):
-#        SS0_ave[i][j] = a
-#SSplot = SS_on - SS0_ave
-#fields = np.linspace(0.014, 0.05,19)
-#freqs = np.linspace(10.708,10.716,17)
-#fieldsplot, freqplot = np.meshgrid(fields, freqs)
-#pl.figure()
-#pl.pcolormesh(fieldsplot, freqplot, np.transpose(SSplot), vmax = 0, vmin = -2)
-#pl.colorbar()
-
-#SSn_on = SS[0]
-#SSn0 = SS[1]
-#SSn_on = SSn_on.reshape(19,17)
-#SSn0 = SSn0.reshape(19,17)
-#SSn0_ave = SSn0
-#for i in range(len(SSn0)):
-#    a = np.average(SSn0[i])
-#    for j in range(len(SSn0[0])):
-#        SSn0_ave[i][j] = a
-#SSnplot = SSn_on - SSn0_ave
-#fields = np.linspace(-0.014, -0.05,19)
-#freqs = np.linspace(10.708,10.716,17)
-#fieldsplot, freqplot = np.meshgrid(fields, freqs)
-#pl.figure()
-#pl.pcolormesh(fieldsplot, freqplot, np.transpose(SSnplot), vmax = 0, vmin = -5)
-#pl.colorbar()
-#
-#pl.figure()
-#pl.pcolormesh(-fieldsplot, freqplot, np.transpose(SSnplot/SSplot), vmax = 10, vmin = 0)
-#pl.colorbar()
+#np.savez(r'C:\Users\Wang_Lab\Documents\yingying\SS', a = SSdatap, b = SSdatap_err, c = SSdatan, d = SSdatan_err)

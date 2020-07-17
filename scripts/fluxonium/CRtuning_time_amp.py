@@ -12,45 +12,40 @@ from measurement import Measurement2D
 from pulseseq.sequencer import *
 from pulseseq.pulselib import *
 
-
 def analysis(meas, data=None, fig=None):
     zs, fig = meas.get_ys_fig(data, fig)
-    zs = zs.reshape(len(meas.xs), len(meas.ys))
+    zs = zs.reshape(len(meas.ys), len(meas.xs))
     xs, ys = meas.get_plotxsys()
     ax = fig.axes[0]
     plt.sca(ax)
-    pc = ax.pcolormesh(xs, ys, zs)#, cmap=plt.get_cmap('RdBu'))
+    pc = ax.pcolormesh(xs, ys, zs, cmap=plt.get_cmap('RdBu'))
     fig.colorbar(pc)
 
-    ax.set_xlim(xs.min()), xs.max()
-    ax.set_ylim(ys.min(), ys.max())
+#    ax.set_xlim(xs.min()), xs.max()
+#    ax.set_ylim(ys.min(), ys.max())
     ax.set_xlabel('times')
-    ax.set_ylabel('amp')
+    ax.set_ylabel('rel_amp')
     fig.canvas.draw()
 
+class CRtuning_time_amp(Measurement2D):
 
+#The purpose here is to sweep over time and detuning for the combined pulse without the pi pulse on the control qubit
 
-class CRtuning_ampvsphase(Measurement2D):
-
-#The purpose here is to sweep over the relative phase and rel_amp
-
-    def __init__(self, qubit_info, qubit_info2, qubit2_info,  rel_amps, rel_phases, times=1000, amp=0.35, phase=0, sigma=5, update=False, seq=None, r_axis=0, fix_phase=True,
+    def __init__(self, qubit_info, qubit_info2, qubit2_info, times, rel_amps, amp=0.35, phase=0, rel_phase=1, sigma=5, 
+                 update=False, seq=None, r_axis=0, fix_phase=True,
                  fix_period=None, repeat_pulse=1, postseq=None, selective=False, control_pi=False, **kwargs):
         self.qubit_info = qubit_info
         self.qubit_info2 = qubit_info2
         self.qubit2_info = qubit2_info
         self.times = times
-#        self.xs = np.array([times,times]).transpose().flatten() / 1e3      # For plotting purposes
         self.rel_amps = rel_amps
-        self.rel_phases = rel_phases
-
-
-        self.xs=rel_amps
-        self.ys=rel_phases
-
+#        self.xs = np.array([times,times]).transpose().flatten() / 1e3      # For plotting purposes        
+        self.xs=times
+        self.ys=rel_amps
+        
         self.amp = amp
         self.phase = phase
-        self.update_ins = update
+        self.rel_phase = rel_phase
         if seq is None:
             seq = Trigger(1000)
         self.seq = seq
@@ -61,30 +56,28 @@ class CRtuning_ampvsphase(Measurement2D):
         self.r_axis = r_axis
         self.selective = selective
         self.sigma = sigma
-        self.control_pi=control_pi
-
+        self.control_pi = control_pi
         
         XS, YS = np.meshgrid(self.xs, self.ys)
         self.two_axes = (-XS + 1j*YS)
 
         npoints = self.two_axes.size
         
-        super(CRtuning_ampvsphase, self).__init__(npoints, infos=(qubit_info,qubit_info2, qubit2_info), **kwargs)
+        super(CRtuning_time_amp, self).__init__(npoints, infos=(qubit_info,qubit_info2, qubit2_info), **kwargs)
         self.data.create_dataset('two_axes', data=self.two_axes, dtype=np.complex)
-
 
     def generate(self):
         s = Sequence()
 #        ampI = self.amp * np.cos(self.phase)
 #        ampQ = self.amp * np.sin(self.phase)
-#        ampIc = self.amp *self.rel_amp * np.cos(self.phase+self.rel_phase)
-#        ampQc = self.amp *self.rel_amp * np.sin(self.phase+self.rel_phase)
+#        ampIc = self.amp *self.rel_amps * np.cos(self.phase+self.rel_phase)
+#        ampQc = self.amp *self.rel_amps * np.sin(self.phase+self.rel_phase)
         chs = self.qubit_info.sideband_channels
         chs2 = self.qubit_info2.sideband_channels
 
-        for rel_amps in self.rel_amps:
-            for rel_phases in self.rel_phases:
-            
+
+        for rel_amp in self.rel_amps:
+            for plen in self.times:
             
                 s.append(self.seq)    
     
@@ -94,26 +87,19 @@ class CRtuning_ampvsphase(Measurement2D):
         #                GaussSquare(int(plen), ampQ, self.sigma, chan=chs[1]),
         #                GaussSquare(int(plen), ampIc, self.sigma, chan=chs2[0]),
         #                GaussSquare(int(plen), ampQc, self.sigma, chan=chs2[1]),            
-                        Constant(self.times, self.amp * np.cos(self.phase), chan=chs[0]),
-                        Constant(self.times, self.amp * np.sin(self.phase), chan=chs[1]),
-                        Constant(self.times, self.amp *rel_amps * np.cos(self.phase + rel_phases), chan=chs2[0]),
-                        Constant(self.times, self.amp *rel_amps * np.sin(self.phase + rel_phases), chan=chs2[1]),              
+                        Constant(int(plen), self.amp * np.cos(self.phase), chan=chs[0]),
+                        Constant(int(plen), self.amp * np.sin(self.phase), chan=chs[1]),
+                        Constant(int(plen), self.amp *rel_amp * np.cos(self.phase+self.rel_phase), chan=chs2[0]),
+                        Constant(int(plen), self.amp *rel_amp * np.sin(self.phase+self.rel_phase), chan=chs2[1]),              
                     ]))
-    #this part out for the moment
 
-
-
-
-                if self.control_pi==True:
-             
-#                     s.append(Join[(self.qubit2_info.rotate(np.pi,0), g ,self.qubit2_info.rotate(np.pi,0))])
-                     s.append(self.qubit2_info.rotate(np.pi,0))
-                     s.append(g)
-                     s.append(self.qubit2_info.rotate(np.pi,0))
-
+                if self.control_pi==True:             
+                    s.append(self.qubit2_info.rotate(np.pi,0))
+                    s.append(g)
+                    s.append(self.qubit2_info.rotate(np.pi,0))
                 else:
                      s.append(g)
-                
+#                s.append(g)
                 if self.postseq:
                     s.append(self.postseq)
                 s.append(Delay(10))
@@ -121,7 +107,7 @@ class CRtuning_ampvsphase(Measurement2D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
-                s.append(Delay(3000))
+                s.append(Delay(2000))
             
             
         s = self.get_sequencer(s)
@@ -130,7 +116,7 @@ class CRtuning_ampvsphase(Measurement2D):
 
 
     def get_ys(self, data=None):
-        ys = super(CRtuning_ampvsphase, self).get_ys(data)
+        ys = super(CRtuning_time_amp, self).get_ys(data)
         return ys
 
     def analyze(self, data=None, fig=None):

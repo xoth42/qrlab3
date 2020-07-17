@@ -65,7 +65,7 @@ class AMI_430(Instrument):
     
     def do_get_current(self):
         self.ser.write('CURRent:MAGnet?;')
-        self.current = self.ser.read(size=20) #size TBD
+        self.current = self.ser.read(size=8) #size TBD
         return self.current
         
     def do_set_current(self, current):
@@ -100,8 +100,6 @@ class AMI_430(Instrument):
         
     def IDN(self):
         self.ser.write('*IDN?;')
-
-        self.IDN = self.ser.read(size = 20)
+        self.IDN = self.ser.read(size = 8)
         
         return self.IDN
-
