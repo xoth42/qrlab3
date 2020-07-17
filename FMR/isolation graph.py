@@ -12,13 +12,13 @@ matplotlib.interactive(True)
 import numpy as np
 import matplotlib.pyplot as pl
 
-filepath = r"C:\Users\WangLab\Documents\yingying\circulator\\12042018 cooldown"
+filepath = r"C:\Users\WangLab\Documents\TConnolly\calibrated_circulator\transition1-2"
 
 if 1: # get the graph of difference between two file
     # Read the array from file
 #    filepath = 'C:\Users\WangLab\Documents\\11282018 cooldowm\\'
-    filename2 ='%s\\circulator_S21_0.0_0.1_0.001_ave_factor_6_14-35-34'%(filepath)
-    filename1 ='%s\\circulator_S21_0.0_-0.1_-0.001_ave_factor_6_14-35-34'%(filepath)
+    filename2 ='%s\\s12_3_term0.0-0.2-0.002_Date_3-19_17-20-13'%(filepath)
+    filename1 ='%s\\s21_3_term0.0-0.2-0.002_Date_3-19_16-54-59'%(filepath)
 #    if filename1[33:]!=filename2[33:]:
 #        print 'not the same port measurement'
     new_data = np.loadtxt('%s.txt'%(filename1))
@@ -123,7 +123,7 @@ if 1: # get the graph of difference between two file
     ax = pl.subplot(gs[0, 0])
     pl.pcolormesh(X, Y, Z)
     pl.colorbar()
-    pl.xlabel('Magnetic Field(mT)')
+#    pl.xlabel('Magnetic Field(mT)')
     pl.ylabel('Frequency (GHZ)')
     pl.ylim(8,)
     pl.show() 
@@ -136,14 +136,14 @@ if 1: # get the graph of difference between two file
     pl.ylim(8,)
     pl.show()
     
-#    ax = pl.subplot(gs[1, 0])
-#    pl.pcolormesh(X, Y, iso,cmap='RdBu', vmin=0, vmax=40)
-#    pl.ylim([np.min(Y),np.max(Y)])
-#    pl.xlim([np.min(X),np.max(X)])
-#    pl.colorbar()
-#    pl.ylim(8,)
-#    pl.xlabel('Magnetic Field(mT)')
-#    pl.ylabel('Frequency (GHZ)')
+    ax = pl.subplot(gs[1, 0])
+    pl.pcolormesh(X, Y, iso,cmap='RdBu', vmin=0, vmax=40)
+    pl.ylim([np.min(Y),np.max(Y)])
+    pl.xlim([np.min(X),np.max(X)])
+    pl.colorbar()
+    pl.ylim(8,)
+    pl.xlabel('Magnetic Field(mT)')
+    pl.ylabel('Frequency (GHZ)')
     
     ax = pl.subplot(gs[1, 1])
     pl.pcolormesh(X, Y, iso,cmap='RdBu', vmin=0, vmax=40)
@@ -382,7 +382,7 @@ if 0: # get a single trace for the difference between two files
     
     
     
-if 0: # get loss between two file
+if 1: # get loss between two file
     # Read the array from file
 #    filepath = 'C:\Users\WangLab\Documents\\11282018 cooldowm\\'
     filename1 ='%s\\s21_3_term0.0-0.2-0.002_Date_3-19_16-54-59'%(filepath)

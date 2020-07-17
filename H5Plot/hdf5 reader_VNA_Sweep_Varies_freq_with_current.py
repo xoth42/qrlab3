@@ -4,8 +4,7 @@ Created on Thu May 16 17:03:23 2019
 
 @author: WangLab
 """
-import matplotlib
-matplotlib.interactive(True)
+
 import os
 import time
 import lmfit 
@@ -23,20 +22,19 @@ from matplotlib import gridspec
 filepath = 'C:\_Data\\'
 #hdf5_name = 'VNAtestJan30.hdf5'
 #hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
-hdf5_name = '0808cooldown_FMR.hdf5'
-hdf5_name = '0808cooldown_FMR - Copy.hdf5'
-#hdf5_name = '0808cooldown_FMR - Copy (2).hdf5'
+hdf5_name = '0531cooldown_FMR.hdf5'
+hdf5_name = '0531cooldown_FMR - Copy.hdf5'
 #hdf5_name = 'FMR_RT_0515 - Copy.hdf5'
 
-date = '20190812'
-time = '173634'
+date = '20190607'
+time = '130705'
 
-experiment = 'Power_Sweep_Varies_freq_VNA'
-#experiment = 'Current_Sweep_Varies_freq_VNA'
+#experiment = 'Power_Sweep_Varies_freq_VNA'
+experiment = 'Current_Sweep_Varies_freq_VNA'
 #experiment = 'Current_Sweep_VNA'
 fit_S12 = True
 fit_S11 = False
-seperate_fitting_figure = False
+seperate_fitting_figure = True
 
 #xlabel = 'current(mA)'
 #xlabel = 'different measurements'
@@ -47,9 +45,9 @@ subtract =True
 if subtract:
 #    hdf5_name_s = '0531cooldown_FMR.hdf5'
     hdf5_name_s = hdf5_name
-    date_s = '20190812'
-    time_s = '183010'
-    experiment_s = experiment
+    date_s = '20190607'
+    time_s = '131321'
+    experiment_s = 'Current_Sweep_Varies_freq_VNA'
 
 def S21(params, x, y):
     est = np.sqrt(params['kappa_prod'])/(-1j*(x-params['omega_c'])-(params['kappa_a'])/2.0 )
@@ -80,11 +78,11 @@ y_keys = exp.keys()
 #y_keys.remove(x_key)
 #y_keys.remove(x2_key)
 freq = exp['freqs'].value
-currents = exp['powers'].value
+currents = exp['currents'].value
 
 real = exp['realS21'].value
 imag = exp['imaginaryS21'].value
-f.close()
+
 if subtract:
     f_s = h5.File(filepath + hdf5_name_s, 'r')
     exp_s = f_s['/' + date_s + '/' + time_s + '_' + experiment_s]
@@ -95,13 +93,13 @@ if subtract:
     #y_keys.remove(x2_key)
     freq_s = exp_s['freqs'].value
 
-    currents_s = exp_s['powers'].value
+    currents_s = exp_s['currents'].value
     
     real_s = exp_s['realS21'].value
     imag_s = exp_s['imaginaryS21'].value
     real = real - real_s
     imag = imag - imag_s
-    f_s.close()
+
 '''Conversion factor from Yoko current in mA to actual magnetic field in mT'''
 #if current.any() < 0.5:
 #    field = current*529.37 + 0.49
@@ -147,8 +145,8 @@ for i in range(len(real))[0:]:
         fig.add_subplot(gs[0])
         fig.add_subplot(gs[1])
     
-    fig.axes[1].plot(real[i],imag[i], 'b', label= 'current = %smA'%(currents[i]))
-    fig.axes[0].plot(freq[i]/1e9,mag[i],'b',  label= 'current = %smA'%(currents[i]))
+    fig.axes[1].plot(real[i],imag[i], label= 'current = %smA'%(currents[i]))
+    fig.axes[0].plot(freq[i]/1e9,mag[i], label= 'current = %smA'%(currents[i]))
     
 
 
@@ -160,18 +158,17 @@ for i in range(len(real))[0:]:
     if fit_S12:
         params = lmfit.Parameters()
         params.add('kappa_prod', value= (np.max(np.abs(datas))*2e6)**2.001, min = 0)#,vary = False)
-        params.add('omega_c', value=freqs[i][np.argmax(np.abs(datas))]*1.00001,min = freqs[i][np.argmax(np.abs(datas))]*0.9, max = freqs[i][np.argmax(np.abs(datas))] * 1.1)#,vary = False)
-        params.add('kappa_a', value=5e6, min = 0)#, max = 4e6)#,vary = False)
+        params.add('omega_c', value=freqs[i][np.argmax(np.abs(datas))]*1.000,min = freqs[i][np.argmax(np.abs(datas))]*0.9, max = freqs[i][np.argmax(np.abs(datas))] * 1.1)#,vary = False)
+        params.add('kappa_a', value=2e6, min = 0)#, max = 4e6)#,vary = False)
         if np.max(np.abs(datas)) < limit_for_off:
             params.add('roff',value = 0)#,vary = False)
             params.add('ioff',value = 0)#, vary = False)
-        params.add('phi',value = 3, max = np.pi, min = -np.pi)#,vary = False)
+        params.add('phi',value = 0, max = np.pi, min = -np.pi)#,vary = False)
                 
     #    datas = realdata[0,:]+ 1j*imagdata[0,:]    
         result = lmfit.minimize(S21, params, args=(freqs[i], datas))
-#        lmfit.report_fit(result.params)
-#        print ('total Q: ',result.params['omega_c'].value/result.params['kappa_a'].value)
-        print ('linwidth ',result.params['kappa_a'].value/1000000)
+        lmfit.report_fit(result.params)
+        print ('total Q: ',result.params['omega_c'].value/result.params['kappa_a'].value)
         fitdata = np.sqrt(result.params['kappa_prod'].value)/(-1j*(freqs[i]-result.params['omega_c'].value)-(result.params['kappa_a'].value)/2.0 )
         if np.max(np.abs(datas)) < limit_for_off:
             fitdata = fitdata + result.params['roff'].value + 1j*result.params['ioff'].value
@@ -295,7 +292,7 @@ n=5
 #m,b = np.polyfit(field [0:n],kappa_a[0:n]/1e6,1)
 #pl.plot(field , field *m + b, label = 'kappa(MHz) = %s * current(mW) + %s'%(m,b))
 #print 'slope for kappa:', m
-pl.ylim(0,20)
+pl.ylim(0,5)
 pl.xlabel(xlabel)
 pl.ylabel('linewidth(MHz)')
 pl.legend(loc='upper right')

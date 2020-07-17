@@ -58,6 +58,7 @@ def analysis(meas, data=None, fig=None):
     fig.axes[0].set_xlabel('Detuning (MHz)')
     fig.axes[0].set_ylabel('Intensity (AU)')
     fig.canvas.draw()
+    return result.params
 
 
 #
@@ -158,4 +159,5 @@ class SSBSpec_Gaussianfit_SS(Measurement1D):
         return ys
 
     def analyze(self, data=None, fig=None):
-        analysis(self, data, fig)
+        self.fit_params = analysis(self, data, fig)
+        return self.fit_params['freq']

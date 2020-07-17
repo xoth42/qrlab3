@@ -15,14 +15,11 @@ import objectsharer as objsh
 import time
 import numpy as np
 from matplotlib import gridspec
-import os
-import config
 #
 #SPEC   = 0
 #POWER  = 1
 
 def analysis(powers, freqs, realdata, imagdata, fig_name, full_fig_name, Sij, fig=None):
-    fn = None
     fig = pl.figure()
     a=[0,0,0,0]
     
@@ -74,13 +71,6 @@ def analysis(powers, freqs, realdata, imagdata, fig_name, full_fig_name, Sij, fi
         pl.colorbar( a[k],fig.axes[len(Sij)+k])
         
     pl.suptitle(full_fig_name)
-    if fn is None:
-        fn = os.path.join(config.datadir, 'images/%s_VNA_trace.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
-    fdir = os.path.split(fn)[0]
-    if not os.path.isdir(fdir):
-        os.makedirs(fdir)
-    kwargs = dict()
-    fig.savefig(fn, **kwargs)
 
 class Power_Sweep_Varies_freq_VNA(Measurement1D):
 
@@ -134,8 +124,7 @@ class Power_Sweep_Varies_freq_VNA(Measurement1D):
         # Generate and load sequences
         VNA = self.instruments['VNA']
 #        Yoko = self.instruments['Yoko']
-#        SCqubit = self.instruments['SCqubit']
-#        Magnet = self.instruments['Magnet']
+        SCqubit = self.instruments['SCqubit']
 
         VNA.set_s_param(self.Sij[0])
         VNA.set_span(self.span)
@@ -162,19 +151,17 @@ class Power_Sweep_Varies_freq_VNA(Measurement1D):
         VNA.set_if_bandwidth(self.if_bandwidth)
         
         for ipower, power in enumerate(self.powers):
-            VNA.set_power(power)
-#            if power == -14:
-#                SCqubit.set_rf_on(False)
-#            else:
-#                SCqubit.set_rf_on(True)                
-#            SCqubit.set_power(power)
-#            self.powerdata[ipower] = SCqubit.get_power()
-#            Magnet.do_set_field(power)
-            
+#            VNA.set_power(power)
+            if power == -14:
+                SCqubit.set_rf_on(False)
+            else:
+                SCqubit.set_rf_on(True)                
+            SCqubit.set_power(power)
+            self.powerdata[ipower] = SCqubit.get_power()
             
             
             VNA.set_center_freq(self.center_freqs[ipower])
-            time.sleep(10)
+#            time.sleep(0.5)
             ave = avelimit
             
             if self.average_factor > avelimit:
