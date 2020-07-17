@@ -65,21 +65,21 @@ date = '20200702'
 #time = '233434'
 experiment = 'Power_Sweep_VNA'
 
-fields = np.linspace(0, -0.05,26)
+fields = np.linspace(0, 0.05,26)
 #fields = np.linspace(0.05, 0.002,13)
 
 ''' Primary x axis and secondary if 2d'''
 #x_key = 'freqs'
 #x2_key = 'powers'
 
-two_modes = True
+two_modes = False
 three_modes = False
 
 j = 0
 
 final_plot = True
 
-itime = 0
+itime = 18
 
 if itime == 0:
     datas = np.zeros([len(fields),1601],dtype = complex)
@@ -157,7 +157,7 @@ f = h5.File(filepath + hdf5_name, 'r')
 for i, title in enumerate(f[date].keys()):
 #    print int(title[0:6])
 #    print int(title[0:6]) <= 020617
-    if int(title[0:6]) <= int('122000') and int(title[0:6]) > int('043000') and title[7:12] =='Power':
+    if int(title[0:6]) <= int('023000') and int(title[0:6]) > int('000000') and title[7:12] =='Power':
         print title
 
 
@@ -195,19 +195,19 @@ for i, title in enumerate(f[date].keys()):
         fig.axes[0].plot(freq/1e9,np.abs(datas[itime]), label= 'field = %sT'%(fields[itime]))
         if two_modes:    
             params = lmfit.Parameters()
-            params.add('kappa_prod1', value=1e7, min = 0)#,vary = False)
-            params.add('omega_c', value=10.808e9)#,vary = False)
-            params.add('kappa_a1', value=1e7, min = 0)#,vary = False)
+            params.add('kappa_prod1', value=0.4e9, min = 0)#,vary = False)
+            params.add('omega_c', value=10.806e9)#,vary = False)
+            params.add('kappa_a1', value=1.3e6, min = 0)#,vary = False)
             if np.max(np.abs(datas)) < limit_for_off:
                 params.add('roff',value =(datas[itime][0].real+ datas[itime][-1].real)/2)#,vary = False)
                 params.add('ioff',value = (datas[itime][0].imag+ datas[itime][-1].imag)/2)#, vary = False)
-            params.add('phi1',value =2, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
+            params.add('phi1',value =-2, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
                 
         
-            params.add('kappa_prod2', value= 1e5, min = 0)#,vary = False)
-            params.add('omega_c2', value=10.825e9)#,vary = False)
-            params.add('kappa_a2', value = 2.4221e6, min = 0)#,vary = False)
-            params.add('phi21',value =3.154, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
+            params.add('kappa_prod2', value= 2e8, min = 0)#,vary = False)
+            params.add('omega_c2', value=10.82e9)#,vary = False)
+            params.add('kappa_a2', value = 40e6, min = 0)#,vary = False)
+            params.add('phi21',value =-3, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
             
         #    if itime == 0:
         #        params = lmfit.Parameters()
@@ -340,7 +340,7 @@ if final_plot:
     #X,Y = np.meshgrid(field, freq)
     X,Y = np.meshgrid(fieldplot, freq)
     pl.xlim(X.min(), X.max())
-    pl.pcolormesh(X,Y,Z,vmax = -30, vmin = -80)
+    pl.pcolormesh(X,Y,Z)#,vmax = -30, vmin = -80)
     pl.colorbar()
     #pl.title('YIG FMR Spectrum, S11 Measurement')
     #pl.xlabel('Magnetic Field(mT)')
@@ -356,6 +356,8 @@ if final_plot:
         pl.figure()
         pl.errorbar(lin_power, omega_c/1e9, yerr =omega_c_err/1e9, fmt ='o', label='frequency')
         pl.errorbar(lin_power, omega_c2/1e9, yerr =omega_c2_err/1e9, fmt ='o', label='frequency')
+        print 'omega_c\n', omega_c
+        print omega_c
     if three_modes:
         pl.figure()
         pl.errorbar(lin_power, omega_c/1e9, yerr =omega_c_err/1e9, fmt ='o', label='frequency1')
@@ -420,3 +422,8 @@ if final_plot:
         pl.errorbar(lin_power,phi31, yerr = phi31_err, fmt ='o', label='phi31')
     #pl.xlabel('drive power (mW)')
     pl.legend(loc='upper right') 
+    data = np.concatenate([omega_c, omega_c2, kappa_a,kappa_a2])
+    np.savetxt('C:\Users\WangLab\Documents\yingying\\0317cooldown_S21 cavity freqs and kappas.txt', data)
+    
+    
+

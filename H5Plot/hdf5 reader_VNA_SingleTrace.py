@@ -27,8 +27,8 @@ filepath = 'C:\_Data\\'
 
 hdf5_name = '0626cooldown_circualtor_VNA - Copy.hdf5'
 #hdf5_name = '0612cooldown_FMR - Copy.hdf5'
-date = '20200629'
-time = '231307'
+date = '20200703'
+time = '133134'
 experiment = 'SingleTrace'
 #experiment = 'SingleTraceNoAsync'
 
@@ -152,7 +152,7 @@ if subtract:
 
 #mag = 10*np.log10(real**2 + imag**2)
 datas = real + 1j*imag
-#datas = datas * np.exp(1j *10e-9 * freq)
+datas = datas * np.exp(1j *15e-9 * freq)
 mag = np.abs(datas)
 
 pl.figure()
@@ -309,23 +309,23 @@ if fit_S12_two_modes_V3:
 if fit_S12_three_modes:
     params = lmfit.Parameters()
     params.add('kappa_prod1', value=2e9, min = 0)#,vary = False)
-    params.add('omega_c', value=10.805e9)#,vary = False)
+    params.add('omega_c', value=10.808e9)#,vary = False)
     params.add('kappa_a1', value=1e6, min = 0)#,vary = False)
     if np.max(np.abs(datas)) < limit_for_off:
         params.add('roff',value =(datas[0][0].real+ datas[0][-1].real)/2)#,vary = False)
         params.add('ioff',value = (datas[0][0].imag+ datas[0][-1].imag)/2)#, vary = False)
-    params.add('phi1',value =3, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
+    params.add('phi1',value =2, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
         
 
     params.add('kappa_prod2', value= 1e11, min = 0)#,vary = False)
-    params.add('omega_c2', value=10.815e9)#,vary = False)
+    params.add('omega_c2', value=10.83e9)#,vary = False)
     params.add('kappa_a2', value = 2e7, min = 0)#,vary = False)
-    params.add('phi21',value =2, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
+    params.add('phi21',value =-3, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
 
     params.add('kappa_prod3', value= 1e11, min = 0)#,vary = False)
-    params.add('omega_c3', value=10.78e9)#,vary = False)
+    params.add('omega_c3', value=10.79e9)#,vary = False)
     params.add('kappa_a3', value = 50e6, min = 0)#,vary = False)
-    params.add('phi31',value =-2, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
+    params.add('phi31',value =-1, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
 #    if itime == 0:
 #        params = lmfit.Parameters()
 #        params.add('kappa_prod1', value= 1e9, min = 0)#,vary = False)
