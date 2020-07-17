@@ -13,6 +13,11 @@ def double_gaussian(params, x, data):
                                 + params['amp2'] * np.exp(-np.power(dx2, 2.) / (2 * np.power(params['sigma'], 2.))))
     return data - est
 
+def single_gaussian(params, x, data):
+    dx1 = x-params['center1']
+    est = (params['background'] + params['amp1'] * np.exp(-np.power(dx1, 2.) / (2 * np.power(params['sigma'], 2.))))
+    return data - est
+
 def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
     xs = -meas.detunings
@@ -21,20 +26,34 @@ def analysis(meas, data=None, fig=None):
     fig.axes[0].set_ylabel('Intensity (AU)')
     fig.canvas.draw()
 
-    params = lmfit.Parameters()
-    params.add('background', value=max(ys), max=max(ys)+np.absolute(max(ys))*0.5)
-    params.add('amp1', value=(np.min(ys)-np.max(ys))/1.2, max=0)
-    params.add('amp2', value=(np.min(ys)-np.max(ys))/1.3, max=0)
-    params.add('sigma', value=(xs[-1]-xs[0])/12, max=(xs[-1]-xs[0])/2)
-    params.add('center1', value=xs[np.argmin(ys)], min=xs[0], max=xs[-1])
-    params.add('center2', value=(xs[np.argmin(ys)]+xs[-1])/2, min=xs[0], max=xs[-1])
+    if 0: #For double Gaussian fit
+        params = lmfit.Parameters()
+        params.add('background', value=min(ys), min=min(ys)+0.5)
+        params.add('amp1', value=(np.max(ys)-np.min(ys))/1.2, min=4)
+        params.add('amp2', value=(np.max(ys)-np.min(ys))/1.2, min=4)
+        params.add('sigma', value=(xs[-1]-xs[0])/12, max=(xs[-1]-xs[0])/2)
+        params.add('center1', value=xs[np.argmax(ys)], min=xs[0], max=xs[-1])
+        params.add('center2', value=(xs[np.argmax(ys)]+xs[-1])/2, min=xs[0], max=xs[-1])
+            
+        result = lmfit.minimize(double_gaussian, params, args=(xs, ys))
+        lmfit.report_fit(result.params)
+    
+        fig.axes[0].plot(xs/1e6, -double_gaussian(result.params, xs, 0))
+        fig.canvas.draw()
+        return result.params
+    if 1: #For single Gaussian fit
+        params = lmfit.Parameters()
+        params.add('background', value=min(ys), min=min(ys)-5) #+np.absolute(min(ys))*0.5)
+        params.add('amp1', value=-(np.min(ys)-np.max(ys))/1.2, min=0) #Chen reverted to positive peak 6/27
+        params.add('sigma', value=(xs[-1]-xs[0])/12, max=(xs[-1]-xs[0])/2)
+        params.add('center1', value=xs[np.argmax(ys)], min=xs[0], max=xs[-1])
         
-    result = lmfit.minimize(double_gaussian, params, args=(xs, ys))
-    lmfit.report_fit(result.params)
-
-    fig.axes[0].plot(xs/1e6, -double_gaussian(result.params, xs, 0))
-    fig.canvas.draw()
-        
+        result = lmfit.minimize(single_gaussian, params, args=(xs, ys))
+        lmfit.report_fit(result.params)
+    
+        fig.axes[0].plot(xs/1e6, -single_gaussian(result.params, xs, 0))
+        fig.canvas.draw()
+        return result.params           
 #    f = fit.Lorentzian(xs, ys)
 #    if 0:
 #        h0 = np.max(ys)-np.min(ys)
@@ -63,7 +82,6 @@ class SSBSpec(Measurement1D):
         self.xs = detunings / 1e6       # For plot
         self.bgcor = bgcor
         self.coplay_delay=coplay_delay
-
 
         npoints = len(detunings)
         if bgcor:
@@ -115,6 +133,6 @@ class SSBSpec(Measurement1D):
         return ys
 
     def analyze(self, data=None, fig=None):
-        analysis(self, data, fig)
+        self.fit_params = analysis(self, data, fig)
         self.fig = fig
 

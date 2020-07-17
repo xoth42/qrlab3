@@ -7,6 +7,9 @@ from lmfit.models import LinearModel, LorentzianModel
 from measurement import Measurement1D
 import lmfit
 
+
+
+
 def Gaussfit(params, x, y):
     est = params['Amp'] * np.exp(-(x-params['freq'])**2/(2 * params['kappa']**2)) + params['off']
     
@@ -58,7 +61,7 @@ def analysis(meas, data=None, fig=None):
     fig.axes[0].set_xlabel('Detuning (MHz)')
     fig.axes[0].set_ylabel('Intensity (AU)')
     fig.canvas.draw()
-
+    return result.params
 
 #
 #        f = plt.figure()
@@ -148,4 +151,5 @@ class SSBSpec_Gaussianfit(Measurement1D):
         return ys
 
     def analyze(self, data=None, fig=None):
-        analysis(self, data, fig)
+        self.fit_params = analysis(self, data, fig)
+        return self.fit_params['freq']

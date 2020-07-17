@@ -37,9 +37,7 @@ if 0: # Cavity disp calibration
     seq = sequencer.Trigger(250)
 
     disp = cavdisp.CavDisp(qubit_info, qubit2_info, np.pi*2, 41, 0, seq=None,
-                           delay=0, bgcor=False, update=False, generate=True,proj_func='phase'
-
-                          )
+                           delay=0, bgcor=False, update=False, generate=True,proj_func='phase')
     disp.measure()
     bla
 
@@ -51,31 +49,53 @@ if 0: # test Q function
              seq=seq, delay=0, saveas=None, bgcor=False, proj_func='phase')
     Qfun.measure()
 
+
 if 0: # test non-square data
     from scripts.single_cavity import WignerbyParity
 #    cool = sequencer.Constant(int(8e3),1,chan='3m1')
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), qubit2_info.rotate(np.pi, 0)])
-    Wfun = WignerbyParity.WignerFunction(qubit_info, qubit_info2, qubit2_info, np.linspace(-2, 2, 9), np.linspace(-2, 2, 9), 
+    Wfun = WignerbyParity.WignerFunction(qubit_info, qubit_info2, qubit2_info, np.linspace(-2, 2, 3), np.linspace(-2, 2, 16), 
                                          t_ge=200, t_gf=0, proj_func='phase')
     Wfun.measure()
-    
 
     
-if 1: # Tune up for time vs relative amp
+if 0: # Tune up for time vs relative amp
     
-    from scripts.fluxonium import CRtuning_timevsamp
+    from scripts.fluxonium import CRtuning_time_amp
     cool = sequencer.Constant(int(8e3),1,chan='3m1')
     seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])    
-    cr_tune = CRtuning_timevsamp.CRtuning_timevsamp(qubit2_info2, qubit2_info, qubit_info, 
-                                                    np.linspace(1,150,13), rel_amps=np.linspace(0.2,0.5,13), 
-                amp=0.3, phase=0, rel_phase=0, sigma=5, update=False, seq=seq, r_axis=0, fix_phase=True, 
-                fix_period=None, repeat_pulse=1, postseq=None, selective=False, control_pi=True, proj_func='phase')    
+    cr_tune = CRtuning_time_amp.CRtuning_time_amp(qubit2_info2, qubit2_info, qubit_info, 
+                                                    np.linspace(1,300,31), rel_amps=np.linspace(0.28,0.38,9), 
+                amp=0.3, phase=0, rel_phase=-0.35, sigma=5, seq=seq, control_pi=True, proj_func='phase')    
     
     data = cr_tune.measure()
     bla
-        
 
+if 0: # Tune up for time vs relative phase
+    
+    from scripts.fluxonium import CRtuning_time_phase
+    cool = sequencer.Constant(int(8e3),1,chan='3m1')
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])    
+    cr_tune = CRtuning_time_phase.CRtuning_time_phase(qubit2_info2, qubit2_info, qubit_info, 
+                                                    np.linspace(1,300,31), rel_phases=np.linspace(-0.5,0,11), 
+                amp=0.3, phase=0, rel_amp=0.33, sigma=5, seq=seq, control_pi=False, proj_func='phase')    
+    
+    data = cr_tune.measure()
+    bla
 
+if 0: # Tune up for time vs detuning   
+    from scripts.fluxonium import CRtuning_timevsdet
+    cool = sequencer.Constant(int(8e3),1,chan='3m1')
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])    
+    cr_tune = CRtuning_timevsdet.CRtuning_timevsdet(qubit2_info2, qubit2_info, qubit_info, 
+                                                    np.linspace(0,600,9), np.linspace(-2e6, 1e6, 31), 
+                amp=0.15, phase=0, rel_amp=0.315, rel_phase=-0.34, sigma=5, 
+                seq=seq, control_pi=True, proj_func='phase',
+                )    
+    
+    data = cr_tune.measure()
+    bla
+    
 if 0: # Tune up for relative amp vs relative phase
     
     from scripts.fluxonium import CRtuning_ampvsphase

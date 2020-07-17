@@ -15,14 +15,11 @@ import objectsharer as objsh
 import time
 import numpy as np
 from matplotlib import gridspec
-import os
-import config
 #
 #SPEC   = 0
 #POWER  = 1
 
 def analysis(fields, freqs, realdata, imagdata, fig_name, full_fig_name, Sij, fig=None):
-    fn = None
     fig = pl.figure()
     a=[0,0,0,0]
     
@@ -43,7 +40,7 @@ def analysis(fields, freqs, realdata, imagdata, fig_name, full_fig_name, Sij, fi
     #    if not len(Sij) == 1:
         gss[k] = gridspec.GridSpecFromSubplotSpec(1,2, subplot_spec=gs[k],width_ratios = (19,1))        
         fig.add_subplot(gss[k][0])
-        fig.axes[k].set_title('%s'%(fig_name))
+        fig.axes[k].set_title('%s%s'%(fig_name,Sij[k]))
         fig.axes[k].set_xlim(xs.min(), xs.max())
         fig.axes[k].set_ylim(ys.min(), ys.max())
         
@@ -69,13 +66,6 @@ def analysis(fields, freqs, realdata, imagdata, fig_name, full_fig_name, Sij, fi
         pl.colorbar( a[k],fig.axes[len(Sij)+k])
         
     pl.suptitle(full_fig_name)
-    if fn is None:
-        fn = os.path.join(config.datadir, 'images/%s_VNA_trace.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
-    fdir = os.path.split(fn)[0]
-    if not os.path.isdir(fdir):
-        os.makedirs(fdir)
-    kwargs = dict()
-    fig.savefig(fn, **kwargs)
 
 class Magnet_Sweep_VNA(Measurement1D):
 
@@ -159,10 +149,7 @@ class Magnet_Sweep_VNA(Measurement1D):
         for ifield, field in enumerate(self.fields):
                
             Magnet.do_set_field(field)
-
-            
-            time.sleep(10)
-
+            time.sleep(5)
             if ifield == 0 or self.dfields > 0.005:
                 try:
                     while not abs(float(Magnet.do_get_field()) - field) < 0.0005:
@@ -266,7 +253,7 @@ class Magnet_Sweep_VNA(Measurement1D):
                     gs.update(wspace=0.4, hspace=0.35)
                 for i in range(len(self.Sij)):
                     self.fig.add_subplot(gs[i])
-                    self.fig.axes[i].set_title('%s'%(self.fig_name))
+                    self.fig.axes[i].set_title('%s%s'%(self.fig_name,self.Sij[i]))
                     self.fig.axes[i].set_xlim(xs.min(), xs.max()+self.dfields)
                     self.fig.axes[i].set_ylim(ys.min(), ys.max())
         

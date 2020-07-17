@@ -11,6 +11,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import math 
 import time
+import lmfit
 
 
 import os
@@ -48,7 +49,7 @@ if 0: # RO Cavity spec
 #    rofreq = 7515.5e6
     rofreq = 7562.22e6
     freq_range = 8e6
-    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-15, -15, 1),
+    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(5, 5, 1),
                                          np.linspace(rofreq - freq_range, rofreq + freq_range, 51), qubit_pulse=False)
     ro.measure()
     bla
@@ -91,7 +92,9 @@ if 0: # Qubit SSBspec
 #    for i in [-15,-10,-5,0,5,10]:
 #    RObrick.do_set_power(i)
     cool = sequencer.Constant(int(8e3),1,chan='3m1')
-    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])#, qubit2_info.rotate(0.0001,0)])
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), 
+#                          qubit2_info.rotate(np.pi,0)
+                          ])
 #
     for power in np.linspace(0, 16, 1):
 #        coolgen.set_power(power)
@@ -102,7 +105,7 @@ if 0: # Qubit SSBspec
 #            seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), 
 ##                                  qubit2_info2.rotate(np.pi, 0)
 #                                  ])
-            spec = ssbspec.SSBSpec(qubit2_info, np.linspace(-6e6, 4e6, 81), proj_func='phase', seq=seq)#, extra_info=qubit_info)
+            spec = ssbspec.SSBSpec(qubit_info, np.linspace(-6e6, 4e6, 81), proj_func='phase', seq=seq, extra_info=qubit2_info)
             spec.measure()
 #            plt.close()
 #    spec.measure_keysight()
@@ -143,12 +146,12 @@ if 0: # Calibrate pi pulse
 #            WF_xxx.set_power(wf_power)
 #            for wf_freq in np.linspace(7.904615e9,7.90461e9,1):
 #                WF_xxx.set_frequency(wf_freq)
-        tr = rabi.Rabi(qubit_info, np.linspace(-0.2, 0.2, 61), selective=False,
+        tr = rabi.Rabi(qubit2_info, np.linspace(0.04, 0.065, 61), selective=False,
                 #                   np.linspace(0.75, 0.95, 101), selective=False,
                 #                           np.linspace(-0.2, 0.2, 61), selective=True,
-                                   plot_seqs=False, generate=True, repeat_pulse=1,  #n=3 has a bug
+                                   plot_seqs=False, generate=True, repeat_pulse=8,  #n=3 has a bug
                                    update=True, seq=seq,
-                                   postseq=None, proj_func='phase')
+                                   postseq=None, proj_func='phase',extra_info=qubit_info)
         data=tr.measure()
 #                amp=tr.fit_params['amp'].value
 #                K=[]
@@ -166,7 +169,7 @@ if 0: # Time Rabi
     from scripts.single_qubit import timerabi
     cool = sequencer.Constant(int(8e3),1,chan='3m1')
     seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])    
-    tr = timerabi.TimeRabi(qubit2_info, np.linspace(0, 300, 51), amp=0.04, seq=seq, plot_seqs=False, proj_func='phase')
+    tr = timerabi.TimeRabi(qubit_info, np.linspace(0, 50, 41), amp=0.038, seq=seq, plot_seqs=False, proj_func='phase')
     data = tr.measure()
     bla
 
@@ -242,20 +245,22 @@ if 0: # Process_tomography
     print ptomo_result
     bla
 
-if 0: # Drag test
+if 0:# Drag test
     from scripts.single_qubit import drag_test
-    dtest = drag_test.drag_test(qubit_info, np.linspace(-20, 0, 41), plot_seqs=False, generate=True)
+    dtest = drag_test.drag_test(qubit_info, np.linspace(-2, 2, 41), plot_seqs=False, generate=True, proj_func='phase', seq=seq_cool)
     data=dtest.measure()
     bla
 
 if 0: # AllXY  # there is a separate allxy with a pre pulse for the blue transition, don't change this one
     from scripts.single_qubit import allxy
+    cool = sequencer.Constant(int(8e3),1,chan='3m1')
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
     
 #    allxy_result = np.zeros((N, 42))
-    alz.set_naverages(15000)
+    alz.set_naverages(30000)
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate(-np.pi/2, 0)]) #this whole line was added
     allxy_result =[]
-    axy = allxy.All_XY(qubit_info, seq=None, generate=True, proj_func='phase')  #seq=seq was added
+    axy = allxy.All_XY(qubit_info, seq=seq, generate=True, proj_func='phase')  #seq=seq was added
     axy.measure()
     #        allxy_result[i,:] = axy.get_ys()
     allxy_result = axy.get_ys()
@@ -263,23 +268,109 @@ if 0: # AllXY  # there is a separate allxy with a pre pulse for the blue transit
 #    plt.figure()
 ##    for i in range(N):
 #        plt.plot(allxy_result[i,:])
-    alz.set_naverages(15000)
+    alz.set_naverages(8000)
 #    bla
 
 if 0: # Randomized benchmarking
-
     from scripts.fluxonium import randbench
     rndmben_result = []
-    alz.set_naverages(10000)
-    for i in range(25):
-        rndmben = randbench.rndm(qubit_info, num_cal_points=10, n_gates_start=1, n_gates_stop= 51, n_gates_step=1, seq=None, generate=True, proj_func='phase') #seq=seq added
+    cool = sequencer.Constant(int(8e3),1,chan='3m1')
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), 
+#                          qubit2_info.rotate(np.pi2,0)
+                          ])
+    postseq=qubit2_info.rotate(np.pi,0)
+
+    alz.set_naverages(1000)
+    for i in range(1):
+        rndmben = randbench.rndm(qubit2_info, num_cal_points=3, n_gates_start=1, n_gates_stop=11, n_gates_step=1, seq=seq, postseq=None, generate=True, proj_func='phase', extra_info=qubit2_info) #seq=seq added
         rndmben.measure()
         rndmben_result.append(rndmben.get_ys())
+        rndmben_complex_result.append(rndmben.avg_data)
+
 #        plt.close()
 #        plt.figure()
 #        plt.plot(rndmben.xs, rndmben.get_ys())#, linestyle=None)
 #    print rndmben_result
+#    bla
+
+if 0: # Randomized benchmarking joint
+    from scripts.fluxonium import randbench_jointRO
+    rndmben_result = []
+    q_epop_cplx = []
+    
+    n_gates_start = 1
+    n_gates_stop = 81
+    n_gates_step=3
+    
+    
+    cool = sequencer.Constant(int(8e3),1,chan='3m1')
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), 
+                          ])
+
+    alz.set_naverages(5000)
+    for i in range(25):
+        rndmben = randbench_jointRO.rndm(qubit_info, qubit2_info, num_cal_points=3, n_gates_start=1, n_gates_stop=81, n_gates_step=3, seq=seq, postseq=None, generate=True, proj_func='phase') #seq=seq added
+        rndmben.measure()
+        rndmben_result.append(rndmben.get_ys())
+        q_epop_cplx.append(rndmben.q1_epop_cplx)
     bla
+#fitting the averaged data of this run
+
+
+    average_data= np.real(np.mean(q_epop_cplx, axis=0))
+    std = np.std(np.real(q_epop_cplx), axis = 0)
+
+
+    xs = np.linspace(1,81,26)  #change this 
+    ys  = average_data
+    err = std
+
+
+
+    def exp_decay(params, x, data):
+        est=params['ofs'] + params['amplitude'] * np.exp(-x/params['tau'].value)
+        return (data-est)
+
+    def exp_decay2(params, x):
+        est=params['ofs'] + params['amplitude'] * np.exp(-x/params['tau'].value)
+        return est
+
+    params=lmfit.Parameters()
+    params.add('amplitude', value=0.5)
+    params.add('ofs', value=0.5)
+    params.add('tau', value=100)
+    plt.figure()
+    ax1 = plt.gca()
+    result= lmfit.minimize(exp_decay, params, args=(xs,ys))
+    lmfit.report_fit(result.params)
+    plt.plot(xs, exp_decay2(result.params,xs), markersize=4)
+    plt.errorbar(xs,ys,std, markersize=3, linestyle='None', capsize=2, color='red')
+    plt.plot(xs,ys, 'ro', markersize=5, color='magenta', linestyle='None')
+    plt.plot(xs,np.transpose(np.real(np.mean(q_epop_cplx, axis=0))), '.', markersize=3, linestyle='None')
+    plt.title('trial')
+    ax1.set_ylabel('Average fidelity')
+    ax1.set_xlabel('Number of gates')
+
+
+
+
+
+if 0: # Randomized benchmarking joint interleaved two qubits
+    from scripts.fluxonium import randbench_jointRO_interleaved
+    rndmben_result = []
+
+    
+    
+    cool = sequencer.Constant(int(8e3),1,chan='3m1')
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), 
+#                          qubit2_info.rotate(np.pi2,0)
+                          ])
+
+    alz.set_naverages(10000)
+    for i in range(1):
+        rndmben = randbench_jointRO_interleaved.rndm(qubit2_info, qubit_info, num_cal_points=3, n_gates_start=1, n_gates_stop=81, n_gates_step=3, seq=seq, postseq=None, generate=True, proj_func='phase') #seq=seq added
+        rndmben.measure()
+        rndmben_result.append(rndmben.get_ys())
 
 
 if 0: # Check histogramming
@@ -320,7 +411,7 @@ if 0: #Temporary: histogram - the set of 3 points looped together - super ineffi
     
 if 0: # T1
     from scripts.single_qubit import T1measurement
-    alz.set_naverages(50000)
+    alz.set_naverages(5000)
 #    t1times = np.zeros(len(range(1000)))
     for i in range(1):
 #    for i in range(1):
@@ -329,7 +420,7 @@ if 0: # T1
         seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])#
 #        t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0.1,5e3,31), np.linspace(5.1e3, 40e3, 31))), double_exp=True, generate=True, plot_seqs=False,
         t1 = T1measurement.T1Measurement(qubit2_info, np.linspace(0, 25e3, 81), double_exp=False, generate=True, plot_seqs=False,
-                                         proj_func='phase', seq=None)
+                                         proj_func='phase', seq=seq_cool)
         t1.measure()
 #        t1times[i] = t1.analyze()
 #        plt.close()
@@ -343,7 +434,7 @@ if 0: # T2
 #        coolgen.set_rf_on(True)
 #    
     #    for i in range(1):
-        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 3e3, 81), detune=2e6, double_freq=True, generate=True, postseq=None,extra_info =qubit_info,
+        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 3e3, 81), detune=1e6, double_freq=False, generate=True, postseq=None,extra_info =qubit_info,
                                              proj_func='phase', seq=seq_cool)
         t2.measure()
         bla
@@ -353,8 +444,8 @@ if 0: # T2echo
     cool = sequencer.Constant(int(8e3),1,chan='3m1')
     seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
 #    for i in range(1):
-    alz.set_naverages(8000)
-    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 4e3, 81), detune=2e6, echotype = T2measurement.ECHO_HAHN, necho=1, plot_seqs = False, generate=True,
+    alz.set_naverages(5000)
+    t2 = T2measurement.T2Measurement(qubit2_info, np.linspace(10, 4e3, 81), detune=2e6, echotype = T2measurement.ECHO_HAHN, necho=1, plot_seqs = False, generate=True,
                                      proj_func='phase', seq=seq )
     t2.measure()
     bla
@@ -449,16 +540,21 @@ if 0: #ground and first excited state voltages #need to figure out proper tick l
         plt.title(power)
     
     bla
-if 0: # Randomized benchmarking for single qubit gates
-
-    from scripts.fluxonium import randbench_singlequbitgate
-    rndmbensingle_result = []
-    alz.set_naverages(150000)
-
-    for i in range(8):
-        rndmbensingle = randbench_singlequbitgate.randbench_singlequbitgate(qubit2_info, qubit2_info2, num_cal_points=6, n_gates_start=1, n_gates_stop= 11, n_gates_step=1, seq=None, plot_seqs=False, generate=True, proj_func='phase') #seq=seq added
-        rndmbensingle.measure()
-        rndmbensingle_result.append(rndmbensingle.get_ys())
+#if 0: # Randomized benchmarking for single qubit gates
+#
+#    from scripts.fluxonium import randbench_singlequbitgate
+#    rndmbensingle_result = []
+#    alz.set_naverages(150000)
+#    cool = sequencer.Constant(int(20e3),1,chan='3m1')
+#
+#    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), 
+#                          qubit2_info.rotate(np.pi,0)
+#                          ])
+#
+#    for i in range(8):
+#        rndmbensingle = randbench_singlequbitgate.randbench_singlequbitgate(qubit2_info, qubit2_info2, num_cal_points=6, n_gates_start=1, n_gates_stop= 11, n_gates_step=1, seq=None, plot_seqs=False, generate=True, proj_func='phase', extra_info=qubit2_info) #seq=seq added
+#        rndmbensingle.measure()
+#        rndmbensingle_result.append(rndmbensingle.get_ys())
 #        plt.close()
 #        plt.figure()
 #        plt.plot(rndmben.xs, rndmben.get_ys())#, linestyle=None)
@@ -467,12 +563,13 @@ if 0: # Randomized benchmarking for single qubit gates
 
 if 0: # single qubit rotation try
     from scripts.fluxonium import single_rotation
+    cool = sequencer.Constant(int(20e3),1,chan='3m1')
+    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(200)])
     
-#    allxy_result = np.zeros((N, 42))
-    alz.set_naverages(100)
+    alz.set_naverages(100000)
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate(-np.pi/2, 0)]) #this whole line was added
     result =[]
-    sr = single_rotation.Single_Rotation(qubit2_info, qubit_info2, seq=None, plot_seqs=True, generate=True, proj_func='phase')  #seq=seq was added
+    sr = single_rotation.Single_Rotation(qubit_info, qubit2_info, seq=seq_cool, plot_seqs=True, generate=True, proj_func='phase')  #seq=seq was added
     sr.measure()
     #        allxy_result[i,:] = axy.get_ys()
     result = sr.get_ys()
@@ -571,41 +668,42 @@ if 0: # Interleaved combined Rabi
 #        data=tr.measure()  
 #
     
-if 0: # Interleaved Time Rabi
+
+if 1: 
     from scripts.fluxonium  import timerabi_interleaved
-    alz.set_naverages(2000)
+    alz.set_naverages(3000)
     
     cool = sequencer.Constant(int(8e3),1,chan='3m1')
     seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)]) 
-    X_proj = qubit_info2.rotate(np.pi/2, np.pi*0.30)
-    Y_proj = qubit_info2.rotate(np.pi/2, np.pi*0.30+np.pi/2)
+    X_proj = qubit_info.rotate(np.pi/2, 0)#np.pi*0.30)
+    Y_proj = qubit_info.rotate(np.pi/2, np.pi/2)
 
-    rel_amp=0.301
-    rel_phase = 0.188*np.pi
+    rel_amp=1
+    rel_phase = 0.25
 #    for rel_amp in np.linspace(0.295, 0.298, 2):
-    for rel_phase in np.linspace(0.189, 0.194, 1)*np.pi:
-        for i in range(3):
+    for rel_amp in np.linspace(1.1, 0.32, 1):
+        for i in range(1):
             for postseq in [None]:
                 tr = timerabi_interleaved.TimeRabi_interleaved(
-                    qubit_info, qubit_info2, qubit2_info2, np.linspace(0, 500, 51), #Does not include Gaussian ramp time, sigma=4
-                    amp=0.5, phase=0, rel_amp=rel_amp, rel_phase=rel_phase, 
+                    qubit_info, qubit_info2, qubit2_info, np.linspace(0, 100, 51), #Does not include Gaussian ramp time, sigma=4
+                    amp=0.05, phase=0, rel_amp=rel_amp, rel_phase=rel_phase, 
                     update=False, seq=seq_cool, postseq=postseq, proj_func='phase')
                 data = tr.measure()
     bla
 
 
-if 0: # Compensated Time Rabi
-    from scripts.single_qubit import timerabi_singlequbit
-    cool = sequencer.Constant(int(8e3),1,chan='3m1')
-    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])    
-    rel_amp=0.301
-    rel_phase = 0.188*np.pi
-
-    tr = timerabi_singlequbit.TimeRabi_singlequbit(qubit_info, qubit_info2, qubit2_info2, np.linspace(0, 500, 51), amp=0.5, phase=0, rel_amp=rel_amp, rel_phase=rel_phase, 
-                    update=False, seq=seq_cool, postseq=postseq, proj_func='phase')
-    data = tr.measure()
-    bla
-
+#if 0: # Compensated Time Rabi
+#    from scripts.single_qubit import timerabi_singlequbit
+#    cool = sequencer.Constant(int(8e3),1,chan='3m1')
+#    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])    
+#    rel_amp=0.301
+#    rel_phase = 0.188*np.pi
+#
+#    tr = timerabi_singlequbit.TimeRabi_singlequbit(qubit_info, qubit_info2, qubit2_info2, np.linspace(0, 500, 51), amp=0.5, phase=0, rel_amp=rel_amp, rel_phase=rel_phase, 
+#                    update=False, seq=seq_cool, postseq=postseq, proj_func='phase')
+#    data = tr.measure()
+#    bla
+#
 
 
 '''2D CR Tune-ups'''
@@ -614,7 +712,7 @@ if 0: # Tune up for time vs detuning   #Some issue with the detuned gaussian, I 
     
     from scripts.fluxonium import CRtuning_timevsdet
     
-    cr_tune = CRtuning_timevsdet.CRtuning_timevsdet(qubit_info, qubit_info2, qubit2_info, np.linspace(1,1000,11), np.linspace(-4e6, 4e6, 11), 
+    cr_tune = CRtuning_timevsdet.CRtuning_timevsdet(qubit_info, qubit_info2, qubit2_info, np.linspace(10,1000,11), np.linspace(-4e6, 4e6, 11), 
                 amp=0.35, phase=0, rel_amp=1, rel_phase=1, sigma=5, update=False, seq=None, r_axis=0, fix_phase=True, fix_period=None, repeat_pulse=1, postseq=None, selective=False, control_pi=False)    
     
     data = cr_tune.measure()
@@ -645,19 +743,34 @@ if 0: # Tune up for relative amp vs relative phase
     
 
   
-if 1: # Qubit spec with phase correction
+if 0: # cooling tone spec
     from scripts.fluxonium import cooling_tune_brickonoff
 #    from scripts.single_qubit import spectroscopy_IQ
-    cool_freq = 3.431e9
-    freq_range = 30e6
-    cool = sequencer.Constant(int(8e3),1,chan='3m1')
-    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
+    cool_freq = 3.420e9
+    freq_range = 15e6
 
-    cool = cooling_tune_brickonoff.Cooling_tune_brickonoff(mclient.instruments['cool'], mclient.instruments['gaius01'], qubit_info,
-                                     np.linspace(cool_freq-freq_range,
-                                                 cool_freq+freq_range, 61),
-                                     [10], seq=seq_cool, plot_seqs=False) #1=1ns for plen
+    cool = cooling_tune_brickonoff.Cooling_tune_brickonoff(mclient.instruments['cool'], mclient.instruments['gaius01'], 
+                                                           qubit2_info, np.linspace(cool_freq-freq_range, cool_freq+freq_range, 31),
+                                     [7,8,9], '3m1', seq=None, plot_seqs=False) #1=1ns for plen
     cool.measure()
     bla
 
  
+    
+if 0: #Single qubit cancellation tune up 
+    #This should be done after ZZ is tuned. While making single qubit gates, we want to make sure we apply 
+    #a pair of tones that drives the first qubit and does not drive the second one.
+    cool = sequencer.Constant(int(8e3),1,chan='3m1')
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])    
+    
+    from scripts.fluxonium import single_qubit_tune
+    
+    sq_tune = single_qubit_tune.Single_qubit_tune(qubit_info, qubit2_info, amps=np.linspace(-0.30,0.3,17), amps2=np.linspace(-0.3,0.3,11),qubit1_rotation_angle =np.pi,
+                                                  update=False, seq=seq, r_axis=0, fix_phase=True, fix_period=None, repeat_pulse=1, postseq=None, selective=False)
+ 
+  
+    data = sq_tune.measure()
+    bla
+    
+
+    

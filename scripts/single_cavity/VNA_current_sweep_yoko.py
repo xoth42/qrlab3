@@ -15,14 +15,11 @@ import objectsharer as objsh
 import time
 import numpy as np
 from matplotlib import gridspec
-import os
-import config
 #
 #SPEC   = 0
 #POWER  = 1
 
 def analysis(currents, freqs, realdata, imagdata, fig_name, full_fig_name, Sij, fig=None):
-    fn = None
     fig = pl.figure()
     a=[0,0,0,0]
     
@@ -69,13 +66,6 @@ def analysis(currents, freqs, realdata, imagdata, fig_name, full_fig_name, Sij, 
         pl.colorbar( a[k],fig.axes[len(Sij)+k])
         
     pl.suptitle(full_fig_name)
-    if fn is None:
-        fn = os.path.join(config.datadir, 'images/%s_VNA_trace.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
-    fdir = os.path.split(fn)[0]
-    if not os.path.isdir(fdir):
-        os.makedirs(fdir)
-    kwargs = dict()
-    fig.savefig(fn, **kwargs)
 
 class Current_Sweep_VNA(Measurement1D):
 
@@ -157,11 +147,9 @@ class Current_Sweep_VNA(Measurement1D):
         VNA.set_if_bandwidth(self.if_bandwidth)
         
         for icurrent, current in enumerate(self.currents):
-
-            if icurrent == 0 or np.abs(self.dcurrents) > 0.002:
-                Yoko.do_ramp_current(current)
-                time.sleep(2)
-
+#            if icurrent == 0 or np.abs(self.dcurrents) > 0.002:
+#                Yoko.do_ramp_current(current)
+#                time.sleep(1)
             Yoko.do_set_current(current)
 
 #            time.sleep(1)

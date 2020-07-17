@@ -55,16 +55,16 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
 
 
 
-        params.add('kappa_prod', value= (np.max(np.abs(datas))*20e6)**2.001, min = 0)#,vary = False)
-        params.add('omega_c', value=freqs[np.argmax(np.abs(datas))]*1.00002,min = freqs[np.argmax(np.abs(datas))]*0.99, max = freqs[np.argmax(np.abs(datas))] * 1.01)#,vary = False)
-        params.add('kappa_a', value=20e6, min = 0)#, max = 4e6)#,vary = False)
+        params.add('kappa_prod', value= (np.max(np.abs(datas))*0.5e6)**2.001, min = 0)#,vary = False)
+        params.add('omega_c', value=freqs[np.argmax(np.abs(datas))]*1.00002,min = freqs[np.argmax(np.abs(datas))]*0.9998, max = freqs[np.argmax(np.abs(datas))] * 1.0002)#,vary = False)
+        params.add('kappa_a', value=1e6, min = 0)#, max = 4e6)#,vary = False)
 
 
 
         if np.max(np.abs(datas)) < limit_for_off:
             params.add('roff',value = np.real(datas[0]))#,vary = False)
             params.add('ioff',value = np.imag(datas[0]))#, vary = False)
-        params.add('phi',value = 0, max = np.pi*1.5, min = -np.pi*1.5)#,vary = False)
+        params.add('phi',value = -2, max = np.pi, min = -np.pi)#,vary = False)
                 
     #    datas = realdata[0,:]+ 1j*imagdata[0,:]    
         result = lmfit.minimize(S21, params, args=(freqs, datas))
@@ -80,10 +80,9 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
 #    ampdata = 20*np.log10(np.sqrt(realdata[0,:]**2 + imagdata[0,:]**2))
     if fit_S11:
         params = lmfit.Parameters()
-        params.add('kappa_1', value=2e+05)
+        params.add('kappa_1', value=2.1305e+05)
         params.add('omega_c', value=freqs[np.argmin(np.abs(datas))]*1.0001)
-#        params.add('omega_c', value=8.5446e9, vary = False)
-        params.add('kappa_a', value=3.00e+06)
+        params.add('kappa_a', value=3.0022e+06)
         params.add('A', value=1)
 #        params.add('phi',value = -1, max = np.pi, min = -np.pi)#,vary = False)
 #        if np.max(np.abs(datas)) < limit_for_off:
@@ -94,12 +93,8 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
     #    datas = realdata[0,:]+ 1j*imagdata[0,:]    
         result = lmfit.minimize(S11, params, args=(freqs, abs(datas)))
         lmfit.report_fit(result.params)
-        q_tot = result.params['omega_c'].value/result.params['kappa_a'].value
-        q_c = result.params['omega_c'].value/result.params['kappa_1'].value
-        q_i = q_c*q_tot/(-q_tot+q_c)
-        print ('total Q: ',q_tot)
-        print ('coupling Q: ',q_c)
-        print ('internal Q: ', q_i)
+        print ('total Q: ',result.params['omega_c'].value/result.params['kappa_a'].value)
+        print ('coupling Q: ',result.params['omega_c'].value/result.params['kappa_1'].value)
         fitdata = (-1 - result.params['kappa_1'].value / (-1j*(freqs-result.params['omega_c'].value)-result.params['kappa_a'].value/2))*result.params['A'].value
         fitdatadB = 20*np.log10(np.abs(fitdata))
 
@@ -122,12 +117,10 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
 #    fig.axes[1].plot( datas.real[0:100], datas.imag[0:100])
     if fit_S12:
 
-        fig.axes[1].plot(fitdata.real,fitdata.imag, '--',label = 'total Q = %s\n kappa_tot = %sMHz\n freq = %sGHz'%(result.params['omega_c'].value/result.params['kappa_a'].value, result.params['kappa_a'].value/1e6, result.params['omega_c'].value/1e9))
-#        fig.axes[1].plot(fitdata.real[0:100],fitdata.imag[0:100], '--')
-    
+        fig.axes[1].plot(fitdata.real,fitdata.imag, '--',label = 'total Q = %s\n kappa_tot = %s\n freq = %sGHz'%(result.params['omega_c'].value/result.params['kappa_a'].value,result.params['kappa_a'].value/1e6, result.params['omega_c'].value/1e9))
 
     if fit_S11:
-        fig.axes[1].plot(fitdata.real,fitdata.imag, '--',label = 'total Q = %s\n coupling Q = %s\n internal Q = %s\n freq = %sGHz'%(result.params['omega_c'].value/result.params['kappa_a'].value, result.params['omega_c'].value/result.params['kappa_1'].value, q_i,result.params['omega_c'].value/1e9))
+        fig.axes[1].plot(fitdata.real,fitdata.imag, '--',label = 'total Q = %s\n couplingQ = %s\n freq = %sGHz'%(result.params['omega_c'].value/result.params['kappa_a'].value, result.params['omega_c'].value/result.params['kappa_1'].value,result.params['omega_c'].value/1e9))
     plt.xlabel('I')
     plt.ylabel('Q') 
     plt.legend()       
@@ -189,7 +182,6 @@ class SingleTrace(Measurement1D):
         VNA.set_if_bandwidth(self.if_bandwidth)    
         ave = self.avelimit
         VNA.set_average_factor(ave)
-#        time.sleep(10)
         count = 0
 
         while count < self.average_factor:

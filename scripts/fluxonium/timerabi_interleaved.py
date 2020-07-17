@@ -49,7 +49,7 @@ def analysis(meas, data=None, fig=None):
         result = lmfit.minimize(fit_timerabi, params, args=(xs, ys))
         # stderr of 0 is none. replace with other line when using actual data
         #txt = 'Amp = %.03f +- %.03e\nPeriod = %.03f +- %.03e\nPi amp = %.06f' % (result.params['amp'].value, 0, result.params['period'].value, 0, result.params['period'].value/2 )
-        txt = 'Amp = %.03f +- %.03e\nPeriod = %.03f +- %.03e\nPi amp = %.06f' % (result.params['amp'].value, 
+        txt = 'Amp = %.03f +- %.03e\nPeriod = %.03f +- %.03e\nPi time = %.06f' % (result.params['amp'].value, 
                                                                                  result.params['amp'].stderr, 
                                                                                  result.params['period'].value, 
                                                                                  result.params['period'].stderr, 
