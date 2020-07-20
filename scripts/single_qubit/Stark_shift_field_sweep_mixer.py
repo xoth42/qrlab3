@@ -56,7 +56,7 @@ shift_ = []
 errors = []
 dig.set_naverages(40000)
 dig.do_set_trigger_period(100)
-fields = np.linspace(0,-.05,6)
+fields = np.linspace(0.001,0.001,1)
 RO_freqs = [10.805e9,10.805e9,10.804e9,10.806e9,10.807e9,10.808e9]
 stark_drive_deltaf = [-94e6,-94e6,-93e6,-95.5e6,-98.5e6,-98e6]
 for i,field in enumerate(fields):

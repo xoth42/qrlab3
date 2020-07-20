@@ -189,7 +189,7 @@ if 0: # cav transmission
     readout_info.rfsource2.set_frequency(ro_freq+50e6)
     bla
 
-if 0: # cav transmission with mixer
+if 1: # cav transmission with mixer
 
     from single_cavity import rocavspectroscopy_keysight_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])

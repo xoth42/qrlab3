@@ -60,7 +60,7 @@ hdf5_name = '0626cooldown_circualtor - Copy (2).hdf5'
 date = '20200717'
 experiment = 'ROCavSpectroscopy_keysight'
 f = h5.File(filepath + hdf5_name, 'r')
-j = 8
+j = 0
 #
 three_modes = False
 two_modes = True
@@ -85,7 +85,7 @@ if three_modes:
 for i, title in enumerate(f[date].keys()):
 #    print int(title[0:6])
 #    print int(title[0:6]) <= 020617
-    if int(title[0:6]) <= int('240000') and int(title[0:6]) > int('002000') and title[7:12] =='ROCav':
+    if int(title[0:6]) <= int('240000') and int(title[0:6]) > int('170000') and title[7:12] =='ROCav':
         print title
 
 
@@ -122,19 +122,19 @@ for i, title in enumerate(f[date].keys()):
         
         if two_modes:    
             params = lmfit.Parameters()
-            params.add('kappa_prod1', value= 5.59e12, min = 0)#,vary = False)
-            params.add('omega_c', value=10.805e9)#,vary = False)
-            params.add('kappa_a', value=3.2e6, min = 0)#,vary = False)
+            params.add('kappa_prod1', value= 3.28e12, min = 0)#,vary = False)
+            params.add('omega_c', value=10.808e9)#,vary = False)
+            params.add('kappa_a', value=2e6, min = 0)#,vary = False)
             if np.max(np.abs(datas)) < limit_for_off:
                 params.add('roff',value =(datas[0].real+ datas[-1].real)/2)
                 params.add('ioff',value = (datas[0].imag+ datas[-1].imag)/2)
-            params.add('phi1',value = -.4, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
+            params.add('phi1',value = 1.15, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
                     
             
-            params.add('kappa_prod2', value= 7.4e13, min = 0)#,vary = False)
-            params.add('omega_c2', value=10.811e9)#,vary = False)
-            params.add('kappa_a2', value=2.4e6, min = 0)#,vary = False)
-            params.add('phi21',value = 2, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
+            params.add('kappa_prod2', value= 6.185e14, min = 0)#,vary = False)
+            params.add('omega_c2', value=10.83e9)#,vary = False)
+            params.add('kappa_a2', value=8e5, min = 0)#,vary = False)
+            params.add('phi21',value = 4.88, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
             params.add('slope', value = -4.7e-7)
             result = lmfit.minimize(S21_two_modes_V3, params, args=(freqs, datas))
             lmfit.report_fit(result.params)

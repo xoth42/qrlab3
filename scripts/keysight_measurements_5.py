@@ -73,7 +73,7 @@ if 0: # test digitizer DEMODULATED
     plt.plot(np.real(avgs),np.imag(avgs)) 
     plt.show()
     bla
-if 1: # cav transmission
+if 0: # cav transmission
 
     from single_cavity import rocavspectroscopy_keysight
 #    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])
@@ -148,6 +148,7 @@ if 0: # cav transmission with mixer
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0), ef2_info.rotate(np.pi, 0)])
 #    Yoko.do_set_current(-0.00175)
     mixer1_amp = .7
+    Mixer2_amp = .7
     mixer_info1_set.set_pi_amp(mixer1_amp)
     mixer_info1 = mclient.get_qubit_info('mixer_info1')
     mixer_info2 = mclient.get_qubit_info('mixer_info2')
@@ -235,17 +236,38 @@ if 0: # cav transmission with mixer and CW qubit drive
     readout_info.rfsource2.set_frequency(ro_freq+50e6)
     bla
 
-if 0: # cav transmission with asymmetric drive 
-
+if 1: # cav transmission with asymmetric drive 
+    
+#    fields = [-0.04,0.03,-0.025,0.02,-0.015,0.01,-0.005, 0.0025, -0.001,0.0005,-0.00025, 0]
+#    fields = - np.asarray(fields)
+##Magnet.do_set_PSwitch(1)
+##time.sleep(35)
+##fields = np.linspace(0,-0.05,26)
+#    for field in fields:
+#        print(field)
+#        Magnet.do_set_field(field)
+#        time.sleep(600)
+#    
+#    Magnet.do_set_field(0)
+#    time.sleep(600)
+#    print('Demag done')
+#    Magnet.do_set_PSwitch(0)
+#    print('start magnet cooling')
+#    time.sleep(350)
+#    print('Magnet in persistent mode')
+#    from single_cavity import asymmetric_drive_cav_spec
+##    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])
+##    seq = sequencer.Sequence([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0), ef2_info.rotate(np.pi, 0)])
+##    Yoko.do_set_current(-0.00175)
+#    
     from single_cavity import asymmetric_drive_cav_spec
-#    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])
-#    seq = sequencer.Sequence([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0), ef2_info.rotate(np.pi, 0)])
-#    Yoko.do_set_current(-0.00175)
-    rofreq = 10.81e9
-    freq_range = 10e6
-    amps1 = np.linspace(.1,1,10)
-    amps2 = np.linspace(0,0,10)
-    phase1 = np.linspace(0,np.pi*2,1)
+    rofreq = 10.815e9
+    freq_range = 15e6
+    amps1 = np.linspace(.35,0,36)
+    amps2 = np.linspace(.35,.7,36)
+    phase1 = np.linspace(0,np.pi*2,36)
+    dig.do_set_naverages(3000)
+    print('Starting sweep')
     for j in range(len(phase1)):
         mixer_info1_set.set_sideband_phase(phase1[j])
         for i in range(len(amps1)):
@@ -446,7 +468,7 @@ if 0: # SSB spec with mixer
     bla
 
     
-if 1: #ssb with stark shift with mixer with lorentzian fit
+if 0: #ssb with stark shift with mixer with lorentzian fit
     from single_qubit import stark_shift_with_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
     for i in range(1):        
