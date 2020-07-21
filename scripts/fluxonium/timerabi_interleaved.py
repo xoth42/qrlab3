@@ -124,8 +124,8 @@ class TimeRabi_interleaved(Measurement1D):
                     Constant(int(plen), self.amp *self.rel_amp * np.cos(self.phase+self.rel_phase), chan=chs2[0]),
                     Constant(int(plen), self.amp *self.rel_amp * np.sin(self.phase+self.rel_phase), chan=chs2[1]),              
                 ]))
-#            s.append(Delay(5))
-#            s.append(self.qubit2_info.rotate(np.pi,0))
+            s.append(Delay(5))
+            s.append(self.qubit2_info.rotate(np.pi,0))#Chen changed to always measure with control qubit in e
 #this part out for the moment
 
 
@@ -156,8 +156,7 @@ class TimeRabi_interleaved(Measurement1D):
     #                GaussSquare(int(plen), ampQc, self.sigma, chan=chs2[1]),
                 ]))
     
-            s.append(Delay(5))
-            s.append(self.qubit2_info.rotate(np.pi,0))
+            s.append(Delay(5))#Chen changed to always measure with control qubit in e
             
             if self.postseq:
                 s.append(self.postseq)

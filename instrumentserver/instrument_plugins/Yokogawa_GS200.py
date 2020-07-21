@@ -27,11 +27,11 @@ class Yokogawa_GS200(VisaInstrument):
                            option_list=('MIN', 'MAX', 'UP', 'DOWN', '1E-3',
                                         '10E-3', '100E-3', '200E-3'),
                            )
-        self.add_parameter('voltage_range', type=types.StringType,
-                           flags=Instrument.FLAG_SET,
-                           option_list=('MIN', 'MAX', 'UP', 'DOWN', '1E-3',
-                                        '10E-3', '100E-3', '1E+0', '10E+0', '30E+0'),
-                           )
+#        self.add_parameter('voltage_range', type=types.StringType,
+#                           flags=Instrument.FLAG_SET,
+#                           option_list=('MIN', 'MAX', 'UP', 'DOWN', '1E-3',
+#                                        '10E-3', '100E-3', '1E+0', '10E+0', '30E+0'),
+#                           )
         self.add_parameter('source_range', type=types.StringType,
                            flags=Instrument.FLAG_GET)
 
@@ -114,19 +114,19 @@ class Yokogawa_GS200(VisaInstrument):
         self.set_source_type('CURR')
         self.set_source_range(range)
 
-    def set_voltage_range(self, range):
-        # don't change state if at limits
-        if self.get_source_range() == '1E-3' and range == 'DOWN':
-            return
-        if self.get_source_range() == '30E+0' and range == 'UP':
-            return
-
-        self.set_source_type('VOLT')
-        self.set_source_range(range)
-
-    # range auto updates at val * 1.2 (i.e. 1.21 V is 10 V scale)
-    # here for simplicity just change scales if value is above the
-    # current scale
+#    def set_voltage_range(self, range):
+#        # don't change state if at limits
+#        if self.get_source_range() == '1E-3' and range == 'DOWN':
+#            return
+#        if self.get_source_range() == '30E+0' and range == 'UP':
+#            return
+#
+#        self.set_source_type('VOLT')
+#        self.set_source_range(range)
+#
+#    # range auto updates at val * 1.2 (i.e. 1.21 V is 10 V scale)
+#    # here for simplicity just change scales if value is above the
+#    # current scale
     def select_voltage_range(self, value):
         ranges = ['10E-3', '100E-3', '1E+0', '10E+0', '30E+0']
 
