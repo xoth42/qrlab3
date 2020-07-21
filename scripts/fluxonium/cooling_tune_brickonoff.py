@@ -70,7 +70,7 @@ class Cooling_tune_brickonoff(Measurement1D):
     
     def generate(self):
         s = Sequence(self.seq)
-        s.append(Constant(int(8e3),1,chan=self.cool_channel))
+        s.append(Constant(int(4e3),1,chan=self.cool_channel))
         s.append(Delay(150))
         s.append(self.qubit_info.rotate(np.pi,0))
         s.append(Delay(5))

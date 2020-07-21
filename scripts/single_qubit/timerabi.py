@@ -17,6 +17,17 @@ def fit_timerabi(params, x, data):
             * np.cos(2*np.pi*x / params['period'].value + params['phase'].value))
     return data  - est
 
+def double_sin_fit(params, x, data):
+    '''
+    Double exponentially decaying sine
+    fit function: of + a1 * exp(-tau1 * x) * sin(f1 * x + phi1) + a2 * exp(-tau2 * x) * cos(f2 * x + phi2)
+    '''
+    exp1 = np.exp(-(x / params['tau'].value))
+    exp2 = np.exp(-(x / params['tau'].value))#exp2 = np.exp(-(x / params['tau2'].value))  #Chen changed to single tau for both frequencies 8/24/19
+    sin1 = np.sin(2 * np.pi * x * params['freq'].value + params['phi0'].value)
+    sin2 = np.sin(2 * np.pi * x * params['freq2'].value + params['phi2'].value)
+    est = params['ofs'].value + params['amp'].value * exp1 * sin1 + params['amp2'].value * exp2 * sin2
+    return data - est
 
 
 def analysis(meas, data=None, fig=None):
