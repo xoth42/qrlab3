@@ -615,3 +615,12 @@ if 0:
         alz.set_naverages(8000)
         t2e = T2measurement.T2Measurement(qubit_info, np.linspace(0.3e3, 40e3, 100), detune=200e3, echotype = T2measurement.ECHO_HAHN)
         t2e.measure()
+
+
+if 1: # Two-Qubit Randomized Benchmarking
+    from scripts.fluxonium import TwoQ_RB
+    TwoQ = TwoQ_RB.TwoQubit_RB(qubit_info, qubit2_info, N_cliffords=5)
+    TwoQ.measure()
+    (err_clif, err_gate) = TwoQ.analyze()
+    print('error per Clifford:', err_clif)
+    print('error per gate:', err_gate)
