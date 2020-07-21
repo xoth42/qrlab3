@@ -207,13 +207,10 @@ class GSRotation(object):
     
 class CombinedGSRotation(object):
 
-    def __init__(self, pi_area, smin, smax, hmin, hmax, rel_amp, rel_phase, area_frac=1, chans=(1,2), chans2=(2,3), drag=0, chop=4, chirp=None, switch=False, switch_channel=None):
-        self.pi_area = pi_area
-        self.smin = smin
-        self.smax = smax
-        self.hmin = hmin
-        self.hmax = hmax
-        self.area_frac = area_frac
+    def __init__(self, width, amp, sigma, rel_amp, rel_phase, chans=(1,2), chans2=(2,3), drag=0, chop=4, chirp=None, switch=False, switch_channel=None):
+        self.width = width
+        self.amp = amp
+        self.sigma = sigma
         self.rel_amp = rel_amp
         self.rel_phase = rel_phase
         self.drag = drag
@@ -223,44 +220,18 @@ class CombinedGSRotation(object):
         self.chirp = chirp
         self.switch = switch
         self.switch_channel = switch_channel
+        self.ampgen = ampgen.AmpGen()
 
-    def set_pi(self, val):
-        self.pi_area = val
+    def __call__(self, alpha, phase, amp=None, drag=None):
+        if amp is None:
+            amp = self.amp*(alpha / np.pi)
+        if drag is None:
+            drag = self.drag
 
-    def __call__(self, alpha, phase, drag=None):
-        if alpha == 0:
-            return Sequence()
-
-        # Requested area
-        if alpha < 0:
-            alpha *= -1
-            sign = -1
-        else:
-            sign = 1
-        area = (alpha / np.pi) * self.pi_area / self.area_frac
-        h = self.hmax
-
-        # Minimum area of Gaussian sides
-        gminarea = self.smin * np.sqrt(np.pi) * self.hmax
-        # Calculate required square wave size
-        if area > gminarea:
-            ws = np.floor((area - gminarea) / self.hmax)
-        else:
-            h = area / np.sqrt(np.pi) / self.smin
-            ws = 0
-        # Calculate are for Gaussian sides
-        garea = area - ws * h
-        sigma = garea / np.sqrt(np.pi) / h
-
-        a1 = sign * h * np.cos(phase)
-        a2 = sign * h * np.sin(phase)
-        a3 = sign * h * self.rel_amp * np.cos(phase+self.rel_phase)
-        a4 = sign * h * self.rel_amp * np.sin(phase+self.rel_phase)
-
-        p1 = GaussSquare(ws, a1, sigma, chan=self.chans[0], chop=self.chop)
-        p2 = GaussSquare(ws, a2, sigma, chan=self.chans[1], chop=self.chop)
-        p3 = GaussSquare(ws, a3, sigma, chan=self.chans2[0], chop=self.chop)
-        p4 = GaussSquare(ws, a4, sigma, chan=self.chans2[1], chop=self.chop)
+        p1 = GaussSquare(self.width, amp * np.cos(phase), self.sigma, chan=self.chans[0], chop=self.chop)
+        p2 = GaussSquare(self.width, amp * np.sin(phase), self.sigma, chan=self.chans[1], chop=self.chop)
+        p3 = GaussSquare(self.width, self.rel_amp * amp * np.cos(phase+self.rel_phase), self.sigma, chan=self.chans2[0], chop=self.chop)
+        p4 = GaussSquare(self.width, self.rel_amp * amp * np.sin(phase+self.rel_phase), self.sigma, chan=self.chans2[1], chop=self.chop)
         if self.chirp:
             p1 = Chirp(p1, self.chirp, chan=self.chans[0])
             p2 = Chirp(p2, self.chirp, chan=self.chans[1])
@@ -276,16 +247,9 @@ class CombinedGSRotation(object):
             p3 = Pulse('dragI(%s,%.5f)'%(p3.name, drag), p3d, chan=self.chans2[0])
             p4 = Pulse('dragQ(%s,%.5f)'%(p4.name, drag), p4d, chan=self.chans2[1])
 
-        # no need for pulses
-        if a1 == 0 and a2 == 0:
-            return Sequence()
-#        elif a1 == 0:
-#            return Combined([Delay(p2len, chan=self.chans[0]), p2])
-#        elif a2 == 0:
-#            return Combined([p1, Delay(p1len, chan=self.chans[1])])
-        if self.switch is True:
-            switchMarker = Constant((4*sigma+ws+8), 1, chan = self.switch_channel)
-            return Combined([p1, p2, switchMarker], align = 1)
+#        if self.switch is True:
+#            switchMarker = Constant((4*sigma+ws+8), 1, chan = self.switch_channel)
+#            return Combined([p1, p2, switchMarker], align = 1)
 
 #        print 'Requested area: %.03f, actual areas: %.03f / %.03f' % (area, p0.get_area(), p1.get_area())
         return Combined([p1, p2, p3, p4])

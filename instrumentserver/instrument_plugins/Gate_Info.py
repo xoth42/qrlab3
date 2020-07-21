@@ -68,7 +68,12 @@ class Gate_Info(Pulse_Info):
         self.add_parameter('w', type=types.FloatType,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 set_func=lambda x: True, value=10,
-                doc='For Gaussian rotations sigma, for others the pulse width'
+                doc='For Gaussian rotations sigma'
+                )
+        self.add_parameter('sq_len', type=types.FloatType,
+                flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
+                set_func=lambda x: True, value=0,
+                doc='For GaussianSquare rotations the square length'
                 )
 
         self.add_parameter('pi_amp', type=types.FloatType,

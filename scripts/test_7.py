@@ -28,11 +28,12 @@ if 0:
     mclient.load_settings_from_file(r'c:\_data\settings\20131214\165409.set', toload)    # Last time-Rabi callibration
     bla
 
-#qubits = mclient.get_qubits()
-#qubit_info = mclient.get_qubit_info('qubit1ge')
+qubits = mclient.get_qubits()
+qubit_info = mclient.get_qubit_info('qubit1ge')
 #qubit2_info = mclient.get_qubit_info('qubit2ge')
 #ef_info = mclient.get_qubit_info('qubit1ef')
 gate_info = mclient.get_gate_info('gate')
+gate2_info = mclient.get_gate_info('gate2')
 #cavity_info = mclient.get_qubit_info('cavityBob')
 #cavity_info = mclient.get_qubit_info('cavityRO')
 #cavity_info = mclient.get_qubit_info('cavityAlice')
@@ -125,7 +126,7 @@ if 0: # Calibrate pi pulse
         
     bla
 
-if 1: # Time Rabi
+if 0: # Time Rabi
     from scripts.single_qubit import timerabi
     tr = timerabi.TimeRabi(gate_info, np.linspace(10, 1500, 5), amp=0.3)
     data = tr.measure()
@@ -295,13 +296,13 @@ if 0: # Check histogramming
     tr.measure()
 
 
-if 1: # T1
+if 0: # T1
     from scripts.single_qubit import T1measurement
 #    alz.set_naverages(5000)
 #    t1times = np.zeros(len(range(1000)))
     for i in range(1):
         #postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
-        t1 = T1measurement.T1Measurement(gate_info, np.linspace(0, 50e3, 5), double_exp=False, generate=True, plot_seqs=True, proj_func='amplitude')
+        t1 = T1measurement.T1Measurement(gate_info, np.linspace(0, 5e3, 5), double_exp=False, generate=True, plot_seqs=True, proj_func='amplitude')
         t1.measure()
 #        t1times[i] = t1.analyze()
 #        plt.close()
@@ -336,7 +337,7 @@ if 0: # T2echo
     t2.measure()
     bla
 
-if 1: # FT1
+if 0: # FT1
     from scripts.single_qubit import FT1measurement
     #ft1times = np.zeros(len(range(20)))
     for i in range(1):
@@ -620,7 +621,7 @@ if 0:
 
 if 1: # Two-Qubit Randomized Benchmarking
     from scripts.fluxonium import TwoQ_RB
-    TwoQ = TwoQ_RB.TwoQubit_RB(qubit_info, qubit2_info, N_cliffords=5)
+    TwoQ = TwoQ_RB.TwoQubit_RB(gate_info, gate2_info, N_cliffords=5, plot_seqs=True)
     TwoQ.measure()
     (err_clif, err_gate) = TwoQ.analyze()
     print('error per Clifford:', err_clif)

@@ -150,7 +150,6 @@ class TwoQubit_RB(Measurement1D):
 
             for k in range(i+1):
                 s.append(Combined([Join(pulseSeq1[k]), Join(pulseSeq2[k])]))
-            print(i, s)
             s.append(Combined([Join(recov_pulseSeq1[i]), Join(recov_pulseSeq2[i])]))
             s.append(Combined([
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
