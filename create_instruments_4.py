@@ -22,7 +22,7 @@ AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PR
                           amps = [1.5,1.5,1.5,1.5], ofs = [0, 0, 0.0, 0])
  
 AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 8,  AWG_PRODUCT = "M3202A",
-                          amps = [1, 1, 1.5, 1.5], ofs = [0.0159, .0115, 0.043, -.084]) #[.020, 0.026, 0.022, .01]) 
+                          amps = [1, 1, 1.5, 1.5], ofs = [0.017, 0.013, 0.043, -.084]) #[.020, 0.026, 0.022, .01]) 
 
 AWG3 = instruments.create('AWG3', 'Keysight_AWG', chassis = 0, slot = 9,  AWG_PRODUCT = "M3202A",
                           amps = [1.5, 1.452, 1, 1], ofs = [0.002, -0.011, 0.042, 0.024]) 
@@ -54,13 +54,13 @@ readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
 
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                              deltaf=-100e6,
-                              pi_amp=.774,
+                              pi_amp=.639,
                               pi2_amp=0,
                               drag=-0.292,
                               pi_amp_quasilective=0.0630,
-                              pi_amp_selective=0.0383,
+                              pi_amp_selective=0.0117,
                               rotation='Gaussian',
-                              w=20,
+                              w=6,
                               w_quasilective=60,
                               w_selective=300,
                               channels='5,6',
@@ -68,11 +68,11 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                               sideband_phase=0)
 
 qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
-                            deltaf=-302850000.0,
-                            pi_amp=0.846,
-                            pi_amp_selective= 0.0456,
+                            deltaf=-304.65e6,
+                            pi_amp=0.268,
+                            pi_amp_selective= 0.012,
                             rotation='Gaussian',
-                            w=12,
+                            w=10,
                             w_selective=200,
                             channels='5,6',
                             sideband_channels='I2,Q2',
@@ -91,7 +91,7 @@ qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
 
 cavityA = instruments.create('cavityA', 'Qubit_Info',
                             deltaf=56e6,
-                            pi_amp=1.092,
+                            pi_amp=1.056,
                             pi_amp_selective=0.05,
                             rotation='Gaussian',
                             channels='7,8',
@@ -105,7 +105,7 @@ cavityA = instruments.create('cavityA', 'Qubit_Info',
 
 cavityB = instruments.create('cavityB', 'Qubit_Info',
                             deltaf=-100e6,
-                            pi_amp=1.012,
+                            pi_amp=1.003,
                             pi_amp_selective=0.05,
                             rotation='Gaussian',
                             channels='9,10',
