@@ -28,10 +28,11 @@ if 0:
     mclient.load_settings_from_file(r'c:\_data\settings\20131214\165409.set', toload)    # Last time-Rabi callibration
     bla
 
-qubits = mclient.get_qubits()
-qubit_info = mclient.get_qubit_info('qubit1ge')
-qubit2_info = mclient.get_qubit_info('qubit2ge')
-ef_info = mclient.get_qubit_info('qubit1ef')
+#qubits = mclient.get_qubits()
+#qubit_info = mclient.get_qubit_info('qubit1ge')
+#qubit2_info = mclient.get_qubit_info('qubit2ge')
+#ef_info = mclient.get_qubit_info('qubit1ef')
+gate_info = mclient.get_gate_info('gate')
 #cavity_info = mclient.get_qubit_info('cavityBob')
 #cavity_info = mclient.get_qubit_info('cavityRO')
 #cavity_info = mclient.get_qubit_info('cavityAlice')
@@ -110,7 +111,7 @@ if 0: # Calibrate pi pulse
     for i in range(1):
         from scripts.single_qubit import rabi
 #        qubitgen.set_frequency(4532.71e6)
-        tr = rabi.Rabi(qubit2_info, np.linspace(-0.6, 0.6, 101), plot_seqs=False, generate=True, selective=False, repeat_pulse=1,
+        tr = rabi.Rabi(gate_info, np.linspace(0.2, 0.5, 5), plot_seqs=True, generate=True, selective=False, repeat_pulse=1,
                        update=True, proj_func='amplitude')
 #        from scripts.single_qubit import rabi_IQ
 #        tr = rabi_IQ.Rabi(qubit_info, np.linspace(0, 0.5, 101), plot_seqs=False, real_signals=False)
@@ -124,9 +125,9 @@ if 0: # Calibrate pi pulse
         
     bla
 
-if 0: # Time Rabi
+if 1: # Time Rabi
     from scripts.single_qubit import timerabi
-    tr = timerabi.TimeRabi(qubit_info, np.linspace(10, 1500, 80), amp=0.3)
+    tr = timerabi.TimeRabi(gate_info, np.linspace(10, 1500, 5), amp=0.3)
     data = tr.measure()
     bla
 
@@ -300,7 +301,7 @@ if 1: # T1
 #    t1times = np.zeros(len(range(1000)))
     for i in range(1):
         #postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
-        t1 = T1measurement.T1Measurement(qubit2_info, np.linspace(0, 50e3, 101), double_exp=False, generate=True, plot_seqs=False, proj_func='amplitude')
+        t1 = T1measurement.T1Measurement(gate_info, np.linspace(0, 50e3, 5), double_exp=False, generate=True, plot_seqs=True, proj_func='amplitude')
         t1.measure()
 #        t1times[i] = t1.analyze()
 #        plt.close()

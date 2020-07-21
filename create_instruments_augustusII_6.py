@@ -21,7 +21,7 @@ dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_p
                          trigger_only = True, awg_list = [7,8,9])
 
 
-#yoko = instruments.create('yoko', 'Yokogawa_7651', address = 'GPIB0::9::INSTR')
+#yoko = instruments.create('yoko', 'Yokogawa_GS200', address = 'GPIB0::9::INSTR')
 
 #
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
@@ -148,12 +148,12 @@ readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
                               rfsource2='refbrick',
                               pulse_len=1400, readout_chan='1m1', acq_chan='2m1')
 #
-WF_xxx = instruments.create('WF_xxx', 'WFT1153', serial = '1153')
+#WF_xxx = instruments.create('WF_xxx', 'WFT1153', serial = '1153')
 
 instruments.remove('alz')
 alz = instruments.create('alazar', 'Alazar_Daemon')
-alz.set_ch1_range('400mV')
-alz.set_ch2_range('400mV')
+alz.set_ch1_range('200mV')
+alz.set_ch2_range('100mV')
 alz.set_nsamples(1600)
 alz.set_naverages(5000)
 alz.set_ch1_coupling('AC')

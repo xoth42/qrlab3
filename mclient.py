@@ -179,6 +179,81 @@ def get_qubit_info(name, detune=None):
 
     return ret
 
+def get_gate_info(name, detune=None):
+    '''
+    This function can be used to get an object that represents a qubit for
+    the sequencer.
+
+    It has the following properties:
+    - rotate(<alpha>, <axis>): a rotation <alpha> around <axis>
+    - ssb, side-band modulation object, call ssb.modulate()
+    '''
+    ret = get_container_object(name)
+    ret.insname = name
+    ret.channels1 = parse_chans(ret.channels1)
+    ret.sideband_channels1 = parse_chans(ret.sideband_channels1)
+    ret.channels2 = parse_chans(ret.channels2)
+    ret.sideband_channels2 = parse_chans(ret.sideband_channels2)
+    if ret.sideband_channels1 is None:
+        ret.sideband_channels1 = ret.channels1
+    if ret.sideband_channels2 is None:
+        ret.sideband_channels2 = ret.channels2
+
+    # Setup channels for this element. If no sideband modulation is used
+    # (i.e. <deltaf> = 0), render directly into <channels>, otherwise to
+    # <sideband_channels>
+    df = ret.deltaf
+    rel_amp = ret.relative_amp
+    rel_phase = ret.relative_phase
+    if detune:
+        df += detune
+    if df == 0:
+        ret.ssb = None
+        ret.sideband_channels1 = ret.channels1
+        ret.sideband_channels2 = ret.channels2        
+    else:
+        period = 1e9 / df
+        if ret.sideband_channels1 == ret.channels1:
+            replace = True
+        else:
+            replace = False
+        ssb1 = sequencer.SSB(period, ret.sideband_channels1, ret.sideband_phase1, outchans=ret.channels1, replace=replace)
+        if ret.sideband_channels2 == ret.channels2:
+            replace = True
+        else:
+            replace = False
+        ssb2 = sequencer.SSB(period, ret.sideband_channels2, ret.sideband_phase2, outchans=ret.channels2, replace=replace)
+        ret.ssb_list = [ssb1,ssb2]
+
+    # Setup rotation
+    r = ret.rotation
+    if type(r) is types.StringType:
+        r = r.upper()
+            
+    if r == 'GAUSSIAN':
+        ret.rotate = pulselib.CombinedAmplitudeRotation(pulselib.Gaussian, ret.w, ret.pi_amp, rel_amp, rel_phase, drag=ret.drag, pi2_amp=ret.pi2_amp, chans=ret.sideband_channels1, chans2=ret.sideband_channels2)
+    elif r == 'GAUSSIANSQUARE':
+        ret.rotate = pulselib.CombinedGSRotation(ret.pi_amp, ret.w, ret.w, 0.0, 1.0, rel_amp=rel_amp, rel_phase=rel_phase, drag=ret.drag, chans=ret.sideband_channels1, chans2=ret.sideband_channels2)
+    elif r == 'SQUARE':
+        ret.rotate = pulselib.AmplitudeRotation(pulselib.Square, ret.w, ret.pi_amp, drag=ret.drag, pi2_amp=ret.pi2_amp, chans=ret.sideband_channels)
+    elif r == 'TRIANGLE':
+        ret.rotate = pulselib.AmplitudeRotation(pulselib.Triangle, ret.w, ret.pi_amp, drag=ret.drag, pi2_amp=ret.pi2_amp, chans=ret.sideband_channels)
+    elif r == 'SINC':
+        ret.rotate = pulselib.AmplitudeRotation(pulselib.Sinc, ret.w, ret.pi_amp, drag=ret.drag, pi2_amp=ret.pi2_amp, chans=ret.sideband_channels)
+    elif r == 'HANNING':
+        ret.rotate = pulselib.AmplitudeRotation(pulselib.Hanning, ret.w, ret.pi_amp, drag=ret.drag, pi2_amp=ret.pi2_amp, chans=ret.sideband_channels)
+    elif r == 'KAISER':
+        ret.rotate = pulselib.AmplitudeRotation(pulselib.Kaiser, ret.w, ret.pi_amp, drag=ret.drag, pi2_amp=ret.pi2_amp, chans=ret.sideband_channels)
+    else:
+        ret.rotate = None
+
+    if ret.marker_channel is not None and ret.marker_channel != '':
+        ret.marker = dict(channel=ret.marker_channel, bufwidth=ret.marker_bufwidth, ofs=ret.marker_ofs)
+    else:
+        ret.marker = None
+
+    return ret
+
 def get_qubits():
     qs = {}
     l = instruments.list_instruments()
@@ -266,6 +341,7 @@ datadir = 'c:/_data'
 
 
 filename = 'c:/_data/0626cooldown_circualtor.hdf5'
+
 
 
 datafile = datasrv.get_file(filename)
