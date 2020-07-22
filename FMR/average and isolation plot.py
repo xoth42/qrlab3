@@ -13,7 +13,7 @@ def Average(a, n):
 #        print np.average(a[i:i+n])
         
     return b
-naverages  = 100
+naverages  = 10
 #datas_p = datas
 datas_p1 = np.zeros([len(fields),1601 - naverages + 1],dtype = complex)
 for i in range(len(datas_p)):
@@ -42,7 +42,7 @@ pl.ylabel('Frequency(GHz)')
 
 itime = 15
 pl.figure()
-pl.plot(freq1, mag_p[itime], label = '-%sT'%(fields[itime]))
-pl.plot(freq1 ,mag_n[itime], label = '%sT'%(fields[itime]))
-pl.plot(freq1 ,mag_n[itime] - mag_p[itime], label = 'isolation, average = %s'%(naverages))
+#pl.plot(freq1, mag_p[itime], label = '-%sT'%(fields[itime]))
+#pl.plot(freq1 ,mag_n[itime], label = '%sT'%(fields[itime]))
+pl.plot(freq1 ,mag_n[itime] - mag_p[itime], label = '%sT, isolation, average = %s'%(fields[itime],naverages))
 pl.legend()

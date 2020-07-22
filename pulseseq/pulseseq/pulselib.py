@@ -204,6 +204,55 @@ class GSRotation(object):
 
 #        print 'Requested area: %.03f, actual areas: %.03f / %.03f' % (area, p0.get_area(), p1.get_area())
         return Combined([p1, p2])
+    
+class CombinedGSRotation(object):
+
+    def __init__(self, width, amp, sigma, rel_amp, rel_phase, chans=(1,2), chans2=(2,3), drag=0, chop=4, chirp=None, switch=False, switch_channel=None):
+        self.width = width
+        self.amp = amp
+        self.sigma = sigma
+        self.rel_amp = rel_amp
+        self.rel_phase = rel_phase
+        self.drag = drag
+        self.chans = chans
+        self.chans2 = chans2
+        self.chop = chop
+        self.chirp = chirp
+        self.switch = switch
+        self.switch_channel = switch_channel
+        self.ampgen = ampgen.AmpGen()
+
+    def __call__(self, alpha, phase, amp=None, drag=None):
+        if amp is None:
+            amp = self.amp*(alpha / np.pi)
+        if drag is None:
+            drag = self.drag
+
+        p1 = GaussSquare(self.width, amp * np.cos(phase), self.sigma, chan=self.chans[0], chop=self.chop)
+        p2 = GaussSquare(self.width, amp * np.sin(phase), self.sigma, chan=self.chans[1], chop=self.chop)
+        p3 = GaussSquare(self.width, self.rel_amp * amp * np.cos(phase+self.rel_phase), self.sigma, chan=self.chans2[0], chop=self.chop)
+        p4 = GaussSquare(self.width, self.rel_amp * amp * np.sin(phase+self.rel_phase), self.sigma, chan=self.chans2[1], chop=self.chop)
+        if self.chirp:
+            p1 = Chirp(p1, self.chirp, chan=self.chans[0])
+            p2 = Chirp(p2, self.chirp, chan=self.chans[1])
+            p3 = Chirp(p3, self.chirp, chan=self.chans2[0])
+            p4 = Chirp(p4, self.chirp, chan=self.chans2[1])
+        elif drag:
+            p1d = p1.data + drag * derivative(p2.data)
+            p2d = p2.data - drag * derivative(p1.data)
+            p3d = p3.data + drag * derivative(p4.data)
+            p4d = p4.data - drag * derivative(p3.data)
+            p1 = Pulse('dragI(%s,%.5f)'%(p1.name, drag), p1d, chan=self.chans[0])
+            p2 = Pulse('dragQ(%s,%.5f)'%(p2.name, drag), p2d, chan=self.chans[1])
+            p3 = Pulse('dragI(%s,%.5f)'%(p3.name, drag), p3d, chan=self.chans2[0])
+            p4 = Pulse('dragQ(%s,%.5f)'%(p4.name, drag), p4d, chan=self.chans2[1])
+
+#        if self.switch is True:
+#            switchMarker = Constant((4*sigma+ws+8), 1, chan = self.switch_channel)
+#            return Combined([p1, p2, switchMarker], align = 1)
+
+#        print 'Requested area: %.03f, actual areas: %.03f / %.03f' % (area, p0.get_area(), p1.get_area())
+        return Combined([p1, p2, p3, p4])
 
 # Rotation generators should have a __call__ function that takes an rotation
 # angle and a phase as an argument. The latter will control around which
@@ -253,6 +302,54 @@ class AmplitudeRotation(object):
         return Combined([p0, p1])
 
 # A gaussian b / d / sqrt(pi/2) * exp(-2(x/d)**2) has an area <b> and fw at exp(-0.5) of <d>
+        
+class CombinedAmplitudeRotation(object):
+    
+     def __init__(self, base, w, pi_amp, rel_amp, rel_phase, chans=(0,1), chans2=(2,3), drag=0, pi2_amp=0, **kwargs):
+        self.base = base
+        self.w = w
+        self.chans = chans
+        self.chans2 = chans2
+        self.kwargs = kwargs
+        self.drag = drag
+        self.rel_amp = rel_amp
+        self.rel_phase = rel_phase
+        self.ampgen = ampgen.AmpGen()
+        self.set_pi_amp(pi_amp, pi2_amp)
+
+     def set_pi_amp(self, pi_amp, pi2_amp=0):
+        self.pi_amp = pi_amp
+        self.pi2_amp = pi2_amp
+        if pi2_amp != 0:
+            self.ampgen.set_amp_spec([pi2_amp, pi_amp])
+        else:
+            self.ampgen.set_amp_spec(pi_amp)
+
+     def __call__(self, alpha, phase, amp=None, drag=None):
+        '''
+        Generate a rotation pulse of angle <alpha> around axis <phase>.
+        If <amp> is specified that amplitude is used and <alpha> is ignored.
+        '''
+        if amp is None:
+            amp = self.ampgen(alpha)
+        if drag is None:
+            drag = self.drag
+        p0 = self.base(self.w, amp * np.cos(phase), chan=self.chans[0], **self.kwargs)
+        p1 = self.base(self.w, amp * np.sin(phase), chan=self.chans[1], **self.kwargs)
+        p2 = self.base(self.w, self.rel_amp * amp * np.cos(phase+self.rel_phase), chan=self.chans2[0], **self.kwargs)
+        p3 = self.base(self.w, self.rel_amp * amp * np.sin(phase+self.rel_phase), chan=self.chans2[1], **self.kwargs)
+        if drag:
+            p0d = p0.data + drag * derivative(p1.data)
+            p1d = p1.data - drag * derivative(p0.data)
+            p2d = p2.data + drag * derivative(p3.data)
+            p3d = p3.data - drag * derivative(p2.data)
+            p0 = Pulse('dragI(%s,%.5f)'%(p0.name, drag), p0d, chan=self.chans[0])
+            p1 = Pulse('dragQ(%s,%.5f)'%(p1.name, drag), p1d, chan=self.chans[1])
+            p2 = Pulse('dragI(%s,%.5f)'%(p2.name, drag), p2d, chan=self.chans2[0])
+            p3 = Pulse('dragQ(%s,%.5f)'%(p3.name, drag), p3d, chan=self.chans2[1])
+            
+        return Combined([p0, p1, p2, p3])
+
 
 class LengthRotation(object):
     '''
