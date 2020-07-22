@@ -64,6 +64,22 @@ gate2 = instruments.create('gate2', 'Gate_Info',
                           sideband_phase1=-0.2,
                           sideband_phase2=0.2)
 
+gate3 = instruments.create('gate3', 'Gate_Info',
+                          deltaf=-200e6,
+                          pi_amp=0.2,
+                          pi2_amp=0,
+                          drag=0,
+                          rotation='Gaussian',
+                          w=6,
+                          channels1='5,6',
+                          sideband_channels1='I5,Q5',
+                          channels2='7,8',
+                          sideband_channels2='I6,Q6',
+                          relative_amp=0.2,
+                          relative_phase=0.5,
+                          sideband_phase1=-0.2,
+                          sideband_phase2=0.2)
+
 
 
 #qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
