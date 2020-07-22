@@ -17,7 +17,7 @@ from mclient import instruments
 #SCtest = instruments.create('SCtest', 'SC5506A', devid='10001FA3')
 
 instruments.remove('dig')
-dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period =50, 
+dig = instruments.create('dig', 'Keysight_DIG', chassis = 1, slot = 3, trigger_period =50, 
                          trigger_only = True, awg_list = [7,8,9])
 
 
