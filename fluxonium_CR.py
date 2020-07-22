@@ -82,7 +82,7 @@ if 0: #Check coherence
 if 0: # Tune up for time vs relative amp
     from scripts.fluxonium import CRtuning_time_amp
     cr_tune = CRtuning_time_amp.CRtuning_time_amp(qubit_info2, qubit_info, qubit2_info, 
-                                                    np.linspace(1,600,31), rel_amps=np.linspace(0.201,0.221,11), 
+                                                    np.linspace(1,300,31), rel_amps=np.linspace(0.201,0.221,11), 
                 amp=0.3, phase=0, rel_phase=-1.15, sigma=5, seq=seq_cool, control_pi=False, proj_func='phase')    
     data = cr_tune.measure()
     bla
@@ -92,11 +92,11 @@ if 0: # Tune up for time vs relative phase
 #    rotation = np.pi*0.10
 #    X_proj = qubit_info.rotate(np.pi/2, rotation)
     cr_tune = CRtuning_time_phase.CRtuning_time_phase(qubit_info2, qubit_info, qubit2_info, 
-                                                    np.linspace(1,601,31), rel_phases=np.linspace(-1.25,-1.05,11), 
-                amp=0.3, phase=0, rel_amp=0.211, sigma=5, seq=seq_cool, postseq=None, control_pi=False, proj_func='phase')    
+                                                    np.linspace(1,300,31), rel_phases=np.linspace(-1.25,-1.05,11), 
+                amp=0.3, phase=0, rel_amp=0.21, sigma=5, seq=seq_cool, postseq=None, control_pi=False, proj_func='phase')    
     data = cr_tune.measure()
 
-if 0: # Tune up 1Q gates with Interleaved Time Rabi
+if 1: # Tune up 1Q gates with Interleaved Time Rabi
     from scripts.fluxonium  import timerabi_interleaved
     alz.set_naverages(5000)
     rotation = 0

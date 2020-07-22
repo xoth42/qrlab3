@@ -115,7 +115,7 @@ def T1(qubit_info, seq):
 
 
 def Drag_test(qubit_info):   
-    dtest = drag_test.drag_test(qubit_info, np.linspace(-1,0, 51), plot_seqs=False, generate=True, proj_func='phase', seq=seq_cool)
+    dtest = drag_test.drag_test(qubit_info, np.linspace(-0.5,1, 51), plot_seqs=False, generate=True, proj_func='phase', seq=seq_cool)
     data=dtest.measure()
 #    
 #We start with a different flux point. 
@@ -156,13 +156,13 @@ if 0:
 if 0:
     ##Optimizing ZZ 
 
-    rabi_test(qubit1ge, qubit_info, seq_cool,np.linspace(-0.3, 0.3, 61) )   
-    rabi_test(qubit2ge, qubit2_info, seq_cool,np.linspace(-0.3, 0.3, 61))   
+#    rabi_test(qubit1ge, qubit_info, seq_cool,np.linspace(-0.3, 0.3, 61) )   
+#    rabi_test(qubit2ge, qubit2_info, seq_cool,np.linspace(-0.3, 0.3, 61))   
 
     ZZ.set_rf_on(True)
     alz.set_naverages(2000)
-    power_range = np.linspace(-4,-4, 1)
-    freq_range = np.linspace(3520e6, 3540e6, 7)
+    power_range = np.linspace(-12,-1, 1)
+    freq_range = np.linspace(3470e6, 3490e6, 7)
     ZZ_tune(qubit_info, power_range, freq_range, extra_info = qubit2_info)
     bla    
 
@@ -172,13 +172,14 @@ if 0:
 
 if 0:
     #Rabi checking pi amps from 5/6 for both qubits
-    rabi_test(qubit1ge, qubit_info, seq_cool,np.linspace(-0.3, 0.3, 61))   
-    rabi_test(qubit2ge, qubit2_info, seq_cool,np.linspace(-0.3, 0.3, 61))   
+    rabi_test(qubit1ge, qubit_info, seq_cool,np.linspace(-0.15, 0.15, 61))   
+    rabi_test(qubit2ge, qubit2_info, seq_cool,np.linspace(-0.2, 0.2, 61))   
 #            
     
     #SSB to update sidenband frequencies (measures through 5/6, updates both qubit_info delta's)
-    ssb_check(qubit1ge, qubit1ge_2, qubit_info, np.linspace(-6e6, 6e6, 81))
-    ssb_check(qubit2ge, qubit2ge_2, qubit2_info, np.linspace(-6e6, 6e6, 81))
+
+    qubitnew1 = ssb_check(qubit1ge, qubit1ge_2, qubit_info, np.linspace(-6e6, 6e6, 81))
+    qubitnew2 = ssb_check(qubit2ge, qubit2ge_2, qubit2_info, np.linspace(-6e6, 6e6, 81))
     qubits = mclient.get_qubits()
     qubit_info = mclient.get_qubit_info('qubit1ge')
     qubit_info2 = mclient.get_qubit_info('qubit1ge_2')
@@ -188,7 +189,7 @@ if 0:
 #    #Running cooling spec one more time
     cool_freq = (cavity - gaius_freq - qubitnew2)/2
     freq_range = 15e6        
-    cooling_spec(cool_freq, freq_range, qubit2_info, [12])
+    cooling_spec(cool_freq, freq_range, qubit2_info, [11])
     bla
     #manually set the frequency and power
 #coolgen.set_power()
@@ -209,7 +210,7 @@ if 0:
     
     T2E(qubit_info, seq=seq_cool)
     T2E(qubit2_info, seq=seq_cool)
-        
+#        
     #Measure T1     
     T1(qubit_info, seq=seq_cool)
     T1(qubit2_info, seq=seq_cool)
@@ -233,7 +234,7 @@ if 0:
     Drag_test(qubit2_info)  
 
     
-if 1: # Tune up for time vs detuning   
+if 0: # Tune up for time vs detuning   
     
     from scripts.fluxonium import CRtuning_timevsdet
     
@@ -241,7 +242,7 @@ if 1: # Tune up for time vs detuning
     seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])     
     cr_tune = CRtuning_timevsdet.CRtuning_timevsdet(qubit_info2, qubit_info, qubit2_info, 
                                                     np.linspace(0,100,21), np.linspace(-30e6, 30e6, 21), 
-                amp=0.3, phase=0, rel_amp=0.0000, rel_phase=0.0, sigma=5, update=False, 
+                amp=0.36, phase=0, rel_amp=0.0000, rel_phase=0.0, sigma=5, update=False, 
                 seq=seq_cool, fix_phase=True, fix_period=None, control_pi=False, proj_func='phase')    
     
     data = cr_tune.measure()
