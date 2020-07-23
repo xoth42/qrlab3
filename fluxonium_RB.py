@@ -25,10 +25,17 @@ qubit_info2 = mclient.get_qubit_info('qubit1ge_2')
 qubit2_info = mclient.get_qubit_info('qubit2ge')
 qubit2_info2 = mclient.get_qubit_info('qubit2ge_2')
 
+gate_info1 = mclient.get_gate_info('sq_gate1')
+gate_info2 = mclient.get_gate_info('sq_gate2')
+cnot_info = mclient.get_gate_info('cnot_gate')
+
+
+
+
 from scripts.single_qubit import ssbspec
 from scripts.single_qubit import rabi
 
-cool = sequencer.Constant(int(8e3),1,chan='3m1')
+cool = sequencer.Constant(int(4e3),1,chan='3m1')
 seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
 
 def RB_fit(Pg_cplx, xs, F_final=0.5):    #fitting the averaged data of this run
@@ -95,7 +102,7 @@ if 0: # Calibrate pi pulse
 #    cool = sequencer.Constant(int(200e3),1,chan='3m1')
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(200)])
     for i in range(1):
-        cool = sequencer.Constant(int(8e3),1,chan='3m1')
+        cool = sequencer.Constant(int(4e3),1,chan='3m1')
         seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150),qubit_info.rotate(np.pi,0)])
 #    for i in range(1): 
 #        M =np.empty(3)
@@ -144,59 +151,57 @@ if 0: #Check coherence
 
 
 
-
-
-
-
-
-
-
-
 if 0: # Drag test
     from scripts.single_qubit import drag_test
-    dtest = drag_test.drag_test(qubit2_info, np.linspace(-2,2, 51), plot_seqs=False, generate=True, proj_func='phase', seq=seq_cool)
+    dtest = drag_test.drag_test(gate_info2, np.linspace(-0.5,1.5, 51), plot_seqs=False, generate=True, proj_func='phase', seq=seq_cool)
     data=dtest.measure()
     bla
 
-if 0: # AllXY 
+if 0: 
+    from scripts.single_qubit import Pi_train
+    p = Pi_train.Pi_train(gate_info2, np.linspace(0.079, 0.083, 61), seq=seq_cool, repeat_pulse=12, proj_func='phase')
+    p.measure()
+    bla
+
+if 0: 
+    from scripts.single_qubit import Pi2_train
+    p = Pi2_train.Pi2_train(gate_info2, np.linspace(0.036, 0.041, 61), seq=seq_cool, repeat_pulse=10, proj_func='phase')
+    p.measure()
+    bla
+    
+if 1: # AllXY 
     from scripts.single_qubit import allxy
-    cool = sequencer.Constant(int(8e3),1,chan='3m1')
-    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
-    
-#    allxy_result = np.zeros((N, 42))
-    alz.set_naverages(30000)
-#    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate(-np.pi/2, 0)]) #this whole line was added
+    cool = sequencer.Constant(int(4e3),1,chan='3m1')
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150),gate_info1.rotate(np.pi,0)])
+    postseq = gate_info1.rotate(np.pi,0) 
+    alz.set_naverages(20000)
     allxy_result =[]
-    axy = allxy.All_XY(qubit2_info, seq=seq, generate=True, proj_func='phase')  #seq=seq was added
+    axy = allxy.All_XY(gate_info2, seq=seq, generate=True, proj_func='phase', postseq = postseq)#, extra_info=gate_info1)  #seq=seq was added
     axy.measure()
-    #        allxy_result[i,:] = axy.get_ys()
     allxy_result = axy.get_ys()
     plt.plot(allxy_result)
-#    plt.figure()
-##    for i in range(N):
-#        plt.plot(allxy_result[i,:])
     alz.set_naverages(5000)
-#    bla
+    bla
 
 
-if 1: # AllXY - interleaved (regular or compensated single qubit drive)
-    from scripts.fluxonium import allxy_interleaved
-    cool = sequencer.Constant(int(8e3),1,chan='3m1')
-    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
-    
-#    allxy_result = np.zeros((N, 42))
-    alz.set_naverages(10000)
-#    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate(-np.pi/2, 0)]) #this whole line was added
-    allxy_result =[]
-    axy = allxy_interleaved.All_XY_interleaved(qubit_info, qubit2_info, qubit2_info,rel_amp=-0.45, rel_angle=0.4*np.pi, qubit2_rotation=0, qubit2_angle =np.pi, seq=seq, generate=True, proj_func='phase')  #seq=seq was added
-    axy.measure()
-    #        allxy_result[i,:] = axy.get_ys()
-    allxy_result = axy.get_ys()
-    plt.plot(allxy_result)
-#    plt.figure()
-##    for i in range(N):
-#        plt.plot(allxy_result[i,:])
-    alz.set_naverages(8000)
+#if 0: # AllXY - interleaved (regular or compensated single qubit drive)
+#    from scripts.fluxonium import allxy_interleaved
+#    cool = sequencer.Constant(int(8e3),1,chan='3m1')
+#    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
+#    
+##    allxy_result = np.zeros((N, 42))
+#    alz.set_naverages(10000)
+##    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate(-np.pi/2, 0)]) #this whole line was added
+#    allxy_result =[]
+#    axy = allxy_interleaved.All_XY_interleaved(qubit_info, qubit2_info, qubit2_info,rel_amp=-0.45, rel_angle=0.4*np.pi, qubit2_rotation=0, qubit2_angle =np.pi, seq=seq, generate=True, proj_func='phase')  #seq=seq was added
+#    axy.measure()
+#    #        allxy_result[i,:] = axy.get_ys()
+#    allxy_result = axy.get_ys()
+#    plt.plot(allxy_result)
+##    plt.figure()
+###    for i in range(N):
+##        plt.plot(allxy_result[i,:])
+#    alz.set_naverages(8000)
 #    bla
 
 
@@ -282,7 +287,7 @@ if 0: # Randomized benchmarking joint simultaneous single qubit gates
     RB_fit(Pg_cplx, xs, F_final=0.25)
 
 
-if 0: # Two-Qubit Randomized Benchmarking
+if 1: # Two-Qubit Randomized Benchmarking
     from scripts.fluxonium import TwoQ_RB
-    TwoQ_RB = TwoQ_RB.TwoQubit_RB(qubit_info, qubit2_info, N_cliffords=10, proj_func='phase')
+    TwoQ_RB = TwoQ_RB.TwoQubit_RB(qubit_info, qubit2_info, N_cliffords=100, proj_func='phase')
     data = TwoQ_RB.measure()

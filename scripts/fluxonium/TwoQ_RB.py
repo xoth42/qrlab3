@@ -406,7 +406,7 @@ class TwoQubit_RB(Measurement1D):
         recovery_seq_2 = []
 
         # Search the recovery gate in two Qubit clifford group
-        find_cheapest = True
+        find_cheapest = False
 
         cheapest_recovery_seq_1 = []
         cheapest_recovery_seq_2 = []
