@@ -194,7 +194,7 @@ def get_gate_info(name, detune=None):
     ret.sideband_channels = parse_chans(ret.sideband_channels)
     ret.channels2 = parse_chans(ret.channels2)
     ret.sideband_channels2 = parse_chans(ret.sideband_channels2)
-    if ret.sideband_channels1 is None:
+    if ret.sideband_channels is None:
         ret.sideband_channels = ret.channels
     if ret.sideband_channels2 is None:
         ret.sideband_channels2 = ret.channels2

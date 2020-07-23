@@ -69,9 +69,7 @@ def CheckIdentity(matrix):
         return True
     else:
         return False
-
-
-        
+       
 
 class TwoQubit_RB(Measurement1D):
     """Two qubit randomized benchmarking."""
@@ -287,6 +285,21 @@ class TwoQubit_RB(Measurement1D):
         s = self.get_sequencer(s)
         seqs = s.render()
         return seqs
+    
+    def pad_sequences(self, gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2):
+        w = int(self.qubit_info.w)
+        sq_len = self.qubit_info.sq_len
+        
+        delta = np.abs(len(gate_seq_1) - len(gate_seq_2))
+        if delta > 0:
+                if len(gate_seq_1) < len(gate_seq_2):
+                    for i in range(delta):
+                        gate_seq_1.extend('I')
+                        pulse_seq_1.append(Delay(4*w+sq_len))
+                elif len(gate_seq_1) > len(gate_seq_2):
+                    for i in range(delta):
+                        gate_seq_2.extend('I')
+                        pulse_seq_2.append(Delay(4*w+sq_len))
 
     def evaluate_sequence(self, gate_seq_1, gate_seq_2, generator = 'CNOT'):
         """
@@ -949,18 +962,8 @@ class TwoQubit_RB(Measurement1D):
             self.add_singleQ_clifford(index_1, gate_seq_1, pulse_seq_1, 1)
             self.add_singleQ_clifford(index_2, gate_seq_2, pulse_seq_2, 2)
             
-            delta = np.abs(len(gate_seq_1) - len(gate_seq_2))
-            if delta > 0:
-                if len(gate_seq_1) < len(gate_seq_2):
-                    for i in range(delta):
-                        gate_seq_1.extend('I')
-                        pulse_seq_1.append(Delay(4*w+sq_len))
-                elif len(gate_seq_1) > len(gate_seq_2):
-                    for i in range(delta):
-                        gate_seq_2.extend('I')
-                        pulse_seq_2.append(Delay(4*w+sq_len))
+            self.pad_sequences(gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2)
                     
-            
             gate_seq_1.append('I')
             gate_seq_2.append('CNOT')
             pulse_seq_1.append(Delay(4*w+sq_len))
@@ -1027,16 +1030,7 @@ class TwoQubit_RB(Measurement1D):
             self.add_singleQ_clifford(index_1, gate_seq_1, pulse_seq_1, 1)
             self.add_singleQ_clifford(index_2, gate_seq_2, pulse_seq_2, 2)
             
-            delta = np.abs(len(gate_seq_1) - len(gate_seq_2))
-            if delta > 0:
-                if len(gate_seq_1) < len(gate_seq_2):
-                    for i in range(delta):
-                        gate_seq_1.extend('I')
-                        pulse_seq_1.append(Delay(4*w+sq_len))
-                elif len(gate_seq_1) > len(gate_seq_2):
-                    for i in range(delta):
-                        gate_seq_2.extend('I')
-                        pulse_seq_2.append(Delay(4*w+sq_len))
+            self.pad_sequences(gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2)
                         
             gate_seq_1.append('I')
             gate_seq_2.append('CNOT')
@@ -1121,16 +1115,7 @@ class TwoQubit_RB(Measurement1D):
             self.add_singleQ_clifford(index_1, gate_seq_1, pulse_seq_1, 1)
             self.add_singleQ_clifford(index_2, gate_seq_2, pulse_seq_2, 2)
             
-            delta = np.abs(len(gate_seq_1) - len(gate_seq_2))
-            if delta > 0:
-                if len(gate_seq_1) < len(gate_seq_2):
-                    for i in range(delta):
-                        gate_seq_1.extend('I')
-                        pulse_seq_1.append(Delay(4*w+sq_len))
-                elif len(gate_seq_1) > len(gate_seq_2):
-                    for i in range(delta):
-                        gate_seq_2.extend('I')
-                        pulse_seq_2.append(Delay(4*w+sq_len))
+            self.pad_sequences(gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2)
             
             gate_seq_1.append('I')
             gate_seq_2.append('CNOT')
