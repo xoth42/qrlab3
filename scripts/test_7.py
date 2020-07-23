@@ -34,6 +34,7 @@ qubit_info = mclient.get_qubit_info('qubit1ge')
 #ef_info = mclient.get_qubit_info('qubit1ef')
 gate_info = mclient.get_gate_info('gate')
 gate2_info = mclient.get_gate_info('gate2')
+gate3_info = mclient.get_gate_info('gate3')
 #cavity_info = mclient.get_qubit_info('cavityBob')
 #cavity_info = mclient.get_qubit_info('cavityRO')
 #cavity_info = mclient.get_qubit_info('cavityAlice')
@@ -621,7 +622,7 @@ if 0:
 
 if 1: # Two-Qubit Randomized Benchmarking
     from scripts.fluxonium import TwoQ_RB
-    TwoQ = TwoQ_RB.TwoQubit_RB(gate_info, gate2_info, N_cliffords=5, plot_seqs=True)
+    TwoQ = TwoQ_RB.TwoQubit_RB(gate_info, gate2_info, gate3_info, N_cliffords=5, plot_seqs=True, only_single_qubit_RB=False, find_cheapest_recovery=True)
     TwoQ.measure()
     (err_clif, err_gate) = TwoQ.analyze()
     print('error per Clifford:', err_clif)

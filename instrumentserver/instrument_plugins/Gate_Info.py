@@ -24,13 +24,13 @@ class Gate_Info(Pulse_Info):
                 units='Hz')
         self.add_parameter('sideband_period', type=types.FloatType,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET)
-        self.add_parameter('sideband_phase1', type=types.FloatType,
+        self.add_parameter('sideband_phase', type=types.FloatType,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 set_func=lambda x: True)
         self.add_parameter('sideband_phase2', type=types.FloatType,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 set_func=lambda x: True)
-        self.add_parameter('channels1', type=types.StringType,
+        self.add_parameter('channels', type=types.StringType,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 set_func=lambda x: True,
                 doc='One pair of physical channels'
@@ -40,7 +40,7 @@ class Gate_Info(Pulse_Info):
                 set_func=lambda x: True,
                 doc='Second pair of physical channels'
                 )
-        self.add_parameter('sideband_channels1', type=types.StringType,
+        self.add_parameter('sideband_channels', type=types.StringType,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 set_func=lambda x: True,
                 doc='One pair of virtual channels'
