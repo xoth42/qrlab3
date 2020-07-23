@@ -622,8 +622,8 @@ if 0:
 
 if 1: # Two-Qubit Randomized Benchmarking
     from scripts.fluxonium import TwoQ_RB
-    TwoQ = TwoQ_RB.TwoQubit_RB(gate_info, gate2_info, gate3_info, N_cliffords=5, plot_seqs=True, only_single_qubit_RB=False, find_cheapest_recovery=True)
+    TwoQ = TwoQ_RB.TwoQubit_RB(gate_info, gate2_info, gate3_info, num_cal_points=3, N_cliffords=3, plot_seqs=False, only_single_qubit_RB=True, find_cheapest_recovery=False)
     TwoQ.measure()
-    (err_clif, err_gate) = TwoQ.analyze()
-    print('error per Clifford:', err_clif)
-    print('error per gate:', err_gate)
+#    (err_clif, err_gate) = TwoQ.analyze()
+#    print('error per Clifford:', err_clif)
+#    print('error per gate:', err_gate)

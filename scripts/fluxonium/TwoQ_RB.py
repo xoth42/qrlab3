@@ -25,22 +25,33 @@ def exp_decay(params, x, data):
 
 def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
-    xs = meas.xs
+    xs = np.asarray(range(len(meas.xs)+12))
+    xs = xs - 11
+    
+    y2d = ys.reshape(len(ys)/4,4)
+    y1s = y2d[:,0]
+    y2s = y2d[:,1]
+    y3s = y2d[:,2]
+    y4s = y2d[:,3]
     
     params = lmfit.Parameters()
     params.add('B', value=np.min(ys))
     params.add('A', value = np.max(ys))
     params.add('alpha', value=xs[-1]/2.0)
-    result = lmfit.minimize(exp_decay, params, args=(xs, ys))
-    lmfit.report_fit(result.params)
+#    result = lmfit.minimize(exp_decay, params, args=(xs, ys))
+#    lmfit.report_fit(result.params)
     
-    fig.axes[0].plot(xs, -exp_decay(result.params, xs, 0), label='Fit, alpha = %.03f us +/- %.03f us '%(result.params['alpha'].value, result.params['alpha'].stderr))
+#    fig.axes[0].plot(xs, -exp_decay(result.params, xs, 0), label='Fit, alpha = %.03f us +/- %.03f us '%(result.params['alpha'].value, result.params['alpha'].stderr))
+    fig.axes[0].plot(xs, y1s, 'bs', ms=3, color='r', linestyle = '-', label='none')
+    fig.axes[0].plot(xs, y2s, 'rs', ms=3, color = 'b', linestyle = '-', label= 'pi pulse on 1')    
+    fig.axes[0].plot(xs, y3s, 'bs', ms=3, color= 'g', linestyle = '-', label = 'pi pulse on 2')
+    fig.axes[0].plot(xs, y4s, 'rs', ms=3, color='y', linestyle = '-', label = 'pi pulse on both')  
     fig.axes[0].legend(loc=0)
     fig.axes[0].set_ylabel('Phase [AU]')
     fig.axes[0].set_xlabel('# of Cliffords')
-    fig.axes[1].plot(xs, exp_decay(result.params, xs, ys), marker='s')
+#    fig.axes[1].plot(xs, exp_decay(result.params, xs, ys), marker='s')
     
-    return result.params
+#    return result.params
 
 
 def CheckIdentity(matrix):
@@ -76,11 +87,11 @@ class TwoQubit_RB(Measurement1D):
 
     filepath_lookup_table = ""
 
-    def __init__(self, qubit_info, qubit2_info, qubit3_info, N_cliffords, generator='CNOT', seq=None, postseq=None, num_gates=0, only_single_qubit_RB=False,
+    def __init__(self, qubit_info, qubit2_info, twoQ_info, num_cal_points, N_cliffords, generator='CNOT', seq=None, postseq=None, num_gates=0, only_single_qubit_RB=False,
                  find_cheapest_recovery=False, **kwargs):
         self.qubit_info = qubit_info
         self.qubit2_info = qubit2_info
-        self.qubit3_info = qubit3_info
+        self.twoQ_info = twoQ_info
         self.N_cliffords = N_cliffords
         self.xs = range(N_cliffords) # for plotting purposes
         self.filepath_lookup_table = ""
@@ -93,16 +104,17 @@ class TwoQubit_RB(Measurement1D):
         self.only_single_qubit_RB = only_single_qubit_RB
         self.find_cheapest_recovery = find_cheapest_recovery
         self.num_gates = num_gates
+        self.num_cal_points = num_cal_points
             
-        super(TwoQubit_RB, self).__init__(N_cliffords, infos=(qubit_info,qubit2_info), **kwargs)
-        self.data.create_dataset('Cliffords', data=range(N_cliffords))
+        super(TwoQubit_RB, self).__init__(4*(N_cliffords+4*num_cal_points), infos=(qubit_info,qubit2_info,twoQ_info), **kwargs)
+        self.data.create_dataset('Cliffords', data=range(4*(N_cliffords+4*num_cal_points)))
          
 
     def generate(self):
         s = Sequence()
         r = self.qubit_info.rotate
         r2 = self.qubit2_info.rotate
-        r3 = self.qubit3_info.rotate
+        r3 = self.twoQ_info.rotate
         w = int(self.qubit_info.w)
         sq_len = self.qubit_info.sq_len
 
@@ -156,12 +168,83 @@ class TwoQubit_RB(Measurement1D):
         
         self.num_gates = len(cliffordSeq1)
 
+        for j in range(self.num_cal_points):
+            temp_seq = Sequence()
+            temp_seq.append(r(np.pi,0))   
+            for i in range(4):
+
+
+                s.append(self.seq)
+                s.append(Join(temp_seq))
+                s.append(Combined([
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+                    ]))
+                s.append(Delay(1000))
+        print('appended calibration pi pulses qubit 1')
+
+
+        for j in range(self.num_cal_points):
+
+            temp_seq = Sequence()
+            temp_seq.append(r2(np.pi,0))   
+            for i in range(4):
+
+
+                s.append(self.seq)
+                s.append(Join(temp_seq))
+                s.append(Combined([
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+                    ]))
+                s.append(Delay(1000))
+        print('appended calibration pi pulses qubit 2')
+
+
+        for j in range(self.num_cal_points):
+
+            temp_seq = Sequence()
+            temp_seq.append(Combined([r(np.pi,0),r2(np.pi,0)]))   
+            for i in range(4):
+
+
+                s.append(self.seq)
+                s.append(Join(temp_seq))
+                s.append(Combined([
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+                    ]))
+                s.append(Delay(1000))
+        print('appended calibration pi pulses for both qubits')
+
+        
+        
+        for j in range(self.num_cal_points):
+
+            temp_seq = Sequence()
+            s.append(Delay(24))   
+            for i in range(4):
+                s.append(self.seq)
+                s.append(Join(temp_seq))
+                s.append(Combined([
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+                    ]))
+                s.append(Delay(1000))
+        print('appended calibration ground state')
+
+
         for i in range(self.N_cliffords):
             s.append(self.seq)
 
             for k in range(i+1):
                 s.append(Combined([Join(pulseSeq1[k]), Join(pulseSeq2[k])]))
             s.append(Combined([Join(recov_pulseSeq1[i]), Join(recov_pulseSeq2[i])]))
+            
+            for ROpostseq in [None, r(np.pi,0), r2(np.pi,0),
+                              Combined([r(np.pi,0),r2(np.pi,0)])]:
+                if ROpostseq is not None:
+                    s.append(ROpostseq)
             s.append(Combined([
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
@@ -915,10 +998,10 @@ class TwoQubit_RB(Measurement1D):
         """
         r = self.qubit_info.rotate
         r2 = self.qubit2_info.rotate
-        r3 = self.qubit3_info.rotate
+        r3 = self.twoQ_info.rotate
         w = int(self.qubit_info.w)
         sq_len = self.qubit_info.sq_len
-        CNOT_len = 4*self.qubit3_info.w+self.qubit3_info.sq_len
+        CNOT_len = 4*self.twoQ_info.w+self.twoQ_info.sq_len
 #        print(index)
 #        print(type(index))
         
@@ -984,10 +1067,10 @@ class TwoQubit_RB(Measurement1D):
         """
         r = self.qubit_info.rotate
         r2 = self.qubit2_info.rotate
-        r3 = self.qubit3_info.rotate
+        r3 = self.twoQ_info.rotate
         w = int(self.qubit_info.w)
         sq_len = self.qubit_info.sq_len
-        CNOT_len = 4*self.qubit3_info.w+self.qubit3_info.sq_len
+        CNOT_len = 4*self.twoQ_info.w+self.twoQ_info.sq_len
 
 #        print(index)
 #        print(type(index))
@@ -1063,10 +1146,10 @@ class TwoQubit_RB(Measurement1D):
         """
         r = self.qubit_info.rotate
         r2 = self.qubit2_info.rotate
-        r3 = self.qubit3_info.rotate
+        r3 = self.twoQ_info.rotate
         w = int(self.qubit_info.w)
         sq_len = self.qubit_info.sq_len
-        CNOT_len = 4*self.qubit3_info.w+self.qubit3_info.sq_len
+        CNOT_len = 4*self.twoQ_info.w+self.twoQ_info.sq_len
 
 #        print(index)
 #        print(type(index))
@@ -1160,4 +1243,4 @@ class TwoQubit_RB(Measurement1D):
     def analyze(self, data=None, fig=None):
         self.fit_params = analysis(self, data, fig)
         
-        return (1-self.fit_params['alpha'].value)*0.75, (1-self.fit_params['alpha'].value)*0.75/self.num_gates
+        return #(1-self.fit_params['alpha'].value)*0.75, (1-self.fit_params['alpha'].value)*0.75/self.num_gates
