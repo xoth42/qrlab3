@@ -918,6 +918,7 @@ class TwoQubit_RB(Measurement1D):
         r3 = self.qubit3_info.rotate
         w = int(self.qubit_info.w)
         sq_len = self.qubit_info.sq_len
+        CNOT_len = 4*self.qubit3_info.w+self.qubit3_info.sq_len
 #        print(index)
 #        print(type(index))
         
@@ -967,7 +968,7 @@ class TwoQubit_RB(Measurement1D):
                     
             gate_seq_1.append('I')
             gate_seq_2.append('CNOT')
-            pulse_seq_1.append(Delay(4*w+sq_len))
+            pulse_seq_1.append(Delay(CNOT_len))
             pulse_seq_2.append(r3(np.pi,0))
             
             self.add_singleQ_S1(index_3, gate_seq_1, pulse_seq_1, qubit=1)
@@ -986,6 +987,8 @@ class TwoQubit_RB(Measurement1D):
         r3 = self.qubit3_info.rotate
         w = int(self.qubit_info.w)
         sq_len = self.qubit_info.sq_len
+        CNOT_len = 4*self.qubit3_info.w+self.qubit3_info.sq_len
+
 #        print(index)
 #        print(type(index))
             
@@ -1035,7 +1038,7 @@ class TwoQubit_RB(Measurement1D):
                         
             gate_seq_1.append('I')
             gate_seq_2.append('CNOT')
-            pulse_seq_1.append(Delay(4*w+sq_len))
+            pulse_seq_1.append(Delay(CNOT_len))
             pulse_seq_2.append(r3(np.pi,0))
             
             gate_seq_1.append('X2m')
@@ -1045,7 +1048,7 @@ class TwoQubit_RB(Measurement1D):
             
             gate_seq_1.append('I')
             gate_seq_2.append('CNOT')
-            pulse_seq_1.append(Delay(4*w+sq_len))
+            pulse_seq_1.append(Delay(CNOT_len))
             pulse_seq_2.append(r3(np.pi,0))
             
             self.add_singleQ_S1_X2p(index_3, gate_seq_1, pulse_seq_1, qubit=1)
@@ -1063,6 +1066,8 @@ class TwoQubit_RB(Measurement1D):
         r3 = self.qubit3_info.rotate
         w = int(self.qubit_info.w)
         sq_len = self.qubit_info.sq_len
+        CNOT_len = 4*self.qubit3_info.w+self.qubit3_info.sq_len
+
 #        print(index)
 #        print(type(index))
         
@@ -1120,7 +1125,7 @@ class TwoQubit_RB(Measurement1D):
             
             gate_seq_1.append('I')
             gate_seq_2.append('CNOT')
-            pulse_seq_1.append(Delay(4*w+sq_len))
+            pulse_seq_1.append(Delay(CNOT_len))
             pulse_seq_2.append(r3(np.pi,0))
 
             gate_seq_1.append('Xp')
@@ -1134,7 +1139,7 @@ class TwoQubit_RB(Measurement1D):
             
             gate_seq_1.append('I')
             gate_seq_2.append('CNOT')
-            pulse_seq_1.append(Delay(4*w+sq_len))
+            pulse_seq_1.append(Delay(CNOT_len))
             pulse_seq_2.append(r3(-np.pi,0))
             
             gate_seq_1.append('Xp')
@@ -1148,7 +1153,7 @@ class TwoQubit_RB(Measurement1D):
             
             gate_seq_1.append('I')
             gate_seq_2.append('CNOT')
-            pulse_seq_1.append(Delay(4*w+sq_len))
+            pulse_seq_1.append(Delay(CNOT_len))
             pulse_seq_2.append(r3(np.pi,0))
             
 
