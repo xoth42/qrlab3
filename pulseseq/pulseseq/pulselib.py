@@ -142,18 +142,20 @@ class Sinc(Pulse):
 
 class GSRotation(object):
 
-    def __init__(self, pi_area, smin, smax, hmin, hmax, area_frac=1, chans=(1,2), chop=4, chirp=None, switch=False, switch_channel=None):
+    def __init__(self, pi_area, smin, smax, hmin, hmax, drag=0, area_frac=1, chans=(1,2), chop=4, chirp=None, switch=False, switch_channel=None):
         self.pi_area = pi_area
         self.smin = smin
         self.smax = smax
         self.hmin = hmin
         self.hmax = hmax
+        self.drag = drag
         self.area_frac = area_frac
         self.chans = chans
         self.chop = chop
         self.chirp = chirp
         self.switch = switch
         self.switch_channel = switch_channel
+
 
     def set_pi(self, val):
         self.pi_area = val
@@ -190,6 +192,11 @@ class GSRotation(object):
         if self.chirp:
             p1 = Chirp(p1, self.chirp, chan=self.chans[0])
             p2 = Chirp(p2, self.chirp, chan=self.chans[1])
+        elif drag:
+            p1d = p1.data + drag * derivative(p2.data)
+            p2d = p2.data - drag * derivative(p1.data)
+            p1 = Pulse('dragI(%s,%.5f)'%(p1.name, drag), p1d, chan=self.chans[0])
+            p2 = Pulse('dragQ(%s,%.5f)'%(p2.name, drag), p2d, chan=self.chans[1])
 
         # no need for pulses
         if a1 == 0 and a2 == 0:
@@ -207,7 +214,7 @@ class GSRotation(object):
     
 class CombinedGSRotation(object):
 
-    def __init__(self, width, amp, sigma, rel_amp, rel_phase, chans=(1,2), chans2=(2,3), drag=0, chop=4, chirp=None, switch=False, switch_channel=None):
+    def __init__(self, width, amp, sigma, rel_amp, rel_phase, chans=(1,2), chans2=(3,4), drag=0, chop=4, chirp=None, switch=False, switch_channel=None):
         self.width = width
         self.amp = amp
         self.sigma = sigma

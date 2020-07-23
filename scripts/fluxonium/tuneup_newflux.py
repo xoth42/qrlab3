@@ -162,7 +162,7 @@ if 0:
     ZZ.set_rf_on(True)
     alz.set_naverages(2000)
     power_range = np.linspace(-12,-1, 1)
-    freq_range = np.linspace(3470e6, 3490e6, 7)
+    freq_range = np.linspace(3473e6, 3474.4e6, 7)
     ZZ_tune(qubit_info, power_range, freq_range, extra_info = qubit2_info)
     bla    
 
@@ -197,7 +197,7 @@ if 0:
 #coolgen.set_rf_on(True)
 #    
 
-if 0:
+if 1:
     #Update all 4 pi amp's
     rabi_test(qubit1ge, qubit_info, seq_cool, np.linspace(-0.15, 0.15, 61))   
     rabi_test(qubit2ge, qubit2_info, seq_cool, np.linspace(-0.2, 0.2, 61))   
@@ -241,7 +241,7 @@ if 0: # Tune up for time vs detuning
     cool = sequencer.Constant(int(4e3),1,chan='3m1')
     seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])     
     cr_tune = CRtuning_timevsdet.CRtuning_timevsdet(qubit_info2, qubit_info, qubit2_info, 
-                                                    np.linspace(0,100,21), np.linspace(-30e6, 30e6, 21), 
+                                                    np.linspace(0,100,21), np.linspace(-10e6, 10e6, 11), 
                 amp=0.36, phase=0, rel_amp=0.0000, rel_phase=0.0, sigma=5, update=False, 
                 seq=seq_cool, fix_phase=True, fix_period=None, control_pi=False, proj_func='phase')    
     
