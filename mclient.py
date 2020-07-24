@@ -233,7 +233,7 @@ def get_gate_info(name, detune=None):
     if r == 'GAUSSIAN':
         ret.rotate = pulselib.CombinedAmplitudeRotation(pulselib.Gaussian, ret.w, ret.pi_amp, rel_amp, rel_phase, drag=ret.drag, pi2_amp=ret.pi2_amp, chans=ret.sideband_channels, chans2=ret.sideband_channels2)
     elif r == 'GAUSSIANSQUARE':
-        ret.rotate = pulselib.CombinedGSRotation(ret.sq_len, ret.pi_amp, ret.w, rel_amp, rel_phase, drag=ret.drag, chop=3, chans=ret.sideband_channels, chans2=ret.sideband_channels2)
+        ret.rotate = pulselib.CombinedGSRotation(ret.sq_len, ret.pi_amp, ret.w, rel_amp, rel_phase, drag=ret.drag, chop=ret.chop, chans=ret.sideband_channels, chans2=ret.sideband_channels2)
     elif r == 'SQUARE':
         ret.rotate = pulselib.AmplitudeRotation(pulselib.Square, ret.w, ret.pi_amp, drag=ret.drag, pi2_amp=ret.pi2_amp, chans=ret.sideband_channels)
     elif r == 'TRIANGLE':

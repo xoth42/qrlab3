@@ -66,6 +66,7 @@ def analysis(meas, data=None, fig=None):
 # ge~ -10, eg~ +8, ee~ +6
 #
 ##
+
     rd = y1s[12:]
     bl = y2s[12:]
     gr = y3s[12:]
@@ -81,6 +82,21 @@ def analysis(meas, data=None, fig=None):
 
     Pegge = ((rd+yw-bl-gr)/(Vge+Veg-Vee-Vgg)+1)/2
     Pg_cplx = (Pg1+Pg2-Pegge)/2
+    
+#Dario commenting out this section to fix a merge conflict, it looks like Chen was changing
+#population calculation stuff last night and I believe I have kept the most updated version here 
+#but just to be safe
+#    B = ((y1s[12:] + y3s[12:]) - (Vge + Vgg))/ (Veg-Vgg+Vee-Vge)  #QUBIT 1 POPULATION (P2 +P3)
+##
+#    D = ((y1s[12:] + y2s[12:]) - (Veg + Vgg))/ (Vge-Veg-Vgg+Vee)   #QUBIT 2 POPULATION (P1 +P3)
+##
+#    C = ((y2s[12:] + y3s[12:]) - (Vge + Veg)) / (Vee-Vge-Veg + Vgg)  #(P1 + P2)
+##
+#    A = ((y1s[12:] + y4s[12:]) - (Vge + Veg)) / (Vee - Vge - Veg + Vgg)  # (P0 + P3)
+#    
+##
+#    Pg_cplx = A-((D-C+B)/2)
+
     fig2, axes2 = plt.subplots(2)
     axes2[0].plot(xs[12:], np.real(Pg_cplx))
     axes2[0].plot(xs[12:], np.real(Pg1*Pg2), color='r')

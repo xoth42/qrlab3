@@ -25,22 +25,36 @@ def exp_decay(params, x, data):
 
 def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
-    xs = meas.xs
+    xs = np.zeros(len(meas.xs)/4)
+    for i in range(len(meas.xs)/4):
+        xs[i] = meas.xs[4*i]
+    
+    y2d = ys.reshape(len(ys)/4,4)
+    y1s = y2d[:,0]
+    y2s = y2d[:,1]
+    y3s = y2d[:,2]
+    y4s = y2d[:,3]
     
     params = lmfit.Parameters()
     params.add('B', value=np.min(ys))
     params.add('A', value = np.max(ys))
     params.add('alpha', value=xs[-1]/2.0)
-    result = lmfit.minimize(exp_decay, params, args=(xs, ys))
-    lmfit.report_fit(result.params)
+#    result = lmfit.minimize(exp_decay, params, args=(xs, ys))
+#    lmfit.report_fit(result.params)
     
-    fig.axes[0].plot(xs, -exp_decay(result.params, xs, 0), label='Fit, alpha = %.03f us +/- %.03f us '%(result.params['alpha'].value, result.params['alpha'].stderr))
+#    fig.axes[0].plot(xs, -exp_decay(result.params, xs, 0), label='Fit, alpha = %.03f us +/- %.03f us '%(result.params['alpha'].value, result.params['alpha'].stderr))
+    fig.axes[0].clear()
+    fig.axes[0].plot(xs, y1s, 'bs', ms=3, color='r', linestyle = '-', label='none')
+    fig.axes[0].plot(xs, y2s, 'rs', ms=3, color = 'b', linestyle = '-', label= 'pi pulse on 1')    
+    fig.axes[0].plot(xs, y3s, 'bs', ms=3, color= 'g', linestyle = '-', label = 'pi pulse on 2')
+    fig.axes[0].plot(xs, y4s, 'rs', ms=3, color='y', linestyle = '-', label = 'pi pulse on both')  
     fig.axes[0].legend(loc=0)
     fig.axes[0].set_ylabel('Phase [AU]')
     fig.axes[0].set_xlabel('# of Cliffords')
-    fig.axes[1].plot(xs, exp_decay(result.params, xs, ys), marker='s')
+    fig.canvas.draw()
+#    fig.axes[1].plot(xs, exp_decay(result.params, xs, ys), marker='s')
     
-    return result.params
+#    return result.params
 
 
 def CheckIdentity(matrix):
@@ -69,22 +83,22 @@ def CheckIdentity(matrix):
         return True
     else:
         return False
-
-
-        
+       
 
 class TwoQubit_RB(Measurement1D):
     """Two qubit randomized benchmarking."""
 
     filepath_lookup_table = ""
 
-    def __init__(self, qubit_info, qubit2_info, qubit3_info, N_cliffords, generator='CNOT', seq=None, postseq=None, num_gates=0, only_single_qubit_RB=False,
+    def __init__(self, qubit_info, qubit2_info, twoQ_info, num_cal_points, N_cliffords, generator='CNOT', seq=None, postseq=None, num_gates=0, only_single_qubit_RB=False,
                  find_cheapest_recovery=False, **kwargs):
         self.qubit_info = qubit_info
         self.qubit2_info = qubit2_info
-        self.qubit3_info = qubit3_info
+        self.twoQ_info = twoQ_info
         self.N_cliffords = N_cliffords
-        self.xs = range(N_cliffords) # for plotting purposes
+        self.num_cal_points = num_cal_points
+        XS = np.asarray(range(N_cliffords+4*self.num_cal_points)) - (4*self.num_cal_points-1)
+        self.xs = np.array([XS,XS,XS,XS]).transpose().flatten() # for plotting purposes
         self.filepath_lookup_table = ""
         
         if seq is None:
@@ -95,17 +109,18 @@ class TwoQubit_RB(Measurement1D):
         self.only_single_qubit_RB = only_single_qubit_RB
         self.find_cheapest_recovery = find_cheapest_recovery
         self.num_gates = num_gates
+        
             
-        super(TwoQubit_RB, self).__init__(N_cliffords, infos=(qubit_info,qubit2_info), **kwargs)
-        self.data.create_dataset('Cliffords', data=range(N_cliffords))
+        super(TwoQubit_RB, self).__init__(4*(N_cliffords+4*num_cal_points), infos=(qubit_info,qubit2_info,twoQ_info), **kwargs)
+        self.data.create_dataset('Cliffords', data=range(4*(N_cliffords+4*num_cal_points)))
          
 
     def generate(self):
         s = Sequence()
         r = self.qubit_info.rotate
         r2 = self.qubit2_info.rotate
-        r3 = self.qubit3_info.rotate
-        w = int(self.qubit_info.w)
+        r3 = self.twoQ_info.rotate
+        w = self.qubit_info.w
         sq_len = self.qubit_info.sq_len
 
 
@@ -125,6 +140,10 @@ class TwoQubit_RB(Measurement1D):
         pulseSeq2 = []
         recov_pulseSeq1 = []
         recov_pulseSeq2 = []
+        len1 = [0]
+        len2 = [0]
+        recov_len1 = [0]
+        recov_len2 = [0]
         
         for j in range(self.N_cliffords):
            if self.only_single_qubit_RB is True:
@@ -134,9 +153,7 @@ class TwoQubit_RB(Measurement1D):
            print(j, rndnum)
            temp_pulseSeq1 = []
            temp_pulseSeq2 = []
-           self.add_twoQ_clifford(rndnum, cliffordSeq1, cliffordSeq2, temp_pulseSeq1, temp_pulseSeq2, generator = self.generator)
-           
-           
+           self.add_twoQ_clifford(rndnum, cliffordSeq1, cliffordSeq2, temp_pulseSeq1, temp_pulseSeq2, len1, len2, generator = self.generator)
            
 #            # get recovery gate seq
            (recoverySeq1, recoverySeq2, recovery_pulseSeq1, recovery_pulseSeq2) = self.get_recovery_gate(cliffordSeq1, cliffordSeq2, generator = self.generator)
@@ -158,12 +175,83 @@ class TwoQubit_RB(Measurement1D):
         
         self.num_gates = len(cliffordSeq1)
 
+        for j in range(self.num_cal_points):
+            temp_seq = Sequence()
+            temp_seq.append(r(np.pi,0))   
+            for i in range(4):
+
+
+                s.append(self.seq)
+                s.append(Join(temp_seq))
+                s.append(Combined([
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+                    ]))
+                s.append(Delay(1000))
+        print('appended calibration pi pulses qubit 1')
+
+
+        for j in range(self.num_cal_points):
+
+            temp_seq = Sequence()
+            temp_seq.append(r2(np.pi,0))   
+            for i in range(4):
+
+
+                s.append(self.seq)
+                s.append(Join(temp_seq))
+                s.append(Combined([
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+                    ]))
+                s.append(Delay(1000))
+        print('appended calibration pi pulses qubit 2')
+
+
+        for j in range(self.num_cal_points):
+
+            temp_seq = Sequence()
+            temp_seq.append(Combined([r(np.pi,0),r2(np.pi,0)]))   
+            for i in range(4):
+
+
+                s.append(self.seq)
+                s.append(Join(temp_seq))
+                s.append(Combined([
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+                    ]))
+                s.append(Delay(1000))
+        print('appended calibration pi pulses for both qubits')
+
+        
+        
+        for j in range(self.num_cal_points):
+
+            temp_seq = Sequence()
+            s.append(Delay(24))   
+            for i in range(4):
+                s.append(self.seq)
+                s.append(Join(temp_seq))
+                s.append(Combined([
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+                    ]))
+                s.append(Delay(1000))
+        print('appended calibration ground state')
+
+
         for i in range(self.N_cliffords):
             s.append(self.seq)
 
             for k in range(i+1):
                 s.append(Combined([Join(pulseSeq1[k]), Join(pulseSeq2[k])]))
             s.append(Combined([Join(recov_pulseSeq1[i]), Join(recov_pulseSeq2[i])]))
+            
+            for ROpostseq in [None, r(np.pi,0), r2(np.pi,0),
+                              Combined([r(np.pi,0),r2(np.pi,0)])]:
+                if ROpostseq is not None:
+                    s.append(ROpostseq)
             s.append(Combined([
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
@@ -287,6 +375,23 @@ class TwoQubit_RB(Measurement1D):
         s = self.get_sequencer(s)
         seqs = s.render()
         return seqs
+    
+    def pad_sequences(self, gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, length1, length2):
+        delta = np.abs(length1[0] - length2[0])
+#        print('delta:', delta)
+        if delta > 0:
+                if length1[0] < length2[0]:
+                    gate_seq_1.extend('I')
+                    pulse_seq_1.append(Delay(delta))
+                    length1[0] = length1[0] + delta
+                elif length1[0] >  length2[0]:
+                    gate_seq_2.extend('I')
+                    pulse_seq_2.append(Delay(delta))
+                    length2[0] = length2[0] + delta
+#        print('length1 after:', length1[0])
+#        print('length2 after:', length2[0])
+
+
 
     def evaluate_sequence(self, gate_seq_1, gate_seq_2, generator = 'CNOT'):
         """
@@ -418,7 +523,7 @@ class TwoQubit_RB(Measurement1D):
 
         # Search the recovery gate in two Qubit clifford group
 
-        find_cheapest = True
+#        find_cheapest = True
 
         cheapest_recovery_seq_1 = []
         cheapest_recovery_seq_2 = []
@@ -470,7 +575,9 @@ class TwoQubit_RB(Measurement1D):
             recovery_seq_2 = []
             temp_pulse_seq_1 = []
             temp_pulse_seq_2 = []
-            self.add_twoQ_clifford(i, recovery_seq_1, recovery_seq_2, temp_pulse_seq_1, temp_pulse_seq_2, generator = generator)
+            temp_recov_len1 = [0]
+            temp_recov_len2 = [0]
+            self.add_twoQ_clifford(i, recovery_seq_1, recovery_seq_2, temp_pulse_seq_1, temp_pulse_seq_2, temp_recov_len1, temp_recov_len2, generator = generator)
             
             # Calculate the matrix of the recovery clifford
             matrix_recovery = self.evaluate_sequence(recovery_seq_1, recovery_seq_2, generator = generator)
@@ -542,8 +649,10 @@ class TwoQubit_RB(Measurement1D):
             recovery_seq_2 = []
             temp_pulse_seq_1 = []
             temp_pulse_seq_2 = []
+            temp_recov_len1 = [0]
+            temp_recov_len2 = [0]
 #            log.info('The index of the cheapest recovery clifford: %d'%(cheapest_index))
-            self.add_twoQ_clifford(cheapest_index, recovery_seq_1, recovery_seq_2, temp_pulse_seq_1, temp_pulse_seq_2, generator = generator)
+            self.add_twoQ_clifford(cheapest_index, recovery_seq_1, recovery_seq_2, temp_pulse_seq_1, temp_pulse_seq_2, temp_recov_len1, temp_recov_len2, generator = generator)
 
 
         if (recovery_seq_1 == [] and recovery_seq_2 == []):
@@ -556,34 +665,39 @@ class TwoQubit_RB(Measurement1D):
         return (recovery_seq_1, recovery_seq_2, temp_pulse_seq_1, temp_pulse_seq_2)
     
     
-    def add_singleQ_clifford(self, index, gate_seq, pulse_seq, qubit, pad_with_I=False, **kwargs):
+    def add_singleQ_clifford(self, index, gate_seq, pulse_seq, length, qubit, pad_with_I=False, **kwargs):
         """Add single qubit clifford (24)."""
 #        print(index)
 #        print(type(index))
         if qubit == 1:
             r = self.qubit_info.rotate
+            q_len = self.qubit_info.chop*self.qubit_info.w+self.qubit_info.sq_len
         elif qubit == 2:
             r = self.qubit2_info.rotate
-            
-        w = int(self.qubit_info.w)
+            q_len = self.qubit2_info.chop*self.qubit2_info.w+self.qubit2_info.sq_len
+        w = self.qubit_info.w
         sq_len = self.qubit_info.sq_len
         
         length_before = len(gate_seq)
         # Paulis
         if index == 0:
             gate_seq.append('I')
-            pulse_seq.append(Delay(4*w+sq_len))
+            pulse_seq.append(Delay(q_len))
+            length[0] = length[0] + q_len
         elif index == 1:
             pulse_seq.append(r(np.pi, X_AXIS))
             gate_seq.append('Xp')
+            length[0] = length[0] + q_len
         elif index == 2:
             pulse_seq.append(r(np.pi, Y_AXIS))
             gate_seq.append('Yp')
+            length[0] = length[0] + q_len
         elif index == 3:
             pulse_seq.append(r(np.pi, Y_AXIS))
             pulse_seq.append(r(np.pi, X_AXIS))
             gate_seq.append('Yp')
             gate_seq.append('Xp')
+            length[0] = length[0] + 2*q_len
     
         # 2pi/3 rotations
         elif index == 4:
@@ -591,55 +705,67 @@ class TwoQubit_RB(Measurement1D):
             pulse_seq.append(r(np.pi/2, Y_AXIS))
             gate_seq.append('X2p')
             gate_seq.append('Y2p')
+            length[0] = length[0] + 2*q_len
         elif index == 5:
             pulse_seq.append(r(np.pi/2, X_AXIS))
             pulse_seq.append(r(-np.pi/2, Y_AXIS))
             gate_seq.append('X2p')
             gate_seq.append('Y2m')
+            length[0] = length[0] + 2*q_len
         elif index == 6:
             pulse_seq.append(r(-np.pi/2, X_AXIS))
             pulse_seq.append(r(np.pi/2, Y_AXIS))
             gate_seq.append('X2m')
             gate_seq.append('Y2p')
+            length[0] = length[0] + 2*q_len
         elif index == 7:
             pulse_seq.append(r(-np.pi/2, X_AXIS))
             pulse_seq.append(r(-np.pi/2, Y_AXIS))
             gate_seq.append('X2m')
             gate_seq.append('Y2m')
+            length[0] = length[0] + 2*q_len
         elif index == 8:
             pulse_seq.append(r(np.pi/2, Y_AXIS))
             pulse_seq.append(r(np.pi/2, X_AXIS))
             gate_seq.append('Y2p')
             gate_seq.append('X2p')
+            length[0] = length[0] + 2*q_len
         elif index == 9:
             pulse_seq.append(r(np.pi/2, Y_AXIS))
             pulse_seq.append(r(-np.pi/2, X_AXIS))
             gate_seq.append('Y2p')
             gate_seq.append('X2m')
+            length[0] = length[0] + 2*q_len
         elif index == 10:
             pulse_seq.append(r(-np.pi/2, Y_AXIS))
             pulse_seq.append(r(np.pi/2, X_AXIS))
             gate_seq.append('Y2m')
             gate_seq.append('X2p')
+            length[0] = length[0] + 2*q_len
         elif index == 11:
             pulse_seq.append(r(-np.pi/2, Y_AXIS))
             pulse_seq.append(r(-np.pi/2, X_AXIS))
             gate_seq.append('Y2m')
             gate_seq.append('X2m')
+            length[0] = length[0] + 2*q_len
     
         # pi/2 rotations
         elif index == 12:
             pulse_seq.append(r(np.pi/2, X_AXIS))
             gate_seq.append('X2p')
+            length[0] = length[0] + q_len
         elif index == 13:
             pulse_seq.append(r(-np.pi/2, X_AXIS))
             gate_seq.append('X2m')
+            length[0] = length[0] + q_len
         elif index == 14:
             pulse_seq.append(r(np.pi/2, Y_AXIS))
             gate_seq.append('Y2p')
+            length[0] = length[0] + q_len
         elif index == 15:
             pulse_seq.append(r(-np.pi/2, Y_AXIS))
             gate_seq.append('Y2m')
+            length[0] = length[0] + q_len
         elif index == 16:
             pulse_seq.append(r(-np.pi/2, X_AXIS))
             pulse_seq.append(r(np.pi/2, Y_AXIS))
@@ -647,6 +773,7 @@ class TwoQubit_RB(Measurement1D):
             gate_seq.append('X2m')
             gate_seq.append('Y2p')
             gate_seq.append('X2p')
+            length[0] = length[0] + 3*q_len
         elif index == 17:
             pulse_seq.append(r(-np.pi/2, X_AXIS))
             pulse_seq.append(r(-np.pi/2, Y_AXIS))
@@ -654,6 +781,7 @@ class TwoQubit_RB(Measurement1D):
             gate_seq.append('X2m')
             gate_seq.append('Y2m')
             gate_seq.append('X2p')
+            length[0] = length[0] + 3*q_len
     
         # Hadamard-Like
         elif index == 18:
@@ -661,21 +789,25 @@ class TwoQubit_RB(Measurement1D):
             pulse_seq.append(r(np.pi/2, Y_AXIS))
             gate_seq.append('Xp')
             gate_seq.append('Y2p')
+            length[0] = length[0] + 2*q_len
         elif index == 19:
             pulse_seq.append(r(np.pi, X_AXIS))
             pulse_seq.append(r(-np.pi/2, Y_AXIS))
             gate_seq.append('Xp')
             gate_seq.append('Y2m')
+            length[0] = length[0] + 2*q_len
         elif index == 20:
             pulse_seq.append(r(np.pi, Y_AXIS))
             pulse_seq.append(r(np.pi/2, X_AXIS))
             gate_seq.append('Yp')
             gate_seq.append('X2p')
+            length[0] = length[0] + 2*q_len
         elif index == 21:
             pulse_seq.append(r(np.pi, Y_AXIS))
             pulse_seq.append(r(-np.pi/2, X_AXIS))
             gate_seq.append('Yp')
             gate_seq.append('X2m')
+            length[0] = length[0] + 2*q_len
         elif index == 22:
             pulse_seq.append(r(np.pi/2, X_AXIS))
             pulse_seq.append(r(np.pi/2, Y_AXIS))
@@ -683,6 +815,7 @@ class TwoQubit_RB(Measurement1D):
             gate_seq.append('X2p')
             gate_seq.append('Y2p')
             gate_seq.append('X2p')
+            length[0] = length[0] + 3*q_len
         elif index == 23:
             pulse_seq.append(r(-np.pi/2, X_AXIS))
             pulse_seq.append(r(np.pi/2, Y_AXIS))
@@ -690,6 +823,7 @@ class TwoQubit_RB(Measurement1D):
             gate_seq.append('X2m')
             gate_seq.append('Y2p')
             gate_seq.append('X2m')
+            length[0] = length[0] + 3*q_len
         else:
             raise ValueError(
                 'index is out of range. it should be smaller than 24 and greater'
@@ -700,13 +834,14 @@ class TwoQubit_RB(Measurement1D):
             # Force the clifford to have a length of 3 gates
             for i in range(3-(length_after-length_before)):
                 gate_seq.append('I')
-                pulse_seq.append(Delay(4*w+sq_len))
+                pulse_seq.append(Delay(q_len))
     
     
-    def add_twoQ_clifford(self, index, gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, generator = 'CNOT'):
+    def add_twoQ_clifford(self, index, gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, length1, length2, generator = 'CNOT'):
         """Add single qubit clifford (11520 = 576 + 5184 + 5184 + 576)."""
         r = self.qubit_info.rotate
         r2 = self.qubit2_info.rotate
+        
 #        print(index)
 #        print(type(index))
 #        
@@ -715,13 +850,13 @@ class TwoQubit_RB(Measurement1D):
                 'index is out of range. it should be smaller than 11520 and '
                 'greater or equal to 0: ', str(index))
         elif (index < 576):
-            self.add_singleQ_based_twoQ_clifford(index, gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2)
+            self.add_singleQ_based_twoQ_clifford(index, gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, length1, length2)
         elif (index < 5184 + 576):
-            self.add_CNOT_like_twoQ_clifford(index, gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, generator = generator)
+            self.add_CNOT_like_twoQ_clifford(index, gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, length1, length2, generator = generator)
         elif (index < 5184 + 5184 + 576):
-            self.add_iSWAP_like_twoQ_clifford(index, gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, generator = generator)
+            self.add_iSWAP_like_twoQ_clifford(index, gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, length1, length2, generator = generator)
         elif (index < 576 + 5184 + 5184 + 576):
-            self.add_SWAP_like_twoQ_clifford(index, gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, generator = generator)
+            self.add_SWAP_like_twoQ_clifford(index, gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, length1, length2, generator = generator)
         else:
             raise ValueError(
                 'index is out of range. it should be smaller than 11520 and '
@@ -730,53 +865,60 @@ class TwoQubit_RB(Measurement1D):
         pass
     
     
-    def add_singleQ_S1(self, index, gate_seq, pulse_seq, qubit):
+    def add_singleQ_S1(self, index, gate_seq, pulse_seq, length, qubit):
         """Add single qubit clifford from S1.
     
         (I-like-subset of single qubit clifford group) (3)
         """
         if qubit == 1:
             r = self.qubit_info.rotate
+            q_len = self.qubit_info.chop*self.qubit_info.w+self.qubit_info.sq_len
         elif qubit == 2:
             r = self.qubit2_info.rotate
+            q_len = self.qubit2_info.chop*self.qubit2_info.w+self.qubit2_info.sq_len
             
-        w = int(self.qubit_info.w)
+        w = self.qubit_info.w
         sq_len = self.qubit_info.sq_len
         
         if index == 0:
             gate_seq.append('I')
 #            gate_seq.append('I')  # auxiliary
 #            gate_seq.append('I')  # auxiliary
-            pulse_seq.append(Delay(4*w+sq_len))
-#            pulse_seq.append(Delay(4*w+sq_len))
-#            pulse_seq.append(Delay(4*w+sq_len))
+            pulse_seq.append(Delay(q_len))
+#            pulse_seq.append(Delay(q_len))
+#            pulse_seq.append(Delay(q_len))
+            length[0] = length[0] + q_len
         elif index == 1:
             gate_seq.append('Y2p')
             gate_seq.append('X2p')
 #            gate_seq.append('I')  # auxiliary
             pulse_seq.append(r(np.pi/2, Y_AXIS))
             pulse_seq.append(r(np.pi/2, X_AXIS))
-#            pulse_seq.append(Delay(4*w+sq_len))
+#            pulse_seq.append(Delay(q_len))
+            length[0] = length[0] + 2*q_len
         elif index == 2:
             gate_seq.append('X2m')
             gate_seq.append('Y2m')
 #            gate_seq.append('I')  # auxiliary
             pulse_seq.append(r(-np.pi/2, X_AXIS))
             pulse_seq.append(r(-np.pi/2, Y_AXIS))
-#            pulse_seq.append(Delay(4*w+sq_len))
+#            pulse_seq.append(Delay(q_len))
+            length[0] = length[0] + 2*q_len
     
     
-    def add_singleQ_S1_X2p(self, index, gate_seq, pulse_seq, qubit):
+    def add_singleQ_S1_X2p(self, index, gate_seq, pulse_seq, length, qubit):
         """Add single qubit clifford from S1_X2p.
     
         (X2p-like-subset of single qubit clifford group) (3)
         """
         if qubit == 1:
             r = self.qubit_info.rotate
+            q_len = self.qubit_info.chop*self.qubit_info.w+self.qubit_info.sq_len
         elif qubit == 2:
             r = self.qubit2_info.rotate
+            q_len = self.qubit2_info.chop*self.qubit2_info.w+self.qubit2_info.sq_len
             
-        w = int(self.qubit_info.w)
+        w = self.qubit_info.w
         sq_len = self.qubit_info.sq_len
         
         if index == 0:
@@ -784,8 +926,9 @@ class TwoQubit_RB(Measurement1D):
 #            gate_seq.append('I')
 #            gate_seq.append('I')
             pulse_seq.append(r(np.pi/2, X_AXIS))
-#            pulse_seq.append(Delay(4*w+sq_len))  # auxiliary
-#            pulse_seq.append(Delay(4*w+sq_len))  # auxiliary
+#            pulse_seq.append(Delay(q_len))  # auxiliary
+#            pulse_seq.append(Delay(q_len))  # auxiliary
+            length[0] = length[0] + q_len
         elif index == 1:
             gate_seq.append('X2p')
             gate_seq.append('Y2p')
@@ -793,26 +936,30 @@ class TwoQubit_RB(Measurement1D):
             pulse_seq.append(r(np.pi/2, X_AXIS))
             pulse_seq.append(r(np.pi/2, Y_AXIS))
             pulse_seq.append(r(np.pi/2, X_AXIS))
+            length[0] = length[0] + 3*q_len
         elif index == 2:
             gate_seq.append('Y2m')
 #            gate_seq.append('I')
 #            gate_seq.append('I')
             pulse_seq.append(r(-np.pi/2, Y_AXIS))
-#            pulse_seq.append(Delay(4*w+sq_len))  # auxiliary
-#            pulse_seq.append(Delay(4*w+sq_len))  # auxiliary
+#            pulse_seq.append(Delay(q_len))  # auxiliary
+#            pulse_seq.append(Delay(q_len))  # auxiliary
+            length[0] = length[0] + q_len
     
     
-    def add_singleQ_S1_Y2p(self,index, gate_seq, pulse_seq, qubit):
+    def add_singleQ_S1_Y2p(self,index, gate_seq, pulse_seq, length, qubit):
         """Add single qubit clifford from S1_Y2p.
     
         (Y2p-like-subset of single qubit clifford group) (3)
         """
         if qubit == 1:
             r = self.qubit_info.rotate
+            q_len = self.qubit_info.chop*self.qubit_info.w+self.qubit_info.sq_len
         elif qubit == 2:
             r = self.qubit2_info.rotate
+            q_len = self.qubit2_info.chop*self.qubit2_info.w+self.qubit2_info.sq_len
             
-        w = int(self.qubit_info.w)
+        w = self.qubit_info.w
         sq_len = self.qubit_info.sq_len
         
         if index == 0:
@@ -820,15 +967,17 @@ class TwoQubit_RB(Measurement1D):
 #            gate_seq.append('I')
 #            gate_seq.append('I')
             pulse_seq.append(r(np.pi/2, Y_AXIS))
-#            pulse_seq.append(Delay(4*w+sq_len))  # auxiliary
-#            pulse_seq.append(Delay(4*w+sq_len))  # auxiliary
+#            pulse_seq.append(Delay(q_len))  # auxiliary
+#            pulse_seq.append(Delay(q_len))  # auxiliary
+            length[0] = length[0] + q_len
         elif index == 1:
             gate_seq.append('Yp')
             gate_seq.append('X2p')
 #            gate_seq.append('I')
             pulse_seq.append(r(np.pi, Y_AXIS))
             pulse_seq.append(r(np.pi/2, X_AXIS))
-#            pulse_seq.append(Delay(4*w+sq_len))  # auxiliary
+#            pulse_seq.append(Delay(q_len))  # auxiliary
+            length[0] = length[0] + 2*q_len
         elif index == 2:
             gate_seq.append('X2m')
             gate_seq.append('Y2m')
@@ -836,18 +985,21 @@ class TwoQubit_RB(Measurement1D):
             pulse_seq.append(r(-np.pi/2, X_AXIS))
             pulse_seq.append(r(-np.pi/2, Y_AXIS))
             pulse_seq.append(r(np.pi/2, X_AXIS))
+            length[0] = length[0] + 3*q_len
     
-    def add_singleQ_S1_Z2p(self, index, gate_seq, pulse_seq, qubit):
+    def add_singleQ_S1_Z2p(self, index, gate_seq, pulse_seq, length, qubit):
         """Add single qubit clifford from S1_Z2p.
     
         (Z2p-like-subset of single qubit clifford group) (3)
         """
         if qubit == 1:
             r = self.qubit_info.rotate
+            q_len = self.qubit_info.chop*self.qubit_info.w+self.qubit_info.sq_len
         elif qubit == 2:
             r = self.qubit2_info.rotate
+            q_len = self.qubit2_info.chop*self.qubit2_info.w+self.qubit2_info.sq_len
             
-        w = int(self.qubit_info.w)
+        w = self.qubit_info.w
         sq_len = self.qubit_info.sq_len
         
         if index == 0:
@@ -857,22 +1009,25 @@ class TwoQubit_RB(Measurement1D):
             pulse_seq.append(r(-np.pi/2, X_AXIS))
             pulse_seq.append(r(-np.pi/2, Y_AXIS))
             pulse_seq.append(r(np.pi/2, X_AXIS))
+            length[0] = length[0] + 3*q_len
         elif index == 1:
             gate_seq.append('Y2p')
 #            gate_seq.append('I')
 #            gate_seq.append('I')
             pulse_seq.append(r(np.pi/2, Y_AXIS))
-#            pulse_seq.append(Delay(4*w+sq_len))  # auxiliary
-#            pulse_seq.append(Delay(4*w+sq_len))  # auxiliary
+#            pulse_seq.append(Delay(q_len))  # auxiliary
+#            pulse_seq.append(Delay(q_len))  # auxiliary
+            length[0] = length[0] + q_len
         elif index == 2:
             gate_seq.append('X2m')
             gate_seq.append('Ypm')
 #            gate_seq.append('I')
             pulse_seq.append(r(-np.pi/2, X_AXIS))
             pulse_seq.append(r(-np.pi, Y_AXIS))
-#            pulse_seq.append(Delay(4*w+sq_len))  # auxiliary
+#            pulse_seq.append(Delay(q_len))  # auxiliary
+            length[0] = length[0] + 2*q_len
     
-    def add_singleQ_based_twoQ_clifford(self,index, gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, **kwargs):
+    def add_singleQ_based_twoQ_clifford(self,index, gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, length1, length2, **kwargs):
         """Add single-qubit-gates-only-based two Qubit Clifford.
     
         (24*24 = 576)
@@ -890,11 +1045,11 @@ class TwoQubit_RB(Measurement1D):
     
         # randomly sample from single qubit cliffords (24)
         index_2 = (index // 24) % 24
-        self.add_singleQ_clifford(index_1, gate_seq_1, pulse_seq_1, 1)
-        self.add_singleQ_clifford(index_2, gate_seq_2, pulse_seq_2, 2)
+        self.add_singleQ_clifford(index_1, gate_seq_1, pulse_seq_1, length1, 1)
+        self.add_singleQ_clifford(index_2, gate_seq_2, pulse_seq_2, length2, 2)
     
     
-    def add_CNOT_like_twoQ_clifford(self, index, gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, generator='CNOT', **kwargs):
+    def add_CNOT_like_twoQ_clifford(self, index, gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, length1, length2, generator='CNOT', **kwargs):
         """Add CNOT like two Qubit Clifford.
     
         (24*24*3*3 = 5184)
@@ -902,9 +1057,10 @@ class TwoQubit_RB(Measurement1D):
         """
         r = self.qubit_info.rotate
         r2 = self.qubit2_info.rotate
-        r3 = self.qubit3_info.rotate
-        w = int(self.qubit_info.w)
-        sq_len = self.qubit_info.sq_len
+        r3 = self.twoQ_info.rotate
+        q_len1 = self.qubit_info.chop*self.qubit_info.w+self.qubit_info.sq_len
+        q_len2 = self.qubit2_info.chop*self.qubit2_info.w+self.qubit2_info.sq_len
+        twoQ_len = self.twoQ_info.chop*self.twoQ_info.w+self.twoQ_info.sq_len
 #        print(index)
 #        print(type(index))
         
@@ -922,57 +1078,49 @@ class TwoQubit_RB(Measurement1D):
         # randomly sample from S1_Y2p (3) or S1_Z2p (3)
         index_4 = (index // 24 // 24 // 3) % 3
     
-        if generator == 'CZ':
-            self.add_singleQ_clifford(index_1, gate_seq_1, pulse_seq_1, 1)
-            self.add_singleQ_clifford(index_2, gate_seq_2, pulse_seq_2, 2)
-            gate_seq_1.append(Delay(4*w+sq_len))
-            gate_seq_2.append(gates.CZ)
-            self.add_singleQ_S1(index_3, gate_seq_1, pulse_seq_1, qubit=1)
-            self.add_singleQ_S1_Y2p(index_4, gate_seq_2, pulse_seq_2, qubit=2)
-    
-        elif generator == 'iSWAP':
-            self.add_singleQ_clifford(index_1, gate_seq_1, 1)
-            self.add_singleQ_clifford(index_2, gate_seq_2, 2)
-    
-            gate_seq_1.append(Delay(4*w+sq_len))
-            gate_seq_2.append(gates.iSWAP)
-    
-            gate_seq_1.append(r(np.pi/2, X_AXIS))
-            gate_seq_2.append(Delay(4*w+sq_len))
-    
-            gate_seq_1.append(Delay(4*w+sq_len))
-            gate_seq_2.append(gates.iSWAP)
-    
-            self.add_singleQ_S1(index_3, gate_seq_1, qubit=1)
-            self.add_singleQ_S1_Z2p(index_4, gate_seq_2, qubit=2)
+#        if generator == 'CZ':
+#            self.add_singleQ_clifford(index_1, gate_seq_1, pulse_seq_1, 1)
+#            self.add_singleQ_clifford(index_2, gate_seq_2, pulse_seq_2, 2)
+#            gate_seq_1.append(Delay(4*w+sq_len))
+#            gate_seq_2.append(gates.CZ)
+#            self.add_singleQ_S1(index_3, gate_seq_1, pulse_seq_1, qubit=1)
+#            self.add_singleQ_S1_Y2p(index_4, gate_seq_2, pulse_seq_2, qubit=2)
+#    
+#        elif generator == 'iSWAP':
+#            self.add_singleQ_clifford(index_1, gate_seq_1, 1)
+#            self.add_singleQ_clifford(index_2, gate_seq_2, 2)
+#    
+#            gate_seq_1.append(Delay(4*w+sq_len))
+#            gate_seq_2.append(gates.iSWAP)
+#    
+#            gate_seq_1.append(r(np.pi/2, X_AXIS))
+#            gate_seq_2.append(Delay(4*w+sq_len))
+#    
+#            gate_seq_1.append(Delay(4*w+sq_len))
+#            gate_seq_2.append(gates.iSWAP)
+#    
+#            self.add_singleQ_S1(index_3, gate_seq_1, qubit=1)
+#            self.add_singleQ_S1_Z2p(index_4, gate_seq_2, qubit=2)
             
-        elif generator == 'CNOT':
-            self.add_singleQ_clifford(index_1, gate_seq_1, pulse_seq_1, 1)
-            self.add_singleQ_clifford(index_2, gate_seq_2, pulse_seq_2, 2)
+        if generator == 'CNOT':
+            self.add_singleQ_clifford(index_1, gate_seq_1, pulse_seq_1, length1, 1)
+            self.add_singleQ_clifford(index_2, gate_seq_2, pulse_seq_2, length2, 2)
             
-            delta = np.abs(len(gate_seq_1) - len(gate_seq_2))
-            if delta > 0:
-                if len(gate_seq_1) < len(gate_seq_2):
-                    for i in range(delta):
-                        gate_seq_1.extend('I')
-                        pulse_seq_1.append(Delay(4*w+sq_len))
-                elif len(gate_seq_1) > len(gate_seq_2):
-                    for i in range(delta):
-                        gate_seq_2.extend('I')
-                        pulse_seq_2.append(Delay(4*w+sq_len))
+            self.pad_sequences(gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, length1, length2)
                     
-            
             gate_seq_1.append('I')
             gate_seq_2.append('CNOT')
-            pulse_seq_1.append(Delay(4*w+sq_len))
+            pulse_seq_1.append(Delay(twoQ_len))
             pulse_seq_2.append(r3(np.pi,0))
+            length1[0] = length1[0] + twoQ_len
+            length2[0] = length2[0] + twoQ_len
             
-            self.add_singleQ_S1(index_3, gate_seq_1, pulse_seq_1, qubit=1)
-            self.add_singleQ_S1(index_4, gate_seq_2, pulse_seq_2, qubit=2)
+            self.add_singleQ_S1(index_3, gate_seq_1, pulse_seq_1, length1, qubit=1)
+            self.add_singleQ_S1(index_4, gate_seq_2, pulse_seq_2, length2, qubit=2)
     
     
     
-    def add_iSWAP_like_twoQ_clifford(self, index, gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, generator='CNOT', **kwargs):
+    def add_iSWAP_like_twoQ_clifford(self, index, gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, length1, length2, generator='CNOT', **kwargs):
         """Add iSWAP like two Qubit Clifford.
     
         (24*24*3*3 = 5184)
@@ -980,9 +1128,10 @@ class TwoQubit_RB(Measurement1D):
         """
         r = self.qubit_info.rotate
         r2 = self.qubit2_info.rotate
-        r3 = self.qubit3_info.rotate
-        w = int(self.qubit_info.w)
-        sq_len = self.qubit_info.sq_len
+        r3 = self.twoQ_info.rotate
+        q_len1 = self.qubit_info.chop*self.qubit_info.w+self.qubit_info.sq_len
+        q_len2 = self.qubit2_info.chop*self.qubit2_info.w+self.qubit2_info.sq_len
+        twoQ_len = self.twoQ_info.chop*self.twoQ_info.w+self.twoQ_info.sq_len
 #        print(index)
 #        print(type(index))
             
@@ -1002,63 +1151,62 @@ class TwoQubit_RB(Measurement1D):
     
     
     
-        if generator == 'CZ':
-            add_singleQ_clifford(index_1, gate_seq_1, qubit=1)
-            add_singleQ_clifford(index_2, gate_seq_2, qubit=2)
-            gate_seq_1.append(Delay(4*w+sq_len))
-            gate_seq_2.append(gates.CZ)
-            gate_seq_1.append(r(np.pi/2, Y_AXIS))
-            gate_seq_2.append(r2(-np.pi/2, X_AXIS))
-            gate_seq_1.append(Delay(4*w+sq_len))
-            gate_seq_2.append(gates.CZ)
-            add_singleQ_S1_Y2p(index_3, gate_seq_1, qubit=1)
-            add_singleQ_S1_X2p(index_4, gate_seq_2, qubit=2)
-    
-        elif generator == 'iSWAP':
-            add_singleQ_clifford(index_1, gate_seq_1, qubit=1)
-            add_singleQ_clifford(index_2, gate_seq_2, qubit=2)
-    
-            gate_seq_1.append(Delay(4*w+sq_len))
-            gate_seq_2.append(gates.iSWAP)
-    
-            add_singleQ_S1(index_3, gate_seq_1, qubit=1)
-            add_singleQ_S1(index_4, gate_seq_2, qubit=2)
+#        if generator == 'CZ':
+#            add_singleQ_clifford(index_1, gate_seq_1, qubit=1)
+#            add_singleQ_clifford(index_2, gate_seq_2, qubit=2)
+#            gate_seq_1.append(Delay(4*w+sq_len))
+#            gate_seq_2.append(gates.CZ)
+#            gate_seq_1.append(r(np.pi/2, Y_AXIS))
+#            gate_seq_2.append(r2(-np.pi/2, X_AXIS))
+#            gate_seq_1.append(Delay(4*w+sq_len))
+#            gate_seq_2.append(gates.CZ)
+#            add_singleQ_S1_Y2p(index_3, gate_seq_1, qubit=1)
+#            add_singleQ_S1_X2p(index_4, gate_seq_2, qubit=2)
+#    
+#        elif generator == 'iSWAP':
+#            add_singleQ_clifford(index_1, gate_seq_1, qubit=1)
+#            add_singleQ_clifford(index_2, gate_seq_2, qubit=2)
+#    
+#            gate_seq_1.append(Delay(4*w+sq_len))
+#            gate_seq_2.append(gates.iSWAP)
+#    
+#            add_singleQ_S1(index_3, gate_seq_1, qubit=1)
+#            add_singleQ_S1(index_4, gate_seq_2, qubit=2)
             
-        elif generator == 'CNOT':
-            self.add_singleQ_clifford(index_1, gate_seq_1, pulse_seq_1, 1)
-            self.add_singleQ_clifford(index_2, gate_seq_2, pulse_seq_2, 2)
+        if generator == 'CNOT':
+            self.add_singleQ_clifford(index_1, gate_seq_1, pulse_seq_1, length1, 1)
+            self.add_singleQ_clifford(index_2, gate_seq_2, pulse_seq_2, length2, 2)
             
-            delta = np.abs(len(gate_seq_1) - len(gate_seq_2))
-            if delta > 0:
-                if len(gate_seq_1) < len(gate_seq_2):
-                    for i in range(delta):
-                        gate_seq_1.extend('I')
-                        pulse_seq_1.append(Delay(4*w+sq_len))
-                elif len(gate_seq_1) > len(gate_seq_2):
-                    for i in range(delta):
-                        gate_seq_2.extend('I')
-                        pulse_seq_2.append(Delay(4*w+sq_len))
+            self.pad_sequences(gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, length1, length2)
                         
             gate_seq_1.append('I')
             gate_seq_2.append('CNOT')
-            pulse_seq_1.append(Delay(4*w+sq_len))
+            pulse_seq_1.append(Delay(twoQ_len))
             pulse_seq_2.append(r3(np.pi,0))
+            length1[0] = length1[0] + twoQ_len
+            length2[0] = length2[0] + twoQ_len
             
             gate_seq_1.append('X2m')
             gate_seq_2.append('Y2p')
             pulse_seq_1.append(r(-np.pi/2, X_AXIS))
             pulse_seq_2.append(r2(np.pi/2, Y_AXIS))
+            length1[0] = length1[0] + q_len1
+            length2[0] = length2[0] + q_len2
             
+            self.pad_sequences(gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, length1, length2)
+
             gate_seq_1.append('I')
             gate_seq_2.append('CNOT')
-            pulse_seq_1.append(Delay(4*w+sq_len))
+            pulse_seq_1.append(Delay(twoQ_len))
             pulse_seq_2.append(r3(np.pi,0))
+            length1[0] = length1[0] + twoQ_len
+            length2[0] = length2[0] + twoQ_len
             
-            self.add_singleQ_S1_X2p(index_3, gate_seq_1, pulse_seq_1, qubit=1)
-            self.add_singleQ_S1(index_4, gate_seq_2, pulse_seq_2, qubit=2)
+            self.add_singleQ_S1_X2p(index_3, gate_seq_1, pulse_seq_1, length1, qubit=1)
+            self.add_singleQ_S1(index_4, gate_seq_2, pulse_seq_2, length2, qubit=2)
     
     
-    def add_SWAP_like_twoQ_clifford(self, index, gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, generator='CNOT', **kwargs):
+    def add_SWAP_like_twoQ_clifford(self, index, gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, length1, length2, generator='CNOT', **kwargs):
         """Add SWAP like two Qubit Clifford.
     
         (24*24*= 576)
@@ -1066,9 +1214,11 @@ class TwoQubit_RB(Measurement1D):
         """
         r = self.qubit_info.rotate
         r2 = self.qubit2_info.rotate
-        r3 = self.qubit3_info.rotate
-        w = int(self.qubit_info.w)
-        sq_len = self.qubit_info.sq_len
+        r3 = self.twoQ_info.rotate
+        q_len1 = self.qubit_info.chop*self.qubit_info.w+self.qubit_info.sq_len
+        q_len2 = self.qubit2_info.chop*self.qubit2_info.w+self.qubit2_info.sq_len
+        twoQ_len = self.twoQ_info.chop*self.twoQ_info.w+self.twoQ_info.sq_len
+
 #        print(index)
 #        print(type(index))
         
@@ -1080,63 +1230,56 @@ class TwoQubit_RB(Measurement1D):
         # randomly sample from single qubit cliffords (24)
         index_2 = (index // 24) % 24
     
-        if generator == 'CZ':
-            add_singleQ_clifford(index_1, gate_seq_1, qubit=1)
-            add_singleQ_clifford(index_2, gate_seq_2, qubit=2)
-            gate_seq_1.append(Delay(4*w+sq_len))
-            gate_seq_2.append(gates.CZ)
-            gate_seq_1.append(r(-np.pi/2, Y_AXIS))
-            gate_seq_2.append(r2(np.pi/2, Y_AXIS))
-            gate_seq_1.append(Delay(4*w+sq_len))
-            gate_seq_2.append(gates.CZ)
-            gate_seq_1.append(r(np.pi/2, Y_AXIS))
-            gate_seq_2.append(r2(-np.pi/2, Y_AXIS))
-            gate_seq_1.append(Delay(4*w+sq_len))
-            gate_seq_2.append(gates.CZ)
-            gate_seq_1.append(Delay(4*w+sq_len))
-            gate_seq_2.append(r2(np.pi/2, Y_AXIS))
-    
-        elif generator == 'iSWAP':
-            add_singleQ_clifford(index_1, gate_seq_1, qubit=1)
-            add_singleQ_clifford(index_2, gate_seq_2, qubit=2)
-    
-            gate_seq_1.append(Delay(4*w+sq_len))
-            gate_seq_2.append(gates.iSWAP)
-    
-            gate_seq_1.append(Delay(4*w+sq_len))
-            gate_seq_2.append(r2(-np.pi/2, X_AXIS))
-    
-            gate_seq_1.append(Delay(4*w+sq_len))
-            gate_seq_2.append(gates.iSWAP)
-    
-            gate_seq_1.append(r(-np.pi/2, X_AXIS))
-            gate_seq_2.append(Delay(4*w+sq_len))
-    
-            gate_seq_1.append(Delay(4*w+sq_len))
-            gate_seq_2.append(gates.iSWAP)
-    
-            gate_seq_1.append(Delay(4*w+sq_len))
-            gate_seq_2.append(r2(-np.pi/2, X_AXIS))
+#        if generator == 'CZ':
+#            add_singleQ_clifford(index_1, gate_seq_1, qubit=1)
+#            add_singleQ_clifford(index_2, gate_seq_2, qubit=2)
+#            gate_seq_1.append(Delay(4*w+sq_len))
+#            gate_seq_2.append(gates.CZ)
+#            gate_seq_1.append(r(-np.pi/2, Y_AXIS))
+#            gate_seq_2.append(r2(np.pi/2, Y_AXIS))
+#            gate_seq_1.append(Delay(4*w+sq_len))
+#            gate_seq_2.append(gates.CZ)
+#            gate_seq_1.append(r(np.pi/2, Y_AXIS))
+#            gate_seq_2.append(r2(-np.pi/2, Y_AXIS))
+#            gate_seq_1.append(Delay(4*w+sq_len))
+#            gate_seq_2.append(gates.CZ)
+#            gate_seq_1.append(Delay(4*w+sq_len))
+#            gate_seq_2.append(r2(np.pi/2, Y_AXIS))
+#    
+#        elif generator == 'iSWAP':
+#            add_singleQ_clifford(index_1, gate_seq_1, qubit=1)
+#            add_singleQ_clifford(index_2, gate_seq_2, qubit=2)
+#    
+#            gate_seq_1.append(Delay(4*w+sq_len))
+#            gate_seq_2.append(gates.iSWAP)
+#    
+#            gate_seq_1.append(Delay(4*w+sq_len))
+#            gate_seq_2.append(r2(-np.pi/2, X_AXIS))
+#    
+#            gate_seq_1.append(Delay(4*w+sq_len))
+#            gate_seq_2.append(gates.iSWAP)
+#    
+#            gate_seq_1.append(r(-np.pi/2, X_AXIS))
+#            gate_seq_2.append(Delay(4*w+sq_len))
+#    
+#            gate_seq_1.append(Delay(4*w+sq_len))
+#            gate_seq_2.append(gates.iSWAP)
+#    
+#            gate_seq_1.append(Delay(4*w+sq_len))
+#            gate_seq_2.append(r2(-np.pi/2, X_AXIS))
             
-        elif generator == 'CNOT':
-            self.add_singleQ_clifford(index_1, gate_seq_1, pulse_seq_1, 1)
-            self.add_singleQ_clifford(index_2, gate_seq_2, pulse_seq_2, 2)
+        if generator == 'CNOT':
+            self.add_singleQ_clifford(index_1, gate_seq_1, pulse_seq_1, length1, 1)
+            self.add_singleQ_clifford(index_2, gate_seq_2, pulse_seq_2, length2, 2)
             
-            delta = np.abs(len(gate_seq_1) - len(gate_seq_2))
-            if delta > 0:
-                if len(gate_seq_1) < len(gate_seq_2):
-                    for i in range(delta):
-                        gate_seq_1.extend('I')
-                        pulse_seq_1.append(Delay(4*w+sq_len))
-                elif len(gate_seq_1) > len(gate_seq_2):
-                    for i in range(delta):
-                        gate_seq_2.extend('I')
-                        pulse_seq_2.append(Delay(4*w+sq_len))
+            self.pad_sequences(gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, length1, length2)
             
             gate_seq_1.append('I')
             gate_seq_2.append('CNOT')
-            pulse_seq_1.append(Delay(4*w+sq_len))
+            pulse_seq_1.append(Delay(twoQ_len))
             pulse_seq_2.append(r3(np.pi,0))
+            length1[0] = length1[0] + twoQ_len
+            length2[0] = length2[0] + twoQ_len
 
             gate_seq_1.append('Xp')
             gate_seq_1.append('Y2p')
@@ -1146,11 +1289,17 @@ class TwoQubit_RB(Measurement1D):
             gate_seq_2.append('Y2p')
             pulse_seq_2.append(r2(np.pi, X_AXIS))
             pulse_seq_2.append(r2(np.pi/2, Y_AXIS))
+            length1[0] = length1[0] + 2*q_len1
+            length2[0] = length2[0] + 2*q_len2
             
+            self.pad_sequences(gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, length1, length2)
+
             gate_seq_1.append('I')
             gate_seq_2.append('CNOT')
-            pulse_seq_1.append(Delay(4*w+sq_len))
+            pulse_seq_1.append(Delay(twoQ_len))
             pulse_seq_2.append(r3(-np.pi,0))
+            length1[0] = length1[0] + twoQ_len
+            length2[0] = length2[0] + twoQ_len
             
             gate_seq_1.append('Xp')
             gate_seq_1.append('Y2p')
@@ -1160,14 +1309,20 @@ class TwoQubit_RB(Measurement1D):
             gate_seq_2.append('Y2p')
             pulse_seq_2.append(r2(np.pi, X_AXIS))
             pulse_seq_2.append(r2(np.pi/2, Y_AXIS))
+            length1[0] = length1[0] + 2*q_len1
+            length2[0] = length2[0] + 2*q_len2
             
+            self.pad_sequences(gate_seq_1, gate_seq_2, pulse_seq_1, pulse_seq_2, length1, length2)
+
             gate_seq_1.append('I')
             gate_seq_2.append('CNOT')
-            pulse_seq_1.append(Delay(4*w+sq_len))
+            pulse_seq_1.append(Delay(twoQ_len))
             pulse_seq_2.append(r3(np.pi,0))
+            length1[0] = length1[0] + twoQ_len
+            length2[0] = length2[0] + twoQ_len
             
 
     def analyze(self, data=None, fig=None):
         self.fit_params = analysis(self, data, fig)
         
-        return (1-self.fit_params['alpha'].value)*0.75, (1-self.fit_params['alpha'].value)*0.75/self.num_gates
+        return #(1-self.fit_params['alpha'].value)*0.75, (1-self.fit_params['alpha'].value)*0.75/self.num_gates
