@@ -64,7 +64,10 @@ class Gate_Info(Pulse_Info):
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 option_list=ROTATIONS,
                 set_func=lambda x: True, value='Gaussian')
-
+        self.add_parameter('chop', type=types.FloatType,
+                flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
+                set_func=lambda x: True, value=4,
+                doc='Gaussian truncation number')
         self.add_parameter('w', type=types.FloatType,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 set_func=lambda x: True, value=10,

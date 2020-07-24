@@ -73,6 +73,7 @@ def analysis(meas, data=None, fig=None):
     C = ((y2s[12:] + y3s[12:]) - (Vge + Veg)) / (Vee-Vge-Veg + Vgg)  #(P1 + P2)
 #
     A = ((y1s[12:] + y4s[12:]) - (Vge + Veg)) / (Vee - Vge - Veg + Vgg)  # (P0 + P3)
+    
 #
     Pg_cplx = A-((D-C+B)/2)
     fig2, axes2 = plt.subplots(2)
