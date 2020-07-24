@@ -108,8 +108,8 @@ def T2E(qubit_info,seq=None):
     t2.measure()
     
 def T1(qubit_info, seq):
-    t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 50e3, 81), double_exp=False, generate=True, plot_seqs=False,
-                                         proj_func='phase', seq=seq)
+    t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 40e3, 81), double_exp=False, generate=True, plot_seqs=False,
+                                         proj_func='phase', seq=seq)  #Note the rep time is 50us
     t1.measure()
 
 
@@ -161,8 +161,8 @@ if 0:
 
     ZZ.set_rf_on(True)
     alz.set_naverages(2000)
-    power_range = np.linspace(-12,-1, 1)
-    freq_range = np.linspace(3473e6, 3474.4e6, 7)
+    power_range = np.linspace(-4,-1, 1)
+    freq_range = np.linspace(3520e6, 3540e6, 5)
     ZZ_tune(qubit_info, power_range, freq_range, extra_info = qubit2_info)
     bla    
 
@@ -178,8 +178,8 @@ if 0:
     
     #SSB to update sidenband frequencies (measures through 5/6, updates both qubit_info delta's)
 
-    qubitnew1 = ssb_check(qubit1ge, qubit1ge_2, qubit_info, np.linspace(-6e6, 6e6, 81))
-    qubitnew2 = ssb_check(qubit2ge, qubit2ge_2, qubit2_info, np.linspace(-6e6, 6e6, 81))
+    qubitnew1 = ssb_check(qubit1ge, qubit1ge_2, qubit_info, np.linspace(-2e6, 2e6, 81))
+    qubitnew2 = ssb_check(qubit2ge, qubit2ge_2, qubit2_info, np.linspace(-2e6, 2e6, 81))
     qubits = mclient.get_qubits()
     qubit_info = mclient.get_qubit_info('qubit1ge')
     qubit_info2 = mclient.get_qubit_info('qubit1ge_2')
@@ -189,7 +189,7 @@ if 0:
 #    #Running cooling spec one more time
     cool_freq = (cavity - gaius_freq - qubitnew2)/2
     freq_range = 15e6        
-    cooling_spec(cool_freq, freq_range, qubit2_info, [11])
+    cooling_spec(cool_freq, freq_range, qubit2_info, [11,12,13])
     bla
     #manually set the frequency and power
 #coolgen.set_power()
@@ -197,7 +197,7 @@ if 0:
 #coolgen.set_rf_on(True)
 #    
 
-if 1:
+if 0:
     #Update all 4 pi amp's
     rabi_test(qubit1ge, qubit_info, seq_cool, np.linspace(-0.15, 0.15, 61))   
     rabi_test(qubit2ge, qubit2_info, seq_cool, np.linspace(-0.2, 0.2, 61))   
@@ -241,7 +241,7 @@ if 0: # Tune up for time vs detuning
     cool = sequencer.Constant(int(4e3),1,chan='3m1')
     seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])     
     cr_tune = CRtuning_timevsdet.CRtuning_timevsdet(qubit_info2, qubit_info, qubit2_info, 
-                                                    np.linspace(0,100,21), np.linspace(-10e6, 10e6, 11), 
+                                                    np.linspace(0,100,21), np.linspace(-40e6, -10e6, 21), 
                 amp=0.36, phase=0, rel_amp=0.0000, rel_phase=0.0, sigma=5, update=False, 
                 seq=seq_cool, fix_phase=True, fix_period=None, control_pi=False, proj_func='phase')    
     

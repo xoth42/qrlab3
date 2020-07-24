@@ -102,9 +102,9 @@ class TimeRabi_interleaved(Measurement1D):
         ampQ = self.amp * np.sin(self.phase)
         ampIc = self.amp *self.rel_amp * np.cos(self.phase+self.rel_phase)
         ampQc = self.amp *self.rel_amp * np.sin(self.phase+self.rel_phase)
-        chs = self.qubit_info.sideband_channels1
-#        chs2 = self.qubit_info2.sideband_channels
-        chs2 = self.qubit_info.sideband_channels2 #Chen temporary hack
+        chs = self.qubit_info.sideband_channels
+        chs2 = self.qubit_info2.sideband_channels
+#        chs2 = self.qubit_info.sideband_channels2 #Chen temporary hack
         
         for plen in self.times:
             

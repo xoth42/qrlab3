@@ -52,12 +52,18 @@ def analysis(meas, data=None, fig=None):
     Vgg = np.mean(calibration_ground)
     print Veg, Vge, Vee, Vgg
     
-    Pg_cplx = 1- ((y1s[12:] + y3s[12:]) - (Vge + Vgg))/ (Veg-Vgg+Vee-Vge) 
+    rd = np.array(y1s[12:])
+    bl = np.array(y2s[12:])
+    gr = np.array(y3s[12:])
+    yw = np.array(y4s[12:])
+    Pg1 = ((-rd-gr+bl+yw)/(Veg-Vgg+Vee-Vge)+1)/2
+    Pg2 = ((-rd-bl+gr+yw)/(Vge-Vgg+Vee-Veg)+1)/2
+#    Pg_cplx = 1- ((y1s[12:] + y3s[12:]) - (Vge + Vgg))/ (Veg-Vgg+Vee-Vge) 
     fig2, axes2 = plt.subplots(2)
-    axes2[0].plot(xs[12:], np.real(Pg_cplx))
-    axes2[1].plot(xs[12:], np.imag(Pg_cplx))
+    axes2[0].plot(xs[12:], np.real(Pg1))
+    axes2[1].plot(xs[12:], np.imag(Pg1))
 #
-    return Pg_cplx
+    return Pg1
 
 def rdm_rotations(n_gates):
     k=[]

@@ -28,7 +28,7 @@ qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')
 qubit_info2 = mclient.get_qubit_info('qubit1ge_2')
 gate_info1 = mclient.get_gate_info('sq_gate1')
-
+gate_info2 = mclient.get_gate_info('sq_gate2')
 
 K= []
 
@@ -415,9 +415,9 @@ if 0: # T1
 #        #postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
         cool = sequencer.Constant(int(4e3),1,chan='3m1')
         seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])#
-#        t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0.1,5e3,31), np.linspace(5.1e3, 40e3, 31))), double_exp=True, generate=True, plot_seqs=False,
-        t1 = T1measurement.T1Measurement(qubit2_info, np.linspace(0, 40e3, 81), double_exp=False, generate=True, plot_seqs=False,
-                                         proj_func='phase', seq=seq_cool)
+        t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0,5e3,51), np.linspace(5.1e3, 40e3, 51))), double_exp=True, generate=True, plot_seqs=False,
+#        t1 = T1measurement.T1Measurement(qubit2_info, np.linspace(0, 40e3, 81), double_exp=False, generate=True, plot_seqs=False,
+                                         proj_func='phase', seq=None)
         t1.measure()
 #        t1times[i] = t1.analyze()
 #        plt.close()
@@ -712,9 +712,9 @@ if 1: # Tune up for time vs detuning
     
     cool = sequencer.Constant(int(4e3),1,chan='3m1')
     seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])     
-    cr_tune = CRtuning_timevsdet.CRtuning_timevsdet(qubit2_info, qubit2_info2, gate_info1, 
+    cr_tune = CRtuning_timevsdet.CRtuning_timevsdet(gate_info2, qubit2_info2, gate_info1, 
                                                     np.linspace(0,121,31), np.linspace(-20e6, 20e6, 11), 
-                amp=0.078, phase=0, rel_amp=0.00, rel_phase=1.77, sigma=1, update=False, 
+                amp=0.12, phase=0, rel_amp=0.00, rel_phase=1.77, sigma=1, update=False, 
                 seq=seq_cool, fix_phase=True, fix_period=None, control_pi=True, proj_func='phase')    
     
     data = cr_tune.measure()
