@@ -103,12 +103,13 @@ def analysis(meas, data=None, fig=None):
 
 class Rabi_mixer(Measurement1D):
 
-    def __init__(self, qubit_info,mixer_info, amps, update=False, seq=None, r_axis=0, fix_phase=True,
+    def __init__(self, qubit_info,mixer_info,mixer_info2, amps, update=False, seq=None, r_axis=0, fix_phase=True,
                  fix_period=None, repeat_pulse=1, postseq=None, selective=False, fit_type=FIT_AMP, **kwargs):
         self.qubit_info = qubit_info
         self.amps = amps
         self.xs = amps
         self.mixer_info = mixer_info
+        self.mixer_info2 = mixer_info2
         self.update_ins = update
         if seq is None:
             seq = Trigger(250)
@@ -121,7 +122,7 @@ class Rabi_mixer(Measurement1D):
         self.fit_type = fit_type
         self.selective = selective
 
-        super(Rabi_mixer, self).__init__(len(amps), infos=(qubit_info,mixer_info), **kwargs)
+        super(Rabi_mixer, self).__init__(len(amps), infos=(qubit_info,mixer_info,mixer_info2), **kwargs)
         self.data.create_dataset('amps', data=amps)
 
     def generate(self):  #That is the original generate function 
@@ -145,12 +146,14 @@ class Rabi_mixer(Measurement1D):
                     Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
         #            Join([Delay(100),self.mixer_info.rotate(np.pi, 0),Delay(200)])
                     Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
+                    Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info2.pi_amp, chan=self.mixer_info2.channels[0]),Delay(200)])
                 ]))
             else:
                 s.append(Combined([
                     Join([Delay(300),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
                     Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
-                    Join([Delay(100),self.mixer_info.rotate(np.pi, 0),Delay(200)])
+                    Join([Delay(100),self.mixer_info.rotate(np.pi, 0),Delay(200)]),
+                    Join([Delay(100),self.mixer_info2.rotate(np.pi, 0),Delay(200)])
     #                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
                 ]))
             s.append(Delay(2000))
