@@ -84,10 +84,10 @@ class CRtuning_time_phase(Measurement2D):
     
 #                if plen > 0:
                 g=(Combined([
-        #                GaussSquare(int(plen), ampI, self.sigma, chan=chs[0]),
-        #                GaussSquare(int(plen), ampQ, self.sigma, chan=chs[1]),
-        #                GaussSquare(int(plen), ampIc, self.sigma, chan=chs2[0]),
-        #                GaussSquare(int(plen), ampQc, self.sigma, chan=chs2[1]),            
+#                        GaussSquare(int(plen), ampI, self.sigma, chan=chs[0]),
+#                        GaussSquare(int(plen), ampQ, self.sigma, chan=chs[1]),
+#                        GaussSquare(int(plen), ampIc, self.sigma, chan=chs2[0]),
+#                        GaussSquare(int(plen), ampQc, self.sigma, chan=chs2[1]),            
                         Constant(int(plen), self.amp * np.cos(self.phase), chan=chs[0]),
                         Constant(int(plen), self.amp * np.sin(self.phase), chan=chs[1]),
                         Constant(int(plen), self.amp *self.rel_amp * np.cos(self.phase+rel_phase), chan=chs2[0]),
@@ -97,9 +97,10 @@ class CRtuning_time_phase(Measurement2D):
                 if self.control_pi==True:             
                     s.append(self.qubit2_info.rotate(np.pi,0))
                     s.append(g)
-                    s.append(self.qubit2_info.rotate(np.pi,0))
+                    s.append(self.qubit2_info.rotate(np.pi,0)) #Chen changed to always measure with control qubit in e
                 else:
-                     s.append(g)
+                    s.append(g)
+                    s.append(self.qubit2_info.rotate(np.pi,0)) #Chen changed to always measure with control qubit in e
                      
                 if self.postseq:
                     s.append(self.postseq)

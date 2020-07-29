@@ -63,7 +63,7 @@ class Pi_train(Measurement1D):
 
         for i, amp in enumerate(self.amps):
             s.append(self.seq)
-            s.append(self.qubit_info.rotate(np.pi/2, 0))
+            s.append(self.qubit_info.rotate(np.pi/2, 0)) 
             s.append(Repeat(self.qubit_info.rotate(0, self.r_axis, amp=amp), self.repeat_pulse))
             if self.postseq is not None:
                 s.append(self.postseq)
@@ -76,7 +76,7 @@ class Pi_train(Measurement1D):
 
         for i, amp in enumerate(self.amps):
             s.append(self.seq)
-            s.append(self.qubit_info.rotate(np.pi/2, 0))
+            s.append(self.qubit_info.rotate(np.pi/2, 0)) 
             s.append(Repeat(self.qubit_info.rotate(0, self.r_axis, amp=-amp), self.repeat_pulse))
             if self.postseq is not None:
                 s.append(self.postseq)

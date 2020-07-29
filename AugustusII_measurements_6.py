@@ -27,7 +27,8 @@ ZZ = mclient.instruments['ZZ']
 qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')
 qubit_info2 = mclient.get_qubit_info('qubit1ge_2')
-
+gate_info1 = mclient.get_gate_info('sq_gate1')
+gate_info2 = mclient.get_gate_info('sq_gate2')
 
 K= []
 
@@ -47,9 +48,9 @@ qubit2_info2 = mclient.get_qubit_info('qubit2ge_2')
 if 0: # RO Cavity spec
     from scripts.single_cavity import rocavspectroscopy
 #    rofreq = 7515.5e6
-    rofreq = 7562.22e6
-    freq_range = 8e6
-    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(5, 5, 1),
+    rofreq = 7564.6e6
+    freq_range = 10e6
+    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(5, 7, 2),
                                          np.linspace(rofreq - freq_range, rofreq + freq_range, 51), qubit_pulse=False)
     ro.measure()
     bla
@@ -59,7 +60,7 @@ if 0:# Qubit spec
     from scripts.single_qubit import spectroscopy
 #    from scripts.single_qubit import spectroscopy_IQ
 
-    qubit_freq = 1050e6
+    qubit_freq = 1192e6
     freq_range = 0e6
     spec = spectroscopy.Spectroscopy(mclient.instruments['gaius01'], qubit_info,
                                          np.linspace(qubit_freq-freq_range,
@@ -91,7 +92,7 @@ if 0: # Qubit SSBspec
     from scripts.single_qubit import ssbspec
 #    for i in [-15,-10,-5,0,5,10]:
 #    RObrick.do_set_power(i)
-    cool = sequencer.Constant(int(8e3),1,chan='3m1')
+    cool = sequencer.Constant(int(4e3),1,chan='3m1')
     seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), 
 #                          qubit2_info.rotate(np.pi,0)
                           ])
@@ -99,13 +100,13 @@ if 0: # Qubit SSBspec
     for power in np.linspace(0, 16, 1):
 #        coolgen.set_power(power)
         for freq in np.linspace(3.380e9,3.450e9,1):
-#            alz.set_naverages(2000)s
+            alz.set_naverages(8000)
 #            coolgen.set_frequency(freq)
 #            cool = sequencer.Constant(int(8e3),1,chan='3m1')
 #            seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), 
 ##                                  qubit2_info2.rotate(np.pi, 0)
 #                                  ])
-            spec = ssbspec.SSBSpec(qubit_info, np.linspace(-6e6, 4e6, 81), proj_func='phase', seq=seq, extra_info=qubit2_info)
+            spec = ssbspec.SSBSpec(qubit_info, np.linspace(-4e6, 4e6, 81), proj_func='phase', seq=seq, extra_info=qubit2_info)
             spec.measure()
 #            plt.close()
 #    spec.measure_keysight()
@@ -113,6 +114,7 @@ if 0: # Qubit SSBspec
     
     
     """Power Rabi -- Pi pulse calibration"""
+
 if 0: # Calibrate pi pulse
     from scripts.single_qubit import rabi
 #    for x in np.linspace(7.54741e9,7.54770e9,30):
@@ -137,8 +139,9 @@ if 0: # Calibrate pi pulse
 #    cool = sequencer.Constant(int(200e3),1,chan='3m1')
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(200)])
     for i in range(1):
-        cool = sequencer.Constant(int(8e3),1,chan='3m1')
-        seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
+        cool = sequencer.Constant(int(4e3),1,chan='3m1')
+        seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])# qubit2_info.rotate(np.pi, 0)])
+#        postseq = qubit2_info.rotate(np.pi, 0)
 #    for i in range(1): 
 #        M =np.empty(3)
 #        WF_xxx.set_rf_on(0)
@@ -146,12 +149,12 @@ if 0: # Calibrate pi pulse
 #            WF_xxx.set_power(wf_power)
 #            for wf_freq in np.linspace(7.904615e9,7.90461e9,1):
 #                WF_xxx.set_frequency(wf_freq)
-        tr = rabi.Rabi(qubit2_info, np.linspace(0.04, 0.065, 61), selective=False,
+        tr = rabi.Rabi(gate_info2, np.linspace(-0.15, 0.15, 61), selective=False,
                 #                   np.linspace(0.75, 0.95, 101), selective=False,
                 #                           np.linspace(-0.2, 0.2, 61), selective=True,
-                                   plot_seqs=False, generate=True, repeat_pulse=8,  #n=3 has a bug
+                                   plot_seqs=False, generate=True, repeat_pulse=1,  #n=3 has a bug
                                    update=True, seq=seq,
-                                   postseq=None, proj_func='phase',extra_info=qubit_info)
+                                   postseq=None, proj_func='phase', extra_info=qubit2_info)
         data=tr.measure()
 #                amp=tr.fit_params['amp'].value
 #                K=[]
@@ -165,13 +168,7 @@ if 0: # Calibrate pi pulse
     
     bla   
     
-if 0: # Time Rabi
-    from scripts.single_qubit import timerabi
-    cool = sequencer.Constant(int(8e3),1,chan='3m1')
-    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])    
-    tr = timerabi.TimeRabi(qubit_info, np.linspace(0, 50, 41), amp=0.038, seq=seq, plot_seqs=False, proj_func='phase')
-    data = tr.measure()
-    bla
+
 
 
     
@@ -416,11 +413,11 @@ if 0: # T1
     for i in range(1):
 #    for i in range(1):
 #        #postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
-        cool = sequencer.Constant(int(8e3),1,chan='3m1')
+        cool = sequencer.Constant(int(4e3),1,chan='3m1')
         seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])#
-#        t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0.1,5e3,31), np.linspace(5.1e3, 40e3, 31))), double_exp=True, generate=True, plot_seqs=False,
-        t1 = T1measurement.T1Measurement(qubit2_info, np.linspace(0, 25e3, 81), double_exp=False, generate=True, plot_seqs=False,
-                                         proj_func='phase', seq=seq_cool)
+        t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0,5e3,51), np.linspace(5.1e3, 40e3, 51))), double_exp=True, generate=True, plot_seqs=False,
+#        t1 = T1measurement.T1Measurement(qubit2_info, np.linspace(0, 40e3, 81), double_exp=False, generate=True, plot_seqs=False,
+                                         proj_func='phase', seq=None)
         t1.measure()
 #        t1times[i] = t1.analyze()
 #        plt.close()
@@ -428,25 +425,26 @@ if 0: # T1
 
 if 0: # T2
     from scripts.single_qubit import T2measurement
-    cool = sequencer.Constant(int(8e3),1,chan='3m1')
+    cool = sequencer.Constant(int(4e3),1,chan='3m1')
     seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
     if 1:
 #        coolgen.set_rf_on(True)
 #    
     #    for i in range(1):
-        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 3e3, 81), detune=1e6, double_freq=False, generate=True, postseq=None,extra_info =qubit_info,
+        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 1e3, 81), detune=8e6, double_freq=False, 
+                                         generate=True, postseq=None,extra_info =qubit_info,
                                              proj_func='phase', seq=seq_cool)
         t2.measure()
         bla
 
 if 0: # T2echo
     from scripts.single_qubit import T2measurement
-    cool = sequencer.Constant(int(8e3),1,chan='3m1')
-    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
+    cool = sequencer.Constant(int(4e3),1,chan='3m1')
+    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
 #    for i in range(1):
-    alz.set_naverages(5000)
-    t2 = T2measurement.T2Measurement(qubit2_info, np.linspace(10, 4e3, 81), detune=2e6, echotype = T2measurement.ECHO_HAHN, necho=1, plot_seqs = False, generate=True,
-                                     proj_func='phase', seq=seq )
+#    alz.set_naverages(4000)
+    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(10, 2e3, 81), detune=4e6, echotype = T2measurement.ECHO_HAHN, necho=1, plot_seqs = False, generate=True,
+                                     proj_func='phase', seq=seq_cool)
     t2.measure()
     bla
 
@@ -669,7 +667,7 @@ if 0: # Interleaved combined Rabi
 #
     
 
-if 1: 
+if 0: 
     from scripts.fluxonium  import timerabi_interleaved
     alz.set_naverages(3000)
     
@@ -708,12 +706,16 @@ if 1:
 
 '''2D CR Tune-ups'''
 
-if 0: # Tune up for time vs detuning   #Some issue with the detuned gaussian, I deleted it back from the pulselib!!
+if 1: # Tune up for time vs detuning   
     
     from scripts.fluxonium import CRtuning_timevsdet
     
-    cr_tune = CRtuning_timevsdet.CRtuning_timevsdet(qubit_info, qubit_info2, qubit2_info, np.linspace(10,1000,11), np.linspace(-4e6, 4e6, 11), 
-                amp=0.35, phase=0, rel_amp=1, rel_phase=1, sigma=5, update=False, seq=None, r_axis=0, fix_phase=True, fix_period=None, repeat_pulse=1, postseq=None, selective=False, control_pi=False)    
+    cool = sequencer.Constant(int(4e3),1,chan='3m1')
+    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])     
+    cr_tune = CRtuning_timevsdet.CRtuning_timevsdet(gate_info2, qubit2_info2, gate_info1, 
+                                                    np.linspace(0,121,31), np.linspace(-20e6, 20e6, 11), 
+                amp=0.12, phase=0, rel_amp=0.00, rel_phase=1.77, sigma=1, update=False, 
+                seq=seq_cool, fix_phase=True, fix_period=None, control_pi=True, proj_func='phase')    
     
     data = cr_tune.measure()
     bla
@@ -747,11 +749,11 @@ if 0: # cooling tone spec
     from scripts.fluxonium import cooling_tune_brickonoff
 #    from scripts.single_qubit import spectroscopy_IQ
     cool_freq = 3.420e9
-    freq_range = 15e6
+    freq_range = 10e6
 
     cool = cooling_tune_brickonoff.Cooling_tune_brickonoff(mclient.instruments['cool'], mclient.instruments['gaius01'], 
                                                            qubit2_info, np.linspace(cool_freq-freq_range, cool_freq+freq_range, 31),
-                                     [7,8,9], '3m1', seq=None, plot_seqs=False) #1=1ns for plen
+                                     [9,11,13], '3m1', seq=None, plot_seqs=False) #1=1ns for plen
     cool.measure()
     bla
 
