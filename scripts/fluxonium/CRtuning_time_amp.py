@@ -96,7 +96,7 @@ class CRtuning_time_amp(Measurement2D):
                 if self.control_pi==True:             
                     s.append(self.qubit2_info.rotate(np.pi,0))
                     s.append(g)
-#                    s.append(self.qubit2_info.rotate(np.pi,0)) #Chen changed to always measure with control qubit in e
+                    s.append(self.qubit2_info.rotate(np.pi,0)) #Chen changed to always measure with control qubit in e
                 else:
                     s.append(g)
                     s.append(self.qubit2_info.rotate(np.pi,0)) #Chen changed to always measure with control qubit in e

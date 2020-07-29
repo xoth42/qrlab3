@@ -56,25 +56,27 @@ shift_ = []
 errors = []
 dig.set_naverages(40000)
 dig.do_set_trigger_period(100)
-fields = np.linspace(0.001,0.001,1)
-RO_freqs = [10.805e9,10.805e9,10.804e9,10.806e9,10.807e9,10.808e9]
+fields = np.linspace(-.05,-.05,1)
+#RO_freqs = [10.805e9,10.805e9,10.804e9,10.806e9,10.807e9,10.808e9]
+RO_freqs = [10.805e9]
 stark_drive_deltaf = [-94e6,-94e6,-93e6,-95.5e6,-98.5e6,-98e6]
+
 for i,field in enumerate(fields):
 #    if abs(field)>0.01:
 #        Magnet.do_set_field(0)
 #        time.sleep(600)
 
     
-    Magnet.do_set_PSwitch(1)
-    print('heating PSwitch')
-    time.sleep(35)
-            
-    Magnet.do_set_field(field)
-    print('setting field')
-    time.sleep(60)
-    Magnet.do_set_PSwitch(0)
-    print('cooling PSwitch')
-    time.sleep(350)
+#    Magnet.do_set_PSwitch(1)
+#    print('heating PSwitch')
+#    time.sleep(35)
+#            
+#    Magnet.do_set_field(field)
+#    print('setting field')
+#    time.sleep(60)
+#    Magnet.do_set_PSwitch(0)
+#    print('cooling PSwitch')
+#    time.sleep(350)
     
     ro_freq = RO_freqs[-i]
 #    power = 10
