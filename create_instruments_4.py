@@ -15,17 +15,17 @@ from mclient import instruments
 #bla
 
 
-dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period = 100, trigger_only = False,
-                         naverages = 1000, nsamples = 2000, awg_list = [7, 8, 9])
+dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period = 200, trigger_only = False,
+                         naverages = 1000, nsamples = 1500, awg_list = [7, 8, 9])
 
 AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PRODUCT = "M3202A", 
                           amps = [1.5,1.5,1.5,1.5], ofs = [0, 0, 0.0, 0])
  
 AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 8,  AWG_PRODUCT = "M3202A",
-                          amps = [1, 1, 1.5, 1.5], ofs = [0.017, 0.013, 0.043, -.084]) #[.020, 0.026, 0.022, .01]) 
+                          amps = [1, 1, 1.5, 1.5], ofs = [0.0173, 0.0127, .0287, -.1123]) #[.020, 0.026, 0.022, .01]) 
 
 AWG3 = instruments.create('AWG3', 'Keysight_AWG', chassis = 0, slot = 9,  AWG_PRODUCT = "M3202A",
-                          amps = [1.5, 1.452, 1, 1], ofs = [0.002, -0.011, 0.042, 0.024]) 
+                          amps = [1, 1, 1, 1], ofs = [-0.0065, -0.0206, 0.042, 0.024]) 
 
 #AWG4 = instruments.create('AWG4', 'Keysight_AWG', chassis = 0, slot = 10,  AWG_PRODUCT = "M3202A",
 #                          amps = [1.5, 1.5, 1.5, 1.5], ofs = [0, 0, 0.0389, -.1145]) 
@@ -49,19 +49,19 @@ MXG = instruments.create('MXGbob', 'Agilent_Generator', address = 'USB0::0x0957:
 
 readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
                            IQe_radius= 1 , rfsource1='BrickRO', rfsource2='BrickRef',
-                         pulse_len=2000, readout_chan='2m1', acq_chan='1m1')
+                           pulse_len=1000, readout_chan='2m1', acq_chan='1m1')
 
 
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                              deltaf=-100e6,
-                              pi_amp=.639,
+                              pi_amp=.803,
                               pi2_amp=0,
                               drag=-0.292,
-                              pi_amp_quasilective=0.0630,
+                              pi_amp_quasilective=0.07,
                               pi_amp_selective=0.0117,
                               rotation='Gaussian',
-                              w=6,
-                              w_quasilective=60,
+                              w=5,
+                              w_quasilective=50,
                               w_selective=300,
                               channels='5,6',
                               sideband_channels='I1,Q1',
@@ -91,27 +91,27 @@ qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
 
 cavityA = instruments.create('cavityA', 'Qubit_Info',
                             deltaf=56e6,
-                            pi_amp=1.056,
+                            pi_amp=1.4,
                             pi_amp_selective=0.05,
                             rotation='Gaussian',
                             channels='7,8',
                             sideband_channels='I7,Q7',
                             sideband_phase=0,
-                            w=25,
+                            w=20,
                             w_selective=400,
                             marker_bufwidth=250,
                             marker_ofs=0)
 
 
 cavityB = instruments.create('cavityB', 'Qubit_Info',
-                            deltaf=-100e6,
-                            pi_amp=1.003,
-                            pi_amp_selective=0.05,
+                            deltaf=-80e6,
+                            pi_amp=1.101,
+                            pi_amp_selective=0.07,
                             rotation='Gaussian',
                             channels='9,10',
                             sideband_channels='I8,Q8',
                             sideband_phase=0,
-                            w=200,
+                            w=8,
                             w_selective=400,
                             marker_bufwidth=250,
                             marker_ofs=0)

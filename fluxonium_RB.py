@@ -27,7 +27,7 @@ qubit2_info2 = mclient.get_qubit_info('qubit2ge_2')
 
 gate_info1 = mclient.get_gate_info('sq_gate1')
 gate_info2 = mclient.get_gate_info('sq_gate2')
-cnot_info = mclient.get_gate_info('cnot_gate')
+#cnot_info = mclient.get_gate_info('cnot_gate')
 
 
 
@@ -65,7 +65,7 @@ def RB_fit(Pg_cplx, xs, F_final=0.5):    #fitting the averaged data of this run
     plt.errorbar(xs,ys,std, markersize=3, linestyle='None', capsize=2, color='red')
     plt.plot(xs,ys, 'ro', markersize=5, color='magenta', linestyle='None')
     plt.plot(xs,np.transpose(np.real(np.mean(Pg_cplx, axis=0))), '.', markersize=3, linestyle='None')
-    plt.figtext(0.1, 0, "EPC: %f" %(1/(2*result.params['tau'])))
+    plt.figtext(0.1, 0, "EPC: %f" %(1*(1-F_final)/(result.params['tau'])))  #Chen updated with a better guess 7/23
 
     ax1.set_ylabel('Average fidelity')
     ax1.set_xlabel('Number of Cliffords')
@@ -153,30 +153,38 @@ if 0: #Check coherence
 
 if 0: # Drag test
     from scripts.single_qubit import drag_test
-    dtest = drag_test.drag_test(gate_info2, np.linspace(-0.5,1.5, 51), plot_seqs=False, generate=True, proj_func='phase', seq=seq_cool)
+    dtest = drag_test.drag_test(gate_info2, np.linspace(-1,1, 51), plot_seqs=False, generate=True, proj_func='phase', seq=seq_cool)
     data=dtest.measure()
     bla
 
 if 0: 
     from scripts.single_qubit import Pi_train
-    p = Pi_train.Pi_train(gate_info2, np.linspace(0.079, 0.083, 61), seq=seq_cool, repeat_pulse=12, proj_func='phase')
+    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)]) #gate_info1.rotate(np.pi,0)])
+#    postseq = gate_info1.rotate(np.pi,0) 
+    p = Pi_train.Pi_train(gate_info1, np.linspace(0.074, 0.078, 61), seq=seq_cool, postseq=None, repeat_pulse=10, proj_func='phase',
+                          extra_info=gate_info1
+                          )
     p.measure()
     bla
 
 if 0: 
     from scripts.single_qubit import Pi2_train
-    p = Pi2_train.Pi2_train(gate_info2, np.linspace(0.036, 0.041, 61), seq=seq_cool, repeat_pulse=10, proj_func='phase')
+#    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info1.rotate(np.pi,0)])
+#    postseq = gate_info1.rotate(np.pi,0) 
+    p = Pi2_train.Pi2_train(gate_info1, np.linspace(0.036, 0.04, 61), seq=seq_cool, postseq=None, repeat_pulse=12, proj_func='phase',
+#                            extra_info=gate_info1
+                            )
     p.measure()
     bla
     
 if 1: # AllXY 
     from scripts.single_qubit import allxy
     cool = sequencer.Constant(int(4e3),1,chan='3m1')
-    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150),gate_info1.rotate(np.pi,0)])
-    postseq = gate_info1.rotate(np.pi,0) 
-    alz.set_naverages(20000)
+#    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info1.rotate(np.pi,0)])
+#    postseq = gate_info1.rotate(np.pi,0) 
+    alz.set_naverages(30000)
     allxy_result =[]
-    axy = allxy.All_XY(gate_info2, seq=seq, generate=True, proj_func='phase', postseq = postseq)#, extra_info=gate_info1)  #seq=seq was added
+    axy = allxy.All_XY(gate_info1, seq=seq_cool, generate=True, proj_func='phase', postseq = None)#, extra_info=gate_info1)  #seq=seq was added
     axy.measure()
     allxy_result = axy.get_ys()
     plt.plot(allxy_result)
@@ -233,18 +241,19 @@ if 0: # Randomized benchmarking joint
     rndmben_result = []
     Pg_cplx = []
     
-    cool = sequencer.Constant(int(8e3),1,chan='3m1')
+    cool = sequencer.Constant(int(4e3),1,chan='3m1')
     seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
     alz.set_naverages(5000)
-    for i in range(3):
-        rndmben = randbench_jointRO.rndm(qubit2_info, qubit_info, num_cal_points=3, n_gates_start=1, n_gates_stop=81, n_gates_step=3, seq=seq, postseq=None, generate=True, proj_func='phase') #seq=seq added
-        rndmben.measure()
-        rndmben_result.append(rndmben.get_ys())
-        Pg_cplx.append(rndmben.Pg_cplx)
-
-    tempxs = rndmben.xs[48:]  #change this 
-    xs = tempxs.reshape(len(tempxs)/4,4).transpose()[0]
-    RB_fit(Pg_cplx, xs, F_final=0.5)
+    for M in [[gate_info1, gate_info2], [gate_info2, gate_info1]]:
+        for i in range(5):
+            rndmben = randbench_jointRO.rndm(M[0], M[1], num_cal_points=3, n_gates_start=1, n_gates_stop=81, n_gates_step=3, seq=seq, postseq=None, generate=True, proj_func='phase') #seq=seq added
+            rndmben.measure()
+            rndmben_result.append(rndmben.get_ys())
+            Pg_cplx.append(rndmben.Pg_cplx)
+    
+        tempxs = rndmben.xs[48:]  #change this 
+        xs = tempxs.reshape(len(tempxs)/4,4).transpose()[0]
+        RB_fit(Pg_cplx, xs, F_final=0.5)
         
     
 if 0: # Randomized benchmarking joint interleaved two qubits
@@ -252,33 +261,34 @@ if 0: # Randomized benchmarking joint interleaved two qubits
     rndmben_result = []
     Pg_cplx = []
 
-    cool = sequencer.Constant(int(8e3),1,chan='3m1')
+    cool = sequencer.Constant(int(4e3),1,chan='3m1')
     seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
     alz.set_naverages(5000)
-    for i in range(3):
-        rndmben = randbench_jointRO_interleaved.Interleaved_1QRB(qubit2_info, qubit_info, num_cal_points=3, n_gates_start=1, n_gates_stop=30, n_gates_step=1, seq=seq, postseq=None, generate=True, proj_func='phase') #seq=seq added
-        rndmben.measure()
-        rndmben_result.append(rndmben.get_ys())
-        Pg_cplx.append(rndmben.Pg_cplx)
-    tempxs = rndmben.xs[48:]  #change this 
-    xs = tempxs.reshape(len(tempxs)/4,4).transpose()[0] *2 #Each gate is actually 2 Cliffords, one on each qubit
-    RB_fit(Pg_cplx, xs, F_final=0.25)
+    for M in [[gate_info1, gate_info2], [gate_info2, gate_info1]]:
+        for i in range(3):
+            rndmben = randbench_jointRO_interleaved.Interleaved_1QRB(M[0], M[1], num_cal_points=3, n_gates_start=1, n_gates_stop=25, n_gates_step=1, seq=seq, postseq=None, generate=True, proj_func='phase') #seq=seq added
+            rndmben.measure()
+            rndmben_result.append(rndmben.get_ys())
+            Pg_cplx.append(rndmben.Pg_cplx)
+        tempxs = rndmben.xs[48:]  #change this 
+        xs = tempxs.reshape(len(tempxs)/4,4).transpose()[0] *2 #Each gate is actually 2 Cliffords, one on each qubit
+        RB_fit(Pg_cplx, xs, F_final=0.25)
+    
 
 
 
 
-
-if 0: # Randomized benchmarking joint simultaneous single qubit gates
+if 1: # Randomized benchmarking joint simultaneous single qubit gates
     from scripts.fluxonium import randbench_jointRO_simultaneous
     rndmben_result = []
     Pg_cplx = []
 
-    cool = sequencer.Constant(int(8e3),1,chan='3m1')
+    cool = sequencer.Constant(int(4e3),1,chan='3m1')
     seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
 
-    alz.set_naverages(5000)
+    alz.set_naverages(8000)
     for i in range(3):
-        rndmben = randbench_jointRO_simultaneous.Simultaneous_1QRB(qubit_info, qubit2_info, num_cal_points=3, n_gates_start=1, n_gates_stop=30, n_gates_step=1, seq=seq, postseq=None, generate=True, proj_func='phase') #seq=seq added
+        rndmben = randbench_jointRO_simultaneous.Simultaneous_1QRB(gate_info1, gate_info2, num_cal_points=3, n_gates_start=1, n_gates_stop=30, n_gates_step=1, seq=seq, postseq=None, generate=True, proj_func='phase') #seq=seq added
         rndmben.measure()
         rndmben_result.append(rndmben.get_ys())
         Pg_cplx.append(rndmben.Pg_cplx)
@@ -287,7 +297,7 @@ if 0: # Randomized benchmarking joint simultaneous single qubit gates
     RB_fit(Pg_cplx, xs, F_final=0.25)
 
 
-if 1: # Two-Qubit Randomized Benchmarking
+if 0: # Two-Qubit Randomized Benchmarking
     from scripts.fluxonium import TwoQ_RB
-    TwoQ_RB = TwoQ_RB.TwoQubit_RB(qubit_info, qubit2_info, N_cliffords=100, proj_func='phase')
+    TwoQ_RB = TwoQ_RB.TwoQubit_RB(gate_info1, gate_info2, cnot_info, N_cliffords=10, proj_func='phase')
     data = TwoQ_RB.measure()

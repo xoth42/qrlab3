@@ -66,9 +66,10 @@ def analysis(meas, data=None, fig=None):
 
 class SSBSpec_mixer(Measurement1D):
 
-    def __init__(self, qubit_info, mixer_info, detunings, seq=None, postseq=None, bgcor=False, coplay_delay=0, **kwargs):
+    def __init__(self, qubit_info, mixer_info,mixer_info2, detunings, seq=None, postseq=None, bgcor=False, coplay_delay=0, **kwargs):
         self.qubit_info = qubit_info
         self.mixer_info = mixer_info
+        self.mixer_info2 = mixer_info2
         if seq is None:
             seq = Trigger(250)
         self.seq = seq
@@ -82,7 +83,7 @@ class SSBSpec_mixer(Measurement1D):
         npoints = len(detunings)
         if bgcor:
             npoints += 1
-        super(SSBSpec_mixer, self).__init__(npoints, residuals=False, infos=(qubit_info,mixer_info), **kwargs)
+        super(SSBSpec_mixer, self).__init__(npoints, residuals=False, infos=(qubit_info,mixer_info,mixer_info2), **kwargs)
         self.data.create_dataset('detunings', data=detunings)
 
     def generate(self):
@@ -95,12 +96,14 @@ class SSBSpec_mixer(Measurement1D):
                 Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
     #            Join([Delay(100),self.mixer_info.rotate(np.pi, 0),Delay(200)])
                 Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
+                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info2.pi_amp, chan=self.mixer_info2.channels[0]),Delay(200)])
             ]))
         else:
             ro = (Combined([
                 Join([Delay(300),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
                 Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
-                Join([Delay(100),self.mixer_info.rotate(np.pi, 0),Delay(200)])
+                Join([Delay(100),self.mixer_info.rotate(np.pi, 0),Delay(200)]),
+                Join([Delay(100),self.mixer_info2.rotate(np.pi, 0),Delay(200)])
 #                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
             ]))
 

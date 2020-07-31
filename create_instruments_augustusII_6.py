@@ -25,8 +25,8 @@ dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_p
 
 #
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
-                              deltaf=228143407.17219445,
-                              pi_amp=0.074515, 
+                              deltaf=228524449.5,
+                              pi_amp=0.0779464653718, 
                               pi2_amp=0.0347,
                               drag=0.08,
                               pi_amp_quasilective=.0253, #.0356,
@@ -42,8 +42,8 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 
 
 qubit1ge_2 = instruments.create('qubit1ge_2', 'Qubit_Info',
-                              deltaf=228143407.17219445,
-                              pi_amp=0.354426, 
+                              deltaf=228524449.5,
+                              pi_amp=0.361942744302, 
                               pi2_amp=0,
                               drag=0.08,
                               pi_amp_quasilective=.0253, #.0356,
@@ -54,40 +54,42 @@ qubit1ge_2 = instruments.create('qubit1ge_2', 'Qubit_Info',
                               w_selective=400,
                               channels='9,10',
                               sideband_channels='I2,Q2',
-                              sideband_phase=-0.2)
+                              sideband_phase=-0.22)
 
 sq_gate1 = instruments.create('sq_gate1', 'Gate_Info',
-                              deltaf=228143407.17219445,
-                              pi_amp=0.075, 
-                              pi2_amp=0,
-                              drag=0.08,
-                              rotation='Gaussian',
-                              w=6,
-                              channels1='5,6',
-                              sideband_channels1='I11,Q11',
-                              sideband_phase1=0.8,
+                              deltaf=228499584.324,
+                              pi_amp=0.07582, 
+                              pi2_amp=0.03766,
+                              drag=0,
+                              sq_len=12,
+                              rotation='GaussianSquare',
+                              w=4,
+                              channels='5,6',
+                              sideband_channels='I11,Q11',
+                              sideband_phase=1,
                               channels2='9,10',
                               sideband_channels2='I12,Q12',
-                              sideband_phase2=-0.2,
-                              relative_amp=1.07,
-                              relative_phase=1.14
+                              sideband_phase2=-0.22,
+                              relative_amp=1.024791,
+                              relative_phase=1.011
                               )
 
 cnot_gate = instruments.create('cnot_gate', 'Gate_Info',
-                              deltaf=228143407.17219445,
+                              deltaf=228499584.324,
                               pi_amp=0.075,
                               pi2_amp=0,
                               drag=0.08,
-                              rotation='Gaussian',
+                              rotation='GaussianSquare',
+                              sq_len=60,
                               w=6,
-                              channels1='9,10',
-                              sideband_channels1='I16,Q16',
-                              sideband_phase1=-0.2,
-                              channels2='5,6,',
-                              sideband_channels2='I15,Q15',
-                              sideband_phase2=0.8,
-                              relative_amp=0.214,
-                              relative_phase=-1.14
+                              channels='5,6',
+                              sideband_channels='I15,Q15',
+                              sideband_phase=-0.22,
+                              channels2='9,10,',
+                              sideband_channels2='I16,Q16',
+                              sideband_phase2=1.0,
+                              relative_amp=4.6,
+                              relative_phase=1.011
                               )
 
 #qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
@@ -119,10 +121,10 @@ cnot_gate = instruments.create('cnot_gate', 'Gate_Info',
 
 
 qubit2ge = instruments.create('qubit2ge', 'Qubit_Info',
-                              deltaf=-374455935.98707265,
-                              pi_amp=0.117406,
-                              pi2_amp=0.0553,
-                              drag=0.6,
+                              deltaf=-373754763.7,
+                              pi_amp=0.129020699795,
+                              pi2_amp=0,
+                              drag=0.58,
                               pi_amp_quasilective=.0253, #.0356,
                               pi_amp_selective=0.001624,
                               rotation='Gaussian',
@@ -131,12 +133,12 @@ qubit2ge = instruments.create('qubit2ge', 'Qubit_Info',
                               w_selective=400,
                               channels='5,6',
                               sideband_channels='I3,Q3',
-                              sideband_phase=-1)
+                              sideband_phase=-1.65)
 
 
 qubit2ge_2 = instruments.create('qubit2ge_2', 'Qubit_Info',
-                              deltaf=-374455935.98707265,
-                              pi_amp=0.343266,
+                              deltaf=-373754763.7,
+                              pi_amp=0.343941007757,
                               pi2_amp=0.0,
                               drag=0.6,
                               pi_amp_quasilective=.0253, #.0356,
@@ -150,20 +152,21 @@ qubit2ge_2 = instruments.create('qubit2ge_2', 'Qubit_Info',
                               sideband_phase=0.0)
 
 sq_gate2 = instruments.create('sq_gate2', 'Gate_Info',
-                              deltaf=-374455935.98707265,
-                              pi_amp=0.34622, 
-                              pi2_amp=0,
-                              drag=0.08,
-                              rotation='Gaussian',
+                              deltaf=-373760740.808,
+                              pi_amp=0.3055, 
+                              pi2_amp=0.1582,
+                              drag=-0.4,
+                              rotation='GaussianSquare',
                               w=6,
-                              channels1='5,6',
-                              sideband_channels1='I13,Q13',
-                              sideband_phase1=0.8,
-                              channels2='9,10',
+                              sq_len=6,
+                              channels='9,10',
+                              sideband_channels='I13,Q13',
+                              sideband_phase=0,
+                              channels2='5,6',
                               sideband_channels2='I14,Q14',
-                              sideband_phase2=-0.2,
-                              relative_amp=1.07,
-                              relative_phase=1.41
+                              sideband_phase2=-1.65,
+                              relative_amp=0.0000001,
+                              relative_phase=0
                               )
 
 
@@ -173,11 +176,11 @@ AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 8,
 
 AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 7,
                               AWG_PRODUCT = "M3202A",
-                              amps = [1.45,1.45,1,1], ofs = [0.016, 0.013, 0.087, -0.048])
+                              amps = [1.2,1.5,1,1], ofs = [0.016, 0.013, 0.087, -0.048])
 
 AWG3 = instruments.create('AWG3', 'Keysight_AWG', chassis = 0, slot = 9,
                               AWG_PRODUCT = "M3202A",
-                              amps = [1.34,1.5,1.5,1.5], ofs = [0.004, -0.026, 0, 0])
+                              amps = [1.36,1.5,1.5,1.5], ofs = [0.004, -0.026, 0, 0])
 
 
 cool = instruments.create('cool', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270760::INSTR')

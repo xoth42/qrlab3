@@ -85,7 +85,7 @@ if three_modes:
 for i, title in enumerate(f[date].keys()):
 #    print int(title[0:6])
 #    print int(title[0:6]) <= 020617
-    if int(title[0:6]) <= int('240000') and int(title[0:6]) > int('170000') and title[7:12] =='ROCav':
+    if int(title[0:6]) <= int('181500') and int(title[0:6]) > int('174400') and title[7:12] =='ROCav':
         print title
 
 
