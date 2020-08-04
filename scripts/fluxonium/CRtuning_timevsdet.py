@@ -135,10 +135,10 @@ class CRtuning_timevsdet(Measurement2D):
                 if self.control_pi==True:
                     s.append(self.qubit2_info.rotate(np.pi,0))
                     s.append(Combined([g1(),g2()]))
+                    s.append(self.qubit2_info.rotate(np.pi,0))#                    s.append(g1())
 
                 else:
                     s.append(Combined([g1(),g2()]))
-                    s.append(self.qubit2_info.rotate(np.pi,0))#                    s.append(g1())
                     
                 if self.postseq:
                     s.append(self.postseq)

@@ -266,7 +266,7 @@ class Simultaneous_1QRB(Measurement1D):
        
                     
         for j in range(self.num_cal_points):
-            s.append(self.seq)
+#            s.append(self.seq)      #Ebru: take this out after making sure that it causes no problem
 
             temp_seq = Sequence()
             temp_seq.append(self.qubit_info.rotate(np.pi,0))   
@@ -284,7 +284,7 @@ class Simultaneous_1QRB(Measurement1D):
 
 
         for j in range(self.num_cal_points):
-            s.append(self.seq)
+#            s.append(self.seq)
 
             temp_seq = Sequence()
             temp_seq.append(self.qubit2_info.rotate(np.pi,0))   
@@ -302,7 +302,7 @@ class Simultaneous_1QRB(Measurement1D):
 
 
         for j in range(self.num_cal_points):
-            s.append(self.seq)
+            s.append(self.seq) 
 
             temp_seq = Sequence()
             temp_seq.append(Combined([self.qubit_info.rotate(np.pi,0),self.qubit2_info.rotate(np.pi,0)]))   
