@@ -159,7 +159,7 @@ class AsymROCavSpectroscopy_keysight(Measurement1D):
 
     def generate(self):
         s = Sequence()
-
+        s.append(self.seq)
 #        s.append(self.seq)
         if self.qubit_pulse:
 #            s.append(Delay(2000))
@@ -173,7 +173,7 @@ class AsymROCavSpectroscopy_keysight(Measurement1D):
 #                Constant(1, 0, chan=self.qubit_info.channels[1]),
 #                Constant(1, 0, chan=self.qubit_info.channels[0])
 #            ]))
-        s.append(self.seq)
+#        s.append(self.seq)
 #        s.append(Combined([
 #            Join([Delay(300),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
 #            Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),

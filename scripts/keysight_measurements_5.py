@@ -196,13 +196,14 @@ if 0: # cav transmission with mixer and CW qubit drive
 #    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0), ef2_info.rotate(np.pi, 0)])
 #    Yoko.do_set_current(-0.00175)
-    mixer1_amp = .3
-    mixer_info1_set.set_pi_amp(mixer1_amp)
+#    mixer1_amp = .3
+#    mixer_info1_set.set_pi_amp(mixer1_amp)
     mixer_info1 = mclient.get_qubit_info('mixer_info1')
     mixer_info2 = mclient.get_qubit_info('mixer_info2')
+    phase = 3.77
     rofreq = 10.815e9
     freq_range = 15e6
-    ro = rocavspectroscopy_keysight_mixer_cw.ROCavSpectroscopy_keysight_mixer_cw(qubit_info, mixer_info1, np.linspace(10,10,1),
+    ro = rocavspectroscopy_keysight_mixer_cw.ROCavSpectroscopy_keysight_mixer_cw(qubit_info, mixer_info1, mixer_info2, phase, np.linspace(10,10,1),
                                              np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
                                              qubit_pulse=False, seq=None)#,extra_info=[ef2_info])
     ro.measure()
@@ -218,7 +219,7 @@ if 0: # cav transmission with mixer and CW qubit drive
     
     
     
-    ro = rocavspectroscopy_keysight_mixer_cw.ROCavSpectroscopy_keysight_mixer_cw(qubit_info, mixer_info1, np.linspace(10,10,1),
+    ro = rocavspectroscopy_keysight_mixer_cw.ROCavSpectroscopy_keysight_mixer_cw(qubit_info, mixer_info1, mixer_info2, phase, np.linspace(10,10,1),
                                              np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
                                              qubit_pulse=True, seq=None)#,extra_info=[ef2_info])
     ro.measure()
@@ -227,7 +228,7 @@ if 0: # cav transmission with mixer and CW qubit drive
     plt.figure('phase%s'%(figure_name))
     plt.plot(ro.freqs,ro.phasedata[0],label = 'qubit 1 in e')
 
-    ro_freq = 10.81065e9
+    ro_freq = 10.81072e9
     power = 10
     readout_info.rfsource1.set_frequency(ro_freq - mixer_info1.deltaf)
     readout_info.rfsource1.set_power(power)
@@ -237,7 +238,7 @@ if 0: # cav transmission with mixer and CW qubit drive
     readout_info.rfsource2.set_frequency(ro_freq+50e6)
     bla
 
-if 0: # cav transmission with asymmetric drive 
+if 1: # cav transmission with asymmetric drive 
     
 #    fields = [-0.04,0.03,-0.025,0.02,-0.015,0.01,-0.005, 0.0025, -0.001,0.0005,-0.00025, 0]
 #    fields = - np.asarray(fields)
@@ -262,16 +263,16 @@ if 0: # cav transmission with asymmetric drive
 ##    Yoko.do_set_current(-0.00175)
 #    
     from single_cavity import asymmetric_drive_cav_spec
-    rofreq = 10.815e9
-    freq_range = 15e6
-    amps1 = np.linspace(.35,.001,36)
-    amps2 = np.linspace(.35,.699,36)
-#    phase1 = np.linspace(2.09813509,3.05183286,6)
-    phase1 = np.linspace(0,2*np.pi,36)
-#    amps1 = [0.56]
-#    amps2 = [0.14]
-#    phase1 = [3.77]
-    dig.do_set_naverages(3000)
+    rofreq = 10.840e9
+    freq_range = 40e6
+#    amps1 = np.linspace(.35,.001,36)
+#    amps2 = np.linspace(.35,.699,36)
+##    phase1 = np.linspace(2.09813509,3.05183286,6)
+#    phase1 = np.linspace(0,2*np.pi,36)
+    amps1 = [0.7]
+    amps2 = [0]
+    phase1 = [0]
+    dig.do_set_naverages(15000)
     print('Starting sweep')
     for j in range(len(phase1)):
         for i in range(len(amps1)):
@@ -279,9 +280,14 @@ if 0: # cav transmission with asymmetric drive
             mixer_info2_set.set_pi_amp(amps2[i])
             mixer_info1 = mclient.get_qubit_info('mixer_info1')
             mixer_info2 = mclient.get_qubit_info('mixer_info2')
-            ro = asymmetric_drive_cav_spec.AsymROCavSpectroscopy_keysight(qubit_info, np.linspace(10,0,1),
-                                                     mixer_info1, mixer_info2, phase1[j], np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
+            ro = asymmetric_drive_cav_spec.AsymROCavSpectroscopy_keysight(qubit2_info, np.linspace(10,0,1),
+                                                     mixer_info1, mixer_info2, phase1[j], np.linspace(rofreq-freq_range, rofreq+freq_range, 401),
                                                      qubit_pulse=False, seq=None)#,extra_info=[ef2_info])
+            ro.measure()
+            
+            ro = asymmetric_drive_cav_spec.AsymROCavSpectroscopy_keysight(qubit2_info, np.linspace(10,0,1),
+                                                     mixer_info1, mixer_info2, phase1[j], np.linspace(rofreq-freq_range, rofreq+freq_range, 401),
+                                                     qubit_pulse=True, seq=None)#,extra_info=[ef2_info])
             ro.measure()
 #        plt.close()
 #        plt.close()
@@ -292,7 +298,7 @@ if 0: # cav transmission with asymmetric drive
 #        plt.plot(ro.freqs,ro.ampdata[0])
 #        plt.figure('phase%s'%(figure_name))
 #        plt.plot(ro.freqs,ro.phasedata[0])
-
+    bla
 
 
 if 0: # cav trans with qubit brick on and off
@@ -467,16 +473,16 @@ if 0: # SSB spec with mixer
         seq = sequencer.Trigger(600)
     #        seq = Join([seq, qubit2_info.rotate(np.pi/2, X_AXIS)])
         spec = ssbspec_mixer.SSBSpec_mixer(qubit_info, mixer_info1,mixer_info2,
-                                           np.linspace(-50e6, 50e6, 101), seq=seq, plot_seqs=False, proj_func='phase')
+                                           np.linspace(-10e6, 10e6, 101), seq=seq, plot_seqs=False, proj_func='phase')
         spec.measure_keysight()
 #        plt.close()
     bla
 
     
-if 1: #ssb with stark shift with mixer with lorentzian fit
+if 0: #ssb with stark shift with mixer with lorentzian fit
     from single_qubit import stark_shift_with_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
-    phase1 = 1.5#3.05
+    phase1 = 3.77
 #    mixer_info1_set.set_deltaf(-100e6)
 #    mixer_info1_set.set_deltaf(-100e6)
 #    mixer_info1 = mclient.get_qubit_info('mixer_info1')
@@ -486,7 +492,7 @@ if 1: #ssb with stark shift with mixer with lorentzian fit
         seq = sequencer.Trigger(600)
 #        seq = Join([seq, qubit2_info.rotate(np.pi/2, X_AXIS)])
         spec = stark_shift_with_mixer.Stark_shift_with_mixer(qubit_info, mixer_info1,mixer_info2,SS_mixer_info1,SS_mixer_info2, 
-                                                             phase1, np.linspace(-50e6, 50e6, 15), seq=seq, plot_seqs=True, 
+                                                             phase1, np.linspace(-200e6, 50e6, 101), seq=seq, plot_seqs=False, 
                                                              proj_func='phase')
         spec.measure_keysight()
 #        plt.close()
