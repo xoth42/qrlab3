@@ -4,6 +4,21 @@ Created on Sat Jun 20 13:25:58 2020
 
 @author: Wang_Lab
 """
+import lmfit
+
+
+
+def S21(params, x, y):
+    est = np.sqrt(params['kappa_prod'])/(-1j*(x-params['omega_c'])-(params['kappa_a'])/2.0 )
+
+    est = est + params['roff'] + 1j*params['ioff']
+    
+    return np.abs(est) - y
+
+
+
+
+
 
 from measurement import Measurement1D
 import matplotlib
@@ -34,18 +49,38 @@ def analysis(powers, freqs, amp1, amp2 , phase1, ampdata, phasedata=None, plot_t
 
         fs = freqs
         amps = ampdata[0,:]
-        f = fit.Lorentzian(fs, amps)
-        h0 = np.max(amps)
-        w0 = 2e6
-        pos = fs[np.argmax(amps)]
-        p0 = [np.min(amps), w0*h0, pos, w0]
-        p = f.fit(p0)
-        txt = 'Center = %.03f MHz, FWHM = %.03f MHz' % (p[2]/1e6, p[3]/1e6)
-        print 'Fit gave: %s' % (txt,)
+#        f = fit.Lorentzian(fs, amps)
+#        h0 = np.max(amps)
+#        w0 = 2e6
+#        pos = fs[np.argmax(amps)]
+#        p0 = [np.min(amps), w0*h0, pos, w0]
+#        p = f.fit(p0)
+#        txt = 'Center = %.03f MHz, FWHM = %.03f MHz' % (p[2]/1e6, p[3]/1e6)
+#        print 'Fit gave: %s' % (txt,)
 #        plt.plot(fs/1e6, f.func(p, fs), label=txt)
-        ax.plot(fs/1000000, p[0] + p[1]/np.pi *(p[3]/2/((fs-p[2])**2 + (p[3]/2)**2)), '--',label = 'freq = %s MHz\n kappa = %s MHz'%(p[2]/1e6,p[3]/1e6))
-        ax2.plot(fs/1000000, p[0] + p[1]/np.pi *(p[3]/2/((fs-p[2])**2 + (p[3]/2)**2)), '--',label = 'freq = %s MHz\n kappa = %s MHz'%(p[2]/1e6,p[3]/1e6))
+#        ax.plot(fs/1000000, p[0] + p[1]/np.pi *(p[3]/2/((fs-p[2])**2 + (p[3]/2)**2)), '--',label = 'freq = %s MHz\n kappa = %s MHz'%(p[2]/1e6,p[3]/1e6))
+#        ax2.plot(fs/1000000, p[0] + p[1]/np.pi *(p[3]/2/((fs-p[2])**2 + (p[3]/2)**2)), '--',label = 'freq = %s MHz\n kappa = %s MHz'%(p[2]/1e6,p[3]/1e6))
 #yingying add fitting plot
+        params = lmfit.Parameters()
+
+
+
+        params.add('kappa_prod', value= (np.max(np.abs(amps))*0.5e6)**2.001, min = 0)#,vary = False)
+        params.add('omega_c', value=freqs[np.argmax(np.abs(amps))]*1.00002,min = freqs[np.argmax(np.abs(amps))]*0.9998, max = freqs[np.argmax(np.abs(amps))] * 1.0002)#,vary = False)
+        params.add('kappa_a', value=1e6, min = 0)#, max = 4e6)#,vary = False)
+        params.add('roff',value = 0)#,vary = False)
+        params.add('ioff',value = 0)#, vary = False)
+                
+    #    datas = realdata[0,:]+ 1j*imagdata[0,:]    
+        result = lmfit.minimize(S21, params, args=(freqs, amps))
+        lmfit.report_fit(result.params)
+        print ('total Q: ',result.params['omega_c'].value/result.params['kappa_a'].value)
+
+        fitdata = np.sqrt(result.params['kappa_prod'].value)/(-1j*(freqs-result.params['omega_c'].value)-(result.params['kappa_a'].value)/2.0 )
+        fitdata = fitdata + result.params['roff'].value + 1j*result.params['ioff'].value
+        ax.plot(fs/1000000,np.abs(fitdata), '--',label = 'freq = %s MHz\n kappa = %s MHz'%(result.params['omega_c'].value/1e6,result.params['kappa_a'].value/1e6))
+        ax2.plot(fs/1000000, np.abs(fitdata), '--',label = 'freq = %s MHz\n kappa = %s MHz'%(result.params['omega_c'].value/1e6,result.params['kappa_a'].value/1e6))
+#Yingying   update fitting
         title = 'amp 1 = %s , amp 2 = %s , phase1 = %s'%(amp1,amp2,phase1)
         plt.legend()
         plt.title(title)
@@ -70,7 +105,7 @@ def analysis(powers, freqs, amp1, amp2 , phase1, ampdata, phasedata=None, plot_t
             os.makedirs(fdir)
         kwargs = dict()
         plt.savefig(fn, **kwargs)
-        return p
+        return result.params
     if plot_type == POWER:
 #        ax1 = f.add_subplot(2,1,1)
 #        ax2 = f.add_subplot(2,1,2)
@@ -93,7 +128,7 @@ def analysis(powers, freqs, amp1, amp2 , phase1, ampdata, phasedata=None, plot_t
 
 class AsymROCavSpectroscopy_keysight(Measurement1D):
 
-    def __init__(self, qubit_info, powers, mixer_info1, mixer_info2, freqs, plot_type=None, qubit_pulse=False, seq=None,  **kwargs):
+    def __init__(self, qubit_info, powers, mixer_info1, mixer_info2, phase1, freqs, plot_type=None, qubit_pulse=False, seq=None,  **kwargs):
         self.qubit_info = qubit_info
         self.freqs = freqs
 #        print(freqs)
@@ -101,7 +136,8 @@ class AsymROCavSpectroscopy_keysight(Measurement1D):
 #        print(powers)
         self.mixer_info1 = mixer_info1
         self.mixer_info2 = mixer_info2
-        self.qubit_pulse = qubit_pulse 
+        self.qubit_pulse = qubit_pulse
+        self.phase1 = phase1
         if seq is None:
             seq = Trigger(250)
         self.seq = seq
@@ -123,7 +159,7 @@ class AsymROCavSpectroscopy_keysight(Measurement1D):
 
     def generate(self):
         s = Sequence()
-
+        s.append(self.seq)
 #        s.append(self.seq)
         if self.qubit_pulse:
 #            s.append(Delay(2000))
@@ -137,7 +173,7 @@ class AsymROCavSpectroscopy_keysight(Measurement1D):
 #                Constant(1, 0, chan=self.qubit_info.channels[1]),
 #                Constant(1, 0, chan=self.qubit_info.channels[0])
 #            ]))
-        s.append(self.seq)
+#        s.append(self.seq)
 #        s.append(Combined([
 #            Join([Delay(300),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
 #            Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
@@ -147,7 +183,7 @@ class AsymROCavSpectroscopy_keysight(Measurement1D):
 ##            Join([Delay(100),self.mixer_info2.rotate(np.pi, 0),Delay(200)]),
 #        ]))
         if self.mixer_info1.deltaf == 0:
-        
+        # cannot tune phase with carrier tone, must use sideband rotate block after else: statement
             s.append(Combined([
                 Join([Delay(300),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
                 Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
@@ -160,7 +196,7 @@ class AsymROCavSpectroscopy_keysight(Measurement1D):
             s.append(Combined([
                 Join([Delay(300),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
                 Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
-                Join([Delay(100),self.mixer_info1.rotate(np.pi, 0),Delay(200)]),
+                Join([Delay(100),self.mixer_info1.rotate(np.pi, self.phase1),Delay(200)]),
                 Join([Delay(100),self.mixer_info2.rotate(np.pi, 0),Delay(200)])
 #                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
             ]))
@@ -293,5 +329,5 @@ class AsymROCavSpectroscopy_keysight(Measurement1D):
     def analyze(self, data=None, ax=None):
         pax = ax if (ax is not None) else plt.figure().add_subplot(111)
         ampdata = data if (data is not None) else self.ampdata
-        self.fit_params = analysis(self.powers, self.freqs, self.mixer_info1.pi_amp, self.mixer_info2.pi_amp, self.mixer_info1.sideband_phase, ampdata, self.phasedata, self.plot_type, ax=pax)
+        self.fit_params = analysis(self.powers, self.freqs, self.mixer_info1.pi_amp, self.mixer_info2.pi_amp, self.phase1, ampdata, self.phasedata, self.plot_type, ax=pax)
 #Yingying add return fitting params

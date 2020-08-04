@@ -1,5 +1,12 @@
 from instrument import Instrument
 import types
+#import numpy as np
+#import matplotlib.pyplot as plt
+from pulseseq.sequencer import *
+from pulseseq.pulselib import *
+#from lib.math import fit
+#from lmfit.models import LinearModel, LorentzianModel
+#from measurement import Measurement1D
 
 class Readout_Info(Instrument):
 
@@ -95,3 +102,20 @@ class Readout_Info(Instrument):
         ins = self._get_ins()
         if ins:
             return ins.set_frequency(val)
+        
+    def do_get_sequence(self):
+        ro = Combined([
+                    Constant(self.get_pulse_len(), 1, chan=self.get_readout_chan()),
+                    Constant(self.get_pulse_len(), 1, chan=self.get_acq_chan())])
+        return ro
+    
+#    def do_get_sequence(self):
+#        p_l = self.pulse_len
+#        r_c = self.
+#        ro = 'Combined([Constant(%d, 1, chan=%s),Constant(%d, 1, %s)])' % (self.pulse_len,self.readout_chan,self.pulse_len,self.acq_chan)       
+#        return ro
+        
+        
+        
+        
+        

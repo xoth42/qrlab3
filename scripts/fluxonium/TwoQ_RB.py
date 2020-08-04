@@ -121,6 +121,7 @@ def CheckIdentity(matrix):
         return False
 
 
+
 def evaluate_sequence(gate_seq_1, gate_seq_2, generator = 'ZX90'):
     """
     Evaluate the two qubit gate sequence.
@@ -142,11 +143,35 @@ def evaluate_sequence(gate_seq_1, gate_seq_2, generator = 'ZX90'):
     twoQ_gate = np.matrix(
         [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
     for i in range(len(gate_seq_1)):
+
+    
+#def evaluate_sequence(gate_seq_1, gate_seq_2, generator = 'CNOT'):
+#        """
+#        Evaluate the two qubit gate sequence.
+#
+#        Parameters
+#        ----------
+#        gate_seq_1: list of class Gate (defined in "gates.py")
+#            The gate sequence applied to Qubit "1"
+#
+#        gate_seq_2: list of class Gate (defined in "gates.py")
+#            The gate sequence applied to Qubit "2"
+#
+#        Returns
+#        -------
+#        twoQ_gate: np.matrix (shape = (4,4))
+#            The evaulation result.
+#        """
+#        
+#        twoQ_gate = np.matrix(
+#            [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+#        for i in range(len(gate_seq_1)):
 #            maxLen = max(len(gate_seq_1), len(gate_seq_2))
 #            if len(gate_seq_1) < maxLen:
 #                gate_seq_1.extend('I')
 #            if len(gate_seq_2) < maxLen:
 #                gate_seq_2.extend('I')
+
             
         gate_1 = np.matrix([[1, 0], [0, 1]])
         gate_2 = np.matrix([[1, 0], [0, 1]])
@@ -233,6 +258,77 @@ def evaluate_sequence(gate_seq_1, gate_seq_2, generator = 'ZX90'):
         twoQ_gate = np.matmul(gate_12, twoQ_gate)
     # log.info('two qubit gate: ' + str(twoQ_gate))
     return twoQ_gate
+=======
+                
+            gate_1 = np.matrix([[1, 0], [0, 1]])
+            gate_2 = np.matrix([[1, 0], [0, 1]])
+            if (gate_seq_1[i] == 'I'):
+                pass
+            elif (gate_seq_1[i] == 'X2p'):
+                gate_1 = np.matmul(
+                    np.matrix([[1, -1j], [-1j, 1]]) / np.sqrt(2), gate_1)
+            elif (gate_seq_1[i] == 'X2m'):
+                gate_1 = np.matmul(
+                    np.matrix([[1, 1j], [1j, 1]]) / np.sqrt(2), gate_1)
+            elif (gate_seq_1[i] == 'Y2p'):
+                gate_1 = np.matmul(
+                    np.matrix([[1, -1], [1, 1]]) / np.sqrt(2), gate_1)
+            elif (gate_seq_1[i] == 'Y2m'):
+                gate_1 = np.matmul(
+                    np.matrix([[1, 1], [-1, 1]]) / np.sqrt(2), gate_1)
+            elif (gate_seq_1[i] == 'Xp'):
+                gate_1 = np.matmul(np.matrix([[0, -1j], [-1j, 0]]), gate_1)
+            elif (gate_seq_1[i] == 'Xpm'):
+                gate_1 = np.matmul(np.matrix([[0, 1j], [1j, 0]]), gate_1)
+            elif (gate_seq_1[i] == 'Yp'):
+                gate_1 = np.matmul(np.matrix([[0, -1], [1, 0]]), gate_1)
+            elif (gate_seq_1[i] == 'Ypm'):
+                gate_1 = np.matmul(np.matrix([[0, 1], [-1, 0]]), gate_1)
+
+            if (gate_seq_2[i] == 'I'):
+                pass
+            elif (gate_seq_2[i] == 'X2p'):
+                gate_2 = np.matmul(
+                    np.matrix([[1, -1j], [-1j, 1]]) / np.sqrt(2), gate_2)
+            elif (gate_seq_2[i] == 'X2m'):
+                gate_2 = np.matmul(
+                    np.matrix([[1, 1j], [1j, 1]]) / np.sqrt(2), gate_2)
+            elif (gate_seq_2[i] == 'Y2p'):
+                gate_2 = np.matmul(
+                    np.matrix([[1, -1], [1, 1]]) / np.sqrt(2), gate_2)
+            elif (gate_seq_2[i] == 'Y2m'):
+                gate_2 = np.matmul(
+                    np.matrix([[1, 1], [-1, 1]]) / np.sqrt(2), gate_2)
+            elif (gate_seq_2[i] == 'Xp'):
+                gate_2 = np.matmul(np.matrix([[0, -1j], [-1j, 0]]), gate_2)
+            elif (gate_seq_2[i] == 'Xpm'):
+                gate_2 = np.matmul(np.matrix([[0, 1j], [1j, 0]]), gate_2)
+            elif (gate_seq_2[i] == 'Yp'):
+                gate_2 = np.matmul(np.matrix([[0, -1], [1, 0]]), gate_2)
+            elif (gate_seq_2[i] == 'Ypm'):
+                gate_2 = np.matmul(np.matrix([[0, 1], [-1, 0]]), gate_2)
+
+            gate_12 = np.kron(gate_1, gate_2)
+            if generator == 'CZ':
+                if (gate_seq_1[i] == 'CZ' or gate_seq_2[i] == 'CZ'):
+                    gate_12 = np.matmul(
+                        np.matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0],
+                                   [0, 0, 0, -1]]), gate_12)
+            elif generator == 'iSWAP':
+                if (gate_seq_1[i] == gates.iSWAP or gate_seq_2[i] == gates.iSWAP):
+                    gate_12 = np.matmul(
+                        np.matrix([[1, 0, 0, 0], [0, 0, 1j, 0], [0, 1j, 0, 0],
+                                   [0, 0, 0, 1]]), gate_12)
+            
+            elif generator == 'CNOT':
+                if (gate_seq_1[i] == 'CNOT' or gate_seq_2[i] == 'CNOT'):
+                    gate_12 = np.matmul(
+                            np.matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1],
+                                       [0, 0, 1, 0]]), gate_12)
+            twoQ_gate = np.matmul(gate_12, twoQ_gate)
+        # log.info('two qubit gate: ' + str(twoQ_gate))
+        return twoQ_gate
+>>>>>>> 9f5970c54cc1556f55a20f2ea2c841a96170758a
        
 
 class TwoQubit_RB(Measurement1D):
@@ -510,7 +606,12 @@ class TwoQubit_RB(Measurement1D):
             gate_seq_2.append('Ip')
 
 
+
     def get_recovery_gate(self, gate_seq_1, gate_seq_2, generator = 'ZX90'):
+
+    
+
+#    def get_recovery_gate(self, gate_seq_1, gate_seq_2, generator = 'CNOT'):
         """
         Get the recovery (the inverse) gate
 
