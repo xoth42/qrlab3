@@ -190,12 +190,12 @@ def get_gate_info(name, detune=None):
     '''
     ret = get_container_object(name)
     ret.insname = name
-    ret.channels1 = parse_chans(ret.channels1)
-    ret.sideband_channels1 = parse_chans(ret.sideband_channels1)
+    ret.channels = parse_chans(ret.channels)
+    ret.sideband_channels = parse_chans(ret.sideband_channels)
     ret.channels2 = parse_chans(ret.channels2)
     ret.sideband_channels2 = parse_chans(ret.sideband_channels2)
-    if ret.sideband_channels1 is None:
-        ret.sideband_channels1 = ret.channels1
+    if ret.sideband_channels is None:
+        ret.sideband_channels = ret.channels
     if ret.sideband_channels2 is None:
         ret.sideband_channels2 = ret.channels2
 
@@ -209,15 +209,15 @@ def get_gate_info(name, detune=None):
         df += detune
     if df == 0:
         ret.ssb = None
-        ret.sideband_channels1 = ret.channels1
+        ret.sideband_channels = ret.channels
         ret.sideband_channels2 = ret.channels2        
     else:
         period = 1e9 / df
-        if ret.sideband_channels1 == ret.channels1:
+        if ret.sideband_channels == ret.channels:
             replace = True
         else:
             replace = False
-        ssb1 = sequencer.SSB(period, ret.sideband_channels1, ret.sideband_phase1, outchans=ret.channels1, replace=replace)
+        ssb1 = sequencer.SSB(period, ret.sideband_channels, ret.sideband_phase, outchans=ret.channels, replace=replace)
         if ret.sideband_channels2 == ret.channels2:
             replace = True
         else:
@@ -231,9 +231,9 @@ def get_gate_info(name, detune=None):
         r = r.upper()
             
     if r == 'GAUSSIAN':
-        ret.rotate = pulselib.CombinedAmplitudeRotation(pulselib.Gaussian, ret.w, ret.pi_amp, rel_amp, rel_phase, drag=ret.drag, pi2_amp=ret.pi2_amp, chans=ret.sideband_channels1, chans2=ret.sideband_channels2)
+        ret.rotate = pulselib.CombinedAmplitudeRotation(pulselib.Gaussian, ret.w, ret.pi_amp, rel_amp, rel_phase, drag=ret.drag, pi2_amp=ret.pi2_amp, chans=ret.sideband_channels, chans2=ret.sideband_channels2)
     elif r == 'GAUSSIANSQUARE':
-        ret.rotate = pulselib.CombinedGSRotation(ret.pi_amp, ret.w, ret.w, 0.0, 1.0, rel_amp=rel_amp, rel_phase=rel_phase, drag=ret.drag, chans=ret.sideband_channels1, chans2=ret.sideband_channels2)
+        ret.rotate = pulselib.CombinedGSRotation(ret.sq_len, ret.pi_amp, ret.w, rel_amp, rel_phase, drag=ret.drag, chop=ret.chop, chans=ret.sideband_channels, chans2=ret.sideband_channels2)
     elif r == 'SQUARE':
         ret.rotate = pulselib.AmplitudeRotation(pulselib.Square, ret.w, ret.pi_amp, drag=ret.drag, pi2_amp=ret.pi2_amp, chans=ret.sideband_channels)
     elif r == 'TRIANGLE':

@@ -1,10 +1,24 @@
-from instrument import Instrument
-import types
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Jul 22 15:41:47 2020
 
-class Readout_IQ_Info(Instrument):
+@author: Wang_Lab
+"""
+
+from instrument import Instrument
+from Pulse_Info import Pulse_Info
+import types
+from pulseseq.sequencer import *
+from pulseseq.pulselib import *
+
+#class IQ_Readout_Info(Qubit_Info,Readout_info):
+#    def __init__(self, name, **kwargs):
+#        super(IQ_Readout_Info, self).__init__(name, tags=['virtual'], **kwargs)
+
+class IQ_Readout_Info(Pulse_Info):
 
     def __init__(self, name, **kwargs):
-        Instrument.__init__(self, name, tags=['virtual'])
+        super(IQ_Readout_Info, self).__init__(name, tags=['virtual'], **kwargs)
 
         self.add_parameter('rotype', type=types.StringType,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
@@ -20,10 +34,7 @@ class Readout_IQ_Info(Instrument):
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET)
         self.add_parameter('frequency', type=types.FloatType,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_GET)
-        self.add_parameter('readout_chan_I', type=types.StringType,
-                flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-                set_func=lambda x: True)
-        self.add_parameter('readout_chan_Q', type=types.StringType,
+        self.add_parameter('readout_chan', type=types.StringType,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 set_func=lambda x: True)
         self.add_parameter('IQg', type=types.ComplexType,
@@ -60,6 +71,7 @@ class Readout_IQ_Info(Instrument):
                 help='Envelope for FPGA',
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 set_func=lambda x: True, value='1')
+#Qubit_info parameters:
         self.add_parameter('deltaf', type=types.FloatType,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 units='Hz')
@@ -194,7 +206,9 @@ class Readout_IQ_Info(Instrument):
                 set_func=lambda x: True,
                 doc='Marker buffer width',
                 )
-
+        self.add_rotation_parameters(suffix='')
+        self.add_rotation_parameters(suffix='_selective')
+        self.add_rotation_parameters(suffix='_oct', rotations=ROTATIONS)
         self.set(kwargs)
 
     def do_set_rfsource(self, val):
@@ -215,10 +229,6 @@ class Readout_IQ_Info(Instrument):
         ins = self._get_ins()
         if ins:
             return ins.get_power()
-    #Added by Josh on 3/20/18 so qrlab would stop bitching that no get is defined
-    #for this parameter.
-   # def do_get_readout_chan(self):
-    #    return 'No GET for param'
 
     def do_set_power(self, val):
         ins = self._get_ins()
@@ -232,8 +242,36 @@ class Readout_IQ_Info(Instrument):
         #Josh did this on 3/20/18 since the get wasn't working and it wasn't
         #important to get working.
         return 1
+    
     def do_set_frequency(self, val):
         ins = self._get_ins()
         if ins:
             return ins.set_frequency(val)
-    
+
+#    def do_get_sequence(self):
+#        if self.mixer_info.deltaf == 0:
+#            
+#            ro = (Combined([
+#                Join([Delay(300),Constant(self.pulse_len, 1, chan=self.acq_chan)]),
+#                Join([Constant(self.pulse_len + 100, 1, chan=self.readout_chan),Delay(200)]),
+#                Join([Delay(100),Constant(self.pulse_len, self.pi_amp, chan=self.channels[0]),Delay(200)]),
+#            ]))
+#        else:
+#            ro = (Combined([
+#                Join([Delay(300),Constant(self.pulse_len, 1, chan=self.acq_chan)]),
+#                Join([Constant(self.pulse_len + 100, 1, chan=self.readout_chan),Delay(200)]),
+#                Join([Delay(100),self.rotate(np.pi, 0),Delay(200)]),
+#
+#            ]))
+#        return ro
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        

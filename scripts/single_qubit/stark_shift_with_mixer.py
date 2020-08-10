@@ -86,12 +86,14 @@ def analysis(meas, data=None, fig=None):
 #            ax1.plot(fs/1e6, f.func(p, fs), label=txt)
 class Stark_shift_with_mixer(Measurement1D):
 
-    def __init__(self, qubit_info, mixer_info, mixer_info2, SS_mixer_info, detunings, seq=None, postseq=None, bgcor=False, coplay_delay=0, **kwargs):
+    def __init__(self, qubit_info, mixer_info, mixer_info2, SS_mixer_info1, SS_mixer_info2,phase1, detunings, seq=None, postseq=None, bgcor=False, coplay_delay=0, **kwargs):
         self.qubit_info = qubit_info
         if seq is None:
             seq = Trigger(250)
         self.seq = seq
-        self.SS_mixer_info = SS_mixer_info
+        self.SS_mixer_info1 = SS_mixer_info1
+        self.SS_mixer_info2 = SS_mixer_info2
+        self.phase1 = phase1
         self.mixer_info = mixer_info
         self.mixer_info2 = mixer_info2
         self.postseq = postseq
@@ -106,7 +108,7 @@ class Stark_shift_with_mixer(Measurement1D):
         npoints = len(detunings)
         if bgcor:
             npoints += 1
-        super(Stark_shift_with_mixer, self).__init__(npoints, residuals=False, infos=(qubit_info,mixer_info,SS_mixer_info,mixer_info2), **kwargs)
+        super(Stark_shift_with_mixer, self).__init__(npoints, residuals=False, infos=(qubit_info,mixer_info,SS_mixer_info1,mixer_info2,SS_mixer_info2,), **kwargs)
         self.data.create_dataset('detunings', data=detunings)
 
     def generate(self):
@@ -129,17 +131,20 @@ class Stark_shift_with_mixer(Measurement1D):
                 Join([self.mixer_info2.rotate(np.pi, 0),Delay(200)])
 
             ]))
-        if self.mixer_info.deltaf == 0:
+        if self.SS_mixer_info1.deltaf == 0:
             stark = (Combined([
                 Join([Constant(int(self.SS_mixer_info.w) + 100, 1, chan=self.readout_info.readout_chan)]),
-                Join([Delay(100),Constant(int(self.SS_mixer_info.w), self.SS_mixer_info.pi_amp, chan=self.SS_mixer_info.channels[0])]),
+                Join([Delay(100),Constant(int(self.SS_mixer_info1.w), self.SS_mixer_info.pi_amp, chan=self.SS_mixer_info.channels[0])]),
+                Join([Delay(100),Constant(int(self.SS_mixer_info2.w), self.SS_mixer_info2.pi_amp, chan=self.SS_mixer_info2.channels[0])]),
 
             ]))
         else:
             stark = (Combined([
-                Join([Constant(int(self.SS_mixer_info.w) + 100, 1, chan=self.readout_info.readout_chan)]),
-                Join([Delay(100),Constant(int(self.SS_mixer_info.w), self.SS_mixer_info.pi_amp, chan=self.SS_mixer_info.sideband_channels[0])]),
-
+#                Constant(int(self.SS_mixer_info1.w) , 1, chan=self.readout_info.readout_chan),
+#                Join([Delay(100),Constant(int(self.SS_mixer_info.w), self.SS_mixer_info.pi_amp, chan=self.SS_mixer_info.sideband_channels[0])]),
+#                Join([Delay(100),Constant(int(self.SS_mixer_info2.w), self.SS_mixer_info2.pi_amp, chan=self.SS_mixer_info2.sideband_channels[0])]),
+                self.SS_mixer_info1.rotate(np.pi, self.phase1),
+                self.SS_mixer_info2.rotate(np.pi, 0)
             ]))
         if self.bgcor:
             plen = self.qubit_info.rotate_selective.base(np.pi, 0).get_length()
@@ -159,6 +164,9 @@ class Stark_shift_with_mixer(Measurement1D):
                 stark,
                 g(),
             ]))
+#            s.append(self.seq)
+#            s.append(stark)
+#            s.append(g())
 
             if self.postseq:
                 s.append(self.postseq)

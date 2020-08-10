@@ -32,6 +32,8 @@ mixer_info1_set = mclient.instruments['mixer_info1']
 mixer_info2_set = mclient.instruments['mixer_info2']
 SS_mixer_info1 = mclient.get_qubit_info('SS_mixer_info1')
 SS_mixer_info1_set = mclient.instruments['SS_mixer_info1']
+SS_mixer_info2 = mclient.get_qubit_info('SS_mixer_info2')
+SS_mixer_info2_set = mclient.instruments['SS_mixer_info2']
 #ef2_V2_info = mclient.get_qubit_info('qubit2ef_V2')
 
 #fwm_info = mclient.get_qubit_info('fwm_info1')
@@ -54,17 +56,21 @@ mixer_info1_set.set_pi_amp(mixer1_amp)
 base_ = []
 shift_ = []
 errors = []
-dig.set_naverages(40000)
+dig.set_naverages(15000)
 dig.do_set_trigger_period(100)
-fields = np.linspace(0.001,0.001,1)
-RO_freqs = [10.805e9,10.805e9,10.804e9,10.806e9,10.807e9,10.808e9]
-stark_drive_deltaf = [-94e6,-94e6,-93e6,-95.5e6,-98.5e6,-98e6]
+fields = np.linspace(0,-.05,6)
+RO_freqs = [10.805e9,10.805e9,10.804e9,10.806e9,10.808e9,10.808e9]
+rofreqs = [10.840e9,10.840e9,10.840e9,10.820e9,10.820e9,10.820e9]
+freq_ranges = [40e6,40e6,40e6,20e6,20e6,20e6]
+#RO_freqs = [10.805e9]
+stark_drive_deltaf = [-94e6,-94e6,-93e6,-95.5e6,-94e6,-84e6]
+phase = 0
 for i,field in enumerate(fields):
 #    if abs(field)>0.01:
 #        Magnet.do_set_field(0)
 #        time.sleep(600)
 
-    
+
     Magnet.do_set_PSwitch(1)
     print('heating PSwitch')
     time.sleep(35)
@@ -76,40 +82,41 @@ for i,field in enumerate(fields):
     print('cooling PSwitch')
     time.sleep(350)
     
-    ro_freq = RO_freqs[-i]
-#    power = 10
-    readout_info.rfsource1.set_frequency(ro_freq - mixer_info1.deltaf)
-#    readout_info.rfsource1.set_power(power)
-#    readout_info.rfsource1.set_rf_on(True)
-#    readout_info.rfsource2.set_power(10)
-#    readout_info.rfsource2.set_rf_on(True)
-    readout_info.rfsource2.set_frequency(ro_freq+50e6)
     
-    SS_mixer_info1_set.set_deltaf(stark_drive_deltaf[-i])
-    SS_mixer_info1 = mclient.get_qubit_info('SS_mixer_info1')
-
-    from single_qubit import stark_shift_with_mixer
-#    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
-    for i in range(1):        
-#        RObrick.do_set_power(i)
-        seq = sequencer.Trigger(600)
-#        seq = Join([seq, qubit2_info.rotate(np.pi/2, X_AXIS)])
-        spec = stark_shift_with_mixer.Stark_shift_with_mixer(qubit2_info, mixer_info1, mixer_info2 ,SS_mixer_info1, np.linspace(-15e6, 10e6, 101), seq=seq, plot_seqs=False, proj_func='phase')
-        spec.measure_keysight()
-#        plt.close()
-    shift_.append(spec.fit_params['freq'].value)
-    errors.append(spec.fit_params['freq'].stderr)
-    from single_qubit import ssbspec_mixer
-#    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
-    for i in range(1):        
-#        RObrick.do_set_power(i)
-        seq = sequencer.Trigger(600)
-#        seq = Join([seq, qubit2_info.rotate(np.pi/2, X_AXIS)])
-        spec = ssbspec_mixer.SSBSpec_mixer(qubit2_info, mixer_info1, np.linspace(-15e6, 10e6, 101), seq=seq, plot_seqs=False, proj_func='phase')
-        spec.measure_keysight()
-    base_.append(spec.center)
-    
-    from single_cavity import rocavspectroscopy_keysight_mixer
+#    ro_freq = RO_freqs[i]
+##    power = 10
+#    readout_info.rfsource1.set_frequency(ro_freq - mixer_info1.deltaf)
+##    readout_info.rfsource1.set_power(power)
+##    readout_info.rfsource1.set_rf_on(True)
+##    readout_info.rfsource2.set_power(10)
+##    readout_info.rfsource2.set_rf_on(True)
+#    readout_info.rfsource2.set_frequency(ro_freq+50e6)
+#    
+#    SS_mixer_info1_set.set_deltaf(stark_drive_deltaf[i])
+#    SS_mixer_info1 = mclient.get_qubit_info('SS_mixer_info1')
+#
+#    from single_qubit import stark_shift_with_mixer
+##    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
+#    for j in range(1):        
+##        RObrick.do_set_power(i)
+#        seq = sequencer.Trigger(600)
+##        seq = Join([seq, qubit2_info.rotate(np.pi/2, X_AXIS)])
+#        spec = stark_shift_with_mixer.Stark_shift_with_mixer(qubit2_info, mixer_info1, mixer_info2 ,SS_mixer_info1,SS_mixer_info2, phase, np.linspace(-15e6, 10e6, 101), seq=seq, plot_seqs=False, proj_func='phase')
+#        spec.measure_keysight()
+##        plt.close()
+#    shift_.append(spec.fit_params['freq'].value)
+#    errors.append(spec.fit_params['freq'].stderr)
+#    from single_qubit import ssbspec_mixer
+##    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
+#    for k in range(1):        
+##        RObrick.do_set_power(i)
+#        seq = sequencer.Trigger(600)
+##        seq = Join([seq, qubit2_info.rotate(np.pi/2, X_AXIS)])
+#        spec = ssbspec_mixer.SSBSpec_mixer(qubit2_info, mixer_info1, mixer_info2, np.linspace(-15e6, 10e6, 101), seq=seq, plot_seqs=False, proj_func='phase')
+#        spec.measure_keysight()
+#    base_.append(spec.center)
+#    
+#    from single_cavity import rocavspectroscopy_keysight_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0), ef2_info.rotate(np.pi, 0)])
 #    Yoko.do_set_current(-0.00175)
@@ -119,10 +126,11 @@ for i,field in enumerate(fields):
 #    mixer_info1 = mclient.get_qubit_info('mixer_info1')
 #    mixer_info2 = mclient.get_qubit_info('mixer_info2')
     
-    rofreq = 10.810e9
-    freq_range = 10e6
-    ro = rocavspectroscopy_keysight_mixer.ROCavSpectroscopy_keysight_mixer(qubit2_info, mixer_info1, np.linspace(10,10,1),
-                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 401),
+    from single_cavity import rocavspectroscopy_keysight_mixer
+    rofreq = rofreqs[i]
+    freq_range = freq_ranges[i]
+    ro = rocavspectroscopy_keysight_mixer.ROCavSpectroscopy_keysight_mixer(qubit2_info, mixer_info1, mixer_info2, np.linspace(10,10,1),
+                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 201),
                                              qubit_pulse=False, seq=None)#,extra_info=[ef2_info])
     ro.measure()
     plt.close()
@@ -137,8 +145,8 @@ for i,field in enumerate(fields):
     
     
     
-    ro = rocavspectroscopy_keysight_mixer.ROCavSpectroscopy_keysight_mixer(qubit2_info, mixer_info1, np.linspace(10,10,1),
-                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 401),
+    ro = rocavspectroscopy_keysight_mixer.ROCavSpectroscopy_keysight_mixer(qubit2_info, mixer_info1, mixer_info2, np.linspace(10,10,1),
+                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 201),
                                              qubit_pulse=True, seq=None)#,extra_info=[ef2_info])
     ro.measure()
     plt.figure('amp%s'%(figure_name))
@@ -147,16 +155,16 @@ for i,field in enumerate(fields):
     plt.plot(ro.freqs,ro.phasedata[0],label = 'qubit 2 in e')
 
 
-Stark_shifts = np.array(shift_)-np.array(base_)
-    
-    
-plt.figure()
-plt.title('Stark shifts')
-plt.xlabel('Fields (T)')
-plt.ylabel('Stark shift (MHz)')
-plt.plot(fields,Stark_shifts, label = 'Stark_shift')
-plt.plot(fields,base_,label = 'Base')
-plt.errorbar(fields,shift_,yerr = errors,label = 'Shift')
-plt.legend()
+#Stark_shifts = np.array(shift_)-np.array(base_)
+#    
+#    
+#plt.figure()
+#plt.title('Stark shifts')
+#plt.xlabel('Fields (T)')
+#plt.ylabel('Stark shift (MHz)')
+#plt.plot(fields,Stark_shifts, label = 'Stark_shift')
+#plt.plot(fields,base_,label = 'Base')
+#plt.errorbar(fields,shift_,yerr = errors,label = 'Shift')
+#plt.legend()
 
 

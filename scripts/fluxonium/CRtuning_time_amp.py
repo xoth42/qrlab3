@@ -31,12 +31,12 @@ class CRtuning_time_amp(Measurement2D):
 
 #The purpose here is to sweep over time and detuning for the combined pulse without the pi pulse on the control qubit
 
-    def __init__(self, qubit_info, qubit_info2, qubit2_info, times, rel_amps, amp=0.35, phase=0, rel_phase=1, sigma=5, 
-                 update=False, seq=None, r_axis=0, fix_phase=True,
+    def __init__(self, gate_info1, gate_info2, times, rel_amps, amp=0.35, phase=0, rel_phase=1, sigma=5, 
+                 update=False, seq=None, r_axis=0, fix_phase=True, cancel_info=None,
                  fix_period=None, repeat_pulse=1, postseq=None, selective=False, control_pi=False, **kwargs):
-        self.qubit_info = qubit_info
-        self.qubit_info2 = qubit_info2
-        self.qubit2_info = qubit2_info
+        self.gate_info1 = gate_info1
+        self.gate_info2= gate_info2
+        self.cancel_info = cancel_info
         self.times = times
         self.rel_amps = rel_amps
 #        self.xs = np.array([times,times]).transpose().flatten() / 1e3      # For plotting purposes        
@@ -63,43 +63,52 @@ class CRtuning_time_amp(Measurement2D):
 
         npoints = self.two_axes.size
         
-        super(CRtuning_time_amp, self).__init__(npoints, infos=(qubit_info,qubit_info2, qubit2_info), **kwargs)
+        if cancel_info is not None:
+            super(CRtuning_time_amp, self).__init__(npoints, infos=(gate_info1, gate_info2, cancel_info), **kwargs)
+        else:
+            super(CRtuning_time_amp, self).__init__(npoints, infos=(gate_info1, gate_info2), **kwargs)
         self.data.create_dataset('two_axes', data=self.two_axes, dtype=np.complex)
 
     def generate(self):
-        s = Sequence()
-#        ampI = self.amp * np.cos(self.phase)
-#        ampQ = self.amp * np.sin(self.phase)
-#        ampIc = self.amp *self.rel_amps * np.cos(self.phase+self.rel_phase)
-#        ampQc = self.amp *self.rel_amps * np.sin(self.phase+self.rel_phase)
-        chs = self.qubit_info.sideband_channels
-        chs2 = self.qubit_info2.sideband_channels
 
+        s = Sequence()
+        ampI = self.amp * np.cos(self.phase)
+        ampQ = self.amp * np.sin(self.phase)
+        chs = self.gate_info1.sideband_channels
+        chs2 = self.gate_info1.sideband_channels2
+        chs3 = self.cancel_info.sideband_channels
 
         for rel_amp in self.rel_amps:
+            ampIc = self.amp * rel_amp * np.cos(self.phase+self.rel_phase)
+            ampQc = self.amp * rel_amp * np.sin(self.phase+self.rel_phase)
             for plen in self.times:
             
                 s.append(self.seq)    
     
-#                if plen > 0:
-                g=(Combined([
-        #                GaussSquare(int(plen), ampI, self.sigma, chan=chs[0]),
-        #                GaussSquare(int(plen), ampQ, self.sigma, chan=chs[1]),
-        #                GaussSquare(int(plen), ampIc, self.sigma, chan=chs2[0]),
-        #                GaussSquare(int(plen), ampQc, self.sigma, chan=chs2[1]),            
-                        Constant(int(plen), self.amp * np.cos(self.phase), chan=chs[0]),
-                        Constant(int(plen), self.amp * np.sin(self.phase), chan=chs[1]),
-                        Constant(int(plen), self.amp *rel_amp * np.cos(self.phase+self.rel_phase), chan=chs2[0]),
-                        Constant(int(plen), self.amp *rel_amp * np.sin(self.phase+self.rel_phase), chan=chs2[1]),              
-                    ]))
+                if plen >= 0:
+                    if self.cancel_info is not None:
+                        g=Repeat(Combined([
+                        GaussSquare(int(plen), ampI, self.sigma, chan=chs[0]),
+                        GaussSquare(int(plen), ampQ, self.sigma, chan=chs[1]),
+                        GaussSquare(int(plen), ampIc, self.sigma, chan=chs2[0]),
+                        GaussSquare(int(plen), ampQc, self.sigma, chan=chs2[1]),            
+                        GaussSquare(int(plen), self.cancel_info.pi_amp, self.sigma, chan=chs3[0]),
+                        ]), self.repeat_pulse)
+                    else:       
+                        g=Repeat(Combined([
+                            GaussSquare(int(plen), ampI, self.sigma, chan=chs[0]),
+                            GaussSquare(int(plen), ampQ, self.sigma, chan=chs[1]),
+                            GaussSquare(int(plen), ampIc, self.sigma, chan=chs2[0]),
+                            GaussSquare(int(plen), ampQc, self.sigma, chan=chs2[1]),            
+                        ]), self.repeat_pulse)
 
                 if self.control_pi==True:             
-                    s.append(self.qubit2_info.rotate(np.pi,0))
-                    s.append(g)
-#                    s.append(self.qubit2_info.rotate(np.pi,0)) #Chen changed to always measure with control qubit in e
-                else:
+                    s.append(self.gate_info2.rotate(np.pi,0))
                     s.append(g)
                     s.append(self.qubit2_info.rotate(np.pi,0)) #Chen changed to always measure with control qubit in e
+                else:
+                    s.append(g)
+                    s.append(self.gate_info2.rotate(np.pi,0)) #Chen changed to always measure with control qubit in e
 #                s.append(g)
                 if self.postseq:
                     s.append(self.postseq)
