@@ -32,8 +32,8 @@ class CRtuning_timevsdet(Measurement2D):
 
 #The purpose here is to sweep over time and detuning for the combined pulse without the pi pulse on the control qubit
 
-    def __init__(self, qubit_info, qubit_info2, qubit2_info, times, detunings, amp=0.35, phase=0, rel_amp=1, rel_phase=1, sigma=5, update=False, seq=None, r_axis=0, fix_phase=True,
-                 fix_period=None, repeat_pulse=1, postseq=None, selective=False, control_pi=False,  **kwargs):
+    def __init__(self, qubit_info, qubit_info2, qubit2_info, times, detunings, amp=0.35, phase=0,  sigma=5, update=False, seq=None, r_axis=0, fix_phase=True,
+                 fix_period=None, repeat_pulse=1, postseq=None, selective=False,   **kwargs):
         self.qubit_info = qubit_info
         self.qubit_info2 = qubit_info2
         self.qubit2_info = qubit2_info
@@ -45,8 +45,6 @@ class CRtuning_timevsdet(Measurement2D):
 
         self.amp = amp
         self.phase = phase
-        self.rel_amp = rel_amp
-        self.rel_phase = rel_phase
         self.update_ins = update
         if seq is None:
             seq = Trigger(1000)
@@ -58,7 +56,6 @@ class CRtuning_timevsdet(Measurement2D):
         self.r_axis = r_axis
         self.selective = selective
         self.sigma = sigma
-        self.control_pi=control_pi
 
         
         XS, YS = np.meshgrid(self.xs, self.ys)
@@ -70,75 +67,35 @@ class CRtuning_timevsdet(Measurement2D):
         self.data.create_dataset('two_axes', data=self.two_axes, dtype=np.complex)
 
 
-    def generate_dummy(self):
-        s = Sequence()
-
-        ro = Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-        ])
-        for i, df in enumerate(self.detunings):
-            g = DetunedSum(self.qubit_info.rotate_selective.base, self.qubit_info.w_selective, chans=self.qubit_info.sideband_channels)
-            if df != 0:
-                period = 1e9 / df
-            else:
-                period = 1e50
-            g.add(self.qubit_info.pi_amp_selective, period)
-
-            s.append(Join([
-                self.seq,
-                g(),
-            ]))
-
-            if self.postseq:
-                s.append(self.postseq)
-            s.append(ro)
-
-            #Ebru, adding the 20000 delay
-            s.append(Delay(2000))
-        s = self.get_sequencer(s)
-        seqs = s.render()
-        return seqs
 
 
 
     def generate(self):
         s = Sequence()
-#        ampI = self.amp * np.cos(self.phase)
-#        ampQ = self.amp * np.sin(self.phase)
-#        ampIc = self.amp *self.rel_amp * np.cos(self.phase+self.rel_phase)
-#        ampQc = self.amp *self.rel_amp * np.sin(self.phase+self.rel_phase)
         chs = self.qubit_info.sideband_channels
         chs2 = self.qubit_info2.sideband_channels
-            
+        ampI = -0.008
+        ampQ = 0.0713
+           
         for df in self.detunings:
             for plen in self.times:
                 
                 s.append(self.seq)    
                 
                 g1 = DetunedGaussSquare(int(plen), self.sigma, chs)
-#                g1 = DetunedSum(self.qubit_info.rotate_selective.base, self.qubit_info.w_selective, chans=self.qubit_info.sideband_channels)
                 if df != 0:
                     period = 1e9 / df
                 else:
                     period = 1e50
                 g1.add(self.amp, period)
-                    
-                g2 = DetunedGaussSquare(int(plen), self.sigma, chs2)
-#                g2 = DetunedSum(self.qubit_info2.rotate_selective.base, self.qubit_info2.w_selective, chans=self.qubit_info2.sideband_channels)
-                if df != 0:
-                    period = 1e9 / df
-                else:
-                    period = 1e50
-                g2.add(self.amp * self.rel_amp, period, (self.rel_phase,self.rel_phase-np.pi/2))
+ 
 
-                if self.control_pi==True:
-                    s.append(self.qubit2_info.rotate(np.pi,0))
-                    s.append(Combined([g1(),g2()]))
-                    s.append(self.qubit2_info.rotate(np.pi,0))#                    s.append(g1())
 
-                else:
-                    s.append(Combined([g1(),g2()]))
+                g2=Combined([
+                        GaussSquare(int(plen), ampI, 0.000001, chan=chs2[0]),
+                        GaussSquare(int(plen), ampQ, 0.000001, chan=chs2[1])])                   
+
+                s.append(Combined([g1(), g2]))
                     
                 if self.postseq:
                     s.append(self.postseq)

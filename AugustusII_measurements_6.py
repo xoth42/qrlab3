@@ -423,7 +423,7 @@ if 0: # T1
 #        plt.close()
     bla
 
-if 0: # T2
+if 1: # T2
     from scripts.single_qubit import T2measurement
     cool = sequencer.Constant(int(4e3),1,chan='3m1')
     seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
@@ -431,7 +431,7 @@ if 0: # T2
 #        coolgen.set_rf_on(True)
 #    
     #    for i in range(1):
-        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 1e3, 81), detune=8e6, double_freq=False, 
+        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 2e3, 81), detune=2e6, double_freq=False, 
                                          generate=True, postseq=None,extra_info =qubit_info,
                                              proj_func='phase', seq=seq_cool)
         t2.measure()
