@@ -65,11 +65,11 @@ def TwoModesFitting(params, fields, ws):
 
 params = lmfit.Parameters()
 vary_params = True
-params.add('wa', value=10.811, vary = vary_params)
-params.add('wb', value=10.806, vary = vary_params)
+params.add('wa', value=10.8056, vary = vary_params)
+params.add('wb', value=10.811, vary = vary_params)
 params.add('wai', value=0.00, vary = False)
 params.add('wbi', value=0, vary = False)
-params.add('wp', value=10.7, vary = vary_params)#,vary = False)
+params.add('wp', value=10.722, vary = vary_params)#,vary = False)
 params.add('wn', value=10.8, vary = vary_params)#,max= 11.5,min = 10.9)
 params.add('wni', value=0.1, vary = vary_params)
 params.add('ga', value=0.03, vary = vary_params)
@@ -86,10 +86,14 @@ params.add('g',value = -0.077, vary = vary_params)
 
 #data = np.concatenate((omega_c/1e9, omega_c2/1e9,kappa_a/1e9,kappa_a2/1e9))
 #data = np.concatenate((freq1[0], freq2[0]))
-#data = np.loadtxt('C:\Users\WangLab\Documents\yingying\cavity freqs and kappas.txt')
+data = np.loadtxt('C:\Users\WangLab\Documents\yingying\cavity freqs and kappas.txt')
 #data = np.loadtxt('C:\Users\WangLab\Documents\yingying\\0317cooldown_cavity freqs and kappas.txt')
-data = np.loadtxt('C:\Users\WangLab\Documents\yingying\\0317cooldown_S21 cavity freqs and kappas.txt')
-#data = data*1e9
+#data = np.loadtxt('C:\Users\WangLab\Documents\yingying\\0317cooldown_S21 cavity freqs and kappas.txt')
+<<<<<<< HEAD
+data = np.loadtxt('C:\Users\Wang_Lab\Documents\yingying\\0626_cooldown_circulator_data\\cavity freqs and kappas.txt')
+=======
+>>>>>>> 69f5acc6765657e08e8dfa29bf38f7e98068f81c
+data = data*1e9
 bad_data_i = 0
 bad_data_f = 0
 fields = np.linspace(0, -0.05,26)
@@ -146,22 +150,30 @@ for field in fields:
 pl.figure()
 #pl.errorbar(fields, omega_c/1e9, yerr =omega_c_err/1e9, fmt ='o', label='data')
 #pl.errorbar(fields, omega_c2/1e9, yerr =omega_c2_err/1e9, fmt ='o', label='data')
-pl.scatter(fields, omega_c/1e9, label='data')
-pl.scatter(fields, omega_c2/1e9,  label='data')
-pl.plot(fields, np.real(w1))
+pl.scatter(fields, omega_c/1e9, label='data_frequency')
+pl.scatter(fields, omega_c2/1e9,  )
+pl.plot(fields, np.real(w1), label = 'fitting eigenvalue_real')
 pl.plot(fields, np.real(w2))
 pl.plot(fields, np.real(w3))
 pl.plot(fields, np.real(w4))
 
+pl.xlabel('fields (T)')
+pl.ylabel('GHz')
+pl.legend()
+
 pl.figure()
 #pl.errorbar(fields, kappa_a/1e9, yerr = kappa_a_err/1e9, fmt ='o', label='kappa_tot data')
 #pl.errorbar(fields, kappa_a2/1e9, yerr = kappa_a2_err/1e9, fmt ='o')
-pl.scatter(fields, kappa_a/2e9,  label='kappa_tot/2 data')
+pl.scatter(fields, kappa_a/2e9,  label='data_kappa_tot/2')
 pl.scatter(fields, kappa_a2/2e9,)
-pl.plot(fields, -np.imag(w1))
+pl.plot(fields, -np.imag(w1), label = 'fitting eigenvalue_-imag')
 pl.plot(fields, -np.imag(w2))
 pl.plot(fields,- np.imag(w3))
 pl.plot(fields,- np.imag(w4))
+pl.xlabel('fields (T)')
+pl.ylabel('GHz')
+pl.legend()
+
 
 '''
 k = 12    
