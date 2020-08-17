@@ -76,7 +76,7 @@ class CRtuning_time_amp(Measurement2D):
         ampQ = self.amp * np.sin(self.phase)
         chs = self.gate_info1.sideband_channels
         chs2 = self.gate_info1.sideband_channels2
-        chs3 = self.cancel_info.sideband_channels
+#        chs3 = self.cancel_info.sideband_channels
 
         for rel_amp in self.rel_amps:
             ampIc = self.amp * rel_amp * np.cos(self.phase+self.rel_phase)
@@ -105,7 +105,7 @@ class CRtuning_time_amp(Measurement2D):
                 if self.control_pi==True:             
                     s.append(self.gate_info2.rotate(np.pi,0))
                     s.append(g)
-                    s.append(self.qubit2_info.rotate(np.pi,0)) #Chen changed to always measure with control qubit in e
+#                    s.append(self.gate_info2.rotate(np.pi,0)) #Chen changed to always measure with control qubit in e
                 else:
                     s.append(g)
                     s.append(self.gate_info2.rotate(np.pi,0)) #Chen changed to always measure with control qubit in e

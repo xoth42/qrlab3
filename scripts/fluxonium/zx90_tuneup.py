@@ -72,13 +72,13 @@ def qubit1_gate_check(amp, rel_amp, rel_phase):
 
 
 def qubit2_gate_check(amp, range):
-    alz.set_naverages(2000)
+    alz.set_naverages(5000)
     rel_amp=0
     rel_phase = 0
     tr = timerabi_interleaved.TimeRabi_interleaved(
             gate_info2, gate_info1, range, #Does not include Gaussian ramp time, sigma=4
             amp, phase=0, rel_amp=rel_amp, rel_phase=rel_phase, sigma=6,
-            update=False, read_on_e=False, seq=seq_cool, postseq=None, proj_func='phase')
+            update=False, read_on_e=True, seq=seq_cool, postseq=None, proj_func='phase')
     data = tr.measure()
     return
 
@@ -167,34 +167,35 @@ def pi2_amp_tune(gate_info, range, repeat_pulse):
 #Checking how well the single qubit gates are doing    
 
 if 1:
-    qubit1_gate_check(0.765, 1.015, 1.004)  #correct this
+    
+#    qubit1_gate_check(0.08, 1.06, -1.06)  #correct this
     qubit2_gate_check(0.3, np.linspace(0, 150, 151))
-
+    bla
 #ramsey?
 
 #CX tune up check
 if 0:
-    CX_timerabis(np.linspace(0,0,1), gate_info1, gate_info2 ,np.linspace(0,350,101), 0.079, 4.456, 1.008, all_axis=True)
+    CX_timerabis(np.linspace(0,0,1), gate_info1, gate_info2 ,np.linspace(0,300,151), 0.08, 4.452, 1.05, all_axis=False)
 
 #CX tune up
 if 0:  #change range +- the current value
-    relative_phase_qubit1(0.079, 4.456, np.linspace(1,300,31), np.linspace(0.97,1.03,11), control_pi=False)
-#    relative_amp_qubit1(0.079, 1.00,  np.linspace(1,300,31), np.linspace(4.35,4.55,11), control_pi=False)
+    relative_phase_qubit1(0.08, 4.45, np.linspace(1,300,31), np.linspace(0.95,1.1,11), control_pi=False)
+#    relative_amp_qubit1(0.079, 1.0,  np.linspace(1,300,31), np.linspace(4.35,4.55,11), control_pi=False)
 
     
 #Single qubit tune up for qubit1:
-if 0: #this one is still using the qubit_info objects since it runs a detuned sum - gaussian 
-#    detuning_qubit1(0.079,4.452, 1.004, np.linspace(0,300,31),np.linspace(-5e6, 5e6, 11) , control_pi=True)
+if 1: #this one is still using the qubit_info objects since it runs a detuned sum - gaussian 
+    detuning_qubit1(0.079,4.452, 1.004, np.linspace(0,300,31),np.linspace(-5e6, 5e6, 11) , control_pi=True)
     #driving from 5/6 with control in g and e:
-    CX_timerabis(np.linspace(-0.8,-0.8,1), gate_info1, gate_info2 ,np.linspace(0,300,151), 0.079, 0.000, 0, all_axis=False, swap_chs = False)
+    CX_timerabis(np.linspace(0,-0.8,1), gate_info1, gate_info2 ,np.linspace(0,300,151), 0.08, 0.000, 0, all_axis=False, swap_chs = False)
 #    #driving from 9/10 with control in g and e:
-    CX_timerabis(np.linspace(-0.8,-0.8,1), gate_info1, gate_info2,np.linspace(0,300,151), 0.3627, 0.000, 0, all_axis=False, swap_chs = True)
+    CX_timerabis(np.linspace(0,-0.8,1), gate_info1, gate_info2,np.linspace(0,300,151), 0.36, 0.000, 0, all_axis=False, swap_chs = True)
 
 
 #    #calculation will go in here  + I CAN'T SEE WHERE IT GETS THE PI TIME FROM, IT IS NOT EXACTLY PERIOD/2??
 # ([1/pitime_56(g) - 1/pitime_56(e)] / [1/pitime_910(g) - 1/pitime_910(e)]) * rel_amp_910 / rel_amp_56 = effective amp for the single qubit gate 
 
-    qubit1_gate_check(0.79, 1.015, 1.004)
+#    qubit1_gate_check(0.79, 1.015, 1.004)
 #Single qubit gate pi amp, pi/2 amp and drag tune up
 
 if 0:  #center around the current value

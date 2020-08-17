@@ -188,7 +188,7 @@ if 0: # AllXY
 #    postseq = gate_info1.rotate(np.pi,0) 
     alz.set_naverages(5000)
     allxy_result =[]
-    axy = allxy.All_XY(gate_info2, seq=seq_cool, generate=True, proj_func='phase', postseq = None)#, extra_info=gate_info1)  #seq=seq was added
+    axy = allxy.All_XY(gate_info1, seq=seq_cool, generate=True, proj_func='phase', postseq = None)#, extra_info=gate_info1)  #seq=seq was added
     axy.measure()
     allxy_result = axy.get_ys()
     plt.plot(allxy_result)
@@ -335,7 +335,7 @@ if 0: # Two-Qubit Randomized Benchmarking
 #    Pg_cplx1_old = Pg_cplx1[:]
 #    Pg_cplx0_old = Pg_cplx0[:]
 
-if 1: # Simultaneous 1qubit gate RB
+if 0: # Simultaneous 1qubit gate RB
     from scripts.fluxonium import TwoQ_RB 
     rndmben_result1 = []
     Pgg = []
@@ -345,8 +345,8 @@ if 1: # Simultaneous 1qubit gate RB
     cool = sequencer.Constant(int(4e3),1,chan='3m1')
     seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
 
-    for i in range(40):
-        rndmben = TwoQ_RB.TwoQubit_RB(gate_info2, gate_info1, cx_info, cancel_info, num_cal_points=3, N_cliffords=80, 
+    for i in range(1):
+        rndmben = TwoQ_RB.TwoQubit_RB(gate_info2, gate_info1, cx_info, cancel_info, num_cal_points=3, N_cliffords=40, 
                                       plot_seqs=False, category='single', generator='CX',# interleave='CX',
                                       find_cheapest_recovery=False, seq=seq, proj_func='phase')
         data = rndmben.measure()
