@@ -5,15 +5,16 @@ Created on Sat Jun 20 13:25:58 2020
 @author: Wang_Lab
 """
 import lmfit
-
+electrical_delay = -4.3e-7
 
 
 def S21(params, x, y):
-    est = np.sqrt(params['kappa_prod'])/(-1j*(x-params['omega_c'])-(params['kappa_a'])/2.0 )
+    est = (np.sqrt(params['kappa_prod'])/(-1j*(x-params['omega_c'])-(params['kappa_a'])/2.0 ))*np.exp(1j*params['phi'])
+    est = est * np.exp(1j*electrical_delay* x)
 
     est = est + params['roff'] + 1j*params['ioff']
     
-    return np.abs(est) - y
+    return np.sqrt((np.real(y)-np.real(est))**2+(np.imag(y)-np.imag(est))**2)
 
 
 
@@ -37,18 +38,21 @@ import config
 SPEC   = 0
 POWER  = 1
 
-def analysis(powers, freqs, amp1, amp2 , phase1, ampdata, phasedata=None, plot_type=POWER, ax=None):
+def analysis(self, powers, freqs, amp1, amp2 , phase1, ampdata, phasedata=None, plot_type=POWER, ax=None, ax3 = None):
     if ax is None:
         ax = plt.figure().add_subplot(111)
     ax2 = ax.twinx()
-
+    
     if plot_type == SPEC:
+        amps = ampdata[0,:]
+        phases = phasedata[0,:]
+        data_comp = amps*np.exp(1j*phases*np.pi/180)
+        data_comp_nodelay = data_comp*np.exp(-1j*electrical_delay*freqs)
         for ipower, power in enumerate(powers):
             ax.plot(freqs/1e6, ampdata[ipower,:], label='Power %.02f dB'%power)
             ax2.plot(freqs/1e6, ampdata[ipower,:], label='Power %.02f dB'%power)
 
         fs = freqs
-        amps = ampdata[0,:]
 #        f = fit.Lorentzian(fs, amps)
 #        h0 = np.max(amps)
 #        w0 = 2e6
@@ -70,22 +74,28 @@ def analysis(powers, freqs, amp1, amp2 , phase1, ampdata, phasedata=None, plot_t
         params.add('kappa_a', value=1e6, min = 0)#, max = 4e6)#,vary = False)
         params.add('roff',value = 0)#,vary = False)
         params.add('ioff',value = 0)#, vary = False)
+        params.add('phi',value = 0)
                 
     #    datas = realdata[0,:]+ 1j*imagdata[0,:]    
-        result = lmfit.minimize(S21, params, args=(freqs, amps))
+        result = lmfit.minimize(S21, params, args=(freqs, data_comp))
         lmfit.report_fit(result.params)
         print ('total Q: ',result.params['omega_c'].value/result.params['kappa_a'].value)
 
-        fitdata = np.sqrt(result.params['kappa_prod'].value)/(-1j*(freqs-result.params['omega_c'].value)-(result.params['kappa_a'].value)/2.0 )
+        fitdata = np.sqrt(result.params['kappa_prod'].value)/(-1j*(freqs-result.params['omega_c'].value)-(result.params['kappa_a'].value)/2.0 )*np.exp(1j*result.params['phi'])
+        fitdata = fitdata*np.exp(1j*electrical_delay*freqs)
         fitdata = fitdata + result.params['roff'].value + 1j*result.params['ioff'].value
+        fitdata_nodelay = fitdata*np.exp(-1j*electrical_delay*freqs)
         ax.plot(fs/1000000,np.abs(fitdata), '--',label = 'freq = %s MHz\n kappa = %s MHz'%(result.params['omega_c'].value/1e6,result.params['kappa_a'].value/1e6))
         ax2.plot(fs/1000000, np.abs(fitdata), '--',label = 'freq = %s MHz\n kappa = %s MHz'%(result.params['omega_c'].value/1e6,result.params['kappa_a'].value/1e6))
 #Yingying   update fitting
         title = 'amp 1 = %s , amp 2 = %s , phase1 = %s'%(amp1,amp2,phase1)
         plt.legend()
+        sup_title = ' data in %s' % self.data.get_fullname()
+        plt.suptitle(sup_title)
         plt.title(title)
         plt.ylabel('Intensity [AU]')
         plt.xlabel('Frequency [MHz]')
+        
         ## Yingying add it to save the figure 
         fn = os.path.join(config.datadir, 'images/%s_cavspecamp.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
         fdir = os.path.split(fn)[0]
@@ -105,6 +115,29 @@ def analysis(powers, freqs, amp1, amp2 , phase1, ampdata, phasedata=None, plot_t
             os.makedirs(fdir)
         kwargs = dict()
         plt.savefig(fn, **kwargs)
+        if ax3 is None:
+            ax3 = plt.figure().add_subplot(111)
+        ax4 = ax3.twinx()
+        ax3.plot(np.real(data_comp_nodelay),np.imag(data_comp_nodelay), label='Power %.02f dB'%power)
+        ax4.plot(np.real(data_comp_nodelay),np.imag(data_comp_nodelay), label='Power %.02f dB'%power)
+        
+        ax3.plot(np.real(fitdata_nodelay),np.imag(fitdata_nodelay), '--',label = 'freq = %s MHz\n kappa = %s MHz'%(result.params['omega_c'].value/1e6,result.params['kappa_a'].value/1e6))
+        ax4.plot(np.real(fitdata_nodelay),np.imag(fitdata_nodelay), '--',label = 'freq = %s MHz\n kappa = %s MHz'%(result.params['omega_c'].value/1e6,result.params['kappa_a'].value/1e6))
+#Yingying   update fitting
+        title = 'amp 1 = %s , amp 2 = %s , phase1 = %s'%(amp1,amp2,phase1)
+        plt.legend()
+        sup_title = ' data in %s' % self.data.get_fullname()
+        plt.suptitle(sup_title)
+        plt.title(title)
+        plt.ylabel('Q')
+        plt.xlabel('I')
+        fn = os.path.join(config.datadir, 'images/%s_cavspec_complex.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
+        fdir = os.path.split(fn)[0]
+        if not os.path.isdir(fdir):
+            os.makedirs(fdir)
+        kwargs = dict()
+        plt.savefig(fn, **kwargs)
+        
         return result.params
     if plot_type == POWER:
 #        ax1 = f.add_subplot(2,1,1)
@@ -125,6 +158,7 @@ def analysis(powers, freqs, amp1, amp2 , phase1, ampdata, phasedata=None, plot_t
             os.makedirs(fdir)
         kwargs = dict()
         plt.savefig(fn, **kwargs)
+        
 
 class AsymROCavSpectroscopy_keysight(Measurement1D):
 
@@ -329,5 +363,5 @@ class AsymROCavSpectroscopy_keysight(Measurement1D):
     def analyze(self, data=None, ax=None):
         pax = ax if (ax is not None) else plt.figure().add_subplot(111)
         ampdata = data if (data is not None) else self.ampdata
-        self.fit_params = analysis(self.powers, self.freqs, self.mixer_info1.pi_amp, self.mixer_info2.pi_amp, self.phase1, ampdata, self.phasedata, self.plot_type, ax=pax)
+        self.fit_params = analysis(self, self.powers, self.freqs, self.mixer_info1.pi_amp, self.mixer_info2.pi_amp, self.phase1, ampdata, self.phasedata, self.plot_type, ax=pax)
 #Yingying add return fitting params
