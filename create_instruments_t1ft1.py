@@ -20,7 +20,7 @@ from mclient import instruments
 #
 instruments.remove('dig')
 
-dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period=100,nsamples=1500, naverages=6000, awg_list = [7, 8])
+dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period=100,nsamples=2000, naverages=6000, awg_list = [7, 8])
 
 
 
@@ -133,7 +133,7 @@ SC_ref = instruments.create('SC_ref', 'SC5511A', devid= '10001C09')#qubit 2
 SS_drive = instruments.create('SS_drive', 'SC5511A', devid= '10001D2F')
 readout = instruments.create('readout', 'Readout_Info', IQe=(30.69-48.9j), IQg=(31.27-48.64j),
                              IQe_radius=1 , rfsource1='RObrick', rfsource2='SC_ref',
-                             pulse_len=2000, readout_chan='1m1', acq_chan='2m1')
+                             pulse_len=3000, readout_chan='1m1', acq_chan='2m1')
 
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 
@@ -224,7 +224,7 @@ mixer_info1 = instruments.create('mixer_info1', 'Qubit_Info',
                             channels='7,7',
                             sideband_channels='I5,Q5',
                             sideband_phase=0,
-                            w=2000,
+                            w=3000,
                             w_selective=200)
 
 SS_mixer_info1 = instruments.create('SS_mixer_info1', 'Qubit_Info',
@@ -246,7 +246,7 @@ mixer_info2 = instruments.create('mixer_info2', 'Qubit_Info',
                             channels='8,8',
                             sideband_channels='I6,Q6',
                             sideband_phase=0,
-                            w=2000,
+                            w=3000,
                             w_selective=200)
 
 SS_mixer_info2 = instruments.create('SS_mixer_info2', 'Qubit_Info',

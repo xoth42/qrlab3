@@ -71,7 +71,7 @@ if 0: # test digitizer
     
 if 0: # test digitizer DEMODULATED
     dig = mclient.instruments['dig']
-    avgs = dig.test_dig_demod(1500, 40000)
+    avgs = dig.test_dig_demod(6500, 10000)
     print(np.shape(avgs))
     plt.figure()
     plt.plot(np.real(avgs), label = 'real')
@@ -511,7 +511,7 @@ if 0: # SSB spec with lorentzian fit
     width = spec.width
     bla
 
-if 1: #ssb with stark shift with mixer with gaussian fit
+if 0: #ssb with stark shift with mixer with gaussian fit
     from single_qubit import stark_shift_with_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
     phase1 = 0
@@ -526,7 +526,7 @@ if 1: #ssb with stark shift with mixer with gaussian fit
         seq = sequencer.Trigger(600)
 #        seq = Join([seq, qubit2_info.rotate(np.pi/2, X_AXIS)])
         spec = stark_shift_with_mixer.Stark_shift_with_mixer(qubit2_info, mixer_info1,mixer_info2, SS_mixer_info1, SS_mixer_info2,
-                                                             phase1, np.linspace(-30e6, 15e6, 101), seq=seq, plot_seqs=False ,
+                                                             phase1, np.linspace(-15e6, 15e6, 101), seq=seq, plot_seqs=False ,
                                                              proj_func='phase')
         spec.measure_keysight()
 #        plt.close()
@@ -924,7 +924,7 @@ if 0: # T1 mixer
 #                          ef_info.rotate(np.pi, 0), sequencer.Constant(4000, 1, chan='3m1'), sequencer.Delay(250)])
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
 
-    t1 = T1measurement_mixer.T1Measurement_mixer(qubit2_info, mixer_info2, #np.linspace(0, 500e3, 101),
+    t1 = T1measurement_mixer.T1Measurement_mixer(qubit2_info, mixer_info1,mixer_info2, #np.linspace(0, 500e3, 101),
                                          np.linspace(0e3, 30e3, 101),
 #                                         np.concatenate((np.linspace(5e3, 5e3, 50), np.linspace(6e3, 6e3, 51))),
                                          double_exp=False, generate=True, plot_seqs=False, proj_func='phase', seq=None)    
@@ -972,7 +972,19 @@ if 0: #T2 mixer
         
         t2.measure_keysight()
     bla
+if 1: #ramsey mixer
+    from single_qubit import ramsey_measurement
+#    seq = sequencer.Join([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0)])
+    for i in range(1):
+        t2 = ramsey_measurement.Ramsey_Measurement_mixer(qubit2_info, SS_mixer_info1, mixer_info1,mixer_info2, np.linspace(0, 0.1e3, 101),
+                                                         detune=80e6, double_freq=False, generate=True, 
+                                                         seq=None, postseq=None, proj_func='phase', plot_seqs = False) #extra_info=[qubit2_info])
+#        t2 = T2measurement.T2Measurement(qubit_info, np.concatenate((np.linspace(0.1e3, 2.6e3, 81), np.linspace(2.61e3, 10e3, 81))), detune=0.5e6, double_freq=False, generate=True, 
+#                                         seq=seq, extra_info=ef_info, postseq=None, proj_func='phase')
 
+        
+        t2.measure_keysight()
+    bla
 if 0: # Ramsey qubit 2 rabi sweep
     from single_qubit import T2measurementforramsey
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])

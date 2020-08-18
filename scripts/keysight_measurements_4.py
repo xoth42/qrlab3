@@ -240,9 +240,9 @@ if 0: #Multiple times SSB spec
 if 0: # Calibrate pi pulse
     from single_qubit import rabi
     tr = rabi.Rabi(qubit_info, 
-#                   np.linspace(-.9, .9, 51), selective=False,
-                   np.linspace(-.6, .6, 51), selective=.5,
-#                  np.linspace(-0.02, 0.02, 51), selective=True,
+#                   np.linspace(-1, 1, 51), selective=False,
+#                   np.linspace(-.1, .1, 51), selective=.5,
+                  np.linspace(-0.01, 0.01, 51), selective=True,
 #                   np.linspace(0.7, .9, 51), selective=False,
 #                   np.linspace(0.45, 0.52, 51), selective=False,
                    plot_seqs=False, generate=True, repeat_pulse=1, update=False, seq=None)
@@ -324,7 +324,7 @@ if 0: # EF rabi for calibration
     efr = efrabi.EFRabi(qubit_info, ef_info, 
 #                   np.linspace(-0.9, 0.9, 51), selective=False,
                    np.linspace(-0.02, 0.02, 51), selective=True,
-#                   np.linspace(0.5, 1, 51), selective=False,
+#                   np.linspace(0.4, .6, 51), selective=False,
 #                   np.linspace(0.45, 0.52, 51), selective=False,
                         repeat_pulse=1, generate=True, postseq = None, update=True)
     efr.measure_keysight()

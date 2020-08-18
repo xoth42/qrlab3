@@ -89,10 +89,9 @@ params.add('g',value = -0.077, vary = vary_params)
 data = np.loadtxt('C:\Users\WangLab\Documents\yingying\cavity freqs and kappas.txt')
 #data = np.loadtxt('C:\Users\WangLab\Documents\yingying\\0317cooldown_cavity freqs and kappas.txt')
 #data = np.loadtxt('C:\Users\WangLab\Documents\yingying\\0317cooldown_S21 cavity freqs and kappas.txt')
-<<<<<<< HEAD
+
 data = np.loadtxt('C:\Users\Wang_Lab\Documents\yingying\\0626_cooldown_circulator_data\\cavity freqs and kappas.txt')
-=======
->>>>>>> 69f5acc6765657e08e8dfa29bf38f7e98068f81c
+
 data = data*1e9
 bad_data_i = 0
 bad_data_f = 0

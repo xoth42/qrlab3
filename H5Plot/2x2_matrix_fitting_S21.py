@@ -5,20 +5,6 @@ Created on Fri Aug  7 13:57:28 2020
 @author: Wang_Lab
 """
 
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Aug  4 15:21:40 2020
-
-@author: Wang_Lab
-"""
-
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Aug  3 19:01:25 2020
-
-@author: svgwi
-"""
-
 
 import os
 import time
