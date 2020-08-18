@@ -166,9 +166,9 @@ def pi2_amp_tune(gate_info, range, repeat_pulse):
 
 #Checking how well the single qubit gates are doing    
 
-if 1:
+if 0:
     
-#    qubit1_gate_check(0.08, 1.06, -1.06)  #correct this
+    qubit1_gate_check(0.08, 1.06, 1.06)  #correct this
     qubit2_gate_check(0.3, np.linspace(0, 150, 151))
     bla
 #ramsey?
@@ -184,12 +184,12 @@ if 0:  #change range +- the current value
 
     
 #Single qubit tune up for qubit1:
-if 1: #this one is still using the qubit_info objects since it runs a detuned sum - gaussian 
-    detuning_qubit1(0.079,4.452, 1.004, np.linspace(0,300,31),np.linspace(-5e6, 5e6, 11) , control_pi=True)
+if 0: #this one is still using the qubit_info objects since it runs a detuned sum - gaussian 
+#    detuning_qubit1(0.079,4.452, 1.004, np.linspace(0,300,31),np.linspace(-5e6, 5e6, 11) , control_pi=True)
     #driving from 5/6 with control in g and e:
-    CX_timerabis(np.linspace(0,-0.8,1), gate_info1, gate_info2 ,np.linspace(0,300,151), 0.08, 0.000, 0, all_axis=False, swap_chs = False)
+    CX_timerabis(np.linspace(0,-0.8,1), gate_info1, gate_info2 ,np.linspace(0,200,151), 0.077613, 0.000, 0, all_axis=False, swap_chs = False)
 #    #driving from 9/10 with control in g and e:
-    CX_timerabis(np.linspace(0,-0.8,1), gate_info1, gate_info2,np.linspace(0,300,151), 0.36, 0.000, 0, all_axis=False, swap_chs = True)
+    CX_timerabis(np.linspace(0,-0.8,1), gate_info1, gate_info2,np.linspace(0,200,151), 0.354502, 0.000, 0, all_axis=False, swap_chs = True)
 
 
 #    #calculation will go in here  + I CAN'T SEE WHERE IT GETS THE PI TIME FROM, IT IS NOT EXACTLY PERIOD/2??

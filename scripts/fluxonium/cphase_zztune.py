@@ -32,12 +32,12 @@ class cphase_zztune(Measurement2D):
 
 #The purpose here is to sweep over time and detuning for the combined pulse without the pi pulse on the control qubit
 
-    def __init__(self, ZZ_info, offset_info, qubit_info, qubit2_info, times, detunings, amp=0.35, phase=0,  sigma=5, update=False, seq=None, r_axis=0, fix_phase=True,
+    def __init__(self, ZZ_info, offset_info, gate_info1, gate_info2, times, detunings, amp=0.35, phase=0,  sigma=5, update=False, seq=None, r_axis=0, fix_phase=True,
                  fix_period=None, repeat_pulse=1, postseq=None, selective=False,  **kwargs):
         self.ZZ_info = ZZ_info
         self.offset_info = offset_info
-        self.qubit_info = qubit_info
-        self.qubit2_info = qubit2_info
+        self.gate_info1 = gate_info1
+        self.gate_info2 = gate_info2
         self.times = times
 #        self.xs = np.array([times,times]).transpose().flatten() / 1e3      # For plotting purposes
         self.detunings = -detunings
@@ -64,7 +64,7 @@ class cphase_zztune(Measurement2D):
 
         npoints = self.two_axes.size
         
-        super(cphase_zztune, self).__init__(npoints, infos=(ZZ_info,offset_info, qubit_info, qubit2_info), **kwargs)
+        super(cphase_zztune, self).__init__(npoints, infos=(ZZ_info,offset_info, gate_info1, gate_info2), **kwargs)
         self.data.create_dataset('two_axes', data=self.two_axes, dtype=np.complex)
 
 
@@ -73,23 +73,29 @@ class cphase_zztune(Measurement2D):
         s = Sequence()
 #        ampI = self.amp * np.cos(self.phase)
 #        ampQ = self.amp * np.sin(self.phase)
-        ampIc = 0.008
-        ampQc = -0.0713
+#        ampIc = 0.008
+#        ampQc = -0.0713
         chs = self.ZZ_info.sideband_channels
-        chs2 = self.offset_info.sideband_channels
+        ampI = self.amp * np.cos(0)
+        ampQ = self.amp * np.sin(0)
+
+#        chs2 = self.offset_info.sideband_channels
             
         for df in self.detunings:
             for plen in self.times:
                 
                 s.append(self.seq)    
                 
-                g1 = DetunedGaussSquare(int(plen), self.sigma, chs)
-#                g1 = DetunedSum(self.qubit_info.rotate_selective.base, self.qubit_info.w_selective, chans=self.qubit_info.sideband_channels)
-                if df != 0:
-                    period = 1e9 / df
-                else:
-                    period = 1e50
-                g1.add(self.amp, period)
+#                g1 = DetunedGaussSquare(int(plen), self.sigma, chs)
+##                g1 = DetunedSum(self.gate_info1.rotate_selective.base, self.gate_info1.w_selective, chans=self.gate_info1.sideband_channels)
+#                if df != 0:
+#                    period = 1e9 / df
+#                else:
+#                    period = 1e50
+#                g1.add(self.amp, period)
+
+                g1= Combined([GaussSquare(int(plen), ampI, self.sigma, chan=chs[0]),
+                              GaussSquare(int(plen), ampQ, self.sigma, chan=chs[1])])                   
                     
 #                g2 = Combined([Constant((int(plen)+self.sigma*3), ampIc, chan=chs2[0]), 
 #                               Constant((int(plen)+self.sigma*3), ampQc, chan=chs2[1])])
@@ -98,26 +104,27 @@ class cphase_zztune(Measurement2D):
 #WHY THIS DOESN'T WORK WHEN I REPEAT s.append(Combined([g1(),g2]))
 
                 
-                g3 = DetunedGaussSquare(int(plen), self.sigma, chs)
-#                g1 = DetunedSum(self.qubit_info.rotate_selective.base, self.qubit_info.w_selective, chans=self.qubit_info.sideband_channels)
-                if df != 0:
-                    period = 1e9 / df
-                else:
-                    period = 1e50
-                g3.add(self.amp, period)
-                    
-                g4 = Combined([Constant((int(plen)+self.sigma*3), ampIc, chan=chs2[0]), 
-                               Constant((int(plen)+self.sigma*3), ampQc, chan=chs2[1])])
+#                g3 = DetunedGaussSquare(int(plen), self.sigma, chs)
+##                g1 = DetunedSum(self.gate_info1.rotate_selective.base, self.gate_info1.w_selective, chans=self.gate_info1.sideband_channels)
+#                if df != 0:
+#                    period = 1e9 / df
+#                else:
+#                    period = 1e50
+#                g3.add(self.amp, period)
+#                    
+#                g4 = Combined([Constant((int(plen)+self.sigma*3), ampIc, chan=chs2[0]), 
+#                               Constant((int(plen)+self.sigma*3), ampQc, chan=chs2[1])])
 
-                s.append(self.qubit_info.rotate(np.pi/2,0))
-                s.append(g1())
-                s.append(Combined([self.qubit2_info.rotate(np.pi,0), self.qubit_info.rotate(np.pi,0)]))
+                s.append(self.gate_info1.rotate(np.pi/2,0))
+                s.append(g1)
+                s.append(Combined([self.gate_info2.rotate(np.pi,0), self.gate_info1.rotate(np.pi,0)]))
 #                s.append(Combined([g3(),g4]))
-                s.append(g3())
-                s.append(self.qubit_info.rotate(np.pi/2,0))
+                s.append(g1)
+                s.append(self.gate_info1.rotate(np.pi/2,0))
 
-#                s.append(self.qubit_info.rotate(np.pi/2,0))
+#                s.append(self.gate_info1.rotate(np.pi/2,0))
 #                s.append(Combined([g1(),g2]))
+#                s.append(self.gate_info2.rotate(np.pi,0))
                     
                 if self.postseq:
                     s.append(self.postseq)

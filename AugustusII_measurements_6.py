@@ -45,13 +45,13 @@ qubit2_info2 = mclient.get_qubit_info('qubit2ge_2')
 
 
 
-if 0: # RO Cavity spec
+if 1: # RO Cavity spec
     from scripts.single_cavity import rocavspectroscopy
 #    rofreq = 7515.5e6
     rofreq = 7564.6e6
-    freq_range = 10e6
-    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(5, 7, 2),
-                                         np.linspace(rofreq - freq_range, rofreq + freq_range, 51), qubit_pulse=False)
+    freq_range = 15e6
+    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(5, 10, 1),
+                                         np.linspace(rofreq - freq_range, rofreq + freq_range, 61), qubit_pulse=False)
     ro.measure()
     bla
     
