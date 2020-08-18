@@ -20,7 +20,7 @@ from mclient import instruments
 #
 instruments.remove('dig')
 
-dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period=100,nsamples=1500, naverages=6000, awg_list = [7, 8])
+dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period=100,nsamples=2000, naverages=6000, awg_list = [7, 8])
 
 
 
@@ -133,22 +133,22 @@ SC_ref = instruments.create('SC_ref', 'SC5511A', devid= '10001C09')#qubit 2
 SS_drive = instruments.create('SS_drive', 'SC5511A', devid= '10001D2F')
 readout = instruments.create('readout', 'Readout_Info', IQe=(30.69-48.9j), IQg=(31.27-48.64j),
                              IQe_radius=1 , rfsource1='RObrick', rfsource2='SC_ref',
-                             pulse_len=2000, readout_chan='1m1', acq_chan='2m1')
+                             pulse_len=3000, readout_chan='1m1', acq_chan='2m1')
 
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 
-                             deltaf=98.8e6,
+                             deltaf=99.3e6,
                               pi_amp=0.4325,#0.404,  # 0.1594,
                               pi2_amp=0,
                               drag=0,
                               pi_amp_quasilective=0.9,
-                              pi_amp_selective=0.2387,
+                              pi_amp_selective=0.0633,
                               rotation='Gaussian',
                               rotation_selective = 'Square',
                               w=5,
 
                               w_quasilective=100,
-                              w_selective=10,
+                              w_selective=80,
                               channels='3,4',
                               sideband_channels='I1,Q1',
                               sideband_phase=0)
@@ -169,12 +169,12 @@ qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
 qubit2ge = instruments.create('qubit2ge', 'Qubit_Info',
 
                              deltaf=190.5e6,
-                              pi_amp=0.23,
+                              pi_amp=0.265,
 #                             pi_amp = 0.742,
                               pi2_amp=0,
                               drag=0,
                               pi_amp_quasilective=0.9,
-                              pi_amp_selective=0.2637,
+                              pi_amp_selective=0.323,
                               rotation='Gaussian',
                               rotation_selective = 'Square',
                               w=40,
@@ -224,40 +224,40 @@ mixer_info1 = instruments.create('mixer_info1', 'Qubit_Info',
                             channels='7,7',
                             sideband_channels='I5,Q5',
                             sideband_phase=0,
-                            w=2000,
+                            w=3000,
                             w_selective=200)
 
 SS_mixer_info1 = instruments.create('SS_mixer_info1', 'Qubit_Info',
-                            deltaf=-100e6,
+                            deltaf=-94.35e6,
                             pi_amp=0.7,
                             pi_amp_selective=0.01,
                             rotation='Square',
                             channels='7,7',
                             sideband_channels='I7,Q7',
                             sideband_phase=0,
-                            w=100,
+                            w=300,
                             w_selective=200)
 
 mixer_info2 = instruments.create('mixer_info2', 'Qubit_Info',
                             deltaf=-100e6,
-                            pi_amp=0.7,
+                            pi_amp=0,
                             pi_amp_selective=0.01,
                             rotation='Square',
                             channels='8,8',
                             sideband_channels='I6,Q6',
                             sideband_phase=0,
-                            w=2000,
+                            w=3000,
                             w_selective=200)
 
 SS_mixer_info2 = instruments.create('SS_mixer_info2', 'Qubit_Info',
-                            deltaf=-100e6,
-                            pi_amp=0.7,
+                            deltaf=-94.35e6,
+                            pi_amp=0,
                             pi_amp_selective=0.01,
                             rotation='Square',
                             channels='8,8',
                             sideband_channels='I8,Q8',
                             sideband_phase=0,
-                            w=100,
+                            w=300,
                             w_selective=200)
 
 #IQ_readout_info = instruments.create('IQ_read_out_info','IQ_readout_info',

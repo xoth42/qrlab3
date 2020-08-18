@@ -132,12 +132,14 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, ax=None):
 
 class ROCavSpectroscopy_keysight_mixer_cw(Measurement1D):
 
-    def __init__(self, qubit_info, mixer_info, powers, freqs, plot_type=None, qubit_pulse=False, seq=None,  **kwargs):
+    def __init__(self, qubit_info, mixer_info, mixer_info2, phase, powers, freqs, plot_type=None, qubit_pulse=False, seq=None,  **kwargs):
         self.qubit_info = qubit_info
         self.freqs = freqs
         self.powers = powers
         self.qubit_pulse = qubit_pulse 
         self.mixer_info = mixer_info
+        self.mixer_info2 = mixer_info2
+        self.phase = phase
         if seq is None:
             seq = Trigger(250)
         self.seq = seq
@@ -150,7 +152,7 @@ class ROCavSpectroscopy_keysight_mixer_cw(Measurement1D):
                 plot_type = SPEC
         self.plot_type = plot_type
 
-        super(ROCavSpectroscopy_keysight_mixer_cw, self).__init__(1, infos=(qubit_info,mixer_info), **kwargs)
+        super(ROCavSpectroscopy_keysight_mixer_cw, self).__init__(1, infos=(qubit_info,mixer_info,mixer_info2), **kwargs)
         self.data.create_dataset('powers', data=powers)
         self.data.create_dataset('freqs', data=freqs)
         self.ampdata = self.data.create_dataset('amplitudes', shape=(len(powers),len(freqs)))
@@ -185,13 +187,15 @@ class ROCavSpectroscopy_keysight_mixer_cw(Measurement1D):
                 Join([Delay(1000),Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(1200)]),
     #            Join([Delay(100),self.mixer_info.rotate(np.pi, 0),Delay(200)])
                 Join([Delay(1100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(1200)]),
+                Join([Delay(1100),Constant(self.readout_info.pulse_len, self.mixer_info2.pi_amp, chan=self.mixer_info2.channels[0]),Delay(1200)]),
                 Constant(self.readout_info.pulse_len + 2300, cw_amp, chan=self.qubit_info.sideband_channels[0])
             ]))
         else:
             s.append(Combined([
                 Join([Delay(1300),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),Delay(1000)]),
                 Join([Delay(1000),Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(1200)]),
-                Join([Delay(1100),self.mixer_info.rotate(np.pi, 0),Delay(1200)]),
+                Join([Delay(1100),self.mixer_info.rotate(np.pi, self.phase),Delay(1200)]),
+                Join([Delay(1100),self.mixer_info2.rotate(np.pi, 0),Delay(1200)]),
                 Constant(self.readout_info.pulse_len + 2300, cw_amp, chan=self.qubit_info.sideband_channels[0])
 #                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
             ]))            
