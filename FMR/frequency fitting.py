@@ -64,20 +64,21 @@ def TwoModesFitting(params, fields, ws):
 
 
 params = lmfit.Parameters()
-vary_params = True
-params.add('wa', value=10.8056, vary = vary_params)
-params.add('wb', value=10.811, vary = vary_params)
-params.add('wai', value=0.00, vary = False)
-params.add('wbi', value=0, vary = False)
-params.add('wp', value=10.722, vary = vary_params)#,vary = False)
-params.add('wn', value=10.8, vary = vary_params)#,max= 11.5,min = 10.9)
-params.add('wni', value=0.1, vary = vary_params)
-params.add('ga', value=0.03, vary = vary_params)
+vary_params = False
+params.add('wa', value=10.8055980, vary = vary_params)
+params.add('wb', value=10.8110259, vary = vary_params)
+params.add('wai', value=.00001, vary = False)
+params.add('wbi', value=.00001, vary = False)
+params.add('wp', value=10.7226776, vary = vary_params)#,vary = False)
+params.add('wn', value=10.8003602, vary = vary_params)#,max= 11.5,min = 10.9)
+params.add('wni', value=0.09718445, vary = vary_params)
+params.add('ga', value=0.03038315, vary = vary_params)
 #params.add('gb', value=0.02)
-params.add('ga2', value=0.009, vary = vary_params)
+params.add('ga2', value=0.00890035, vary = vary_params)
 #params.add('gb2', value=0.008)
 params.add('k', value = 8,vary = False)
-params.add('g',value = -0.077, vary = vary_params)
+params.add('g',value = -0.07407939, vary = vary_params)
+
 
 #omega_c = freq1[0]
 #omega_c2 = freq2[0]
@@ -86,7 +87,7 @@ params.add('g',value = -0.077, vary = vary_params)
 
 #data = np.concatenate((omega_c/1e9, omega_c2/1e9,kappa_a/1e9,kappa_a2/1e9))
 #data = np.concatenate((freq1[0], freq2[0]))
-data = np.loadtxt('C:\Users\WangLab\Documents\yingying\cavity freqs and kappas.txt')
+#data = np.loadtxt('C:\Users\Wang_Lab\Documents\yingying\cavity freqs and kappas.txt')
 #data = np.loadtxt('C:\Users\WangLab\Documents\yingying\\0317cooldown_cavity freqs and kappas.txt')
 #data = np.loadtxt('C:\Users\WangLab\Documents\yingying\\0317cooldown_S21 cavity freqs and kappas.txt')
 
