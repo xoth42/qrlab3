@@ -65,7 +65,7 @@ if 0: # Cavity disp calibration
 #for i in range(5):
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
 #    dig.set_trigger_period(5000)
-    disp = cavdisp.CavDisp(qubit_info, cavity_infoB, 2.5, 41, 0, seq=None,
+    disp = cavdisp.CavDisp(qubit_info, cavity_infoB, 2, 41, 0, seq=None,
                            delay=0, bgcor=True, update=True, generate=True,
                            plot_seqs = False
 #                           Qswitch_infoA=Qswitch_infoB, Qswitch_infoB=Qswitch_infoB,
@@ -81,7 +81,7 @@ if 0: # Cavity T1
 #    xs = np.concatenate((np.linspace(0e3, 50e3, 26), np.linspace(60e3, 1250e3, 55)))
 
     t1 = cavT1.CavT1(qubit_info, cavity_infoB, 1.0, np.linspace(1e3, 1500e3, 51),
-                     proj_num=0, seq=None, postseq=None, bgcor=False, force_a0 = True
+                     proj_num=0, seq=None, postseq=None, bgcor=True, force_a0 = True
 #                     extra_info=[ef_info,]
                      )
     t1.measure_keysight()
@@ -360,7 +360,7 @@ if 1: # Wigner function by displaced parity for cavity B
 
     
     Wfun = WignerbyParity.WignerFunction(qubit_info, ef_info, cavity_infoB,
-                                         xs = np.linspace(-1.8,1.8,11), ys = np.linspace(-1.3,1.3,7),
+                                         xs = np.linspace(-1.8,1.8,17), ys = np.linspace(-1.3,1.3,13),
                                          t_ge=70, t_gf=0,
                                          seq=seq, delay=5, bgcor=True, zmax=100, zmin=-100, 
                                          extra_info = None)

@@ -55,8 +55,8 @@ qubit1ge_2 = instruments.create('qubit1ge_2', 'Qubit_Info',
                               sideband_phase=-0.22)
 
 sq_gate1 = instruments.create('sq_gate1', 'Gate_Info',
-                              deltaf=228480000,
-                              pi_amp=0.075811, 
+                              deltaf=227440449.5,
+                              pi_amp=0.075176, 
                               pi2_amp=0.03753,
                               drag=-0.075,
                               sq_len=12,
@@ -69,8 +69,8 @@ sq_gate1 = instruments.create('sq_gate1', 'Gate_Info',
                               channels2='9,10',
                               sideband_channels2='I12,Q12',
                               sideband_phase2=-0.22,
-                              relative_amp=1.06,
-                              relative_phase=-0.433
+                              relative_amp=1,
+                              relative_phase=-0.421
                               )
 #
 #zx90_gate = instruments.create('zx90_gate', 'Gate_Info',
@@ -178,8 +178,8 @@ cancel_gate = instruments.create('cancel_gate', 'Gate_Info',
 
 
 sq_gate2 = instruments.create('sq_gate2', 'Gate_Info',
-                              deltaf=-373800000,
-                              pi_amp=0.314629,
+                              deltaf=-373980763.7,
+                              pi_amp=0.313739726839,
                               pi2_amp=0.1579,
                               drag=-0.3,
                               rotation='GaussianSquare',
@@ -206,7 +206,7 @@ ZZ_info = instruments.create('ZZ_info', 'Gate_Info',
                               chop=3,
                               channels='11,12',
                               sideband_channels='I21,Q21',
-                              sideband_phase=1,
+                              sideband_phase=-0.2,
                               channels2='7,8',
                               sideband_channels2='I22,Q22',
                               sideband_phase2=-0.22,
