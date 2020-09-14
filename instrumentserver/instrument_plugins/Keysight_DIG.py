@@ -482,20 +482,20 @@ class Keysight_DIG(Instrument):
         if any(error < 0 for error in errors):
             print('setup_experiment errors: ', errors)
         
-    def take_experiment(self, avg_buf=None, IQ_e=None, e_radius=None):
+    def take_experiment(self, avg_buf=None, ste_buf=None, IQ_e=None, e_radius=None):
         samples_per_transfer = self._naverages *  self._npoints * self._nsamples / self._ntransfers
         acq_per_transfer = self._naverages *  self._npoints / self._ntransfers
-#        signal = np.zeros(samples_per_transfer, dtype = np.complex64)
-#        ref = np.zeros_like(signal)
+
         avgs = np.zeros(self._npoints, dtype = np.complex64)
+        values = np.zeros((self._npoints, self._naverages), dtype = np.complex64)
                 
         self._capturing = True 
         self.set_interrupt(False)
         self.emit('start-capture')
         for i in range(self._ntransfers):
 #            print('Acquiring %d/%d', i+1, self._ntransfers)
-            logging.info('%d/%d averages performed', (i+1)*self._naverages/self._ntransfers, self._naverages)
-            self.emit('capture-progress', (i+1)*self._naverages/self._ntransfers)
+            logging.info('%d/%d averages performed', (i)*self._naverages/self._ntransfers, self._naverages)
+            self.emit('capture-progress', (i)*self._naverages/self._ntransfers)
             
             if self._interrupt:
                 logging.info('Capture interrupted')
@@ -527,13 +527,18 @@ class Keysight_DIG(Instrument):
         
             for j in range(self._npoints):
                 for k in range(self._naverages / self._ntransfers):
-                    avgs[j] += np.mean(IQA[j + k*self._npoints,:]
-                                    * refs[j + k*self._npoints])
+                    temp = np.mean(IQA[j + k*self._npoints,:] * refs[j + k*self._npoints])
+                    avgs[j] += temp
+                    values[j, i*self._naverages / self._ntransfers + k] = temp
                     
             if avg_buf:
                 self.update_averages(avg_buf, avgs, (i+1) * self._naverages / self._ntransfers)
-            
-        return avgs/self._naverages
+           
+        stes = np.std(values, axis = 1)/np.sqrt(self._naverages-1)
+        if ste_buf:
+            self.update_stes(ste_buf, stes, self._naverages)        
+        
+        return avgs/self._naverages, stes
     
     def test_dig(self, nsamples, npoints, naverages, ntransfers, captureDelay = 0, digScale = 2):
         digChannels = [1, 2] 
@@ -673,6 +678,17 @@ class Keysight_DIG(Instrument):
             print(IQ_sum.shape, n, avg_buf.shape)
             print(avg_buf[:].shape)
             msg = 'Unable to store averages: %s' % str(e)
+            logging.warning(msg)
+            raise Exception(msg)
+   
+    def update_stes(self, ste_buf, stes, n):
+        try:
+            ste_buf[:] = stes
+            ste_buf.set_attrs(averages=n)
+        except Exception, e:
+            print(stes.shape, n, ste_buf.shape)
+            print(ste_buf[:].shape)
+            msg = 'Unable to store standard errors: %s' % str(e)
             logging.warning(msg)
             raise Exception(msg)
     

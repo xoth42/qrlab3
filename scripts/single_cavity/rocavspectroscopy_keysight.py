@@ -97,7 +97,7 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, square_amp
             os.makedirs(fdir)
         kwargs = dict()
         plt.savefig(fn, **kwargs)
-        return p
+        return result
     if plot_type == POWER:
 #        ax1 = f.add_subplot(2,1,1)
 #        ax2 = f.add_subplot(2,1,2)
