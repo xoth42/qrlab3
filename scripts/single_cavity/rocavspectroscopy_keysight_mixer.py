@@ -156,6 +156,7 @@ class ROCavSpectroscopy_keysight_mixer(Measurement1D):
         if self.qubit_pulse:
 #            s.append(Delay(2000))
             s.append(self.qubit_info.rotate(np.pi, 0))
+            s.append(Delay(400))
 #            s.append(Join([
 #                self.seq,
 #                self.qubit_info.rotate(np.pi, 0),
