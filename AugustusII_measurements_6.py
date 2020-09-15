@@ -45,13 +45,13 @@ qubit2_info2 = mclient.get_qubit_info('qubit2ge_2')
 
 
 
-if 0: # RO Cavity spec
+if 1: # RO Cavity spec
     from scripts.single_cavity import rocavspectroscopy
 #    rofreq = 7515.5e6
     rofreq = 7564.6e6
-    freq_range = 10e6
-    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(5, 7, 2),
-                                         np.linspace(rofreq - freq_range, rofreq + freq_range, 51), qubit_pulse=False)
+    freq_range = 15e6
+    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(5, 10, 1),
+                                         np.linspace(rofreq - freq_range, rofreq + freq_range, 61), qubit_pulse=False)
     ro.measure()
     bla
     
@@ -423,7 +423,7 @@ if 0: # T1
 #        plt.close()
     bla
 
-if 0: # T2
+if 1: # T2
     from scripts.single_qubit import T2measurement
     cool = sequencer.Constant(int(4e3),1,chan='3m1')
     seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
@@ -431,7 +431,7 @@ if 0: # T2
 #        coolgen.set_rf_on(True)
 #    
     #    for i in range(1):
-        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 1e3, 81), detune=8e6, double_freq=False, 
+        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 2e3, 81), detune=2e6, double_freq=False, 
                                          generate=True, postseq=None,extra_info =qubit_info,
                                              proj_func='phase', seq=seq_cool)
         t2.measure()

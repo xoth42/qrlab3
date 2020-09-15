@@ -1,5 +1,3 @@
-
-
 import numpy as np
 import matplotlib.pyplot as plt
 from pulseseq.sequencer import *
@@ -8,6 +6,9 @@ from lib.math import fit
 from lmfit.models import LinearModel, LorentzianModel
 from measurement import Measurement1D
 import lmfit
+
+
+
 
 def Gaussfit(params, x, y):
     est = params['Amp'] * np.exp(-(x-params['freq'])**2/(2 * params['kappa']**2)) + params['off']
@@ -60,7 +61,7 @@ def analysis(meas, data=None, fig=None):
     fig.axes[0].set_xlabel('Detuning (MHz)')
     fig.axes[0].set_ylabel('Intensity (AU)')
     fig.canvas.draw()
-
+    return result.params
 
 #
 #        f = plt.figure()
@@ -84,19 +85,14 @@ def analysis(meas, data=None, fig=None):
 #            txt = 'Center = %.03f MHz' % (p[2]/1e6,)
 #            print 'Fit gave: %s' % (txt,)
 #            ax1.plot(fs/1e6, f.func(p, fs), label=txt)
-class Stark_shift_with_mixer(Measurement1D):
+class SSBSpec_Gaussianfit(Measurement1D):
 
-    def __init__(self, qubit_info, mixer_info, mixer_info2, SS_mixer_info1, SS_mixer_info2,phase1, detunings,damp_delay=0, seq=None, postseq=None, bgcor=False, coplay_delay=0, **kwargs):
+    def __init__(self, qubit_info, offset_info, detunings, seq=None, postseq=None, bgcor=False, coplay_delay=0, **kwargs):
         self.qubit_info = qubit_info
+        self.offset_info = offset_info
         if seq is None:
             seq = Trigger(250)
         self.seq = seq
-        self.SS_mixer_info1 = SS_mixer_info1
-        self.SS_mixer_info2 = SS_mixer_info2
-        self.damp_delay = damp_delay
-        self.phase1 = phase1
-        self.mixer_info = mixer_info
-        self.mixer_info2 = mixer_info2
         self.postseq = postseq
         self.detunings = -detunings
         self.xs = detunings / 1e6       # For plot
@@ -109,46 +105,19 @@ class Stark_shift_with_mixer(Measurement1D):
         npoints = len(detunings)
         if bgcor:
             npoints += 1
-        super(Stark_shift_with_mixer, self).__init__(npoints, residuals=False, infos=(qubit_info,mixer_info,SS_mixer_info1,mixer_info2,SS_mixer_info2,), **kwargs)
+        super(SSBSpec_Gaussianfit, self).__init__(npoints, residuals=False, infos=(qubit_info,), **kwargs)
         self.data.create_dataset('detunings', data=detunings)
 
     def generate(self):
         s = Sequence()
-        slope = .00513
-        if self.mixer_info.deltaf == 0:
-            
-            ro = (Combined([
-                Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
-                Join([Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),Delay(200)]),
-                Join([Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
-                Join([Constant(self.readout_info.pulse_len, self.mixer_info2.pi_amp, chan=self.mixer_info2.channels[0]),Delay(200)])
 
-            ]))
-        else:
-            ro = (Combined([
-                Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
-#                Join([Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),Delay(200)]),
-                Join([self.mixer_info.rotate(np.pi, 0),Delay(200)]),
-                Join([self.mixer_info2.rotate(np.pi, 0),Delay(200)])
+        chs2 = self.offset_info.sideband_channels
 
-            ]))
-        if self.SS_mixer_info1.deltaf == 0:
-            stark = (Combined([
-                Join([Constant(int(self.SS_mixer_info.w) + 100, 1, chan=self.readout_info.readout_chan)]),
-                Join([Delay(100),Constant(int(self.SS_mixer_info1.w), self.SS_mixer_info.pi_amp, chan=self.SS_mixer_info.channels[0])]),
-                Join([Delay(100),Constant(int(self.SS_mixer_info2.w), self.SS_mixer_info2.pi_amp, chan=self.SS_mixer_info2.channels[0])]),
+        ro =Combined([
+            Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
+            Join([Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+        ])
 
-            ]))
-        else:
-#            stark = (Combined([
-##                Constant(int(self.SS_mixer_info1.w) , 1, chan=self.readout_info.readout_chan),
-##                Join([Delay(100),Constant(int(self.SS_mixer_info.w), self.SS_mixer_info.pi_amp, chan=self.SS_mixer_info.sideband_channels[0])]),
-##                Join([Delay(100),Constant(int(self.SS_mixer_info2.w), self.SS_mixer_info2.pi_amp, chan=self.SS_mixer_info2.sideband_channels[0])]),
-#                Join([self.SS_mixer_info1.rotate(np.pi*np.exp(-slope*self.damp_delay), self.phase1),Delay(10)]),
-#                Join([self.SS_mixer_info2.rotate(np.pi, 0),Delay(10)])
-#            ]))
-            stark = Join([self.SS_mixer_info1.rotate(np.pi*np.exp(-slope*self.damp_delay), self.phase1),Delay(5)])
-#            stark = Join([self.SS_mixer_info1.rotate(np.pi, self.phase1),self.SS_mixer_info1.rotate(np.pi, self.phase1 +3.141)])
         if self.bgcor:
             plen = self.qubit_info.rotate_selective.base(np.pi, 0).get_length()
             s.append(Join([self.seq, Delay(plen), ro]))
@@ -162,14 +131,14 @@ class Stark_shift_with_mixer(Measurement1D):
                 period = 1e50
             g.add(self.qubit_info.pi_amp_selective, period)
 
+
+            g_square = Combined([Constant((self.qubit_info.w_selective*4), -0.008, chan=chs2[0]), 
+                               Constant((self.qubit_info.w_selective*4), 0.0713, chan=chs2[1])])
+
             s.append(Join([
                 self.seq,
-                stark,
                 g(),
             ]))
-#            s.append(self.seq)
-#            s.append(stark)
-#            s.append(g())
 
             if self.postseq:
                 s.append(self.postseq)
@@ -183,10 +152,11 @@ class Stark_shift_with_mixer(Measurement1D):
     
 
     def get_ys(self, data=None):
-        ys = super(Stark_shift_with_mixer, self).get_ys(data)
+        ys = super(SSBSpec_Gaussianfit, self).get_ys(data)
         if self.bgcor:
             return ys[1:] - ys[0]
         return ys
 
     def analyze(self, data=None, fig=None):
-        analysis(self, data, fig)
+        self.fit_params = analysis(self, data, fig)
+        return self.fit_params['freq']

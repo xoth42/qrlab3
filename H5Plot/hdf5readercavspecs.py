@@ -56,23 +56,36 @@ def S21_three_modes(params, x, y):
 
 ''' Path to the .hdf5 file '''
 filepath = 'C:/_Data/'
-hdf5_name = '0626cooldown_circualtor - Copy (2).hdf5'
-date = '20200717'
-experiment = 'ROCavSpectroscopy_keysight'
+hdf5_name = '0626cooldown_circualtor_VNA - Copy.hdf5'
+date = '20200629'
+#experiment = 'ROCavSpectroscopy_keysight'
+experiment = 'Power_Sweep_VNA'
 f = h5.File(filepath + hdf5_name, 'r')
-j = 0
+j = 19
 #
 three_modes = False
 two_modes = True
 
-fields = np.linspace(0,0.05,6)
-nrows = 2
+fields = np.linspace(0,-0.05,26)
+nrows = 1
 if two_modes:
     if j == 0:
         freq1 = np.zeros([nrows,len(fields)])
         freq2 = np.zeros([nrows,len(fields)])
         freq1_err = np.zeros([nrows,len(fields)])
         freq2_err = np.zeros([nrows,len(fields)])
+        kappa_a_ = np.zeros([nrows,len(fields)])
+        kappa_a2_ = np.zeros([nrows,len(fields)])
+        kappa_a_err_ = np.zeros([nrows,len(fields)])
+        kappa_a2_err_ = np.zeros([nrows,len(fields)])
+        kappa_prod1_ = np.zeros([nrows,len(fields)])
+        kappa_prod2_ = np.zeros([nrows,len(fields)])
+        kappa_prod1_err_ = np.zeros([nrows,len(fields)])
+        kappa_prod2_err_ = np.zeros([nrows,len(fields)])
+        phi1_ = np.zeros([nrows,len(fields)])
+        phi21_ = np.zeros([nrows,len(fields)])
+        phi1_err_ = np.zeros([nrows,len(fields)])
+        phi21_err_ = np.zeros([nrows,len(fields)])
 if three_modes:
     if j == 0:
         freq1 = np.zeros([nrows,len(fields)])
@@ -85,7 +98,7 @@ if three_modes:
 for i, title in enumerate(f[date].keys()):
 #    print int(title[0:6])
 #    print int(title[0:6]) <= 020617
-    if int(title[0:6]) <= int('181500') and int(title[0:6]) > int('174400') and title[7:12] =='ROCav':
+    if int(title[0:6]) <= int('110625') and int(title[0:6]) > int('080000') and title[7:12] == 'Power':# and title[7:12] =='ROCav':
         print title
 
 
@@ -97,17 +110,22 @@ for i, title in enumerate(f[date].keys()):
         
             
         freqs = exp[x_key].value
-        amp = exp['amplitudes'].value[0]
-        phase = exp['phases'].value[0]
+#        amp = exp['amplitudes'].value[0]
+#        phase = exp['phases'].value[0]
+#        
+##        freqs = freqs[40:100]
+##        amp = amp[40:100]
+##        phase = phase[40:100]
+#        datas = amp * np.exp(1j * phase *np.pi/180)
+        imag_data = exp['imaginaryS21']
+        real_data = exp['realS21']
+        datas = real_data[0] + 1j*imag_data[0]
+        amp = abs(datas)
+        phase = np.angle(datas)*(360/(2*np.pi))
         
-#        freqs = freqs[40:100]
-#        amp = amp[40:100]
-#        phase = phase[40:100]
-        datas = amp * np.exp(1j * phase *np.pi/180)
-            
         fig = pl.figure()
         fig.add_subplot(131)
-        fig.axes[0].plot(freqs/1e6,amp,label = '-6dB')
+        fig.axes[0].plot(freqs/1e6,amp,label = '-40dB')
         fig.add_subplot(132)
 #        fig.axes[1].plot(freqs/1e6,phase)
         params = lmfit.Parameters()
@@ -122,20 +140,21 @@ for i, title in enumerate(f[date].keys()):
         
         if two_modes:    
             params = lmfit.Parameters()
-            params.add('kappa_prod1', value= 3.28e12, min = 0)#,vary = False)
-            params.add('omega_c', value=10.808e9)#,vary = False)
-            params.add('kappa_a', value=2e6, min = 0)#,vary = False)
+            params.add('kappa_prod1', value= 8.97e8, min = 0)#,vary = False)
+            params.add('omega_c', value=10.806e9)#,vary = False)
+            params.add('kappa_a', value=2.6e6, min = 0)#,vary = False)
             if np.max(np.abs(datas)) < limit_for_off:
                 params.add('roff',value =(datas[0].real+ datas[-1].real)/2)
                 params.add('ioff',value = (datas[0].imag+ datas[-1].imag)/2)
-            params.add('phi1',value = 1.15, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
+            params.add('phi1',value = -.67, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
                     
             
-            params.add('kappa_prod2', value= 6.185e14, min = 0)#,vary = False)
-            params.add('omega_c2', value=10.83e9)#,vary = False)
-            params.add('kappa_a2', value=8e5, min = 0)#,vary = False)
-            params.add('phi21',value = 4.88, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
-            params.add('slope', value = -4.7e-7)
+            params.add('kappa_prod2', value= 2.014e10, min = 0)#,vary = False)
+            params.add('omega_c2', value=10.811e9)#,vary = False)
+            params.add('kappa_a2', value=1.7e6, min = 0)#,vary = False)
+            params.add('phi21',value =1.93 , max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
+#            params.add('slope', value = -4.7e-7)
+            params.add('slope', value = 0, vary = False)
             result = lmfit.minimize(S21_two_modes_V3, params, args=(freqs, datas))
             lmfit.report_fit(result.params)
             fitdata1 = np.sqrt(result.params['kappa_prod1'].value)/(-1j*(freqs-result.params['omega_c'].value)-(result.params['kappa_a'].value)/2.0 )* np.exp(1j*result.params['phi1'].value)
@@ -162,6 +181,18 @@ for i, title in enumerate(f[date].keys()):
             freq1_err[j%nrows][j/nrows] = result.params['omega_c'].stderr
             freq2[j%nrows][j/nrows] = result.params['omega_c2'].value      #np.average(ys)
             freq2_err[j%nrows][j/nrows] =result.params['omega_c2'].stderr
+            kappa_a_[j%nrows][j/nrows] = result.params['kappa_a'].value
+            kappa_a_err_[j%nrows][j/nrows] = result.params['kappa_a'].stderr
+            kappa_a2_[j%nrows][j/nrows] = result.params['kappa_a2'].value      #np.average(ys)
+            kappa_a2_err_[j%nrows][j/nrows] =result.params['kappa_a2'].stderr
+            kappa_prod1_[j%nrows][j/nrows] = result.params['kappa_prod1'].value
+            kappa_prod1_err_[j%nrows][j/nrows] = result.params['kappa_prod1'].stderr
+            kappa_prod2_[j%nrows][j/nrows] = result.params['kappa_prod2'].value      #np.average(ys)
+            kappa_prod2_err_[j%nrows][j/nrows] =result.params['kappa_prod2'].stderr
+            phi1_[j%nrows][j/nrows] = result.params['phi1'].value
+            phi1_err_[j%nrows][j/nrows] = result.params['phi1'].stderr
+            phi21_[j%nrows][j/nrows] = result.params['phi21'].value      #np.average(ys)
+            phi21_err_[j%nrows][j/nrows] =result.params['phi21'].stderr
             j = j+1
             fn = os.path.join(r'C:\Users\Wang_Lab\Documents\yingying\03172020cooldown', 'fitting\%s_%s.png'%(title,j-1))
             fdir = os.path.split(fn)[0]
@@ -253,15 +284,34 @@ for k in []:
     freq2[k%nrows][k/nrows] = 0
     freq2_err[k%nrows][k/nrows] = 10000000
 pl.figure()
-
-pl.errorbar(fields, freq1[0],yerr = freq1_err[0],fmt = 'o', label = 'g')
-pl.errorbar(fields, freq1[1],yerr = freq1_err[1],fmt = 'o', label = 'qubit 2 in e')
+pl.title('freqs')
+pl.errorbar(fields, freq1[0],yerr = freq1_err[0],fmt = 'o', label = 'g freq1')
+#pl.errorbar(fields, freq1[1],yerr = freq1_err[1],fmt = 'o', label = 'qubit 2 in e')
 #pl.errorbar(fields, freq1[2],yerr = freq1_err[2],fmt = 'o',label = 'qubit 2 in e')
-pl.errorbar(fields, freq2[0],yerr = freq2_err[0],fmt = 'o', label = 'g')
-pl.errorbar(fields, freq2[1],yerr = freq2_err[1],fmt = 'o', label = 'qubit 2 in e')
+pl.errorbar(fields, freq2[0],yerr = freq2_err[0],fmt = 'o', label = 'g freq2')
+#pl.errorbar(fields, freq2[1],yerr = freq2_err[1],fmt = 'o', label = 'qubit 2 in e')
 #pl.errorbar(fields, freq2[2],yerr = freq2_err[2], fmt = 'o',label = 'qubit 2 in e')
 pl.ylim(10.809e9,10.825e9)
 pl.legend()
+
+pl.figure()
+pl.title('kappa tot')
+pl.errorbar(fields, kappa_a_[0],yerr = kappa_a_err_[0],fmt = 'o', label = 'kappa_tot 1')
+pl.errorbar(fields, kappa_a2_[0],yerr = kappa_a2_err_[0],fmt = 'o', label = 'kappa_tot 2')
+pl.legend()
+
+pl.figure()
+pl.title('kappa prod')
+pl.errorbar(fields, kappa_prod1_[0],yerr = kappa_prod1_err_[0],fmt = 'o', label = 'kappa_prod 1')
+pl.errorbar(fields, kappa_prod2_[0],yerr = kappa_prod2_err_[0],fmt = 'o', label = 'kappa_prod 2')
+pl.legend()
+
+pl.figure()
+pl.title('phi21')
+pl.errorbar(fields, phi21_[0],yerr = phi21_err_[0],fmt = 'o', label = 'kappa_prod 2')
+pl.legend()
+
+
 
 fn = os.path.join(r'C:\Users\Wang_Lab\Documents\yingying\03172020cooldown', 'fitting\\freqs.png')
 fdir = os.path.split(fn)[0]
@@ -270,21 +320,21 @@ if not os.path.isdir(fdir):
 kwargs = dict()
 pl.savefig(fn, **kwargs)
 
-pl.figure()
+#pl.figure()
+#
+#pl.errorbar(fields, freq1[1] - freq1[0], yerr = freq1_err[1] + freq1_err[0], fmt = 'o',label = 'chi between qubit 2 e and 10.711GHz mode')
+##pl.errorbar(fields, freq1[2] - freq1[0], yerr = freq1_err[2] + freq1_err[0], fmt = 'o',label = 'chi between qubit 2 e and 10.711GHz mode')
+#pl.errorbar(fields, freq2[1] - freq2[0], yerr = freq2_err[1] + freq2_err[0], fmt = 'o',label = 'chi between qubit 2 e and 10.718GHz mode')
+##pl.errorbar(fields, freq2[2] - freq2[0], yerr = freq2_err[2] + freq2_err[0], fmt = 'o',label = 'chi between qubit 2 e and 10.718GHz mode')
+#pl.ylim(-1.5e6,0.5e6)
+#pl.legend()
 
-pl.errorbar(fields, freq1[1] - freq1[0], yerr = freq1_err[1] + freq1_err[0], fmt = 'o',label = 'chi between qubit 2 e and 10.711GHz mode')
-#pl.errorbar(fields, freq1[2] - freq1[0], yerr = freq1_err[2] + freq1_err[0], fmt = 'o',label = 'chi between qubit 2 e and 10.711GHz mode')
-pl.errorbar(fields, freq2[1] - freq2[0], yerr = freq2_err[1] + freq2_err[0], fmt = 'o',label = 'chi between qubit 2 e and 10.718GHz mode')
-#pl.errorbar(fields, freq2[2] - freq2[0], yerr = freq2_err[2] + freq2_err[0], fmt = 'o',label = 'chi between qubit 2 e and 10.718GHz mode')
-pl.ylim(-1.5e6,0.5e6)
-pl.legend()
-
-fn = os.path.join(r'C:\Users\Wang_Lab\Documents\yingying\03172020cooldown', 'fitting\\chis.png')
-fdir = os.path.split(fn)[0]
-if not os.path.isdir(fdir):
-    os.makedirs(fdir)
-kwargs = dict()
-pl.savefig(fn, **kwargs)
+#fn = os.path.join(r'C:\Users\Wang_Lab\Documents\yingying\03172020cooldown', 'fitting\\chis.png')
+#fdir = os.path.split(fn)[0]
+#if not os.path.isdir(fdir):
+#    os.makedirs(fdir)
+#kwargs = dict()
+#pl.savefig(fn, **kwargs)
 #pl.figure()
 #
 ##pl.errorbar(fields, freq1[1] - freq1[0], yerr = freq1_err[1] + freq1_err[0], fmt = 'o',label = 'chi between qubit 2 e and 10.711GHz mode')

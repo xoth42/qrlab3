@@ -193,7 +193,7 @@ class ROCavSpectroscopy_keysight_mixer_cw(Measurement1D):
         else:
             s.append(Combined([
                 Join([Delay(1300),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),Delay(1000)]),
-                Join([Delay(1000),Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(1200)]),
+#                Join([Delay(1000),Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(1200)]),
                 Join([Delay(1100),self.mixer_info.rotate(np.pi, self.phase),Delay(1200)]),
                 Join([Delay(1100),self.mixer_info2.rotate(np.pi, 0),Delay(1200)]),
                 Constant(self.readout_info.pulse_len + 2300, cw_amp, chan=self.qubit_info.sideband_channels[0])

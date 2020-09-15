@@ -31,7 +31,7 @@ class CRtuning_time_phase(Measurement2D):
 
 #The purpose here is to sweep over time and detuning for the combined pulse without the pi pulse on the control qubit
 
-    def __init__(self, gate_info1, gate_info2, times, rel_phases, amp=0.35, phase=0, rel_amp=0.2, sigma=5, 
+    def __init__(self, gate_info1, gate_info2, times, rel_phases, amp, phase, rel_amp, sigma, 
                  update=False, seq=None, r_axis=0, fix_phase=True, cancel_info=None,
                  fix_period=None, repeat_pulse=1, postseq=None, selective=False, control_pi=False, **kwargs):
         self.gate_info1 = gate_info1
@@ -77,7 +77,7 @@ class CRtuning_time_phase(Measurement2D):
         ampQ = self.amp * np.sin(self.phase)
         chs = self.gate_info1.sideband_channels
         chs2 = self.gate_info1.sideband_channels2
-        chs3 = self.cancel_info.sideband_channels
+#        chs3 = self.cancel_info.sideband_channels   #needs to be commented out if cancel info is used
 
         for rel_phase in self.rel_phases:
 
@@ -108,7 +108,7 @@ class CRtuning_time_phase(Measurement2D):
                 if self.control_pi==True:             
                     s.append(self.gate_info2.rotate(np.pi,0))
                     s.append(g)
-                    s.append(self.gate_info2.rotate(np.pi,0)) #Chen changed to always measure with control qubit in e
+#                    s.append(self.gate_info2.rotate(np.pi,0)) #Chen changed to always measure with control qubit in e
                 else:
                     s.append(g)
                     s.append(self.gate_info2.rotate(np.pi,0)) #Chen changed to always measure with control qubit in e
