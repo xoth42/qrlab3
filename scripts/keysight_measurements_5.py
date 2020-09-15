@@ -142,19 +142,19 @@ if 0: # cav transmission
     readout_info.rfsource2.set_frequency(ro_freq+50e6)
     bla
 
-if 0: # cav transmission with mixer
+if 1: # cav transmission with mixer
 
     from single_cavity import rocavspectroscopy_keysight_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0), ef2_info.rotate(np.pi, 0)])
 #    Yoko.do_set_current(-0.00175)
-    mixer1_amp = .7
-    Mixer2_amp = .7
+    mixer1_amp = .15
+    Mixer2_amp = .15
     mixer_info1_set.set_pi_amp(mixer1_amp)
     mixer_info1 = mclient.get_qubit_info('mixer_info1')
     mixer_info2 = mclient.get_qubit_info('mixer_info2')
-    rofreq = 10.825e9
-    freq_range = 25e6
+    rofreq = 10.810e9
+    freq_range = 10e6
     ro = rocavspectroscopy_keysight_mixer.ROCavSpectroscopy_keysight_mixer(qubit_info, mixer_info1,mixer_info2, np.linspace(10,10,1),
                                              np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
                                              qubit_pulse=False, seq=None)#,extra_info=[ef2_info])
@@ -162,7 +162,7 @@ if 0: # cav transmission with mixer
     plt.close()
     plt.close()
     
-    figure_name = 'S31'
+    figure_name = '.05T'
     
     plt.figure('amp%s'%(figure_name))
     plt.plot(ro.freqs,ro.ampdata[0],label = 'g')
@@ -179,9 +179,22 @@ if 0: # cav transmission with mixer
     plt.plot(ro.freqs,ro.ampdata[0],label = 'qubit 1 in e')
     plt.figure('phase%s'%(figure_name))
     plt.plot(ro.freqs,ro.phasedata[0],label = 'qubit 1 in e')
-
-    ro_freq = 10.804e9
+#    
+    ro = rocavspectroscopy_keysight_mixer.ROCavSpectroscopy_keysight_mixer(qubit2_info, mixer_info1,mixer_info2, np.linspace(10,10,1),
+                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
+                                             qubit_pulse=True, seq=None)#,extra_info=[ef2_info])
+    ro.measure()
+    plt.figure('amp%s'%(figure_name))
+    plt.plot(ro.freqs,ro.ampdata[0],label = 'qubit 2 in e')
+    plt.figure('phase%s'%(figure_name))
+    plt.plot(ro.freqs,ro.phasedata[0],label = 'qubit 2 in e')
+    
+    plt.legend()
+    
+    ro_freq = 10.8075e9
     power = 10
+    mixer_info1 = mclient.get_qubit_info('mixer_info1')
+    mixer_info2 = mclient.get_qubit_info('mixer_info2')
     readout_info.rfsource1.set_frequency(ro_freq - mixer_info1.deltaf)
     readout_info.rfsource1.set_power(power)
     readout_info.rfsource1.set_rf_on(True)
@@ -190,7 +203,7 @@ if 0: # cav transmission with mixer
     readout_info.rfsource2.set_frequency(ro_freq+50e6)
     bla
 
-if 1: # cav transmission with mixer and CW qubit drive
+if 0: # cav transmission with mixer and CW qubit drive
 
     from single_cavity import rocavspectroscopy_keysight_mixer_cw
 #    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])

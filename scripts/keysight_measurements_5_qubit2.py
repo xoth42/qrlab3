@@ -1022,10 +1022,18 @@ if 0: #ramsey mixer
     from single_qubit import ramsey_measurement
 #    seq = sequencer.Join([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0)])
     post_seq = sequencer.Delay(500)
-    A_E = []
-    A = []
-    pi_amps = np.linspace(0.000001, 0.7,1)
-    repeat = 1
+#    A_E = []
+#    A = []
+    field = 0
+    pi_amps = np.linspace(0.3, 0.3,1)
+    repeat = 5
+    df_i = np.zeros([len(pi_amps),repeat])
+    df_f = np.zeros([len(pi_amps),repeat])
+    df_ave = np.zeros([len(pi_amps),repeat])
+    tau_i = np.zeros([len(pi_amps),repeat])
+    tau_f = np.zeros([len(pi_amps),repeat])
+    tau_ave = np.zeros([len(pi_amps),repeat])
+    
     for i in range(len(pi_amps)):
         SS_mixer_info1_set.set_pi_amp(pi_amps[i])
 
@@ -1034,78 +1042,95 @@ if 0: #ramsey mixer
         for j in range(repeat):
             
        
+#            t2 = ramsey_measurement.Ramsey_Measurement_mixer(qubit2_info, SS_mixer_info1, mixer_info1,mixer_info2, 
+#                                                         np.linspace(0, 0.12e3, 121), detune=80e6, echotype = 'HANN', 
+#                                                         necho = 1, double_freq=False, generate=True, 
+#                                                         seq=None, postseq=post_seq, proj_func='phase', plot_seqs = False) #extra_info=[qubit2_info])
+#            t2.measure_keysight()
+#            A_E.append(t2.fit_params)
             t2 = ramsey_measurement.Ramsey_Measurement_mixer(qubit2_info, SS_mixer_info1, mixer_info1,mixer_info2, 
-                                                         np.linspace(0, 0.12e3, 121), detune=80e6, echotype = 'HANN', 
-                                                         necho = 1, double_freq=False, generate=True, 
-                                                         seq=None, postseq=post_seq, proj_func='phase', plot_seqs = False) #extra_info=[qubit2_info])
-            t2.measure_keysight()
-            A_E.append(t2.fit_params)
-            t2 = ramsey_measurement.Ramsey_Measurement_mixer(qubit2_info, SS_mixer_info1, mixer_info1,mixer_info2, 
-                                                         np.linspace(0, 0.12e3, 121), detune=80e6,  
+                                                         np.linspace(0, 0.24e3, 121), detune=40e6,  
                                                          double_freq=False, generate=True, 
                                                          seq=None, postseq=post_seq, proj_func='phase', plot_seqs = False) #extra_info=[qubit2_info])
 
             t2.measure_keysight()
-            A.append(t2.fit_params)
-    slope = []
-    slope_E = []
-    tau = []
-    tau_E = []
-    A2 = []    
-    A2_E = []
-    for i in range(len(A)):
-        slope.append(A[i]['slope'].value)
-        slope_E.append( A_E[i]['slope'].value)
-        tau.append(A[i]['tau'].value)
-        tau_E.append(A_E[i]['tau'].value)
-        A2.append(A[i]['A2'].value)
-        A2_E.append(A_E[i]['A2'].value)
-        
-    for j in range(len(pi_amps)):
-        plt.figure()
-        plt.title('pi amp = %s'%(pi_amps[j]))
-        plt.plot(range(repeat),slope[j*repeat: j*repeat + repeat ],label = 'slpoe')
-        plt.plot(range(repeat),slope_E[j*repeat: j*repeat + repeat ],label = 'slpoe with echo')
-        plt.legend()
-        
-        plt.figure()
-        plt.title('pi amp = %s'%(pi_amps[j]))
-        plt.plot(range(repeat),tau[j*repeat: j*repeat + repeat ],label = 'tau')
-        plt.plot(range(repeat),tau_E[j*repeat: j*repeat + repeat ],label = 'tau with echo')
-        plt.legend()
-        
-        plt.figure()
-        plt.title('pi amp = %s'%(pi_amps[j]))
-        plt.plot(range(repeat),A2[j*repeat: j*repeat + repeat ],label = 'A2')
-        plt.plot(range(repeat),A2_E[j*repeat: j*repeat + repeat ],label = 'A2 with echo')
-        plt.legend()
-        
-        
-    
+#            A.append(t2.fit_params)
+            xs = t2.delays
+            df_i[i][j] = t2.fit_params['freq'].value*1e6 + t2.fit_params['A']*1e6*np.exp(-xs[0]*t2.fit_params['slope'])
+            df_f[i][j] = t2.fit_params['freq'].value*1e6 + t2.fit_params['A']*1e6*np.exp(-xs[-1]*t2.fit_params['slope'])
+            df_ave[i][j] = np.average(t2.fit_params['freq'].value*1e6 + t2.fit_params['A']*1e6*np.exp(-xs*t2.fit_params['slope']))
+            tau_i[i][j] = 0.001/((1/t2.fit_params['tau'].value) + t2.fit_params['A2'].value*np.exp(-xs[0]*t2.fit_params['slope'].value/2))
+            tau_f[i][j] = 0.001/((1/t2.fit_params['tau'].value) + t2.fit_params['A2'].value*np.exp(-xs[-1]*t2.fit_params['slope'].value/2))
+            tau_ave = 0.001/np.average((1/t2.fit_params['tau'].value) + t2.fit_params['A2'].value*np.exp(-xs*t2.fit_params['slope'].value/2))
 
-#    plt.figure()
-#    plt.errorbar(range(len(A)),np.asarray(A)*1000,yerr = np.asarray(Aerr)*1000, label = 'A')
-#
-#    plt.ylabel('MHz')
-#    plt.legend()
+        if repeat >1:
+            plt.figure()
+            plt.title('pi_amp = %s'%(pi_amps[i]))
+            plt.plot(df_i[i]*1000, label = ' df_initial, ave freq = %.3f +/- %.3f MHz'%(
+                    np.average(df_i[i]*1000), np.std(df_i[i])/np.sqrt(len(df_i[i]))*1000))
+            plt.plot(df_f[i]*1000, label = ' df_final, ave freq = %.3f +/- %.3f MHz'%(
+                    np.average(df_f[i]*1000), np.std(df_f[i])/np.sqrt(len(df_f[i]))*1000))
+            plt.plot(df_ave[i]*1000, label = ' df_average, ave freq = %.3f +/- %.3f MHz'%(
+                    np.average(df_ave[i]*1000), np.std(df_ave[i])/np.sqrt(len(df_ave[i]))*1000))
+            plt.legend()
+
+            pl.figure()
+            plt.title('pi_amp = %s'%(pi_amps[i]))
+            plt.plot(tau_i[i]*1000, label = ' tau_initial, ave tau = %.3f +/- %.3f MHz'%(
+                    np.average(tau_i[i]*1000), np.std(tau_i[i])/np.sqrt(len(tau_i[i]))*1000))
+            plt.plot(tau_f[i]*1000, label = ' tau_final, ave tau = %.3f +/- %.3f MHz'%(
+                    np.average(tau_f[i]*1000), np.std(tau_f[i])/np.sqrt(len(tau_f[i]))*1000))
+            plt.plot(tau_ave[i]*1000, label = ' tau_average, ave tau = %.3f +/- %.3f MHz'%(
+                    np.average(tau_ave[i]*1000), np.std(tau_ave[i])/np.sqrt(len(tau_ave[i]))*1000))
+            plt.legend()
+
+    if len(pi_amps) > 1:
+
+        plt.figure()
+        plt.title('field = %s'%(field))#%(points[u]))
+        plt.plot(pi_amps,np.mean(df_i, axis = 1),label = 'df_initial')
+        plt.plot(pi_amps,np.mean(df_f, axis = 1),label = 'df_final')
+        plt.plot(pi_amps,np.mean(df_ave, axis = 1),label = 'df_average')
+        plt.legend()   
+        plt.figure()
+        plt.title('field = %s'%(field))#%(points[u]))
+        plt.plot(pi_amps,np.mean(tau_i, axis = 1),label = 'tau_initial')
+        plt.plot(pi_amps,np.mean(tau_f, axis = 1),label = 'tau_final')
+        plt.plot(pi_amps,np.mean(tau_ave, axis = 1),label = 'tau_average')
+        plt.legend() 
+#    slope = []
+##    slope_E = []
+#    tau = []
+##    tau_E = []
+#    A2 = []    
+##    A2_E = []
+#    for i in range(len(A)):
+#        slope.append(A[i]['slope'].value)
+##        slope_E.append( A_E[i]['slope'].value)
+#        tau.append(A[i]['tau'].value)
+##        tau_E.append(A_E[i]['tau'].value)
+#        A2.append(A[i]['A2'].value)
+##        A2_E.append(A_E[i]['A2'].value)
+
+
     bla
     
 if 0: #ramsey mixer for photon
     from single_qubit import photon_ramsey_measurement
 #    seq = sequencer.Join([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0)])
-    Delays = [1200]
-    repeat = 1
+    Delays = [300]
+    repeat = 3
     freq_q = np.zeros([len(Delays),repeat])
     freq = np.zeros([len(Delays),repeat])
     for idelay, delay in enumerate(Delays):
         for i in range(repeat):
             t2 = photon_ramsey_measurement.Photon_Ramsey_Measurement_mixer(qubit_info, qubit2_info, SS_mixer_info1, mixer_info1,mixer_info2, 
-                                                             np.linspace(0,.2e3,101), detune=40e6, delay = 100, qubit_pulse = True, double_freq=False, generate=True, 
+                                                             np.linspace(0,.1e3,101), detune=60e6, fix_phi0 = -1.8, delay = delay , qubit_pulse = True, double_freq=False, generate=True, 
                                                              seq=None, postseq=None, proj_func='phase', plot_seqs =False) #extra_info=[qubit2_info])
             t2.measure_keysight()
             freq_q[idelay][i] = t2.fit_params['freq'].value
             t2 = photon_ramsey_measurement.Photon_Ramsey_Measurement_mixer(qubit_info, qubit2_info, SS_mixer_info1, mixer_info1,mixer_info2, 
-                                                             np.linspace(0,.2e3,101), detune=40e6, delay = 1, qubit_pulse = False, double_freq=False, generate=True, 
+                                                             np.linspace(0,.1e3,101), detune=60e6, fix_phi0 = -1.8, delay = delay, qubit_pulse = False, double_freq=False, generate=True, 
                                                              seq=None, postseq=None, proj_func='phase', plot_seqs =False) #extra_info=[qubit2_info])
             
             t2.measure_keysight()
@@ -1114,35 +1139,54 @@ if 0: #ramsey mixer for photon
 #            plt.close()
 #            
         plt.figure()
-        plt.plot(np.asarray(freq_q[idelay])*1000,label = 'with qubit, delay = %s'%(delay))
-        plt.plot(np.asarray(freq[idelay])*1000,label = 'without qubit, delay = %s'%(delay))
+        plt.plot(np.asarray(freq_q[idelay])*1000,label = 'with qubit, delay = %s, ave_freq = %s +/- %s MHz'%(
+                delay, np.average(freq_q[idelay]*1000), np.std(freq_q[idelay]*1000)/np.sqrt(repeat)))
+        plt.plot(np.asarray(freq[idelay])*1000,label = 'without qubit, delay = %s, ave_freq = %s +/- %s MHz'%(
+                delay, np.average(freq[idelay]*1000), np.std(freq[idelay]*1000)/np.sqrt(repeat)))
+                
         plt.ylabel('MHz')
         plt.legend()
     bla
     
 if 1: #photon ramsey mixer test
     from single_qubit import photon_ramsey_test
-#    delay = np.linspace(26,520,20)
-    delay = np.linspace(26,260,10)
+#    delay = np.linspace(130,260,6)
+    
+    delay = [100]
     points = [101]
-    repeat = 10
-    seq_num = 2
+    repeat = 3
+    seq_num = 3
     data = np.zeros([len(points),len(delay),seq_num])
+    data_q = np.zeros([len(points),len(delay),seq_num])
+    labels = ['phase 0','phase pi','averages phase']
 #    freq = np.zeros([4,repeat])
     for k in range(len(points)):
         for j in range(len(delay)): 
             freq = np.zeros([seq_num,repeat])
+            freq_q = np.zeros([seq_num,repeat])
             for i in range(repeat):
                 t2 = photon_ramsey_test.Photon_Ramsey_Test(qubit_info, qubit2_info, SS_mixer_info1, mixer_info1,mixer_info2, 
                                                                  np.linspace(0, 0.001e3*(points[k]-1),points[k]), detune=60e6, 
-                                                                 delay = delay[j], generate=True, 
+                                                                 delay = delay[j], generate=True, fix_phi0 = -1.8,qubit_pulse = False,
                                                                  seq=None, postseq=None, proj_func='phase', plot_seqs =False) #extra_info=[qubit2_info])
                 t2.measure_keysight()
-                plt.close()
+                if repeat * len(delay)* len(points) >5:
+                    
+                    plt.close()
                 for m in range(seq_num):
                     freq[m][i] = t2.fit_params[m]['freq'].value
+                t2 = photon_ramsey_test.Photon_Ramsey_Test(qubit_info, qubit2_info, SS_mixer_info1, mixer_info1,mixer_info2, 
+                                                                 np.linspace(0, 0.001e3*(points[k]-1),points[k]), detune=60e6, 
+                                                                 delay = delay[j], generate=True, fix_phi0 = -1.8,qubit_pulse = True,
+                                                                 seq=None, postseq=None, proj_func='phase', plot_seqs =False) #extra_info=[qubit2_info])
+                t2.measure_keysight()
+                if repeat * len(delay)* len(points) >5:
+                    
+                    plt.close()
+                for m in range(seq_num):
+                    freq_q[m][i] = t2.fit_params[m]['freq'].value
 #            labels = ['without qubit','without qubit, delay %s'%(delay[j]), 'with qubit','with qubit, delay %s'%(delay[j])]
-            labels = ['without qubit, delay %s'%(delay[j]),'with qubit, delay %s'%(delay[j])]
+#            labels = ['without qubit, delay %s'%(delay[j]),'with qubit, delay %s'%(delay[j])]
         #    labels = ['without qubit, delay %s'%(delay),'without qubit', 'with qubit','with qubit, delay %s'%(delay)]
         #    labels = ['without qubit', 'with qubit','without qubit, delay %s'%(delay),'with qubit, delay %s'%(delay)]
         #    labels = ['with qubit', 'without qubit','with qubit, delay %s'%(delay),'without qubit, delay %s'%(delay)]
@@ -1150,7 +1194,10 @@ if 1: #photon ramsey mixer test
                 plt.figure()
                 plt.title('delay = %s, points = %s'%(delay[j],points[k]))
                 for l in range(seq_num):
-                    plt.plot(freq[l]*1000, label = labels[l] + 'ave freq = %s +/- %s MHz'%(np.average(freq[l]*1000), np.std(freq[l])/np.sqrt(len(freq[l]))*1000))
+                    plt.plot(freq[l]*1000, label = labels[l] + ' w/o qubit, ave freq = %.3f +/- %.3f MHz'%(
+                            np.average(freq[l]*1000), np.std(freq[l])/np.sqrt(len(freq[l]))*1000))
+                    plt.plot(freq_q[l]*1000, label = labels[l] + ' w/ qubit, ave freq = %.3f +/- %.3f MHz'%(
+                            np.average(freq_q[l]*1000), np.std(freq_q[l])/np.sqrt(len(freq_q[l]))*1000))
                 plt.legend()
 #                plt.figure()
 #                plt.title('freq_shifts, delay = %s, points = %s'%(delay[j],points[k]))
@@ -1159,30 +1206,46 @@ if 1: #photon ramsey mixer test
 #                plt.legend()
             for p in range(seq_num):
                 data[k][j][p]=np.average(freq[p])
+                data_q[k][j][p]=np.average(freq_q[p])
     if len(points) > 1:
         
         for u in range(len(delay)):
 #            labels_ = ['without qubit','without qubit, delay', 'with qubit','with qubit, delay']
-            labels_ = ['without qubit, delay','with qubit, delay']
+#            labels_ = ['without qubit, delay','with qubit, delay']
             plt.figure()
-            plt.title('delay = 300')#%(points[u]))
+            plt.title('delay = %s'%(delay[u]))#%(points[u]))
             for t in range(seq_num):
-                plt.plot(points,data.transpose()[t][0],label = labels_[t])
+                plt.plot(points,data.transpose()[t][0],label = labels[t]+' w/o qubit')
+                plt.plot(points,data_p.transpose()[t][0],label = labels[t]+ ' w/ qubit')
             plt.legend()
     if len(delay) > 1:
         
         for u in range(len(points)):
 #            labels_ = ['without qubit','without qubit, delay', 'with qubit','with qubit, delay']
-            labels_ = ['without qubit, delay','with qubit, delay']
+#            labels_ = ['without qubit, delay','with qubit, delay']
             plt.figure()
-            plt.title('pts = 101')#%(points[u]))
+            plt.title('pts = %s'%(points[u]))
             for t in range(seq_num):
-                plt.plot(delay,data[u].transpose()[t],label = labels_[t])
+                plt.plot(delay,data[u].transpose()[t],label = labels[t] + ' w/o qubit')
+                plt.plot(delay,data_p[u].transpose()[t],label = labels[t]+' w/ qubit')
             plt.legend() 
             
     bla
     #(self, qubit_info1,qubit_info2, SS_mixer_info1, mixer_info1,mixer_info2, delays, detune=0, qubit_pulse=False,
 #                 double_freq=False, seq=None, postseq=None, selective=True, Qswitch_infoA=None, Qswitch_infoB=None, **kwargs):
+    
+    
+if 0:
+    points = [151]
+    repeat = 1
+    from single_qubit import photon_ramsey_test_2
+    for k in range(len(points)):
+        for i in range(repeat):
+            t2 = photon_ramsey_test_2.Photon_Ramsey_Test_2(qubit_info, qubit2_info, SS_mixer_info1, mixer_info1,mixer_info2, 
+                                                             np.linspace(0, 0.001e3*(points[k]-1),points[k]), detune=60e6, 
+                                                             delay = 300, generate=True, 
+                                                             seq=None, postseq=None, proj_func='phase', plot_seqs =False) #extra_info=[qubit2_info])
+            t2.measure_keysight()
 if 0: # Ramsey qubit 2 rabi sweep
     from single_qubit import T2measurementforramsey
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])

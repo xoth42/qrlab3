@@ -33,7 +33,7 @@ readout_info = mclient.get_readout_info('readout')
 #qubit2_info = mclient.get_qubit_info('cavityAlice')
 os.chdir(r'C:/qrlab/scripts')
 
-fields = [0.02,-0.015,0.01,-0.005, 0.0025, -0.001,0.0005,-0.00025, 0]
+fields = [ - 0.03, 0.02,-0.015,0.01,-0.005, 0.0025, -0.001,0.0005,-0.00025, 0]
 #fields = - np.asarray(fields)
 #Magnet.do_set_PSwitch(1)
 #time.sleep(35)
@@ -49,7 +49,7 @@ for field in fields:
 #    time.sleep(35)
 #            
     Magnet.do_set_field(field)
-    time.sleep(200)
+    time.sleep(300)
 #    Magnet.do_set_PSwitch(0)
 #    time.sleep(350)
     '''
