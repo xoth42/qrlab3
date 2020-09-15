@@ -10,7 +10,7 @@ import time
 import lmfit 
 
 
-
+import matplotlib
 import h5py as h5
 import numpy as np
 import matplotlib.pyplot as pl
@@ -61,11 +61,11 @@ filepath = 'C:\_Data\\'
 #hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
 hdf5_name = '0626cooldown_circualtor_VNA - Copy.hdf5'
 
-date = '20200702'
+date = '20200629'
 #time = '233434'
 experiment = 'Power_Sweep_VNA'
 
-fields = np.linspace(0, 0.05,26)
+fields = np.linspace(0,-0.05,26)
 #fields = np.linspace(0.05, 0.002,13)
 
 ''' Primary x axis and secondary if 2d'''
@@ -79,7 +79,7 @@ j = 0
 
 final_plot = True
 
-itime = 18
+itime = 4
 
 if itime == 0:
     datas = np.zeros([len(fields),1601],dtype = complex)
@@ -157,7 +157,7 @@ f = h5.File(filepath + hdf5_name, 'r')
 for i, title in enumerate(f[date].keys()):
 #    print int(title[0:6])
 #    print int(title[0:6]) <= 020617
-    if int(title[0:6]) <= int('023000') and int(title[0:6]) > int('000000') and title[7:12] =='Power':
+    if int(title[0:6]) <= int('110625') and int(title[0:6]) > int('000000') and title[7:12] =='Power':
         print title
 
 
@@ -333,23 +333,28 @@ for i, title in enumerate(f[date].keys()):
         itime = itime + 1
 if final_plot:    
     pl.figure()
+    matplotlib.rc('xtick', labelsize=24) 
+    matplotlib.rc('ytick', labelsize=24)
     figname = ''
+    axis_font = {'fontname':'Arial', 'size':'24'}
     fieldplot = np.concatenate((fields, np.zeros(1) + fields[1]-fields[0] + fields[-1]))
     mag = 20*np.log10(np.abs(datas))
     Z = np.transpose(mag)
     #X,Y = np.meshgrid(field, freq)
     X,Y = np.meshgrid(fieldplot, freq)
     pl.xlim(X.min(), X.max())
-    pl.pcolormesh(X,Y,Z)#,vmax = -30, vmin = -80)
+    pl.pcolormesh(X,Y/1e9,Z,vmax = -10, vmin = -50)#,vmax = -30, vmin = -80)
+#    cbar = pl.colorbar()
+#    cbar.set_label('dB',rotation=0, **axis_font)
     pl.colorbar()
-    #pl.title('YIG FMR Spectrum, S11 Measurement')
-    #pl.xlabel('Magnetic Field(mT)')
-    pl.ylabel('Frequency(GHz)')
+#    pl.title('Color Plot Experiment S31 Spectrum in dB')
+    pl.xlabel('Magnetic Field(T)', **axis_font)
+    pl.ylabel('Frequency(GHz)', **axis_font)
     #pl.close()
     f.close()
         
         
-    lin_power = xlist
+#    lin_power = xlist
     #lin_power = np.power(10,xlist/10)
     #lin_power[0] = 0
     if two_modes:

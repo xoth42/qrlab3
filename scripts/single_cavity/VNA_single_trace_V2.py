@@ -64,7 +64,7 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
         if np.max(np.abs(datas)) < limit_for_off:
             params.add('roff',value = np.real(datas[0]))#,vary = False)
             params.add('ioff',value = np.imag(datas[0]))#, vary = False)
-        params.add('phi',value = -2, max = np.pi, min = -np.pi)#,vary = False)
+        params.add('phi',value = 0, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
                 
     #    datas = realdata[0,:]+ 1j*imagdata[0,:]    
         result = lmfit.minimize(S21, params, args=(freqs, datas))
