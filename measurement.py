@@ -158,6 +158,10 @@ class Measurement(object):
                 shotdata = np.array(self.shot_data[:])
             else:
                 shotdata = None
+            if self.ste_data:
+                stedata = np.array(self.ste_data[:])
+            else:
+                stedata = None
 
             logging.info('Dropping data group %s' % self._groupname)
             del self.datafile[self._groupname]
@@ -167,6 +171,7 @@ class Measurement(object):
             self.avg_data = avgdata
             self.pp_data = ppdata
             self.shot_data = shotdata
+            self.ste_data = stedata
 
         except Exception, e:
             logging.warning('Unable to remove data: %s' % str(e))
@@ -617,7 +622,9 @@ class Measurement(object):
         # Start measurement, either by starting the AWG or the function generator
         self.start_awgs()
         dig.start_hvi()
-        ret = dig.take_experiment(avg_buf=self.avg_data, async=True, IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius)
+        ret = dig.take_experiment(avg_buf=self.avg_data, ste_buf=self.ste_data, 
+                                  async=True, IQ_e=self.readout_info.IQe, 
+                                  e_radius=self.readout_info.IQe_radius)
         
         try:
             while not ret.is_valid() and not self._interrupted:
@@ -705,6 +712,7 @@ class Measurement(object):
             else:
                 self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
                 self.pp_data = None
+            self.ste_data = self.data.create_dataset('ste', [self.cyclelen,], dtype=np.float)
 
     def measure_keysight(self):
         '''
@@ -718,9 +726,10 @@ class Measurement(object):
         self.setup_measurement_data_keysight()
 
         dig = self.instruments['dig']
-        ret = self.acquisition_loop_keysight(dig) # calls update function
+        avgs, stes = self.acquisition_loop_keysight(dig) # calls update function
 #        print('after aquisition loop')
-        self.avg_data = ret
+        self.avg_data = avgs
+        self.ste_data = stes
 
         if self.histogram:
             if self.cyclelen == 1:
@@ -838,6 +847,16 @@ class Measurement(object):
         ''' CHEN/DARIO/JEFF fix for old error shifting first point to last point '''
 #        ys=np.concatenate((ys[1:], ys[:1]))
         return self.complex_to_real(ys)
+
+    def get_stes(self, data=None):
+        '''
+        Return measured standard errors
+        '''
+        if data is None:
+            stes = self.ste_data[:]
+        else:
+            stes = data
+        return self.complex_to_real(stes)
 
     def post_process(self):
         '''
