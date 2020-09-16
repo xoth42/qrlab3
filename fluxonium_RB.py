@@ -286,6 +286,8 @@ if 1: # Two-Qubit Randomized Benchmarking
     Pg_cplx0 = []
     rndmben_result1 = []
     Pg_cplx1 = []
+    rndmben_result2 = []
+    Pg_cplx2 = []
     
 #    alz.set_naverages(8000)
     cool = sequencer.Constant(int(4e3),1,chan='3m1')
@@ -293,7 +295,7 @@ if 1: # Two-Qubit Randomized Benchmarking
     X_proj = gate_info1.rotate(np.pi/2, np.pi/2)
     Y_proj = gate_info1.rotate(np.pi/2, 0)
 
-    for i in range(10):
+    for i in range(20):
         alz.set_naverages(5000)
         rndmben0 = TwoQ_RB.TwoQubit_RB(gate_info2, gate_info1, ZZ_info, cancel_info, num_cal_points=3, N_cliffords=7, 
                                       plot_seqs=False, category='all', generator='CZ',
@@ -302,14 +304,24 @@ if 1: # Two-Qubit Randomized Benchmarking
         data0 = rndmben0.measure()
         rndmben_result0.append(rndmben0.get_ys())
         Pg_cplx0.append(rndmben0.Pgg)
-##
-#        rndmben = TwoQ_RB.TwoQubit_RB(gate_info2, gate_info1, ZZ_info, cancel_info, num_cal_points=3, N_cliffords=7, 
-#                                      plot_seqs=False, category='all', generator='CZ', interleave='CZ',
-#                                      find_cheapest_recovery=False, use_virtual_Z=True, virtual_recovery=True, 
-#                                      singleQ_phases=[-2.627,-1.372+np.pi], seq=seq, proj_func='phase')
-#        data = rndmben.measure()
-#        rndmben_result1.append(rndmben.get_ys())
-#        Pg_cplx1.append(rndmben.Pgg)
+###
+        rndmben = TwoQ_RB.TwoQubit_RB(gate_info2, gate_info1, ZZ_info, cancel_info, num_cal_points=3, N_cliffords=7, 
+                                      plot_seqs=False, category='all', generator='CZ', interleave='CZ',
+                                      find_cheapest_recovery=False, use_virtual_Z=True, virtual_recovery=True, 
+                                      singleQ_phases=[-2.627,-1.372+np.pi], seq=seq, proj_func='phase')
+        data = rndmben.measure()
+        rndmben_result1.append(rndmben.get_ys())
+        Pg_cplx1.append(rndmben.Pgg)
+
+
+
+        rndmben2 = TwoQ_RB.TwoQubit_RB(gate_info2, gate_info1, ZZ_info, cancel_info, num_cal_points=3, N_cliffords=7, 
+                                      plot_seqs=False, category='all', generator='CZ', interleave='I',
+                                      find_cheapest_recovery=False, use_virtual_Z=True, virtual_recovery=True, 
+                                      singleQ_phases=[-2.627,-1.372+np.pi], seq=seq, proj_func='phase')
+        data2 = rndmben2.measure()
+        rndmben_result2.append(rndmben2.get_ys())
+        Pg_cplx2.append(rndmben2.Pgg)
         
 #        if i%2 == 0:
 #            alz.set_naverages(2000)       
@@ -327,11 +339,15 @@ if 1: # Two-Qubit Randomized Benchmarking
     tempxs = rndmben0.xs[48:]  #change this 
     xs = tempxs.reshape(len(tempxs)/4,4).transpose()[0]  #Each gate is actually 2 Cliffords, one on each qubit
     RB_fit(Pg_cplx0, xs, F_final=0.25, F_init=1-0.1)
-    plt.figure()
-#    tempxs = rndmben.xs[48:]  #change this 
-#    xs = tempxs.reshape(len(tempxs)/4,4).transpose()[0]  #Each gate is actually 2 Cliffords, one on each qubit
-#    RB_fit(Pg_cplx1, xs, F_final=0.25, F_init=1-0.35)
+    
+    tempxs = rndmben.xs[48:]  #change this 
+    xs = tempxs.reshape(len(tempxs)/4,4).transpose()[0]  #Each gate is actually 2 Cliffords, one on each qubit
+    RB_fit(Pg_cplx1, xs, F_final=0.25, F_init=1-0.35)
 
+
+    tempxs = rndmben2.xs[48:]  #change this 
+    xs = tempxs.reshape(len(tempxs)/4,4).transpose()[0]  #Each gate is actually 2 Cliffords, one on each qubit
+    RB_fit(Pg_cplx2, xs, F_final=0.25, F_init=1-0.35)
     
 #    tempxs = rndmben0.xs[48:]  #change this 
 #    xs = tempxs.reshape(len(tempxs)/4,4).transpose()[0]

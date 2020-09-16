@@ -398,10 +398,10 @@ if 1: #Calibration of the CR-imprinted phase for control qubit in |g>
 
     cool = sequencer.Constant(int(4e3),1,chan='3m1')
     seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
-    for pulselen in np.linspace(21,30,10):
-        ZZobj.set_sq_len(pulselen)
+    for pulselen in np.linspace(14,14,1):
+        ZZobj.set_sq_len(14)
         ZZ_info = mclient.get_gate_info('ZZ_gate')
-        geoph = geophasecal.geophasecal(gate_info1, ZZ_info, np.linspace(-np.pi, np.pi, 101), test_info2=None, 
+        geoph = geophasecal.geophasecal(gate_info2, ZZ_info, np.linspace(-np.pi, np.pi, 101), test_info2=None, 
                                         wait_reference = True, wait_time =pulselen+18 , repeat_pulse=1,
                                         seq=seq, postseq=None, proj_func='phase', plot_seqs=False,
                                         extra_info=gate_info2
@@ -409,7 +409,7 @@ if 1: #Calibration of the CR-imprinted phase for control qubit in |g>
         data=geoph.measure() 
 
 
-        geoph = geophasecal.geophasecal(gate_info1, ZZ_info, np.linspace(-np.pi, np.pi, 101), test_info2=None, 
+        geoph = geophasecal.geophasecal(gate_info2, ZZ_info, np.linspace(-np.pi, np.pi, 101), test_info2=None, 
                                         wait_reference = False, wait_time =pulselen+18 , repeat_pulse=1,
                                         seq=seq, postseq=None, proj_func='phase', plot_seqs=False,
                                         extra_info=gate_info2
@@ -482,7 +482,7 @@ if 0: #
                             update=False, seq=seq_cool, postseq=None, proj_func='phase', plot_seqs=False, extra_info=None)
     data = cz.measure()
     
-if 0: # for modified version
+if 1: # for modified version
     from scripts.fluxonium  import CZ_1Dseq_modified
     alz.set_naverages(5000)
     seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])

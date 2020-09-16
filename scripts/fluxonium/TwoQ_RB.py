@@ -123,7 +123,7 @@ def CheckIdentity(matrix):
 
 
 
-def evaluate_sequence(gate_seq_1, gate_seq_2, generator = 'ZX90'):
+def evaluate_sequence(gate_seq_1, gate_seq_2, generator = 'CZ'):
     """
     Evaluate the two qubit gate sequence.
 
@@ -144,38 +144,9 @@ def evaluate_sequence(gate_seq_1, gate_seq_2, generator = 'ZX90'):
     twoQ_gate = np.matrix(
         [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
     for i in range(len(gate_seq_1)):
-
-    
-#def evaluate_sequence(gate_seq_1, gate_seq_2, generator = 'CNOT'):
-#        """
-#        Evaluate the two qubit gate sequence.
-#
-#        Parameters
-#        ----------
-#        gate_seq_1: list of class Gate (defined in "gates.py")
-#            The gate sequence applied to Qubit "1"
-#
-#        gate_seq_2: list of class Gate (defined in "gates.py")
-#            The gate sequence applied to Qubit "2"
-#
-#        Returns
-#        -------
-#        twoQ_gate: np.matrix (shape = (4,4))
-#            The evaulation result.
-#        """
-#        
-#        twoQ_gate = np.matrix(
-#            [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
-#        for i in range(len(gate_seq_1)):
-#            maxLen = max(len(gate_seq_1), len(gate_seq_2))
-#            if len(gate_seq_1) < maxLen:
-#                gate_seq_1.extend('I')
-#            if len(gate_seq_2) < maxLen:
-#                gate_seq_2.extend('I')
-
-            
+        
         gate_1 = np.matrix([[1, 0], [0, 1]])
-        gate_2 = np.matrix([[1, 0], [0, 1]])
+        gate_2 = np.matrix([[1, 0], [0, 1]])        
         if (gate_seq_1[i] == 'I'):
             pass
         elif (gate_seq_1[i] == 'Ip'):
@@ -250,19 +221,18 @@ def evaluate_sequence(gate_seq_1, gate_seq_2, generator = 'ZX90'):
         if generator == 'CZ':
 #            if (gate_seq_1[i] == gates.CZ or gate_seq_2[i] == gates.CZ):
             if (gate_seq_2[i] == 'CZ'):
-
                 gate_12 = np.matmul(
                         np.matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0],
                                    [0, 0, 0, -1]]), gate_12)
         elif generator == 'iSWAP':
             if (gate_seq_1[i] == gates.iSWAP or gate_seq_2[i] == gates.iSWAP):
-                    gate_12 = np.matmul(
+                gate_12 = np.matmul(
                         np.matrix([[1, 0, 0, 0], [0, 0, 1j, 0], [0, 1j, 0, 0],
                                    [0, 0, 0, 1]]), gate_12)
             
         elif generator == 'CNOT':
             if (gate_seq_1[i] == 'CNOT' or gate_seq_2[i] == 'CNOT'):
-                    gate_12 = np.matmul(
+                gate_12 = np.matmul(
                             np.matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1],
                                        [0, 0, 1, 0]]), gate_12)
         elif generator == 'ZX90':
@@ -273,13 +243,13 @@ def evaluate_sequence(gate_seq_1, gate_seq_2, generator = 'ZX90'):
        
         elif generator == 'CX':
             if (gate_seq_1[i] == 'CX' or gate_seq_2[i] == 'CX'):
-                    gate_12 = np.matmul(
+                gate_12 = np.matmul(
                             np.matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, -1j],
                                        [0, 0, -1j, 0]]), gate_12)
     
-            twoQ_gate = np.matmul(gate_12, twoQ_gate)
+        twoQ_gate = np.matmul(gate_12, twoQ_gate)
         # log.info('two qubit gate: ' + str(twoQ_gate))
-        return twoQ_gate
+    return twoQ_gate
 
         
     
@@ -289,7 +259,7 @@ class TwoQubit_RB(Measurement1D):
 
     filepath_lookup_table = ""
 
-    def __init__(self, qubit_info, qubit2_info, twoQ_info, cancel_info, num_cal_points, N_cliffords, generator='ZX90', seq=None, postseq=None, num_gates=0, category='all', cnum=None,
+    def __init__(self, qubit_info, qubit2_info, twoQ_info, cancel_info, num_cal_points, N_cliffords, generator='CZ', seq=None, postseq=None, num_gates=0, category='all', cnum=None,
                  find_cheapest_recovery=False, interleave=None, use_virtual_Z=False, virtual_recovery=False, 
                  singleQ_phases=[0,0], **kwargs):
         self.qubit_info = qubit_info
@@ -577,7 +547,7 @@ class TwoQubit_RB(Measurement1D):
 
 
 
-    def get_recovery_gate(self, gate_seq_1, gate_seq_2, phase1, phase2, generator = 'ZX90'):    
+    def get_recovery_gate(self, gate_seq_1, gate_seq_2, phase1, phase2, generator = 'CZ'):    
 
 #    def get_recovery_gate(self, gate_seq_1, gate_seq_2, generator = 'CNOT'):
         """
