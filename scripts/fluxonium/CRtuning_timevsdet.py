@@ -32,11 +32,10 @@ class CRtuning_timevsdet(Measurement2D):
 
 #The purpose here is to sweep over time and detuning for the combined pulse without the pi pulse on the control qubit
 
-    def __init__(self, qubit_info, qubit_info2, qubit2_info, times, detunings, amp=0.35, phase=0, rel_amp=1, rel_phase=1, sigma=5, update=False, seq=None, r_axis=0, fix_phase=True,
+    def __init__(self, gate_info1, gate_info2,  times, detunings, amp=0.35, phase=0, rel_amp=1, rel_phase=1, sigma=5, update=False, seq=None, r_axis=0, fix_phase=True,
                  fix_period=None, repeat_pulse=1, postseq=None, selective=False, control_pi=False,  **kwargs):
-        self.qubit_info = qubit_info
-        self.qubit_info2 = qubit_info2
-        self.qubit2_info = qubit2_info
+        self.gate_info1 = gate_info1
+        self.gate_info2 = gate_info2
         self.times = times
 #        self.xs = np.array([times,times]).transpose().flatten() / 1e3      # For plotting purposes
         self.detunings = -detunings
@@ -66,50 +65,50 @@ class CRtuning_timevsdet(Measurement2D):
 
         npoints = self.two_axes.size
         
-        super(CRtuning_timevsdet, self).__init__(npoints, infos=(qubit_info,qubit_info2, qubit2_info), **kwargs)
+        super(CRtuning_timevsdet, self).__init__(npoints, infos=(gate_info1, gate_info2), **kwargs)
         self.data.create_dataset('two_axes', data=self.two_axes, dtype=np.complex)
 
 
-    def generate_dummy(self):
-        s = Sequence()
-
-        ro = Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-        ])
-        for i, df in enumerate(self.detunings):
-            g = DetunedSum(self.qubit_info.rotate_selective.base, self.qubit_info.w_selective, chans=self.qubit_info.sideband_channels)
-            if df != 0:
-                period = 1e9 / df
-            else:
-                period = 1e50
-            g.add(self.qubit_info.pi_amp_selective, period)
-
-            s.append(Join([
-                self.seq,
-                g(),
-            ]))
-
-            if self.postseq:
-                s.append(self.postseq)
-            s.append(ro)
-
-            #Ebru, adding the 20000 delay
-            s.append(Delay(2000))
-        s = self.get_sequencer(s)
-        seqs = s.render()
-        return seqs
+#    def generate_dummy(self):
+#        s = Sequence()
+#
+#        ro = Combined([
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#        ])
+#        for i, df in enumerate(self.detunings):
+#            g = DetunedSum(self.qubit_info.rotate_selective.base, self.qubit_info.w_selective, chans=self.qubit_info.sideband_channels)
+#            if df != 0:
+#                period = 1e9 / df
+#            else:
+#                period = 1e50
+#            g.add(self.qubit_info.pi_amp_selective, period)
+#
+#            s.append(Join([
+#                self.seq,
+#                g(),
+#            ]))
+#
+#            if self.postseq:
+#                s.append(self.postseq)
+#            s.append(ro)
+#
+#            #Ebru, adding the 20000 delay
+#            s.append(Delay(2000))
+#        s = self.get_sequencer(s)
+#        seqs = s.render()
+#        return seqs
 
 
 
     def generate(self):
         s = Sequence()
-        ampI = self.amp * np.cos(self.phase)
-        ampQ = self.amp * np.sin(self.phase)
-        ampIc = self.amp *self.rel_amp * np.cos(self.phase+self.rel_phase)
-        ampQc = self.amp *self.rel_amp * np.sin(self.phase+self.rel_phase)
-        chs = self.qubit_info.sideband_channels
-        chs2 = self.qubit_info2.sideband_channels
+#        ampI = self.amp * np.cos(self.phase)
+#        ampQ = self.amp * np.sin(self.phase)
+#        ampIc = self.amp *self.rel_amp * np.cos(self.phase+self.rel_phase)
+#        ampQc = self.amp *self.rel_amp * np.sin(self.phase+self.rel_phase)
+        chs = self.gate_info1.sideband_channels
+        chs2 = self.gate_info1.sideband_channels2
             
         for df in self.detunings:
             for plen in self.times:
@@ -133,16 +132,18 @@ class CRtuning_timevsdet(Measurement2D):
                 g2.add(self.amp * self.rel_amp, period, (self.rel_phase,self.rel_phase-np.pi/2))
 
                 if self.control_pi==True:
-                    s.append(self.qubit2_info.rotate(np.pi,0))
+                    s.append(self.gate_info2.rotate(np.pi,0))
                     s.append(Combined([g1(),g2()]))
+                    s.append(self.gate_info2.rotate(np.pi,0))#                    s.append(g1())
 
                 else:
                     s.append(Combined([g1(),g2()]))
-                    s.append(self.qubit2_info.rotate(np.pi,0))#                    s.append(g1())
                     
                 if self.postseq:
                     s.append(self.postseq)
                 s.append(Delay(10))
+                s.append(self.gate_info2.rotate(np.pi,0))  #ebru: temporarily for readout on e
+
                 s.append(Combined([
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),

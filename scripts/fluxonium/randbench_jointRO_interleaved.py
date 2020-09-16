@@ -320,7 +320,7 @@ class Interleaved_1QRB(Measurement1D):
 
                     
         for n in range(self.start, self.stop+1, self.step):
-#            s.append(self.seq)
+            s.append(self.seq)
             temp_seq = Sequence()            
             for i in range(2*n):
                 if rotation_list[i] in ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B4', 'B5', 'B6']:

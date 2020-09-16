@@ -30,6 +30,8 @@ def analysis(meas, data=None, fig=None):
     xs = meas.amps
 
     fig.axes[0].plot(xs, ys, 'ks', ms=3)
+    fig.axes[0].errorbar(xs, ys, yerr=meas.get_stes(), fmt='.', 
+                         markersize = 0, ecolor='grey', linewidth=1)
     
 
     amp0 = (np.max(ys) - np.min(ys)) / 2
@@ -97,10 +99,10 @@ def analysis(meas, data=None, fig=None):
 
 class Rabi(Measurement1D):
 
-    def __init__(self, qubit_info, amps, update=False, seq=None, r_axis=0, fix_phase=True,
+    def __init__(self, qubit_info, amps, update=False, seq=None, r_axis=0, fix_phase=True, cancel_info=None,
                  fix_period=None, repeat_pulse=1, postseq=None, selective=False, fit_type=FIT_AMP, **kwargs):
         self.qubit_info = qubit_info
-#        self.qubit2_info = qubit2_info
+        self.cancel_info = cancel_info
         self.amps = amps
         self.xs = amps
         self.update_ins = update
@@ -114,22 +116,31 @@ class Rabi(Measurement1D):
         self.r_axis = r_axis
         self.fit_type = fit_type
         self.selective = selective
-
-        super(Rabi, self).__init__(len(amps), infos=(qubit_info), **kwargs)
+        
+        if cancel_info is not None:
+            super(Rabi, self).__init__(len(amps), infos=(qubit_info, cancel_info), **kwargs)
+        else:
+            super(Rabi, self).__init__(len(amps), infos=(qubit_info), **kwargs)
+            
         self.data.create_dataset('amps', data=amps)
 
     def generate(self):  #That is the original generate function 
         s = Sequence()
-#        r2 = self.qubit_pre.rotate
         for i, amp in enumerate(self.amps):
             s.append(self.seq)
-#            s.append(self.qubit2_info.rotate(np.pi,0))
-            if self.selective==1:
-                s.append(Repeat(self.qubit_info.rotate_selective(0, self.r_axis, amp=amp), self.repeat_pulse))
-            elif self.selective==0.5:
-                s.append(Repeat(self.qubit_info.rotate_quasilective(0, self.r_axis, amp=amp), self.repeat_pulse))
+            
+            if self.cancel_info is not None:
+                for j in range(self.repeat_pulse):
+                    s.append(Combined([self.qubit_info.rotate(0, self.r_axis, amp=amp),
+                                       self.cancel_info.rotate(np.pi, self.r_axis)
+                            ]))
             else:
-                s.append(Repeat(self.qubit_info.rotate(0, self.r_axis, amp=amp), self.repeat_pulse))
+                if self.selective==1:
+                    s.append(Repeat(self.qubit_info.rotate_selective(0, self.r_axis, amp=amp), self.repeat_pulse))
+                elif self.selective==0.5:
+                    s.append(Repeat(self.qubit_info.rotate_quasilective(0, self.r_axis, amp=amp), self.repeat_pulse))
+                else:
+                    s.append(Repeat(self.qubit_info.rotate(0, self.r_axis, amp=amp), self.repeat_pulse))
             if self.postseq is not None:
                 s.append(self.postseq)
             s.append(Delay(100))

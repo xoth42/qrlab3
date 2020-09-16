@@ -57,7 +57,6 @@ def analysis(meas, data=None, fig=None):
         fig.axes[0].plot(xs, -fit_timerabi(result.params, xs, 0), label=txt)
         fig.axes[1].plot(xs, fit_timerabi(result.params, xs, ys), marker='s')
     
-    #    lmfit.report_fit(params)
         lmfit.report_fit(result.params)
     
         fig.axes[0].set_ylabel('Intensity [AU]')
@@ -65,15 +64,16 @@ def analysis(meas, data=None, fig=None):
         fig.axes[0].legend(loc=0)
     
     fig.canvas.draw()
-    return result.params
+    return
+#    return result.params
 
 class TimeRabi_interleaved(Measurement1D):
 
-    def __init__(self, qubit_info, qubit_info2, qubit2_info, times, amp=0.35, phase=0, rel_amp=1, rel_phase=1, sigma=5, update=False, seq=None, r_axis=0, fix_phase=True,
-                 fix_period=None, repeat_pulse=1, postseq=None, selective=False, fit_type=FIT_AMP, **kwargs):
-        self.qubit_info = qubit_info
-        self.qubit_info2 = qubit_info2
-        self.qubit2_info = qubit2_info
+    def __init__(self, gate_info1, gate_info2, times, amp=0.08, phase=0, rel_amp=1, rel_phase=1, cancel_info=None, sigma=5, update=False, seq=None, r_axis=0, fix_phase=True, read_on_e=True,
+                 fix_period=None, repeat_pulse=1, postseq=None, selective=False, swap_chs = False, fit_type=FIT_AMP, **kwargs):
+        self.gate_info1 = gate_info1
+        self.gate_info2 = gate_info2
+        self.cancel_info = cancel_info
         self.times = times
         self.xs = np.array([times,times]).transpose().flatten() / 1e3      # For plotting purposes
         self.amp = amp
@@ -91,9 +91,10 @@ class TimeRabi_interleaved(Measurement1D):
         self.r_axis = r_axis
         self.fit_type = fit_type
         self.selective = selective
+        self.swap_chs = swap_chs
         self.sigma = sigma
-
-        super(TimeRabi_interleaved, self).__init__(len(times)*2, infos=(qubit_info,qubit_info2, qubit2_info), **kwargs)
+        self.read_on_e = read_on_e
+        super(TimeRabi_interleaved, self).__init__(len(times)*2, infos=(gate_info1,gate_info2), **kwargs)
         self.data.create_dataset('times', data=times)
 
     def generate(self):
@@ -102,33 +103,41 @@ class TimeRabi_interleaved(Measurement1D):
         ampQ = self.amp * np.sin(self.phase)
         ampIc = self.amp *self.rel_amp * np.cos(self.phase+self.rel_phase)
         ampQc = self.amp *self.rel_amp * np.sin(self.phase+self.rel_phase)
-        chs = self.qubit_info.sideband_channels
-        chs2 = self.qubit_info2.sideband_channels
-#        chs2 = self.qubit_info.sideband_channels2 #Chen temporary hack
-        
+        chs = self.gate_info1.sideband_channels
+        chs2 = self.gate_info1.sideband_channels2
+        if self.cancel_info is not None:
+            chs3 = self.cancel_info.sideband_channels
+
+        if self.swap_chs == True: 
+            chs2= self.gate_info1.sideband_channels
+            chs = self.gate_info1.sideband_channels2
+            
         for plen in self.times:
             
             '''Without pi pulse'''
             s.append(self.seq)    
 
             if plen >= 0:
-#            s.append(self.qubit2_info.rotate(np.pi,0))
-#            s.append(Delay(5))
-#this part out for the moment           
-                s.append(Combined([
+                if self.cancel_info is not None:
+                    s.append(Repeat(Combined([
                     GaussSquare(int(plen), ampI, self.sigma, chan=chs[0]),
                     GaussSquare(int(plen), ampQ, self.sigma, chan=chs[1]),
                     GaussSquare(int(plen), ampIc, self.sigma, chan=chs2[0]),
                     GaussSquare(int(plen), ampQc, self.sigma, chan=chs2[1]),            
-#                    Constant(int(plen), self.amp * np.cos(self.phase), chan=chs[0]),
-#                    Constant(int(plen), self.amp * np.sin(self.phase), chan=chs[1]),
-#                    Constant(int(plen), self.amp *self.rel_amp * np.cos(self.phase+self.rel_phase), chan=chs2[0]),
-#                    Constant(int(plen), self.amp *self.rel_amp * np.sin(self.phase+self.rel_phase), chan=chs2[1]),              
-                ]))
+                    GaussSquare(int(plen), self.cancel_info.pi_amp, self.sigma, chan=chs3[0]),
+                    ]), self.repeat_pulse))
+                else:       
+                    s.append(Repeat(Combined([
+                        GaussSquare(int(plen), ampI, self.sigma, chan=chs[0]),
+                        GaussSquare(int(plen), ampQ, self.sigma, chan=chs[1]),
+                        GaussSquare(int(plen), ampIc, self.sigma, chan=chs2[0]),
+                        GaussSquare(int(plen), ampQc, self.sigma, chan=chs2[1]),            
+                    ]), self.repeat_pulse))
             s.append(Delay(5))
-#            s.append(self.qubit2_info.rotate(np.pi,0))#Chen changed to always measure with control qubit in e
+            
+            if self.read_on_e is True:
+                s.append(self.gate_info2.rotate(np.pi,0))#Chen changed to always measure with control qubit in e
 #this part out for the moment
-
 
             if self.postseq:
                 s.append(self.postseq)
@@ -142,23 +151,29 @@ class TimeRabi_interleaved(Measurement1D):
             '''With pi pulse'''
 
             s.append(self.seq)
-            s.append(self.qubit2_info.rotate(np.pi,0))
+            s.append(self.gate_info2.rotate(np.pi,0))
             s.append(Delay(5))
             
             if plen >= 0:
-                s.append(Combined([
-#                    Constant(int(plen), self.amp * np.cos(self.phase), chan=chs[0]),
-#                    Constant(int(plen), self.amp * np.sin(self.phase), chan=chs[1]),
-#                    Constant(int(plen), self.amp *self.rel_amp * np.cos(self.phase+self.rel_phase), chan=chs2[0]),
-#                    Constant(int(plen), self.amp *self.rel_amp * np.sin(self.phase+self.rel_phase), chan=chs2[1]),              
+                if self.cancel_info is not None:
+                    s.append(Repeat(Combined([
                     GaussSquare(int(plen), ampI, self.sigma, chan=chs[0]),
                     GaussSquare(int(plen), ampQ, self.sigma, chan=chs[1]),
                     GaussSquare(int(plen), ampIc, self.sigma, chan=chs2[0]),
-                    GaussSquare(int(plen), ampQc, self.sigma, chan=chs2[1]),
-                ]))
-    
+                    GaussSquare(int(plen), ampQc, self.sigma, chan=chs2[1]),            
+                    GaussSquare(int(plen), self.cancel_info.pi_amp, self.sigma, chan=chs3[0]),
+                    ]), self.repeat_pulse))
+                else:       
+                    s.append(Repeat(Combined([
+                        GaussSquare(int(plen), ampI, self.sigma, chan=chs[0]),
+                        GaussSquare(int(plen), ampQ, self.sigma, chan=chs[1]),
+                        GaussSquare(int(plen), ampIc, self.sigma, chan=chs2[0]),
+                        GaussSquare(int(plen), ampQc, self.sigma, chan=chs2[1]),            
+                    ]), self.repeat_pulse))
             s.append(Delay(5))
-            s.append(self.qubit2_info.rotate(np.pi,0))      
+            
+            if self.read_on_e is not True:
+                s.append(self.gate_info2.rotate(np.pi,0))#Chen changed to always measure with control qubit in e
             
             if self.postseq:
                 s.append(self.postseq)

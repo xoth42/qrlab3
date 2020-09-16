@@ -56,12 +56,12 @@ class Singlequbit_tuning_time_amp(Measurement2D):
 
 #The purpose here is to sweep over time and detuning for the combined pulse without the pi pulse on the control qubit
 
-    def __init__(self, qubit_info, qubit_info2, qubit2_info, times, rel_amps, amp=0.35, phase=0, rel_phase=1, sigma=5, 
+    def __init__(self, gate_info1, gate_info2, times, rel_amps, amp=0.35, phase=0, rel_phase=1, sigma=5, 
                  update=False, seq=None, r_axis=0, fix_phase=True,
                  fix_period=None, repeat_pulse=1, postseq=None, selective=False, **kwargs):
-        self.qubit_info = qubit_info
-        self.qubit_info2 = qubit_info2
-        self.qubit2_info = qubit2_info
+        self.gate_info1 = gate_info1
+        self.gate_info2 = gate_info2
+
         self.times = times
         self.rel_amps = rel_amps
 #        self.xs2 = np.array([times,times]).transpose().flatten() / 1e3      # For plotting purposes        
@@ -98,7 +98,7 @@ class Singlequbit_tuning_time_amp(Measurement2D):
 
 
 
-        super(Singlequbit_tuning_time_amp, self).__init__(npoints, infos=(qubit_info,qubit_info2, qubit2_info), **kwargs)
+        super(Singlequbit_tuning_time_amp, self).__init__(npoints, infos=(gate_info1, gate_info2), **kwargs)
         self.data.create_dataset('two_axes', data=self.two_axes, dtype=np.complex)
 
     def generate(self):
@@ -107,8 +107,8 @@ class Singlequbit_tuning_time_amp(Measurement2D):
 #        ampQ = self.amp * np.sin(self.phase)
 #        ampIc = self.amp *self.rel_amps * np.cos(self.phase+self.rel_phase)
 #        ampQc = self.amp *self.rel_amps * np.sin(self.phase+self.rel_phase)
-        chs = self.qubit_info.sideband_channels
-        chs2 = self.qubit_info2.sideband_channels
+        chs = self.gate_info1.sideband_channels1
+        chs2 = self.gate_info1.sideband_channels2
 
 
         for rel_amp in self.rel_amps:
@@ -120,14 +120,14 @@ class Singlequbit_tuning_time_amp(Measurement2D):
     
 #                if plen > 0:
                 g=(Combined([
-        #                GaussSquare(int(plen), ampI, self.sigma, chan=chs[0]),
-        #                GaussSquare(int(plen), ampQ, self.sigma, chan=chs[1]),
-        #                GaussSquare(int(plen), ampIc, self.sigma, chan=chs2[0]),
-        #                GaussSquare(int(plen), ampQc, self.sigma, chan=chs2[1]),            
-                        Constant(int(plen), self.amp * np.cos(self.phase), chan=chs[0]),
-                        Constant(int(plen), self.amp * np.sin(self.phase), chan=chs[1]),
-                        Constant(int(plen), self.amp *rel_amp * np.cos(self.phase+self.rel_phase), chan=chs2[0]),
-                        Constant(int(plen), self.amp *rel_amp * np.sin(self.phase+self.rel_phase), chan=chs2[1]),              
+                        GaussSquare(int(plen), ampI, self.sigma, chan=chs[0]),
+                        GaussSquare(int(plen), ampQ, self.sigma, chan=chs[1]),
+                        GaussSquare(int(plen), ampIc, self.sigma, chan=chs2[0]),
+                        GaussSquare(int(plen), ampQc, self.sigma, chan=chs2[1]),            
+#                        Constant(int(plen), self.amp * np.cos(self.phase), chan=chs[0]),
+#                        Constant(int(plen), self.amp * np.sin(self.phase), chan=chs[1]),
+#                        Constant(int(plen), self.amp *rel_amp * np.cos(self.phase+self.rel_phase), chan=chs2[0]),
+#                        Constant(int(plen), self.amp *rel_amp * np.sin(self.phase+self.rel_phase), chan=chs2[1]),              
                     ]))
                 s.append(g)
 #                s.append(g)
@@ -143,21 +143,21 @@ class Singlequbit_tuning_time_amp(Measurement2D):
             for plen in self.times:
                 '''With pi pulse'''
                 s.append(self.seq)    
-                s.append(self.qubit2_info.rotate(np.pi,0))    
+                s.append(self.gate_info2.rotate(np.pi,0))    
 #                if plen > 0:
                 g=(Combined([
-        #                GaussSquare(int(plen), ampI, self.sigma, chan=chs[0]),
-        #                GaussSquare(int(plen), ampQ, self.sigma, chan=chs[1]),
-        #                GaussSquare(int(plen), ampIc, self.sigma, chan=chs2[0]),
-        #                GaussSquare(int(plen), ampQc, self.sigma, chan=chs2[1]),            
-                        Constant(int(plen), self.amp * np.cos(self.phase), chan=chs[0]),
-                        Constant(int(plen), self.amp * np.sin(self.phase), chan=chs[1]),
-                        Constant(int(plen), self.amp *rel_amp * np.cos(self.phase+self.rel_phase), chan=chs2[0]),
-                        Constant(int(plen), self.amp *rel_amp * np.sin(self.phase+self.rel_phase), chan=chs2[1]),              
+                        GaussSquare(int(plen), ampI, self.sigma, chan=chs[0]),
+                        GaussSquare(int(plen), ampQ, self.sigma, chan=chs[1]),
+                        GaussSquare(int(plen), ampIc, self.sigma, chan=chs2[0]),
+                        GaussSquare(int(plen), ampQc, self.sigma, chan=chs2[1]),            
+#                        Constant(int(plen), self.amp * np.cos(self.phase), chan=chs[0]),
+#                        Constant(int(plen), self.amp * np.sin(self.phase), chan=chs[1]),
+#                        Constant(int(plen), self.amp *rel_amp * np.cos(self.phase+self.rel_phase), chan=chs2[0]),
+#                        Constant(int(plen), self.amp *rel_amp * np.sin(self.phase+self.rel_phase), chan=chs2[1]),              
                     ]))
 
                 s.append(g)
-                s.append(self.qubit2_info.rotate(np.pi,0))    
+                s.append(self.gate_info2.rotate(np.pi,0))    
                 if self.postseq:
                     s.append(self.postseq)
                 s.append(Delay(10))
