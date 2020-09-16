@@ -9,8 +9,8 @@ from mclient import instruments
 
 #SC = instruments.create('SC', 'SC5511A', devid='100016B5')
 
-Yoko = instruments.create('Yoko','Yokogawa_7651_new',address='GPIB1::6::INSTR')
-print 'Yoko OK'
+#Yoko = instruments.create('Yoko','Yokogawa_7651_new',address='GPIB1::6::INSTR')
+#print 'Yoko OK'
 
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1', clock=1e9, refsrc='EXT', reffreq=10e6)
 

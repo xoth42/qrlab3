@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Wed Aug 19 15:28:42 2020
+
+@author: Wang_Lab
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Mon Jul  6 17:51:18 2020
 
 @author: Wang_Lab
@@ -61,19 +68,14 @@ def changing_freq_fit(params, x, data):
     '''
 
     sine = np.sin(2 * np.pi * x * (params['freq'].value + params['A']*np.exp(-params['slope'].value * x) ) + params['phi0'].value)
-    exp = np.exp(-(x*((1 / params['tau'].value) + params['A2'].value*np.exp(-x*params['slope'].value/2))))
+    exp = np.exp(-(x*(1 / params['tau'].value + params['A2']*np.exp(-x*params['slope']))))
     est = params['ofs'].value + params['amp'].value * exp * sine
-#    print params
     return data - est
 
 def analysis(meas, data=None, fig=None):
     xs = meas.delays
     ys, fig = meas.get_ys_fig(data, fig)
-    if np.max(ys) - np.min(ys)>300:# and meas.proj_func is 'phase':
 
-        for iphase in range(len(ys)):
-            if ys[iphase] > 0:
-                ys[iphase] = ys[iphase] -360  
     fig.axes[0].plot(xs/1e3, ys, 'ks', ms=3, linestyle='-', markerfacecolor='red')
 
     amp0 = (np.max(ys) - np.min(ys)) / 2
@@ -87,15 +89,9 @@ def analysis(meas, data=None, fig=None):
     params.add('amp', value=amp0, min=0.1)
     params.add('tau', value=xs[-1], min=1, max=2e5)
     params.add('freq', value=f0, min=0)
-    if meas.SS_mixer_info1.pi_amp ==0:
-        params.add('slope', value=0,min = 0, vary = False)
-        params.add('A', value = 0,  vary = False)
-        params.add('A2', value = 0, vary = False) 
-    else:
-        
-        params.add('slope', value=.01,min = 0, vary = True)
-        params.add('A', value = -1e-3, max = 0, vary = True)
-        params.add('A2', value = 2e-4, min = 0, vary = True)
+    params.add('slope', value=.01,vary = True)
+    params.add('A', value = -1e-3, min = -5e-3, max = 0, vary = True)
+    params.add('A2', value = 2e-4, vary = True)
 #    if meas.echotype == ECHO_NONE:
 #
 #        params.add('phi0', value=np.pi/2, min=-1.2*np.pi, max=1.2*np.pi, vary=True)  #Changed to plus sign for accommodate for amplitude RO, need a good LT solution
@@ -112,16 +108,7 @@ def analysis(meas, data=None, fig=None):
     lmfit.report_fit(result.params)
 
     if meas.double_freq == False:
-        fig.axes[0].plot(xs/1e3, -changing_freq_fit(result.params, xs, 0), 
-                label='Fit, tau=%.03f us, df=%.03f kHz, df_final = %.03f kHz,\n df_average = %.03f kHz\n tau_i = %.04f us, tau_f = %.04f us, tau_ave = %.04f us'%(
-                        result.params['tau'].value/1000, 
-                        result.params['freq'].value*1e6 + result.params['A']*1e6*np.exp(-xs[0]*result.params['slope']),
-                        result.params['freq'].value*1e6 + result.params['A']*1e6*np.exp(-xs[-1]*result.params['slope']),
-                        np.average(result.params['freq'].value*1e6 + result.params['A']*1e6*np.exp(-xs*result.params['slope'])),
-                        0.001/((1/result.params['tau'].value) + result.params['A2'].value*np.exp(-xs[0]*result.params['slope'].value/2)),
-                        0.001/((1/result.params['tau'].value) + result.params['A2'].value*np.exp(-xs[-1]*result.params['slope'].value/2)),
-                        0.001/np.average((1/result.params['tau'].value) + result.params['A2'].value*np.exp(-xs*result.params['slope'].value/2))                   
-                        ))
+        fig.axes[0].plot(xs/1e3, -changing_freq_fit(result.params, xs, 0), label='Fit, tau=%.03f us, df=%.03f kHz, df_final = %.03f kHz'%(result.params['tau'].value/1000, result.params['freq'].value*1e6 + result.params['A']*1e6*np.exp(-xs[0]*result.params['slope']),result.params['freq'].value*1e6 + result.params['A']*1e6*np.exp(-xs[-1]*result.params['slope'])))
         fig.axes[0].legend()
         fig.axes[0].set_ylabel('Intensity [AU]')
         fig.axes[0].set_xlabel('Time [us]')
@@ -172,20 +159,20 @@ def analysis(meas, data=None, fig=None):
 
     return result.params
 
-class Ramsey_Measurement_mixer(Measurement1D):
+class Photon_Ramsey_Measurement_mixer(Measurement1D):
 
-    def __init__(self, qubit_info, SS_mixer_info1, mixer_info1,mixer_info2, delays, detune=0, echotype=ECHO_NONE, necho=1,
-                 double_freq=False, seq=None, postseq=None, selective=False, Qswitch_infoA=None, Qswitch_infoB=None, **kwargs):
-        self.qubit_info = qubit_info
+    def __init__(self, qubit_info1,qubit_info2, SS_mixer_info1, mixer_info1,mixer_info2, delays, detune=0, qubit_pulse=False,
+                 double_freq=False, seq=None, postseq=None, selective=True, Qswitch_infoA=None, Qswitch_infoB=None, **kwargs):
+        self.qubit_info1 = qubit_info1
+        self.qubit_info2 = qubit_info2
         self.SS_mixer_info1 = SS_mixer_info1
         self.mixer_info1 = mixer_info1
         self.mixer_info2 = mixer_info2
+        self.qubit_pulse = qubit_pulse
 #        self.qubit_pre = qubit_pre
         self.delays = delays
         self.xs = delays / 1e3        # For plotting purposes
         self.detune = detune
-        self.echotype = echotype
-        self.necho = necho
         self.double_freq=double_freq
         if seq is None:
             seq = Trigger(250)
@@ -195,179 +182,29 @@ class Ramsey_Measurement_mixer(Measurement1D):
         self.QswA = Qswitch_infoA
         self.QswB = Qswitch_infoB
 
-        super(Ramsey_Measurement_mixer, self).__init__(len(delays), infos=(qubit_info,SS_mixer_info1, mixer_info1,mixer_info2,), **kwargs)
+        super(Photon_Ramsey_Measurement_mixer, self).__init__(len(delays), infos=(qubit_info,SS_mixer_info1, mixer_info1,mixer_info2,), **kwargs)
         self.data.create_dataset('delays', data=delays)
         self.data.set_attrs(
             detune=detune,
-            echotype=echotype,
-            necho=necho
         )
 
-    def get_echo_pulse(self):
-        if self.selective == False:
-            r = self.qubit_info.rotate
-        else:
-            r = self.qubit_info.rotate_selective
 
-        if self.echotype == ECHO_NONE:
-            return None
 
-        elif self.echotype == ECHO_HAHN:
-            return r(np.pi, X_AXIS)
-
-        elif self.echotype == ECHO_CPMG:
-            return r(np.pi, Y_AXIS)
-
-        elif self.echotype == ECHO_XY4:
-            return Sequence([
-                r(np.pi, X_AXIS),
-                r(np.pi, Y_AXIS),
-                r(np.pi, X_AXIS),
-                r(np.pi, Y_AXIS),
-            ])
-
-        elif self.echotype == ECHO_XY8:
-            return Sequence([
-                r(np.pi, X_AXIS),
-                r(np.pi, Y_AXIS),
-                r(np.pi, X_AXIS),
-                r(np.pi, Y_AXIS),
-
-                r(np.pi, Y_AXIS),
-                r(np.pi, X_AXIS),
-                r(np.pi, Y_AXIS),
-                r(np.pi, X_AXIS),
-            ])
-
-        elif self.echo == ECHO_XY16:
-            return Sequence([
-                r(np.pi, X_AXIS),
-                r(np.pi, Y_AXIS),
-                r(np.pi, X_AXIS),
-                r(np.pi, Y_AXIS),
-
-                r(np.pi, Y_AXIS),
-                r(np.pi, X_AXIS),
-                r(np.pi, Y_AXIS),
-                r(np.pi, X_AXIS),
-
-                r(-np.pi, X_AXIS),
-                r(-np.pi, Y_AXIS),
-                r(-np.pi, X_AXIS),
-                r(-np.pi, Y_AXIS),
-
-                r(-np.pi, Y_AXIS),
-                r(-np.pi, X_AXIS),
-                r(-np.pi, Y_AXIS),
-                r(-np.pi, X_AXIS),
-            ])
-
-#    def generate(self):
-#        s = Sequence()
-#        ro = (Combined([
-#            Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
-#            Join([Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),Delay(200)]),
-#            Join([self.mixer_info1.rotate(np.pi, 0),Delay(200)]),
-#            Join([self.mixer_info2.rotate(np.pi, 0),Delay(200)])
-##                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
-#        ])) 
-#        if self.selective == False:
-#            r = self.qubit_info.rotate
-#        else:
-#            r = self.qubit_info.rotate_selective
-#        e = self.get_echo_pulse()
-##        if e:
-##            elen = e.get_length()
-##            e = Pad(e, 250, PAD_BOTH)
-##            epadlen = e.get_length() - elen
-##        else:
-##            elen = 0
-#
-#        for i, dt in enumerate(self.delays):
-#            s_temp = self.seq[:]
-##            s.append(Constant(10, 1, chan=self.readout_info.acq_chan))
-#            s_temp += [r(np.pi/2, X_AXIS)]#s.append(Pad(r(np.pi/2, X_AXIS), 250, PAD_LEFT))
-#
-#            # We want echos: <tau> (<tau> <echo> <tau>)^n <tau>
-#            s_temp += [Combined([
-#            Constant(int(self.SS_mixer_info1.w), 1, chan=self.readout_info.readout_chan),
-#            self.SS_mixer_info1.rotate(np.pi, X_AXIS)])]
-#            
-##            s_temp += [self.SS_mixer_info1.rotate(np.pi, X_AXIS)]
-#            
-#            if e:
-#                tau=int(dt/(self.necho*2 + 2))
-##                s.append(Delay(tau))
-##                for i in range(self.necho):
-##                    s.append(Delay(tau))
-##                    s.append(e)
-##                    s.append(Delay(tau))
-##                s.append(Delay(tau))
-#                
-#                for i in range(self.necho):
-#                    s_temp += [Delay(2*tau)]
-#                    s_temp += [e]
-#                s_temp += [Delay(2*tau)]
-##                tau = int(np.round(dt / (2 * self.necho) - epadlen/2))
-##                if tau < 0:
-##                    s.append(Delay(dt))
-##                else:
-##                    s.append(Delay(tau))
-##                    for i in range(self.necho - 1):
-##                        s.append(e)
-##                        s.append(Delay(2*tau))
-##                    s.append(e)
-##                    s.append(Delay(tau))
-#
-#            # Plain T2
-#            
-#            else:
-#                if dt > 0:
-#                    s_temp += [Delay(dt)] # Very temporary, recover today Chen
-##                s.append(Constant(int(dt), 1, chan='8m1'))
-#
-#            # Measurement pulse
-#            angle = dt * 1e-9 * self.detune * 2 * np.pi
-#            s_temp += [r(-np.pi/2, angle)]#s.append(Pad(r(np.pi/2, angle), 250, PAD_RIGHT))
-#
-#            if self.postseq:
-#                s_temp += [self.postseq]
-#            s_temp += [ro]
-#    
-##            s.append(Delay(50000))
-#
-##            s.append(Repeat(Delay(1000), 20))   # wait for alazar acquisition to finish
-##            s.append(Combined([
-##                Repeat(Constant(5000, 0.4, chan=self.QswA.sideband_channels[0]), 60),
-##                Repeat(Constant(5000, 0.4, chan=self.QswA.sideband_channels[1]), 60),
-##                Repeat(Constant(5000, 0.6, chan=self.QswB.sideband_channels[0]), 60),
-##                Repeat(Constant(5000, 0.6, chan=self.QswB.sideband_channels[1]), 60),
-##                Repeat(Constant(5000, 1, chan='1m1'), 60),     # Readout pump tone switch
-##                Repeat(Constant(5000, 0.0001, chan=5), 60),         # Qubit/Readout master switch
-##            ]))
-#
-#            s_temp += [Delay(2000)]
-#            s.append(Join(s_temp))
-#
-#        s = self.get_sequencer(s)
-#        seqs = s.render()
-##        s.plot_seqs(seqs)
-#
-#        return seqs
     def generate(self):
         s = Sequence()
         ro = (Combined([
             Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
-#            Join([Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+            Join([Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),Delay(200)]),
             Join([self.mixer_info1.rotate(np.pi, 0),Delay(200)]),
             Join([self.mixer_info2.rotate(np.pi, 0),Delay(200)])
 #                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
-        ])) 
-        if self.selective == False:
-            r = self.qubit_info.rotate
+        ]))
+#    we are using the rotate_selective for the single photon stuff and the rotate for stark shift stuff
+        if self.selective == True:
+            r = self.SS_mixer_info1.rotate_selective
         else:
-            r = self.qubit_info.rotate_selective
-        e = self.get_echo_pulse()
+            r = self.SS_mixer_info1.rotate
+#        e = self.get_echo_pulse()
 #        if e:
 #            elen = e.get_length()
 #            e = Pad(e, 250, PAD_BOTH)
@@ -378,6 +215,8 @@ class Ramsey_Measurement_mixer(Measurement1D):
         for i, dt in enumerate(self.delays):
             s.append(self.seq)
 #            s.append(Constant(10, 1, chan=self.readout_info.acq_chan))
+            if self.qubit_pulse:
+                s.append(self.qubit_info2.rotate(np.pi, 0))
             s.append(r(np.pi/2, X_AXIS))#s.append(Pad(r(np.pi/2, X_AXIS), 250, PAD_LEFT))
 
             # We want echos: <tau> (<tau> <echo> <tau>)^n <tau>
@@ -385,43 +224,20 @@ class Ramsey_Measurement_mixer(Measurement1D):
 #            Constant(int(self.SS_mixer_info1.w), 1, chan=self.readout_info.readout_chan),
 #            self.SS_mixer_info1.rotate(np.pi, X_AXIS)]))
             
-            s.append(self.SS_mixer_info1.rotate(np.pi, X_AXIS))
+#            s.append(self.SS_mixer_info1.rotate(np.pi, X_AXIS))
             
-            if e:
-                tau=int(dt/(self.necho*2 + 2))
-#                s.append(Delay(tau))
-#                for i in range(self.necho):
-#                    s.append(Delay(tau))
-#                    s.append(e)
-#                    s.append(Delay(tau))
-#                s.append(Delay(tau))
-                
-                for i in range(self.necho):
-                    s.append(Delay(2*tau))
-                    s.append(e)
-                s.append(Delay(2*tau))
-#                tau = int(np.round(dt / (2 * self.necho) - epadlen/2))
-#                if tau < 0:
-#                    s.append(Delay(dt))
-#                else:
-#                    s.append(Delay(tau))
-#                    for i in range(self.necho - 1):
-#                        s.append(e)
-#                        s.append(Delay(2*tau))
-#                    s.append(e)
-#                    s.append(Delay(tau))
 
             # Plain T2
             
-            else:
-                if dt > 0:
-                    s.append(Delay(dt)) # Very temporary, recover today Chen
+
+            if dt > 0:
+                s.append(Delay(dt)) # Very temporary, recover today Chen
 #                s.append(Constant(int(dt), 1, chan='8m1'))
 
             # Measurement pulse
             angle = dt * 1e-9 * self.detune * 2 * np.pi
             s.append(r(-np.pi/2, angle))#s.append(Pad(r(np.pi/2, angle), 250, PAD_RIGHT))
-
+            s.append(self.qubit_info1.rotate(np.pi, 0))
             if self.postseq:
                 s.append(self.postseq)
             s.append(ro)

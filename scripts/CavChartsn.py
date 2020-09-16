@@ -80,7 +80,7 @@ if 0: # Cavity T1
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
 #    xs = np.concatenate((np.linspace(0e3, 50e3, 26), np.linspace(60e3, 1250e3, 55)))
 
-    t1 = cavT1.CavT1(qubit_info, cavity_infoB, 1.0, np.linspace(1e3, 1500e3, 51),
+    t1 = cavT1.CavT1(qubit_info, cavity_infoB, 2, np.linspace(1e3, 2000e3, 51),
                      proj_num=0, seq=None, postseq=None, bgcor=True, force_a0 = True
 #                     extra_info=[ef_info,]
                      )
@@ -90,8 +90,8 @@ if 0: # Cavity T1
 
 if 0: # Cavity T2
     from single_cavity import cavT2
-    detune = 10e3
-    ct2 = cavT2.CavT2(qubit_info, cavity_infoB, .7, np.linspace(0e3, 300e3, 71), detune=detune, seq=None,
+    detune = 15e3
+    ct2 = cavT2.CavT2(qubit_info, cavity_infoB, .7, np.linspace(10e3, 400e3, 91), detune=detune, seq=None,
                        postseq=None, bgcor=False, double_freq=False)
     ct2.measure_keysight()
 
@@ -194,9 +194,11 @@ if 0: # Measure cavity photon population
 
 if 0: #Sideband modulated number splitting:
     from single_qubit import ssbspec
-    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate(1, 0)])
+    seq = sequencer.Join([sequencer.Trigger(250), cA(0.561, 0), ges(2*np.pi, np.pi),
+                          cA(-0.24, 0)]) # t2 seq test
+#    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate(1, 0)])
     spec = ssbspec.SSBSpec(qubit_info, #np.linspace(-30e6, 10e6, 21),
-                           np.linspace(-15e6, .5e6, 301),
+                           np.linspace(-3e6, .5e6, 81),
 #                           np.concatenate((
 #                                           np.linspace(-22e6, -18e6, 15),
 #                                           np.linspace(-7e6, -5e6, 25), 
@@ -344,7 +346,7 @@ if 0: # Ramsey revival to calibrate wigner tomo
                                      seq = seq, extra_info = cavity_infoB)
     rr.measure_keysight()
 
-if 1: # Wigner function by displaced parity for cavity B
+if 0: # Wigner function by displaced parity for cavity B
     from scripts.single_cavity import WignerbyParity
 #    seq = sequencer.Join([prepareB, geph(pi/2,0), sequencer.Delay(950), cB(1.65, -pi*0.175),
 #                          geqs(pi,0), cB(-1.65, -pi*0.02)])

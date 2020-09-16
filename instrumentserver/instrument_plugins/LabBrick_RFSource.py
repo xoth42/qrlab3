@@ -182,8 +182,8 @@ class LabBrick_RFSource(Instrument):
 
         self.add_parameter('rf_on', type=types.BooleanType,
                            flags=Instrument.FLAG_GETSET)
-        self.add_parameter('ext_locked', type=types.BooleanType,
-                           flags=Instrument.FLAG_GET)
+#        self.add_parameter('ext_locked', type=types.BooleanType,
+#                           flags=Instrument.FLAG_GET)
         self.add_parameter('fast_pulse_option', type=types.BooleanType,
                            flags=Instrument.FLAG_GET)
         self.add_parameter('power', type=types.FloatType,
@@ -196,6 +196,9 @@ class LabBrick_RFSource(Instrument):
                            display_scale=6)
         self.add_parameter('use_extref', type=types.BooleanType,
                            flags=Instrument.FLAG_GETSET)
+        
+#        self.add_parameter('pulse_on', type=types.BooleanType,
+#                           flags=Instrument.FLAG_GET)
 
         self.add_parameter('internal_pulse_stat', type=types.BooleanType,
                            flags=Instrument.FLAG_GETSET)
@@ -275,8 +278,13 @@ class LabBrick_RFSource(Instrument):
         
 
 #    def do_get_pulse_on(self):
-#        f = get_lb_func('fnLMS_GetUseInternalPulseMod')
-#        return not f(self._devid)
+#        f = get_lb_func('fnLMS_GetPulseMode')
+#        return f(self._devid)
+    
+#    def do_set_pulse_on(self, val):
+#        f = get_lb_func('fnLMS_EnableInternalPulseMod',
+#                        [ctypes.c_uint32, ctypes.c_bool])
+#        return f(self._devid, not val)
 #
 #    def do_set_pulse_on(self, val):
 #        f = get_lb_func('fnLMS_SetUseExternalPulseMod', [ctypes.c_uint32, ctypes.c_bool])
@@ -284,7 +292,7 @@ class LabBrick_RFSource(Instrument):
            
 
     def do_get_internal_pulse_stat(self):
-        f = get_lb_func('fnLMS_GetUseInternalPulseMod')
+        f = get_lb_func('fnLMS_GetPulseMode')
         v = f(self._devid)
         return v
         
@@ -292,7 +300,7 @@ class LabBrick_RFSource(Instrument):
         func = get_lb_func("fnLMS_EnableInternalPulseMod",
                            [ctypes.c_uint32, ctypes.c_bool])
         stat = func(self._devid, value)
-        #return stat
+        return stat
 
     def do_set_external_pulse_stat(self, val):
         f = get_lb_func('fnLMS_SetUseExternalPulseMod',
@@ -303,13 +311,16 @@ class LabBrick_RFSource(Instrument):
         # -JC 3/5/18
         g = f(self._devid, val)
         self.external_mod_status = val
-        #return g
+        return g
 
     def do_get_external_pulse_stat(self):
         #This function returns None to signify that there is no specific API
         #function to retrievet this parameter. You should be able to tell its
         #value from the internal pulse modulation information.
-        return None
+        #return None
+        f = get_lb_func('fnLMS_GetUseInternalPulseMod')
+        v = f(self._devid)
+        return not v
 
     def do_get_frequency(self):
         f = get_lb_func('fnLMS_GetFrequency')

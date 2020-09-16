@@ -14,7 +14,7 @@ import os
 #mpl.rcParams['figure.figsize']=[5,3.5]
 #mpl.rcParams['axes.color_cycle'] = ['b', 'g', 'r', 'c', 'm', 'k']
 VNA = mclient.instruments['VNA']
-Magnet = mclient.instruments['Magnet']
+#Magnet = mclient.instruments['Magnet']
 
 #Yoko = mclient.instruments['Yoko']
 #print 'OK1'
@@ -47,7 +47,7 @@ if 0: #sweep voltage Yoko and get 2D plot
     pl.show()
     bla
     
-if 1: #sweep current Yoko and get 2D plot
+if 0: #sweep current Yoko and get 2D plot
     from scripts.single_cavity import VNA_current_sweep_yoko 
 
 #    Yoko.do_set_output_state(0)
@@ -190,7 +190,7 @@ if 1: #get single trace from VNA, withoout waiting, just take screenshot and fit
     from scripts.single_cavity import VNA_single_trace_V2
 #    print 'OK2'
     freqs = VNA.do_get_xaxis()
-    ro = VNA_single_trace_V2.SingleTraceNoAsync(freqs, fit_S12 = 0, fit_S11 =0)
+    ro = VNA_single_trace_V2.SingleTraceNoAsync(freqs, fit_S12 = 1, fit_S11 =0)
 
     ro.measure()
 

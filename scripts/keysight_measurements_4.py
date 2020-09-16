@@ -83,7 +83,7 @@ if 0: # Quantum Jump
 if 0: # cav transmission
     from single_cavity import rocavspectroscopy_keysight
     rofreq = 7317.52e6
-    freq_range = 1e6
+    freq_range = 5e6
 
     for i in range(1):    
         ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(5, 5, 1),
@@ -242,7 +242,7 @@ if 0: # Calibrate pi pulse
     tr = rabi.Rabi(qubit_info, 
 #                   np.linspace(-1, 1, 51), selective=False,
 #                   np.linspace(-.1, .1, 51), selective=.5,
-                  np.linspace(-0.01, 0.01, 51), selective=True,
+                  np.linspace(-0.015, 0.015, 51), selective=True,
 #                   np.linspace(0.7, .9, 51), selective=False,
 #                   np.linspace(0.45, 0.52, 51), selective=False,
                    plot_seqs=False, generate=True, repeat_pulse=1, update=False, seq=None)
@@ -256,7 +256,7 @@ if 0: # Time Rabi
     bla
 
     
-if 0: # T1
+if 1: # T1
 #    dig.set_trigger_period(500)
     from single_qubit import T1measurement
     t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0, 19e3, 20), np.linspace(20e3, 160e3, 20))), 
@@ -267,9 +267,9 @@ if 0: # T1
 
 if 0: # T2
     from single_qubit import T2measurement
-    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0e3, 30e3, 101), detune=.3e6, 
+    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0e3, 20e3, 101), detune=.5e6, 
 #    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 3.9e3, 81), detune=2e6, 
-                                     double_freq=False, generate=True, seq=None,
+                                     double_freq=True, generate=True, seq=None,
                                      plot_seqs=False)
     t2.measure_keysight()
     bla
@@ -280,7 +280,8 @@ if 0: # T2echo
     t2 = T2measurement.T2Measurement(qubit_info, np.linspace(.1e3, 70e3, 81),
 #                                     np.concatenate((np.linspace(0, 3.9e3, 14), np.linspace(8e3, 50e3, 81))), 
                                      detune=.1e6, 
-                                     echotype = T2measurement.ECHO_HAHN, necho=1, plot_seqs = False, generate=True)
+                                     echotype = T2measurement.ECHO_HAHN, necho=1, 
+                                     plot_seqs = False, generate=True)
     t2.measure_keysight()
     bla  
     
@@ -307,12 +308,12 @@ if 0: # EF rabi for pop
     from single_qubit import efrabi
     dig = mclient.instruments['dig']
     dig.set_naverages(1000)
-    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.9, 0.9, 51), plot_seqs=False, 
+    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.7, 0.7, 51), plot_seqs=False, 
                         selective=False, generate=True, postseq = None, update=False)
     efr.measure_keysight()
     period = efr.fit_params['period'].value
     dig.set_naverages(5000)
-    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.9, 0.9, 51), first_pi=False, 
+    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.7, 0.7, 51), first_pi=False, 
                         selective=False, force_period=period, postseq= None, generate=True)
     efr.measure_keysight()
     dig.set_naverages(1000)
@@ -360,9 +361,9 @@ if 0: # FT1
 if 0: # EFT2
     from single_qubit import EFT2measurement
 
-    eft2 = EFT2measurement.EFT2Measurement(qubit_info, ef_info, np.linspace(0e3, 19.9e3, 80),
-                                           detune=0.5e6, 
-                                           double_freq=False, generate=True, seq=None)
+    eft2 = EFT2measurement.EFT2Measurement(qubit_info, ef_info, np.linspace(0e3, 15e3, 161),
+                                           detune=0.7e6, 
+                                           double_freq=True, generate=True, seq=None)
     eft2.measure_keysight()
     bla
 
