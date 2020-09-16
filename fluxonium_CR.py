@@ -398,7 +398,7 @@ if 1: #Calibration of the CR-imprinted phase for control qubit in |g>
 
     cool = sequencer.Constant(int(4e3),1,chan='3m1')
     seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
-    for pulselen in np.linspace(1,20,20):
+    for pulselen in np.linspace(21,30,10):
         ZZobj.set_sq_len(pulselen)
         ZZ_info = mclient.get_gate_info('ZZ_gate')
         geoph = geophasecal.geophasecal(gate_info1, ZZ_info, np.linspace(-np.pi, np.pi, 101), test_info2=None, 
