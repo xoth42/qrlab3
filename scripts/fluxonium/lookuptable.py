@@ -5,7 +5,7 @@ from numpy.linalg import eig as eig
 from numpy import tensordot as tensor
 from numpy import dot
 
-from TwoQ_RB import TwoQubit_RB
+#from TwoQ_RB import TwoQubit_RB
 
 def evaluate_sequence(gate_seq_1, gate_seq_2, generator):
         """
@@ -112,6 +112,11 @@ def evaluate_sequence(gate_seq_1, gate_seq_2, generator):
                     gate_12 = np.matmul(
                         np.matrix([[1, 0, 0, 0], [0, 0, 1j, 0], [0, 1j, 0, 0],
                                    [0, 0, 0, 1]]), gate_12)
+            elif generator == 'u':
+                if (gate_seq_1[i] == 'u' or gate_seq_2[i] == 'u'):
+                    gate_12 = np.matmul(
+                        np.matrix([[1, 0, 0, 0], [0, 2, 0, 0], [0, 0, 3, 0],
+                                   [0, 0, 0, 4]]), gate_12)
             twoQ_gate = np.matmul(gate_12, twoQ_gate)
         return twoQ_gate
     
@@ -684,19 +689,22 @@ SWAP_CX_mat = evaluate_sequence(SWAP_CX_seq1, SWAP_CX_seq2, 'CX')
 SWAP_CNOT_mat = evaluate_sequence(SWAP_CNOT_seq1, SWAP_CNOT_seq2, 'CNOT')
 
 
-
-seq1_to_simplify = ['Z2p', 'Y2p', 'Xp', 'Z2p']
-seq2_to_simplify = ['I', 'I', 'I', 'I']
-matrix_to_simplify = evaluate_sequence(seq1_to_simplify, seq2_to_simplify, 'CNOT')
-print('matrix to simplify', matrix_to_simplify)
-
-for i in range(24):
-    seq1_to_test = []
-    seq2_to_test = []
-    add_singleQ_clifford(i, seq1_to_test)
-    seq_len = len(seq1_to_test)
-    for j in range(seq_len):
-        seq2_to_test.append('I')
-    matrix_to_test = evaluate_sequence(seq1_to_test, seq2_to_test, 'CNOT')
-    print(i, matrix_to_simplify == matrix_to_test)
-    print(i, matrix_to_test)
+seq1 = ['X2p', 'I', 'Xp', 'I', 'I']
+seq2 = ['X2p', 'u', 'I', 'u', 'X2p']
+mat = evaluate_sequence(seq1, seq2, 'u')
+#
+#seq1_to_simplify = ['Z2p', 'Y2p', 'Xp', 'Z2p']
+#seq2_to_simplify = ['I', 'I', 'I', 'I']
+#matrix_to_simplify = evaluate_sequence(seq1_to_simplify, seq2_to_simplify, 'CNOT')
+#print('matrix to simplify', matrix_to_simplify)
+#
+#for i in range(24):
+#    seq1_to_test = []
+#    seq2_to_test = []
+#    add_singleQ_clifford(i, seq1_to_test)
+#    seq_len = len(seq1_to_test)
+#    for j in range(seq_len):
+#        seq2_to_test.append('I')
+#    matrix_to_test = evaluate_sequence(seq1_to_test, seq2_to_test, 'CNOT')
+#    print(i, matrix_to_simplify == matrix_to_test)
+#    print(i, matrix_to_test)
