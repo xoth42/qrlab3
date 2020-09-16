@@ -30,7 +30,7 @@ gate_info2 = mclient.get_gate_info('sq_gate2')
 cancel_info = mclient.get_gate_info('cancel_gate')
 #zx90_info = mclient.get_gate_info('zx90_gate')
 cx_info = mclient.get_gate_info('cx_gate')
-ZZ_info = mclient.get_gate_info('ZZ_info')
+ZZ_info = mclient.get_gate_info('ZZ_gate')
 
 
 
@@ -57,7 +57,7 @@ def RB_fit(Pg_cplx, xs,  label='', F_final=0.5, F_init=1.0, fig=None):    #fitti
 
     params=lmfit.Parameters()
     params.add('amplitude', value=F_init-F_final, vary=True)
-    params.add('ofs', value=F_final, vary=True)
+    params.add('ofs', value=F_final, vary=False)
     params.add('tau', value=len(xs))
     result= lmfit.minimize(exp_decay, params, args=(xs,ys))
     lmfit.report_fit(result.params)
@@ -157,7 +157,7 @@ if 0: #Check coherence
 
 if 0: # Drag test
     from scripts.single_qubit import drag_test
-    dtest = drag_test.drag_test(gate_info2, np.linspace(-1.5,-0.5, 51), plot_seqs=False, generate=True, proj_func='phase', seq=seq_cool)
+    dtest = drag_test.drag_test(gate_info1, np.linspace(-0.5,1, 51), plot_seqs=False, generate=True, proj_func='phase', seq=seq_cool)
     data=dtest.measure()
     bla
 
@@ -165,7 +165,7 @@ if 0:
     from scripts.single_qubit import Pi_train
     seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)]) #gate_info1.rotate(np.pi,0)])
 #    postseq = gate_info1.rotate(np.pi,0) 
-    p = Pi_train.Pi_train(gate_info2, np.linspace(0.314, 0.32, 61), seq=seq_cool, postseq=None, repeat_pulse=5, proj_func='phase',
+    p = Pi_train.Pi_train(gate_info1, np.linspace(0.0735, 0.0755, 61), seq=seq_cool, postseq=None, repeat_pulse=5, proj_func='phase',
                           extra_info=gate_info1
                           )
     p.measure()
@@ -175,7 +175,7 @@ if 0:
     from scripts.single_qubit import Pi2_train
 #    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info1.rotate(np.pi,0)])
 #    postseq = gate_info1.rotate(np.pi,0) 
-    p = Pi2_train.Pi2_train(gate_info2, np.linspace(0.16, 0.17, 61), seq=seq_cool, postseq=None, repeat_pulse=12, proj_func='phase',
+    p = Pi2_train.Pi2_train(gate_info1, np.linspace(0.036, 0.038, 61), seq=seq_cool, postseq=None, repeat_pulse=10, proj_func='phase',
 #                            extra_info=gate_info1
                             )
     p.measure()
@@ -186,9 +186,9 @@ if 0: # AllXY
     cool = sequencer.Constant(int(4e3),1,chan='3m1')
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info1.rotate(np.pi,0)])
 #    postseq = gate_info1.rotate(np.pi,0) 
-    alz.set_naverages(15000)
+    alz.set_naverages(10000)
     allxy_result =[]
-    axy = allxy.All_XY(gate_info2, seq=seq_cool, generate=True, proj_func='phase', postseq = None)#, extra_info=gate_info1)  #seq=seq was added
+    axy = allxy.All_XY(gate_info1, seq=seq_cool, generate=True, proj_func='phase', postseq = None)#, extra_info=gate_info1)  #seq=seq was added
     axy.measure()
     allxy_result = axy.get_ys()
     plt.plot(allxy_result)
@@ -282,10 +282,10 @@ if 0: # Randomized benchmarking joint interleaved two qubits
 if 1: # Two-Qubit Randomized Benchmarking  
     from scripts.fluxonium import TwoQ_RB 
     from scripts.fluxonium  import timerabi_interleaved
-#    rndmben_result0 = []
-#    Pg_cplx0 = []
-#    rndmben_result1 = []
-#    Pg_cplx1 = []
+    rndmben_result0 = []
+    Pg_cplx0 = []
+    rndmben_result1 = []
+    Pg_cplx1 = []
     
 #    alz.set_naverages(8000)
     cool = sequencer.Constant(int(4e3),1,chan='3m1')
@@ -293,47 +293,71 @@ if 1: # Two-Qubit Randomized Benchmarking
     X_proj = gate_info1.rotate(np.pi/2, np.pi/2)
     Y_proj = gate_info1.rotate(np.pi/2, 0)
 
-    for i in range(1):
-        alz.set_naverages(8000)
+    for i in range(10):
+        alz.set_naverages(5000)
         rndmben0 = TwoQ_RB.TwoQubit_RB(gate_info2, gate_info1, ZZ_info, cancel_info, num_cal_points=3, N_cliffords=7, 
                                       plot_seqs=False, category='all', generator='CZ',
-                                      find_cheapest_recovery=False, seq=seq, proj_func='phase')
+                                      find_cheapest_recovery=False, use_virtual_Z=True, virtual_recovery=True,
+                                      singleQ_phases=[-2.627,-1.372+np.pi], seq=seq, proj_func='phase')
         data0 = rndmben0.measure()
         rndmben_result0.append(rndmben0.get_ys())
-        Pg_cplx0.append(rndmben0.Pg_cplx)
-
-        rndmben = TwoQ_RB.TwoQubit_RB(gate_info2, gate_info1, ZZ_info, cancel_info, num_cal_points=3, N_cliffords=7, 
-                                      plot_seqs=False, category='all', generator='CZ', interleave='CZ',
-                                      find_cheapest_recovery=False, seq=seq, proj_func='phase')
-        data = rndmben.measure()
-        rndmben_result1.append(rndmben.get_ys())
-        Pg_cplx1.append(rndmben.Pg_cplx)
+        Pg_cplx0.append(rndmben0.Pgg)
+##
+#        rndmben = TwoQ_RB.TwoQubit_RB(gate_info2, gate_info1, ZZ_info, cancel_info, num_cal_points=3, N_cliffords=7, 
+#                                      plot_seqs=False, category='all', generator='CZ', interleave='CZ',
+#                                      find_cheapest_recovery=False, use_virtual_Z=True, virtual_recovery=True, 
+#                                      singleQ_phases=[-2.627,-1.372+np.pi], seq=seq, proj_func='phase')
+#        data = rndmben.measure()
+#        rndmben_result1.append(rndmben.get_ys())
+#        Pg_cplx1.append(rndmben.Pgg)
         
-        if i%2 == 0:
-            alz.set_naverages(2000)       
-            tr = timerabi_interleaved.TimeRabi_interleaved(cx_info, gate_info2, np.linspace(0, 600, 101), 
-                        amp=0.0766, phase=0, rel_amp=4.433, rel_phase=0.993, sigma=6, read_on_e=True, cancel_info=cancel_info, 
-                        update=False, seq=seq, postseq=X_proj, proj_func='phase', plot_seqs=False, extra_info=gate_info1)
-            data = tr.measure()            
-        if i%4 == 0:
-            tr = timerabi_interleaved.TimeRabi_interleaved(cx_info, gate_info2, np.linspace(0, 600, 101), 
-                        amp=0.0766, phase=0, rel_amp=4.433, rel_phase=0.993, sigma=6, read_on_e=True, cancel_info=cancel_info, 
-                        update=False, seq=seq, postseq=Y_proj, proj_func='phase', plot_seqs=False, extra_info=gate_info1)
-            data = tr.measure()            
-    
-    tempxs = rndmben0.xs[48:]  #change this 
-    xs = tempxs.reshape(len(tempxs)/4,4).transpose()[0]
-    RB_fit(RBdata, xs, F_final=0.25, F_init=1-0.09)
-    plt.title('2-qubit randomized benchmarking')
+#        if i%2 == 0:
+#            alz.set_naverages(2000)       
+#            tr = timerabi_interleaved.TimeRabi_interleaved(cx_info, gate_info2, np.linspace(0, 600, 101), 
+#                        amp=0.0766, phase=0, rel_amp=4.433, rel_phase=0.993, sigma=6, read_on_e=True, cancel_info=cancel_info, 
+#                        update=False, seq=seq, postseq=X_proj, proj_func='phase', plot_seqs=False, extra_info=gate_info1)
+#            data = tr.measure()            
+#        if i%4 == 0:
+#            tr = timerabi_interleaved.TimeRabi_interleaved(cx_info, gate_info2, np.linspace(0, 600, 101), 
+#                        amp=0.0766, phase=0, rel_amp=4.433, rel_phase=0.993, sigma=6, read_on_e=True, cancel_info=cancel_info, 
+#                        update=False, seq=seq, postseq=Y_proj, proj_func='phase', plot_seqs=False, extra_info=gate_info1)
+#            data = tr.measure()            
 
-    xs = tempxs.reshape(len(tempxs)/4,4).transpose()[0] 
-    RB_fit(IRBdata, xs, F_final=0.25, F_init=1-0.115)
-    plt.title('2-qubit CX-interleaved randomized benchmarking')
+
+    tempxs = rndmben0.xs[48:]  #change this 
+    xs = tempxs.reshape(len(tempxs)/4,4).transpose()[0]  #Each gate is actually 2 Cliffords, one on each qubit
+    RB_fit(Pg_cplx0, xs, F_final=0.25, F_init=1-0.1)
+    plt.figure()
+#    tempxs = rndmben.xs[48:]  #change this 
+#    xs = tempxs.reshape(len(tempxs)/4,4).transpose()[0]  #Each gate is actually 2 Cliffords, one on each qubit
+#    RB_fit(Pg_cplx1, xs, F_final=0.25, F_init=1-0.35)
+
+    
+#    tempxs = rndmben0.xs[48:]  #change this 
+#    xs = tempxs.reshape(len(tempxs)/4,4).transpose()[0]
+#    RB_fit(RBdata, xs, F_final=0.25, F_init=1-0.09)
+#    plt.title('2-qubit randomized benchmarking')
+
+#    xs = tempxs.reshape(len(tempxs)/4,4).transpose()[0] 
+#    RB_fit(IRBdata, xs, F_final=0.25, F_init=1-0.115)
+#    plt.title('2-qubit CX-interleaved randomized benchmarking')
     
 #    rndmben_result1_old = rndmben_result1[:]
 #    rndmben_result0_old = rndmben_result0[:]
 #    Pg_cplx1_old = Pg_cplx1[:]
 #    Pg_cplx0_old = Pg_cplx0[:]
+
+
+
+
+
+
+
+
+
+
+
+
 
 if 0: # Simultaneous 1qubit gate RB
     from scripts.fluxonium import TwoQ_RB 
@@ -346,9 +370,9 @@ if 0: # Simultaneous 1qubit gate RB
     seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
 
     for i in range(5):
-        rndmben = TwoQ_RB.TwoQubit_RB(gate_info2, gate_info1, cx_info, cancel_info, num_cal_points=3, N_cliffords=40, 
-                                      plot_seqs=False, category='single', generator='CX',# interleave='CX',
-                                      find_cheapest_recovery=False, seq=seq, proj_func='phase')
+        rndmben = TwoQ_RB.TwoQubit_RB(gate_info2, gate_info1, cx_info, cancel_info, num_cal_points=3, N_cliffords=30, 
+                                      plot_seqs=False, category='single', generator='CZ',# interleave='CX',
+                                      find_cheapest_recovery=False, use_virtual_Z=True, virtual_recovery=True, seq=seq, proj_func='phase')
         data = rndmben.measure()
         rndmben_result1.append(rndmben.get_ys())
         Pgg.append(rndmben.Pgg)
