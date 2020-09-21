@@ -31,10 +31,10 @@ if 0:
 qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')
 #qubit2_info = mclient.get_qubit_info('qubit2ge')
-#ef_info = mclient.get_qubit_info('qubit1ef')
-gate_info = mclient.get_gate_info('gate')
-gate2_info = mclient.get_gate_info('gate2')
-gate3_info = mclient.get_gate_info('gate3')
+ef_info = mclient.get_qubit_info('qubit1ef')
+#gate_info = mclient.get_gate_info('gate')
+#gate2_info = mclient.get_gate_info('gate2')
+#gate3_info = mclient.get_gate_info('gate3')
 #cavity_info = mclient.get_qubit_info('cavityBob')
 #cavity_info = mclient.get_qubit_info('cavityRO')
 #cavity_info = mclient.get_qubit_info('cavityAlice')
@@ -43,8 +43,8 @@ gate3_info = mclient.get_gate_info('gate3')
 
 if 0: # RO Cavity spec
     from scripts.single_cavity import rocavspectroscopy
-    rofreq = 8154e6
-    freq_range = 5e6
+    rofreq = 7595e6
+    freq_range = 10e6
 
     ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-20, -20, 1),
                                          np.linspace(rofreq - freq_range, rofreq + freq_range, 61), qubit_pulse=False)
@@ -56,13 +56,13 @@ if 0: # RO Cavity spec
 if 0: # Qubit spec
     from scripts.single_qubit import spectroscopy
 #    from scripts.single_qubit import spectroscopy_IQ
-    qubit_freq = 67e6
-    freq_range = 250e6
+    qubit_freq = 5128e6
+    freq_range = 25e6
     spec = spectroscopy.Spectroscopy(mclient.instruments['SCqubit'], qubit_info,
                                      np.linspace(qubit_freq-freq_range,
-                                                 qubit_freq+freq_range, 501),
+                                                 qubit_freq+freq_range, 151),
                                      [-20],
-                                     plen=20000, amp=0.05, plot_seqs=False,
+                                     plen=80000, amp=0.05, plot_seqs=False,
                                      freq_delay=.1) #1=1ns for plen
 
 #    spec = spectroscopy_IQ.Spectroscopy_IQ(client.instruments['gen'], qubit_info,
@@ -77,7 +77,7 @@ if 0: # Qubit spec
 if 0: # Qubit SSBspec
     from scripts.single_qubit import ssbspec
 #    postseq = sequencer.Delay(500)
-    spec = ssbspec.SSBSpec(qubit2_info, np.linspace(-2.5e6, 2.5e6, 101), plot_seqs=False, proj_func='amplitude')
+    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-5e6, 5e6, 101), plot_seqs=False, proj_func='amplitude')
     spec.measure()
 #    spec.measure_keysight()
     bla
@@ -113,7 +113,7 @@ if 0: # Calibrate pi pulse
     for i in range(1):
         from scripts.single_qubit import rabi
 #        qubitgen.set_frequency(4532.71e6)
-        tr = rabi.Rabi(gate_info, np.linspace(0.2, 0.5, 5), plot_seqs=True, generate=True, selective=False, repeat_pulse=1,
+        tr = rabi.Rabi(qubit_info, np.linspace(-0.4, 0.4, 101), plot_seqs=False, generate=True, selective=False, repeat_pulse=1,
                        update=True, proj_func='amplitude')
 #        from scripts.single_qubit import rabi_IQ
 #        tr = rabi_IQ.Rabi(qubit_info, np.linspace(0, 0.5, 101), plot_seqs=False, real_signals=False)
@@ -171,20 +171,20 @@ if 0: # EF SSBspec
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate_selective(np.pi, 0)])
     postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
 #    postseq = sequencer.Sequence(qubit_info.rotate_selective(np.pi, 0))
-    spec = ssbspec.SSBSpec(ef_info, np.linspace(-2.5e6, 2.5e6, 151), seq=seq, postseq = postseq, extra_info=qubit_info, plot_seqs=False, generate=True)
+    spec = ssbspec.SSBSpec(ef_info, np.linspace(-1.5e6, 1.5e6, 151), seq=seq, postseq = postseq, extra_info=qubit_info, plot_seqs=False, generate=True)
     spec.measure()
     bla
 
 if 0: # EF rabi -ef_info not defined
     from scripts.single_qubit import efrabi
 #    alz.set_naverages(2000)
-    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.2, 0.2, 101), plot_seqs=False, selective=False, generate=True, update=True)
+    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.4, 0.4, 101), plot_seqs=False, selective=False, generate=True, update=True)
     efr.measure()
     period = efr.fit_params['period'].value
-    alz.set_naverages(4000)
-    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.2, 0.2, 101), first_pi=False, selective=False, force_period=period, generate=True)
+    alz.set_naverages(20000)
+    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.4, 0.4, 101), first_pi=False, selective=False, force_period=period, generate=True)
     efr.measure()
-    alz.set_naverages(1000)
+    alz.set_naverages(5000)
     bla
 
 if 0: # Single qubit tomography
@@ -303,7 +303,7 @@ if 0: # T1
 #    t1times = np.zeros(len(range(1000)))
     for i in range(1):
         #postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
-        t1 = T1measurement.T1Measurement(gate_info, np.linspace(0, 5e3, 5), double_exp=False, generate=True, plot_seqs=True, proj_func='amplitude')
+        t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 80e3, 101), double_exp=False, generate=True, plot_seqs=False, proj_func='amplitude')
         t1.measure()
 #        t1times[i] = t1.analyze()
 #        plt.close()
@@ -318,10 +318,10 @@ if 0: # T1_QP
         t1.measure()
     bla
 
-if 0: # T2
+if 1: # T2
     from scripts.single_qubit import T2measurement
-    for i in range(10):
-        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 2e3, 101), detune=2e6, double_freq=False, generate=True)
+    for i in range(1):
+        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 2e3, 101), detune=3e6, double_freq=False, generate=True)
         t2.measure()
     bla
 
@@ -334,7 +334,7 @@ if 0: # T2_QP
 
 if 0: # T2echo
     from scripts.single_qubit import T2measurement
-    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 5e3, 101), detune=1e6, echotype = T2measurement.ECHO_HAHN, necho=1, plot_seqs = False, generate=True)
+    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(10, 5e3, 101), detune=1e6, echotype = T2measurement.ECHO_HAHN, necho=1, plot_seqs = False, generate=True)
     t2.measure()
     bla
 
