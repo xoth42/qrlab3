@@ -16,7 +16,7 @@ from mclient import instruments
 
 
 dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period = 200, trigger_only = False,
-                         naverages = 1000, nsamples = 1500, awg_list = [7, 8, 9])
+                         naverages = 2000, nsamples = 1500, awg_list = [7, 8, 9])
 
 AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PRODUCT = "M3202A", 
                           amps = [1.5,1.5,1.5,1.5], ofs = [0, 0, 0.0, 0])

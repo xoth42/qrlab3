@@ -33,6 +33,8 @@ class Keysight_DIG(Instrument):
         self._main_delay=0
         self._ref_delay=0
         self._if_period=10
+
+
         self._trigger_period=trigger_period
         self._interrupt = False
         self._capturing = False
@@ -665,6 +667,104 @@ class Keysight_DIG(Instrument):
     def take_demod_shots(self, acqtimeout=None, Iweight=None, Qweight=None):
         #TODO
         return 0
+    
+    def setup_hist(self, N, hist_buf = None, num_demods=1, ntransfers=None):   
+        self.hist_buf = hist_buf
+        self.nacquisitions = N * num_demods
+
+        if ntransfers is None:
+            if self.nacquisitions % 1000 == 0:
+                ntransfers = int(self.nacquisitions / 1000)
+            elif self.nacquisitions % 800 == 0:
+                ntransfers = int(self.nacquisitions / 800)
+            elif self.nacquisitions % 750 == 0:
+                ntransfers = int(self.nacquisitions / 750)
+            elif self.nacquisitions % 500 == 0:
+                ntransfers = int(self.nacquisitions / 500)
+            else:
+                raise Exception('Bad number of averages*points. Make divisible by (1000, 800, 750, 500)')
+                
+        self._ntransfers = ntransfers
+                
+        self.release_buf()
+        
+        errors = []
+            
+        errors += [self.dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)]
+        for channel in [self._main_channel, self._ref_channel]:
+            errors += [self.dig.DAQtriggerExternalConfig(channel, key.SD_TriggerExternalSources.TRIGGER_EXTERN, 
+                                    key.SD_TriggerBehaviors.TRIGGER_RISE, key.SD_SyncModes.SYNC_NONE)]
+            errors += [self.dig.DAQflush(channel)]
+            errors += [self.dig.channelInputConfig(channel, VOLTAGE_SCALE, 
+                                                   key.AIN_Impedance.AIN_IMPEDANCE_50, 
+                                                   key.AIN_Coupling.AIN_COUPLING_DC)]
+            errors += [self.dig.DAQconfig(channel, self._nsamples, self.nacquisitions, 
+                                          self._main_delay, key.SD_TriggerModes.EXTTRIG)]
+            errors += [self.dig.DAQbufferPoolConfig(channel, self._nsamples * self.nacquisitions / ntransfers, 
+                                                    self._timeout)]
+            self.set_demod(self._nsamples * self.nacquisitions / self._ntransfers, avg_periods= 1) #TODO: change avg_periods?
+        
+        if any(error < 0 for error in errors):
+            print('setup_avg_shot errors: ', errors)
+        
+        
+        
+        
+    def take_hist(self, num_demods=1):
+        acq_per_transfer = self.nacquisitions / self._ntransfers
+        
+        print('acq per transfer ', acq_per_transfer)
+        print('ntransfers ', self._ntransfers)
+        print('naqeuistions ', self.nacquisitions)
+        print('naverages', self._naverages)
+        
+
+        values = np.zeros(self.nacquisitions, dtype = np.complex64)
+                
+        self._capturing = True 
+        self.set_interrupt(False)
+        self.emit('start-capture')
+        for i in range(self._ntransfers):
+#            print('Acquiring %d/%d', i+1, self._ntransfers)
+            logging.info('%d/%d acquisitions performed', (i)*acq_per_transfer, self.nacquisitions)
+            self.emit('capture-progress', (i)*acq_per_transfer)
+            
+            if self._interrupt:
+                logging.info('Capture interrupted')
+                raise Exception('Capture interrupted')
+                self._card.end_capture()
+                if self._capturing:
+                    self.emit('end-capture')
+                self.set_interrupt(False)
+                self._capturing = False
+                logging.info('DIG ended capture...')
+                return values
+            
+            try:
+                signal = np.array(self.dig.DAQbufferGet(self._main_channel), dtype=np.complex64)
+                ref = np.array(self.dig.DAQbufferGet(self._ref_channel), dtype=np.complex64)
+            except ValueError, e:
+                print(str(e))
+                print('digitizer is likely not getting triggered')
+                raise ValueError
+                        
+            print(np.shape(signal))
+                
+            self._demodA.demodulate(signal)
+            self._demodB.demodulate(ref)
+            
+            print(np.shape(self._demodA.IQ))
+            
+            IQA = self._demodA.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
+            IQB = self._demodB.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
+            refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
+        
+            for j in range(acq_per_transfer):
+                values[j + i*acq_per_transfer] = np.mean(IQA[j,:] * refs[j])
+        
+        self.hist_buf[:] = values
+        return values
+    
     
     def release_buf(self):
         self.dig.DAQbufferPoolRelease(self._main_channel)
