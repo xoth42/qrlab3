@@ -45,7 +45,7 @@ def analysis(meas, data=None, fig=None, period=None):
 
 class geophasecal(Measurement1D):
 
-    def __init__(self, ge_info, test_info, phases, test_info2=None, seq=None, repeat_pulse=1, delay=0, postseq = None,
+    def __init__(self, ge_info, test_info, phases, test_info2=None, seq=None, wait_reference = False, wait_time = None, repeat_pulse=1, delay=0, postseq = None,
                  **kwargs):
         self.ge_info = ge_info
         self.test_info = test_info
@@ -54,6 +54,8 @@ class geophasecal(Measurement1D):
         self.delay = delay
 
         self.xs = phases
+        self.wait_reference = wait_reference
+        self.wait_time = wait_time
         self.repeat_pulse = repeat_pulse
         self.postseq = postseq
         if seq is None:
@@ -78,13 +80,19 @@ class geophasecal(Measurement1D):
 
         for i, phase in enumerate(self.phases):
             s.append(Join([self.seq, r(np.pi/2, 0), Delay(5)]))            
-            if self.test_info2 is not None:
-                for j in range(self.repeat_pulse):
-                    s.append(Combined([test_pulse, test_pulse2]))
+
+#            if self.test_info2 is not None:
+#                for j in range(self.repeat_pulse):
+#                    s.append(Combined([test_pulse, test_pulse2]))
 #                    s.append(test_pulse2)
+#            else:
+#                s.append(Repeat(test_pulse, self.repeat_pulse))
+#
+            if self.wait_reference == True:
+                s.append(Delay(self.wait_time))
             else:
-                s.append(Repeat(test_pulse, self.repeat_pulse))
-            s.append(Delay(self.delay))
+                s.append(Repeat(self.test_info.rotate(np.pi,0), self.repeat_pulse))
+
             s.append(r(-np.pi/2, phase))
         
             if self.postseq:

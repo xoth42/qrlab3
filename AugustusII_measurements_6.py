@@ -29,6 +29,9 @@ qubit_info = mclient.get_qubit_info('qubit1ge')
 qubit_info2 = mclient.get_qubit_info('qubit1ge_2')
 gate_info1 = mclient.get_gate_info('sq_gate1')
 gate_info2 = mclient.get_gate_info('sq_gate2')
+ZZ_info = mclient.get_gate_info('ZZ_gate')
+gate_info1 = mclient.get_gate_info('sq_gate1')
+gate_info2 = mclient.get_gate_info('sq_gate2')
 
 K= []
 
@@ -45,7 +48,7 @@ qubit2_info2 = mclient.get_qubit_info('qubit2ge_2')
 
 
 
-if 1: # RO Cavity spec
+if 0: # RO Cavity spec
     from scripts.single_cavity import rocavspectroscopy
 #    rofreq = 7515.5e6
     rofreq = 7564.6e6
@@ -59,14 +62,14 @@ if 1: # RO Cavity spec
 if 0:# Qubit spec
     from scripts.single_qubit import spectroscopy
 #    from scripts.single_qubit import spectroscopy_IQ
-
-    qubit_freq = 1192e6
-    freq_range = 0e6
-    spec = spectroscopy.Spectroscopy(mclient.instruments['gaius01'], qubit_info,
+    seq = sequencer.Join([sequencer.Trigger(250), gate_info1.rotate(np.pi,0)])
+    qubit_freq = 3.400e9
+    freq_range = 100e6
+    spec = spectroscopy.Spectroscopy(mclient.instruments['ZZ'], ZZ_info,
                                          np.linspace(qubit_freq-freq_range,
-                                                     qubit_freq+freq_range, 11),
-                                             [-15],
-                                        plen=2000, amp=0.2, plot_seqs=False, seq=None) #1=1ns for plen
+                                                     qubit_freq+freq_range, 201),
+                                             [5],
+                                        plen=500, amp=0.00000001, seq=seq, plot_seqs=False, extra_info=qubit_info) #1=1ns for plen
     spec.measure()
     bla    
 

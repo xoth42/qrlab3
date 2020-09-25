@@ -28,11 +28,12 @@ import lmfit
 
 ''' Path to the .hdf5 file '''
 filepath = 'C:/_Data/'
-hdf5_name = '0626cooldown_circualtor - Copy.hdf5'
-date = '20200818'
-time = '132735'
+#hdf5_name = '0626cooldown_circualtor - Copy.hdf5'
+hdf5_name = '2cavity-09-2020 - Copy (2).hdf5'
+date = '20200909'
+time = '214315'
 #experiment = 'Photon_Ramsey_Measurement_mixer'
-experiment = 'Ramsey_Measurement_mixer'
+experiment = 'Photon_Ramsey_Measurement_mixer'
 ''' Primary x axis and secondary if 2d'''
 x_key = 'delays'
 #x2_key = 'powers'
@@ -41,10 +42,10 @@ f = h5.File(filepath + hdf5_name, 'r')
 exp = f['/' + date + '/' + time + '_' + experiment]
 #y_keys = exp.keys()
 #print(y_keys)
-x_data = exp[x_key].value[:71]
+x_data = exp[x_key].value[:81]
 
 #y_keys.remove(x_key)
-y_data = exp['avg_pp'].value[:71]
+y_data = exp['avg_pp'].value[:81]
 
 #def create_figure(self):
 
@@ -150,9 +151,9 @@ params = lmfit.Parameters()
 params.add('ofs', value=np.average(ys))
 params.add('tau', value=xs[-1], min=30, max=2e5)
 params.add('freq', value=f0, min=.00001)
-params.add('slope', value=0.005,vary =True)
-params.add('A', value = 0, min = -5e-3, max = 0, vary = True)
-params.add('A2', value = 0, vary = True)
+params.add('slope', value=0.00,vary =False)
+params.add('A', value = 0, min = -5e-3, max = 0, vary =False)
+params.add('A2', value = 0, vary =False)
 if chang_freq:
     params.add('amp', value=amp0, min=0.1)
 if with_T1:    
@@ -168,10 +169,13 @@ if asymetric_T2:
 #
 #    elif meas.echotype == ECHO_HAHN:
 #        params.add('phi0', value=-np.pi/2, min=-1.2*np.pi, max=1.2*np.pi) #DARIO added to fit better for echo vs plain T2
-if ys[0] < np.average(ys):
-    params.add('phi0', value=-np.pi/2, min=-1.2*np.pi, max=1.2*np.pi, vary=True)
-else:
-    params.add('phi0', value=np.pi/2, min=-1.2*np.pi, max=1.2*np.pi, vary=True) #Yingying changed phi0 to checking value of first point
+#if ys[0] < np.average(ys):
+#    params.add('phi0', value=-np.pi/2, min=-1.2*np.pi, max=1.2*np.pi, vary=True)
+#else:
+#    params.add('phi0', value=np.pi/2, min=-1.2*np.pi, max=1.2*np.pi, vary=True) #Yingying changed phi0 to checking value of first point
+
+params.add('phi0', value=-1.8, vary=False)
+
 if with_T1:
     result = lmfit.minimize(changing_freq_fit_T1exponential_overlay, params, args=(xs, ys))
 if chang_freq:

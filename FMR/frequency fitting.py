@@ -87,6 +87,12 @@ params.add('g',value = -0.07407939, vary = vary_params)
 
 #data = np.concatenate((omega_c/1e9, omega_c2/1e9,kappa_a/1e9,kappa_a2/1e9))
 #data = np.concatenate((freq1[0], freq2[0]))
+<<<<<<< HEAD
+#data = np.loadtxt('C:\Users\WangLab\Documents\yingying\cavity freqs and kappas.txt')
+#data = np.loadtxt('C:\Users\WangLab\Documents\yingying\\0317cooldown_cavity freqs and kappas.txt')
+data = np.loadtxt('C:\Users\WangLab\Documents\yingying\\S21 cavity freqs and kappas.txt')
+#data = data*1e9
+=======
 #data = np.loadtxt('C:\Users\Wang_Lab\Documents\yingying\cavity freqs and kappas.txt')
 #data = np.loadtxt('C:\Users\WangLab\Documents\yingying\\0317cooldown_cavity freqs and kappas.txt')
 #data = np.loadtxt('C:\Users\WangLab\Documents\yingying\\0317cooldown_S21 cavity freqs and kappas.txt')
@@ -94,6 +100,7 @@ params.add('g',value = -0.07407939, vary = vary_params)
 data = np.loadtxt('C:\Users\Wang_Lab\Documents\yingying\\0626_cooldown_circulator_data\\cavity freqs and kappas.txt')
 
 data = data*1e9
+>>>>>>> 8777d50220eed25c4d3a901b4cf5e2adcae76be7
 bad_data_i = 0
 bad_data_f = 0
 fields = np.linspace(0, -0.05,26)

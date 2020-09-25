@@ -112,7 +112,7 @@ def rabi_test(qubitge, qubit_info, seq, range):
 def T2R(qubit_info,seq=None): 
     postseq =  gate_info2.rotate(np.pi,0)
     
-    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(10, 1e3, 81), detune=4e6, plot_seqs = False, generate=True,
+    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(10, 1e3, 81), detune=2e6, plot_seqs = False, generate=True,
                                      proj_func='phase', seq=seq, postseq=None, extra_info = gate_info2)
     t2.measure()
 
@@ -146,9 +146,9 @@ if 0:
     coolgen.set_rf_on(False)
     alz.set_naverages(2500)
     qubitnew1 = ssb_check(qubit1ge, qubit1ge_2, qubit_info,  np.linspace(-10e6, 10e6, 61))
-    alz.set_naverages(8000)
-#
-    qubitnew2 = ssb_check(qubit2ge, qubit2ge_2, qubit2_info,  np.linspace(-10e6, 10e6, 61))
+#    alz.set_naverages(100000)
+##
+#    qubitnew2 = ssb_check(qubit2ge, qubit2ge_2, qubit2_info,  np.linspace(-10e6, 10e6, 61))
     qubits = mclient.get_qubits()
     qubit_info = mclient.get_qubit_info('qubit1ge')
     qubit_info2 = mclient.get_qubit_info('qubit1ge_2')
@@ -157,11 +157,11 @@ if 0:
     #This should confirm that we are in the good region.
     
 #    Getting some cooling prediction
-    alz.set_naverages(2500)
-    cool_freq = (cavity - gaius_freq - qubitnew2)/2
-    coolgen.set_rf_on(True)
-    freq_range = 15e6        
-    cooling_spec(3420e6, 15e6, qubit2_info, [11,12,13])
+#    alz.set_naverages(2500)
+#    cool_freq = (cavity - gaius_freq - qubitnew2)/2
+#    coolgen.set_rf_on(True)
+#    freq_range = 15e6        
+#    cooling_spec(3420e6, 15e6, qubit2_info, [11,12,13])
 ##    
     bla
 
@@ -179,7 +179,7 @@ if 0:
     ZZ.set_rf_on(True)
     alz.set_naverages(2000)
     power_range = np.linspace(10,10, 1)
-    freq_range = np.linspace(3527.5e6, 3531.5e6, 7)
+    freq_range = np.linspace(3528.5e6, 3529.5e6, 7)
     ZZ_tune(qubit_info, power_range, freq_range, extra_info = qubit2_info)
     bla    
 
@@ -206,16 +206,17 @@ if 0:
 #    #Running cooling spec one more time
     cool_freq = (cavity - gaius_freq - qubitnew2)/2
     freq_range = 35e6        
-    cooling_spec(3420.0e6, 15e6, qubit2_info, [11,12,13])
+    cooling_spec(3420e6, 15e6, qubit2_info, [12,13])
     bla
     #manually set the frequency and power
 #coolgen.set_power()
 #coolgen.set_frequency()
 #coolgen.set_rf_on(True)
 #    
+    
 
 if 1:
-#    #Update all 4 pi amp's
+    #Update all 4 pi amp's
 #    rabi_test(qubit1ge, qubit_info, seq_cool, np.linspace(-0.15, 0.15, 61))   
 #    rabi_test(qubit2ge, qubit2_info, seq_cool, np.linspace(-0.2, 0.2, 61))   
 #    rabi_test(qubit1ge_2, qubit_info2, seq_cool, np.linspace(-0.5, 0.5, 61))   

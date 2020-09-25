@@ -12,13 +12,21 @@ matplotlib.interactive(True)
 import numpy as np
 import matplotlib.pyplot as pl
 
-filepath = r"C:\Users\WangLab\Documents\TConnolly\calibrated_circulator\transition1-2"
+#filepath = r"C:\Users\WangLab\Documents\TConnolly\calibrated_circulator\transition1-2"
+filepath = r"C:\Users\WangLab\Documents\yingying\circulator\12192018 cooldown"
+
 
 if 1: # get the graph of difference between two file
     # Read the array from file
 #    filepath = 'C:\Users\WangLab\Documents\\11282018 cooldowm\\'
-    filename2 ='%s\\s12_3_term0.0-0.2-0.002_Date_3-19_17-20-13'%(filepath)
-    filename1 ='%s\\s21_3_term0.0-0.2-0.002_Date_3-19_16-54-59'%(filepath)
+
+#    filename2 ='%s\\s12_3_term0.0-0.2-0.002_Date_3-19_17-20-13'%(filepath)
+#    filename1 ='%s\\s21_3_term0.0-0.2-0.002_Date_3-19_16-54-59'%(filepath)
+    f1 = 'circulator_S13_0.0_0.05_0.0005_sleeptime_6.5_18-1-37'
+    f2 = 'circulator_S13_0.0_-0.05_-0.0005_sleeptime_6.5_18-39-12'
+    filename1 = '%s\\%s'%(filepath,f1)
+    filename2 = '%s\\%s'%(filepath,f2)
+    
 #    if filename1[33:]!=filename2[33:]:
 #        print 'not the same port measurement'
     new_data = np.loadtxt('%s.txt'%(filename1))
@@ -41,7 +49,7 @@ if 1: # get the graph of difference between two file
     Z2 =new_data2[2] 
 #    phase2 = new_data2[3]
 #    Z2 = Z2 * np.exp(1j*phase2*np.pi/180)
-    iso = Z-Z2
+    iso = ( Z-Z2)
 #    iso = np.abs(iso)
     
     
@@ -58,7 +66,7 @@ if 1: # get the graph of difference between two file
 #    trupasses = np.unique(passes)
 ##'''
         
-    x=X[0]
+    x=X[0]*10
     y=Y[:,0]/10**9
 
 #
@@ -67,7 +75,7 @@ if 1: # get the graph of difference between two file
 #            x[i] = x[i]*60
 #        else:
 #            x[i] = -2.709 * (x[i])**2 + 86.171*x[i]-63.13
-            
+    
     X, Y = np.meshgrid(x,y)
     #Y=np.transpose(Y)
     #iso = np.transpose(iso)
@@ -103,13 +111,15 @@ if 1: # get the graph of difference between two file
     #pl.suptitle('ratio of transition and isolation')
 #    pl.suptitle('dB('+filename1[67:70]+')-dB(' +filename2[67:70] +')')
     pl.pcolormesh(X, Y, iso,cmap='RdBu', vmin=0, vmax=40)
+    pl.title('Isolation')
     pl.ylim([np.min(Y),np.max(Y)])
     pl.xlim([np.min(X),np.max(X)])
     pl.colorbar()
-    pl.xlabel('Magnetic Field(mT)')
-    pl.ylabel('Frequency (GHZ)')
+    pl.clim(0,-40)
+    pl.xlabel('Magnetic Field [Oe]')
+    pl.ylabel('Frequency [GHZ]')
 #    pl.xlim(.4,.795)
-#    pl.ylim(7,11)
+    pl.ylim(9,12)
     pl.show()
 
 
@@ -382,7 +392,7 @@ if 0: # get a single trace for the difference between two files
     
     
     
-if 1: # get loss between two file
+if 0: # get loss between two file
     # Read the array from file
 #    filepath = 'C:\Users\WangLab\Documents\\11282018 cooldowm\\'
     filename1 ='%s\\s21_3_term0.0-0.2-0.002_Date_3-19_16-54-59'%(filepath)

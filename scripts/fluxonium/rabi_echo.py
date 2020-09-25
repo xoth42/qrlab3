@@ -30,11 +30,7 @@ def analysis(meas, data=None, fig=None):
     xs = meas.amps
 
     fig.axes[0].plot(xs, ys, 'ks', ms=3)
-    try: # This is a placeholder until stes is implemented w/ Alazar.
-        fig.axes[0].errorbar(xs, ys, yerr=meas.get_stes(), fmt='.', 
-                         markersize = 0, ecolor='grey', linewidth=1)
-    except:
-        print('passed no stes error')  
+    
 
     amp0 = (np.max(ys) - np.min(ys)) / 2
     if ys[len(ys)/2]>np.average(ys):
@@ -101,9 +97,11 @@ def analysis(meas, data=None, fig=None):
 
 class Rabi(Measurement1D):
 
-    def __init__(self, qubit_info, amps, update=False, seq=None, r_axis=0, fix_phase=True, cancel_info=None,
+    def __init__(self, zz_info, gate_info1, gate_info2, amps, update=False, seq=None, r_axis=0, fix_phase=True, cancel_info=None,
                  fix_period=None, repeat_pulse=1, postseq=None, selective=False, fit_type=FIT_AMP, **kwargs):
-        self.qubit_info = qubit_info
+        self.zz_info= zz_info
+        self.gate_info1 = gate_info1
+        self.gate_info2 = gate_info2
         self.cancel_info = cancel_info
         self.amps = amps
         self.xs = amps
@@ -122,7 +120,7 @@ class Rabi(Measurement1D):
         if cancel_info is not None:
             super(Rabi, self).__init__(len(amps), infos=(qubit_info, cancel_info), **kwargs)
         else:
-            super(Rabi, self).__init__(len(amps), infos=(qubit_info), **kwargs)
+            super(Rabi, self).__init__(len(amps), infos=(zz_info, gate_info1, gate_info2), **kwargs)
             
         self.data.create_dataset('amps', data=amps)
 
@@ -130,19 +128,27 @@ class Rabi(Measurement1D):
         s = Sequence()
         for i, amp in enumerate(self.amps):
             s.append(self.seq)
-            
+
             if self.cancel_info is not None:
                 for j in range(self.repeat_pulse):
-                    s.append(Combined([self.qubit_info.rotate(0, self.r_axis, amp=amp),
+                    s.append(Combined([self.zz_info.rotate(0, self.r_axis, amp=amp),
                                        self.cancel_info.rotate(np.pi, self.r_axis)
                             ]))
             else:
                 if self.selective==1:
-                    s.append(Repeat(self.qubit_info.rotate_selective(0, self.r_axis, amp=amp), self.repeat_pulse))
+                    s.append(Repeat(self.zz_info.rotate_selective(0, self.r_axis, amp=amp), self.repeat_pulse))
                 elif self.selective==0.5:
-                    s.append(Repeat(self.qubit_info.rotate_quasilective(0, self.r_axis, amp=amp), self.repeat_pulse))
+                    s.append(Repeat(self.zz_info.rotate_quasilective(0, self.r_axis, amp=amp), self.repeat_pulse))
                 else:
-                    s.append(Repeat(self.qubit_info.rotate(0, self.r_axis, amp=amp), self.repeat_pulse))
+                    s.append(self.gate_info1.rotate(np.pi/2,0))            
+                    s.append(Repeat(self.zz_info.rotate(0, self.r_axis, amp=amp), self.repeat_pulse))
+                    
+                    s.append(Combined([self.gate_info1.rotate(np.pi,0), self.gate_info2.rotate(np.pi,0)]))
+
+                    s.append(Repeat(self.zz_info.rotate(0, self.r_axis, amp=amp), self.repeat_pulse))
+                    s.append(self.gate_info1.rotate(np.pi/2,0))            
+                    
+
             if self.postseq is not None:
                 s.append(self.postseq)
             s.append(Delay(100))

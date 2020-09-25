@@ -20,7 +20,7 @@ from mclient import instruments
 #
 instruments.remove('dig')
 
-dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period=100,nsamples=500, naverages=6000, awg_list = [7, 8])
+dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period=100,nsamples=500, naverages=10000, awg_list = [7, 8])
 
 
 
@@ -217,7 +217,7 @@ qubit2ef = instruments.create('qubit2ef', 'Qubit_Info',
 #                            w=10000,
 #                            w_selective=200)
 mixer_info1 = instruments.create('mixer_info1', 'Qubit_Info',
-                            deltaf=-160e6,
+                            deltaf=-160.5e6,
                             pi_amp=0.15,
                             pi_amp_selective=0.01,
                             rotation='Square',
@@ -241,7 +241,7 @@ SS_mixer_info1 = instruments.create('SS_mixer_info1', 'Qubit_Info',
                             w_selective=12)
 
 mixer_info2 = instruments.create('mixer_info2', 'Qubit_Info',
-                            deltaf=-160e6,
+                            deltaf=-160.5e6,
                             pi_amp=.15,
                             pi_amp_selective=0.01,
                             rotation='Square',

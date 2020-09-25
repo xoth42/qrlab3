@@ -155,7 +155,7 @@ class Yokogawa_7651_new(Instrument):
 #        self.output = state
 
     def do_get_output_state(self):
-
+        print('yes')
         state = self.status.recieve()
         digit = re.findall("[-+]?[.]?[\d]+(?:,\d\d\d)*[\.]?\d*(?:[eE][-+]?\d+)?", state)
         digit = float(digit[-1])
@@ -176,6 +176,7 @@ class Yokogawa_7651_new(Instrument):
             raise ValueError('source_type is invalid')
 
     def do_get_source_type(self):
+        print('getting source type')
         strng = self.do_get_output()
         print(strng)
         char = strng[3]
@@ -184,7 +185,10 @@ class Yokogawa_7651_new(Instrument):
         if (char == 'A'):
             return 'current'
             
-            
+    def do_try(self):
+        print('yes')
+        return 2
+                    
 # Voltage Functions:  
     
     def do_get_voltage(self):
@@ -203,17 +207,17 @@ class Yokogawa_7651_new(Instrument):
             raise VoltageError('Voltage out of range.')
 #       The if statement below is necessary to ensure Yoko can switch between
 #       current and voltage. BS & AS, 2/13/19.
-        if (self.do_get_source_type() != 'voltage'):
-            self.do_set_source_type('voltage')
+#        if (self.do_get_source_type() != 'voltage'):
+#            self.do_set_source_type('voltage')
 #        self.voltage_function.send()
         if np.abs(voltage) > np.abs(self.get_voltage_range()):
             raise VoltageError('%0.6f is out of voltage limit!')
         self.range_value.send(voltage)
         
     def do_ramp_voltage(self,vtarget):
-        if (self.do_get_source_type() != 'voltage'):
-            raise VoltageError('Not in voltage mode')
-            return               
+#        if (self.do_get_source_type() != 'voltage'):
+#            raise VoltageError('Not in voltage mode')
+#            return               
         v = self.do_get_voltage()
         vstep = .01
 #        bigger = np.max((abs(v),abs(vtarget)))
@@ -236,9 +240,9 @@ class Yokogawa_7651_new(Instrument):
 
     def do_set_voltage_range(self,R):
         R = abs(R)
-        if (self.do_get_source_type() != 'voltage'):
-            raise VoltageError('Not in voltage mode')
-            return
+#        if (self.do_get_source_type() != 'voltage'):
+#            raise VoltageError('Not in voltage mode')
+#            return
         if ( R <= .01):
             VISACommand('R2', self.instrument).send()
         elif (R <= .1):
@@ -253,9 +257,9 @@ class Yokogawa_7651_new(Instrument):
             raise VoltageError('Range not supported!!!')
 
     def do_get_voltage_range(self):
-        if (self.do_get_source_type() != 'voltage'):
-#            raise VoltageError('Not in voltage mode')
-            return None
+#        if (self.do_get_source_type() != 'voltage'):
+##            raise VoltageError('Not in voltage mode')
+#            return None
         strng = self.do_get_output()
         
         if ( strng[7] == '.' and strng[13] == '-' and strng[14] == '3'):
@@ -279,26 +283,26 @@ class Yokogawa_7651_new(Instrument):
             raise CurrentError('Current out of range.')
 #       The if statement below is necessary to ensure Yoko can switch between
 #       current and voltage. BS & AS, 2/13/19.
-        if (self.do_get_source_type() != 'current'):
-            self.do_set_source_type('current')
+#        if (self.do_get_source_type() != 'current'):
+#            self.do_set_source_type('current')
 #        self.current_function.send()
         if np.abs(current) > np.abs(self.get_current_range()):
             raise CurrentError('%0.6f is out of current limit!')
         self.range_value.send(current / 1000)
 
     def do_get_current(self):
-        if (self.do_get_source_type() != 'current'):
-#            raise CurrentError('Not in current mode')
-            return None
+#        if (self.do_get_source_type() != 'current'):
+##            raise CurrentError('Not in current mode')
+#            return None
         strng = self.do_get_output()
         digit = re.findall("[-+]?[.]?[\d]+(?:,\d\d\d)*[\.]?\d*(?:[eE][-+]?\d+)?", strng)
         digit = float(digit[0]) * 1000
         return digit
 
     def do_ramp_current(self,i_target):
-        if (self.do_get_source_type() != 'current'):
-            raise CurrentError('Not in current mode')
-            return               
+#        if (self.do_get_source_type() != 'current'):
+#            raise CurrentError('Not in current mode')
+#            return               
         i = self.do_get_current()
         i_step = .0005 / 1000
 #        bigger = np.max((abs(i),abs(i_target)))
@@ -315,9 +319,9 @@ class Yokogawa_7651_new(Instrument):
 
     def do_set_current_range(self,R):
         R = abs(R)
-        if (self.do_get_source_type() != 'current'):
-            raise CurrentError('Not in current mode')
-            return
+#        if (self.do_get_source_type() != 'current'):
+#            raise CurrentError('Not in current mode')
+#            return
         if ( R <= 1):
             VISACommand('R4', self.instrument).send()
         elif (R <= 10):
