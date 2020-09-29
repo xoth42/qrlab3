@@ -574,8 +574,8 @@ class Measurement(object):
         self.avg_data = ret
 
         if self.histogram:
-            if self.cyclelen == 1:
-                self.plot_histogram(self.shot_data[:])
+#            if self.cyclelen == 1:
+            self.plot_histogram(self.shot_data[:])
         else:
             ret = self.analyze(self.get_ys(), fig=self.get_figure())
 
@@ -928,18 +928,26 @@ class Measurement(object):
     def plot_histogram(self, data):
         fig = self.get_figure()
         avg = np.average(data)
-        print 'avgerage I,Q is:', avg, '\n'
+        print(np.shape(data))
+        if self.cyclelen == 2:
+            data1 = data[::2]
+            data2 = data[1::2]
+        print 'average I,Q is:', avg, '\n'
         if 0:
             fig.axes[0].scatter(np.real(data), np.imag(data), label='avg=%s'%(avg,))
         else:
             fig.axes[0].hexbin(np.real(data), np.imag(data), label='avg=%s'%(avg,), cmap=mpl.cm.hot)
         if self.residuals:
-            n, bins, patches = fig.axes[1].hist(self.complex_to_real(data), bins=64)
-            ax2 = fig.axes[1].twinx()
-            ax2.set_zorder(fig.axes[1].zorder+1)
-            ax2.patch.set_visible(False)
-            ax2.plot((bins[:-1]+bins[1:])/2, np.cumsum(n), 'k')
-            ax2.plot((bins[:-1]+bins[1:])/2, np.sum(n) - np.cumsum(n), 'r')
+            if self.cyclelen == 2:
+                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data1), bins=64)
+                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data2), bins=64)
+            else:
+                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data), bins=64)
+#            ax2 = fig.axes[1].twinx()
+#            ax2.set_zorder(fig.axes[1].zorder+1)
+#            ax2.patch.set_visible(False)
+#            ax2.plot((bins[:-1]+bins[1:])/2, np.cumsum(n), 'k')
+#            ax2.plot((bins[:-1]+bins[1:])/2, np.sum(n) - np.cumsum(n), 'r')
 
     #########################################################
     # Sequencer helper functions
