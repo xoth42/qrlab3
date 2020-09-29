@@ -221,7 +221,7 @@ if 0: # Qubit spec with phase correction
     bla    
     
 
-if 0: # qubit SSB spec
+if 1: # qubit SSB spec
     from single_qubit import ssbspec
 #for i in range(5):
     spec = ssbspec.SSBSpec(qubit_info, np.concatenate((
@@ -257,7 +257,7 @@ if 0: #Multiple times SSB spec
     bla
      
     
-if 1: # Calibrate pi pulse
+if 0: # Calibrate pi pulse
     from single_qubit import rabi
     tr = rabi.Rabi(qubit_info, 
                    np.linspace(-1, 1, 51), selective=False,
