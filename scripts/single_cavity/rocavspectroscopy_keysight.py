@@ -35,14 +35,24 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, square_amp
 
     if square_amps:
         ampdata = ampdata[:]**2
-        
+      
+    
     if plot_type == SPEC:
         for ipower, power in enumerate(powers):
-            ax.plot(freqs/1e6, ampdata[ipower,:], label='Power %.02f dB'%power)
-            ax2.plot(freqs/1e6, ampdata[ipower,:], label='Power %.02f dB'%power)
-
+            ax.plot(freqs/1e6, (ampdata[ipower,:]), label='Power %.02f dB'%power)
+            ax2.plot(freqs/1e6, (ampdata[ipower,:]), label='Power %.02f dB'%power)
+            
+            
+        max_amp=np.zeros((len(powers),len(freqs)), dtype=float)     
+        for ipower in range(0, len(powers)):
+            for ifreq in range(0, len(freqs)):
+                max_amp[ipower][ifreq]=20*np.log10(ampdata[ipower,ifreq])-powers[ipower]-78
+         
+        
         fs = freqs
         amps = ampdata[0,:]
+        
+        
 #        f = fit.Lorentzian(fs, amps)
 #        h0 = np.max(amps)
 #        w0 = 2e6
@@ -97,6 +107,13 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, square_amp
             os.makedirs(fdir)
         kwargs = dict()
         plt.savefig(fn, **kwargs)
+        ##  Shruti adding a 2D plot
+        #plt.figure()
+        #plt.pcolormesh(freqs/1e9,powers, max_amp, cmap=plt.get_cmap('RdBu'), vmin=-40)
+        #plt.colorbar()
+        #plt.xlabel('Frequency [GHz]')
+        #plt.ylabel('Power [dBm]')
+        
         return result
     if plot_type == POWER:
 #        ax1 = f.add_subplot(2,1,1)
@@ -200,7 +217,7 @@ class ROCavSpectroscopy_keysight(Measurement1D):
         for ipower, power in enumerate(self.powers):
             self.readout_info.rfsource1.set_power(power)
             print 'Power = %s' % (power, )
-            time.sleep(2)
+            time.sleep(1)
 
             amps = []
             phases = []

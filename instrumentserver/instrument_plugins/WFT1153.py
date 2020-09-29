@@ -18,7 +18,8 @@ class WFT1153(Instrument):
     
     
     def __init__(self, name, channel_index = 0, serial=None):
-        self.synth = SynthHD('COM4')
+        self.synth = synth
+
 
         self.channel_index = channel_index
         
