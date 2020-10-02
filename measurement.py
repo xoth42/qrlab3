@@ -574,8 +574,8 @@ class Measurement(object):
         self.avg_data = ret
 
         if self.histogram:
-            if self.cyclelen == 1:
-                self.plot_histogram(self.shot_data[:])
+#            if self.cyclelen == 1:
+            self.plot_histogram(self.shot_data[:])
         else:
             ret = self.analyze(self.get_ys(), fig=self.get_figure())
 

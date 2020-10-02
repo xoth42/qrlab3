@@ -30,7 +30,7 @@ def analysis(meas, data=None, fig=None):
     xs = meas.amps
 
     fig.axes[0].plot(xs, ys, 'ks', ms=3)
-    fig.axes[0].errorbar(xs, ys, yerr=meas.get_stes(), fmt='.', 
+    fig.axes[0].errorbar(xs, ys, fmt='.', 
                          markersize = 0, ecolor='grey', linewidth=1)
     
 

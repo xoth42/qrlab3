@@ -28,12 +28,12 @@ def analysis(meas, data=None, fig=None):
 
     if 0: #For double Gaussian fit
         params = lmfit.Parameters()
-        params.add('background', value=min(ys), min=min(ys)+0.5)
-        params.add('amp1', value=(np.max(ys)-np.min(ys))/1.2, min=4)
-        params.add('amp2', value=(np.max(ys)-np.min(ys))/1.2, min=4)
+        params.add('background', value=max(ys), max=max(ys)+0.5)
+        params.add('amp1', value=-(np.max(ys)-np.min(ys))/1.2)
+        params.add('amp2', value=-(np.max(ys)-np.min(ys))/1.2)
         params.add('sigma', value=(xs[-1]-xs[0])/12, max=(xs[-1]-xs[0])/2)
-        params.add('center1', value=xs[np.argmax(ys)], min=xs[0], max=xs[-1])
-        params.add('center2', value=(xs[np.argmax(ys)]+xs[-1])/2, min=xs[0], max=xs[-1])
+        params.add('center1', value=xs[np.argmin(ys)], min=xs[0], max=xs[-1])
+        params.add('center2', value=(xs[np.argmin(ys)]-xs[-1])/2, min=xs[0], max=xs[-1])
             
         result = lmfit.minimize(double_gaussian, params, args=(xs, ys))
         lmfit.report_fit(result.params)
@@ -41,7 +41,40 @@ def analysis(meas, data=None, fig=None):
         fig.axes[0].plot(xs/1e6, -double_gaussian(result.params, xs, 0))
         fig.canvas.draw()
         return result.params
-    if 1: #For single Gaussian fit
+
+
+
+    if 1: #For double Gaussian fit - qubit1
+        params = lmfit.Parameters()
+        params.add('background', value=min(ys), min=min(ys)+0.5)
+        params.add('amp1', value=(np.max(ys)-np.min(ys))/1.2)
+        params.add('amp2', value=(np.max(ys)-np.min(ys))/1.2)
+        params.add('sigma', value=(xs[-1]-xs[0])/12, max=(xs[-1]-xs[0])/2)
+        params.add('center1', value=xs[np.argmax(ys)], min=xs[0], max=xs[-1])
+        params.add('center2', value=(xs[np.argmax(ys)]-xs[-1])/2, min=xs[0], max=xs[-1])
+            
+        result = lmfit.minimize(double_gaussian, params, args=(xs, ys))
+        lmfit.report_fit(result.params)
+    
+        fig.axes[0].plot(xs/1e6, -double_gaussian(result.params, xs, 0))
+        fig.canvas.draw()
+        return result.params
+
+#
+
+
+
+
+
+
+
+
+
+
+
+
+
+    if 0: #For single Gaussian fit
         params = lmfit.Parameters()
         params.add('background', value=min(ys), min=min(ys)-5) #+np.absolute(min(ys))*0.5)
         params.add('amp1', value=-(np.min(ys)-np.max(ys))/1.2, min=0) #Chen reverted to positive peak 6/27
