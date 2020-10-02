@@ -611,7 +611,7 @@ class Measurement(object):
         
         dig.stop_hvi()
         if self.histogram:
-            dig.setup_hist(self.cyclelen * dig.get_naverages(), self.shot_data)
+            dig.setup_hist(self.cyclelen * dig.get_naverages(), hist_buf = self.shot_data)
         else:
             dig.setup_experiment(self.cyclelen, ntransfers = None)
         
@@ -622,9 +622,12 @@ class Measurement(object):
         # Start measurement, either by starting the AWG or the function generator
         self.start_awgs()
         dig.start_hvi()
-        ret = dig.take_experiment(avg_buf=self.avg_data, ste_buf=self.ste_data, 
-                                  async=True, IQ_e=self.readout_info.IQe, 
-                                  e_radius=self.readout_info.IQe_radius)
+        if self.histogram:
+            ret = dig.take_hist(async=True)
+        else:
+            ret = dig.take_experiment(avg_buf=self.avg_data, ste_buf=self.ste_data, 
+                                      async=True, IQ_e=self.readout_info.IQe, 
+                                      e_radius=self.readout_info.IQe_radius)
         
         try:
             while not ret.is_valid() and not self._interrupted:
@@ -699,10 +702,12 @@ class Measurement(object):
             self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*dig.do_get_naverages()], dtype=np.complex)
             self.avg_data = None
             self.pp_data = None
+            self.ste_data = None
         elif self.singleshotbin:
             self.shot_data = None
             self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
             self.pp_data = None
+            self.ste_data = None
         else:
             self.shot_data = None
             # If saving complex data, save both raw signal and post-processed version
@@ -725,16 +730,18 @@ class Measurement(object):
         self.setup_measurement_keysight()
         self.setup_measurement_data_keysight()
 
-        dig = self.instruments['dig']
-        avgs, stes = self.acquisition_loop_keysight(dig) # calls update function
-#        print('after aquisition loop')
-        self.avg_data = avgs
-        self.ste_data = stes
+        dig = self.instruments['dig']            
+        
 
         if self.histogram:
+            ret = self.acquisition_loop_keysight(dig)
+            print(ret)
             if self.cyclelen == 1:
-                self.plot_histogram(self.shot_data[:])
+                self.plot_histogram(ret)
         else:
+            avgs, stes = self.acquisition_loop_keysight(dig) # calls update function
+            self.avg_data = avgs
+            self.ste_data = stes
             ret = self.analyze(self.get_ys(), fig=self.get_figure())
 
         if self.savefig:
@@ -928,18 +935,26 @@ class Measurement(object):
     def plot_histogram(self, data):
         fig = self.get_figure()
         avg = np.average(data)
-        print 'avgerage I,Q is:', avg, '\n'
+        print(np.shape(data))
+        if self.cyclelen == 2:
+            data1 = data[::2]
+            data2 = data[1::2]
+        print 'average I,Q is:', avg, '\n'
         if 0:
             fig.axes[0].scatter(np.real(data), np.imag(data), label='avg=%s'%(avg,))
         else:
             fig.axes[0].hexbin(np.real(data), np.imag(data), label='avg=%s'%(avg,), cmap=mpl.cm.hot)
         if self.residuals:
-            n, bins, patches = fig.axes[1].hist(self.complex_to_real(data), bins=64)
-            ax2 = fig.axes[1].twinx()
-            ax2.set_zorder(fig.axes[1].zorder+1)
-            ax2.patch.set_visible(False)
-            ax2.plot((bins[:-1]+bins[1:])/2, np.cumsum(n), 'k')
-            ax2.plot((bins[:-1]+bins[1:])/2, np.sum(n) - np.cumsum(n), 'r')
+            if self.cyclelen == 2:
+                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data1), bins=64)
+                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data2), bins=64)
+            else:
+                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data), bins=64)
+#            ax2 = fig.axes[1].twinx()
+#            ax2.set_zorder(fig.axes[1].zorder+1)
+#            ax2.patch.set_visible(False)
+#            ax2.plot((bins[:-1]+bins[1:])/2, np.cumsum(n), 'k')
+#            ax2.plot((bins[:-1]+bins[1:])/2, np.sum(n) - np.cumsum(n), 'r')
 
     #########################################################
     # Sequencer helper functions
