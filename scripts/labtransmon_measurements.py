@@ -6,21 +6,31 @@ import matplotlib
 matplotlib.rcParams['backend'] = 'Qt4Agg'
 matplotlib.rcParams['backend.qt4'] = 'PyQt4'
 import matplotlib.pyplot as plt
-#from t1t2_plotting import smart_T1_delays
+
 import math as math
 import time
+from matplotlib import gridspec
+import lmfit
 
 
 import os
 os.chdir(r'c:\qrlab')
 
-#mpl.rcParams['figure.figsize']=[5,3.5]
-#mpl.rcParams['axes.color_cycle'] = ['b', 'g', 'r', 'c', 'm', 'k']
 alz = mclient.instruments['alazar']
-#qubitgen = mclient.instruments['geFG']
 
-#fg = mclient.instruments['funcgen']
-#laserfg = mclient.instruments['laserfg']
+def gaussian(params, x, data):
+    return data - params['amp'] * np.exp(-.5 * ((x - params['mean']) / params['std'])**2)
+
+def gaussian_sum(params, x, data):
+    g1 = params['amp1'] * np.exp(-.5 * ((x - params['mean1']) / params['std1'])**2)
+    g2 = params['amp2'] * np.exp(-.5 * ((x - params['mean2']) / params['std2'])**2)
+    return data - (g1 + g2)
+
+def meas_error_model(params, x1, x2, data):
+    C_g = params['A_gg'] * np.exp(-.5 * ((x1 - params['mean_g']) / params['std_g'])**2) + params['A_eg'] * np.exp(-.5 * ((x1 - params['mean_e']) / params['std_e'])**2) 
+    C_e = params['A_ee'] * np.exp(-.5 * ((x2 - params['mean_e']) / params['std_e'])**2) + params['A_ge'] * np.exp(-.5 * ((x2 - params['mean_g']) / params['std_g'])**2) 
+    return data - (C_g + C_e)
+
 
 # Load old settings.
 if 0:
@@ -35,9 +45,7 @@ ef_info = mclient.get_qubit_info('qubit1ef')
 #gate_info = mclient.get_gate_info('gate')
 #gate2_info = mclient.get_gate_info('gate2')
 #gate3_info = mclient.get_gate_info('gate3')
-#cavity_info = mclient.get_qubit_info('cavityBob')
-#cavity_info = mclient.get_qubit_info('cavityRO')
-#cavity_info = mclient.get_qubit_info('cavityAlice')
+
 
 #Find read-out cavity and choose a power
 
@@ -83,7 +91,7 @@ if 0: # Qubit SSBspec
     bla
 
 '''Flux-tuned SSBspec'''
-if 0: 
+if 0: # Flux-tuned SSBspec
     from scripts.single_qubit import ssbspec
     Yoko = mclient.instruments['yoko']
     
@@ -109,7 +117,7 @@ if 0:
     bla
 
 """Power Rabi -- Pi pulse calibration"""
-if 0: # Calibrate pi pulse
+if 1: # Power Rabi
     for i in range(1):
         from scripts.single_qubit import rabi
 #        qubitgen.set_frequency(4532.71e6)
@@ -133,26 +141,7 @@ if 0: # Time Rabi
     data = tr.measure()
     bla
 
-if 0: # Cavity spec
-    from scripts.single_cavity import cavspectroscopy
-    cav_freq = 4089.56e6
-    freq_range = 0.4e6
-    cspec = cavspectroscopy.CavSpectroscopy(mclient.instruments['aliceFG'], qubit_info, cavity_info, [np.pi], 
-                                            np.linspace(cav_freq-freq_range, cav_freq+freq_range, 51))
-    #This amplitude is NOT capped at 1 like on the qubit spec
-    cspec.measure()
-    bla
-
-if 0: # SSB cavspec - ss not defined
-    from scripts.single_cavity import ssbcavspec
-#    postseq = sequencer.Delay(200000)
-#    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate(np.pi, 0)])
-    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_info, np.linspace(-1e6, 1e6, 101))
-    cspec.measure()
-    bla
-
-
-if 0: # Qubit EFspec - ef_info is not defined
+if 0: # Qubit EFspec 
     from scripts.single_qubit import spectroscopy
     ef_freq = 4465e6
     freq_range = 5e6
@@ -175,7 +164,7 @@ if 0: # EF SSBspec
     spec.measure()
     bla
 
-if 0: # EF rabi -ef_info not defined
+if 0: # EF rabi 
     from scripts.single_qubit import efrabi
 #    alz.set_naverages(2000)
     efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.6, 0.6, 101), plot_seqs=False, selective=False, generate=True, update=True)
@@ -287,18 +276,137 @@ if 0: # Mixer calibration:
 
 if 1: # Check histogramming
     from scripts.single_qubit import rabi
+    twpa = mclient.instruments['WF_twpa']
+    RO = mclient.instruments['RObrick']
     alz.set_naverages(50000)
-    tr = rabi.Rabi(qubit_info, [qubit_info.pi_amp, 0.000001], histogram=True, proj_func='projection', title='|g> and |e>')
-    tr.measure()
-    e_data = tr.complex_to_real(tr.shot_data[:])
-    g_data = tr.complex_to_real
-#    tr = rabi.Rabi(qubit_info, [0.0000001,], histogram=True, proj_func='projection', title='|g>')
-#    tr.measure()
-#    tr = rabi.Rabi(qubit_info, [qubit_info.pi_amp], histogram=True, proj_func='projection', title='|e>')
-#    tr.measure()
-#    tr = rabi.Rabi(qubit_info, [qubit_info.pi_amp/2,], histogram=True, title='|g>+|e>')
-#    tr.measure()
-    alz.set_naverages(1000)
+    pump_freq = 8.160e9
+    twpa.set_frequency(pump_freq)
+    RO_powers = np.linspace(-20, -15, 6)
+    fidelities = []
+    SNRs = []
+    for power in RO_powers:
+        RO.set_power(power)
+#        tr_g = rabi.Rabi(qubit_info, [0.0000001,], histogram=True, proj_func='projection', title='|g>')
+#        tr_g.measure()
+#        tr_e = rabi.Rabi(qubit_info, [qubit_info.pi_amp], histogram=True, proj_func='projection', title='|e>')
+#        tr_e.measure()
+        tr = rabi.Rabi(qubit_info, [0.000001, qubit_info.pi_amp,], histogram=True, title='|g> and |e>')
+        tr.measure()
+#        alz.set_naverages(1000)
+        
+    #if 1: # histogram calculating and plotting
+        e_data = tr.shot_data[1::2]
+        g_data = tr.shot_data[::2]
+        
+        #find blob centers
+        g_average = np.average(g_data)
+        e_average = np.average(e_data)
+        midpoint = np.average([g_average, e_average])
+    
+        #setup plots
+        lim = 10
+        xvec = np.linspace(-lim, lim, 100)
+        fig = plt.figure(figsize=(6, 8))
+        gs = gridspec.GridSpec(2, 1, height_ratios=[3,1])
+        ax1 = fig.add_subplot(gs[0])    
+        ax2 = fig.add_subplot(gs[1])
+        ax1.set_xlim(-lim, lim)
+        ax1.set_ylim(-lim, lim)
+        
+        #plot centers
+        ax1.scatter(np.real(g_average), np.imag(g_average), color='b')
+        ax1.scatter(np.real(e_average), np.imag(e_average), color='r')
+        ax1.scatter(np.real(midpoint), np.imag(midpoint), color='k')
+        
+        #calculate separatrix
+        m = (np.imag(g_average) - np.imag(e_average))/(np.real(g_average) - np.real(e_average))
+        b = np.imag(g_average) - m * np.real(g_average)
+        ax1.plot(xvec, m*xvec+b, linestyle='dashed', color='k')
+        
+        #plot blobs in 2d
+        ax1.hexbin(np.real(g_data), np.imag(g_data), bins=100, alpha=.4, 
+                   cmap='Blues', edgecolors='none')
+        ax1.hexbin(np.real(e_data), np.imag(e_data), bins=100, alpha=.4, 
+                   cmap='Reds', edgecolors='none')
+        
+        # calculate and plot projections
+        g_project = (np.real(g_data) + np.imag(g_data)*m) / np.sqrt(1 + m**2)
+        e_project = (np.real(e_data) + np.imag(e_data)*m) / np.sqrt(1 + m**2)
+        g_hist, g_bins, patches = ax2.hist(g_project, bins=100, alpha=.4, color='b')
+        e_hist, e_bins, patches = ax2.hist(e_project, bins=100, alpha=.4, color='r')
+        
+        # fit projections
+    #    xs = [g_bins[:-1], e_bins[:-1]]
+    #    colors = ['b', 'r']
+    #    means = []
+    #    stds = []
+    #    for i, ys in enumerate([g_hist, e_hist]):
+    #        params = lmfit.Parameters()
+    #        params.add('amp', value=np.max(ys), min=0)
+    #        params.add('mean', value=np.mean(ys))
+    #        params.add('std', value=np.std(ys), min=0)
+    #        result = lmfit.minimize(gaussian, params, args=(xs[i], ys))
+    #        means += [result.params['mean']]
+    #        stds += [result.params['std']]
+    #        lmfit.report_fit(result.params)
+    #        ax2.plot(xs[i], -gaussian(result.params, xs[i], 0), color=colors[i], linestyle='dashed')
+            
+        # fit sum of two gaussians
+        xs = [g_bins[:-1], e_bins[:-1]]
+        g_center = g_bins[g_hist.argmax()]
+        e_center = e_bins[e_hist.argmax()]
+        lines = []
+        colors = ['b', 'r']
+        amps = []
+        means = []
+        stds = []
+        for i, ys in enumerate([g_hist, e_hist]):
+            params = lmfit.Parameters()
+            params.add('amp1', value=np.max(ys), min=0)
+            params.add('mean1', value=g_center, vary=False)
+            params.add('std1', value=np.std(xs[i]), min=1)
+            params.add('amp2', value=np.max(ys), min=0)
+            params.add('mean2', value=e_center, vary=False)
+            params.add('std2', value=np.std(xs[i]), min=1)
+            result = lmfit.minimize(gaussian_sum, params, args=(xs[i], ys))
+            amps += [result.params['amp1'], result.params['amp2']]
+            means += [result.params['mean1'], result.params['mean2']]
+            stds += [result.params['std1'], result.params['std2']]
+            lmfit.report_fit(result.params)
+            ax2.plot(xs[i], -gaussian_sum(result.params, xs[i], 0), color=colors[i], linestyle='dashed')
+            lines += [-gaussian_sum(result.params, xs[i], 0)]
+            
+        threshold = (means[0]+means[3])/2
+        ax2.axvline(threshold)
+        threshold_indices = [np.where(g_bins == g_bins[np.abs(g_bins-threshold).argmin()])[0][0], np.where(e_bins == e_bins[np.abs(e_bins-threshold).argmin()])[0][0]]
+        ge_error_prob = np.sum(g_hist[threshold_indices[0]:])/np.sum(g_hist)
+        eg_error_prob = np.sum(e_hist[:threshold_indices[1]])/np.sum(e_hist)
+        fidelity = 1 - (ge_error_prob + eg_error_prob)/2
+        fidelities += [fidelity]
+        print('Fidelity = ', fidelity)
+        plt.figure()
+        plt.plot(g_bins[:-1], lines[0])
+        plt.plot(e_bins[:-1], lines[1])
+        plt.axvline(threshold, color='g', linestyle='dashed')
+        plt.title(fidelity)
+    
+        
+        print('SNR = ', np.abs(means[3] - means[0]) / (stds[3] + stds[0])/2)
+        SNRs += [np.abs(means[3] - means[0]) / (stds[3] + stds[0])/2]
+        '''
+        ax2.plot(np.linspace(-lim, lim, 100), gaussian(np.linspace(-lim, lim, 100), 
+                             g_mean, g_std), linestyle='dashed', color='b')
+        ax2.plot(np.linspace(-lim, lim, 100), gaussian(np.linspace(-lim, lim, 100), 
+                             e_mean, e_std), linestyle='dashed', color='r')
+        '''
+        
+        
+        
+    #    e_data = np.abs(e_data)
+    #    g_data = np.abs(g_data)
+    #    plt.hist(e_data, bins=100, color='r', alpha=0.5)
+    #    plt.hist(g_data, bins=100, color='b', alpha=0.5)
+
 
 if 0: # TWPA histogram sweep
     from scripts.single_qubit import rabi
@@ -348,27 +456,11 @@ if 0: # T1
 #        plt.close()
     bla
 
-
-
-if 0: # T1_QP
-    from scripts.single_qubit import T1measurement_QP
-    for delays in [0.2e6, 0.1e6, 0.125e6, 0.15e6, 0.175e6, 0.2e6, 0.25e6]:
-        t1 = T1measurement_QP.T1Measurement_QP(qubit_info, np.linspace(0, 10e3, 101), QP_delay=delays, inj_len=30e3)
-        t1.measure()
-    bla
-
 if 0: # T2
     from scripts.single_qubit import T2measurement
     for i in range(1):
-        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 4e3, 101), detune=1.5e6, double_freq=False, generate=True)
+        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 2e3, 101), detune=2e6, double_freq=False, generate=True)
         t2.measure()
-    bla
-
-
-if 0: # T2_QP
-    from scripts.single_qubit import T2measurement_QP
-    t2 = T2measurement_QP.T2Measurement_QP(qubit_info, np.linspace(0.3e3, 30e3, 100), QP_delay=1.5e6, detune=250e3, double_freq=False, inj_len=100e3, echotype = T2measurement_QP.ECHO_HAHN)
-    t2.measure()
     bla
 
 if 0: # T2echo
@@ -428,235 +520,6 @@ if 0: # SSB number splitting:
 #                           seq=None, extra_info=cavity_info, plot_seqs=False, coplay_delay=coplay_delay)
 #        spec.measure()
     bla
-
-if 0:
-    from scripts.single_qubit import ssbspec
-    for amp in [.1, 1, 3.14, 5]:
-        seq = sequencer.Join([sequencer.Trigger(250), cavity_info.rotate(np.pi, 0)])
-        spec = ssbspec.SSBSpec(qubit_info, np.linspace(-5e6, 1e6, 101),
-                       seq=seq, extra_info=cavity_info, plot_seqs=False, generate=True)
-        spec.measure()
-
-
-if 0: # Cavity lifetime:
-    from scripts.single_cavity import cavT1
-    t1 = cavT1.CavT1(qubit_info, cavity_info, np.pi, np.linspace(0, 1e4, 201), proj_num=0, seq=None, extra_info=None, bgcor=False,
-                     plot_seqs=False, generate=True)
-    t1.measure()
-
-if 0: # Rabi_QP
-    from scripts.single_qubit import rabi_QP
-    tr = rabi_QP.Rabi_QP(qubit_info, np.linspace(0, 1, 81), QP_delay = 10e3, inj_len = 30e3)
-    tr.measure()
-
-#test laser pulse
-if 0:
-    from scripts.single_qubit import lasertest
-    laser_info = mclient.instruments['laserfg']
-    for plen in [20e-6, 50e-6, 100e-6]:
-        laser_info.set_pulsewidth(plen)
-        blah = lasertest.Rabi_laser(qubit_info, np.linspace(0, 1, 81), laser_plen=250, laser_delay = (5e-6))
-        blah.measure()
-
-#for number splitting and cavity lifetime using a laser injection
-if 0:
-    from scripts.single_qubit import ssbspec
-#    laser_info.set_output_on(True)
-#    laser_delay = 50e3
-#    plen = 10-6
-#    laser_info.set_pulsewidth(plen)
-#    edge = 5e-6
-#    laser_info.set_edgetime(edge)
-
-#    seq = sequencer.Join([sequencer.Trigger(250), sequencer.Constant(250, 1, '1m2'), sequencer.Delay(laser_delay)])
-
-    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-6e6, 3e6, 121),
-                           extra_info=cavity_info, plot_seqs=False)
-    spec.measure()
-#    laser_info.set_output_on(False)
-
-
-if 0:
-#for i in range(20):
-    tau=[]
-    tau_err=[]
-    delays=[]
-    freq=[]
-    freq_err=[]
-    T2=[]
-    T2_err=[]
-    from scripts.single_qubit import T1measurement_laser
-#    from scripts.single_qubit import T2measurement_laser
-    laser_info = mclient.instruments['laserfg']
-    laser_info.set_function('PULS')
-    laser_info.set_Vhigh(1.5)
-    laser_info.set_Vlow(0)
-    laser_info.burst_mode()
-    laser_info.set_output_on(True)
-#    for pulse in[10e-6, 50e-6, 100e-6, 250e-6, 400e-6]:
-    for j in range(3):
-        pulse = 500e-6
-        plen = pulse
-        laser_info.set_pulsewidth(plen)
-        edge = 1e-6
-        laser_info.set_edgetime(edge)
-        for add_delay in np.concatenate((np.linspace(plen*1e9,plen*1e9+400e3, 4),np.linspace(plen*1e9+400e3, plen*1e9+3e6, 4))):
-#        for add_delay in  np.linspace(plen*1e9,plen*1e9+100e3, 26):
-    #    for add_delay in [5e3, 10e3, 50e3, 100e3, 250e3, 500e3, 750e3, 900e3, 1e6, 1.2e6, 1.5e6, 2.5e6, 5e6]:
-            delays.append(add_delay)
-
-#            rep_rate = 1/(plen  + 3e-3)
-#            rep_rate=100.0*floor(rep_rate/100.0)
-    #        rep_rate = 1/(10e-3)
-    #        fg.set_frequency(500)
-    #        add_delay = 10e3
-#
-            if add_delay < 50e3:
-                fg.set_frequency(250)
-                alz.set_naverages(1000)
-                t1_range = np.concatenate((np.linspace(0, 10e3, 41), np.linspace(11e3, 20e3, 41)))
-#                t1_range = np.concatenate((np.linspace(0, 4e3, 41), np.linspace(4.5e3, 10e3, 41)))
-            elif add_delay < 100e3:
-                fg.set_frequency(250)
-                alz.set_naverages(1000)
-                t1_range = np.linspace(0, 10e3, 41)
-            elif add_delay < plen*1e9:
-                fg.set_frequency(250)
-                alz.set_naverages(1000)
-                t1_range = np.linspace(0, 2e3, 81)
-#                t1_range = np.concatenate((np.linspace(0, 5e3, 41), np.linspace(6e3, 10e3, 41)))
-            elif add_delay < plen*1e9 + 200e3:
-                fg.set_frequency(250)
-                alz.set_naverages(1000)
-                t1_range = np.linspace(0, 3e3, 81)
-            elif add_delay < plen*1e9 + 400e3:
-                fg.set_frequency(200)
-                alz.set_naverages(1000)
-                t1_range = np.linspace(0, 6e3, 81)
-
-            elif add_delay < plen*1e9 + 1.1e6:
-                fg.set_frequency(200)
-                alz.set_naverages(1000)
-                t1_range = np.linspace(0, 40e3, 81)
-            else:
-                fg.set_frequency(200)
-                alz.set_naverages(400)
-                t1_range = np.concatenate((np.linspace(0, 10e3, 41), np.linspace(11e3, 20e3, 41)))
-
-            #t1 = T1measurement_laser.T1Measurement_laser(qubit_info, t1_range, double_exp=False, laser_plen=250, laser_delay = (plen*1e9 + 1.7*edge*1e9 + add_delay))
-            t1 = T1measurement_laser.T1Measurement_laser(qubit_info, t1_range, double_exp=False, laser_plen=250, laser_delay = add_delay)
-            tau_new, tau_new_err = t1.measure()
-            t1.data.set_attrs(post_inj_delay = add_delay)
-            t1.data.set_attrs(injection_length = plen)
-            plt.close()
-            tau.append(tau_new)
-            tau_err.append(tau_new_err)
-            plt.figure(1)
-            plt.clf()
-#            plt.errorbar(np.array(delays)/1000.0, np.array(tau)/1000.0, np.array(tau_err)/1000.0, fmt ='mo')
-            plt.errorbar(np.array(range(len(tau))),np.array(tau)/1000.0, np.array(tau_err)/1000.0, fmt ='mo')
-#            plt.axis(xmin=min(delays)*0.9/1000.0, xmax=max(delays)*1.10/1000.0)
-            #plt.semilogx()
-            plt.title('QP Decay After Optical Injection')
-            plt.xlabel('Iterations - from 0 to 100 us after inj end')
-            plt.ylabel('T1 (us)')
-
-#            t2 = T2measurement_laser.T2Measurement_laser(qubit_info, t1_range/2.0, detune= 20.0e9/max(t1_range), laser_plen=250, laser_delay = (plen*1e9 + 1.7*edge*1e9 + add_delay))
-#            t2 = T2measurement_laser.T2Measurement_laser(qubit_info, t1_range/8.0, detune= 80.0e9/max(t1_range), laser_plen=250, laser_delay = (plen*1e9 + 1.7*edge*1e9 + add_delay))
-#            freq_new, freq_new_err, T2_new, T2_new_err = t2.measure()
-#            t2.data.set_attrs(post_inj_delay = add_delay)
-#            t2.data.set_attrs(injection_length = plen)
-#            plt.close()
-#            T2.append(T2_new)
-#            T2_err.append(T2_new_err)
-#            plt.figure(2)
-#            plt.clf()
-#            plt.errorbar(np.array(delays)/1000.0, np.array(T2)/1000.0, np.array(T2_err)/1000.0, fmt ='b^')
-#            plt.axis(xmin=min(delays)*0.9/1000.0, xmax=max(delays)*1.10/1000.0)
-#            plt.figure(3)
-#            plt.clf()
-##            delta_freq = freq_new*1e6 - 20e9/max(t1_range)/1e3 #delta_freq is in kHz
-#            delta_freq = freq_new*1e6 - 80e9/max(t1_range)/1e3
-#            freq.append(delta_freq)
-#            freq_err.append(freq_new_err*1e6)
-#            plt.errorbar(np.array(delays)/1000.0, np.array(freq), np.array(freq_err), fmt ='g^')
-#            plt.axis(xmin=min(delays)*0.9/1000.0, xmax=max(delays)*1.10/1000.0)
-
-    laser_info.set_output_on(False)
-
-#QP decay with laser:
-if 0:
-    from scripts.single_qubit import QPdecay_laser
-    laser_info = mclient.instruments['laserfg']
-    laser_info.set_output_on(True)
-    eff_T1_delay = 500.0
-    meas_per_QPinj = 4
-    meas_per_reptime = 10
-    fg = mclient.instruments['funcgen']
-    rep_time=1.0e9/fg.get_frequency()
-    laser_inj_len = 50e-6
-    laser_info.set_pulsewidth(laser_inj_len)
-    edge = 5e-6
-    laser_info.set_edgetime(edge)
-    T1_delays = smart_T1_delays(T1_int=45.0e3, QPT1=0.4e6, half_decay_point=0.2e6, eff_T1_delay=eff_T1_delay, probe_point=0.7, meas_per_QPinj=meas_per_QPinj, meas_per_reptime=meas_per_reptime)
-
-    for i in range(5):
-        alz.set_naverages(4000)
-        qpd = QPdecay_laser.QPdecay_laser(qubit_info, T1_delays, rep_time, meas_per_reptime, meas_per_QPinj, fit_start=5, vg=0.0, ve=6.75, eff_T1_delay=eff_T1_delay, inj_len= laser_inj_len*1e9)
-        qpd.measure()
-#        ag3 = mclient.instruments['ag3']
-#        qpd.data.set_attrs(inj_power=ag3.get_power())
-
-        T1_delays = (T1_delays -np.log(0.5)*1000.0/qpd.invT1 - eff_T1_delay)/2.0
-        for j, delay in enumerate(T1_delays):
-            if delay < 0:
-                T1_delays[j]=0.0
-
-    laser_info.set_output_on(False)
-
-"""
-Quasi-particle Decay
-"""
-if 0: # QPDecay
-#    from scripts.single_qubit import T1measurement
-    from scripts.single_qubit import QPdecay
-    eff_T1_delay = 500.0
-    meas_per_QPinj = 40
-    meas_per_reptime = 5
-    fg = mclient.instruments['funcgen']
-    rep_time=1.0e9/fg.get_frequency()
-
-    T1_delays = smart_T1_delays(T1_int=6.0e3, QPT1=5.0e6, half_decay_point=3.0e6, eff_T1_delay=eff_T1_delay, probe_point=0.5, meas_per_QPinj=meas_per_QPinj, meas_per_reptime=meas_per_reptime)
-    for i in range(5):
-        alz.set_naverages(4000)
-        qpd = QPdecay.QPdecay(qubit_info, T1_delays, rep_time, meas_per_reptime, meas_per_QPinj, fit_start=6, vg=0.0, ve=3.8, eff_T1_delay=eff_T1_delay, inj_len=360e3)
-        qpd.measure()
-        ag3 = mclient.instruments['ag3']
-        qpd.data.set_attrs(inj_power=ag3.get_power())
-
-        T1_delays = (T1_delays -np.log(0.5)*1000.0/qpd.invT1 - eff_T1_delay)/2.0
-        for j, delay in enumerate(T1_delays):
-            if delay < 0:
-                T1_delays[j]=0.0
-
-#        alz.set_naverages(2000)
-#        t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0, 100e3, 81), np.linspace(100e3, 200e3, 81))), double_exp=False)
-#        t1.measure()
-
-
-if 0:
-    from scripts.single_qubit import T2measurement
-    from scripts.single_qubit import QPdecayRamsey
-    fg = mclient.instruments['funcgen']
-    rep_time=1.0e9/fg.get_frequency()
-    T2_delay = 22500 #ns
-    for i in range(5):
-        alz.set_naverages(25000)
-        qpd = QPdecayRamsey.QPdecayRamsey(qubit_info, T2_delay=T2_delay, detune=200e3, rep_time=rep_time, meas_per_reptime=1, meas_per_QPinj=400, fit_start=5, vg=0, ve=4.25, inj_len=100e3)
-        qpd.measure()
-        alz.set_naverages(8000)
-        t2e = T2measurement.T2Measurement(qubit_info, np.linspace(0.3e3, 40e3, 100), detune=200e3, echotype = T2measurement.ECHO_HAHN)
-        t2e.measure()
 
 
 if 0: # Two-Qubit Randomized Benchmarking

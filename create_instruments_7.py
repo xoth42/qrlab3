@@ -146,7 +146,7 @@ AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 1, slot = 8,
 alz = instruments.create('alazar', 'Alazar_Daemon')
 alz.set_ch1_range('40mV')
 alz.set_ch2_range('40mV')
-alz.set_nsamples(1600)
+alz.set_nsamples(1280)
 alz.set_naverages(1000)
 alz.set_ch1_coupling('AC')
 alz.set_ch2_coupling('AC')

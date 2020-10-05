@@ -437,7 +437,8 @@ class Measurement(object):
             if self.histogram:
                 ret = alz.take_hist(async=True)
             else:
-                ret = alz.take_experiment(avg_buf=self.avg_data, async=True, singleshotbin=self.singleshotbin, shot_buf=self.shot_data, #Dario
+                ret = alz.take_experiment(avg_buf=self.avg_data, async=True, singleshotbin=self.singleshotbin, ste_buf=self.ste_data,
+                                          shot_buf=self.shot_data, #Dario
                                           IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius)
             if self.print_progress:
                 logging.info('Acquiring...')
@@ -532,10 +533,12 @@ class Measurement(object):
             self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*alz.get_naverages()], dtype=np.complex)
             self.avg_data = None
             self.pp_data = None
+            self.ste_data = None
         elif self.singleshotbin:
             self.shot_data = None
             self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
             self.pp_data = None
+            self.ste_data = None
             '''DARIO added 7/28/18 to keep all single shot data'''
         elif self.keep_shots:
             self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*alz.get_naverages()], dtype=np.complex)
@@ -554,6 +557,7 @@ class Measurement(object):
             else:
                 self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
                 self.pp_data = None
+            self.ste_data = self.data.create_dataset('ste', [self.cyclelen,], dtype=np.float)
 
     def measure(self):
         '''
@@ -569,9 +573,10 @@ class Measurement(object):
         self.setup_measurement_data()
 
         alz = self.instruments['alazar']
-        ret = self.acquisition_loop(alz) # calls update function
+        avgs, stes = self.acquisition_loop(alz) # calls update function
         print('after acquisition loop')
-        self.avg_data = ret
+        self.avg_data = avgs
+        self.ste_data = stes
 
         if self.histogram:
 #            if self.cyclelen == 1:
