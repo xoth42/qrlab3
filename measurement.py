@@ -573,15 +573,16 @@ class Measurement(object):
         self.setup_measurement_data()
 
         alz = self.instruments['alazar']
-        avgs, stes = self.acquisition_loop(alz) # calls update function
-        print('after acquisition loop')
-        self.avg_data = avgs
-        self.ste_data = stes
-
         if self.histogram:
 #            if self.cyclelen == 1:
+            ret = self.acquisition_loop(alz)
             self.plot_histogram(self.shot_data[:])
+  
         else:
+            avgs, stes = self.acquisition_loop(alz) # calls update function
+            print('after acquisition loop')
+            self.avg_data = avgs
+            self.ste_data = stes
             ret = self.analyze(self.get_ys(), fig=self.get_figure())
 
         if self.savefig:

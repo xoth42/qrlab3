@@ -122,7 +122,7 @@ if 1: # Power Rabi
         from scripts.single_qubit import rabi
 #        qubitgen.set_frequency(4532.71e6)
         tr = rabi.Rabi(qubit_info, np.linspace(-0.6, 0.6, 101), plot_seqs=False, generate=True, selective=False, repeat_pulse=1,
-                       update=True, proj_func='amplitude')
+                       update=True, proj_func='projection')
 #        from scripts.single_qubit import rabi_IQ
 #        tr = rabi_IQ.Rabi(qubit_info, np.linspace(0, 0.5, 101), plot_seqs=False, real_signals=False)
         data=tr.measure()
@@ -286,12 +286,12 @@ if 1: # Check histogramming
     SNRs = []
     for power in RO_powers:
         RO.set_power(power)
-#        tr_g = rabi.Rabi(qubit_info, [0.0000001,], histogram=True, proj_func='projection', title='|g>')
-#        tr_g.measure()
+        tr_g = rabi.Rabi(qubit_info, [0.0000001,], histogram=True, proj_func='projection', title='|g>')
+        tr_g.measure()
 #        tr_e = rabi.Rabi(qubit_info, [qubit_info.pi_amp], histogram=True, proj_func='projection', title='|e>')
 #        tr_e.measure()
-        tr = rabi.Rabi(qubit_info, [0.000001, qubit_info.pi_amp,], histogram=True, title='|g> and |e>')
-        tr.measure()
+#        tr = rabi.Rabi(qubit_info, [0.000001, qubit_info.pi_amp,], histogram=True, title='|g> and |e>')
+#        tr.measure()
 #        alz.set_naverages(1000)
         
     #if 1: # histogram calculating and plotting
