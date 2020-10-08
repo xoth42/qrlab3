@@ -71,7 +71,7 @@ class Measurement(object):
                      savefig=True,
                      imagetype='png',
                      print_progress=True,
-                     proj_func = 'amp'):
+                     proj_func = 'amplitude'):
         if name is None:
             name = self.__class__.__name__
 
@@ -98,7 +98,7 @@ class Measurement(object):
         self.savefig = savefig
         self.imagetype = imagetype
         self.print_progress = print_progress
-        self._proj_func = proj_func
+        self.proj_func = proj_func
 
         # Build list of info objects
         if infos is None:
@@ -439,7 +439,7 @@ class Measurement(object):
             else:
                 ret = alz.take_experiment(avg_buf=self.avg_data, async=True, singleshotbin=self.singleshotbin, ste_buf=self.ste_data,
                                           shot_buf=self.shot_data, #Dario
-                                          IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius)
+                                          IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius, proj_func=self.proj_func)
             if self.print_progress:
                 logging.info('Acquiring...')
             while not ret.is_valid() and not self._interrupted:
@@ -837,9 +837,9 @@ class Measurement(object):
 
         vproj /= np.abs(vproj)
 
-        if(self._proj_func is 'phase'):
+        if(self.proj_func is 'phase'):
             return np.angle(ys, deg=True) # returns phase #DARIO 8/31 
-        elif(self._proj_func is 'projection'):
+        elif(self.proj_func is 'projection'):
             ys = ys - IQg #DARIO 8/31
             return np.real(ys) * vproj.real  + np.imag(ys) * vproj.imag # returns projected amplitue
         else:

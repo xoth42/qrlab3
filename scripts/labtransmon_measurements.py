@@ -122,7 +122,7 @@ if 1: # Power Rabi
         from scripts.single_qubit import rabi
 #        qubitgen.set_frequency(4532.71e6)
         tr = rabi.Rabi(qubit_info, np.linspace(-0.6, 0.6, 101), plot_seqs=False, generate=True, selective=False, repeat_pulse=1,
-                       update=True, proj_func='projection')
+                       update=True, proj_func='phase')
 #        from scripts.single_qubit import rabi_IQ
 #        tr = rabi_IQ.Rabi(qubit_info, np.linspace(0, 0.5, 101), plot_seqs=False, real_signals=False)
         data=tr.measure()
@@ -278,134 +278,138 @@ if 1: # Check histogramming
     from scripts.single_qubit import rabi
     twpa = mclient.instruments['WF_twpa']
     RO = mclient.instruments['RObrick']
+    ro = mclient.instruments['readout']
     alz.set_naverages(50000)
-    pump_freq = 8.160e9
-    twpa.set_frequency(pump_freq)
+    alz.set_nsamples(1280)
+    ro.set_pulse_len(1000)
+    pump_freqs = np.linspace(8.160e9, 8.160e9, 1)
     RO_powers = np.linspace(-20, -15, 6)
     fidelities = []
     SNRs = []
     for power in RO_powers:
         RO.set_power(power)
-        tr_g = rabi.Rabi(qubit_info, [0.0000001,], histogram=True, proj_func='projection', title='|g>')
-        tr_g.measure()
-#        tr_e = rabi.Rabi(qubit_info, [qubit_info.pi_amp], histogram=True, proj_func='projection', title='|e>')
-#        tr_e.measure()
-#        tr = rabi.Rabi(qubit_info, [0.000001, qubit_info.pi_amp,], histogram=True, title='|g> and |e>')
-#        tr.measure()
-#        alz.set_naverages(1000)
-        
-    #if 1: # histogram calculating and plotting
-        e_data = tr.shot_data[1::2]
-        g_data = tr.shot_data[::2]
-        
-        #find blob centers
-        g_average = np.average(g_data)
-        e_average = np.average(e_data)
-        midpoint = np.average([g_average, e_average])
-    
-        #setup plots
-        lim = 10
-        xvec = np.linspace(-lim, lim, 100)
-        fig = plt.figure(figsize=(6, 8))
-        gs = gridspec.GridSpec(2, 1, height_ratios=[3,1])
-        ax1 = fig.add_subplot(gs[0])    
-        ax2 = fig.add_subplot(gs[1])
-        ax1.set_xlim(-lim, lim)
-        ax1.set_ylim(-lim, lim)
-        
-        #plot centers
-        ax1.scatter(np.real(g_average), np.imag(g_average), color='b')
-        ax1.scatter(np.real(e_average), np.imag(e_average), color='r')
-        ax1.scatter(np.real(midpoint), np.imag(midpoint), color='k')
-        
-        #calculate separatrix
-        m = (np.imag(g_average) - np.imag(e_average))/(np.real(g_average) - np.real(e_average))
-        b = np.imag(g_average) - m * np.real(g_average)
-        ax1.plot(xvec, m*xvec+b, linestyle='dashed', color='k')
-        
-        #plot blobs in 2d
-        ax1.hexbin(np.real(g_data), np.imag(g_data), bins=100, alpha=.4, 
-                   cmap='Blues', edgecolors='none')
-        ax1.hexbin(np.real(e_data), np.imag(e_data), bins=100, alpha=.4, 
-                   cmap='Reds', edgecolors='none')
-        
-        # calculate and plot projections
-        g_project = (np.real(g_data) + np.imag(g_data)*m) / np.sqrt(1 + m**2)
-        e_project = (np.real(e_data) + np.imag(e_data)*m) / np.sqrt(1 + m**2)
-        g_hist, g_bins, patches = ax2.hist(g_project, bins=100, alpha=.4, color='b')
-        e_hist, e_bins, patches = ax2.hist(e_project, bins=100, alpha=.4, color='r')
-        
-        # fit projections
-    #    xs = [g_bins[:-1], e_bins[:-1]]
-    #    colors = ['b', 'r']
-    #    means = []
-    #    stds = []
-    #    for i, ys in enumerate([g_hist, e_hist]):
-    #        params = lmfit.Parameters()
-    #        params.add('amp', value=np.max(ys), min=0)
-    #        params.add('mean', value=np.mean(ys))
-    #        params.add('std', value=np.std(ys), min=0)
-    #        result = lmfit.minimize(gaussian, params, args=(xs[i], ys))
-    #        means += [result.params['mean']]
-    #        stds += [result.params['std']]
-    #        lmfit.report_fit(result.params)
-    #        ax2.plot(xs[i], -gaussian(result.params, xs[i], 0), color=colors[i], linestyle='dashed')
+        for freq in pump_freqs:
+            twpa.set_frequency(freq)
+            tr_g = rabi.Rabi(qubit_info, [0.0000001,], histogram=True, proj_func='amplitude', title='|g>')
+            tr_g.measure()
+            tr_e = rabi.Rabi(qubit_info, [qubit_info.pi_amp], histogram=True, proj_func='amplitude', title='|e>')
+            tr_e.measure()
+            tr = rabi.Rabi(qubit_info, [0.000001, qubit_info.pi_amp,], histogram=True, proj_func='amplitude', title='|g> and |e>')
+            tr.measure()
+    #        alz.set_naverages(1000)
             
-        # fit sum of two gaussians
-        xs = [g_bins[:-1], e_bins[:-1]]
-        g_center = g_bins[g_hist.argmax()]
-        e_center = e_bins[e_hist.argmax()]
-        lines = []
-        colors = ['b', 'r']
-        amps = []
-        means = []
-        stds = []
-        for i, ys in enumerate([g_hist, e_hist]):
-            params = lmfit.Parameters()
-            params.add('amp1', value=np.max(ys), min=0)
-            params.add('mean1', value=g_center, vary=False)
-            params.add('std1', value=np.std(xs[i]), min=1)
-            params.add('amp2', value=np.max(ys), min=0)
-            params.add('mean2', value=e_center, vary=False)
-            params.add('std2', value=np.std(xs[i]), min=1)
-            result = lmfit.minimize(gaussian_sum, params, args=(xs[i], ys))
-            amps += [result.params['amp1'], result.params['amp2']]
-            means += [result.params['mean1'], result.params['mean2']]
-            stds += [result.params['std1'], result.params['std2']]
-            lmfit.report_fit(result.params)
-            ax2.plot(xs[i], -gaussian_sum(result.params, xs[i], 0), color=colors[i], linestyle='dashed')
-            lines += [-gaussian_sum(result.params, xs[i], 0)]
+        #if 1: # histogram calculating and plotting
+            e_data = tr.shot_data[1::2]
+            g_data = tr.shot_data[::2]
             
-        threshold = (means[0]+means[3])/2
-        ax2.axvline(threshold)
-        threshold_indices = [np.where(g_bins == g_bins[np.abs(g_bins-threshold).argmin()])[0][0], np.where(e_bins == e_bins[np.abs(e_bins-threshold).argmin()])[0][0]]
-        ge_error_prob = np.sum(g_hist[threshold_indices[0]:])/np.sum(g_hist)
-        eg_error_prob = np.sum(e_hist[:threshold_indices[1]])/np.sum(e_hist)
-        fidelity = 1 - (ge_error_prob + eg_error_prob)/2
-        fidelities += [fidelity]
-        print('Fidelity = ', fidelity)
-        plt.figure()
-        plt.plot(g_bins[:-1], lines[0])
-        plt.plot(e_bins[:-1], lines[1])
-        plt.axvline(threshold, color='g', linestyle='dashed')
-        plt.title(fidelity)
-    
+            #find blob centers
+            g_average = np.average(g_data)
+            e_average = np.average(e_data)
+            midpoint = np.average([g_average, e_average])
         
-        print('SNR = ', np.abs(means[3] - means[0]) / (stds[3] + stds[0])/2)
-        SNRs += [np.abs(means[3] - means[0]) / (stds[3] + stds[0])/2]
-        '''
-        ax2.plot(np.linspace(-lim, lim, 100), gaussian(np.linspace(-lim, lim, 100), 
-                             g_mean, g_std), linestyle='dashed', color='b')
-        ax2.plot(np.linspace(-lim, lim, 100), gaussian(np.linspace(-lim, lim, 100), 
-                             e_mean, e_std), linestyle='dashed', color='r')
-        '''
+            #setup plots
+            lim = 10
+            xvec = np.linspace(-lim, lim, 100)
+            fig = plt.figure(figsize=(6, 8))
+            gs = gridspec.GridSpec(2, 1, height_ratios=[3,1])
+            ax1 = fig.add_subplot(gs[0])    
+            ax2 = fig.add_subplot(gs[1])
+            ax1.set_xlim(-lim, lim)
+            ax1.set_ylim(-lim, lim)
+            
+            #plot centers
+            ax1.scatter(np.real(g_average), np.imag(g_average), color='b')
+            ax1.scatter(np.real(e_average), np.imag(e_average), color='r')
+            ax1.scatter(np.real(midpoint), np.imag(midpoint), color='k')
+            
+            #calculate separatrix
+            m = (np.imag(g_average) - np.imag(e_average))/(np.real(g_average) - np.real(e_average))
+            b = np.imag(g_average) - m * np.real(g_average)
+            ax1.plot(xvec, m*xvec+b, linestyle='dashed', color='k')
+            
+            #plot blobs in 2d
+            ax1.hexbin(np.real(g_data), np.imag(g_data), bins=100, alpha=.4, 
+                       cmap='Blues', edgecolors='none')
+            ax1.hexbin(np.real(e_data), np.imag(e_data), bins=100, alpha=.4, 
+                       cmap='Reds', edgecolors='none')
+            
+            # calculate and plot projections
+            g_project = (np.real(g_data) + np.imag(g_data)*m) / np.sqrt(1 + m**2)
+            e_project = (np.real(e_data) + np.imag(e_data)*m) / np.sqrt(1 + m**2)
+            g_hist, g_bins, patches = ax2.hist(g_project, bins=100, alpha=.4, color='b')
+            e_hist, e_bins, patches = ax2.hist(e_project, bins=100, alpha=.4, color='r')
+            
+            # fit projections
+        #    xs = [g_bins[:-1], e_bins[:-1]]
+        #    colors = ['b', 'r']
+        #    means = []
+        #    stds = []
+        #    for i, ys in enumerate([g_hist, e_hist]):
+        #        params = lmfit.Parameters()
+        #        params.add('amp', value=np.max(ys), min=0)
+        #        params.add('mean', value=np.mean(ys))
+        #        params.add('std', value=np.std(ys), min=0)
+        #        result = lmfit.minimize(gaussian, params, args=(xs[i], ys))
+        #        means += [result.params['mean']]
+        #        stds += [result.params['std']]
+        #        lmfit.report_fit(result.params)
+        #        ax2.plot(xs[i], -gaussian(result.params, xs[i], 0), color=colors[i], linestyle='dashed')
+                
+            # fit sum of two gaussians
+            xs = [g_bins[:-1], e_bins[:-1]]
+            g_center = g_bins[g_hist.argmax()]
+            e_center = e_bins[e_hist.argmax()]
+            lines = []
+            colors = ['b', 'r']
+            amps = []
+            means = []
+            stds = []
+            for i, ys in enumerate([g_hist, e_hist]):
+                params = lmfit.Parameters()
+                params.add('amp1', value=np.max(ys), min=0)
+                params.add('mean1', value=g_center, vary=False)
+                params.add('std1', value=np.std(xs[i]), min=1)
+                params.add('amp2', value=np.max(ys), min=0)
+                params.add('mean2', value=e_center, vary=False)
+                params.add('std2', value=np.std(xs[i]), min=1)
+                result = lmfit.minimize(gaussian_sum, params, args=(xs[i], ys))
+                amps += [result.params['amp1'], result.params['amp2']]
+                means += [result.params['mean1'], result.params['mean2']]
+                stds += [result.params['std1'], result.params['std2']]
+                lmfit.report_fit(result.params)
+                ax2.plot(xs[i], -gaussian_sum(result.params, xs[i], 0), color=colors[i], linestyle='dashed')
+                lines += [-gaussian_sum(result.params, xs[i], 0)]
+                
+            threshold = (means[0]+means[3])/2
+            ax2.axvline(threshold)
+            threshold_indices = [np.where(g_bins == g_bins[np.abs(g_bins-threshold).argmin()])[0][0], np.where(e_bins == e_bins[np.abs(e_bins-threshold).argmin()])[0][0]]
+            ge_error_prob = np.sum(g_hist[:threshold_indices[0]])/np.sum(g_hist)
+            eg_error_prob = np.sum(e_hist[threshold_indices[1]:])/np.sum(e_hist)
+            fidelity = 1 - (ge_error_prob + eg_error_prob)/2
+            fidelities += [fidelity]
+            print('Fidelity = ', fidelity)
+            plt.figure()
+            plt.plot(g_bins[:-1], lines[0])
+            plt.plot(e_bins[:-1], lines[1])
+            plt.axvline(threshold, color='g', linestyle='dashed')
+            plt.title(fidelity)
         
-        
-        
-    #    e_data = np.abs(e_data)
-    #    g_data = np.abs(g_data)
-    #    plt.hist(e_data, bins=100, color='r', alpha=0.5)
-    #    plt.hist(g_data, bins=100, color='b', alpha=0.5)
+            
+            print('SNR = ', np.abs(means[3] - means[0]) / (stds[3] + stds[0])/2)
+            SNRs += [np.abs(means[3] - means[0]) / (stds[3] + stds[0])/2]
+            '''
+            ax2.plot(np.linspace(-lim, lim, 100), gaussian(np.linspace(-lim, lim, 100), 
+                                 g_mean, g_std), linestyle='dashed', color='b')
+            ax2.plot(np.linspace(-lim, lim, 100), gaussian(np.linspace(-lim, lim, 100), 
+                                 e_mean, e_std), linestyle='dashed', color='r')
+            '''
+            
+            
+            
+        #    e_data = np.abs(e_data)
+        #    g_data = np.abs(g_data)
+        #    plt.hist(e_data, bins=100, color='r', alpha=0.5)
+        #    plt.hist(g_data, bins=100, color='b', alpha=0.5)
 
 
 if 0: # TWPA histogram sweep

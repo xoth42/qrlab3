@@ -732,7 +732,8 @@ real part is applied to I and the imaginary part to Q.
     def ge_criteria(self, IQ, IQ_e, e_radius):
         return (abs(IQ-IQ_e)-e_radius < 0)*1
 
-    def take_experiment(self, acqtimeout=None, avg_buf=None, singleshotbin=False, ste_buf=None, shot_buf=None, IQ_e=None, e_radius=None, num_demod=1):
+    def take_experiment(self, acqtimeout=None, avg_buf=None, singleshotbin=False, ste_buf=None, shot_buf=None, IQ_e=None, e_radius=None,
+                        proj_func='amplitude', num_demod=1):
         '''
             Performs experiment. Each cycle will be demodulated into 1 point,
             and each cycle will be averaged together.
@@ -821,11 +822,17 @@ real part is applied to I and the imaginary part to Q.
 
         if singleshotbin:
             return data_sum * 1.0 / navg
-        stes = np.std(temp_ste, axis=1)/np.sqrt(numbufs)
-        print('temp_ste:', temp_ste, np.shape(temp_ste))
-        print('stes', stes, np.shape(stes))
-        print('numbufs:', numbufs)
-        print('avg check', np.mean(temp_ste, axis=1))
+        if proj_func == 'phase':
+            print('in the right place for phase')
+            angles = np.angle(temp_ste, deg=True)
+            stes = np.std(angles, axis=1)/np.sqrt(numbufs)
+        else:
+            print('in the wrong place for phase')
+            stes = np.std(temp_ste, axis=1)/np.sqrt(numbufs)
+#        print('temp_ste:', temp_ste, np.shape(temp_ste))
+#        print('stes', stes, np.shape(stes))
+#        print('numbufs:', numbufs)
+#        print('avg check', np.mean(temp_ste, axis=1))
         if ste_buf:
             self.update_stes(ste_buf, stes, navg)
         return data_sum/navg, stes

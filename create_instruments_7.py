@@ -118,7 +118,7 @@ qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
 #                              sideband_channels='I3,Q3',
 #                              sideband_phase=0)
 
-readout = instruments.create('readout', 'Readout_Info', IQe=(18.69+25.6j), IQg=(-51.15+15.87j),
+readout = instruments.create('readout', 'Readout_Info', IQe=(-1-1.66j), IQg=(3+2j),
                            IQe_radius= 1 , rfsource1='RObrick', rfsource2='SCref',
                          pulse_len=1000, readout_chan='1m1', acq_chan='2m1')
 

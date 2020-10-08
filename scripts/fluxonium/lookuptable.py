@@ -7,6 +7,37 @@ from numpy import dot
 
 #from TwoQ_RB import TwoQubit_RB
 
+def CheckIdentity(matrix):
+    """
+    Check whether the matrix is identity by calculating it numerically.
+
+    Parameters
+    ----------
+    matrix: 4x4 np.matrix
+        matrix
+
+    Returns
+    -------
+    result: bool
+        True, if identity.
+    """
+
+    #Check all the diagonal entries.
+#    if ((np.abs(matrix[0,0]-1)< 1e-6) and
+#        (np.abs(matrix[1,1]-1)< 1e-6) and
+#        (np.abs(matrix[2,2]-1)< 1e-6) and
+#        (np.abs(matrix[3,3]-1)< 1e-6)):
+    if ((np.abs(np.abs(matrix[0,0])-1)< 1e-3) and
+        (np.abs(np.abs(matrix[1,1])-1)< 1e-3) and
+        (np.abs(np.abs(matrix[2,2])-1)< 1e-3) and
+        (np.abs(np.abs(matrix[3,3])-1)< 1e-3) and
+        (np.abs(matrix[1,1]/matrix[0,0]-1)<1e-3) and
+        (np.abs(matrix[2,2]/matrix[0,0]-1)<1e-3) and
+        (np.abs(matrix[3,3]/matrix[0,0]-1)<1e-3)):
+        return True
+    else:
+        return False
+
 def evaluate_sequence(gate_seq_1, gate_seq_2, generator):
         """
         Evaluate the two qubit gate sequence.
@@ -358,6 +389,25 @@ def add_singleQ_S1_X2p(index, gate_seq):
             gate_seq.append('I')
             gate_seq.append('I')
             
+def add_singleQ_S1_Y2p(index, gate_seq):
+        """Add single qubit clifford from S1_Y2p.
+    
+        (Y2p-like-subset of single qubit clifford group) (3)
+        """
+        
+        if index == 0:
+            gate_seq.append('Y2p')
+            gate_seq.append('I')
+            gate_seq.append('I')
+        elif index == 1:
+            gate_seq.append('Yp')
+            gate_seq.append('X2p')
+            gate_seq.append('I')
+        elif index == 2:
+            gate_seq.append('X2m')
+            gate_seq.append('Y2m')
+            gate_seq.append('X2p')
+
 def add_singleQ_S1_X2p_Y2m(index, gate_seq):
         """Add single qubit clifford from S1_X2p.
     
@@ -456,6 +506,15 @@ def add_CNOT_like_twoQ_clifford(index, gate_seq_1, gate_seq_2, generator, **kwar
             
             add_singleQ_S1(index_3, gate_seq_1)
             add_singleQ_S1(index_4, gate_seq_2)
+            
+        elif generator == 'CZ':
+            add_singleQ_clifford(index_1, gate_seq_1)
+            add_singleQ_clifford(index_2, gate_seq_2)
+            
+            gate_seq_1.append('I')
+            gate_seq_2.append('CZ')
+            add_singleQ_S1(index_3, gate_seq_1)
+            add_singleQ_S1_Y2p(index_4, gate_seq_2)
     
     
 def add_iSWAP_like_twoQ_clifford(index, gate_seq_1, gate_seq_2, generator, **kwargs):
@@ -540,6 +599,22 @@ def add_iSWAP_like_twoQ_clifford(index, gate_seq_1, gate_seq_2, generator, **kwa
             
             add_singleQ_S1_X2p_Y2m(index_3, gate_seq_1)
             add_singleQ_S1(index_4, gate_seq_2)
+            
+        elif generator == 'CZ':
+            add_singleQ_clifford(index_1, gate_seq_1)
+            add_singleQ_clifford(index_2, gate_seq_2)
+                                    
+            gate_seq_1.append('Ic')
+            gate_seq_2.append('CZ')
+           
+            gate_seq_1.append('Y2p')
+            gate_seq_2.append('X2m')
+                    
+            gate_seq_1.append('Ic')
+            gate_seq_2.append('CZ')
+            
+            add_singleQ_S1_Y2p(index_3, gate_seq_1)
+            add_singleQ_S1_X2p(index_4, gate_seq_2)
     
     
 def add_SWAP_like_twoQ_clifford(index, gate_seq_1, gate_seq_2, generator, **kwargs):
@@ -654,22 +729,53 @@ def add_SWAP_like_twoQ_clifford(index, gate_seq_1, gate_seq_2, generator, **kwar
             gate_seq_1.append('I')
             gate_seq_2.append('CX')
             
+        elif generator == 'CZ':
+            add_singleQ_clifford(index_1, gate_seq_1)
+            add_singleQ_clifford(index_2, gate_seq_2)
+                                
+            gate_seq_1.append('Ic')
+            gate_seq_2.append('CZ')
+        
+            gate_seq_1.append('Y2m')
+            gate_seq_2.append('Y2p')
+                
+            gate_seq_1.append('Ic')
+            gate_seq_2.append('CZ')
+            
+            gate_seq_1.append('Y2p')
+            gate_seq_2.append('Y2m')
+            
+            gate_seq_1.append('Ic')
+            gate_seq_2.append('CZ')
+            
+            gate_seq_1.append('Ip')
+            gate_seq_2.append('Y2p')
+                
     
-#generator = 'CNOT'
-#initial_state = np.matrix('1;0;0;0') # qubit starts in |gg>
-#num_2Q_cliffords = 11520
-#final_state_list = []
-#for i in range(num_2Q_cliffords):
-#    print('Calculating 2Q clifford #:', i+1)
-#    gateseq_1 = []
-#    gateseq_2 = []
-#    add_twoQ_clifford(i, gateseq_1, gateseq_2, generator)
-#    clifford_matrix = evaluate_sequence(gateseq_1, gateseq_2, generator)
+generator = 'CZ'
+initial_state = np.matrix('1;0;0;0') # qubit starts in |gg>
+num_2Q_cliffords = 11520
+final_state_list = []
+clifford_matrix_list = []
+clifford_matrix_array_list = []
+final_list = []
+for i in range(num_2Q_cliffords):
+    print('Calculating 2Q clifford #:', i+1)
+    gateseq_1 = []
+    gateseq_2 = []
+    add_twoQ_clifford(i, gateseq_1, gateseq_2, generator)
+    clifford_matrix = evaluate_sequence(gateseq_1, gateseq_2, generator)
+#    clifford_matrix_list.append(clifford_matrix)
+#    clifford_matrix_array_list.append(np.asarray(clifford_matrix_array_list))
+    if any(np.array_equal(clifford_matrix, j) for j in clifford_matrix_list) == False:
+        print('adding new clifford matrix')
+        clifford_matrix_list.append(clifford_matrix)
 #    final_state = np.matmul(clifford_matrix, initial_state)
 #    final_state[np.abs(final_state) < 1e-6] = 0
 ##    if (not (final_state in final_state_list)):
 #    final_state_list.append(final_state)
-##    
+##
+'''
 iSWAP_CX_seq1 = ['X2m', 'Z2p', 'I', 'X2m', 'I', 'X2p', 'Y2m']
 iSWAP_CX_seq2 = ['I', 'I', 'CX', 'Y2p', 'CX', 'I', 'I']
 
@@ -692,6 +798,7 @@ SWAP_CNOT_mat = evaluate_sequence(SWAP_CNOT_seq1, SWAP_CNOT_seq2, 'CNOT')
 seq1 = ['X2p', 'I', 'Xp', 'I', 'I']
 seq2 = ['X2p', 'u', 'I', 'u', 'X2p']
 mat = evaluate_sequence(seq1, seq2, 'u')
+'''
 #
 #seq1_to_simplify = ['Z2p', 'Y2p', 'Xp', 'Z2p']
 #seq2_to_simplify = ['I', 'I', 'I', 'I']
