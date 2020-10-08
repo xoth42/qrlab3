@@ -633,7 +633,7 @@ class Measurement(object):
         else:
             ret = dig.take_experiment(avg_buf=self.avg_data, ste_buf=self.ste_data, 
                                       async=True, IQ_e=self.readout_info.IQe, 
-                                      e_radius=self.readout_info.IQe_radius)
+                                      e_radius=self.readout_info.IQe_radius, proj_func=self.proj_func)
         
         try:
             while not ret.is_valid() and not self._interrupted:

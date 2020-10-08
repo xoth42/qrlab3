@@ -823,11 +823,9 @@ real part is applied to I and the imaginary part to Q.
         if singleshotbin:
             return data_sum * 1.0 / navg
         if proj_func == 'phase':
-            print('in the right place for phase')
             angles = np.angle(temp_ste, deg=True)
             stes = np.std(angles, axis=1)/np.sqrt(numbufs)
         else:
-            print('in the wrong place for phase')
             stes = np.std(temp_ste, axis=1)/np.sqrt(numbufs)
 #        print('temp_ste:', temp_ste, np.shape(temp_ste))
 #        print('stes', stes, np.shape(stes))
