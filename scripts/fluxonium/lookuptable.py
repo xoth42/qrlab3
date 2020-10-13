@@ -756,24 +756,48 @@ generator = 'CZ'
 initial_state = np.matrix('1;0;0;0') # qubit starts in |gg>
 num_2Q_cliffords = 11520
 final_state_list = []
+unique_final_state_list = []
 clifford_matrix_list = []
-clifford_matrix_array_list = []
-final_list = []
+unique_clifford_matrix_list = []
+recovery_list_1 = []
+recovery_list_2 = []
 for i in range(num_2Q_cliffords):
     print('Calculating 2Q clifford #:', i+1)
     gateseq_1 = []
     gateseq_2 = []
-    add_twoQ_clifford(i, gateseq_1, gateseq_2, generator)
-    clifford_matrix = evaluate_sequence(gateseq_1, gateseq_2, generator)
-#    clifford_matrix_list.append(clifford_matrix)
-#    clifford_matrix_array_list.append(np.asarray(clifford_matrix_array_list))
-    if any(np.array_equal(clifford_matrix, j) for j in clifford_matrix_list) == False:
-        print('adding new clifford matrix')
-        clifford_matrix_list.append(clifford_matrix)
-#    final_state = np.matmul(clifford_matrix, initial_state)
-#    final_state[np.abs(final_state) < 1e-6] = 0
-##    if (not (final_state in final_state_list)):
-#    final_state_list.append(final_state)
+    add_twoQ_clifford(i, gateseq_1, gateseq_2, generator = generator)
+    clifford_matrix = evaluate_sequence(gateseq_1, gateseq_2, generator = generator)
+
+    final_state = np.asarray(np.matmul(clifford_matrix, initial_state))
+    final_state_list.append(final_state)
+    clifford_matrix_arr = np.asarray(clifford_matrix)
+    clifford_matrix_list.append(clifford_matrix_arr)
+
+    if i == 0:
+        unique_final_state_list.append(final_state)
+        unique_clifford_matrix_list.append(clifford_matrix_arr)
+    else:
+        if any(np.array_equal(final_state, j) for j in unique_final_state_list[:]) == True:
+            print('found final state')
+        else:
+            print('adding new final state')
+            unique_final_state_list.append(final_state)
+        if any(np.array_equal(clifford_matrix_arr, k) for k in unique_clifford_matrix_list[:]) == True:
+            print('found clifford matrix')
+        else:
+            print('adding new clifford matrix')
+            unique_clifford_matrix_list.append(clifford_matrix_arr)
+    print('finding recovery')        
+    for m in range(num_2Q_cliffords):
+        recovseq_1 = []
+        recovseq_2 = []
+        add_twoQ_clifford(m, recovseq_1, recovseq_2, generator = generator)
+        recovery_matrix = evaluate_sequence(recovseq_1, recovseq_2, generator = generator)
+        if CheckIdentity(np.matmul(recovery_matrix, clifford_matrix)):
+            print('found recovery')
+            recovery_list_1.append(recovseq_1)
+            recovery_list_2.append(recovseq_2)
+            break
 ##
 '''
 iSWAP_CX_seq1 = ['X2m', 'Z2p', 'I', 'X2m', 'I', 'X2p', 'Y2m']

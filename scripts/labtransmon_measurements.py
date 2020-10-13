@@ -54,7 +54,7 @@ if 0: # RO Cavity spec
     rofreq = 7595e6
     freq_range = 10e6
 
-    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-20, -15, 6),
+    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-20, -20, 1),
                                          np.linspace(rofreq - freq_range, rofreq + freq_range, 61), qubit_pulse=False)
     ro.measure()
     bla
@@ -117,12 +117,12 @@ if 0: # Flux-tuned SSBspec
     bla
 
 """Power Rabi -- Pi pulse calibration"""
-if 1: # Power Rabi
+if 0: # Power Rabi
     for i in range(1):
         from scripts.single_qubit import rabi
 #        qubitgen.set_frequency(4532.71e6)
         tr = rabi.Rabi(qubit_info, np.linspace(-0.6, 0.6, 101), plot_seqs=False, generate=True, selective=False, repeat_pulse=1,
-                       update=True, proj_func='phase')
+                       update=True, proj_func='amplitude')
 #        from scripts.single_qubit import rabi_IQ
 #        tr = rabi_IQ.Rabi(qubit_info, np.linspace(0, 0.5, 101), plot_seqs=False, real_signals=False)
         data=tr.measure()
@@ -280,10 +280,10 @@ if 1: # Check histogramming
     RO = mclient.instruments['RObrick']
     ro = mclient.instruments['readout']
     alz.set_naverages(50000)
-    alz.set_nsamples(1280)
-    ro.set_pulse_len(1000)
+    alz.set_nsamples(2560)
+    ro.set_pulse_len(2500)
     pump_freqs = np.linspace(8.160e9, 8.160e9, 1)
-    RO_powers = np.linspace(-20, -15, 6)
+    RO_powers = np.linspace(-20, -20, 1)
     fidelities = []
     SNRs = []
     for power in RO_powers:
@@ -294,8 +294,8 @@ if 1: # Check histogramming
             tr_g.measure()
             tr_e = rabi.Rabi(qubit_info, [qubit_info.pi_amp], histogram=True, proj_func='amplitude', title='|e>')
             tr_e.measure()
-            tr = rabi.Rabi(qubit_info, [0.000001, qubit_info.pi_amp,], histogram=True, proj_func='amplitude', title='|g> and |e>')
-            tr.measure()
+#            tr = rabi.Rabi(qubit_info, [0.000001, qubit_info.pi_amp,], histogram=True, proj_func='amplitude', title='|g> and |e>')
+#            tr.measure()
     #        alz.set_naverages(1000)
             
         #if 1: # histogram calculating and plotting
