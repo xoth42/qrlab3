@@ -118,7 +118,7 @@ qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
 #                              sideband_channels='I3,Q3',
 #                              sideband_phase=0)
 
-readout = instruments.create('readout', 'Readout_Info', IQe=(18.69+25.6j), IQg=(-51.15+15.87j),
+readout = instruments.create('readout', 'Readout_Info', IQe=(-1-1.66j), IQg=(3+2j),
                            IQe_radius= 1 , rfsource1='RObrick', rfsource2='SCref',
                          pulse_len=1000, readout_chan='1m1', acq_chan='2m1')
 
@@ -146,7 +146,7 @@ AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 1, slot = 8,
 alz = instruments.create('alazar', 'Alazar_Daemon')
 alz.set_ch1_range('40mV')
 alz.set_ch2_range('40mV')
-alz.set_nsamples(1600)
+alz.set_nsamples(1280)
 alz.set_naverages(1000)
 alz.set_ch1_coupling('AC')
 alz.set_ch2_coupling('AC')

@@ -41,7 +41,7 @@ ef_info = mclient.get_qubit_info('qubit1ef')
 
 #Find read-out cavity and choose a power
 
-if 1: # RO Cavity spec
+if 0: # RO Cavity spec
     from scripts.single_cavity import rocavspectroscopy
     rofreq = 7595e6
     freq_range = 10e6

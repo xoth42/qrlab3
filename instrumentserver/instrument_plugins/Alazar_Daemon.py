@@ -694,6 +694,16 @@ real part is applied to I and the imaginary part to Q.
             msg = 'Unable to store averages: %s' % str(e)
             logging.warning(msg)
             raise Exception(msg)
+            
+    def update_stes(self, ste_buf, stes, n):
+        try:
+            ste_buf[:] = stes
+            ste_buf.set_attrs(averages=n)
+        except Exception, e:
+            self._card.end_capture()
+            msg = 'Unable to store standard errors: %s' % str(e)
+            logging.warning(msg)
+            raise Exception(msg)
 
     def get_IQ_rel(self, buf, cycles):
         '''
@@ -722,7 +732,8 @@ real part is applied to I and the imaginary part to Q.
     def ge_criteria(self, IQ, IQ_e, e_radius):
         return (abs(IQ-IQ_e)-e_radius < 0)*1
 
-    def take_experiment(self, acqtimeout=None, avg_buf=None, singleshotbin=False, shot_buf=None, IQ_e=None, e_radius=None, num_demod=1):
+    def take_experiment(self, acqtimeout=None, avg_buf=None, singleshotbin=False, ste_buf=None, shot_buf=None, IQ_e=None, e_radius=None,
+                        proj_func='amplitude', num_demod=1):
         '''
             Performs experiment. Each cycle will be demodulated into 1 point,
             and each cycle will be averaged together.
@@ -738,6 +749,7 @@ real part is applied to I and the imaginary part to Q.
         totrec = self.get_ntotal_rec()
 
         numbufs = totrec / recperbuf
+        temp_ste = np.zeros((cycles, numbufs), dtype=np.complex64)
 
         i = 0
         century_count = 0
@@ -765,7 +777,6 @@ real part is applied to I and the imaginary part to Q.
             if cyclereps > 1:
                 IQ = IQ.reshape([cyclereps, cycles*num_demod])
                 IQ = IQ.sum(axis=0)
-#                print IQ
             if singleshotbin:
                 if IQ_e is not None and e_radius is not None:
                     data = self.ge_criteria(IQ, IQ_e, e_radius)
@@ -775,14 +786,13 @@ real part is applied to I and the imaginary part to Q.
                     singleshotbin = False
             else:
                 data = IQ
-                
-#            print "data is", data, i, "\n"
+            temp_ste[:, i] = data/cyclereps
                 # Now data is remains an array of IQs
             if data_sum is not None:
                 data_sum += data
             else:
                 data_sum = data
- #           print "data_sum for this iteration is", data_sum, i, "\n"
+#            print "data_sum for this iteration is", data_sum, i, "\n"
 
             self._card.post_buffers(buf)
             if avg_buf and update_averages:
@@ -796,7 +806,6 @@ real part is applied to I and the imaginary part to Q.
                     tmp_buf = []
                 tmp_buf.extend(IQ)
                 #self._card.post_buffers(buf) #Dario
-                
             i += 1
         if shot_buf:  #Dario
             shot_buf[buf_index:buf_index+len(tmp_buf)] = tmp_buf
@@ -813,7 +822,18 @@ real part is applied to I and the imaginary part to Q.
 
         if singleshotbin:
             return data_sum * 1.0 / navg
-        return self.convert_signal(data_sum / navg)
+        if proj_func == 'phase':
+            angles = np.angle(temp_ste, deg=True)
+            stes = np.std(angles, axis=1)/np.sqrt(numbufs)
+        else:
+            stes = np.std(temp_ste, axis=1)/np.sqrt(numbufs)
+#        print('temp_ste:', temp_ste, np.shape(temp_ste))
+#        print('stes', stes, np.shape(stes))
+#        print('numbufs:', numbufs)
+#        print('avg check', np.mean(temp_ste, axis=1))
+        if ste_buf:
+            self.update_stes(ste_buf, stes, navg)
+        return data_sum/navg, stes
 
     def setup_hist(self, N, hist_buf=None, num_demods=1):
         '''

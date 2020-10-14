@@ -71,7 +71,7 @@ class Measurement(object):
                      savefig=True,
                      imagetype='png',
                      print_progress=True,
-                     proj_func = 'amp'):
+                     proj_func = 'amplitude'):
         if name is None:
             name = self.__class__.__name__
 
@@ -98,7 +98,7 @@ class Measurement(object):
         self.savefig = savefig
         self.imagetype = imagetype
         self.print_progress = print_progress
-        self._proj_func = proj_func
+        self.proj_func = proj_func
 
         # Build list of info objects
         if infos is None:
@@ -437,8 +437,9 @@ class Measurement(object):
             if self.histogram:
                 ret = alz.take_hist(async=True)
             else:
-                ret = alz.take_experiment(avg_buf=self.avg_data, async=True, singleshotbin=self.singleshotbin, shot_buf=self.shot_data, #Dario
-                                          IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius)
+                ret = alz.take_experiment(avg_buf=self.avg_data, async=True, singleshotbin=self.singleshotbin, ste_buf=self.ste_data,
+                                          shot_buf=self.shot_data, #Dario
+                                          IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius, proj_func=self.proj_func)
             if self.print_progress:
                 logging.info('Acquiring...')
             while not ret.is_valid() and not self._interrupted:
@@ -532,10 +533,12 @@ class Measurement(object):
             self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*alz.get_naverages()], dtype=np.complex)
             self.avg_data = None
             self.pp_data = None
+            self.ste_data = None
         elif self.singleshotbin:
             self.shot_data = None
             self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
             self.pp_data = None
+            self.ste_data = None
             '''DARIO added 7/28/18 to keep all single shot data'''
         elif self.keep_shots:
             self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*alz.get_naverages()], dtype=np.complex)
@@ -554,6 +557,7 @@ class Measurement(object):
             else:
                 self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
                 self.pp_data = None
+            self.ste_data = self.data.create_dataset('ste', [self.cyclelen,], dtype=np.float)
 
     def measure(self):
         '''
@@ -569,14 +573,16 @@ class Measurement(object):
         self.setup_measurement_data()
 
         alz = self.instruments['alazar']
-        ret = self.acquisition_loop(alz) # calls update function
-        print('after acquisition loop')
-        self.avg_data = ret
-
         if self.histogram:
 #            if self.cyclelen == 1:
+            ret = self.acquisition_loop(alz)
             self.plot_histogram(self.shot_data[:])
+  
         else:
+            avgs, stes = self.acquisition_loop(alz) # calls update function
+            print('after acquisition loop')
+            self.avg_data = avgs
+            self.ste_data = stes
             ret = self.analyze(self.get_ys(), fig=self.get_figure())
 
         if self.savefig:
@@ -627,7 +633,7 @@ class Measurement(object):
         else:
             ret = dig.take_experiment(avg_buf=self.avg_data, ste_buf=self.ste_data, 
                                       async=True, IQ_e=self.readout_info.IQe, 
-                                      e_radius=self.readout_info.IQe_radius)
+                                      e_radius=self.readout_info.IQe_radius, proj_func=self.proj_func)
         
         try:
             while not ret.is_valid() and not self._interrupted:
@@ -831,9 +837,9 @@ class Measurement(object):
 
         vproj /= np.abs(vproj)
 
-        if(self._proj_func is 'phase'):
+        if(self.proj_func is 'phase'):
             return np.angle(ys, deg=True) # returns phase #DARIO 8/31 
-        elif(self._proj_func is 'projection'):
+        elif(self.proj_func is 'projection'):
             ys = ys - IQg #DARIO 8/31
             return np.real(ys) * vproj.real  + np.imag(ys) * vproj.imag # returns projected amplitue
         else:

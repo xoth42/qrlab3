@@ -484,7 +484,7 @@ class Keysight_DIG(Instrument):
         if any(error < 0 for error in errors):
             print('setup_experiment errors: ', errors)
         
-    def take_experiment(self, avg_buf=None, ste_buf=None, IQ_e=None, e_radius=None):
+    def take_experiment(self, avg_buf=None, ste_buf=None, IQ_e=None, e_radius=None, proj_func='amplitude'):
         samples_per_transfer = self._naverages *  self._npoints * self._nsamples / self._ntransfers
         acq_per_transfer = self._naverages *  self._npoints / self._ntransfers
 
@@ -535,8 +535,11 @@ class Keysight_DIG(Instrument):
                     
             if avg_buf:
                 self.update_averages(avg_buf, avgs, (i+1) * self._naverages / self._ntransfers)
-           
-        stes = np.std(values, axis = 1)/np.sqrt(self._naverages-1)
+        if proj_func == 'phase': #DARIO trying to fix std_err bug for phase 10/7
+            angles = np.angle(values, deg=True)
+            stes = np.std(angles, axis=1)/np.sqrt(self._naverages-1)
+        else:
+            stes = np.std(values, axis = 1)/np.sqrt(self._naverages-1)
         if ste_buf:
             self.update_stes(ste_buf, stes, self._naverages)        
         
