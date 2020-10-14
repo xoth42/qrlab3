@@ -5,6 +5,8 @@ from numpy.linalg import eig as eig
 from numpy import tensordot as tensor
 from numpy import dot
 
+import pickle
+
 #from TwoQ_RB import TwoQubit_RB
 
 def CheckIdentity(matrix):
@@ -761,6 +763,7 @@ clifford_matrix_list = []
 unique_clifford_matrix_list = []
 recovery_list_1 = []
 recovery_list_2 = []
+recovery_index_list = []
 for i in range(num_2Q_cliffords):
     print('Calculating 2Q clifford #:', i+1)
     gateseq_1 = []
@@ -797,7 +800,16 @@ for i in range(num_2Q_cliffords):
             print('found recovery')
             recovery_list_1.append(recovseq_1)
             recovery_list_2.append(recovseq_2)
+            recovery_index_list.append(m)
             break
+        
+        
+with open('CZ_clifford_matrix_list.pickle', 'wb') as filepath:
+    pickle.dump(unique_clifford_matrix_list, filepath)
+    
+with open('CZ_recovery_table.pickle', 'wb') as filepath:
+    pickle.dump(recovery_index_list, filepath)
+
 ##
 '''
 iSWAP_CX_seq1 = ['X2m', 'Z2p', 'I', 'X2m', 'I', 'X2p', 'Y2m']
