@@ -939,15 +939,28 @@ class Measurement(object):
         if self.cyclelen == 2:
             data1 = data[::2]
             data2 = data[1::2]
+        elif self.cyclelen == 3:
+            data1 = data[::3]
+            data2 = data[1::3]
+            data3 = data[2::3]
         print 'average I,Q is:', avg, '\n'
         if 0:
             fig.axes[0].scatter(np.real(data), np.imag(data), label='avg=%s'%(avg,))
         else:
-            fig.axes[0].hexbin(np.real(data), np.imag(data), label='avg=%s'%(avg,), cmap=mpl.cm.hot)
+            if self.cyclelen == 3:
+                fig.axes[0].hexbin(np.real(data1), np.imag(data1), alpha=0.4, cmap='Blues')
+                fig.axes[0].hexbin(np.real(data2), np.imag(data2), alpha=0.4, cmap='Reds')
+                fig.axes[0].hexbin(np.real(data3), np.imag(data3), alpha=0.4, cmap='Greens')
+            else:
+                fig.axes[0].hexbin(np.real(data), np.imag(data), label='avg=%s'%(avg,), cmap=mpl.cm.hot)
         if self.residuals:
             if self.cyclelen == 2:
                 n, bins, patches = fig.axes[1].hist(self.complex_to_real(data1), bins=64)
                 n, bins, patches = fig.axes[1].hist(self.complex_to_real(data2), bins=64)
+            elif self.cyclelen == 3:
+                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data1), bins=64)
+                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data2), bins=64, color='r')
+                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data3), bins=64)
             else:
                 n, bins, patches = fig.axes[1].hist(self.complex_to_real(data), bins=64)
 #            ax2 = fig.axes[1].twinx()
