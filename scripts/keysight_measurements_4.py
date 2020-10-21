@@ -93,11 +93,11 @@ if 0: # Quantum Jump
 
 if 0: # cav transmission
     from single_cavity import rocavspectroscopy_keysight
-    rofreq = 7317.52e6
+    rofreq = 7317.5e6
 #    rofreq = 7320e6
     freq_range =1e6
-    freqs = np.linspace(rofreq-freq_range, rofreq+freq_range, 51)
-    powers = np.linspace(0, 5, 6)
+    freqs = np.linspace(rofreq-freq_range, rofreq+freq_range, 81)
+    powers = np.linspace(2, 5, 1)
 
     for i in range(1):    
         ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, powers, freqs,
@@ -221,15 +221,15 @@ if 0: # Qubit spec with phase correction
     bla    
     
 
-if 1: # qubit SSB spec
+if 0: # qubit SSB spec
     from single_qubit import ssbspec
 #for i in range(5):
     spec = ssbspec.SSBSpec(qubit_info, np.concatenate((
 #                                        np.linspace(-7e6, -5e6, 51),
 #                                        np.linspace(-3.7e6, -.7e6, 51), 
-                                       np.linspace(-7e6,-5e6, 51),
-                                       np.linspace(-2.8e6,-1e6, 51),
-                                       np.linspace(-1e6,1e6, 51),
+                                       np.linspace(-7e6,1e6, 101),
+#                                       np.linspace(-2.8e6,-1e6, 51),
+#                                       np.linspace(-1e6,1e6, 51),
                                        )), 
                            seq=None, plot_seqs=False, 
 #                           extra_info = [cavity_infoB, qubit_b0s, qubit_b2s, qubit_b4s, fwm_info, fwm_info_b2, fwm_info_b4]
@@ -257,15 +257,15 @@ if 0: #Multiple times SSB spec
     bla
      
     
-if 0: # Calibrate pi pulse
+if 1: # Calibrate pi pulse
     from single_qubit import rabi
     tr = rabi.Rabi(qubit_info, 
-                   np.linspace(-1, 1, 51), selective=False,
-#                   np.linspace(-.1, .1, 51), selective=.5,
-#                  np.linspace(-0.015, 0.015, 51), selective=True,
+#                   np.linspace(-1, 1, 51), selective=False,
+#                   np.linspace(-.12, .12, 51), selective=.5,
+                  np.linspace(-0.015, 0.015, 51), selective=True,
 #                   np.linspace(0.7, .9, 51), selective=False,
-#                   np.linspace(0.45, 0.52, 51), selective=False,
-                   plot_seqs=False, generate=True, repeat_pulse=1, update=False, seq=None)
+#                   np.linspace(0.35, 0.41, 51), selective=False,
+                   plot_seqs=False, generate=True, repeat_pulse=1, update=True, seq=None)
     tr.measure_keysight()
     bla
     

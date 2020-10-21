@@ -484,7 +484,7 @@ class Keysight_DIG(Instrument):
         if any(error < 0 for error in errors):
             print('setup_experiment errors: ', errors)
         
-    def take_experiment(self, avg_buf=None, ste_buf=None, IQ_e=None, e_radius=None):
+    def take_experiment(self, avg_buf=None, cov_buf=None, IQ_e=None, e_radius=None):
         samples_per_transfer = self._naverages *  self._npoints * self._nsamples / self._ntransfers
         acq_per_transfer = self._naverages *  self._npoints / self._ntransfers
 
@@ -536,11 +536,19 @@ class Keysight_DIG(Instrument):
             if avg_buf:
                 self.update_averages(avg_buf, avgs, (i+1) * self._naverages / self._ntransfers)
            
-        stes = np.std(values, axis = 1)/np.sqrt(self._naverages-1)
-        if ste_buf:
-            self.update_stes(ste_buf, stes, self._naverages)        
+        re = np.real(values)
+        im = np.imag(values)
+        cov = np.zeros((self._npoints, 3), dtype=float)
+#        std_i = np.std(re, axis = 1)
+#        std_q = np.std(im, axis = 1)
+#        std_corr = np.sqrt(np.mean((np.mean(re) - re)*(np.mean(im) - im)))
+        for i in range(self._npoints):
+            m = np.cov(re[i,:],im[i,:])
+            cov[i] = np.array([m[0,0], m[1,1], m[1,0]])
+        if cov_buf:
+            self.update_cov(cov_buf, cov, self._naverages)            
         
-        return avgs/self._naverages, stes
+        return avgs/self._naverages, cov
     
     def test_dig(self, nsamples, npoints, naverages, ntransfers, captureDelay = 0, digScale = 2):
         digChannels = [1, 2] 
@@ -781,13 +789,13 @@ class Keysight_DIG(Instrument):
             logging.warning(msg)
             raise Exception(msg)
    
-    def update_stes(self, ste_buf, stes, n):
+    def update_cov(self, cov_buf, cov, n):
         try:
-            ste_buf[:] = stes
-            ste_buf.set_attrs(averages=n)
+            cov_buf[:] = cov
+            cov_buf.set_attrs(averages=n)
         except Exception, e:
-            print(stes.shape, n, ste_buf.shape)
-            print(ste_buf[:].shape)
+            print(cov.shape, n, cov.shape)
+            print(cov_buf[:].shape)
             msg = 'Unable to store standard errors: %s' % str(e)
             logging.warning(msg)
             raise Exception(msg)
