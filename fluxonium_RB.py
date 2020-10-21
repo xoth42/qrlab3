@@ -31,7 +31,7 @@ cancel_info = mclient.get_gate_info('cancel_gate')
 #zx90_info = mclient.get_gate_info('zx90_gate')
 cx_info = mclient.get_gate_info('cx_gate')
 ZZ_info = mclient.get_gate_info('ZZ_gate')
-
+CZ = mclient.instruments['ZZ_gate']
 
 
 from scripts.single_qubit import ssbspec
@@ -157,15 +157,45 @@ if 0: #Check coherence
 
 if 0: # Drag test
     from scripts.single_qubit import drag_test
-    dtest = drag_test.drag_test(gate_info1, np.linspace(-0.5,1, 51), plot_seqs=False, generate=True, proj_func='phase', seq=seq_cool)
+    dtest = drag_test.drag_test(gate_info2, np.linspace(-1.5,-0.5, 51), plot_seqs=False, generate=True, proj_func='phase', seq=seq_cool)
     data=dtest.measure()
     bla
+
+if 0: # Drag test
+    from scripts.single_qubit import drag_test
+    dtest = drag_test.drag_test(gate_info1, np.linspace(-0.5, 0.5, 51), plot_seqs=False, generate=True, proj_func='phase', seq=seq_cool)
+    data=dtest.measure()
+    bla
+
+
+
+
 
 if 0: 
     from scripts.single_qubit import Pi_train
     seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)]) #gate_info1.rotate(np.pi,0)])
 #    postseq = gate_info1.rotate(np.pi,0) 
-    p = Pi_train.Pi_train(gate_info1, np.linspace(0.0735, 0.0755, 61), seq=seq_cool, postseq=None, repeat_pulse=5, proj_func='phase',
+    p = Pi_train.Pi_train(gate_info1, np.linspace(0.073, 0.076, 61), seq=seq_cool, postseq=None, repeat_pulse=5, proj_func='phase',
+                          extra_info=gate_info1
+                          )
+    p.measure()
+#    bla
+
+if 0: 
+    from scripts.single_qubit import Pi2_train
+#    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info1.rotate(np.pi,0)])
+#    postseq = gate_info1.rotate(np.pi,0) 
+    p = Pi2_train.Pi2_train(gate_info1, np.linspace(0.0345, 0.0395, 61), seq=seq_cool, postseq=None, repeat_pulse=10, proj_func='phase',
+#                            extra_info=gate_info1
+                            )
+    p.measure()
+#    bla
+
+if 0: 
+    from scripts.single_qubit import Pi_train
+    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)]) #gate_info1.rotate(np.pi,0)])
+#    postseq = gate_info1.rotate(np.pi,0) 
+    p = Pi_train.Pi_train(gate_info2, np.linspace(0.313, 0.318, 61), seq=seq_cool, postseq=None, repeat_pulse=5, proj_func='phase',
                           extra_info=gate_info1
                           )
     p.measure()
@@ -175,7 +205,7 @@ if 0:
     from scripts.single_qubit import Pi2_train
 #    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info1.rotate(np.pi,0)])
 #    postseq = gate_info1.rotate(np.pi,0) 
-    p = Pi2_train.Pi2_train(gate_info1, np.linspace(0.036, 0.038, 61), seq=seq_cool, postseq=None, repeat_pulse=10, proj_func='phase',
+    p = Pi2_train.Pi2_train(gate_info2, np.linspace(0.162, 0.166, 61), seq=seq_cool, postseq=None, repeat_pulse=10, proj_func='phase',
 #                            extra_info=gate_info1
                             )
     p.measure()
@@ -184,17 +214,17 @@ if 0:
 if 0: # AllXY 
     from scripts.single_qubit import allxy
     cool = sequencer.Constant(int(4e3),1,chan='3m1')
+
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info1.rotate(np.pi,0)])
 #    postseq = gate_info1.rotate(np.pi,0) 
     alz.set_naverages(10000)
-    allxy_result =[]
-    axy = allxy.All_XY(gate_info1, seq=seq_cool, generate=True, proj_func='phase', postseq = None)#, extra_info=gate_info1)  #seq=seq was added
+#    allxy_result =[]
+    axy = allxy.All_XY(gate_info2, seq=seq_cool, generate=True, proj_func='phase', postseq = None, extra_info=gate_info2)#, extra_info=gate_info1)  #seq=seq was added
     axy.measure()
-    allxy_result = axy.get_ys()
-    plt.plot(allxy_result)
-    alz.set_naverages(5000)
+#    allxy_result.append(axy.get_ys())
+#    plt.plot(allxy_result)
+#    alz.set_naverages(5000)
     bla
-
 
 #if 0: # AllXY - interleaved (regular or compensated single qubit drive)
 #    from scripts.fluxonium import allxy_interleaved
@@ -294,34 +324,27 @@ if 1: # Two-Qubit Randomized Benchmarking
     seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
     X_proj = gate_info1.rotate(np.pi/2, np.pi/2)
     Y_proj = gate_info1.rotate(np.pi/2, 0)
-
-    for i in range(20):
-        alz.set_naverages(5000)
-        rndmben0 = TwoQ_RB.TwoQubit_RB(gate_info2, gate_info1, ZZ_info, cancel_info, num_cal_points=3, N_cliffords=7, 
+    
+    for i in range(15):
+        alz.set_naverages(10000)
+        rndmben0 = TwoQ_RB.TwoQubit_RB(gate_info2, gate_info1, ZZ_info, cancel_info, num_cal_points=3, N_cliffords=16, 
                                       plot_seqs=False, category='all', generator='CZ',
                                       find_cheapest_recovery=False, use_virtual_Z=True, virtual_recovery=True,
-                                      singleQ_phases=[-2.627,-1.372+np.pi], seq=seq, proj_func='phase')
+                                      singleQ_phases=[-2.511,-1.325+np.pi], seq=seq, proj_func='phase')
         data0 = rndmben0.measure()
         rndmben_result0.append(rndmben0.get_ys())
         Pg_cplx0.append(rndmben0.Pgg)
 ###
-        rndmben = TwoQ_RB.TwoQubit_RB(gate_info2, gate_info1, ZZ_info, cancel_info, num_cal_points=3, N_cliffords=7, 
+        rndmben = TwoQ_RB.TwoQubit_RB(gate_info2, gate_info1, ZZ_info, cancel_info, num_cal_points=3, N_cliffords=16, 
                                       plot_seqs=False, category='all', generator='CZ', interleave='CZ',
                                       find_cheapest_recovery=False, use_virtual_Z=True, virtual_recovery=True, 
-                                      singleQ_phases=[-2.627,-1.372+np.pi], seq=seq, proj_func='phase')
+                                      singleQ_phases=[-2.511,-1.325+np.pi], seq=seq, proj_func='phase')
         data = rndmben.measure()
         rndmben_result1.append(rndmben.get_ys())
         Pg_cplx1.append(rndmben.Pgg)
-
-
-
-        rndmben2 = TwoQ_RB.TwoQubit_RB(gate_info2, gate_info1, ZZ_info, cancel_info, num_cal_points=3, N_cliffords=7, 
-                                      plot_seqs=False, category='all', generator='CZ', interleave='I',
-                                      find_cheapest_recovery=False, use_virtual_Z=True, virtual_recovery=True, 
-                                      singleQ_phases=[-2.627,-1.372+np.pi], seq=seq, proj_func='phase')
-        data2 = rndmben2.measure()
-        rndmben_result2.append(rndmben2.get_ys())
-        Pg_cplx2.append(rndmben2.Pgg)
+##
+###
+###
         
 #        if i%2 == 0:
 #            alz.set_naverages(2000)       
@@ -345,10 +368,7 @@ if 1: # Two-Qubit Randomized Benchmarking
     RB_fit(Pg_cplx1, xs, F_final=0.25, F_init=1-0.35)
 
 
-    tempxs = rndmben2.xs[48:]  #change this 
-    xs = tempxs.reshape(len(tempxs)/4,4).transpose()[0]  #Each gate is actually 2 Cliffords, one on each qubit
-    RB_fit(Pg_cplx2, xs, F_final=0.25, F_init=1-0.35)
-    
+##    
 #    tempxs = rndmben0.xs[48:]  #change this 
 #    xs = tempxs.reshape(len(tempxs)/4,4).transpose()[0]
 #    RB_fit(RBdata, xs, F_final=0.25, F_init=1-0.09)
@@ -385,8 +405,8 @@ if 0: # Simultaneous 1qubit gate RB
     cool = sequencer.Constant(int(4e3),1,chan='3m1')
     seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
 
-    for i in range(5):
-        rndmben = TwoQ_RB.TwoQubit_RB(gate_info2, gate_info1, cx_info, cancel_info, num_cal_points=3, N_cliffords=30, 
+    for i in range(1):
+        rndmben = TwoQ_RB.TwoQubit_RB(gate_info2, gate_info1, cx_info, cancel_info, num_cal_points=3, N_cliffords=20, 
                                       plot_seqs=False, category='single', generator='CZ',# interleave='CX',
                                       find_cheapest_recovery=False, use_virtual_Z=True, virtual_recovery=True, seq=seq, proj_func='phase')
         data = rndmben.measure()
@@ -461,3 +481,14 @@ if 0: # Two-Qubit Randomized Benchmarking with the echo scheme
 #    xs = tempxs.reshape(len(tempxs)/4,4).transpose()[0]+1 #Each gate is actually 2 Cliffords, one on each qubit
 #    RB_fit(Pg_cplx2, xs, F_final=0.25)
 '''
+if 0: #Population rabi
+    from scripts.fluxonium import rabi_populations
+    alz.set_naverages(4000)
+    cool = sequencer.Constant(int(4e3),1,chan='3m1')
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
+    tr1 = rabi_populations.Rabi(gate_info1, gate_info2, np.linspace(-0.15,0.15, 61), selective=False,
+                                   plot_seqs=False, generate=True, repeat_pulse=1, cancel_info=None,
+                                   update=False, seq=seq, postseq=None, proj_func='phase',
+                                   )
+    data=tr1.measure()    
+    bla

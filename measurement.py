@@ -71,7 +71,7 @@ class Measurement(object):
                      savefig=True,
                      imagetype='png',
                      print_progress=True,
-                     proj_func = 'amp'):
+                     proj_func = 'amplitude'):
         if name is None:
             name = self.__class__.__name__
 
@@ -98,7 +98,7 @@ class Measurement(object):
         self.savefig = savefig
         self.imagetype = imagetype
         self.print_progress = print_progress
-        self._proj_func = proj_func
+        self.proj_func = proj_func
 
         # Build list of info objects
         if infos is None:
@@ -437,8 +437,9 @@ class Measurement(object):
             if self.histogram:
                 ret = alz.take_hist(async=True)
             else:
-                ret = alz.take_experiment(avg_buf=self.avg_data, async=True, singleshotbin=self.singleshotbin, shot_buf=self.shot_data, #Dario
-                                          IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius)
+                ret = alz.take_experiment(avg_buf=self.avg_data, async=True, singleshotbin=self.singleshotbin, ste_buf=self.ste_data,
+                                          shot_buf=self.shot_data, #Dario
+                                          IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius, proj_func=self.proj_func)
             if self.print_progress:
                 logging.info('Acquiring...')
             while not ret.is_valid() and not self._interrupted:
@@ -532,10 +533,12 @@ class Measurement(object):
             self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*alz.get_naverages()], dtype=np.complex)
             self.avg_data = None
             self.pp_data = None
+            self.ste_data = None
         elif self.singleshotbin:
             self.shot_data = None
             self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
             self.pp_data = None
+            self.ste_data = None
             '''DARIO added 7/28/18 to keep all single shot data'''
         elif self.keep_shots:
             self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*alz.get_naverages()], dtype=np.complex)
@@ -554,6 +557,7 @@ class Measurement(object):
             else:
                 self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
                 self.pp_data = None
+            self.ste_data = self.data.create_dataset('ste', [self.cyclelen,], dtype=np.float)
 
     def measure(self):
         '''
@@ -569,14 +573,16 @@ class Measurement(object):
         self.setup_measurement_data()
 
         alz = self.instruments['alazar']
-        ret = self.acquisition_loop(alz) # calls update function
-        print('after acquisition loop')
-        self.avg_data = ret
-
         if self.histogram:
-            if self.cyclelen == 1:
-                self.plot_histogram(self.shot_data[:])
+#            if self.cyclelen == 1:
+            ret = self.acquisition_loop(alz)
+            self.plot_histogram(self.shot_data[:])
+  
         else:
+            avgs, stes = self.acquisition_loop(alz) # calls update function
+            print('after acquisition loop')
+            self.avg_data = avgs
+            self.ste_data = stes
             ret = self.analyze(self.get_ys(), fig=self.get_figure())
 
         if self.savefig:
@@ -627,7 +633,7 @@ class Measurement(object):
         else:
             ret = dig.take_experiment(avg_buf=self.avg_data, cov_buf=self.cov_data,
                                       async=True, IQ_e=self.readout_info.IQe, 
-                                      e_radius=self.readout_info.IQe_radius)
+                                      e_radius=self.readout_info.IQe_radius, proj_func=self.proj_func)
         
         try:
             while not ret.is_valid() and not self._interrupted:
@@ -835,9 +841,9 @@ class Measurement(object):
 
         vproj /= np.abs(vproj)
 
-        if(self._proj_func is 'phase'):
+        if(self.proj_func is 'phase'):
             return np.angle(ys, deg=True) # returns phase #DARIO 8/31 
-        elif(self._proj_func is 'projection'):
+        elif(self.proj_func is 'projection'):
             ys = ys - IQg #DARIO 8/31
             return np.real(ys) * vproj.real  + np.imag(ys) * vproj.imag # returns projected amplitue
         else:
@@ -961,18 +967,39 @@ class Measurement(object):
     def plot_histogram(self, data):
         fig = self.get_figure()
         avg = np.average(data)
-        print 'avgerage I,Q is:', avg, '\n'
+        print(np.shape(data))
+        if self.cyclelen == 2:
+            data1 = data[::2]
+            data2 = data[1::2]
+        elif self.cyclelen == 3:
+            data1 = data[::3]
+            data2 = data[1::3]
+            data3 = data[2::3]
+        print 'average I,Q is:', avg, '\n'
         if 0:
             fig.axes[0].scatter(np.real(data), np.imag(data), label='avg=%s'%(avg,))
         else:
-            fig.axes[0].hexbin(np.real(data), np.imag(data), label='avg=%s'%(avg,), cmap=mpl.cm.hot)
+            if self.cyclelen == 3:
+                fig.axes[0].hexbin(np.real(data1), np.imag(data1), alpha=0.4, cmap='Blues')
+                fig.axes[0].hexbin(np.real(data2), np.imag(data2), alpha=0.4, cmap='Reds')
+                fig.axes[0].hexbin(np.real(data3), np.imag(data3), alpha=0.4, cmap='Greens')
+            else:
+                fig.axes[0].hexbin(np.real(data), np.imag(data), label='avg=%s'%(avg,), cmap=mpl.cm.hot)
         if self.residuals:
-            n, bins, patches = fig.axes[1].hist(self.complex_to_real(data), bins=64)
-            ax2 = fig.axes[1].twinx()
-            ax2.set_zorder(fig.axes[1].zorder+1)
-            ax2.patch.set_visible(False)
-            ax2.plot((bins[:-1]+bins[1:])/2, np.cumsum(n), 'k')
-            ax2.plot((bins[:-1]+bins[1:])/2, np.sum(n) - np.cumsum(n), 'r')
+            if self.cyclelen == 2:
+                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data1), bins=64)
+                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data2), bins=64)
+            elif self.cyclelen == 3:
+                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data1), bins=64)
+                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data2), bins=64, color='r')
+                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data3), bins=64)
+            else:
+                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data), bins=64)
+#            ax2 = fig.axes[1].twinx()
+#            ax2.set_zorder(fig.axes[1].zorder+1)
+#            ax2.patch.set_visible(False)
+#            ax2.plot((bins[:-1]+bins[1:])/2, np.cumsum(n), 'k')
+#            ax2.plot((bins[:-1]+bins[1:])/2, np.sum(n) - np.cumsum(n), 'r')
 
     #########################################################
     # Sequencer helper functions

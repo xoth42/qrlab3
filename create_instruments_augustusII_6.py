@@ -55,10 +55,10 @@ qubit1ge_2 = instruments.create('qubit1ge_2', 'Qubit_Info',
                               sideband_phase=-0.22)
 
 sq_gate1 = instruments.create('sq_gate1', 'Gate_Info',
-                              deltaf=229575449.5,
-                              pi_amp=0.07468, 
-                              pi2_amp=0.03717,
-                              drag=0.29,
+                              deltaf=229525449.5,
+                              pi_amp=0.0745, 
+                              pi2_amp=0.037,
+                              drag=0.22,
                               sq_len=12,
                               rotation='GaussianSquare',
                               w=4,
@@ -178,10 +178,10 @@ cancel_gate = instruments.create('cancel_gate', 'Gate_Info',
 
 
 sq_gate2 = instruments.create('sq_gate2', 'Gate_Info',
-                              deltaf=-373920760.7,
-                              pi_amp=0.31568,
-                              pi2_amp=0.164,
-                              drag=-1.1,
+                              deltaf=-373910760.7,
+                              pi_amp=0.32154,
+                              pi2_amp=0,
+                              drag=-1.077,
                               rotation='GaussianSquare',
                               w=6,
                               sq_len=6,
@@ -313,7 +313,7 @@ readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
                               rfsource2='refbrick',
                               pulse_len=1400, readout_chan='1m1', acq_chan='2m1')
 #
-#WF_xxx = instruments.create('WF_xxx', 'WFT1153', serial = '1153')
+WF_xxx = instruments.create('WF_xxx', 'WFT1153', serial = '1153')
 
 instruments.remove('alz')
 alz = instruments.create('alazar', 'Alazar_Daemon')

@@ -549,6 +549,18 @@ class Keysight_DIG(Instrument):
             self.update_cov(cov_buf, cov, self._naverages)            
         
         return avgs/self._naverages, cov
+
+        '''
+        if proj_func == 'phase': #DARIO trying to fix std_err bug for phase 10/7
+            angles = np.angle(values, deg=True)
+            stes = np.std(angles, axis=1)/np.sqrt(self._naverages-1)
+        else:
+            stes = np.std(values, axis = 1)/np.sqrt(self._naverages-1)
+        if ste_buf:
+            self.update_stes(ste_buf, stes, self._naverages)        
+        
+        return avgs/self._naverages, stes
+        '''
     
     def test_dig(self, nsamples, npoints, naverages, ntransfers, captureDelay = 0, digScale = 2):
         digChannels = [1, 2] 
