@@ -437,7 +437,7 @@ class Measurement(object):
             if self.histogram:
                 ret = alz.take_hist(async=True)
             else:
-                ret = alz.take_experiment(avg_buf=self.avg_data, async=True, singleshotbin=self.singleshotbin, ste_buf=self.ste_data,
+                ret = alz.take_experiment(avg_buf=self.avg_data, async=True, singleshotbin=self.singleshotbin, cov_buf=self.cov_data,
                                           shot_buf=self.shot_data, #Dario
                                           IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius, proj_func=self.proj_func)
             if self.print_progress:
@@ -533,7 +533,8 @@ class Measurement(object):
             self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*alz.get_naverages()], dtype=np.complex)
             self.avg_data = None
             self.pp_data = None
-            self.ste_data = None
+            self.std_i_data = None
+            self.std_q_data = None
         elif self.singleshotbin:
             self.shot_data = None
             self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
@@ -557,7 +558,7 @@ class Measurement(object):
             else:
                 self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
                 self.pp_data = None
-            self.ste_data = self.data.create_dataset('ste', [self.cyclelen,], dtype=np.float)
+            self.cov_data = self.data.create_dataset('cov', [self.cyclelen,3], dtype=np.float)
 
     def measure(self):
         '''
@@ -579,10 +580,10 @@ class Measurement(object):
             self.plot_histogram(self.shot_data[:])
   
         else:
-            avgs, stes = self.acquisition_loop(alz) # calls update function
+            avgs, cov = self.acquisition_loop(alz) # calls update function
             print('after acquisition loop')
             self.avg_data = avgs
-            self.ste_data = stes
+            self.cov_data = cov
             ret = self.analyze(self.get_ys(), fig=self.get_figure())
 
         if self.savefig:
@@ -861,15 +862,38 @@ class Measurement(object):
 #        ys=np.concatenate((ys[1:], ys[:1]))
         return self.complex_to_real(ys)
 
-    def get_stes(self, data=None):
+    def get_errorbars(self, data=None):
         '''
         Return measured standard errors
         '''
+        alz = self.instruments['alazar']
         if data is None:
-            stes = self.ste_data[:]
+            naverages = alz.get_naverages()
+            values = self.avg_data[:]
+            
+            # calculate amp based on projection type
+            if self.proj_func == 'amplitude':
+                theta = -np.angle(values)
+            elif self.proj_func == 'phase':
+                theta = -np.angle(values) + np.pi
+            elif self.proj_func == 'projection':
+                IQg = self.readout_info.IQg
+                IQe = self.readout_info.IQe
+                vproj = IQe - IQg
+                theta = -np.angle(vproj) * np.ones_like(values)
+                
+            eb = np.zeros_like(values)
+            for i in range(len(values)):
+                m = np.array([[self.cov_data[i,0], self.cov_data[i,2]],
+                              [self.cov_data[i,2], self.cov_data[i,1]]]) # unpack cov matrix
+                r = np.array([[np.cos(theta[i]), -np.sin(theta[i])],
+                              [np.sin(theta[i]), np.cos(theta[i])]]) # rotation matrix
+                m = np.matmul(r, m)
+                eb[i] = m[0,0]/(naverages*np.sqrt(naverages-1)) # convert to st error
         else:
-            stes = data
-        return self.complex_to_real(stes)
+            eb = data
+        print('eb is:', eb)
+        return eb
 
     def post_process(self):
         '''
