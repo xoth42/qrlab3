@@ -28,7 +28,8 @@ gate_info2 = mclient.get_gate_info('sq_gate2')
 #zx90_info = mclient.get_gate_info('zx90_gate')
 cx_info = mclient.get_gate_info('cx_gate')
 cancel_info = mclient.get_gate_info('cancel_gate')
-ZZ_info = mclient.get_gate_info('ZZ_info')
+ZZ_info = mclient.get_gate_info('ZZ_gate')
+ZZobj = mclient.instruments['ZZ_gate']
 offset_info = mclient.get_qubit_info('offset_info')
 
 from scripts.single_qubit import ssbspec
@@ -42,7 +43,7 @@ from scripts.fluxonium import CRtuning_time_amp
 from scripts.single_qubit import timerabi
 from scripts.fluxonium import CRtuning_timevsdet
 from scripts.single_qubit import geophasecal_zx90
-
+from scripts.fluxonium import rabi_echo
 
 cool = sequencer.Constant(int(4e3),1,chan='3m1')
 seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
@@ -67,12 +68,27 @@ def qubit2_gate_check(amp, range, qubit1):
     return
 
 def morning_check():
-    if 1: #Check ZZ -- SSB for upper qubit with ZZ for lower qubit in g vs e
-        spec1 = ssbspec_gaussianfit.SSBSpec_Gaussianfit(qubit_info, np.linspace(-4e6, 4e6, 81), proj_func='phase', seq=seq_cool)
+    if 0: #Check ZZ -- SSB for upper qubit with ZZ for lower qubit in g vs e
+        spec1 = ssbspec.SSBSpec(qubit_info, np.linspace(-4e6, 3e6, 201), proj_func='phase', seq=seq_cool)
         spec1.measure()
         seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), qubit2_info.rotate(np.pi,0)])
-        spec1 = ssbspec_gaussianfit.SSBSpec_Gaussianfit(qubit_info, np.linspace(-4e6, 4e6, 81), proj_func='phase', seq=seq, extra_info=qubit2_info)
+        spec1 = ssbspec_gaussianfit.SSBSpec_Gaussianfit(qubit_info, np.linspace(-4e6, 3e6, 181), proj_func='phase', seq=seq, extra_info=qubit2_info)
         spec1.measure()    
+
+
+    if 1: #Check ZZ -- SSB for upper qubit with ZZ for lower qubit in g vs e
+#        spec1 = ssbspec_gaussianfit.SSBSpec_Gaussianfit(qubit2_info, np.linspace(-4e6, 3e6, 201), proj_func='phase', seq=seq_cool)
+#        spec1.measure()
+        seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), qubit_info.rotate(np.pi,0)])
+        spec1 = ssbspec.SSBSpec(qubit2_info, np.linspace(-5e6, 4e6, 201), proj_func='phase', seq=seq, extra_info=qubit_info)
+        spec1.measure()    
+
+
+
+
+
+
+
 
 #    from scripts.fluxonium import ssbspec_gaussianfit_ZZon
 #    if 0: #Check ZZ -- SSB for upper qubit with ZZ for lower qubit in g vs e
@@ -255,20 +271,48 @@ if 0:
     Drag_test(gate_info2)  
 
 
-if 0: #Rabi checking pi amp for single qubit gate
+if 0: #Rabi checking pi amp for cz gate with pre post rotations 
     alz.set_naverages(2000)
     cool = sequencer.Constant(int(4e3),1,chan='3m1')
-    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])#, gate_info2.rotate(np.pi,0)])
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info2.rotate(np.pi/2,0), gate_info1.rotate(np.pi/2,0)])
 #                          sequencer.Combined([cx_info.rotate(np.pi, 0), cancel_info.rotate(np.pi, 0)])])
 #                          sequencer.Combined([cx_info.rotate(np.pi, 0), cancel_info.rotate(np.pi, 0)])
-    postseq =  gate_info2.rotate(np.pi,0)
-    tr1 = rabi.Rabi(ZZ_info, np.linspace(-0.2,0.2, 101), selective=False,
+    postseq =  sequencer.Combined([gate_info1.rotate(np.pi/2,0), gate_info2.rotate(np.pi/2,0)])
+    tr1 = rabi.Rabi(ZZ_info, np.linspace(-0.3,0.3, 101), selective=False,
+                                   plot_seqs=False, generate=True, repeat_pulse=4, cancel_info=None,
+                                   update=True, seq=seq, postseq=postseq, proj_func='phase',
+                                   extra_info=gate_info2,
+                                   )
+    data=tr1.measure()    
+#    bla
+if 0: #Rabi checking pi amp for single qubit gate  
+    alz.set_naverages(2000)
+    cool = sequencer.Constant(int(4e3),1,chan='3m1')
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
+    postseq =  sequencer.Combined([gate_info1.rotate(np.pi,0), gate_info2.rotate(np.pi,0)])
+    tr1 = rabi.Rabi(gate_info1, np.linspace(-0.15,0.15, 101), selective=False,
                                    plot_seqs=False, generate=True, repeat_pulse=1, cancel_info=None,
-                                   update=True, seq=seq, postseq=None, proj_func='phase',
+                                   update=False, seq=seq, postseq=None, proj_func='phase',
+                                   extra_info=gate_info1,
+                                   )
+    data=tr1.measure()    
+    bla
+
+if 0: #CZ Rabi with echo
+    alz.set_naverages(3000)
+    cool = sequencer.Constant(int(4e3),1,chan='3m1')
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
+    tr1 = rabi_echo.Rabi(ZZ_info, gate_info1, gate_info2, np.linspace(-0.3,0.3, 201), selective=False,
+                                   plot_seqs=False, generate=True, repeat_pulse=3, cancel_info=None,
+                                   update=False, seq=seq, postseq=None, proj_func='phase',
                                    extra_info=gate_info2,
                                    )
     data=tr1.measure()    
     bla
+
+
+
+
 
 if 0: # Time Rabi
     from scripts.single_qubit import timerabi
@@ -291,8 +335,8 @@ if 0: # Tune up for time vs relative amp
     Y_proj = gate_info1.rotate(np.pi/2, rotation)
     
     cr_tune = CRtuning_time_amp.CRtuning_time_amp(gate_info1, gate_info2,  
-                                                    np.linspace(1,400,21), rel_amps=np.linspace(4.4,4.8,21), 
-                amp=0.079591, phase=0, rel_phase=-0.421, sigma=6, seq=seq_cool, postseq=None, cancel_info=None,
+                                                    np.linspace(1,400,21), rel_amps=np.linspace(4.5,4.8,21), 
+                amp=0.079063, phase=0, rel_phase=-0.4635, sigma=4, seq=seq_cool, postseq=None, cancel_info=None,
                 control_pi=False, proj_func='phase', extra_info=gate_info1)    
     data = cr_tune.measure()
     bla
@@ -304,8 +348,8 @@ if 0: # Tune up for time vs relative phase
 #    Y_proj = gate_info1.rotate(np.pi/2, rotation)
 
     cr_tune = CRtuning_time_phase.CRtuning_time_phase(gate_info1, gate_info2,  
-                                                    np.linspace(1,400,21), rel_phases=np.linspace(-0.5,-0.35,21), 
-                amp=0.079591, phase=0, rel_amp=4.64, sigma=6, seq=seq_cool, postseq=None, cancel_info=None,
+                                                    np.linspace(1,400,21), rel_phases=np.linspace(-0.5,-0.4,21), 
+                amp=0.079063, phase=0, rel_amp=4.7, sigma=4, seq=seq_cool, postseq=None, cancel_info=None,
                 control_pi=False, proj_func='phase',plot_seqs=False)    
     data = cr_tune.measure()
     bla
@@ -326,19 +370,19 @@ if 0: # Tune up for time vs detuning
     
 if 0: # Tune up 1Q gates with Interleaved Time Rabi
     from scripts.fluxonium  import timerabi_interleaved
-    alz.set_naverages(2000)
+    alz.set_naverages(5000)
 #    rotation = 0.6
 #    X_proj = qubit2_info.rotate(np.pi/2, np.pi/2+rotation)
 #    Y_proj = qubit2_info.rotate(np.pi/2, rotation)
 #    rel_amp=0.550893
-    rel_amp = 0
-    rel_phase = -0.4375
+    rel_amp = 1.00
+    rel_phase = -0.4642
 #    rel_phase = -0.412
     for postseq in [None]:
         tr = timerabi_interleaved.TimeRabi_interleaved(
-            gate_info2, gate_info1, np.linspace(0, 300, 121), #Does not include Gaussian ramp time, sigma=4
-            amp=0.361787, phase=0, rel_amp=rel_amp, rel_phase=rel_phase, sigma=6,
-            update=False, seq=seq_cool, postseq=postseq, proj_func='phase', read_on_e=False)
+            gate_info1, gate_info2, np.linspace(0, 200, 121), #Does not include Gaussian ramp time, sigma=4
+            amp=0.079063, phase=0, rel_amp=rel_amp, rel_phase=rel_phase, sigma=4,
+            update=False, seq=seq_cool, postseq=postseq, proj_func='phase', read_on_e=True)
         data = tr.measure()
     bla
         
@@ -351,34 +395,50 @@ if 0: # Tune up CR with Interleaved Time Rabi
     rotation = 0
     X_proj = gate_info1.rotate(np.pi/2, np.pi/2+rotation)
     Y_proj = gate_info1.rotate(np.pi/2, rotation)
-    for rel_amp in [4.64]:
+    for rel_amp in [4.68]:
 #    rel_amp= 4.457#5.03#4.4493
-        for rel_phase in [-0.437]: #1.011
+        for rel_phase in [-0.4635]: #1.011
 #    rel_amp=4.4405
 #    rel_phase=1.01
             
             for postseq in [None]:
                 tr = timerabi_interleaved.TimeRabi_interleaved(
-                            gate_info1, gate_info2, np.linspace(0, 100, 31), #Does not include Gaussian ramp time, sigma=4
-                            amp=0.079591, phase=0, rel_amp=rel_amp, rel_phase=rel_phase, sigma=6, read_on_e=True, cancel_info=None, 
+                            gate_info1, gate_info2, np.linspace(0, 500, 131), #Does not include Gaussian ramp time, sigma=4
+                            amp=0.079063, phase=0, rel_amp=rel_amp, rel_phase=rel_phase, sigma=4, read_on_e=True, cancel_info=None, 
                             update=False, seq=seq_cool, postseq=None, proj_func='phase', plot_seqs=False, extra_info=None)
                 data = tr.measure()
     bla
-if 0: #Calibration of the CR-imprinted phase for control qubit in |g>
+if 1: #Calibration of the CR-imprinted phase for control qubit in |g>
     from scripts.single_qubit import geophasecal
     alz.set_naverages(3000)
 
     cool = sequencer.Constant(int(4e3),1,chan='3m1')
-    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])  
-    postseq = gate_info1.rotate(np.pi, 0)
-    geoph = geophasecal.geophasecal(gate_info2, cx_info, np.linspace(-np.pi, np.pi, 61), test_info2=cancel_info, repeat_pulse=2,
-                                    seq=seq, postseq=None, proj_func='phase', plot_seqs=False,
-#                                    extra_info=gate_info1
-                                    )
-    data=geoph.measure()    
-    bla
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
+    X_proj = gate_info1.rotate(-np.pi/2, np.pi/2)
+    Y_proj = gate_info1.rotate(np.pi/2, 0)
+
+    for postseq in [gate_info1.rotate(np.pi,0)]:    
+        geoph = geophasecal.geophasecal(gate_info2, ZZ_info, np.linspace(-np.pi, np.pi, 101), test_info2=None, 
+                                            wait_reference = True, wait_time =(5+36) , repeat_pulse=1,
+                                            seq=seq, postseq=None, proj_func='phase', plot_seqs=False,
+                                            extra_info=gate_info1
+                                            )
+        data=geoph.measure() 
+    
+    
+        geoph = geophasecal.geophasecal(gate_info2, ZZ_info, np.linspace(-np.pi, np.pi, 101), test_info2=None, 
+                                            wait_reference = False, wait_time =5+36 , repeat_pulse=1,
+                                            seq=seq, postseq=None, proj_func='phase', plot_seqs=False,
+                                            extra_info=gate_info1
+                                            )
+        data=geoph.measure() 
+#    bla
     
         
+
+
+
+
 
 if 0: # single qubit tune up for time vs relative amp for  #NEED TO FIX THE 2D PLOTTING ISSUE
     from scripts.fluxonium import Singlequbit_tuning_time_amp
@@ -439,14 +499,18 @@ if 0: #
                             update=False, seq=seq_cool, postseq=None, proj_func='phase', plot_seqs=False, extra_info=None)
     data = cz.measure()
     
-if 1: # for modified version
+if 0: # for modified version
     from scripts.fluxonium  import CZ_1Dseq_modified
     alz.set_naverages(3000)
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
+#                          sequencer.Combined([gate_info2.rotate(np.pi,0), gate_info1.rotate(np.pi,0)])])
+    postseq = gate_info2.rotate(np.pi,0)
+#    postseq =  sequencer.Combined([gate_info1.rotate(np.pi,0), gate_info2.rotate(np.pi,0)])
 
     cz = CZ_1Dseq_modified.TimeRabi_interleaved(
-                            gate_info1, gate_info2, ZZ_info,  np.linspace(0, 240, 81), #Does not include Gaussian ramp time, sigma=4
-                            amp=0.2, phase=0, sigma=6, read_on_e=False,  
-                            update=False, seq=seq_cool, postseq=None, proj_func='phase', plot_seqs=False, extra_info=None)
+                                gate_info1, gate_info2, ZZ_info,  np.linspace(0, 200, 101), #Does not include Gaussian ramp time, sigma=4
+                                amp=-0.118, phase=0, sigma=12, read_on_e=False,update=False, seq=seq, 
+                                postseq=None, proj_func='phase', plot_seqs=False, extra_info=None)
     data = cz.measure()
 
 if 0: # 2d
@@ -461,3 +525,282 @@ if 0: # 2d
     
     data = cr_tune.measure()
     bla
+
+
+
+
+if 0: # Check histogramming
+    from scripts.single_qubit import rabi, efrabi
+    twpa = mclient.instruments['WF_xxx']
+    ro = mclient.instruments['readout']
+    alz = mclient.instruments['alazar']
+    readoutbrick = mclient.instruments['RObrick']
+    pump_freqs = np.linspace(7903.48e6, 7903.48e6, 1)
+    pump_powers = np.linspace(-4.5, -4.5, 1)
+    readout_powers = np.linspace(5, 5, 1)
+    acq_len = [2240]
+    alz.set_naverages(50000)
+    SNRs_qubit1 = []
+    SNRs_qubit2 = []
+    for power in pump_powers:
+        twpa.set_power(power)
+        for freq in pump_freqs:
+            twpa.set_frequency(freq)
+            for acq in acq_len:
+                alz.set_nsamples(acq)
+                ro.set_pulse_len(acq - 200)
+                tr = rabi.Rabi(gate_info1, [gate_info1.pi_amp,], seq= seq_cool, histogram=True, title='|eg>')
+                tr.measure()
+                ro.set_IQe(np.average(tr.shot_data[:]))
+                tr = rabi.Rabi(gate_info1, [0.00001], seq= seq_cool, histogram=True, title='|gg>')
+                tr.measure()
+                ro.set_IQg(np.average(tr.shot_data[:]))
+                tr1 = rabi.Rabi(gate_info1, [0.00001, gate_info1.pi_amp,], seq= seq_cool, histogram=True, proj_func='projection', title='|gg> and |eg>')
+                tr1.measure()
+                tr = rabi.Rabi(gate_info2, [gate_info2.pi_amp,], seq= seq_cool, histogram=True, title='|ge>')
+                tr.measure()
+                ro.set_IQe(np.average(tr.shot_data[:]))
+#                tr2 = rabi.Rabi(gate_info2, [0.00001, gate_info2.pi_amp,], seq= seq_cool, histogram=True, proj_func='projection', title='|gg> and |ge>')
+#                tr2.measure()
+                gg_data = tr1.shot_data[::2]
+                eg_data = tr1.shot_data[1::2]
+                ge_data = tr.shot_data[:]
+                print('gg phase: ', np.angle(np.average(gg_data), deg=True))
+                print('eg phase: ', np.angle(np.average(eg_data), deg=True))
+                print('ge phase: ', np.angle(np.average(ge_data), deg=True))
+                SNR_qubit1 = np.abs(np.average(np.angle(gg_data, deg=True)) - np.average(np.angle(eg_data, deg=True)))/(np.std(np.angle(gg_data, deg=True))+np.std(np.angle(eg_data, deg=True)))
+                print('SNR of qubit 1:', SNR_qubit1)
+                SNR_qubit2 = np.abs(np.average(np.angle(gg_data, deg=True)) - np.average(np.angle(ge_data, deg=True)))/(np.std(np.angle(gg_data, deg=True))+np.std(np.angle(ge_data, deg=True)))
+                print('SNR of qubit 2:', SNR_qubit2)
+                SNRs_qubit1.append(SNR_qubit1)
+                SNRs_qubit2.append(SNR_qubit2)
+                plt.close('all')
+    plt.plot(SNRs_qubit1)
+    plt.plot(SNRs_qubit2)
+        #
+        
+        #    tr = rabi.Rabi(gate_info1, [gate_info1.pi_amp,], seq=seq_cool, histogram=True, title='|eg>')
+        #    tr.measure()
+        #
+        #    tr = rabi.Rabi(gate_info2, [gate_info2.pi_amp,], seq=seq_cool, histogram=True, title='|ge>')
+        #    tr.measure()
+        #
+        #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info1.rotate(np.pi,0)])
+        #    tr = rabi.Rabi(gate_info2, [gate_info2.pi_amp,], seq=seq, histogram=True, title='|ee>', extra_info = gate_info1)
+        #    tr.measure()
+        
+        #    tr = efrabi.EFRabi(qubit_info, ef_info, [ef_info.pi_amp,], histogram=True, title='|f>')
+        #    tr.measure()
+    bla
+
+if 0: #two-qubit histogramming
+    from scripts.fluxonium import twoQ_histogram
+    alz.set_naverages(50000)
+    gg_phase = []
+    eg_phase = []
+    ge_phase = []
+    twpa = mclient.instruments['WF_xxx']
+    ro = mclient.instruments['readout']
+    pump_freqs = np.linspace(  7904e6,  7905.5e6, 11)
+    pump_powers = np.linspace(-2,-6,9)
+    pulselens = np.linspace(2500,2500,1)
+    for freq in pump_freqs:
+        for power in pump_powers:
+            for pulselen in pulselens:
+                twpa.set_power(power)
+                twpa.set_frequency(freq)
+                ro.set_pulse_len(pulselen)
+                tQh = twoQ_histogram.TwoQ_histogram(gate_info1, gate_info2, ['|gg>', '|eg>', '|ge>',], seq=seq_cool, histogram=True, proj_func='phase')
+                tQh.measure()
+                gg_data = tQh.shot_data[::3]
+                eg_data = tQh.shot_data[1::3]
+                ge_data = tQh.shot_data[2::3]
+                gg_phase.append(np.angle(np.mean(gg_data), deg=True))
+                eg_phase.append(np.angle(np.mean(eg_data), deg=True))
+                ge_phase.append(np.angle(np.mean(ge_data), deg=True))
+ 
+if 0: #single qubit tomography
+    from scripts.single_qubit import Single_qubit_tomo
+    alz.set_naverages(500000)
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
+    tomo = Single_qubit_tomo.Single_qubit_tomo(gate_info2, ZZ_info, CZ=True, repeat_pulse=1, 
+                                               seq=seq, postseq=None, proj_func='phase', extra_info=ZZ_info)
+    data = tomo.measure()
+    alz.set_naverages(5000)
+    
+   
+
+if 0: #two qubit tomography
+    from scripts.fluxonium import twoqubit_state_tomo
+    alz.set_naverages(100000)
+    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
+
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info2.rotate(np.pi,0)])
+#    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150),
+#                          gate_info1.rotate(np.pi/2,0), ZZ_info.rotate(np.pi,0),
+#                          sequencer.Combined([gate_info2.rotate(np.pi,0), gate_info1.rotate(np.pi,0)]),
+#                          ZZ_info.rotate(np.pi,0), gate_info1.rotate(np.pi/2,0)])
+#    
+
+    tomo = twoqubit_state_tomo.twoqubit_state_tomo(gate_info1, gate_info2, seq=seq, seq_cool=seq_cool, postseq=None, proj_func='phase', extra_info=ZZ_info)
+    data = tomo.measure()
+    alz.set_naverages(5000)
+#I will integrate that part inside the analysis once it works fine    
+    ys= tomo.get_ys()
+#    A = np.array([[1, -1, -1,1],[1,-1,1,-1], [1,1,-1,-1] ,[1,1,1,1]])
+    A = np.array([[1, 1, 1,1],[1,-1,1,-1], [1,1,-1,-1] ,[1,-1,-1,1]])
+
+    B = np.array([ys[0], ys[1], ys[2], ys[3]])
+    beta = np.linalg.solve(A,B)
+    b0 = beta[0]
+    b1 = beta[1]
+    b2 = beta[2]
+    b3 = beta[3]
+    ys= ys - beta[0]
+
+    IZ = (ys[4] + ys[5])/(2*b2)
+    ZZ = (ys[5] + ys[6])/(-2*b3)
+    ZI = (ys[4] + ys[6])/(2*b1)
+    
+#    YZ = (y[10]-y[7]+2*b2*IZ)/(-2*b3)
+#
+#    YI = (ys[10] + ys[7])/(2*b1)
+
+    M_sub = np.array([[b1,b3],
+                  [b1,-b3]])
+    M_sub_vec =  np.array([ys[7] - b2*IZ, ys[10] +b2*IZ])
+    M = np.linalg.solve(M_sub, M_sub_vec)
+    YI = M[0]
+    YZ = M[1]    
+
+
+
+#    YZ = (y[7] - b1*YI - b2*IZ)/b3
+    
+    IX = (ys[17] + ys[18])/(-2*b2)
+
+    ZX = (ys[18] + b1*ZI +b2 * IX)/b3
+    
+    IY = (ys[15]+ys[16])/(2*b2)
+    
+    ZY = (ys[15] - b1*ZI - b2*IY)/b3
+    
+    XI = (ys[11] + ys[14])/(-2*b1)
+    
+    XZ = (ys[14] + b1*XI +b2*IZ)/b3
+    
+    YY = (ys[8]- b1*YI - b2*IY)/b3
+    
+    YX = (ys[9] - b1*YI +b2*IX)/(-b3)
+    
+    XX = (ys[13] + b1*XI + b2*IX)/b3
+    
+    XY = (ys[12]+b1*XI -b2*IY)/(-b3)
+
+#    YZ = (y[7] - b1*YI - b2*IZ)/b3
+
+#    M_sub = np.array([[b1,b2,b3],
+#                  [-1*b1,b2,-1*b3,],
+#                  [b1,-1*b2,-1*b3]])
+#    M_sub_vec =  np.array([ys[4], ys[5] , ys[6]])
+#    M = np.linalg.solve(M_sub, M_sub_vec)
+#    ZI = M[0]
+#    IZ = M[1]
+#    ZZ = M[2]
+#    
+#    M_sub = np.array([[b2,b3],
+#                  [b2,-1*b3]])
+#    M_sub_vec =  np.array([ys[15] - b1*ZI, ys[16] +b1*ZI])
+#    M = np.linalg.solve(M_sub, M_sub_vec)
+#    IY = M[0]
+#    ZY = M[1]    
+#    
+#    
+#    
+#    
+#    M_sub = np.array([[-b1,-b3],
+#                  [-b1,b3]])
+#    M_sub_vec =  np.array([ys[11] - b2*IZ, ys[14] +b2*IZ])
+#    M = np.linalg.solve(M_sub, M_sub_vec)
+#    XI = M[0]
+#    XZ = M[1]    
+#
+#
+#    M_sub = np.array([[b1,b3],
+#                  [b1,-b3]])
+#    M_sub_vec =  np.array([ys[7] - b2*IZ, ys[10] +b2*IZ])
+#    M = np.linalg.solve(M_sub, M_sub_vec)
+#    YI = M[0]
+#    YZ = M[1]    
+
+#    M_sub = np.array([[-b2,-b3],
+#                  [-b2,b3]])
+#    M_sub_vec =  np.array([ys[17] - b1*ZI, ys[18] +b1*ZI])
+#    M = np.linalg.solve(M_sub, M_sub_vec)
+#    IX = M[0]
+#    ZX = M[1]    
+#
+#
+#    
+#    YY = (y[8] - b1*YI - b2* IY) / b3
+#    M_sub = np.array([[b3]])
+#    M_sub_vec =  np.array([y[8] - b1*YI - b2* IY])
+#    M = np.linalg.solve(M_sub, M_sub_vec)
+#    YY = M[0]
+#
+#    YX = (y[9] - (b1*YI - b2* IX)) / -b3
+#    XY = (y[12] - (-b1*XI + b2* IY)) / -b3
+#    XX = (y[13] - (-b1*XI - b2* IX)) / b3
+    
+    
+    components = [ZI,IZ,ZX,ZY,ZZ,YI,IY,YX,YY,YZ,XI,IX,XX,XY,XZ]
+    fig, ax = plt.subplots()
+    plt.plot(components, linestyle="None", marker='o')    
+    plt.bar([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14], components, width=0.2)    
+
+    plt.xticks(np.arange(0,15,1))
+    plt.legend()
+    labels = [item.get_text() for item in ax.get_xticklabels()]
+
+    labels[0]='ZI'
+    labels[1] = 'IZ'
+    labels[2] = 'ZX'
+    labels[3] = 'ZY'
+    labels[4] = 'ZZ'
+    labels[5] = 'YI'
+    labels[6] = 'IY'
+    labels[7] = 'YX'
+    labels[8] = 'YY'
+    labels[9] = 'YZ'   
+    labels[10] = 'XI'
+    labels[11] = 'IX'
+    labels[12] = 'XX'
+    labels[13] = 'XY'
+    labels[14] = 'XZ'
+   
+    ax.set_xticklabels(labels)
+    plt.show()  
+    
+
+
+if 0: #State population with SSB
+    ZZ.set_rf_on(False)
+    
+    #qubit 2
+    spec1 = ssbspec_gaussianfit.SSBSpec_Gaussianfit(qubit2_info, np.linspace(-4e6, 3e6, 81), proj_func='phase', seq=seq_cool)
+    spec1.measure()
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), qubit_info.rotate(np.pi,0)])
+    spec1 = ssbspec.SSBSpec(qubit2_info, np.linspace(-4e6, 3e6, 181), proj_func='phase', seq=seq, extra_info=qubit_info)
+    spec1.measure()    
+   
+ #fit initial conditions need to be changed here
+#uncertainties need to be saved properly   
+ 
+if  0:    #qubit 1
+    ZZ.set_rf_on(False)
+
+    spec1 = ssbspec_gaussianfit.SSBSpec_Gaussianfit(qubit_info, np.linspace(-4e6, 4e6, 81), proj_func='phase', seq=seq_cool)
+    spec1.measure()
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), qubit2_info.rotate(np.pi,0)])
+    spec1 = ssbspec.SSBSpec(qubit_info, np.linspace(-4e6, 4e6, 181), proj_func='phase', seq=seq, extra_info=qubit2_info)
+    spec1.measure()    

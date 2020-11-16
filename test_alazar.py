@@ -16,10 +16,10 @@ import mclient
 alz = mclient.instruments['alazar']
 #mclient.instruments.reload('alazar')
 #alz = mclient.instruments['alazar']
-alz.set_ch1_range('200mV')
-alz.set_ch2_range('100mV')
-alz.set_nsamples(2560)
-#alz.set_naverages(2000)
+alz.set_ch1_range('40mV')
+alz.set_ch2_range('40mV')
+alz.set_nsamples(1280)
+alz.set_naverages(1000)
 alz.set_ch1_coupling('AC')
 alz.set_ch2_coupling('AC')
 alz.set_clock_source('EXT10M')
@@ -102,7 +102,7 @@ if 0:
         
 
 if 1:
-        alz.setup_avg_shot(50000)
+        alz.setup_avg_shot(10000)
         buf = alz.take_avg_shot(timeout=50000)
     
         print('plotting')

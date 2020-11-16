@@ -105,22 +105,84 @@ class TimeRabi_interleaved(Measurement1D):
             
         for plen in self.times:
             
-            '''Without pi pulse'''
+#            '''Without pi pulse'''
+#
+#            s.append(self.seq)
+#            if plen >= 0:
+#                g1= Combined([GaussSquare(int(plen), ampI, self.sigma, chan=chs[0]),
+#                              GaussSquare(int(plen), ampQ, self.sigma, chan=chs[1])])                   
+#                for j in range(self.repeat_pulse):
+#                    s.append(g1)
+#            s.append(Delay(5))
+#            
+#            if self.read_on_e is True:
+#                s.append(self.gate_info2.rotate(np.pi,0))#Chen changed to always measure with control qubit in e
+#            
+#            if self.postseq:
+#                s.append(self.postseq)
+#            s.append(Delay(10))
+#            s.append(Combined([
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#            ]))
+#            s.append(Delay(3000))
+#
+#            
+#            '''Without pi pulse'''
+#
+#            s.append(self.seq)
+#            if plen >= 0:
+#                g1= Combined([GaussSquare(int(plen), ampI, self.sigma, chan=chs[0]),
+#                              GaussSquare(int(plen), ampQ, self.sigma, chan=chs[1])])                   
+#                for j in range(self.repeat_pulse):
+#                    s.append(g1)
+#            s.append(Delay(5))
+#            
+#            if self.read_on_e is True:
+#                s.append(self.gate_info2.rotate(np.pi,0))#Chen changed to always measure with control qubit in e
+#            
+#            if self.postseq:
+#                s.append(self.postseq)
+#            s.append(Delay(10))
+#            s.append(Combined([
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#            ]))
+#            s.append(Delay(3000))
+#
+##
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#
+#
             s.append(self.seq)
             if plen >= 0:
 #                s.append(Delay(int(plen)))
                 g1= Combined([GaussSquare(int(plen), ampI, self.sigma, chan=chs[0]),
                               GaussSquare(int(plen), ampQ, self.sigma, chan=chs[1])])                   
                 s.append(self.gate_info1.rotate(np.pi/2,0))
-                s.append(g1)
-#                s.append(Combined([Constant(int(plen),  0.008, chan=chs2[0]),
-#                                   Constant(int(plen), -0.0713, chan=chs2[1])]))
+                for j in range(self.repeat_pulse):
+                    s.append(g1)
                 s.append(Combined([self.gate_info2.rotate(np.pi,0), self.gate_info1.rotate(np.pi,0)]))
-#                s.append(Delay(int(plen)))
-                s.append(g1)
+                for j in range(self.repeat_pulse):
+                    s.append(g1)
 
-#                s.append(Combined([Constant(int(plen),  0.008, chan=chs2[0]),
-#                                   Constant(int(plen), -0.0713, chan=chs2[1])]))
                 s.append(self.gate_info1.rotate(np.pi/2,0))
     
             s.append(Delay(5))
@@ -145,12 +207,11 @@ class TimeRabi_interleaved(Measurement1D):
                 g1= Combined([GaussSquare(int(plen), ampI, self.sigma, chan=chs[0]),
                               GaussSquare(int(plen), ampQ, self.sigma, chan=chs[1])])                   
                 s.append(self.gate_info1.rotate(np.pi/2,0))
-                s.append(g1)
-#                s.append(Combined([Constant(int(plen),  0.008, chan=chs2[0]),
-#                                   Constant(int(plen), -0.0713, chan=chs2[1])]))
+                for j in range(self.repeat_pulse):
+                    s.append(g1)
                 s.append(Combined([self.gate_info2.rotate(np.pi,0), self.gate_info1.rotate(np.pi,0)]))
-#                s.append(Delay(int(plen)))
-                s.append(g1)
+                for j in range(self.repeat_pulse):
+                    s.append(g1)
 
 #                s.append(Combined([Constant(int(plen),  0.008, chan=chs2[0]),
 #                                   Constant(int(plen), -0.0713, chan=chs2[1])]))

@@ -60,6 +60,17 @@ if 0: # test digitizer DEMODULATED
     plt.show()
     bla
 
+if 0: # Check histogramming
+    from scripts.single_qubit import rabi
+    tr = rabi.Rabi(qubit_info, [qubit_info.pi_amp,], histogram=True, title='|e>')
+    tr.measure_keysight()
+    tr = rabi.Rabi(qubit_info, [0.001,], histogram=True, title='|g>')
+    tr.measure_keysight()
+    tr = rabi.Rabi(qubit_info, [qubit_info.pi_amp/2,], histogram=True, title='|g>+|e>')
+    tr.measure_keysight()
+    bla
+
+
 if 0: # Quantum Jump
     dig = mclient.instruments['dig']
     nsamples = 100
@@ -82,18 +93,27 @@ if 0: # Quantum Jump
 
 if 0: # cav transmission
     from single_cavity import rocavspectroscopy_keysight
-    rofreq = 7317.52e6
-    freq_range = 5e6
+    rofreq = 7317.5e6
+#    rofreq = 7320e6
+    freq_range =1e6
+    freqs = np.linspace(rofreq-freq_range, rofreq+freq_range, 81)
+    powers = np.linspace(2, 5, 1)
 
     for i in range(1):    
-        ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(5, 5, 1),
-                                                 np.linspace(rofreq-freq_range, rofreq+freq_range, 81),
-    #                                             np.linspace(rofreq, rofreq+freq_range, 1), 
+        ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, powers, freqs,
+         #                                        np.linspace(rofreq, rofreq+freq_range, 1), 
                                                  qubit_pulse=False, seq=None)
         ro.measure()
+        
+        '''amp = ro.ampdata[:]
+        f= open('ampdata_2d_HP.txt', 'w')
+        f.write(str(amp))
+        f.close()'''
+        
     bla
+ #f.open(' ')   
+
     
-     
 if 0: # calibrate TWPA
     TWPApump = mclient.instruments['SCTWPA']
     from single_cavity import twpa_calibration_keysight
@@ -207,9 +227,9 @@ if 0: # qubit SSB spec
     spec = ssbspec.SSBSpec(qubit_info, np.concatenate((
 #                                        np.linspace(-7e6, -5e6, 51),
 #                                        np.linspace(-3.7e6, -.7e6, 51), 
-                                       np.linspace(-7e6,-5e6, 51),
-                                       np.linspace(-2.8e6,-1e6, 51),
-                                       np.linspace(-1e6,1e6, 51),
+                                       np.linspace(-7e6,1e6, 101),
+#                                       np.linspace(-2.8e6,-1e6, 51),
+#                                       np.linspace(-1e6,1e6, 51),
                                        )), 
                            seq=None, plot_seqs=False, 
 #                           extra_info = [cavity_infoB, qubit_b0s, qubit_b2s, qubit_b4s, fwm_info, fwm_info_b2, fwm_info_b4]
@@ -237,15 +257,15 @@ if 0: #Multiple times SSB spec
     bla
      
     
-if 0: # Calibrate pi pulse
+if 1: # Calibrate pi pulse
     from single_qubit import rabi
     tr = rabi.Rabi(qubit_info, 
 #                   np.linspace(-1, 1, 51), selective=False,
-#                   np.linspace(-.1, .1, 51), selective=.5,
+#                   np.linspace(-.12, .12, 51), selective=.5,
                   np.linspace(-0.015, 0.015, 51), selective=True,
 #                   np.linspace(0.7, .9, 51), selective=False,
-#                   np.linspace(0.45, 0.52, 51), selective=False,
-                   plot_seqs=False, generate=True, repeat_pulse=1, update=False, seq=None)
+#                   np.linspace(0.35, 0.41, 51), selective=False,
+                   plot_seqs=False, generate=True, repeat_pulse=1, update=True, seq=None)
     tr.measure_keysight()
     bla
     
@@ -256,7 +276,7 @@ if 0: # Time Rabi
     bla
 
     
-if 1: # T1
+if 0: # T1
 #    dig.set_trigger_period(500)
     from single_qubit import T1measurement
     t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0, 19e3, 20), np.linspace(20e3, 160e3, 20))), 
@@ -269,7 +289,7 @@ if 0: # T2
     from single_qubit import T2measurement
     t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0e3, 20e3, 101), detune=.5e6, 
 #    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 3.9e3, 81), detune=2e6, 
-                                     double_freq=True, generate=True, seq=None,
+                                     double_freq=False, generate=True, seq=None,
                                      plot_seqs=False)
     t2.measure_keysight()
     bla

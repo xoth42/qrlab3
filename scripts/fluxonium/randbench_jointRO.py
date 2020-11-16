@@ -22,10 +22,10 @@ def analysis(meas, data=None, fig=None):
         xs[i] = meas.xs[4*i]
     
     y2d = ys.reshape(len(ys)/4,4)
-    y1s = y2d[:,0]
-    y2s = y2d[:,1]
-    y3s = y2d[:,2]
-    y4s = y2d[:,3]
+    y1s = y2d[0,:]
+    y2s = y2d[1,:]
+    y3s = y2d[2,:]
+    y4s = y2d[3,:]
    
     fig.axes[0].clear()   
     fig.axes[0].plot(xs, y1s, 'bs', ms=3, color='r', linestyle = '-', label='none')
