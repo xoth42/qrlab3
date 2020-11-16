@@ -76,19 +76,62 @@ def analysis(meas, data=None, fig=None):
     bl = y2s[12:]
     gr = y3s[12:]
     yw = y4s[12:]
+
+
+#the original part    
+#    Pg1 = ((-rd-gr+bl+yw)/(Veg-Vgg+Vee-Vge)+1)/2
+#    Pg2 = ((-rd-bl+gr+yw)/(Vge-Vgg+Vee-Veg)+1)/2
+#
+#    Pegge = ((rd+yw-bl-gr)/(Vge+Veg-Vee-Vgg)+1)/2
+#    Pgg = (Pg1+Pg2-Pegge)/2
+#    Pg_cplx = (Pg1+Pg2-Pegge)/2
+#
+#    
+#    fig2, axes2 = plt.subplots(2)
+#    axes2[0].plot(xs[12:], np.real(Pgg))
+#    axes2[0].plot(xs[12:], np.real(Pg1*Pg2), color='r')
+#    axes2[1].plot(xs[12:], np.imag(Pgg))
+#    
+#    return [Pgg, Pg1, Pg2, Pg_cplx]
+# end of the original part
+
+
+
+
+    
     Pg1 = ((-rd-gr+bl+yw)/(Veg-Vgg+Vee-Vge)+1)/2
     Pg2 = ((-rd-bl+gr+yw)/(Vge-Vgg+Vee-Veg)+1)/2
 
-    Pegge = ((rd+yw-bl-gr)/(Vge+Veg-Vee-Vgg)+1)/2
-    Pgg = (Pg1+Pg2-Pegge)/2
-    Pg_cplx = (Pg1+Pg2-Pegge)/2
+    V_matrix = np.matrix([[Vgg, Vge, Veg, Vee], [Vge, Vgg, Veg, Vee], 
+                          [Veg, Vee, Vgg, Vge], [Vee, Veg, Vge, Vgg]])
+    y_vector = [rd, gr, bl, yw]
+    P = np.dot(np.linalg.inv(V_matrix), y_vector)
 
+
+#    Igg = 1
+#    Ige = 0.0
+#    Ieg = 0.0
+#    Iee = 0.0
+
+    Igg = 0.8
+    Ige = 0.05
+    Ieg = 0.15
+    Iee = 0.00
+    
+    I_matrix = np.matrix([[Igg, Ige, Ieg, Iee], [Ige, Igg, Iee, Ieg], 
+                          [Ieg, Iee, Igg, Ige], [Iee, Ieg, Ige, Igg]])
+    
+    P_correct = np.dot(I_matrix, P)
+
+    Pgg = np.transpose(P_correct[0])
+    Pgg= Pgg.A1
+    
     fig2, axes2 = plt.subplots(2)
     axes2[0].plot(xs[12:], np.real(Pgg))
     axes2[0].plot(xs[12:], np.real(Pg1*Pg2), color='r')
     axes2[1].plot(xs[12:], np.imag(Pgg))
     
-    return [Pgg, Pg1, Pg2, Pg_cplx]
+    return [Pgg, Pg1, Pg2]
 
 
 def CheckIdentity(matrix):

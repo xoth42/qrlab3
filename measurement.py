@@ -632,7 +632,7 @@ class Measurement(object):
         if self.histogram:
             ret = dig.take_hist(async=True)
         else:
-            ret = dig.take_experiment(avg_buf=self.avg_data, ste_buf=self.ste_data, 
+            ret = dig.take_experiment(avg_buf=self.avg_data, cov_buf=self.cov_data,
                                       async=True, IQ_e=self.readout_info.IQe, 
                                       e_radius=self.readout_info.IQe_radius, proj_func=self.proj_func)
         
@@ -709,7 +709,8 @@ class Measurement(object):
             self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*dig.do_get_naverages()], dtype=np.complex)
             self.avg_data = None
             self.pp_data = None
-            self.ste_data = None
+            self.std_i_data = None
+            self.std_q_data = None
         elif self.singleshotbin:
             self.shot_data = None
             self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
@@ -724,7 +725,10 @@ class Measurement(object):
             else:
                 self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
                 self.pp_data = None
-            self.ste_data = self.data.create_dataset('ste', [self.cyclelen,], dtype=np.float)
+#            self.std_i_data = self.data.create_dataset('std_i', [self.cyclelen,], dtype=np.float)
+#            self.std_q_data = self.data.create_dataset('std_q', [self.cyclelen,], dtype=np.float)
+#            self.std_corr_data = self.data.create_dataset('std_corr', [self.cyclelen,], dtype=np.float)
+            self.cov_data = self.data.create_dataset('cov', [self.cyclelen,3], dtype=np.float)
 
     def measure_keysight(self):
         '''
@@ -746,9 +750,9 @@ class Measurement(object):
             if self.cyclelen == 1:
                 self.plot_histogram(ret)
         else:
-            avgs, stes = self.acquisition_loop_keysight(dig) # calls update function
+            avgs, cov = self.acquisition_loop_keysight(dig) # calls update function
             self.avg_data = avgs
-            self.ste_data = stes
+            self.cov_data = cov
             ret = self.analyze(self.get_ys(), fig=self.get_figure())
 
         if self.savefig:
@@ -877,6 +881,18 @@ class Measurement(object):
             elif self.proj_func == 'phase':
                 theta = -np.angle(values) + np.pi
             elif self.proj_func == 'projection':
+
+#       FOR KEYSIGHT DIG:                
+#        if data is None:
+#            naverages = self._dig.get_naverages()
+#            values = self.avg_data[:]
+#
+#            # calculate amp based on projection type
+#            if self._proj_func is 'amp':
+#                theta = -np.angle(values)
+#            elif self._proj_func is 'phase':
+#                theta = -np.angle(values) + np.pi
+#            elif self._proj_func is 'projection':
                 IQg = self.readout_info.IQg
                 IQe = self.readout_info.IQe
                 vproj = IQe - IQg
@@ -892,7 +908,6 @@ class Measurement(object):
                 eb[i] = m[0,0]/(naverages*np.sqrt(naverages-1)) # convert to st error
         else:
             eb = data
-        print('eb is:', eb)
         return eb
 
     def post_process(self):
@@ -969,15 +984,28 @@ class Measurement(object):
         if self.cyclelen == 2:
             data1 = data[::2]
             data2 = data[1::2]
+        elif self.cyclelen == 3:
+            data1 = data[::3]
+            data2 = data[1::3]
+            data3 = data[2::3]
         print 'average I,Q is:', avg, '\n'
         if 0:
             fig.axes[0].scatter(np.real(data), np.imag(data), label='avg=%s'%(avg,))
         else:
-            fig.axes[0].hexbin(np.real(data), np.imag(data), label='avg=%s'%(avg,), cmap=mpl.cm.hot)
+            if self.cyclelen == 3:
+                fig.axes[0].hexbin(np.real(data1), np.imag(data1), alpha=0.4, cmap='Blues')
+                fig.axes[0].hexbin(np.real(data2), np.imag(data2), alpha=0.4, cmap='Reds')
+                fig.axes[0].hexbin(np.real(data3), np.imag(data3), alpha=0.4, cmap='Greens')
+            else:
+                fig.axes[0].hexbin(np.real(data), np.imag(data), label='avg=%s'%(avg,), cmap=mpl.cm.hot)
         if self.residuals:
             if self.cyclelen == 2:
                 n, bins, patches = fig.axes[1].hist(self.complex_to_real(data1), bins=64)
                 n, bins, patches = fig.axes[1].hist(self.complex_to_real(data2), bins=64)
+            elif self.cyclelen == 3:
+                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data1), bins=64)
+                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data2), bins=64, color='r')
+                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data3), bins=64)
             else:
                 n, bins, patches = fig.axes[1].hist(self.complex_to_real(data), bins=64)
 #            ax2 = fig.axes[1].twinx()

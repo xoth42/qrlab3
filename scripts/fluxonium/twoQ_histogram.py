@@ -31,11 +31,10 @@ def analysis(meas, data=None, fig=None):
 
     fig.axes[0].plot(xs, ys, 'ks', ms=3)
     try: # This is a placeholder until stes is implemented w/ Alazar.
-        fig.axes[0].errorbar(xs, ys, yerr=meas.get_errorbars(), fmt='.', 
+        fig.axes[0].errorbar(xs, ys, yerr=meas.get_stes(), fmt='.', 
                          markersize = 0, ecolor='grey', linewidth=1)
     except:
-        print('passed no errorbars')  
-
+        print('passed no stes error')  
 
     amp0 = (np.max(ys) - np.min(ys)) / 2
     if ys[len(ys)/2]>np.average(ys):
@@ -100,14 +99,15 @@ def analysis(meas, data=None, fig=None):
 
     return result.params
 
-class Rabi(Measurement1D):
+class TwoQ_histogram(Measurement1D):
 
-    def __init__(self, qubit_info, amps, update=False, seq=None, r_axis=0, fix_phase=True, cancel_info=None,
+    def __init__(self, qubit_info, qubit2_info, states, update=False, seq=None, r_axis=0, fix_phase=True, cancel_info=None,
                  fix_period=None, repeat_pulse=1, postseq=None, selective=False, fit_type=FIT_AMP, **kwargs):
         self.qubit_info = qubit_info
+        self.qubit2_info = qubit2_info
         self.cancel_info = cancel_info
-        self.amps = amps
-        self.xs = amps
+        self.states = states
+        self.xs = states
         self.update_ins = update
         if seq is None:
             seq = Trigger(250)
@@ -121,39 +121,53 @@ class Rabi(Measurement1D):
         self.selective = selective
         
         if cancel_info is not None:
-            super(Rabi, self).__init__(len(amps), infos=(qubit_info, cancel_info), **kwargs)
+            super(TwoQ_histogram, self).__init__(len(states), infos=(qubit_info, cancel_info), **kwargs)
         else:
-            super(Rabi, self).__init__(len(amps), infos=(qubit_info), **kwargs)
+            super(TwoQ_histogram, self).__init__(len(states), infos=(qubit_info, qubit2_info), **kwargs)
             
-        self.data.create_dataset('amps', data=amps)
+        self.data.create_dataset('states', data=len(states))
 
     def generate(self):  #That is the original generate function 
         s = Sequence()
-        for i, amp in enumerate(self.amps):
-            s.append(self.seq)
+        '''measure |gg>'''            
+        s.append(self.seq)
+        
+        if self.postseq is not None:
+            s.append(self.postseq)
             
-            if self.cancel_info is not None:
-                for j in range(self.repeat_pulse):
-                    s.append(Combined([self.qubit_info.rotate(0, self.r_axis, amp=amp),
-                                       self.cancel_info.rotate(np.pi, self.r_axis)
-                            ]))
-            else:
-                if self.selective==1:
-                    s.append(Repeat(self.qubit_info.rotate_selective(0, self.r_axis, amp=amp), self.repeat_pulse))
-                elif self.selective==0.5:
-                    s.append(Repeat(self.qubit_info.rotate_quasilective(0, self.r_axis, amp=amp), self.repeat_pulse))
-                else:
-                    s.append(Repeat(self.qubit_info.rotate(0, self.r_axis, amp=amp), self.repeat_pulse))
-            if self.postseq is not None:
-                s.append(self.postseq)
-            s.append(Delay(100))
-            s.append(Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ]))
-            s.append(Delay(2000))
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+        s.append(Delay(2000))
 
-
+        '''measure |eg>'''
+        s.append(self.seq)
+        
+        s.append(self.qubit_info.rotate(np.pi, 0))
+        
+        if self.postseq is not None:
+            s.append(self.postseq)
+            
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+        s.append(Delay(2000))
+        
+        '''measure |ge>'''
+        s.append(self.seq)
+        
+        s.append(self.qubit2_info.rotate(np.pi, 0))
+        
+        if self.postseq is not None:
+            s.append(self.postseq)
+            
+        s.append(Combined([
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            ]))
+        s.append(Delay(2000))
 
         s = self.get_sequencer(s)
         seqs = s.render()
