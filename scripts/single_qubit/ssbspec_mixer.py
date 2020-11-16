@@ -101,7 +101,7 @@ class SSBSpec_mixer(Measurement1D):
         else:
             ro = (Combined([
                 Join([Delay(300),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
-                Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+#                Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
                 Join([Delay(100),self.mixer_info.rotate(np.pi, 0),Delay(200)]),
                 Join([Delay(100),self.mixer_info2.rotate(np.pi, 0),Delay(200)])
 #                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),

@@ -20,6 +20,8 @@ def analysis(meas, data=None, fig=None):
     xs = meas.delays
 
     fig.axes[0].plot(xs/1e3, ys, 'ks', ms=3, linestyle='-', markerfacecolor='red' )
+    fig.axes[0].errorbar(xs/1e3, ys, yerr=meas.get_stes(), fmt='.', 
+                         markersize = 0, ecolor='grey', linewidth=1)
 
     if meas.double_exp == False:
         params = lmfit.Parameters()
@@ -76,7 +78,7 @@ class T1Measurement_mixer(Measurement1D):
         self.double_exp = double_exp
         self.laser_power = laser_power
         if seq is None:
-            seq = Trigger(250)
+            seq = [Trigger(250)]
         self.seq = seq
         self.postseq = postseq
         self.QswB = Qswitch_infoB
@@ -90,46 +92,51 @@ class T1Measurement_mixer(Measurement1D):
         s = Sequence()
 #        s.append(Constant(250, 0, chan=4))
 #        s.append(Constant(250, 1, chan='4m1'))
-        ro = (Combined([
-            Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
-            Join([Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),Delay(200)]),
-            Join([self.mixer_info1.rotate(np.pi, 0),Delay(200)]),
-            Join([self.mixer_info2.rotate(np.pi, 0),Delay(200)])
-#                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
-        ]))       
+        if self.mixer_info1.deltaf == 0:
+            ro = [Combined([
+                Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
+    #            Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+                Join([Constant(int(self.mixer_info1.w),self.mixer_info1.pi_amp,chan = self.mixer_info1.sideband_channels[0]),Delay(200)]),
+                Join([Constant(int(self.mixer_info2.w),self.mixer_info2.pi_amp,chan = self.mixer_info2.sideband_channels[0]),Delay(200)])
+    #                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
+            ])]
+        else:
+            ro = [Combined([
+                Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
+    #            Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+                Join([self.mixer_info1.rotate(np.pi, 0),Delay(200)]),
+                Join([self.mixer_info2.rotate(np.pi, 0),Delay(200)])
+    #                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
+            ])]       
         
         r = self.qubit_info.rotate
         for i, dt in enumerate(self.delays):
-            s.append(self.seq)
-            s.append(r(np.pi, 0))
-#            s.append(Combined([
-#                    Constant(25000, 0.1, chan=self.qubit_info.sideband_channels[0]),
-#                    Constant(25000, 0.1, chan=self.qubit_info.sideband_channels[1]),
-#            ]))
-            s.append(Delay(dt))
-
-            if self.postseq is not None:
-                s.append(self.postseq)
-#            s.append(self.get_readout_pulse())
-            
-#            s.append(Delay(20))
-#            s.append(Combined([
-#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-#                    Constant(self.readout_info.pulse_len, self.mixer_info1.pi_amp, chan=self.mixer_info1.channels[0]),
-#                    Constant(self.readout_info.pulse_len, self.mixer_info2.pi_amp, chan=self.mixer_info2.channels[0])
-#            ]))
-            s.append(ro)
-            s.append(Delay(2000))
+#            s.append(self.seq)
+#            s.append(r(np.pi, 0))
+##            s.append(Combined([
+##                    Constant(25000, 0.1, chan=self.qubit_info.sideband_channels[0]),
+##                    Constant(25000, 0.1, chan=self.qubit_info.sideband_channels[1]),
+##            ]))
+#            if dt > 0:  
+#                s.append(Delay(dt))
+#
+#            if self.postseq is not None:
+#                s.append(self.postseq)
+#
+#            s.append(ro)
+#            s.append(Delay(2000))
             #Ebru: changed the delay from 1000 to 20000.
-
-#            s.append(Repeat(Delay(1000), 20))   # wait for alazar acquisition to finish
-#            s.append(Combined([
-#                Repeat(Constant(8000, 0.4, chan=self.QswB.sideband_channels[0]), 70),
-#                Repeat(Constant(8000, 0.4, chan=self.QswB.sideband_channels[1]), 70),
-#                Repeat(Constant(8000, 1, chan='1m1'), 70),     # Readout pump tone switch
-#                Repeat(Constant(8000, 0.0001, chan=5), 70),         # Qubit/Readout master switch
-#            ]))
+            s_temp = self.seq[:]
+            s_temp += [r(np.pi,0)]
+            if dt >0:
+                s_temp += [Delay(dt)]
+            
+            if self.postseq:
+                s_temp += [self.postseq]
+                
+            s_temp += ro
+            s_temp += [Delay(2000)]
+            s.append(Join(s_temp))
 
         s = self.get_sequencer(s)
         seqs = s.render()
