@@ -633,7 +633,7 @@ class Measurement(object):
         else:
             ret = dig.take_experiment(avg_buf=self.avg_data, cov_buf=self.cov_data,
                                       async=True, IQ_e=self.readout_info.IQe, 
-                                      e_radius=self.readout_info.IQe_radius, proj_func=self.proj_func)
+                                      e_radius=self.readout_info.IQe_radius)
         
         try:
             while not ret.is_valid() and not self._interrupted:
@@ -875,11 +875,11 @@ class Measurement(object):
             values = self.avg_data[:]
 
             # calculate amp based on projection type
-            if self._proj_func is 'amp':
+            if self.proj_func is 'amplitude':
                 theta = -np.angle(values)
-            elif self._proj_func is 'phase':
+            elif self.proj_func is 'phase':
                 theta = -np.angle(values) + np.pi
-            elif self._proj_func is 'projection':
+            elif self.proj_func is 'projection':
                 IQg = self.readout_info.IQg
                 IQe = self.readout_info.IQe
                 vproj = IQe - IQg
