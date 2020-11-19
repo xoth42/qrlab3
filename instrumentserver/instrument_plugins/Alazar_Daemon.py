@@ -695,12 +695,14 @@ real part is applied to I and the imaginary part to Q.
             logging.warning(msg)
             raise Exception(msg)
             
-    def update_stes(self, ste_buf, stes, n):
+    def update_cov(self, cov_buf, cov, n):
         try:
-            ste_buf[:] = stes
-            ste_buf.set_attrs(averages=n)
+            cov_buf[:] = cov
+            cov_buf.set_attrs(averages=n)
         except Exception, e:
             self._card.end_capture()
+            print(cov.shape, n, cov.shape)
+            print(cov_buf[:].shape)
             msg = 'Unable to store standard errors: %s' % str(e)
             logging.warning(msg)
             raise Exception(msg)
@@ -732,7 +734,7 @@ real part is applied to I and the imaginary part to Q.
     def ge_criteria(self, IQ, IQ_e, e_radius):
         return (abs(IQ-IQ_e)-e_radius < 0)*1
 
-    def take_experiment(self, acqtimeout=None, avg_buf=None, singleshotbin=False, ste_buf=None, shot_buf=None, IQ_e=None, e_radius=None,
+    def take_experiment(self, acqtimeout=None, avg_buf=None, singleshotbin=False, cov_buf=None, shot_buf=None, IQ_e=None, e_radius=None,
                         proj_func='amplitude', num_demod=1):
         '''
             Performs experiment. Each cycle will be demodulated into 1 point,
@@ -822,18 +824,27 @@ real part is applied to I and the imaginary part to Q.
 
         if singleshotbin:
             return data_sum * 1.0 / navg
-        if proj_func == 'phase':
-            angles = np.angle(temp_ste, deg=True)
-            stes = np.std(angles, axis=1)/np.sqrt(numbufs)
-        else:
-            stes = np.std(temp_ste, axis=1)/np.sqrt(numbufs)
-#        print('temp_ste:', temp_ste, np.shape(temp_ste))
-#        print('stes', stes, np.shape(stes))
-#        print('numbufs:', numbufs)
-#        print('avg check', np.mean(temp_ste, axis=1))
-        if ste_buf:
-            self.update_stes(ste_buf, stes, navg)
-        return data_sum/navg, stes
+#        if proj_func == 'phase':
+#            angles = np.angle(temp_ste, deg=True)
+#            stes = np.std(angles, axis=1)/np.sqrt(numbufs)
+#        else:
+#            stes = np.std(temp_ste, axis=1)/np.sqrt(numbufs)
+##        print('temp_ste:', temp_ste, np.shape(temp_ste))
+##        print('stes', stes, np.shape(stes))
+##        print('numbufs:', numbufs)
+##        print('avg check', np.mean(temp_ste, axis=1))
+#        if ste_buf:
+#            self.update_stes(ste_buf, stes, navg)
+        print(len(temp_ste))
+        re = np.real(temp_ste)
+        im = np.imag(temp_ste)
+        cov = np.zeros((len(temp_ste), 3), dtype=float)
+        for i in range(len(temp_ste)):
+            m = np.cov(re[i,:], im[i,:])
+            cov[i] = np.array([m[0,0], m[1,1], m[1,0]])
+        if cov_buf:
+            self.update_cov(cov_buf, cov, navg)
+        return data_sum/navg, cov
 
     def setup_hist(self, N, hist_buf=None, num_demods=1):
         '''

@@ -23,7 +23,7 @@ class Keysight_DIG(Instrument):
 
 
     def __init__(self, name, chassis=0, slot=3, DIG_PRODUCT = "M3102A", trigger_period = 200, trigger_only = False, awg_list = [7, 8, 9, 10], 
-                 nsamples=1000, naverages = 1000, **kwargs):
+                 nsamples=1000, naverages = 1000, ref_freq = 50, **kwargs):
         super(Keysight_DIG, self).__init__(name)
         self._timeout = DEFAULT_TIMEOUT
         self._main_channel=1
@@ -40,6 +40,7 @@ class Keysight_DIG(Instrument):
         self._capturing = False
         self._awg_list = awg_list #DARIO 1/31 dynamic slot assignment
         self._trigger_only = trigger_only
+        self._ref_freq = ref_freq
         
         self._name = name
         self._chassis = chassis
@@ -522,10 +523,13 @@ class Keysight_DIG(Instrument):
                 
             self._demodA.demodulate(signal)
             self._demodB.demodulate(ref)
+#            self._demodB.demodulate_ref_freq(ref, ref_freq = ref_freq, nsample = self._nsamples) #Yingying
             
             IQA = self._demodA.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
             IQB = self._demodB.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
             refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
+            
+            
         
             for j in range(self._npoints):
                 for k in range(self._naverages / self._ntransfers):
@@ -837,7 +841,9 @@ class Keysight_DIG(Instrument):
 #                self._Qweight = weight_func
 
         self._demodA = demod.DemodulatorComplex(bufsize, self._if_period, avg_periods=1)
-        self._demodB = demod.DemodulatorComplex(bufsize, self._if_period, avg_periods=avg_periods)
+#        self._demodB = demod.DemodulatorComplex(bufsize, self._if_period, avg_periods=avg_periods)
+        self._demodB = demod.DemodulatorForRef(bufsize, self._if_period, self._nsamples,self._ref_freq, avg_periods=avg_periods)#Yingying changed to this
+        
 
         # Garbage collect old demodulators
         gc.collect()

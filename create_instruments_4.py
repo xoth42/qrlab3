@@ -19,7 +19,7 @@ dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_p
                          naverages = 200, nsamples = 3000, awg_list = [7, 8, 9])
 
 AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PRODUCT = "M3202A", 
-                          amps = [1.5,1.5,1.5,1.5], ofs = [0, 0, -0.0062, -0.0045])
+                          amps = [1.5,1.5,1.5,1.5], ofs = [0, 0, -0.0064, -0.0027])
  
 AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 8,  AWG_PRODUCT = "M3202A",
                           amps = [1.5, 1.5, 1.5, 1.5], ofs = [0.016, 0.0118, 0.032, -0.098]) #[.020, 0.026, 0.022, .01]) 
@@ -119,14 +119,14 @@ cavityB = instruments.create('cavityB', 'Qubit_Info',
 
 cavityR = instruments.create('cavityR', 'Qubit_Info',
                             deltaf=-50e6,#16.9e3,
-                            pi_amp=0.7517,
+                            pi_amp=0.598,
                             pi_amp_selective=0.0115,
                             rotation='SQUARE',                             
                             rotation_selective = 'SQUARE',
                             channels='11,12',
                             sideband_channels='I9,Q9',
                             sideband_phase=0,
-                            w=25,
+                            w=80,
                             w_selective=400,
                             marker_bufwidth=250,
                             marker_ofs=0)

@@ -97,7 +97,7 @@ if 0: # cav transmission
 #    rofreq = 7320e6
     freq_range =1e6
     freqs = np.linspace(rofreq-freq_range, rofreq+freq_range, 81)
-    powers = np.linspace(-3, 2.5, 5)
+    powers = np.linspace(-3,5, 5)
 
     for i in range(1):    
         ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, powers, freqs,
@@ -257,16 +257,16 @@ if 0: #Multiple times SSB spec
     bla
      
     
-if 0: # Calibrate pi pulse
+if 1: # Calibrate pi pulse
     from single_qubit import rabi
     tr = rabi.Rabi(qubit_info, 
-                   np.linspace(-1, 1, 51), selective=False,
+#                   np.linspace(-1, 1, 51), selective=False,
 #                   np.linspace(-.12, .12, 51), selective=.5,
-#                  np.linspace(-0.003, 0.003, 51), selective=True,
+                  np.linspace(-0.003, 0.003, 51), selective=True,
 #                   np.linspace(0.7, .9, 51), selective=False,
 #                   np.linspace(0.35, 0.41, 51), selective=False,
-                   plot_seqs=False, generate=True, repeat_pulse=1, update=True, seq=None)
-    tr.measure_keysight()
+                   plot_seqs=False, generate=True, repeat_pulse=1, update=False, seq=None)
+    tr.measure()
     bla
     
 if 0: # Time Rabi

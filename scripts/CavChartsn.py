@@ -69,7 +69,7 @@ if 0: # Cavity disp calibration
 #for i in range(5):
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
 #    dig.set_trigger_period(100)
-    disp = cavdisp.CavDisp(qubit_info, cavity_infoA, 2, 41, 0, seq=None,
+    disp = cavdisp.CavDisp(qubit_info, cavity_infoR, 2, 41, 0, seq=None,
                            delay=0, bgcor=True, update=False, generate=True,
                            plot_seqs = False
 #                           Qswitch_infoA=Qswitch_infoB, Qswitch_infoB=Qswitch_infoB,
@@ -162,9 +162,9 @@ if 0: # Cavity speco
     bla
 
 
-if 1: #SSB cavspec
+if 0: #SSB cavspec
     from single_cavity import ssbcavspec 
-    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoR, np.linspace(-3e6,3e6, 101),
+    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoR, np.linspace(-5e6,5e6, 101),
 #                                  postseq=efpi, extra_info=[ef_info,]
                                   )
     cspec.measure_keysight()

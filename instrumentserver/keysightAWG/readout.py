@@ -10,7 +10,7 @@ import csv
 
 AWG_PRODUCT = "M3202A"
 CHASSIS = 1
-AWG_SLOT = 7
+AWG_SLOT = 8
 
 DIG_PRODUCT = "M3212A"
 

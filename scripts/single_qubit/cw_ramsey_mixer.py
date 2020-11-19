@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Mon Oct  5 13:03:57 2020
+
+@author: Wang_Lab
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Wed Sep  2 13:57:53 2020
 
 @author: Wang_Lab
@@ -89,7 +96,10 @@ def analysis(meas, data=None, fig=None):
     ys_als[0] = ys_tot[0::seq_num]
     ys_als[1] = ys_tot[1::seq_num]
     ys_cplx = meas.avg_data
-    ys_als[2] = np.angle((ys_cplx[0::seq_num] + ys_cplx[1::seq_num])/2)*180/np.pi
+
+    ys_als[2] = np.angle((ys_cplx[0::seq_num] + ys_cplx[1::seq_num])/2)*180/np.pi #phase
+#    ys_als[2] = np.abs((ys_cplx[0::seq_num] + ys_cplx[1::seq_num])/2) #amplitude
+
     if np.max(ys_als) - np.min(ys_als)>300:# and meas.proj_func is 'phase':
 
         for iphase in range(len(ys_als)):
@@ -118,10 +128,10 @@ def analysis(meas, data=None, fig=None):
         params = lmfit.Parameters()
         params.add('ofs', value=np.average(ys))
         params.add('amp', value=amp0, min=0.1)
-        params.add('tau', value=max(xs), min=1, max=2e5)
+        params.add('tau', value=max(xs), min=1, max=2e7)
         params.add('freq', value=f0, min=0)
         params.add('slope', value=0,vary = False)
-        params.add('A', value = 0, min = -5e-3, max = 0, vary = False)
+        params.add('A', value = 0, vary = False)
         params.add('A2', value = 0, vary = False)
     #    if meas.echotype == ECHO_NONE:
     #
@@ -200,12 +210,11 @@ def analysis(meas, data=None, fig=None):
 
     return return_result
 
-class Photon_Ramsey_Test(Measurement1D):
+class CW_Ramsey_Mixer(Measurement1D):
 
-    def __init__(self, qubit_info1,qubit_info2, SS_mixer_info1, mixer_info1,mixer_info2, delays, detune=0, fix_phi0 = None, delay = 0, qubit_pulse=False,
-                 double_freq=False, seq=None, postseq=None, selective=True, Qswitch_infoA=None, Qswitch_infoB=None, **kwargs):
-        self.qubit_info1 = qubit_info1
-        self.qubit_info2 = qubit_info2
+    def __init__(self, qubit_info, SS_mixer_info1, mixer_info1,mixer_info2, delays, detune=0, fix_phi0 = None, delay = 0, qubit_pulse=False,
+                 double_freq=False, seq=None, postseq=None, selective=False, Qswitch_infoA=None, Qswitch_infoB=None, **kwargs):
+        self.qubit_info = qubit_info
         self.SS_mixer_info1 = SS_mixer_info1
         self.mixer_info1 = mixer_info1
         self.mixer_info2 = mixer_info2
@@ -228,7 +237,7 @@ class Photon_Ramsey_Test(Measurement1D):
         self.QswA = Qswitch_infoA
         self.QswB = Qswitch_infoB
 
-        super(Photon_Ramsey_Test, self).__init__(len(delays)*2, infos=(qubit_info1,qubit_info2,SS_mixer_info1, mixer_info1,mixer_info2,), **kwargs)
+        super(CW_Ramsey_Mixer, self).__init__(len(delays)*2, infos=(qubit_info,SS_mixer_info1, mixer_info1,mixer_info2,), **kwargs)
         self.data.create_dataset('delays', data=delays)
         self.data.set_attrs(
             detune=detune,
@@ -237,6 +246,7 @@ class Photon_Ramsey_Test(Measurement1D):
 
 
     def generate(self):
+        ro_delay = 1000
         s = Sequence()
         s.append(self.seq)
         s.append(Delay(2000))
@@ -249,180 +259,76 @@ class Photon_Ramsey_Test(Measurement1D):
         ]))
 #    we are using the rotate_selective for the single photon stuff and the rotate for stark shift stuff
         if self.selective == True:
-            r = self.SS_mixer_info1.rotate_selective
+            pi_amp = self.SS_mixer_info1.pi_amp_selective
             print('Selective')
         else:
-            r = self.SS_mixer_info1.rotate
-#        e = self.get_echo_pulse()
-#        if e:
-#            elen = e.get_length()
-#            e = Pad(e, 250, PAD_BOTH)
-#            epadlen = e.get_length() - elen
-#        else:
-#            elen = 0
+            pi_amp = self.SS_mixer_info1.pi_amp
+        
+        r = self.qubit_info.rotate
 
         for i, dt in enumerate(self.delays):
 #            """
             
-            ''' delay with phase 0'''
+            ''' ramsey with phase 0'''
             s.append(self.seq)
-            s.append(Delay(300)) 
-            if self.qubit_pulse:
-                s.append(self.qubit_info2.rotate(np.pi, 0))
-            else:
-                s.append(Delay(80))
-            s.append(Delay(self.delay))
-#            s.append(Constant(10, 1, chan=self.readout_info.acq_chan))   
-            s.append(r(np.pi, X_AXIS))#s.append(Pad(r(np.pi/2, X_AXIS), 250, PAD_LEFT))
-
-            if dt > 0:
-                s.append(Delay(dt)) # Very temporary, recover today Chen
-#                s.append(Constant(int(dt), 1, chan='8m1'))
-#            slope = .00513
-            slope = 0
-            # Measurement pulse
+#            s.append(Delay(300))
             angle = dt * 1e-9 * self.detune * 2 * np.pi
-            s.append(r(-np.pi*np.exp(-slope*dt), angle))
-            s.append(Delay(5))#s.append(Pad(r(np.pi/2, angle), 250, PAD_RIGHT))
-#            s.append(Combined([
-#                Constant(int(self.SS_mixer_info1.w) , 1, chan=self.readout_info.readout_chan),
-##                Join([Delay(100),Constant(int(self.SS_mixer_info.w), self.SS_mixer_info.pi_amp, chan=self.SS_mixer_info.sideband_channels[0])]),
-##                Join([Delay(100),Constant(int(self.SS_mixer_info2.w), self.SS_mixer_info2.pi_amp, chan=self.SS_mixer_info2.sideband_channels[0])]),
-#                r(-np.pi, angle),
-#                ]))
-            s.append(self.qubit_info1.rotate_selective(np.pi, 0))
-            if self.qubit_pulse:
-                s.append(self.qubit_info2.rotate(np.pi, 0))
-                s.append(Delay(70))
+            if dt > 0:
+                s.append(Combined([
+                        Join([Constant(int(10000 + 4*self.qubit_info.w + dt + 4*self.qubit_info.w), pi_amp, chan = self.SS_mixer_info1.sideband_channels[0])]),
+                        Join([Delay(10000),
+                              r(np.pi/2, X_AXIS),
+                              Delay(int(dt)),
+                              r(-np.pi/2, angle),                          
+                                ])
+                        ]))
             else:
-                s.append(Delay(150))
-
-
+                s.append(Combined([
+                        Join([Constant(int(10000 + 4*self.qubit_info.w + dt + 4*self.qubit_info.w), pi_amp, chan = self.SS_mixer_info1.sideband_channels[0])]),
+                        Join([Delay(10000),
+                              r(np.pi/2, X_AXIS),
+#                              Delay(int(dt)),
+                              r(-np.pi/2, angle),                          
+                                ])
+                        ]))
             if self.postseq:
                 s.append(self.postseq)
+                
+            s.append(Delay(ro_delay))
             s.append(ro)
-
-            s.append(Delay(2000))      
+            s.append(Delay(2000))
             
             
-            
-            '''delay with extra pi'''
-            
+            ''' ramsey with phase pi '''
             s.append(self.seq)
-            s.append(Delay(300)) 
-            if self.qubit_pulse:
-                s.append(self.qubit_info2.rotate(np.pi, 0))
-            else:
-                s.append(Delay(80))
-            s.append(Delay(self.delay))
-#            s.append(Constant(10, 1, chan=self.readout_info.acq_chan))   
-            s.append(r(np.pi, np.pi))#s.append(Pad(r(np.pi/2, X_AXIS), 250, PAD_LEFT))
-
-            if dt > 0:
-                s.append(Delay(dt)) # Very temporary, recover today Chen
-#                s.append(Constant(int(dt), 1, chan='8m1'))
-#            slope = .00513
-            slope = 0
-            # Measurement pulse
+#            s.append(Delay(300))
             angle = dt * 1e-9 * self.detune * 2 * np.pi
-            s.append(r(-np.pi*np.exp(-slope*dt), angle+np.pi))
-            s.append(Delay(5))#s.append(Pad(r(np.pi/2, angle), 250, PAD_RIGHT))
-#            s.append(Combined([
-#                Constant(int(self.SS_mixer_info1.w) , 1, chan=self.readout_info.readout_chan),
-##                Join([Delay(100),Constant(int(self.SS_mixer_info.w), self.SS_mixer_info.pi_amp, chan=self.SS_mixer_info.sideband_channels[0])]),
-##                Join([Delay(100),Constant(int(self.SS_mixer_info2.w), self.SS_mixer_info2.pi_amp, chan=self.SS_mixer_info2.sideband_channels[0])]),
-#                r(-np.pi, angle),
-#                ]))
-            s.append(self.qubit_info1.rotate_selective(np.pi, 0))
-            if self.qubit_pulse:
-                s.append(self.qubit_info2.rotate(np.pi, 0))
-                s.append(Delay(70))
+            if dt >0:                     
+                s.append(Combined([
+                        Join([Constant(int(10000 + 4*self.qubit_info.w + dt + 4*self.qubit_info.w), -pi_amp, chan = self.SS_mixer_info1.sideband_channels[0])]),
+                        Join([Delay(10000),
+                              r(np.pi/2, X_AXIS),
+                              Delay(int(dt)),
+                              r(-np.pi/2, angle),                          
+                                ])
+                        ]))
             else:
-                s.append(Delay(150))
-
-
+                s.append(Combined([
+                        Join([Constant(int(10000 + 4*self.qubit_info.w + dt + 4*self.qubit_info.w), -pi_amp, chan = self.SS_mixer_info1.sideband_channels[0])]),
+                        Join([Delay(10000),
+                              r(np.pi/2, X_AXIS),
+#                              Delay(int(dt)),
+                              r(-np.pi/2, angle),                          
+                                ])
+                        ]))                
             if self.postseq:
                 s.append(self.postseq)
+            s.append(Delay(ro_delay))
             s.append(ro)
-
-            s.append(Delay(2000)) 
-
-            """
-
-            
-            ''' without qubit pulse, DELAY'''
-            s_temp = self.seq[:]
-            s_temp += [Delay(380)] 
-            s_temp += [Delay(self.delay)]
-#            s.append(Constant(10, 1, chan=self.readout_info.acq_chan))   
-            s_temp += [r(np.pi, X_AXIS)]#s.append(Pad(r(np.pi/2, X_AXIS), 250, PAD_LEFT))
-
-            if dt > 0:
-                s_temp += [Delay(dt)] # Very temporary, recover today Chen
-#                s.append(Constant(int(dt), 1, chan='8m1'))
-#            slope = .00513
-            slope = 0
-            # Measurement pulse
-            angle = dt * 1e-9 * self.detune * 2 * np.pi
-            s_temp += [r(-np.pi*np.exp(-slope*dt), angle)]
-            s_temp += [Delay(5)]#s.append(Pad(r(np.pi/2, angle), 250, PAD_RIGHT))
-#            s.append(Combined([
-#                Constant(int(self.SS_mixer_info1.w) , 1, chan=self.readout_info.readout_chan),
-##                Join([Delay(100),Constant(int(self.SS_mixer_info.w), self.SS_mixer_info.pi_amp, chan=self.SS_mixer_info.sideband_channels[0])]),
-##                Join([Delay(100),Constant(int(self.SS_mixer_info2.w), self.SS_mixer_info2.pi_amp, chan=self.SS_mixer_info2.sideband_channels[0])]),
-#                r(-np.pi, angle),
-#                ]))
-            s_temp += [self.qubit_info1.rotate_selective(np.pi, 0)]
-
-            s_temp += [Delay(150)]
-            if self.postseq:
-                s_temp += [self.postseq]
-            s_temp += [ro]
-
-            s_temp += [Delay(2000)]  
-            
-            s.append(Join(s_temp))
-            
-            
-            
-            '''with qubit pulse and delay'''
-            s_temp = self.seq[:]
-            s_temp += [Delay(300)] 
-                       
-#            s.append(Constant(10, 1, chan=self.readout_info.acq_chan))
-            s_temp += [self.qubit_info2.rotate(np.pi, 0)]
-            s_temp += [Delay(self.delay)]   
-            s_temp += [r(np.pi, X_AXIS)]#s.append(Pad(r(np.pi/2, X_AXIS), 250, PAD_LEFT))
-
-            if dt > 0:
-                s_temp += [Delay(dt)] # Very temporary, recover today Chen
-#                s.append(Constant(int(dt), 1, chan='8m1'))
-#            slope = .00513
-            slope = 0
-            # Measurement pulse
-            angle = dt * 1e-9 * self.detune * 2 * np.pi
-            s_temp += [r(-np.pi*np.exp(-slope*dt), angle)]
-            s_temp += [Delay(5)]#s.append(Pad(r(np.pi/2, angle), 250, PAD_RIGHT))
-#            s.append(Combined([
-#                Constant(int(self.SS_mixer_info1.w) , 1, chan=self.readout_info.readout_chan),
-##                Join([Delay(100),Constant(int(self.SS_mixer_info.w), self.SS_mixer_info.pi_amp, chan=self.SS_mixer_info.sideband_channels[0])]),
-##                Join([Delay(100),Constant(int(self.SS_mixer_info2.w), self.SS_mixer_info2.pi_amp, chan=self.SS_mixer_info2.sideband_channels[0])]),
-#                r(-np.pi, angle),
-#                ]))
-            s_temp += [self.qubit_info1.rotate_selective(np.pi, 0)]
-
-            s_temp += [self.qubit_info2.rotate(np.pi, 0)]
-            s_temp += [Delay(70)]
-
-            if self.postseq:
-                s_temp += [self.postseq]
-            s_temp += [ro]
-    
+            s.append(Delay(2000))
 
 
-            s_temp += [Delay(2000)]
-            s.append(Join(s_temp))   
-            """
+
         s = self.get_sequencer(s)
         seqs = s.render()
 #        s.plot_seqs(seqs)

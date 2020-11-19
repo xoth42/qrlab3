@@ -42,20 +42,20 @@ qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')
 #qubit2_info = mclient.get_qubit_info('qubit2ge')
 ef_info = mclient.get_qubit_info('qubit1ef')
-#gate_info = mclient.get_gate_info('gate')
-#gate2_info = mclient.get_gate_info('gate2')
-#gate3_info = mclient.get_gate_info('gate3')
+gate_info = mclient.get_gate_info('gate')
+gate2_info = mclient.get_gate_info('gate2')
+gate3_info = mclient.get_gate_info('gate3')
 
 
 #Find read-out cavity and choose a power
 
 if 0: # RO Cavity spec
     from scripts.single_cavity import rocavspectroscopy
-    rofreq = 7595e6
+    rofreq = 6530e6
     freq_range = 10e6
 
     ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-20, -20, 1),
-                                         np.linspace(rofreq - freq_range, rofreq + freq_range, 61), qubit_pulse=False)
+                                         np.linspace(rofreq - freq_range, rofreq + freq_range, 51), qubit_pulse=False)
     ro.measure()
     bla
  
@@ -64,11 +64,11 @@ if 0: # RO Cavity spec
 if 0: # Qubit spec
     from scripts.single_qubit import spectroscopy
 #    from scripts.single_qubit import spectroscopy_IQ
-    qubit_freq = 5558e6
-    freq_range = 15e6
+    qubit_freq = 5200e6
+    freq_range = 200e6
     spec = spectroscopy.Spectroscopy(mclient.instruments['SCqubit'], qubit_info,
                                      np.linspace(qubit_freq-freq_range,
-                                                 qubit_freq+freq_range, 101),
+                                                 qubit_freq+freq_range, 501),
                                      [-20],
                                      plen=80000, amp=0.01, plot_seqs=False,
                                      freq_delay=.1) #1=1ns for plen
@@ -117,7 +117,7 @@ if 0: # Flux-tuned SSBspec
     bla
 
 """Power Rabi -- Pi pulse calibration"""
-if 0: # Power Rabi
+if 1: # Power Rabi
     for i in range(1):
         from scripts.single_qubit import rabi
 #        qubitgen.set_frequency(4532.71e6)
@@ -274,7 +274,7 @@ if 0: # Mixer calibration:
     cal.print_tuning_parameters()
     bla
 
-if 1: # Check histogramming
+if 0: # Check histogramming
     from scripts.single_qubit import rabi
     twpa = mclient.instruments['WF_twpa']
     RO = mclient.instruments['RObrick']
@@ -526,12 +526,14 @@ if 0: # SSB number splitting:
     bla
 
 
-if 0: # Two-Qubit Randomized Benchmarking
+if 1: # Two-Qubit Randomized Benchmarking
     from scripts.fluxonium import TwoQ_RB
-    for i in range(25):
+    for i in range(1):
     
-        TwoQ = TwoQ_RB.TwoQubit_RB(gate_info, gate2_info, gate3_info, num_cal_points=3, N_cliffords=10, plot_seqs=False, only_single_qubit_RB=False,
-                                   find_cheapest_recovery=False, generator='CX')
+        TwoQ = TwoQ_RB.TwoQubit_RB(gate_info, gate2_info, gate3_info, gate3_info, num_cal_points=3, N_cliffords=10, 
+                                   plot_seqs=False, category='all',
+                                   find_cheapest_recovery=False, use_virtual_Z=True, virtual_recovery=True, 
+                                   use_lookup_table=True, generator='CZ')
         TwoQ.measure()
 #    (err_clif, err_gate) = TwoQ.analyze()
 #    print('error per Clifford:', err_clif)

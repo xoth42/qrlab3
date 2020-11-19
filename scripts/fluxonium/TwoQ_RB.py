@@ -253,9 +253,9 @@ def evaluate_sequence(gate_seq_1, gate_seq_2, generator = 'CZ'):
         elif (gate_seq_2[i] == 'Ypm'):
             gate_2 = np.matmul(np.matrix([[0, 1], [-1, 0]]), gate_2)
         elif (gate_seq_2[i] == 'VZ2p'):
-            gate_2 = np.matmul(np.matrix([[1-1j, 0], [0, 1+1j]]) / np.sqrt(2), gate_2)
-        elif (gate_seq_2[i] == 'VZ2m'):
             gate_2 = np.matmul(np.matrix([[1+1j, 0], [0, 1-1j]]) / np.sqrt(2), gate_2)
+        elif (gate_seq_2[i] == 'VZ2m'):
+            gate_2 = np.matmul(np.matrix([[1-1j, 0], [0, 1+1j]]) / np.sqrt(2), gate_2)
         elif (gate_seq_2[i] == 'VZp'):
             gate_2 = np.matmul(np.matrix([[-1j, 0], [0, 1j]]), gate_2)
 #        elif (gate_seq_2[i] == 'VZpm'):
@@ -425,7 +425,8 @@ class TwoQubit_RB(Measurement1D):
                phi2[0] = phi2[0] + self.singleQ_phases[1]
  
            print ('computing recovery')
-           
+           print('cliffordSeq1 is:', cliffordSeq1)
+           print('cliffordSeq2 is:', cliffordSeq2)
 #            # get recovery gate seq
            (recoverySeq1, recoverySeq2, recovery_pulseSeq1, recovery_pulseSeq2) = self.get_recovery_gate(cliffordSeq1, cliffordSeq2, phi1, phi2, generator = self.generator)
 #           print(phi1[0], phi2[0])
@@ -435,8 +436,7 @@ class TwoQubit_RB(Measurement1D):
            recov_pulseSeq2.append(recovery_pulseSeq2)
            pulseSeq1.append(temp_pulseSeq1)
            pulseSeq2.append(temp_pulseSeq2)
-        print('cliffordSeq1 is:', cliffordSeq1)
-        print('cliffordSeq2 is:', cliffordSeq2)
+        
         print('total # gates:', len(cliffordSeq1))
         print('total # gates:', len(cliffordSeq2))
 
@@ -649,17 +649,20 @@ class TwoQubit_RB(Measurement1D):
         
         if (self.use_lookup_table == True):
             if (generator == 'CZ'):
-                with open('CZ_clifford_matrix_list.pickle', 'rb') as filepath:
+                with open('scripts/fluxonium/CZ_clifford_matrix_list.pickle', 'rb') as filepath:
                     cliff_mat_list = pickle.load(filepath)
     
-                with open('CZ_recovery_table.pickle', 'rb') as filepath:
+                with open('scripts/fluxonium/CZ_recovery_table.pickle', 'rb') as filepath:
                     recov_index_list = pickle.load(filepath)
                     
                 for i in range(total_num_cliffords):
-                    if np.array_equal(matrix_cliffords, cliff_mat_list[i]):
-                        print('found matrix in list at location', i)
-                        recovery_index = recov_index_list[i]
-                        break
+                    for k in [1, -1, 1j, -1j, 
+                              (1+1j)/np.sqrt(2), (-1+1j)/np.sqrt(2), (-1-1j)/np.sqrt(2), (1-1j)/np.sqrt(2)]:
+                        diff = matrix_cliffords.flatten() - cliff_mat_list[i].flatten()*k
+                        if np.all((np.abs(diff) < 1e-3)):
+                            print('found matrix in list at location', i)
+                            recovery_index = recov_index_list[i]
+                            break
             
             recovery_seq_1 = []
             recovery_seq_2 = []
@@ -673,6 +676,11 @@ class TwoQubit_RB(Measurement1D):
             temp_phi2[0] = temp_phi2[0] + phase2[0]
             
             self.add_twoQ_clifford(recovery_index, recovery_seq_1, recovery_seq_2, temp_pulse_seq_1, temp_pulse_seq_2, temp_recov_len1, temp_recov_len2, temp_phi1, temp_phi2, virtualZ=self.virtual_recovery, generator = generator)
+            matrix_recovery = evaluate_sequence(recovery_seq_1, recovery_seq_2, generator = generator)
+            print('matrix_recovery is:', matrix_recovery)
+            matrix_total = np.matmul(matrix_recovery,matrix_cliffords)
+            print('matrix_total is:', matrix_total)
+            print(CheckIdentity(matrix_total))
             return (recovery_seq_1, recovery_seq_2, temp_pulse_seq_1, temp_pulse_seq_2)
 
         if (self.use_lookup_table == False):
