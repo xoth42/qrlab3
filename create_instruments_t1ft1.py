@@ -95,7 +95,7 @@ qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
 #AWG1.do_set_waveform_delay(200000)
 #bla
 #instruments.remove('Magnet')
-#Magnet = instruments.create('Magnet','AMI_430')
+Magnet = instruments.create('Magnet','AMI_430')
 #print 'Magnet OK'
 #instruments.remove('Magnet')
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='TCPIP0::172.30.56.25::4000::SOCKET')
@@ -137,15 +137,15 @@ readout = instruments.create('readout', 'Readout_Info', IQe=(30.69-48.9j), IQg=(
 
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 
-                             deltaf=104.4e6,
-                              pi_amp=0.4549,#0.404,  # 0.1594,
+                             deltaf=175.8e6,
+                              pi_amp=0.3860592,#0.404,  # 0.1594,
                               pi2_amp=0,
                               drag=0,
                               pi_amp_quasilective=0.9,
-                              pi_amp_selective=0.04831,
+                              pi_amp_selective=0.06075928,
                               rotation='Gaussian',
                               rotation_selective = 'Square',
-                              w=5,
+                              w=8,
 
                               w_quasilective=100,
                               w_selective=120,
@@ -154,12 +154,13 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                               sideband_phase=0.16)
 #
 qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
-                            deltaf=-176e6,
+                            deltaf=-100.05e6,
                             pi_amp=0.228,
                             pi_amp_quasilective=0.02,
                             pi_amp_selective=0.02131,
                             rotation='Gaussian',
-                            w=7,
+                            rotation_selective = 'Square',
+                            w=6,
                             w_quasilective=100,
                             w_selective=100,
                             channels='3,4',
@@ -168,24 +169,24 @@ qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
 
 qubit2ge = instruments.create('qubit2ge', 'Qubit_Info',
 
-                             deltaf=97.53e6,
-                              pi_amp=0.4769,
+                             deltaf=93.6e6,
+                              pi_amp=0.449846,
 #                             pi_amp = 0.742,
                               pi2_amp=0,
                               drag=0,
                               pi_amp_quasilective=0.9,
-                              pi_amp_selective=0.057,
+                              pi_amp_selective=0.043,
                               rotation='Gaussian',
                               rotation_selective = 'Gaussian',
-                              w=25,
+                              w=20,
                               w_quasilective=100,
                               w_selective=200,
                               channels='5,6',
                               sideband_channels='I3,Q3',
-                              sideband_phase=0)
+                              sideband_phase=-3)
 #
 qubit2ef = instruments.create('qubit2ef', 'Qubit_Info',
-                            deltaf=--394.87e6,
+                            deltaf=-398.76e6,
                             pi_amp=0.5287,
                             pi_amp_quasilective=0.02,
                             pi_amp_selective=0.084,
@@ -229,9 +230,9 @@ mixer_info1 = instruments.create('mixer_info1', 'Qubit_Info',
 #for SS_mixer_info1 pi_amp/w is for normal stark shift and pi_amp_selective/w_selective is for single photon calibrated pulse
 #to be used in the photon ramsey measurement
 SS_mixer_info1 = instruments.create('SS_mixer_info1', 'Qubit_Info',
-                            deltaf=-157.5e6,
+                            deltaf=-100.6e6,
                             pi_amp=0.7,
-                            pi_amp_selective=0.15,
+                            pi_amp_selective=0.22,
                             rotation='Square',
                             rotation_selective = 'Square',
                             channels='7,8',
@@ -245,7 +246,7 @@ SS_mixer_info1 = instruments.create('SS_mixer_info1', 'Qubit_Info',
 
 mixer_info2 = instruments.create('mixer_info2', 'Qubit_Info',
                             deltaf=-100e6,
-                            pi_amp=.24,
+                            pi_amp=.1,
                             pi_amp_selective=0.01,
                             rotation='Square',
                             channels='9,10',
@@ -258,7 +259,7 @@ mixer_info2 = instruments.create('mixer_info2', 'Qubit_Info',
                             marker_ofs = 0)
 
 SS_mixer_info2 = instruments.create('SS_mixer_info2', 'Qubit_Info',
-                            deltaf=-157.5e6,
+                            deltaf=-100e6,
                             pi_amp=0,
                             pi_amp_selective=0,
                             rotation='Square',

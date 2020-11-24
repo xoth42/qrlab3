@@ -89,7 +89,10 @@ def analysis(meas, data=None, fig=None):
     ys_als[0] = ys_tot[0::seq_num]
     ys_als[1] = ys_tot[1::seq_num]
     ys_cplx = meas.avg_data
-    ys_als[2] = np.angle((ys_cplx[0::seq_num] + ys_cplx[1::seq_num])/2)*180/np.pi
+    if meas.proj_func == 'phase':
+        ys_als[2] = np.angle((ys_cplx[0::seq_num] + ys_cplx[1::seq_num])/2)*180/np.pi
+    elif meas.proj_func == 'amplitude':
+        ys_als[2] = np.abs((ys_cplx[0::seq_num] + ys_cplx[1::seq_num])/2)
     if np.max(ys_als) - np.min(ys_als)>300:# and meas.proj_func is 'phase':
 
         for iphase in range(len(ys_als)):

@@ -53,7 +53,7 @@ def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
 
     fig.axes[0].plot(xs/1e3, ys, 'ks', ms=3, linestyle='-', markerfacecolor='red')
-    fig.axes[0].errorbar(xs/1e3, ys, yerr=meas.get_stes(), fmt='.', 
+    fig.axes[0].errorbar(xs/1e3, ys, yerr=meas.get_errorbars(), fmt='.', 
                          markersize = 0, ecolor='grey', linewidth=1)
 
     amp0 = (np.max(ys) - np.min(ys)) / 2
