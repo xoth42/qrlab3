@@ -670,6 +670,9 @@ class Keysight_DIG(Instrument):
         self._demodA.demodulate(signal)
         self._demodB.demodulate(ref)
         
+        
+        print(naverages, nsamples, self._if_period)
+        
         IQA = self._demodA.IQ.reshape([naverages, nsamples / self._if_period])
         IQB = self._demodB.IQ.reshape([naverages, nsamples / self._if_period])
         refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
@@ -841,8 +844,8 @@ class Keysight_DIG(Instrument):
 #                self._Qweight = weight_func
 
         self._demodA = demod.DemodulatorComplex(bufsize, self._if_period, avg_periods=1)
-#        self._demodB = demod.DemodulatorComplex(bufsize, self._if_period, avg_periods=avg_periods)
-        self._demodB = demod.DemodulatorForRef(bufsize, self._if_period, self._nsamples,self._ref_freq, avg_periods=avg_periods)#Yingying changed to this
+        self._demodB = demod.DemodulatorComplex(bufsize, self._if_period, avg_periods=avg_periods)
+#        self._demodB = demod.DemodulatorForRef(bufsize, self._if_period, self._nsamples,self._ref_freq, avg_periods=avg_periods)#Yingying changed to this
         
 
         # Garbage collect old demodulators

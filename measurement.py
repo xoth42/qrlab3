@@ -101,6 +101,10 @@ class Measurement(object):
         self.proj_func = proj_func
 
         # Build list of info objects
+        self.readout_qubit_info = None # JEFF - getting IQ readout working
+        if readout is 'readout_IQ':
+            self.readout_qubit_info = mclient.get_qubit_info(readout)
+        
         if infos is None:
             infos = []
         elif type(infos) is types.TupleType:
@@ -112,6 +116,8 @@ class Measurement(object):
                 infos.extend(extra_info)
             else:
                 infos.append(extra_info)
+        if readout is 'readout_IQ':
+            infos.append(self.readout_qubit_info)
         self.infos = infos
 
         self.analysis_func = analysis_func
@@ -120,9 +126,20 @@ class Measurement(object):
 
         self.instruments = mclient.instruments
         self.readout_info = mclient.get_readout_info(readout)
+        self.readout_driver = mclient.instruments.get(readout)
+
+            
         self._funcgen = mclient.instruments.get('funcgen')
-        self._dig = mclient.instruments.get('dig') #Dario
         self.use_sync = use_sync
+        
+        # Figure out the digitizor model
+        alz = mclient.instruments.get('alazar')
+        if alz is not None:
+            self.dig_type = 'alz'
+        else:
+            self.dig_type = 'key'
+        self._dig = mclient.instruments.get('dig') # Used for triggering if nothing else
+
 
     def setup_data(self, name):
         if self.keep_data:
@@ -569,7 +586,9 @@ class Measurement(object):
         Sets up data sets, performs initialization and updates plots if the
         class has an 'update' function.
         '''
-
+        if self.dig_type is 'key':
+            return self.measure_keysight()
+            
         self.setup_measurement()
         self.setup_measurement_data()
 
@@ -639,7 +658,11 @@ class Measurement(object):
         else:
             ret = dig.take_experiment(avg_buf=self.avg_data, cov_buf=self.cov_data,
                                       async=True, IQ_e=self.readout_info.IQe, 
+<<<<<<< HEAD
                                       e_radius=self.readout_info.IQe_radius)#, proj_func=self.proj_func)
+=======
+                                      e_radius=self.readout_info.IQe_radius)
+>>>>>>> b10b5bbde1578a5129c1093a3b3a69319661ffa7
         
         try:
             while not ret.is_valid() and not self._interrupted:
@@ -746,7 +769,7 @@ class Measurement(object):
         self.setup_measurement_keysight()
         self.setup_measurement_data_keysight()
 
-        dig = self.instruments['dig']            
+        dig = self._dig            
         
 
         if self.histogram:
@@ -875,30 +898,21 @@ class Measurement(object):
         '''
         Return measured standard errors
         '''
-        alz = self.instruments['alazar']
         if data is None:
+<<<<<<< HEAD
 #            naverages = alz.get_naverages()
             naverages = self._dig.get_naverages()  #Yingying 
+=======
+            naverages = self.get_naverages()
+>>>>>>> b10b5bbde1578a5129c1093a3b3a69319661ffa7
             values = self.avg_data[:]
             
             # calculate amp based on projection type
             if self.proj_func == 'amplitude':
                 theta = -np.angle(values)
             elif self.proj_func == 'phase':
-                theta = -np.angle(values) + np.pi
+                theta = -np.angle(values) + np.pi/2
             elif self.proj_func == 'projection':
-
-#       FOR KEYSIGHT DIG:                
-#        if data is None:
-#            naverages = self._dig.get_naverages()
-#            values = self.avg_data[:]
-#
-#            # calculate amp based on projection type
-#            if self._proj_func is 'amp':
-#                theta = -np.angle(values)
-#            elif self._proj_func is 'phase':
-#                theta = -np.angle(values) + np.pi
-#            elif self._proj_func is 'projection':
                 IQg = self.readout_info.IQg
                 IQe = self.readout_info.IQe
                 vproj = IQe - IQg
@@ -911,10 +925,16 @@ class Measurement(object):
                 r = np.array([[np.cos(theta[i]), -np.sin(theta[i])],
                               [np.sin(theta[i]), np.cos(theta[i])]]) # rotation matrix
                 m = np.matmul(r, m)
-                eb[i] = m[0,0]/(naverages*np.sqrt(naverages-1)) # convert to st error
+                eb[i] = np.sqrt(np.abs(m[0,0]))/np.sqrt(naverages-1) # convert to std and then st error
         else:
             eb = data
         return eb
+
+    def get_naverages(self):
+        if self.dig_type is 'alz':
+            return self.instruments['alazar'].get_naverages()
+        else:
+            return self._dig.get_naverages()
 
     def post_process(self):
         '''
