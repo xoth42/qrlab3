@@ -24,6 +24,7 @@ import datetime
 
 qubit_info = mclient.get_qubit_info('qubit1ge')
 ef_info = mclient.get_qubit_info('qubit1ef')
+readout = 'readout_IQ'
 #fh_info = mclient.get_qubit_info('qubit1fh')
 #qubit_a1 = mclient.get_qubit_info('qubit_a1')
 #qubit_a1b1 = mclient.get_qubit_info('qubit_a1b1')
@@ -39,7 +40,7 @@ os.chdir(r'C:/qrlab/scripts')
     
 if 0: # test digitizer
     dig = mclient.instruments['dig']
-    data = dig.test_dig(5200, 1, 1, 1)
+    data = dig.test_dig(4000, 1, 1, 1)
     print(np.shape(data))
     plt.figure()
     plt.plot(data[0][0][:], label = 'sig')
@@ -50,7 +51,7 @@ if 0: # test digitizer
     
 if 0: # test digitizer DEMODULATED
     dig = mclient.instruments['dig']
-    avgs = dig.test_dig_demod(1500, 10000)
+    avgs = dig.test_dig_demod(4000, 10000)
     print(np.shape(avgs))
     plt.figure()
     plt.plot(np.real(avgs), label = 'real')
@@ -62,11 +63,14 @@ if 0: # test digitizer DEMODULATED
 
 if 0: # Check histogramming
     from scripts.single_qubit import rabi
-    tr = rabi.Rabi(qubit_info, [qubit_info.pi_amp,], histogram=True, title='|e>')
+    tr = rabi.Rabi(qubit_info, [qubit_info.pi_amp,], histogram=True, title='|e>',
+                   readout=readout)
     tr.measure_keysight()
-    tr = rabi.Rabi(qubit_info, [0.001,], histogram=True, title='|g>')
+    tr = rabi.Rabi(qubit_info, [0.001,], histogram=True, title='|g>',
+                   readout=readout)
     tr.measure_keysight()
-    tr = rabi.Rabi(qubit_info, [qubit_info.pi_amp/2,], histogram=True, title='|g>+|e>')
+    tr = rabi.Rabi(qubit_info, [qubit_info.pi_amp/2,], histogram=True, title='|g>+|e>',
+                   readout=readout)
     tr.measure_keysight()
     bla
 
@@ -91,7 +95,28 @@ if 0: # Quantum Jump
     plt.show()
     bla
 
-if 0: # cav transmission
+if 0: # cav transmission NEW IQ
+    from single_cavity import ROCavSpec_IQ
+    freq_range =1e6
+    df = np.linspace(-freq_range, freq_range, 51)
+    amps = np.linspace(.1,.5, 5)
+
+    for i in range(1):    
+        ro = ROCavSpec_IQ.ROCavSpec_IQ(qubit_info, amps, df,
+                                       qubit_pulse=False, seq=None,
+                                       readout = 'readout_IQ')
+        ro.measure()
+        
+        '''amp = ro.ampdata[:]
+        f= open('ampdata_2d_HP.txt', 'w')
+        f.write(str(amp))
+        f.close()'''
+        
+    bla
+
+
+
+if 0: # cav transmission OLD
     from single_cavity import rocavspectroscopy_keysight
     rofreq = 7317.5e6
 #    rofreq = 7320e6
@@ -262,10 +287,11 @@ if 1: # Calibrate pi pulse
     tr = rabi.Rabi(qubit_info, 
 #                   np.linspace(-1, 1, 51), selective=False,
 #                   np.linspace(-.12, .12, 51), selective=.5,
-                  np.linspace(-0.003, 0.003, 51), selective=True,
+                  np.linspace(-0.003, 0.003, 1), selective=True,
 #                   np.linspace(0.7, .9, 51), selective=False,
 #                   np.linspace(0.35, 0.41, 51), selective=False,
-                   plot_seqs=False, generate=True, repeat_pulse=1, update=False, seq=None)
+                   plot_seqs=True, generate=True, repeat_pulse=1, update=False, 
+                   seq=None, readout='readout_IQ')
     tr.measure()
     bla
     
@@ -279,10 +305,12 @@ if 0: # Time Rabi
 if 0: # T1
 #    dig.set_trigger_period(500)
     from single_qubit import T1measurement
-    t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0, 19e3, 20), np.linspace(20e3, 160e3, 20))), 
+    t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0, 19e3, 20), 
+                                                                 np.linspace(20e3, 160e3, 20))), 
 #    t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0, 1e3, 151),)), 
-                                     double_exp=False, generate=True, plot_seqs=False, seq=None)
-    t1.measure_keysight()
+                                     double_exp=False, generate=True, plot_seqs=False, seq=None, 
+                                     readout='readout_IQ')
+    t1.measure()
 #    bla
 
 if 0: # T2

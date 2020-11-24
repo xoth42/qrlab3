@@ -270,6 +270,9 @@ def get_qubits():
 
 def get_readout_info(readout='readout'):
     ret = get_container_object(readout)
+    if readout is 'readout_IQ': # JEFF- changed to get IQ readout working
+        ret.rfsource = instruments.get(ret.rfsource)
+        return ret
     ret.rfsource1 = instruments.get(ret.rfsource1)
     ret.rfsource2 = instruments.get(ret.rfsource2)
     return ret

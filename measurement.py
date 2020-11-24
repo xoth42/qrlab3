@@ -101,6 +101,10 @@ class Measurement(object):
         self.proj_func = proj_func
 
         # Build list of info objects
+        self.readout_qubit_info = None # JEFF - getting IQ readout working
+        if readout is 'readout_IQ':
+            self.readout_qubit_info = mclient.get_qubit_info(readout)
+        
         if infos is None:
             infos = []
         elif type(infos) is types.TupleType:
@@ -112,6 +116,8 @@ class Measurement(object):
                 infos.extend(extra_info)
             else:
                 infos.append(extra_info)
+        if readout is 'readout_IQ':
+            infos.append(self.readout_qubit_info)
         self.infos = infos
 
         self.analysis_func = analysis_func
@@ -120,6 +126,9 @@ class Measurement(object):
 
         self.instruments = mclient.instruments
         self.readout_info = mclient.get_readout_info(readout)
+        self.readout_driver = mclient.instruments.get(readout)
+
+            
         self._funcgen = mclient.instruments.get('funcgen')
         self.use_sync = use_sync
         

@@ -106,7 +106,7 @@ class Readout_Info(Instrument):
         if ins:
             return ins.set_frequency(val)
         
-    def do_get_sequence(self):
+    def do_get_sequence(self, readout_qubit_info):
         ro = Combined([
                     Constant(self.get_pulse_len(), 1, chan=self.get_readout_chan()),
                     Constant(self.get_pulse_len(), 1, chan=self.get_acq_chan())])
