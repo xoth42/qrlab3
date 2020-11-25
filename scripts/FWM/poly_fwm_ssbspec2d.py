@@ -20,8 +20,8 @@ def analysis(meas, data=None, fig=None):
     ax.set_ylim(ys.min(), ys.max())
 #    if meas.zmin is not None and meas.zmax is not None:  (was trying to force set data range for color bar)
 #        ax.set_zlim(meas.zmin, meas.zmax())
-    ax.set_xlabel('fwm detuning (mhz)')
-    ax.set_ylabel('ge detuning (mhz)')
+    ax.set_xlabel(meas.comb1.info.insname + ' detuning (mhz)')
+    ax.set_ylabel(meas.comb2.info.insname + ' detuning (mhz)')
     fig.canvas.draw()
 
 class poly_fwm_ssbspec2d(Measurement2D):
@@ -30,7 +30,7 @@ class poly_fwm_ssbspec2d(Measurement2D):
                  post_delay = 1e3, seq=None, postseq=None, bgcor=False, **kwargs):
         self.qubit_info = qubit_info
         self.comb1 = comb1
-        self.comb2 = comb2        
+        self.comb2 = comb2
         self.comb1_freqs = comb1_freqs
         self.comb2_freqs = comb2_freqs
         self.delay_t = delay_t

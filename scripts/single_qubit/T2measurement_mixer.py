@@ -53,6 +53,8 @@ def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
 
     fig.axes[0].plot(xs/1e3, ys, 'ks', ms=3, linestyle='-', markerfacecolor='red')
+    fig.axes[0].errorbar(xs/1e3, ys, yerr=meas.get_errorbars(), fmt='.', 
+                         markersize = 0, ecolor='grey', linewidth=1)
 
     amp0 = (np.max(ys) - np.min(ys)) / 2
     fftys = np.abs(np.fft.fft(ys - np.average(ys)))
@@ -64,7 +66,7 @@ def analysis(meas, data=None, fig=None):
     params.add('ofs', value=np.average(ys))
     params.add('amp', value=amp0, min=0.1)
     params.add('tau', value=xs[-1], min=10, max=2e5)
-    params.add('freq', value=f0, min=0)
+    params.add('freq', value=meas.detune/1e9, min=0)
 #    if meas.echotype == ECHO_NONE:
 #
 #        params.add('phi0', value=np.pi/2, min=-1.2*np.pi, max=1.2*np.pi, vary=True)  #Changed to plus sign for accommodate for amplitude RO, need a good LT solution
@@ -101,7 +103,7 @@ def analysis(meas, data=None, fig=None):
         params2.add('ofs', value=amp0)
         params2.add('amp', value=amp0, min=0)
         params2.add('tau', value=xs[-1], min=10, max=200000)
-        params2.add('freq', value=f0, min=0)
+        params2.add('freq', value=meas.detune/1e9, min=0)
         params2.add('phi0', value=-np.pi/2.0, min=-1.2*np.pi, max=1.2*np.pi)
         result = lmfit.minimize(t2_fit, params2, args=(xs, residues))
         lmfit.report_fit(result.params)
@@ -112,11 +114,11 @@ def analysis(meas, data=None, fig=None):
         params3.add('ofs', value=params['ofs'].value)
         params3.add('amp', value=params['amp'].value, min=0, max=params['amp'].value*2)
         params3.add('tau', value=params['tau'].value, min=10, max=200000)
-        params3.add('freq', value=params['freq'].value, min=0, max=2e-3)
+        params3.add('freq', value=params['freq'].value, min=0, max=20e-3)
         params3.add('phi0', value=params['phi0'].value, min=-1.2*np.pi, max=1.2*np.pi)
         params3.add('amp2', value=result.params['amp'].value, min=0, max=params['amp'].value*2)
 #        params3.add('tau2', value=result.params['tau'].value, min=10, max=200000)
-        params3.add('freq2', value=result.params['freq'].value, min=0, max=2e-3)
+        params3.add('freq2', value=result.params['freq'].value, min=0, max=20e-3)
         params3.add('phi2', value=result.params['phi0'].value, min=-1.2*np.pi, max=1.2*np.pi)
 
         result = lmfit.minimize(double_sin_fit, params3, args=(xs,ys))
@@ -134,10 +136,11 @@ def analysis(meas, data=None, fig=None):
 
 class T2Measurement_mixer(Measurement1D):
 
-    def __init__(self, qubit_info, mixer_info, delays, detune=0, echotype=ECHO_NONE, necho=1,
+    def __init__(self, qubit_info, mixer_info, mixer_info2, delays, detune=0, echotype=ECHO_NONE, necho=1,
                  double_freq=False, seq=None, postseq=None, selective=False, Qswitch_infoA=None, Qswitch_infoB=None, **kwargs):
         self.qubit_info = qubit_info
         self.mixer_info = mixer_info
+        self.mixer_info2 = mixer_info2
 #        self.qubit_pre = qubit_pre
         self.delays = delays
         self.xs = delays / 1e3        # For plotting purposes
@@ -153,7 +156,7 @@ class T2Measurement_mixer(Measurement1D):
         self.QswA = Qswitch_infoA
         self.QswB = Qswitch_infoB
 
-        super(T2Measurement_mixer, self).__init__(len(delays), infos=(qubit_info,mixer_info), **kwargs)
+        super(T2Measurement_mixer, self).__init__(len(delays), infos=(qubit_info,mixer_info,mixer_info2), **kwargs)
         self.data.create_dataset('delays', data=delays)
         self.data.set_attrs(
             detune=detune,
@@ -243,6 +246,7 @@ class T2Measurement_mixer(Measurement1D):
             # We want echos: <tau> (<tau> <echo> <tau>)^n <tau>
             if e:
                 tau=int(dt/(self.necho*2 + 2))
+
 #                s.append(Delay(tau))
 #                for i in range(self.necho):
 #                    s.append(Delay(tau))
@@ -251,9 +255,11 @@ class T2Measurement_mixer(Measurement1D):
 #                s.append(Delay(tau))
                 
                 for i in range(self.necho):
-                    s_temp += [Delay(2*tau)]
+                    if tau > 0:
+                        s_temp += [Delay(2*tau)]
                     s_temp += [e]
-                s_temp += [Delay(2*tau)]
+                if tau > 0:                    
+                    s_temp += [Delay(2*tau)]
 #                tau = int(np.round(dt / (2 * self.necho) - epadlen/2))
 #                if tau < 0:
 #                    s.append(Delay(dt))
@@ -277,10 +283,18 @@ class T2Measurement_mixer(Measurement1D):
 
             if self.postseq:
                 s_temp += [self.postseq]
+#            s_temp += [Combined([
+##                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#                    Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),
+#                    Constant(self.readout_info.pulse_len, self.mixer_info2.pi_amp, chan=self.mixer_info2.channels[0])
+#                ])]
             s_temp += [Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                    Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0])
+                    Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
+#                   Join([Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+                    Join([self.mixer_info.rotate(np.pi, 0),Delay(200)]),
+                    Join([self.mixer_info2.rotate(np.pi, 0),Delay(200)])
+#                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
                 ])]
     
 #            s.append(Delay(50000))

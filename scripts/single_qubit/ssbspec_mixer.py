@@ -24,6 +24,8 @@ def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
     xs = meas.detunings
     fig.axes[0].plot(-xs/1e6, ys, '.')
+    fig.axes[0].errorbar(-xs/1e6, ys, yerr=meas.get_errorbars(), fmt='.', 
+                         markersize = 0, ecolor='grey', linewidth=1)
     fig.axes[0].set_xlabel('Detuning (MHz)')
     fig.axes[0].set_ylabel('Intensity (AU)')
     fig.canvas.draw()
@@ -50,7 +52,7 @@ def analysis(meas, data=None, fig=None):
         p0 = [np.min(ys), w0*h0, pos, w0]
     if 1:
         h0 = np.min(ys)-np.max(ys)
-        w0 = 0.05e6
+        w0 = 0.5e6
         pos = xs[np.argmin(ys)]
         p0 = [np.max(ys), w0*h0, pos, w0]
         p = f.fit(p0)
@@ -101,7 +103,7 @@ class SSBSpec_mixer(Measurement1D):
         else:
             ro = (Combined([
                 Join([Delay(300),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
-                Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+#                Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
                 Join([Delay(100),self.mixer_info.rotate(np.pi, 0),Delay(200)]),
                 Join([Delay(100),self.mixer_info2.rotate(np.pi, 0),Delay(200)])
 #                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),

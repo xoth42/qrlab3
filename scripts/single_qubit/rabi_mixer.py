@@ -37,7 +37,13 @@ def analysis(meas, data=None, fig=None):
     xs = meas.amps
 
     fig.axes[0].plot(xs, ys, 'ks', ms=3)
-    
+    fig.axes[0].errorbar(xs, ys, yerr=meas.get_errorbars(), fmt='.', 
+                         markersize = 0, ecolor='grey', linewidth=1)
+    if np.max(ys) - np.min(ys)>300:# and meas.proj_func is 'phase':
+
+        for iphase in range(len(ys)):
+            if ys[iphase] > 0:
+                ys[iphase] = ys[iphase] -360     
 
     amp0 = (np.min(ys) - np.max(ys)) / 2
 #    if ys[0]>np.average(ys):
@@ -62,6 +68,7 @@ def analysis(meas, data=None, fig=None):
 #        result2 = lmfit.minimize(fit_amprabi_func, result.params, args=(xs, ys, meas))
         txt = ''
         fig.axes[0].plot(xs, -fit_amprabi_func(result.params, xs, 0, meas), label='fit')
+        
         fig.axes[1].plot(xs, fit_amprabi_func(result.params, xs, ys, meas), marker='s')
 
 
@@ -149,13 +156,26 @@ class Rabi_mixer(Measurement1D):
                     Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info2.pi_amp, chan=self.mixer_info2.channels[0]),Delay(200)])
                 ]))
             else:
+#                s.append(Combined([
+#                    Join([Delay(300),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
+##                    Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+#                    Join([Delay(100),self.mixer_info.rotate(np.pi, 0),Delay(200)]),
+#                    Join([Delay(100),self.mixer_info2.rotate(np.pi, 0),Delay(200)])
+#    #                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
+#                ]))
+#                s.append(Combined([
+#                    Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
+##                    Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+#                    Join([self.mixer_info.rotate(np.pi, 0),Delay(200)]),
+#                    Join([self.mixer_info2.rotate(np.pi, 0),Delay(200)])
+#                    ]))
                 s.append(Combined([
-                    Join([Delay(300),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
-                    Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
-                    Join([Delay(100),self.mixer_info.rotate(np.pi, 0),Delay(200)]),
-                    Join([Delay(100),self.mixer_info2.rotate(np.pi, 0),Delay(200)])
+                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#                    Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+                    self.mixer_info.rotate(np.pi, 0),
+                    self.mixer_info2.rotate(np.pi, 0)
+                    ]))
     #                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
-                ]))
             s.append(Delay(2000))
 
 

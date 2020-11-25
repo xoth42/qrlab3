@@ -270,6 +270,9 @@ def get_qubits():
 
 def get_readout_info(readout='readout'):
     ret = get_container_object(readout)
+    if readout is 'readout_IQ': # JEFF- changed to get IQ readout working
+        ret.rfsource = instruments.get(ret.rfsource)
+        return ret
     ret.rfsource1 = instruments.get(ret.rfsource1)
     ret.rfsource2 = instruments.get(ret.rfsource2)
     return ret
@@ -340,7 +343,8 @@ datasrv = objsh.helper.find_object('dataserver')
 datadir = 'c:/_data'
 
 
-filename = 'c:/_data/Transmon7GHzCavity_wTWPA.hdf5'
+filename = 'c:/_data/112020_Joint_Tomography.hdf5'
+
 
 
 
