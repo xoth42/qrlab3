@@ -9,7 +9,7 @@ from mclient import instruments
 
 
 
-WF_twpa = instruments.create('WF_twpa', 'WFT1153', serial='1153')
+#WF_twpa = instruments.create('WF_twpa', 'WFT1153', serial='1153')
 
 instruments.remove('dig')
 dig = instruments.create('dig', 'Keysight_DIG', chassis = 1, slot = 3, trigger_period = 100, 

@@ -908,6 +908,7 @@ class Measurement(object):
                 eb[i] = m[0,0]/(naverages*np.sqrt(naverages-1)) # convert to st error
         else:
             eb = data
+        print(eb)
         return eb
 
     def post_process(self):
