@@ -925,6 +925,7 @@ class Measurement(object):
                     eb[i] = np.arcsin(eb[i]/np.abs(self.avg_data[i])) * 180/np.pi
         else:
             eb = data
+        print(eb)
         return eb
 
     def get_naverages(self):
