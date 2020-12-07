@@ -39,7 +39,7 @@ SS_mixer_info2_set = mclient.instruments['SS_mixer_info2']
 #qubit03_info = mclient.get_qubit_info('qubit1_03')
 #qubit14_info = mclient.get_qubit_info('qubit1_14')
 readout_info = mclient.get_readout_info('readout')
-readout = mclient.instruments['readout']
+readout = 'readout_IQ'
 #cavity_infoA = mclient.get_qubit_info('cavityAlice')
 #RO_info = mclient.get_qubit_info('RO')
 #qubit2_info = mclient.get_qubit_info('cavityAlice')
@@ -226,7 +226,7 @@ if 0: # cav transmission with mixer
     
     plt.legend()
     
-    ro_freq = 10.8201e9
+    ro_freq = 10.8058e9
     power = 10
     mixer_info1 = mclient.get_qubit_info('mixer_info1')
     mixer_info2 = mclient.get_qubit_info('mixer_info2')
@@ -248,8 +248,8 @@ if 0: # cav transmission with mixer
     mixer1_amps = np.linspace(0.1,0.1,1)
 
 
-    rofreq = 10.82e9
-    freq_range = 4e6
+    rofreq = 10.805e9
+    freq_range = 5e6
     for mixer1_amp in mixer1_amps:
         mixer2_amp = mixer1_amp
         mixer_info1_set.set_pi_amp(mixer1_amp)
@@ -263,7 +263,7 @@ if 0: # cav transmission with mixer
         plt.close()
         plt.close()
         
-        figure_name = '0T'
+        figure_name = '0T low power'
         
         plt.figure('amp%s'%(figure_name))
         plt.plot(ro.freqs,ro.ampdata[0],label = 'mixer1_amp = %s, mixer2_amp = %s'%(mixer1_amp, mixer2_amp))
@@ -276,6 +276,7 @@ if 0: # cav transmission with mixer
             plt.savefig(fn, **kwargs)
         plt.figure('phase%s'%(figure_name))
         plt.plot(ro.freqs,ro.phasedata[0],label = 'mixer1_amp = %s, mixer2_amp = %s'%(mixer1_amp, mixer2_amp))
+        plt.legend()
         if mixer1_amp == mixer1_amps[-1]:
             fn = os.path.join(r'C:\_Data', 'images/%s_phase%s.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime()),figure_name))
             fdir = os.path.split(fn)[0]
@@ -287,7 +288,7 @@ if 0: # cav transmission with mixer
     bla
     
     
-if 1: # cav transmission with mixer and CW qubit drive
+if 0: # cav transmission with mixer and CW qubit drive
 
     from single_cavity import rocavspectroscopy_keysight_mixer_cw
 #    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])
@@ -577,13 +578,13 @@ if 0: # SSB spec with mixer
         seq = sequencer.Trigger(600)
     #        seq = Join([seq, qubit2_info.rotate(np.pi/2, X_AXIS)])
         spec = ssbspec_mixer.SSBSpec_mixer(qubit_info, mixer_info1,mixer_info2,
-                                           np.linspace(-20e6, 20e6, 101), seq=seq, plot_seqs=True, proj_func='phase')
+                                           np.linspace(-20e6, 20e6, 101), seq=seq, plot_seqs=False, proj_func='phase')
         spec.measure_keysight()
 #        plt.close()
     bla
 
     
-if 1: #ssb with stark shift with mixer with lorentzian fit
+if 0: #ssb with stark shift with mixer with lorentzian fit
     from single_qubit import stark_shift_with_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
     phase1 = 3.141
@@ -718,7 +719,7 @@ if 0: # Power Rabi-Calibrate pi pulse with mixer
     tr = rabi_mixer.Rabi_mixer(qubit_info, mixer_info1, mixer_info2,
 #                               np.linspace(-0.8, 0.8, 81), selective=False,
 #                               np.linspace(-0.6, 0.6, 81), selective=False,
-                               np.linspace(-0.08, 0.08, 81), selective=True,
+                               np.linspace(-0.2, 0.2, 81), selective=True,
 #                               np.linspace(-0.4, 0.4, 81), selective=True,
         #                       np.linspace(-0.47,-0.41, 81), selective=False,                   
                                plot_seqs=False, generate=True, repeat_pulse=1,# seq=seq,postseq = postseq, fix_period = 0.38087745,
@@ -789,11 +790,11 @@ if 0: # ef Power Rabi-Calibrate pi pulse mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
     tr = rabi_mixer.Rabi_mixer(ef_info, mixer_info1, mixer_info2,
 #                               np.linspace(-0.3, 0.3, 81), selective=False,
-#                               np.linspace(-.6, .6, 81), selective=False,
+                               np.linspace(-.6, .6, 81), selective=False,
 #                               np.linspace(-0.05, 0.05, 81), selective=True,
-                               np.linspace(-0.1, 0.1, 81), selective=True,
+#                               np.linspace(-0.1, 0.1, 81), selective=True,
         #                       np.linspace(-0.47,-0.41, 81), selective=False,                   
-                               plot_seqs=False, generate=True, repeat_pulse=1, seq=seq,postseq = postseq,#fix_period = 0.834,
+                               plot_seqs=False, generate=True, repeat_pulse=1, seq=seq,postseq = postseq,fix_period = 0.891,
                                update=True, extra_info = qubit_info,
                                proj_func='phase')
     tr.measure_keysight()
@@ -909,12 +910,12 @@ if 0: #T2
         t2.measure_keysight()
     bla
 
-if 1: #T2 mixer
+if 0: #T2 mixer
     from single_qubit import T2measurement_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0)])
     for i in range(1):
         t2 = T2measurement_mixer.T2Measurement_mixer(qubit_info, mixer_info1, mixer_info2, np.linspace(0, 1e3, 101), detune=8e6, 
-                                                     double_freq=False, generate=True, #echotype = 'HANN',
+                                                     double_freq=False, generate=True, echotype = 'HANN',
                                                      seq=None, postseq=None, proj_func='phase') #extra_info=[qubit2_info])
 #        t2 = T2measurement.T2Measurement(qubit_info, np.concatenate((np.linspace(0.1e3, 2.6e3, 81), np.linspace(2.61e3, 10e3, 81))), detune=0.5e6, double_freq=False, generate=True, 
 #                                         seq=seq, extra_info=ef_info, postseq=None, proj_func='phase')

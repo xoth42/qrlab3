@@ -658,11 +658,9 @@ class Measurement(object):
         else:
             ret = dig.take_experiment(avg_buf=self.avg_data, cov_buf=self.cov_data,
                                       async=True, IQ_e=self.readout_info.IQe, 
-<<<<<<< HEAD
+
                                       e_radius=self.readout_info.IQe_radius)#, proj_func=self.proj_func)
-=======
-                                      e_radius=self.readout_info.IQe_radius)
->>>>>>> b10b5bbde1578a5129c1093a3b3a69319661ffa7
+
         
         try:
             while not ret.is_valid() and not self._interrupted:
@@ -899,12 +897,9 @@ class Measurement(object):
         Return measured standard errors
         '''
         if data is None:
-<<<<<<< HEAD
-#            naverages = alz.get_naverages()
-            naverages = self._dig.get_naverages()  #Yingying 
-=======
+
             naverages = self.get_naverages()
->>>>>>> b10b5bbde1578a5129c1093a3b3a69319661ffa7
+
             values = self.avg_data[:]
             
             # calculate amp based on projection type
@@ -926,6 +921,8 @@ class Measurement(object):
                               [np.sin(theta[i]), np.cos(theta[i])]]) # rotation matrix
                 m = np.matmul(r, m)
                 eb[i] = np.sqrt(np.abs(m[0,0]))/np.sqrt(naverages-1) # convert to std and then st error
+                if self.proj_func == 'phase':                       #Yingying, for phase errorbar
+                    eb[i] = np.arcsin(eb[i]/np.abs(self.avg_data[i])) * 180/np.pi
         else:
             eb = data
         return eb

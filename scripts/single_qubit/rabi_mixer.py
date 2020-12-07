@@ -169,12 +169,13 @@ class Rabi_mixer(Measurement1D):
 #                    Join([self.mixer_info.rotate(np.pi, 0),Delay(200)]),
 #                    Join([self.mixer_info2.rotate(np.pi, 0),Delay(200)])
 #                    ]))
-                s.append(Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-#                    Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
-                    self.mixer_info.rotate(np.pi, 0),
-                    self.mixer_info2.rotate(np.pi, 0)
-                    ]))
+#                s.append(Combined([
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+##                    Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+#                    self.mixer_info.rotate(np.pi, 0),
+#                    self.mixer_info2.rotate(np.pi, 0)
+#                    ]))
+                s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
     #                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
             s.append(Delay(2000))
 
