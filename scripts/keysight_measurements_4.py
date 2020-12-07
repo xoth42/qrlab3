@@ -256,7 +256,7 @@ if 0: # qubit SSB spec
 #                                       np.linspace(-2.8e6,-1e6, 51),
 #                                       np.linspace(-1e6,1e6, 51),
                                        )), 
-                           seq=None, plot_seqs=False, 
+                           seq=None, plot_seqs=False, readout='readout_IQ'
 #                           extra_info = [cavity_infoB, qubit_b0s, qubit_b2s, qubit_b4s, fwm_info, fwm_info_b2, fwm_info_b4]
                            )
     spec.measure_keysight()
@@ -282,7 +282,7 @@ if 0: #Multiple times SSB spec
     bla
      
     
-if 1: # Calibrate pi pulse
+if 0: # Calibrate pi pulse
     from single_qubit import rabi
     tr = rabi.Rabi(qubit_info, 
 #                   np.linspace(-1, 1, 51), selective=False,
@@ -318,18 +318,18 @@ if 0: # T2
     t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0e3, 20e3, 101), detune=.5e6, 
 #    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 3.9e3, 81), detune=2e6, 
                                      double_freq=False, generate=True, seq=None,
-                                     plot_seqs=False)
+                                     plot_seqs=False, readout='readout_IQ')
     t2.measure_keysight()
     bla
     
-if 0: # T2echo
+if 1: # T2echo
     from single_qubit import T2measurement
 
     t2 = T2measurement.T2Measurement(qubit_info, np.linspace(.1e3, 70e3, 81),
 #                                     np.concatenate((np.linspace(0, 3.9e3, 14), np.linspace(8e3, 50e3, 81))), 
                                      detune=.1e6, 
                                      echotype = T2measurement.ECHO_HAHN, necho=1, 
-                                     plot_seqs = False, generate=True)
+                                     plot_seqs = False, generate=True, readout= 'readout_IQ')
     t2.measure_keysight()
     bla  
     
@@ -357,12 +357,12 @@ if 0: # EF rabi for pop
     dig = mclient.instruments['dig']
     dig.set_naverages(1000)
     efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.7, 0.7, 51), plot_seqs=False, 
-                        selective=False, generate=True, postseq = None, update=False)
+                        selective=False, generate=True, postseq = None, update=False, readout='readout_IQ')
     efr.measure_keysight()
     period = efr.fit_params['period'].value
     dig.set_naverages(5000)
     efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.7, 0.7, 51), first_pi=False, 
-                        selective=False, force_period=period, postseq= None, generate=True)
+                        selective=False, force_period=period, postseq= None, generate=True, readout='readout_IQ')
     efr.measure_keysight()
     dig.set_naverages(1000)
 

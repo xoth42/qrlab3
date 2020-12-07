@@ -63,15 +63,15 @@ Qswitchseq = sequencer.Join([sequencer.Repeat(sequencer.Delay(100), 100),
 #            Repeat(Constant(250, 1, chan=5), 800),      # Qubit/Readout master switch
             ])])
 '''
-if 0: # Cavity disp calibration
+if 1: # Cavity disp calibration
     from single_cavity import cavdisp
 
 #for i in range(5):
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
 #    dig.set_trigger_period(100)
-    disp = cavdisp.CavDisp(qubit_info, cavity_infoR, 2, 41, 0, seq=None,
+    disp = cavdisp.CavDisp(qubit_info, cavity_infoA, 2, 41, 0, seq=None,
                            delay=0, bgcor=True, update=False, generate=True,
-                           plot_seqs = False
+                           plot_seqs = False, readout='readout_IQ'
 #                           Qswitch_infoA=Qswitch_infoB, Qswitch_infoB=Qswitch_infoB,
 #                           extra_info=[Qswitch_infoA, Qswitch_infoB,],
                           )

@@ -450,7 +450,7 @@ class Keysight_DIG(Instrument):
             
         return avg/self._naverages
         
-    def setup_experiment(self, num_points, ntransfers = None):
+    def setup_experiment(self, num_points, ntransfers = None, take_ref = True):
         if ntransfers is None:
             if self._naverages % 10 == 0:
                 if num_points >= 10:
@@ -473,7 +473,9 @@ class Keysight_DIG(Instrument):
         samples_per_transfer = self._naverages *  self._npoints * self._nsamples / self._ntransfers
 
         errors += [self.dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)]
-        for channel in [self._main_channel, self._ref_channel]:
+        channels = [self._main_channel]
+        if take_ref: channels += [self._ref_channel]
+        for channel in channels:
             errors += [self.dig.DAQtriggerExternalConfig(channel, key.SD_TriggerExternalSources.TRIGGER_EXTERN, 
                                     key.SD_TriggerBehaviors.TRIGGER_RISE, key.SD_SyncModes.SYNC_NONE)]
             errors += [self.dig.DAQflush(channel)]
@@ -485,7 +487,7 @@ class Keysight_DIG(Instrument):
         if any(error < 0 for error in errors):
             print('setup_experiment errors: ', errors)
         
-    def take_experiment(self, avg_buf=None, cov_buf=None, IQ_e=None, e_radius=None):
+    def take_experiment(self, avg_buf=None, cov_buf=None, IQ_e=None, e_radius=None, take_ref=True):
         samples_per_transfer = self._naverages *  self._npoints * self._nsamples / self._ntransfers
         acq_per_transfer = self._naverages *  self._npoints / self._ntransfers
 
@@ -513,7 +515,8 @@ class Keysight_DIG(Instrument):
             
             try:
                 signal = np.array(self.dig.DAQbufferGet(self._main_channel), dtype=np.complex64)
-                ref = np.array(self.dig.DAQbufferGet(self._ref_channel), dtype=np.complex64)
+                if take_ref:
+                    ref = np.array(self.dig.DAQbufferGet(self._ref_channel), dtype=np.complex64)
             except ValueError, e:
                 print(str(e))
                 print('digitizer is likely not getting triggered')
@@ -522,18 +525,23 @@ class Keysight_DIG(Instrument):
             
                 
             self._demodA.demodulate(signal)
-            self._demodB.demodulate(ref)
-#            self._demodB.demodulate_ref_freq(ref, ref_freq = ref_freq, nsample = self._nsamples) #Yingying
-            
             IQA = self._demodA.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
-            IQB = self._demodB.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
-            refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
             
+            if take_ref:
+                self._demodB.demodulate(ref)
+                IQB = self._demodB.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
+                refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
+            else:
+                refs = np.ones_like(np.average(IQA, 1))
             
+#            self._demodB.demodulate_ref_freq(ref, ref_freq = ref_freq, nsample = self._nsamples) #Yingying
+
         
             for j in range(self._npoints):
                 for k in range(self._naverages / self._ntransfers):
-                    temp = np.mean(IQA[j + k*self._npoints,:] * refs[j + k*self._npoints])
+#                    temp = np.mean(IQA[j + k*self._npoints,:] * refs[j + k*self._npoints])
+                    temp = np.mean(IQA[j + k*self._npoints,:]
+                                    * np.exp(-1j * np.angle(IQB[j + k*self._npoints,:])))
                     avgs[j] += temp
                     values[j, i*self._naverages / self._ntransfers + k] = temp
                     
