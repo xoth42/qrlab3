@@ -20,7 +20,7 @@ def analysis(meas, data=None, fig=None):
     xs = meas.delays
 
     fig.axes[0].plot(xs/1e3, ys, 'ks', ms=3, linestyle='-', markerfacecolor='red' )
-    fig.axes[0].errorbar(xs/1e3, ys, yerr=meas.get_stes(), fmt='.', 
+    fig.axes[0].errorbar(xs/1e3, ys, yerr=meas.get_errorbars(), fmt='.', 
                          markersize = 0, ecolor='grey', linewidth=1)
 
     if meas.double_exp == False:

@@ -39,8 +39,8 @@ def changing_freq_fit(params, x, data):
 
 ''' Path to the .hdf5 file '''
 filepath = 'C:/_Data/'
-hdf5_name = '0915cooldown_circulator - Copy.hdf5'
-date = '20201009'
+hdf5_name = '1106cooldown_circulator - Copy.hdf5'
+date = '20201118'
 #experiment = 'ROCavSpectroscopy_keysight'
 #experiment = 'Power_Sweep_VNA'
 f = h5.File(filepath + hdf5_name, 'r')
@@ -48,11 +48,11 @@ j = 0
 
 
 
-CW_qubit = True
+CW_qubit = False
 field = 0.05
 nrows = 3
-repeat = 100
-fix_phi0 = None
+repeat = 10
+fix_phi0 = 1.6
 if j == 0:
     freqs = np.zeros([nrows,repeat*2])
     taus = np.zeros([nrows,repeat*2])
@@ -69,7 +69,7 @@ else:
 for i, title in enumerate(f[date].keys()):
 #    print int(title[0:6])
 #    print int(title[0:6]) <= 020617
-    if int(title[0:6]) <= int('093849') and int(title[0:6]) > int('015300') and title[7:13] == exp_t:# and title[7:12] =='ROCav':
+    if int(title[0:6]) <= int('224419') and int(title[0:6]) > int('220832') and title[7:13] == exp_t:# and title[7:12] =='ROCav':
         print title
 
 

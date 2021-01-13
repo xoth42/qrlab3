@@ -28,7 +28,7 @@ def S21(params, x, y):
 
 
 
-def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, square_amps=True, ax=None):
+def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, square_amps=False, ax=None):
     if ax is None:
         ax = plt.figure().add_subplot(111)
     ax2 = ax.twinx()
@@ -178,10 +178,8 @@ class ROCavSpectroscopy_keysight(Measurement1D):
 #                Constant(1, 0, chan=self.qubit_info.channels[0])
 #            ]))
 
-        s.append(Combined([
-            Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
-            Join([Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),Delay(200)]),
-        ]))
+        s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+
 #        s.append(Combined([
 #            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
 #            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
@@ -215,16 +213,20 @@ class ROCavSpectroscopy_keysight(Measurement1D):
         self.start_awgs()
 
         for ipower, power in enumerate(self.powers):
-            self.readout_info.rfsource1.set_power(power)
-            print 'Power = %s' % (power, )
-            time.sleep(1)
+            if self.readout is not 'readout_IQ':
+                self.readout_info.rfsource1.set_power(power)
+                print 'Power = %s' % (power, )
+                time.sleep(1)
 
             amps = []
             phases = []
 
             for ifreq, freq in enumerate(self.freqs):
-                self.readout_info.rfsource1.set_frequency(freq)
-                self.readout_info.rfsource2.set_frequency(freq+50e6)
+                if self.readout is 'readout_IQ':
+                    self.readout_info.rfsource.set_frequency(freq)
+                else:
+                    self.readout_info.rfsource1.set_frequency(freq)
+                    self.readout_info.rfsource2.set_frequency(freq+50e6)
                 time.sleep(0.1)
 
                 ''' the parameter to setup avg shots shouldn't be naverages.
@@ -235,7 +237,7 @@ class ROCavSpectroscopy_keysight(Measurement1D):
                 dig.setup_avg_shot()
                 dig.arm()
                 dig.start_hvi()
-                ret = dig.take_avg_shot()
+                ret = dig.take_avg_shot(take_ref = self.readout is not 'readout_IQ')
 
                 dig.stop_hvi()
                 dig.release_buf()

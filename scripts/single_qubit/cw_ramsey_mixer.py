@@ -246,7 +246,7 @@ class CW_Ramsey_Mixer(Measurement1D):
 
 
     def generate(self):
-        ro_delay = 1000
+        ro_delay = 500
         s = Sequence()
         s.append(self.seq)
         s.append(Delay(2000))

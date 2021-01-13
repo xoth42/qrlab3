@@ -27,7 +27,7 @@ for delay in delays:
         ar2 = ar.reshape((len(ar) / len(t), len(t)))
         ar3 = np.dot(ar2,_exp_iphi)
         ar4 = np.repeat(ar3, len(t)/10)
-        IQ[:len(ar4)] = ar4 #* np.exp(1j * np.angle(ar4)*(50.0/np.abs(ref)-1))
+        IQ[:len(ar4)] = ar4 * np.exp(1j * np.angle(ar4)*(50.0/np.abs(ref)-1))
         return(IQ)
         
     r_d = demodulate(r)

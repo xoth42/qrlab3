@@ -139,7 +139,8 @@ class SSBSpec(Measurement1D):
 
         if self.bgcor:
             plen = self.qubit_info.rotate_selective.base(np.pi, 0).get_length()
-            s.append(Join([self.seq, Delay(plen), ro]))
+            s.append(Join([self.seq, Delay(plen)]))
+            s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
 
         for i, df in enumerate(self.detunings):
 #        for df in self.detunings:

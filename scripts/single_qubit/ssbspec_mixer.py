@@ -24,6 +24,8 @@ def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
     xs = meas.detunings
     fig.axes[0].plot(-xs/1e6, ys, '.')
+    fig.axes[0].errorbar(-xs/1e6, ys, yerr=meas.get_errorbars(), fmt='.', 
+                         markersize = 0, ecolor='grey', linewidth=1)
     fig.axes[0].set_xlabel('Detuning (MHz)')
     fig.axes[0].set_ylabel('Intensity (AU)')
     fig.canvas.draw()
@@ -50,7 +52,7 @@ def analysis(meas, data=None, fig=None):
         p0 = [np.min(ys), w0*h0, pos, w0]
     if 1:
         h0 = np.min(ys)-np.max(ys)
-        w0 = 0.05e6
+        w0 = 0.5e6
         pos = xs[np.argmin(ys)]
         p0 = [np.max(ys), w0*h0, pos, w0]
         p = f.fit(p0)
