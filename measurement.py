@@ -99,6 +99,7 @@ class Measurement(object):
         self.imagetype = imagetype
         self.print_progress = print_progress
         self.proj_func = proj_func
+        self.readout = readout
 
         # Build list of info objects
         self.readout_qubit_info = None # JEFF - getting IQ readout working
@@ -657,10 +658,11 @@ class Measurement(object):
         if self.histogram:
             ret = dig.take_hist(async=True)
         else:
+            take_ref = (self.readout is not 'readout_IQ')
             ret = dig.take_experiment(avg_buf=self.avg_data, cov_buf=self.cov_data,
                                       async=True, IQ_e=self.readout_info.IQe, 
-
-                                      e_radius=self.readout_info.IQe_radius)#, proj_func=self.proj_func)
+                                      e_radius=self.readout_info.IQe_radius,
+                                      take_ref=take_ref)#, proj_func=self.proj_func)
 
         
         try:

@@ -42,6 +42,8 @@ fwm_info = mclient.get_qubit_info('fwm_info')
 qubit_a1b1 = mclient.get_qubit_info('qubit_a1b1')
 
 
+readout= 'readout_IQ'
+
 
 cA = cavity_infoA.rotate
 cB = cavity_infoB.rotate
@@ -59,7 +61,6 @@ ges_a1b1 = qubit_a1b1.rotate_quasilective
 
 #fwm_info = mclient.get_qubit_info('FWM_info')
 
-ss = 2.868e6     #OMP
 fwm_comb = OCTlib.comb(fwm_info, [0], [.9], vary = [1], phases = [0])
 res_comb = OCTlib.comb(cavity_infoR, [0], [.9], vary = [1], phases = [0])
 
@@ -72,9 +73,9 @@ if 0: # Cavity disp calibration
 #for i in range(5):
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
 #    dig.set_trigger_period(2000)
-    disp = cavdisp.CavDisp(qubit_info, cavity_infoR, 2, 41, 0, seq=None,
-                           delay=0, bgcor=True, update=False, generate=True,
-                           plot_seqs = False
+    disp = cavdisp.CavDisp(qubit_info, cavity_infoB, 2.7, 41, 0, seq=None,
+                           delay=0, bgcor=False, update=False, generate=True,
+                           plot_seqs = False, readout=readout
 #                           Qswitch_infoA=Qswitch_infoB, Qswitch_infoB=Qswitch_infoB,
 #                           extra_info=[Qswitch_infoA, Qswitch_infoB,],
                           )
@@ -130,7 +131,7 @@ if 0: # Cavity speco
 
 if 0: #SSB cavspec
     from single_cavity import ssbcavspec 
-    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoR, np.linspace(-2e6, 2e6, 61),
+    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoB, np.linspace(-2e6, 2e6, 61), readout=readout
 #                                  postseq=efpi, extra_info=[ef_info,]
                                   )
     cspec.measure_keysight()
@@ -155,31 +156,75 @@ if 0: #cavity stark shift
 
 if 0: #Sideband modulated number splitting:
     from single_qubit import ssbspec
-    dig.do_set_naverages(1000)
-    dig.do_set_trigger(2500)
-    delay_t = 10e3
-    post_delay = 5e3
-    poly_seq = []
-    poly_seq += fwm_comb.get_poly_seq(delay_t - fwm_comb.sigma*4, .6e6)
-    poly_seq += res_comb.get_poly_seq(delay_t - res_comb.sigma*4, -0.04e6)
+#    dig.do_set_naverages(1000)
+#    dig.do_set_trigger(2500)
+#    delay_t = 10e3
+#    post_delay = 5e3
+#    poly_seq = []
+#    poly_seq += fwm_comb.get_poly_seq(delay_t - fwm_comb.sigma*4, .6e6)
+#    poly_seq += res_comb.get_poly_seq(delay_t - res_comb.sigma*4, -0.04e6)
 #    seq = sequencer.Join([sequencer.Trigger(250), sequencer.Combined(poly_seq),
 #                          sequencer.Delay(post_delay)])
      #                     cR(-0.24, 0)]) # t2 seq test
-    seq = sequencer.Join([sequencer.Trigger(250),cA(1, 0)])
 #                          sequencer.Combined(fwm_comb.get_poly_seq(5e3 - fwm_comb.sigma*4, .2e6)),
 #                          sequencer.Delay(2e3)])
-    spec = ssbspec.SSBSpec(qubit_info, #np.linspace(-30e6, 10e6, 21),
-                           np.linspace(-3e6, 0.5e6, 101),
-#                           np.concatenate((
-#                                           np.linspace(-22e6, -18e6, 15),
-#                                           np.linspace(-9.8e6, -6.8e6, 25), 
-#                                           np.linspace(-1e6, 1e6, 25)
-#                                           )),
-#                           extra_info= [fwm_comb.info, res_comb.info],
-                           extra_info= [cavity_infoA, cavity_infoB],
-                           seq = seq,  plot_seqs=False,
-                           bgcor = False)
-    spec.measure_keysight()
+    for alpha in [.8]:
+        
+        seq = sequencer.Join([sequencer.Trigger(250),cB(alpha, 0), cA(alpha,0)])
+        for freqs in [
+#                      np.linspace(-27e6, -17e6, 200),
+                      np.linspace(-17e6, -14e6, 100),
+#                      np.linspace(-8e6, -6.7e6, 61),
+                     ]:
+            spec = ssbspec.SSBSpec(qubit_info, #np.linspace(-30e6, 10e6, 21),
+        #                           np.linspace(-10e6, 0.5e6, 151),
+        #                           np.concatenate((
+        #                                           np.linspace(-22e6, -18e6, 15),
+                                                   freqs, 
+        #                                           np.linspace(-1e6, 1e6, 25)
+        #                                           )),
+        #                           extra_info= [fwm_comb.info, res_comb.info],
+                                   extra_info= [cavity_infoA, cavity_infoB],
+                                   seq = seq,  plot_seqs=False,
+                                   bgcor = False, readout=readout)
+            spec.measure_keysight()
+    bla
+
+
+if 0: # Measure readout contrast
+    from single_qubit import rabi
+    tr = rabi.Rabi(cavity_infoA, 
+                   np.linspace(-1.1/np.pi, 1.1/np.pi, 51), selective=False,
+#                   np.linspace(-.12, .12, 51), selective=.5,
+#                  np.linspace(-0.01, 0.01, 51), selective=True,
+#                   np.linspace(0.8, .9, 51), selective=False,
+#                   np.linspace(0.25, 0.4, 51), selective=False,
+                   plot_seqs=False, generate=True, repeat_pulse=1, update=False, 
+                   seq=None)
+    tr.measure()
+    bla
+
+
+if 0: # RO cavity shift 
+    from single_cavity import rocavspectroscopy_keysight
+    seq = sequencer.Join([sequencer.Trigger(250),cA(1, 0)])
+
+    rofreq = 7317.63e6#+50e6
+#    rofreq = 7320e6
+    freq_range = 2e6
+    freqs = np.linspace(rofreq-freq_range, rofreq+freq_range, 51)
+    powers = np.linspace(5,10,1) 
+
+    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(cavity_infoA, powers, freqs,
+                                             qubit_pulse=False, seq=seq,
+                                             plot_seqs = True)
+    ro.measure()
+    
+    '''amp = ro.ampdata[:]
+    f= open('ampdata_2d_HP.txt', 'w')
+    f.write(str(amp))
+    f.close()'''
+    
     bla
 
 if 0: #EF Sideband modulated number splitting:
@@ -319,12 +364,16 @@ if 0: # Cavity cooling test
     
     
     
-if 0: # 2d poly ssbspec to find stark shift
+if 1: # 2d poly ssbspec
     from FWM import poly_fwm_ssbspec2d
     dig.set_trigger_period(2500)
-    dig.set_naverages(400)
-    fwm_freqs =  np.linspace(-3e6, 10e6, 21)
-    res_freqs =  np.linspace(-1e6, 1e6, 21)
+    dig.set_naverages(500)
+    fwm_freqs =  np.linspace(-3e6, 10e6, 5)
+    res_freqs =  np.linspace(-1e6, 1e6, 5)
+#    alice_comb = OCTlib.comb(cavity_infoA, [10e6], [.9], vary = [1], phases = [0])
+#    bob_comb = OCTlib.comb(cavity_infoB, [-10e6], [.9], vary = [-1], phases = [0])
+#    alice_freqs =  np.linspace(-1e6, 1e6, 11)
+#    bob_freqs =  np.linspace(-1e6, 1e6, 11)
     delay_times=[20e3]
     amps = np.linspace(0.9, .02, 1)
     seq = sequencer.Trigger(200)
@@ -332,22 +381,22 @@ if 0: # 2d poly ssbspec to find stark shift
         for amp in amps:
             res_comb.amps = [amp]
 
-            ssb2d = poly_fwm_ssbspec2d.poly_fwm_ssbspec2d(qubit_a1b1, fwm_comb, res_comb,
+#            ssb2d = poly_fwm_ssbspec2d.poly_fwm_ssbspec2d(qubit_info, alice_comb, bob_comb,
+#                                                alice_freqs, bob_freqs, delay_t,
+#                                                seq = seq, post_delay = 5e3, bgcor = False,
+#                                                extra_info = [], plot_seqs=False, readout=readout
+#                                                )
+#            ssb2d.measure_keysight()
+            
+            ssb2d = poly_fwm_ssbspec2d.poly_fwm_ssbspec2d(qubit_info, fwm_comb, res_comb,
                                                 fwm_freqs, res_freqs, delay_t,
                                                 seq = seq, post_delay = 10e3, bgcor = False,
                                                 extra_info = []
                                                 )
             ssb2d.measure_keysight()
-            
-#            ssb2d = poly_fwm_ssbspec2d.poly_fwm_ssbspec2d(qubit_info, fwm_comb, res_comb,
-#                                                fwm_freqs, res_freqs, delay_t,
-#                                                seq = seq, post_delay = 10e3, bgcor = True,
-#                                                extra_info = []
-#                                                )
-#            ssb2d.measure_keysight()
     bla
     
-if 1: # poly ssbspec to find stark shift
+if 0: # poly ssbspec to find stark shift
     from FWM import poly_fwm_ssbspec
     
 #    alice_comb = OCTlib.comb(cavity_infoA, [0], [.1], vary = [1], phases = [0])

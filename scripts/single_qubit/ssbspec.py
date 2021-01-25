@@ -22,6 +22,13 @@ def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
     xs = -meas.detunings
     fig.axes[0].plot(xs/1e6, ys, '.')
+    
+    try: # This is a placeholder until stes is implemented w/ Alazar.
+        fig.axes[0].errorbar(xs/1e6, ys, yerr=meas.get_errorbars(), fmt='.', 
+                         markersize = 0, ecolor='grey', linewidth=1)
+    except:
+        print('passed no errorbars')
+        
     fig.axes[0].set_xlabel('Detuning (MHz)')
     fig.axes[0].set_ylabel('Intensity (AU)')
     fig.canvas.draw()
@@ -132,7 +139,8 @@ class SSBSpec(Measurement1D):
 
         if self.bgcor:
             plen = self.qubit_info.rotate_selective.base(np.pi, 0).get_length()
-            s.append(Join([self.seq, Delay(plen), ro]))
+            s.append(Join([self.seq, Delay(plen)]))
+            s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
 
         for i, df in enumerate(self.detunings):
 #        for df in self.detunings:
@@ -150,7 +158,13 @@ class SSBSpec(Measurement1D):
 
             if self.postseq:
                 s.append(self.postseq)
+<<<<<<< HEAD
             s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+=======
+            
+            s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+            
+>>>>>>> 8e861097dda104a4c46ecbb153d1782883007b4c
 
             #Ebru, adding the 20000 delay
             s.append(Delay(2000))

@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 #fg = mclient.instruments['funcgen']
 os.chdir(r'C:/qrlab/scripts')
 dig = mclient.instruments['dig']
+readout = 'readout'
 #laserfg = mclient.instruments['laserfg']
 #awg2 = mclient.instruments['AWG2']
 #ag1 = mclient.instruments['ag1_RO']
@@ -42,6 +43,7 @@ fwm_info = mclient.get_qubit_info('fwm_info')
 
 cA = cavity_infoA.rotate
 cB = cavity_infoB.rotate
+cR = cavity_infoR.rotate
 #cBqs = cavity_infoB.rotate_quasilective
 ge = qubit_info.rotate
 ges= qubit_info.rotate_selective
@@ -69,9 +71,9 @@ if 0: # Cavity disp calibration
 #for i in range(5):
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
 #    dig.set_trigger_period(100)
-    disp = cavdisp.CavDisp(qubit_info, cavity_infoR, 2, 41, 0, seq=None,
-                           delay=0, bgcor=True, update=False, generate=True,
-                           plot_seqs = False
+    disp = cavdisp.CavDisp(qubit_info, cavity_infoA, 3, 41, 0, seq=None,
+                           delay=0, bgcor=False, update=False, generate=True,
+                           plot_seqs = False, readout='readout_IQ'
 #                           Qswitch_infoA=Qswitch_infoB, Qswitch_infoB=Qswitch_infoB,
 #                           extra_info=[Qswitch_infoA, Qswitch_infoB,],
                           )
@@ -84,8 +86,8 @@ if 0: # Cavity T1
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
 #    xs = np.concatenate((np.linspace(0e3, 50e3, 26), np.linspace(60e3, 1250e3, 55)))
 
-    t1 = cavT1.CavT1(qubit_info, cavity_infoR, 2.2, np.linspace(1, 5e3, 51),
-                     proj_num=0, seq=None, postseq=None, bgcor=False, force_a0 = True
+    t1 = cavT1.CavT1(qubit_info, cavity_infoA, 2.2, np.linspace(1, 2e6, 51),
+                     proj_num=0, seq=None, postseq=None, bgcor=False, force_a0 = True, readout = readout
 #                     extra_info=[ef_info,]
                      )
     t1.measure_keysight()
@@ -94,8 +96,8 @@ if 0: # Cavity T1
 
 if 0: # Cavity T2
     from single_cavity import cavT2
-    detune = 15e3
-    ct2 = cavT2.CavT2(qubit_info, cavity_infoB, .7, np.linspace(10e3, 400e3, 91), detune=detune, seq=None,
+    detune = 5e3
+    ct2 = cavT2.CavT2(qubit_info, cavity_infoB, 1, np.linspace(0.1e3, 250e3, 81), detune=detune, seq=None,
                        postseq=None, bgcor=False, double_freq=False)
     ct2.measure_keysight()
 
@@ -164,8 +166,8 @@ if 0: # Cavity speco
 
 if 0: #SSB cavspec
     from single_cavity import ssbcavspec 
-    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoR, np.linspace(-5e6,5e6, 101),
-#                                  postseq=efpi, extra_info=[ef_info,]
+    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoA, np.linspace(-5e6,5e6, 101), readout='readout_IQ'
+#                                  postseq=efpi, extra_info=[ef_info,],
                                   )
     cspec.measure_keysight()
     bla
@@ -188,7 +190,7 @@ if 0: #cavity stark shift
 
 if 0: # Measure cavity photon population
     from single_qubit import rabi
-    tr = rabi.Rabi(qubit_info, np.linspace(-0.9, 0.9, 29), plot_seqs=False, update=False, seq=None, selective=1, singleshotbin=True)
+    tr = rabi.Rabi(qubit_info, np.linspace(-0.9, 0.9, 29), plot_seqs=False, update=False, seq=None, selective=1, singleshotbin=False)
     tr.measure_keysight()
 #    period = tr.fit_params['period'].value
 ##    alz.set_naverages(4000)
@@ -196,22 +198,22 @@ if 0: # Measure cavity photon population
 #    tr.measure_keysight()
     
 
-if 0: #Sideband modulated number splitting:
+if 1: #Sideband modulated number splitting:
     from single_qubit import ssbspec
-    seq = sequencer.Join([sequencer.Trigger(250), cA(1, 0), 
-#                          ges(np.pi, 0), 
+    seq = sequencer.Join([sequencer.Trigger(250), cB(1, 0),
 #                          cA(-0.24, 0)
                           ]) # t2 seq test
 #    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate(1, 0)])
     spec = ssbspec.SSBSpec(qubit_info, #np.linspace(-30e6, 10e6, 21),
-                           np.linspace(-8e6, .5e6, 81),
-#                           np.concatenate((
-#                                           np.linspace(-22e6, -18e6, 15),
-#                                           np.linspace(-7e6, -5e6, 25), 
-#                                           np.linspace(-1e6, 1e6, 25)
-#                                           )),
-                           extra_info= cavity_infoA,
-                           seq = seq,  plot_seqs=False)
+#                           np.linspace(-3e6, .5e6, 81),
+                           np.concatenate((
+#                                           np.linspace(-7e6, -5e6, 101),
+                                           np.linspace(-1e6, 1e6, 101),
+#                                           np.linspace(-0.5e6, 0.5e6, 31), 
+#                                           
+                                           )),
+                           extra_info= [cavity_infoR, cavity_infoB],
+                           seq = seq,  plot_seqs=False, readout='readout_IQ')
     spec.measure_keysight()
     bla
 
@@ -249,7 +251,7 @@ if 0: #Alice spec with qubit pulse
 
 if 0: #EF Sideband modulated number splitting:
     from single_qubit import ssbspec
-    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoB.rotate(1, 0), qubit_info.rotate(np.pi,0)])
+    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate(1, 0), qubit_info.rotate(np.pi,0)])
 #    postseq = qubit_info.rotate(np.pi/2,0)
     postseq = sequencer.Sequence(qubit_info.rotate(np.pi/2, 0))
     spec = ssbspec.SSBSpec(ef_info, np.concatenate((
@@ -257,7 +259,7 @@ if 0: #EF Sideband modulated number splitting:
 #                                                    np.linspace(-12e6, -8e6, 71),
                                                     np.linspace(-10e6, 1e6, 91),
                                                     )),
-                           extra_info= [qubit_info, cavity_infoB],
+                           extra_info= [qubit_info, cavity_infoA],
                            seq =seq,  postseq = postseq, plot_seqs=False)
     spec.measure_keysight()
     bla
