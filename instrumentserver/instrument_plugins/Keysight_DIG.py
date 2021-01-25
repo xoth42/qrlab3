@@ -23,7 +23,7 @@ class Keysight_DIG(Instrument):
 
 
     def __init__(self, name, chassis=0, slot=3, DIG_PRODUCT = "M3102A", trigger_period = 200, trigger_only = False, awg_list = [7, 8, 9, 10], 
-                 nsamples=1000, naverages = 1000, **kwargs):
+                 nsamples=1000, naverages = 1000,if_period = 10, **kwargs):
         super(Keysight_DIG, self).__init__(name)
         self._timeout = DEFAULT_TIMEOUT
         self._main_channel=1
@@ -32,7 +32,7 @@ class Keysight_DIG(Instrument):
         self._naverages=naverages
         self._main_delay=0
         self._ref_delay=0
-        self._if_period=10
+        self._if_period=if_period
 
 
         self._trigger_period=trigger_period
@@ -466,6 +466,22 @@ class Keysight_DIG(Instrument):
         else:
             print('not able to choose ntransfers or choice is incompatible with naverages')
             raise ValueError
+#        if ntransfers is None:    #Yingying, try more frequent update when number of points is large
+#            if self._naverages % 10 == 0:
+#                if num_points >= 200:
+#                    ntransfers = self._naverages/20                
+#                elif num_points >= 10:
+#                    ntransfers = self._naverages/100
+#                else:
+#                    ntransfers = self._naverages/2000  # May 2019: Less frequent update when number of points is small
+#            else:
+#                ntransfers = self._naverages
+#        if(self._naverages % ntransfers == 0):
+#                self._ntransfers = ntransfers
+#                print('ntransfers is %s'%( ntransfers))
+#        else:
+#            print('not able to choose ntransfers or choice is incompatible with naverages')
+#            raise ValueError
             
         self.release_buf()
             

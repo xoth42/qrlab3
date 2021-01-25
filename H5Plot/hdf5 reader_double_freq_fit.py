@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Thu Jan 14 13:17:36 2021
+
+@author: Wang_Lab
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Tue Sep 15 22:15:28 2020
 
 @author: Wang_Lab
@@ -36,21 +43,48 @@ def changing_freq_fit(params, x, data):
     est = params['ofs'].value + params['amp'].value * exp * sine
 #    print params
     return data - est
+def t2_fit(params, x, data):
+    '''
+    Exponentially decaying sine fit function: a + b * exp(-c * x) * sin(d * x + e)
 
+    parameters:
+       ofs
+       amp
+       tau
+       freq
+       phi0
+    '''
+
+    sine = np.sin(2 * np.pi * x * params['freq'].value + params['phi0'].value)
+    exp = np.exp(-(x / params['tau'].value))
+    est = params['ofs'].value + params['amp'].value * exp * sine
+    return data - est
+
+def double_sin_fit(params, x, data):
+    '''
+    Double exponentially decaying sine
+    fit function: of + a1 * exp(-tau1 * x) * sin(f1 * x + phi1) + a2 * exp(-tau2 * x) * cos(f2 * x + phi2)
+    '''
+    exp1 = np.exp(-(x / params['tau'].value))
+    exp2 = np.exp(-(x / params['tau'].value))#exp2 = np.exp(-(x / params['tau2'].value))  #Chen changed to single tau for both frequencies 8/24/19
+    sin1 = np.sin(2 * np.pi * x * params['freq'].value + params['phi0'].value)
+    sin2 = np.sin(2 * np.pi * x * params['freq2'].value + params['phi2'].value)
+    est = params['ofs'].value + params['amp'].value * exp1 * sin1 + params['amp2'].value * exp2 * sin2
+    return data - est
 
 ''' Path to the .hdf5 file '''
 filepath = 'C:/_Data/'
-hdf5_name = '01052021cooldown_circulator - Copy (2).hdf5'
-date = '20210114'
+hdf5_name = '01052021cooldown_circulator - Copy.hdf5'
+date = '20210112'
 #experiment = 'ROCavSpectroscopy_keysight'
 #experiment = 'Power_Sweep_VNA'
 f = h5.File(filepath + hdf5_name, 'r')
 j = 0
 
 
-save_data = True
-CW_qubit = True
-field = -.05
+save_data = False
+CW_qubit = False
+field = 0.01
 nrows = 3
 repeat = 21
 fix_phi0 = None
@@ -71,8 +105,7 @@ else:
 for i, title in enumerate(f[date].keys()):
 #    print int(title[0:6])
 #    print int(title[0:6]) <= 020617
-    if int(title[0:6]) <= int('233857') and int(title[0:6]) > int('230116') and title[7:13] == exp_t:# and title[7:12] =='ROCav':
-        print j
+    if int(title[0:6]) <= int('240000') and int(title[0:6]) > int('232724') and title[7:13] == exp_t:# and title[7:12] =='ROCav':
         print title
 
 
@@ -229,18 +262,60 @@ for i, title in enumerate(f[date].keys()):
             freqs[l][j] = result.params['freq'].value
             taus[l][j] = result.params['tau'].value
 #            return_result.append(result.params)
-#            if meas.double_freq == False:
-            fig.axes[0].plot(xs/1e3, -changing_freq_fit(result.params, xs, 0), 
-                    label='Fit, tau=%.03f us, df=%.03f kHz, %s'%(
-                            result.params['tau'].value/1000,
-                            result.params['freq'].value*1e6 + result.params['A']*1e6*np.exp(-xs[0]*result.params['slope']),
-#                            result.params['freq'].value*1e6 + result.params['A']*1e6*np.exp(-xs[-1]*result.params['slope'])))
-                            labels[l]))
+            
+            residues = changing_freq_fit(result.params, xs, ys)
+            amp0 = (np.max(residues) - np.min(residues)) / 2
+            fftys = np.abs(np.fft.fft(residues - np.average(residues)))
+            fftfs = np.fft.fftfreq(len(residues), xs[1]-xs[0])
+            f0 = np.abs(fftfs[np.argmax(fftys)])
+            print 'Delta f estimate: %.03f kHz' % (f0 * 1e6)
+    
+            params2 = lmfit.Parameters()
+            params2.add('ofs', value=amp0)
+            params2.add('amp', value=amp0, min=0)
+            params2.add('tau', value=xs[-1], min=10, max=200000)
+            params2.add('freq', value=f0, min=0)
+            params2.add('phi0', value=-np.pi/2.0, min=-1.2*np.pi, max=1.2*np.pi)
+            result = lmfit.minimize(t2_fit, params2, args=(xs, residues))
+            lmfit.report_fit(result.params)
+    #        fig.axes[1].plot(xs/1e3, -t2_fit(result.params, xs, 0), label='Fit, tau=%.03f us, df=%.03f kHz'%(result.params['tau'].value/1000, result.params['freq'].value*1e6))
+#            fig.axes[1].legend()
+    
+            params3 = lmfit.Parameters()
+            params3.add('ofs', value=params['ofs'].value)
+            params3.add('amp', value=params['amp'].value, min=0, max=params['amp'].value*2)
+            params3.add('tau', value=params['tau'].value, min=10, max=200000)
+            params3.add('freq', value=params['freq'].value , min=0, max=20e-2)
+            params3.add('phi0', value=params['phi0'].value, min=-1.2*np.pi, max=1.2*np.pi)
+            params3.add('amp2', value=result.params['amp'].value, min=0, max=params['amp'].value*2)
+    #        params3.add('tau2', value=result.params['tau'].value, min=10, max=200000)
+            params3.add('freq2', value=result.params['freq'].value, min=0, max=20e-2)
+            params3.add('phi2', value=result.params['phi0'].value, min=-1.2*np.pi, max=1.2*np.pi)
+    
+            result = lmfit.minimize(double_sin_fit, params3, args=(xs,ys))
+            lmfit.report_fit(result.params)
+            text = 'Fit, tau1=%.03f us, df1=%.03f kHz, amp1=%.02f \nFit, tau2=%.03f us, df2=%.03f kHz, amp2=%.02f'%(result.params['tau'].value/1000, result.params['freq'].value*1e6, result.params['amp'].value, result.params['tau'].value/1000, result.params['freq2'].value*1e6, result.params['amp2'].value)
+            fig.axes[0].plot(xs/1e3, -double_sin_fit(result.params, xs, 0), label=text)
             fig.axes[0].legend()
             fig.axes[0].set_ylabel('Intensity [AU]')
             fig.axes[0].set_xlabel('Time [us]')
-#            fig.axes[1].plot(xs/1e3, changing_freq_fit(result.params, xs, ys), marker='s')
+#            fig.axes[1].plot(xs/1e3, double_sin_fit(result.params, xs, ys), marker='s')
             fig.canvas.draw()
+            
+            
+            
+##            if meas.double_freq == False:
+#            fig.axes[0].plot(xs/1e3, -changing_freq_fit(result.params, xs, 0), 
+#                    label='Fit, tau=%.03f us, df=%.03f kHz, %s'%(
+#                            result.params['tau'].value/1000,
+#                            result.params['freq'].value*1e6 + result.params['A']*1e6*np.exp(-xs[0]*result.params['slope']),
+##                            result.params['freq'].value*1e6 + result.params['A']*1e6*np.exp(-xs[-1]*result.params['slope'])))
+#                            labels[l]))
+#            fig.axes[0].legend()
+#            fig.axes[0].set_ylabel('Intensity [AU]')
+#            fig.axes[0].set_xlabel('Time [us]')
+##            fig.axes[1].plot(xs/1e3, changing_freq_fit(result.params, xs, ys), marker='s')
+#            fig.canvas.draw()
 #        if j >0:            
 #            pl.close()
         j = j + 1

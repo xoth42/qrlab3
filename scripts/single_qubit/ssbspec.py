@@ -125,10 +125,10 @@ class SSBSpec(Measurement1D):
     def generate(self):
         s = Sequence()
 
-        ro = Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-        ])
+#        ro = Combined([
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#        ])
 
         if self.bgcor:
             plen = self.qubit_info.rotate_selective.base(np.pi, 0).get_length()
@@ -150,7 +150,7 @@ class SSBSpec(Measurement1D):
 
             if self.postseq:
                 s.append(self.postseq)
-            s.append(ro)
+            s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
 
             #Ebru, adding the 20000 delay
             s.append(Delay(2000))

@@ -23,7 +23,7 @@ import datetime
 #fxa01 = mclient.get_qubit_info('fxa01')
 
 qubit_info = mclient.get_qubit_info('qubit1ge')
-ef_info = mclient.get_qubit_info('qubit1ef')
+#ef_info = mclient.get_qubit_info('qubit1ef')
 readout = 'readout_IQ'
 #fh_info = mclient.get_qubit_info('qubit1fh')
 #qubit_a1 = mclient.get_qubit_info('qubit_a1')
@@ -282,7 +282,7 @@ if 0: #Multiple times SSB spec
     bla
      
     
-if 1: # Calibrate pi pulse
+if 0: # Calibrate pi pulse
     from single_qubit import rabi
     tr = rabi.Rabi(qubit_info, 
 #                   np.linspace(-1, 1, 51), selective=False,
@@ -322,7 +322,7 @@ if 0: # T2
     t2.measure_keysight()
     bla
     
-if 0: # T2echo
+if 1: # T2echo
     from single_qubit import T2measurement
 
     t2 = T2measurement.T2Measurement(qubit_info, np.linspace(.1e3, 70e3, 81),
