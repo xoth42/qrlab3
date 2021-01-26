@@ -9,19 +9,19 @@ from mclient import instruments
 
 
 
-#WF_twpa = instruments.create('WF_twpa', 'WFT1153', serial='1153')
+WF_twpa = instruments.create('WF_twpa', 'WFT1153', serial='1153')
 
-instruments.remove('dig')
+#instruments.remove('dig')
 dig = instruments.create('dig', 'Keysight_DIG', chassis = 1, slot = 3, trigger_period = 100, 
                          trigger_only = True, awg_list = [8])
 
-#yoko = instruments.create('yoko', 'Yokogawa_7651_old', address = 'GPIB0::3::INSTR')
+yoko = instruments.create('yoko', 'Yokogawa_7651_old', address = 'GPIB0::3::INSTR')
 #yoko = instruments.create('yoko', 'Yokogawa_7651_new', address = 'GPIB0::3::INSTR')
 #signalhound = instruments.create('signalhound', 'SignalHoundSM200A', 'S/N 18104217')
 #ROFG = instruments.create('ROFG', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270811::0::INSTR')
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                              deltaf=-100e6,
-                              pi_amp=0.377,
+                              pi_amp=0.067,
                               pi2_amp=0,
                               drag=0,
                               pi_amp_quasilective=.01,
@@ -93,9 +93,9 @@ gate3 = instruments.create('gate3', 'Gate_Info',
 
 
 qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
-                            deltaf=-375e6,
+                            deltaf=-375.68e6,
                             pi_amp=0.07,
-                            pi_amp_selective=0.01,
+                            pi_amp_selective=0.001,
                             rotation='Gaussian',
                             w=20,
                             w_selective=500,
