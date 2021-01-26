@@ -19,6 +19,9 @@ import math
 import lmfit
 import time
 import datetime
+from matplotlib import gridspec
+
+
 
 qubit_info = mclient.get_qubit_info('qubit1ge')
 ef_info = mclient.get_qubit_info('qubit1ef')
@@ -41,36 +44,155 @@ os.chdir(r'C:/qrlab/scripts')
 
 
 
-field = -0.03
+field = -.05
 
 #time.sleep(300)
-
-dig.do_set_naverages(5000)
-
-
-
+dig = mclient.instruments['dig']
+#dig.do_set_naverages(10000)
+def gaussian(params, x, data):
+    return data - params['amp'] * np.exp(-.5 * ((x - params['mean']) / params['std'])**2)
+if 0: #demag
+#    avgs = [3000]
+    fields = [-.04,0.03, -0.025, 0.02, -0.015, 0.01,-0.005, 0.0025, -0.001,0.0005,-0.00025, 0]
+#    fields = - np.asarray(fields)
+    #Magnet.do_set_PSwitch(1)
+    #time.sleep(35)
+    #fields = np.linspace(0,-0.05,26)
+    for field in fields:
+        print(field)
+        if abs(field)>0.01:
+            Magnet.do_set_field(0)
+            time.sleep(400)
+    
+        
+    #    Magnet.do_set_PSwitch(1)
+    #    time.sleep(35)
+    #            
+        Magnet.do_set_field(field)
+        time.sleep(300)
 
 #####for qubit 1 readout
-if 1:
+if 1:   #qubit1 readout setting
     
-    ro_freq = 10.821e9
+    ro_freq = 10.8093e9
     power = 10
     readout_info.rfsource1.set_frequency(ro_freq - mixer_info1.deltaf)
     readout_info.rfsource1.set_power(power)
-    readout_info.rfsource2.set_frequency(ro_freq+50e6)
-    deltaf = 10.8223e9 - ro_freq - 100e6
+#    readout_info.rfsource2.set_frequency(ro_freq+50e6)
+    deltaf = 10.808e9 - ro_freq + mixer_info1.deltaf
     SS_mixer_info1_set.set_deltaf(deltaf)
     SS_mixer_info1 = mclient.get_qubit_info('SS_mixer_info1')
     
     mixer_info1_set.set_pi_amp(.4)
     mixer_info2_set.set_pi_amp(.4)
+    mixer_info1_set.set_w(300)
+    mixer_info2_set.set_w(300)
+    dig.set_nsamples(500)
     mixer_info1 = mclient.get_qubit_info('mixer_info1')
     mixer_info2 = mclient.get_qubit_info('mixer_info2')
     
-if 1:
+    from scripts.single_qubit import rabi_mixer
+    tr_e = rabi_mixer.Rabi_mixer(qubit_info, mixer_info1, mixer_info2,[qubit_info.pi_amp,], histogram=True, title='|e>',
+                   )
+    tr_e.measure_keysight()
+    tr_g = rabi_mixer.Rabi_mixer(qubit_info,mixer_info1, mixer_info2, [0.001,], histogram=True, title='|g>',
+                   )
+    tr_g.measure_keysight()
+    tr = rabi_mixer.Rabi_mixer(qubit_info, mixer_info1, mixer_info2,[qubit_info.pi_amp/2,], histogram=True, title='|g>+|e>',
+                   )
+    tr.measure_keysight()
+    
+    e_data = tr_e.shot_data[:]
+    g_data = tr_g.shot_data[:]
+    
+    #find blob centers
+    g_average = np.average(g_data)
+    e_average = np.average(e_data)
+    readout.set_IQg(g_average)
+    readout.set_IQe(e_average)    
+    midpoint = np.average([g_average, e_average])
+
+    #setup plots
+    lim = 400
+    xvec = np.linspace(-lim, lim, 100)
+    fig = plt.figure(figsize=(6, 8))
+    gs = gridspec.GridSpec(2, 1, height_ratios=[3,1])
+    ax1 = fig.add_subplot(gs[0])    
+    ax2 = fig.add_subplot(gs[1])
+    ax1.set_xlim(-lim, lim)
+    ax1.set_ylim(-lim, lim)
+    
+    #plot centers
+    ax1.scatter(np.real(g_average), np.imag(g_average), color='b')
+    ax1.scatter(np.real(e_average), np.imag(e_average), color='r')
+    ax1.scatter(np.real(midpoint), np.imag(midpoint), color='k')
+    
+    #calculate separatrix
+    m = (np.imag(g_average) - np.imag(e_average))/(np.real(g_average) - np.real(e_average))
+    b = np.imag(g_average) - m * np.real(g_average)
+    ax1.plot(xvec, m*xvec+b, linestyle='dashed', color='k')
+    
+    #plot blobs in 2d
+    ax1.hexbin(np.real(g_data), np.imag(g_data), bins=100, alpha=.4, 
+               cmap='Blues', edgecolors='none')
+    ax1.hexbin(np.real(e_data), np.imag(e_data), bins=100, alpha=.4, 
+               cmap='Reds', edgecolors='none')
+    
+    # calculate and plot projections
+    g_project = (np.real(g_data) + np.imag(g_data)*m) / np.sqrt(1 + m**2)
+    e_project = (np.real(e_data) + np.imag(e_data)*m) / np.sqrt(1 + m**2)
+    g_hist, g_bins, patches = ax2.hist(g_project, bins=100, alpha=.4, color='b')
+    e_hist, e_bins, patches = ax2.hist(e_project, bins=100, alpha=.4, color='r')
+    
+    # fit projections
+    xs = [g_bins[:-1], e_bins[:-1]]
+    colors = ['b', 'r']
+    means = []
+    stds = []
+    for i, ys in enumerate([g_hist, e_hist]):
+        params = lmfit.Parameters()
+        params.add('amp', value=np.max(ys), min=0)
+        params.add('mean', value=np.mean(ys))
+        params.add('std', value=np.std(ys), min=0)
+        result = lmfit.minimize(gaussian, params, args=(xs[i], ys))
+        means += [result.params['mean']]
+        stds += [result.params['std']]
+        lmfit.report_fit(result.params)
+        ax2.plot(xs[i], -gaussian(result.params, xs[i], 0), color=colors[i], linestyle='dashed')
+    
+    
+    print('SNR = ', (means[1] - means[0]) / (stds[0] + stds[1])/2)
+
+dig.do_set_naverages(10000)
+if 1: #ssb with stark shift with mixer with gaussian fit
+    from single_qubit import stark_shift_with_mixer
+#    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
+    phase1 =0
+    pi_amps = [0,0.3,0.6, 0.7]
+    repeat_ssb = 1
+    for j in range(len(pi_amps)):
+        SS_mixer_info1_set.set_pi_amp(pi_amps[j])
+
+        SS_mixer_info1 = mclient.get_qubit_info('SS_mixer_info1')
+#    for j in range(len(delays)):
+        for i in range(repeat_ssb):        
+    #        RObrick.do_set_power(i)
+            seq = sequencer.Trigger(600)
+            post_seq = sequencer.Delay(150)
+            spec = stark_shift_with_mixer.Stark_shift_with_mixer(qubit_info, mixer_info1,mixer_info2, SS_mixer_info1, SS_mixer_info2,
+                                                                 phase1, np.linspace(-50e6, 10e6,101), seq=seq, plot_seqs=False, postseq = post_seq,
+                                                                 proj_func='projection')
+            spec.measure_keysight()
+            plt.close()
+            shift = spec.center
+
+   
+if 1:    #photon ramsey
     from single_qubit import photon_ramsey_test
 #    delay = np.linspace(130,260,6)
-    
+    SS_mixer_info1_set.set_pi_amp_selective(0.3)
+
+    SS_mixer_info1 = mclient.get_qubit_info('SS_mixer_info1')    
     delay = [200]
     points = [101]
     repeat = 10
@@ -86,8 +208,8 @@ if 1:
             for i in range(repeat):
                 t2 = photon_ramsey_test.Photon_Ramsey_Test(qubit_info, qubit2_info, SS_mixer_info1, mixer_info1,mixer_info2, 
                                                                  np.linspace(0, 0.001e3*(points[k]-1),points[k]), detune=60e6, 
-                                                                 delay = delay[j], generate=True, fix_phi0 = -1.8,qubit_pulse = False,
-                                                                 seq=None, postseq=None, proj_func='amplitude', plot_seqs =False) #extra_info=[qubit2_info])
+                                                                 delay = delay[j], generate=True, fix_phi0 = 1.8,qubit_pulse = False,
+                                                                 seq=None, postseq=None, proj_func='projection', plot_seqs =False) #extra_info=[qubit2_info])
                 t2.measure_keysight()
                 if repeat * len(delay)* len(points) >5:
                     
@@ -96,8 +218,8 @@ if 1:
                     freq[m][i] = t2.fit_params[m]['freq'].value
                 t2 = photon_ramsey_test.Photon_Ramsey_Test(qubit_info, qubit2_info, SS_mixer_info1, mixer_info1,mixer_info2, 
                                                                  np.linspace(0, 0.001e3*(points[k]-1),points[k]), detune=60e6, 
-                                                                 delay = delay[j], generate=True, fix_phi0 = -1.8,qubit_pulse = True,
-                                                                 seq=None, postseq=None, proj_func='amplitude', plot_seqs =False) #extra_info=[qubit2_info])
+                                                                 delay = delay[j], generate=True, fix_phi0 = 1.8,qubit_pulse = True,
+                                                                 seq=None, postseq=None, proj_func='projection', plot_seqs =False) #extra_info=[qubit2_info])
                 t2.measure_keysight()
                 if repeat * len(delay)* len(points) >5:
                     
@@ -166,48 +288,135 @@ if 1:
                 os.makedirs(fdir)
             kwargs = dict()
             plt.savefig(fn, **kwargs)
-if 1: #ssb with stark shift with mixer with gaussian fit
-    from single_qubit import stark_shift_with_mixer
-#    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
-    phase1 =0
-    pi_amps = [0,0.3,0.6]
-    repeat_ssb = 1
-    for j in range(len(pi_amps)):
-        SS_mixer_info1_set.set_pi_amp(pi_amps[j])
 
-        SS_mixer_info1 = mclient.get_qubit_info('SS_mixer_info1')
-#    for j in range(len(delays)):
-        for i in range(repeat_ssb):        
-    #        RObrick.do_set_power(i)
-            seq = sequencer.Trigger(600)
-            post_seq = sequencer.Delay(500)
-            spec = stark_shift_with_mixer.Stark_shift_with_mixer(qubit_info, mixer_info1,mixer_info2, SS_mixer_info1, SS_mixer_info2,
-                                                                 phase1, np.linspace(-50e6, 10e6,101), seq=seq, plot_seqs=False, postseq = post_seq,
-                                                                 proj_func='phase')
-            spec.measure_keysight()
-            plt.close()
-            shift = spec.center
 
 
 
 
 #####for qubit 2 readout
 
-if 1:
+if 1:   #qubit2 readout setting
     
-    ro_freq = 10.824e9
+    ro_freq = 10.8034e9
     power = 10
     readout_info.rfsource1.set_frequency(ro_freq - mixer_info1.deltaf)
     readout_info.rfsource1.set_power(power)
-    readout_info.rfsource2.set_frequency(ro_freq+50e6)
-    deltaf = 10.8223e9 - ro_freq - 100e6
+#    readout_info.rfsource2.set_frequency(ro_freq+50e6)
+    deltaf = 10.811e9 - ro_freq + mixer_info1.deltaf
     SS_mixer_info1_set.set_deltaf(deltaf)
     SS_mixer_info1 = mclient.get_qubit_info('SS_mixer_info1')
+    
+    mixer_info1_set.set_pi_amp(.08)
+    mixer_info2_set.set_pi_amp(.08)
+    mixer_info1_set.set_w(1000)
+    mixer_info2_set.set_w(1000)
+    dig.set_nsamples(1000)
+    
+    
+    
+    mixer_info1 = mclient.get_qubit_info('mixer_info1')
+    mixer_info2 = mclient.get_qubit_info('mixer_info2')
+    from scripts.single_qubit import rabi_mixer
+    tr_e = rabi_mixer.Rabi_mixer(qubit2_info, mixer_info1, mixer_info2,[qubit_info.pi_amp,], histogram=True, title='|e>',
+                   )
+    tr_e.measure_keysight()
+    tr_g = rabi_mixer.Rabi_mixer(qubit2_info,mixer_info1, mixer_info2, [0.001,], histogram=True, title='|g>',
+                   )
+    tr_g.measure_keysight()
+    tr = rabi_mixer.Rabi_mixer(qubit2_info, mixer_info1, mixer_info2,[qubit_info.pi_amp/2,], histogram=True, title='|g>+|e>',
+                   )
+    tr.measure_keysight()
+    
+    e_data = tr_e.shot_data[:]
+    g_data = tr_g.shot_data[:]
+    
+    #find blob centers
+    g_average = np.average(g_data)
+    e_average = np.average(e_data)
+    readout.set_IQg(g_average)
+    readout.set_IQe(e_average)    
+    midpoint = np.average([g_average, e_average])
+
+    #setup plots
+    lim = 400
+    xvec = np.linspace(-lim, lim, 100)
+    fig = plt.figure(figsize=(6, 8))
+    gs = gridspec.GridSpec(2, 1, height_ratios=[3,1])
+    ax1 = fig.add_subplot(gs[0])    
+    ax2 = fig.add_subplot(gs[1])
+    ax1.set_xlim(-lim, lim)
+    ax1.set_ylim(-lim, lim)
+    
+    #plot centers
+    ax1.scatter(np.real(g_average), np.imag(g_average), color='b')
+    ax1.scatter(np.real(e_average), np.imag(e_average), color='r')
+    ax1.scatter(np.real(midpoint), np.imag(midpoint), color='k')
+    
+    #calculate separatrix
+    m = (np.imag(g_average) - np.imag(e_average))/(np.real(g_average) - np.real(e_average))
+    b = np.imag(g_average) - m * np.real(g_average)
+    ax1.plot(xvec, m*xvec+b, linestyle='dashed', color='k')
+    
+    #plot blobs in 2d
+    ax1.hexbin(np.real(g_data), np.imag(g_data), bins=100, alpha=.4, 
+               cmap='Blues', edgecolors='none')
+    ax1.hexbin(np.real(e_data), np.imag(e_data), bins=100, alpha=.4, 
+               cmap='Reds', edgecolors='none')
+    
+    # calculate and plot projections
+    g_project = (np.real(g_data) + np.imag(g_data)*m) / np.sqrt(1 + m**2)
+    e_project = (np.real(e_data) + np.imag(e_data)*m) / np.sqrt(1 + m**2)
+    g_hist, g_bins, patches = ax2.hist(g_project, bins=100, alpha=.4, color='b')
+    e_hist, e_bins, patches = ax2.hist(e_project, bins=100, alpha=.4, color='r')
+    
+    # fit projections
+    xs = [g_bins[:-1], e_bins[:-1]]
+    colors = ['b', 'r']
+    means = []
+    stds = []
+    for i, ys in enumerate([g_hist, e_hist]):
+        params = lmfit.Parameters()
+        params.add('amp', value=np.max(ys), min=0)
+        params.add('mean', value=np.mean(ys))
+        params.add('std', value=np.std(ys), min=0)
+        result = lmfit.minimize(gaussian, params, args=(xs[i], ys))
+        means += [result.params['mean']]
+        stds += [result.params['std']]
+        lmfit.report_fit(result.params)
+        ax2.plot(xs[i], -gaussian(result.params, xs[i], 0), color=colors[i], linestyle='dashed')
+    
+    
+    print('SNR = ', (means[1] - means[0]) / (stds[0] + stds[1])/2)
+    
+dig.do_set_naverages(10000)
+if 1: #T2 mixer
+    from single_qubit import ramsey_measurement_xy
+#    seq = sequencer.Join([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0)])
+    for i in range(1):
+        SS_mixer_info1_set.set_pi_amp(0.00001)
+
+        SS_mixer_info1 = mclient.get_qubit_info('SS_mixer_info1')
+        post_seq = sequencer.Delay(500)
+        
+        for j in range(1):
+            
+       
+#            t2 = ramsey_measurement.Ramsey_Measurement_mixer(qubit2_info, SS_mixer_info1, mixer_info1,mixer_info2, 
+#                                                         np.linspace(0, 0.12e3, 121), detune=80e6, echotype = 'HANN', 
+#                                                         necho = 1, double_freq=False, generate=True, 
+#                                                         seq=None, postseq=post_seq, proj_func='phase', plot_seqs = False) #extra_info=[qubit2_info])
+#            t2.measure_keysight()
+#            A_E.append(t2.fit_params)
+            t2 = ramsey_measurement_xy.Ramsey_Measurement_mixer_xy(qubit2_info, SS_mixer_info1, mixer_info1,mixer_info2, 
+                                                         np.linspace(0, 0.24e3, 121), detune=40e6,  
+                                                         double_freq=False, generate=True, 
+                                                         seq=None, postseq=post_seq, proj_func='projection', plot_seqs = False) #extra_info=[qubit2_info])
+
+            t2.measure_keysight()
 
 
-
-
-if 1:
+'''
+if 0:
     
     
     
@@ -324,11 +533,116 @@ if 1:
             os.makedirs(fdir)
         kwargs = dict()
         plt.savefig(fn, **kwargs)
+'''
+if 1:    #sigma_xy
+    
+    
+    
+    dig.do_set_naverages(10000)
+    from single_qubit import ramsey_measurement_xy
+    post_seq = sequencer.Delay(500)
+    
+    pi_amps = np.linspace(0.7, 0.7,1)
+    repeat = 5
+    df_i = np.zeros([len(pi_amps),repeat])
+    df_f = np.zeros([len(pi_amps),repeat])
+    df_ave = np.zeros([len(pi_amps),repeat])
+    tau_i = np.zeros([len(pi_amps),repeat])
+    tau_f = np.zeros([len(pi_amps),repeat])
+    tau_ave = np.zeros([len(pi_amps),repeat])
+    
+    for i in range(len(pi_amps)):
+        SS_mixer_info1_set.set_pi_amp(pi_amps[i])
+
+        SS_mixer_info1 = mclient.get_qubit_info('SS_mixer_info1')
+        
+        for j in range(repeat):
+            
+       
+#            t2 = ramsey_measurement.Ramsey_Measurement_mixer(qubit2_info, SS_mixer_info1, mixer_info1,mixer_info2, 
+#                                                         np.linspace(0, 0.12e3, 121), detune=80e6, echotype = 'HANN', 
+#                                                         necho = 1, double_freq=False, generate=True, 
+#                                                         seq=None, postseq=post_seq, proj_func='phase', plot_seqs = False) #extra_info=[qubit2_info])
+#            t2.measure_keysight()
+#            A_E.append(t2.fit_params)
+            t2 = ramsey_measurement_xy.Ramsey_Measurement_mixer_xy(qubit2_info, SS_mixer_info1, mixer_info1,mixer_info2, 
+                                                         np.linspace(0, 0.24e3, 121), detune=40e6,  
+                                                         double_freq=False, generate=True, 
+                                                         seq=None, postseq=post_seq, proj_func='projection', plot_seqs = False) #extra_info=[qubit2_info])
+
+            t2.measure_keysight()
+            plt.close()
+#            A.append(t2.fit_params)
+#            xs = t2.delays
+#            df_i[i][j] = t2.fit_params['freq'].value*1e6 + t2.fit_params['A']*1e6*np.exp(-xs[0]*t2.fit_params['slope'])
+#            df_f[i][j] = t2.fit_params['freq'].value*1e6 + t2.fit_params['A']*1e6*np.exp(-xs[-1]*t2.fit_params['slope'])
+#            df_ave[i][j] = np.average(t2.fit_params['freq'].value*1e6 + t2.fit_params['A']*1e6*np.exp(-xs*t2.fit_params['slope']))
+#            tau_i[i][j] = 0.001/((1/t2.fit_params['tau'].value) + t2.fit_params['A2'].value*np.exp(-xs[0]*t2.fit_params['slope'].value/2))
+#            tau_f[i][j] = 0.001/((1/t2.fit_params['tau'].value) + t2.fit_params['A2'].value*np.exp(-xs[-1]*t2.fit_params['slope'].value/2))
+#            tau_ave[i][j] = 0.001/np.average((1/t2.fit_params['tau'].value) + t2.fit_params['A2'].value*np.exp(-xs*t2.fit_params['slope'].value/2))
+#
+#        if repeat >1:
+#            plt.figure()
+#            plt.title('pi_amp = %s'%(pi_amps[i]))
+#            plt.plot(df_i[i], label = ' df_initial, ave freq = %.3f +/- %.3f kHz'%(
+#                    np.average(df_i[i]), np.std(df_i[i])/np.sqrt(len(df_i[i]))))
+#            plt.plot(df_f[i], label = ' df_final, ave freq = %.3f +/- %.3f kHz'%(
+#                    np.average(df_f[i]), np.std(df_f[i])/np.sqrt(len(df_f[i]))))
+#            plt.plot(df_ave[i], label = ' df_average, ave freq = %.3f +/- %.3f kHz'%(
+#                    np.average(df_ave[i]), np.std(df_ave[i])/np.sqrt(len(df_ave[i]))))
+#            plt.legend()
+#            fn = os.path.join(r'C:\_Data', 'images/%s_qubit_df.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
+#            fdir = os.path.split(fn)[0]
+#            if not os.path.isdir(fdir):
+#                os.makedirs(fdir)
+#            kwargs = dict()
+#            plt.savefig(fn, **kwargs)
+#            plt.figure()
+#            plt.title('pi_amp = %s'%(pi_amps[i]))
+#            plt.plot(tau_i[i], label = ' tau_initial, ave tau = %.3f +/- %.3f us'%(
+#                    np.average(tau_i[i]), np.std(tau_i[i])/np.sqrt(len(tau_i[i]))))
+#            plt.plot(tau_f[i], label = ' tau_final, ave tau = %.3f +/- %.3f us'%(
+#                    np.average(tau_f[i]), np.std(tau_f[i])/np.sqrt(len(tau_f[i]))))
+#            plt.plot(tau_ave[i], label = ' tau_average, ave tau = %.3f +/- %.3f us'%(
+#                    np.average(tau_ave[i]), np.std(tau_ave[i])/np.sqrt(len(tau_ave[i]))))
+#            plt.legend()
+#            fn = os.path.join(r'C:\_Data', 'images/%s_tau.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
+#            fdir = os.path.split(fn)[0]
+#            if not os.path.isdir(fdir):
+#                os.makedirs(fdir)
+#            kwargs = dict()
+#            plt.savefig(fn, **kwargs)
+#
+#    if len(pi_amps) > 1:
+#
+#        plt.figure()
+#        plt.title('field = %s'%(field))#%(points[u]))
+#        plt.plot(pi_amps,np.mean(df_i, axis = 1),label = 'df_initial')
+#        plt.plot(pi_amps,np.mean(df_f, axis = 1),label = 'df_final')
+#        plt.plot(pi_amps,np.mean(df_ave, axis = 1),label = 'df_average')
+#        plt.legend()   
+#        fn = os.path.join(r'C:\_Data', 'images/%s_qubit_df_vs_amp.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
+#        fdir = os.path.split(fn)[0]
+#        if not os.path.isdir(fdir):
+#            os.makedirs(fdir)
+#        kwargs = dict()
+#        plt.savefig(fn, **kwargs)
+#        plt.figure()
+#        plt.title('field = %s'%(field))#%(points[u]))
+#        plt.plot(pi_amps,np.mean(tau_i, axis = 1),label = 'tau_initial')
+#        plt.plot(pi_amps,np.mean(tau_f, axis = 1),label = 'tau_final')
+#        plt.plot(pi_amps,np.mean(tau_ave, axis = 1),label = 'tau_average')
+#        plt.legend() 
+#        fn = os.path.join(r'C:\_Data', 'images/%s_tau_vs_amp.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
+#        fdir = os.path.split(fn)[0]
+#        if not os.path.isdir(fdir):
+#            os.makedirs(fdir)
+#        kwargs = dict()
+#        plt.savefig(fn, **kwargs)
 
 
 
-
-if 1:
+if 1:   #CW_ramsey
     from single_qubit import cw_ramsey_mixer
 #    SS_mixer_info1_set.set_pi_amp(0.000000001)
 #
@@ -343,7 +657,7 @@ if 1:
 #    t2.measure_keysight()   
     dig.do_set_naverages(10000)
 
-    pi_amps = np.linspace(0,0.1,11)
+    pi_amps = np.linspace(0,0.2,21)
     repeat = 1
     df = np.zeros([len(pi_amps),repeat])
     tau = np.zeros([len(pi_amps),repeat])
@@ -355,9 +669,9 @@ if 1:
         
         for j in range(repeat):
             t2 = cw_ramsey_mixer.CW_Ramsey_Mixer(qubit2_info,  SS_mixer_info1, mixer_info1,mixer_info2, 
-                                                         np.linspace(0, 0.5e3, 101), detune = 20e6, 
-                                                         generate=True, fix_phi0 =None,qubit_pulse = False,double_freq = False,
-                                                         seq=None, postseq=None, proj_func='phase', plot_seqs =False) #extra_info=[qubit2_info])
+                                                         np.linspace(0, 1e3, 101), detune = 10e6, 
+                                                         generate=True, fix_phi0 =None,qubit_pulse = False,double_freq = True,
+                                                         seq=None, postseq=None, proj_func='projection', plot_seqs =False) #extra_info=[qubit2_info])
             t2.measure_keysight() 
 
             df[i][j] = t2.fit_params[2]['freq'].value*1e6 

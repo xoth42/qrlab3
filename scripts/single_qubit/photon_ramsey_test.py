@@ -93,6 +93,19 @@ def analysis(meas, data=None, fig=None):
         ys_als[2] = np.angle((ys_cplx[0::seq_num] + ys_cplx[1::seq_num])/2)*180/np.pi
     elif meas.proj_func == 'amplitude':
         ys_als[2] = np.abs((ys_cplx[0::seq_num] + ys_cplx[1::seq_num])/2)
+    elif meas.proj_func == 'projection':
+        IQg = meas.readout_info.IQg
+        IQe = meas.readout_info.IQe
+
+        ys = ((ys_cplx[0::seq_num] + ys_cplx[1::seq_num])/2)- IQg
+        if IQg is None or IQe is None or IQg == 0 or IQe == 0:
+            p = np.polyfit(np.real(ys), np.imag(ys), 1)
+            vproj = 1 + 1j*p[0]
+#            return np.real(ys * np.exp(-1j * np.angle(np.average(ys))))
+        else:
+            vproj = IQe - IQg
+        vproj /= np.abs(vproj)
+        ys_als[2] = np.real(ys) * vproj.real  + np.imag(ys) * vproj.imag
     if np.max(ys_als) - np.min(ys_als)>300:# and meas.proj_func is 'phase':
 
         for iphase in range(len(ys_als)):

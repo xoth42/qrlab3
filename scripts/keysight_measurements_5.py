@@ -17,9 +17,14 @@ import matplotlib.pyplot as plt
 import os
 import time
 import math
-import lmfit
+#import lmfit
 import time
 import datetime
+from matplotlib import gridspec
+import lmfit
+
+def gaussian(params, x, data):
+    return data - params['amp'] * np.exp(-.5 * ((x - params['mean']) / params['std'])**2)
 
 qubit_info = mclient.get_qubit_info('qubit1ge')
 ef_info = mclient.get_qubit_info('qubit1ef')
@@ -38,7 +43,7 @@ SS_mixer_info1_set = mclient.instruments['SS_mixer_info1']
 SS_mixer_info2_set = mclient.instruments['SS_mixer_info2']
 #qubit03_info = mclient.get_qubit_info('qubit1_03')
 #qubit14_info = mclient.get_qubit_info('qubit1_14')
-readout_info = mclient.get_readout_info('readout')
+#readout_info = mclient.get_readout_info('readout')
 readout = 'readout_IQ'
 #cavity_infoA = mclient.get_qubit_info('cavityAlice')
 #RO_info = mclient.get_qubit_info('RO')
@@ -226,7 +231,7 @@ if 0: # cav transmission with mixer
     
     plt.legend()
     
-    ro_freq = 10.8058e9
+    ro_freq = 10.8022e9
     power = 10
     mixer_info1 = mclient.get_qubit_info('mixer_info1')
     mixer_info2 = mclient.get_qubit_info('mixer_info2')
@@ -248,7 +253,7 @@ if 0: # cav transmission with mixer
     mixer1_amps = np.linspace(0.1,0.1,1)
 
 
-    rofreq = 10.805e9
+    rofreq = 10.804e9
     freq_range = 5e6
     for mixer1_amp in mixer1_amps:
         mixer2_amp = mixer1_amp
@@ -296,7 +301,7 @@ if 0: # cav transmission with mixer and CW qubit drive
 #    Yoko.do_set_current(-0.00175)
 #    mixer1_amp = .3
 #    mixer_info1_set.set_pi_amp(mixer1_amp)
-    mixer1_amp = 0.04
+    mixer1_amp = 0.06
     mixer2_amp = 0
     
     mixer_info1_set.set_pi_amp(mixer1_amp)
@@ -305,8 +310,8 @@ if 0: # cav transmission with mixer and CW qubit drive
     mixer_info1 = mclient.get_qubit_info('mixer_info1')
     mixer_info2 = mclient.get_qubit_info('mixer_info2')
     phase = 0
-    rofreq = 10.825e9
-    freq_range = 10e6
+    rofreq = 10.805e9
+    freq_range = 5e6
     ro = rocavspectroscopy_keysight_mixer_cw.ROCavSpectroscopy_keysight_mixer_cw(qubit_info, mixer_info1, mixer_info2, phase, 
                                              np.linspace(10,10,1),np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
                                              qubit_pulse=False, seq=None)#,extra_info=[ef2_info])
@@ -332,7 +337,7 @@ if 0: # cav transmission with mixer and CW qubit drive
     plt.figure('phase%s'%(figure_name))
     plt.plot(ro.freqs,ro.phasedata[0],label = 'qubit 1 in CW drive')
 
-    ro_freq = 10.8205e9
+    ro_freq = 10.8064e9
     power = 10
     readout_info.rfsource1.set_frequency(ro_freq - mixer_info1.deltaf)
     readout_info.rfsource1.set_power(power)
@@ -565,12 +570,13 @@ if 0: # SSB spec
 #        RObrick.do_set_power(i)
         seq = sequencer.Trigger(600)
 #        seq = Join([seq, qubit2_info.rotate(np.pi/2, X_AXIS)])
-        spec = ssbspec.SSBSpec(qubit_info, np.linspace(-20e6, 20e6, 101), seq=seq, plot_seqs=False, proj_func='projection')
+        spec = ssbspec.SSBSpec(qubit_info, np.linspace(-20e6, 20e6, 101), seq=seq, plot_seqs=False, 
+                               proj_func='phase',readout = 'readout_IQ')
         spec.measure_keysight()
 #        plt.close()
     bla
     
-if 0: # SSB spec with mixer
+if 1: # SSB spec with mixer
     from single_qubit import ssbspec_mixer
     #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
     for i in range(1):        
@@ -578,7 +584,8 @@ if 0: # SSB spec with mixer
         seq = sequencer.Trigger(600)
     #        seq = Join([seq, qubit2_info.rotate(np.pi/2, X_AXIS)])
         spec = ssbspec_mixer.SSBSpec_mixer(qubit_info, mixer_info1,mixer_info2,
-                                           np.linspace(-20e6, 20e6, 101), seq=seq, plot_seqs=False, proj_func='phase')
+                                           np.linspace(-150e6, 150e6, 101), seq=seq, plot_seqs=False, 
+                                           proj_func='projection')
         spec.measure_keysight()
 #        plt.close()
     bla
@@ -587,18 +594,19 @@ if 0: # SSB spec with mixer
 if 0: #ssb with stark shift with mixer with lorentzian fit
     from single_qubit import stark_shift_with_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
+    postseq = sequencer.Delay(150)
     phase1 = 3.141
-#    mixer_info1_set.set_deltaf(-100e6)
-#    mixer_info1_set.set_deltaf(-100e6)
-#    mixer_info1 = mclient.get_qubit_info('mixer_info1')
-#    mixer_info2 = mclient.get_qubit_info('mixer_info2')
+
+    SS_mixer_info1_set.set_pi_amp(0.6)
+
+    SS_mixer_info1 = mclient.get_qubit_info('SS_mixer_info1')
     for i in range(1):        
 #        RObrick.do_set_power(i)
         seq = sequencer.Trigger(600)
 #        seq = Join([seq, qubit2_info.rotate(np.pi/2, X_AXIS)])
         spec = stark_shift_with_mixer.Stark_shift_with_mixer(qubit_info, mixer_info1,mixer_info2,SS_mixer_info1,SS_mixer_info2, 
-                                                             phase1, np.linspace(-40e6, 20e6, 101), seq=seq, plot_seqs=False, 
-                                                             proj_func='amplitude')
+                                                             phase1, np.linspace(-40e6, 20e6, 101), seq=seq, postseq = postseq, plot_seqs=False, 
+                                                             proj_func='phase')
         spec.measure_keysight()
 #        plt.close()
     shift = spec.center
@@ -633,15 +641,7 @@ if 0: # SSB spec with Stark Shift tone with gaussian fit
     
     bla
     
-if 0: # Check histogramming  #THIS DOES NOT WORK, IT NEEDS TO BE IMPLEMENTED TO KEYSIGHT
-    from single_qubit import rabi
-#    dig.set_naverages(50000)
-    tr = rabi.Rabi(qubit_info, [qubit_info.pi_amp,], histogram=True, title='|e>')
-    tr.measure_keysight()
-    tr = rabi.Rabi(qubit_info, [0.001,], histogram=True, title='|g>')
-    tr.measure_keysight()
-    tr = rabi.Rabi(qubit_info, [qubit_info.pi_amp/2,], histogram=True, title='|g>+|e>')
-    tr.measure_keysight()
+
 
 
     
@@ -675,7 +675,7 @@ if 0: # Power Rabi-Calibrate pi pulse
 #    postseq = sequencer.Sequence(ef2_info.rotate(np.pi/2, 0))
     from single_qubit import rabi
     import time
-    update_proj = True
+    update_proj = False
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
     tr = rabi.Rabi(qubit_info, 
 #                               np.linspace(-0.5, 0.5, 81), selective=False,
@@ -685,7 +685,7 @@ if 0: # Power Rabi-Calibrate pi pulse
         #                       np.linspace(-0.47,-0.41, 81), selective=False,                   
                                plot_seqs=False, generate=True, repeat_pulse=1,# seq=seq,postseq = postseq,
                                update=True, #extra_info=[qubit2_info, ef2_info],
-                               proj_func='projection')
+                               proj_func='phase',readout = 'readout_IQ')
     tr.measure_keysight()
     
     if update_proj:
@@ -700,6 +700,81 @@ if 0: # Power Rabi-Calibrate pi pulse
     bla
 
 
+if 0: # Check histogramming
+    from scripts.single_qubit import rabi_mixer
+    tr_e = rabi_mixer.Rabi_mixer(qubit_info, mixer_info1, mixer_info2,[qubit_info.pi_amp,], histogram=True, title='|e>',
+                   )
+    tr_e.measure_keysight()
+    tr_g = rabi_mixer.Rabi_mixer(qubit_info,mixer_info1, mixer_info2, [0.001,], histogram=True, title='|g>',
+                   )
+    tr_g.measure_keysight()
+    tr = rabi_mixer.Rabi_mixer(qubit_info, mixer_info1, mixer_info2,[qubit_info.pi_amp/2,], histogram=True, title='|g>+|e>',
+                   )
+    tr.measure_keysight()
+    
+    e_data = tr_e.shot_data[:]
+    g_data = tr_g.shot_data[:]
+    
+    #find blob centers
+    g_average = np.average(g_data)
+    e_average = np.average(e_data)
+    readout.set_IQg(g_average)
+    readout.set_IQe(e_average)    
+    midpoint = np.average([g_average, e_average])
+
+    #setup plots
+    lim = 400
+    xvec = np.linspace(-lim, lim, 100)
+    fig = plt.figure(figsize=(6, 8))
+    gs = gridspec.GridSpec(2, 1, height_ratios=[3,1])
+    ax1 = fig.add_subplot(gs[0])    
+    ax2 = fig.add_subplot(gs[1])
+    ax1.set_xlim(-lim, lim)
+    ax1.set_ylim(-lim, lim)
+    
+    #plot centers
+    ax1.scatter(np.real(g_average), np.imag(g_average), color='b')
+    ax1.scatter(np.real(e_average), np.imag(e_average), color='r')
+    ax1.scatter(np.real(midpoint), np.imag(midpoint), color='k')
+    
+    #calculate separatrix
+    m = (np.imag(g_average) - np.imag(e_average))/(np.real(g_average) - np.real(e_average))
+    b = np.imag(g_average) - m * np.real(g_average)
+    ax1.plot(xvec, m*xvec+b, linestyle='dashed', color='k')
+    
+    #plot blobs in 2d
+    ax1.hexbin(np.real(g_data), np.imag(g_data), bins=100, alpha=.4, 
+               cmap='Blues', edgecolors='none')
+    ax1.hexbin(np.real(e_data), np.imag(e_data), bins=100, alpha=.4, 
+               cmap='Reds', edgecolors='none')
+    
+    # calculate and plot projections
+    g_project = (np.real(g_data) + np.imag(g_data)*m) / np.sqrt(1 + m**2)
+    e_project = (np.real(e_data) + np.imag(e_data)*m) / np.sqrt(1 + m**2)
+    g_hist, g_bins, patches = ax2.hist(g_project, bins=100, alpha=.4, color='b')
+    e_hist, e_bins, patches = ax2.hist(e_project, bins=100, alpha=.4, color='r')
+    
+    # fit projections
+    xs = [g_bins[:-1], e_bins[:-1]]
+    colors = ['b', 'r']
+    means = []
+    stds = []
+    for i, ys in enumerate([g_hist, e_hist]):
+        params = lmfit.Parameters()
+        params.add('amp', value=np.max(ys), min=0)
+        params.add('mean', value=np.mean(ys))
+        params.add('std', value=np.std(ys), min=0)
+        result = lmfit.minimize(gaussian, params, args=(xs[i], ys))
+        means += [result.params['mean']]
+        stds += [result.params['std']]
+        lmfit.report_fit(result.params)
+        ax2.plot(xs[i], -gaussian(result.params, xs[i], 0), color=colors[i], linestyle='dashed')
+    
+    
+    print('SNR = ', (means[1] - means[0]) / (stds[0] + stds[1])/2)
+    dig.do_set_naverages(10000)
+    bla
+
 if 0: # Power Rabi-Calibrate pi pulse with mixer
 
 #    for cool_time in [1e3,5e3,10e3,30e3]:
@@ -711,20 +786,21 @@ if 0: # Power Rabi-Calibrate pi pulse with mixer
     from single_qubit import rabi_mixer
     import time
     update_proj =False
+    postseq = sequencer.Delay(150)
 #    seq = sequencer.Sequence([sequencer.Trigger(400)])
 #    seq = sequencer.Sequence([sequencer.Trigger(400), qubit_info.rotate(np.pi, 0)])
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate_selective(np.pi, 0)])
 #    postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
 #    postseq = sequencer.Sequence(qubit_info.rotate_selective(np.pi, 0))
     tr = rabi_mixer.Rabi_mixer(qubit_info, mixer_info1, mixer_info2,
-#                               np.linspace(-0.8, 0.8, 81), selective=False,
+#                               np.linspace(-0.4, 0.4, 81), selective=False,
 #                               np.linspace(-0.6, 0.6, 81), selective=False,
                                np.linspace(-0.2, 0.2, 81), selective=True,
-#                               np.linspace(-0.4, 0.4, 81), selective=True,
+#                               np.linspace(-0.6, 0.6, 81), selective=True,
         #                       np.linspace(-0.47,-0.41, 81), selective=False,                   
-                               plot_seqs=False, generate=True, repeat_pulse=1,# seq=seq,postseq = postseq, fix_period = 0.38087745,
-                               update=True, #extra_info=[qubit_info],
-                               proj_func='phase')
+                               plot_seqs=False, generate=True, repeat_pulse=1,postseq = postseq,# seq=seq,postseq = postseq, fix_period = 0.38087745,
+                               update=False, #extra_info=[qubit_info],
+                               proj_func='projection')
     tr.measure_keysight()
     
     if update_proj:
@@ -875,9 +951,9 @@ if 0: # T1 mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
 
     t1 = T1measurement_mixer.T1Measurement_mixer(qubit_info, mixer_info1, mixer_info2, #np.linspace(0, 500e3, 101),
-                                         np.linspace(0e3, 4e3, 101),
+                                         np.linspace(0e3, 2e3, 101),
 #                                         np.concatenate((np.linspace(5e3, 5e3, 50), np.linspace(6e3, 6e3, 51))),
-                                         double_exp=False, generate=True, plot_seqs=False, proj_func='phase', seq=None)    
+                                         double_exp=False, generate=True, plot_seqs=False, proj_func='projection', seq=None)    
     t1.measure_keysight()
     bla
 
@@ -915,8 +991,8 @@ if 0: #T2 mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0)])
     for i in range(1):
         t2 = T2measurement_mixer.T2Measurement_mixer(qubit_info, mixer_info1, mixer_info2, np.linspace(0, 1e3, 101), detune=8e6, 
-                                                     double_freq=False, generate=True, echotype = 'HANN',
-                                                     seq=None, postseq=None, proj_func='phase') #extra_info=[qubit2_info])
+                                                     double_freq=True, generate=True, echotype = 'HANN',
+                                                     seq=None, postseq=None, proj_func='projection') #extra_info=[qubit2_info])
 #        t2 = T2measurement.T2Measurement(qubit_info, np.concatenate((np.linspace(0.1e3, 2.6e3, 81), np.linspace(2.61e3, 10e3, 81))), detune=0.5e6, double_freq=False, generate=True, 
 #                                         seq=seq, extra_info=ef_info, postseq=None, proj_func='phase')
 
@@ -1070,7 +1146,9 @@ if 0: # EF SSBspec mixer
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate_selective(np.pi, 0)])
     postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
 #    postseq = sequencer.Sequence(qubit_info.rotate_selective(np.pi, 0))
-    spec = ssbspec_mixer.SSBSpec_mixer(ef_info, mixer_info1, mixer_info2, np.linspace(-10e6, 10e6, 101), seq=seq, postseq = postseq, extra_info=qubit_info, plot_seqs=False, generate=True, proj_func='phase')
+    spec = ssbspec_mixer.SSBSpec_mixer(ef_info, mixer_info1, mixer_info2, np.linspace(-10e6, 10e6, 101), 
+                                       seq=seq, postseq = postseq, extra_info=qubit_info, plot_seqs=False, generate=True, 
+                                       proj_func='projection')
     spec.measure_keysight()
 #    fit_freq=spec.center
 #    deltaf_1 = ef2_info_set.get_deltaf()
@@ -1131,7 +1209,7 @@ if 0: # EF rabi
     dig.set_naverages(3000)
     bla
 
-if 0: # EF rabi mixer
+if 1: # EF rabi mixer
     from single_qubit import efrabi_mixer
 #    dig = mclient.instruments['dig']
 #    cool_time = 25e3
@@ -1143,15 +1221,15 @@ if 0: # EF rabi mixer
 #                                   sequencer.Constant(int(cool_time), 1, chan='3m1')])
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
 #    dig.set_naverages(4000)
-    efr = efrabi_mixer.EFRabi_mixer(qubit_info, ef_info, mixer_info1, mixer_info2, np.linspace(-0.4, 0.4, 101), first_pi=True,
-                                    second_pi=True, seq=None, generate=True, update=True,
-                                    proj_func='phase')
-    efr.measure_keysight()
-    period = efr.fit_params['period'].value
+#    efr = efrabi_mixer.EFRabi_mixer(qubit_info, ef_info, mixer_info1, mixer_info2, np.linspace(-0.6, 0.6, 101), first_pi=True,
+#                                    second_pi=True, seq=None, generate=True, update=True,
+#                                    proj_func='projection')
+#    efr.measure_keysight()
+#    period = efr.fit_params['period'].value
     dig.set_naverages(30000)
-    efr = efrabi_mixer.EFRabi_mixer(qubit_info, ef_info, mixer_info1, mixer_info2, np.linspace(-0.4, 0.4, 101), first_pi=False, 
+    efr = efrabi_mixer.EFRabi_mixer(qubit_info, ef_info, mixer_info1, mixer_info2, np.linspace(-0.6, 0.6, 101), first_pi=False, 
                                     second_pi=True, selective=False, seq=None, generate=True,
-                                    force_period = period, proj_func='phase')
+                                    force_period = period, proj_func='projection')
     efr.measure_keysight()
     dig.set_naverages(6000)
     bla
@@ -1162,7 +1240,7 @@ if 0: # FT1
 
     for i in range(1):
 #        seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
-        ft1 = FT1measurement.FT1Measurement(qubit_info, ef_info, np.linspace(0, 2e3, 101), seq=None, proj_func='phase')
+        ft1 = FT1measurement.FT1Measurement(qubit_info, ef_info, np.linspace(0, 2e3, 101), seq=None, proj_func='projection')
 #        ft1 = FT1measurement.FT1Measurement(qubit_info, ef_info, np.concatenate((np.linspace(0, 1e3, 31), np.linspace(1.01e3, 5e3, 31))), seq=None, proj_func='phase')
 
         ft1.measure_keysight()
@@ -1195,9 +1273,9 @@ if 0: # FT1 mixer
     seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate(np.pi, 0)])
     postseq = sequencer.Sequence([qubit_info.rotate(np.pi/2, 0)])
     t1 = T1measurement_mixer.T1Measurement_mixer(ef_info, mixer_info1, mixer_info2, #np.linspace(0, 500e3, 101),
-                                         np.linspace(0e3, 3e3, 101),
+                                         np.linspace(0e3, 1e3, 101),
 #                                         np.concatenate((np.linspace(5e3, 5e3, 50), np.linspace(6e3, 6e3, 51))),
-                                         double_exp=False, generate=True, plot_seqs=False, proj_func='phase', seq=seq , postseq = postseq, extra_info=qubit_info)    
+                                         double_exp=False, generate=True, plot_seqs=False, proj_func='projection', seq=seq , postseq = postseq, extra_info=qubit_info)    
     t1.measure_keysight()
     bla
     

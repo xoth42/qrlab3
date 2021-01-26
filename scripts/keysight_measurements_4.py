@@ -23,7 +23,7 @@ import datetime
 #fxa01 = mclient.get_qubit_info('fxa01')
 
 qubit_info = mclient.get_qubit_info('qubit1ge')
-ef_info = mclient.get_qubit_info('qubit1ef')
+#ef_info = mclient.get_qubit_info('qubit1ef')
 readout = 'readout_IQ'
 #fh_info = mclient.get_qubit_info('qubit1fh')
 #qubit_a1 = mclient.get_qubit_info('qubit_a1')
@@ -335,7 +335,7 @@ if 0: # T2
         t2.measure_keysight()
     bla
     
-if 0: # T2echo
+if 1: # T2echo
     from single_qubit import T2measurement
 
     t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0.01e3, 20e3, 101),

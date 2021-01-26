@@ -420,7 +420,6 @@ class Measurement(object):
             print('inside acquisiton_loop, seeing if funcgen is on')
             self.start_awgs()
             time.sleep(1)
-
         # Setup and arm alazar
         if self.histogram:
             alz.setup_hist(self.cyclelen * alz.get_naverages(), self.shot_data)
@@ -636,6 +635,8 @@ class Measurement(object):
         progress_hid = dig.connect('capture-progress', self._capture_progress_cb)
         dataupd_hid = self.data.connect('changed', self._data_changed_cb)
         
+        print("Cycle length is %s"%(self.cyclelen))
+
         dig.stop_hvi()
         if self.histogram:
             dig.setup_hist(self.cyclelen * dig.get_naverages(), hist_buf = self.shot_data)
