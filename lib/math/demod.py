@@ -88,37 +88,37 @@ class DemodulatorComplex(Demodulator):
 #        self.IQ[:len(ar4)] = ar4
 
         
-class DemodulatorForRef(Demodulator):
-    '''
-    Class to perform complex demodulation by calculating sig * exp(-i phi).
-    This class can directly average the IQ values over several perios of the
-    IF frequency by specifying <avg_periods>.
-    '''
-
-    def __init__(self, nsamples, period, nsample,ref_freq = 50, avg_periods=1, weight_func=1):
-        Demodulator.__init__(self, nsamples, period)
-        self.nsamples = nsamples
-        self.period = period
-        self.nsample = nsample
-        self.ref_freq = ref_freq
-        # Number of samples for one data point
-        self.samples_per_point = period * avg_periods
-        if (nsamples % self.samples_per_point) != 0:
-            raise ValueError('Number of samples needs to be multiple of period and avg_cycles')
-
-
-        phis = np.linspace(0, 2*np.pi * avg_periods *nsample/self.period * self.ref_freq/50,nsample,endpoint = False)
-        print self.ref_freq
-        self._exp_iphi = np.exp(1j * phis) / avg_periods * weight_func
-        self._exp_iphi = self._exp_iphi.astype(np.complex64)
-        self.IQ = np.zeros([self.nsamples/self.samples_per_point,], dtype=np.complex64)
-
-    def demodulate(self, ar):
-        ar2 = ar.reshape((len(ar) / self.nsample, self.nsample))
-        ar3 = np.dot(ar2,self._exp_iphi)
-        ar4 = np.repeat(ar3, self.nsample/self.period)
-        self.IQ[:len(ar4)] = ar4 
-        
+#class DemodulatorForRef(Demodulator):#Yingying
+#    '''
+#    Class to perform complex demodulation by calculating sig * exp(-i phi).
+#    This class can directly average the IQ values over several perios of the
+#    IF frequency by specifying <avg_periods>.
+#    '''
+#
+#    def __init__(self, nsamples, period, nsample,ref_freq = 50, avg_periods=1, weight_func=1):
+#        Demodulator.__init__(self, nsamples, period)
+#        self.nsamples = nsamples
+#        self.period = period
+#        self.nsample = nsample
+#        self.ref_freq = ref_freq
+#        # Number of samples for one data point
+#        self.samples_per_point = period * avg_periods
+#        if (nsamples % self.samples_per_point) != 0:
+#            raise ValueError('Number of samples needs to be multiple of period and avg_cycles')
+#
+#
+#        phis = np.linspace(0, 2*np.pi * avg_periods *nsample/self.period * self.ref_freq/50,nsample,endpoint = False)
+#        print self.ref_freq
+#        self._exp_iphi = np.exp(1j * phis) / avg_periods * weight_func
+#        self._exp_iphi = self._exp_iphi.astype(np.complex64)
+#        self.IQ = np.zeros([self.nsamples/self.samples_per_point,], dtype=np.complex64)
+#
+#    def demodulate(self, ar):
+#        ar2 = ar.reshape((len(ar) / self.nsample, self.nsample))
+#        ar3 = np.dot(ar2,self._exp_iphi)
+#        ar4 = np.repeat(ar3, self.nsample/self.period)
+#        self.IQ[:len(ar4)] = ar4 
+#        
 
         
         

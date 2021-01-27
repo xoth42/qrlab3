@@ -39,6 +39,13 @@ def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
     xs = meas.displacements
     fig.axes[0].plot(xs, ys, 'ks', ms=3)
+    
+    try: # This is a placeholder until stes is implemented w/ Alazar.
+        fig.axes[0].errorbar(xs, ys, yerr=meas.get_errorbars(), fmt='.', 
+                         markersize = 0, ecolor='grey', linewidth=1)
+    except:
+        print('passed no errorbars')
+    
     ofs0 = np.min(ys)
     amp0 = (np.max(ys) - np.min(ys)) * np.sign(ys[0]-ys[-1])
     scaling0 = 1
@@ -117,10 +124,13 @@ class CavDisp(Measurement1D):
                 if self.postseq:
                     s.append(self.postseq)
 
-                s.append(Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ]))
+#                s.append(Combined([
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#                ]))
+#                s.append(Delay(2000))
+                    
+                s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
                 s.append(Delay(2000))
 
             if self.QswA is not None or self.QswB is not None:

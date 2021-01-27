@@ -1,153 +1,72 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Sep 30 12:27:21 2019
+Created on Mon Dec 14 20:18:24 2020
 
 @author: Wang_Lab
 """
 
-rofreq = 10.935e9
-freq_range = 2.5e6
-dig.set_naverages(10000)
-#    SC_qubit.set_rf_on(True)
-#    qubitbrick.set_rf_on(True)
-ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(-5, 10, 1),
-                                         np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
-                                         qubit_pulse=False, seq=None)
-ro.measure()
-pl.close()
-max_freq = ro.fit_params[2]
-print max_freq
-readout_info.rfsource1.set_frequency(ro.fit_params[2])
-readout_info.rfsource2.set_frequency(ro.fit_params[2]+50e6)   
 
-freadout.append(max_freq)
+import numpy as np
+import glob
+import re
+import matplotlib.pyplot as pl
 
 
+foldername = 'sigma_xy_redo'
+#foldername = '0.25T in fridge\\330'
+filepath = 'C:\\Users\\Wang_Lab\\Documents\\circulator results\\1126cooldown_circulator\\%s'%(foldername) 
+#filepath = 'C:\Users\Wang_Lab\Documents\\yingying\\FMR\\power sweep 220 mode' 
+filelist = glob.glob(r'%s\\*.txt'%(filepath))
+#pl.title('temperature dependence')
 
+fields = np.linspace(-0.05, 0.05, 11)
+fieldplot = np.linspace(-0.05,0.06,12)
 
-from single_qubit import rabi
-#    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
-dig.set_naverages(10000)
-#    SC_qubit.set_rf_on(True)
-#    qubitbrick.set_rf_on(True)
-tr = rabi.Rabi(qubit_info, 
-    #                       np.linspace(-0.2, -0.20, 81), selective=False,
-                           np.linspace(-0.6, 0.6, 81), selective=False,
-    #                       np.linspace(-0.26, -0.18, 101), selective=False,
-    #                       np.linspace(-0.47,-0.41, 81), selective=False,                   
-                           plot_seqs=False, generate=True, repeat_pulse=1, seq=None,
-                           update=True, #extra_info=ef_info,
-                           proj_func='phase')
-tr.measure_keysight()
-pl.title('S31 with qubit1 field = %s'%(float(field0)))
-rabiamp1.append(tr.fit_params['amp'].value)
-rabiamp1_err.append(tr.fit_params['amp'].stderr)
-pl.close()
+npts = 242
+delays = np.linspace(0,0.24,121)
+proj_data = np.zeros((len(fields),npts))
 
-dig.set_naverages(80000)
-#    SC_qubit.set_rf_on(True)
-#    qubitbrick.set_rf_on(True)
-tr = rabi.Rabi(qubit2_info, 
-    #                       np.linspace(-0.2, -0.20, 81), selective=False,
-                           np.linspace(-0.7, 0.7, 81), selective=False,
-    #                       np.linspace(-0.26, -0.18, 101), selective=False,
-    #                       np.linspace(-0.47,-0.41, 81), selective=False,                   
-                           plot_seqs=False, generate=True, repeat_pulse=1, seq=None,
-                           update=True, fix_period = qubit2ge.get_pi_amp()*2, #extra_info=ef_info,
-                           proj_func='phase')
-tr.measure_keysight()
-pl.title('S31 with qubit2 field = %s'%(float(field0)))    
-rabiamp2.append(tr.fit_params['amp'].value)
-rabiamp2_err.append(tr.fit_params['amp'].stderr)
-pl.close()
-
-
-dig.set_naverages(10000)
-#    SC_qubit.set_rf_on(False)
-#    qubitbrick.set_rf_on(True)
-tr = rabi.Rabi(qubit_info, 
-    #                       np.linspace(-0.2, -0.20, 81), selective=False,
-                           np.linspace(-0.6, 0.6, 81), selective=False,
-    #                       np.linspace(-0.26, -0.18, 101), selective=False,
-    #                       np.linspace(-0.47,-0.41, 81), selective=False,                   
-                           plot_seqs=False, generate=True, repeat_pulse=1, seq=None,
-                           update=True, #extra_info=ef_info,
-                           proj_func='phase')
-tr.measure_keysight()
-pl.title('S31 with qubit1 field = %s'%(float(field0)))
-rabiamp3.append(tr.fit_params['amp'].value)
-rabiamp3_err.append(tr.fit_params['amp'].stderr)
-pl.close()
-rofreq = 10.935e9
-freq_range = 2.5e6
-dig.set_naverages(10000)
-#    SC_qubit.set_rf_on(True)
-#    qubitbrick.set_rf_on(True)
-ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(-5, 10, 1),
-                                         np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
-                                         qubit_pulse=False, seq=None)
-ro.measure()
-pl.close()
-max_freq = ro.fit_params[2]
-print max_freq
-readout_info.rfsource1.set_frequency(ro.fit_params[2])
-readout_info.rfsource2.set_frequency(ro.fit_params[2]+50e6)   
-
-freadout.append(max_freq)
+#print filelist
+for filename in filelist:
+# Read the array from file
+#    if filename[95]!=filename[96]:
+    print '\n'
+    print filename
+    num = [float(s) for s in re.findall(r'-?\d+\.?\d*', filename)]
+    proj = np.loadtxt(filename,delimiter=",")
+    ifield = np.argmin(np.abs(fields - num[-1]))
+    proj_data[ifield] = proj
+    x = proj[::2]
+    y = proj[1::2]
+    pl.figure()
+    pl.title('%sT'%(num[-1]))
+    pl.plot(delays,x)
+    pl.plot(delays,y)
+    pl.plot(delays,np.sqrt(x**2 + y**2))
+            
 
 
 
-
-from single_qubit import rabi
-#    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
-dig.set_naverages(10000)
-#    SC_qubit.set_rf_on(True)
-#    qubitbrick.set_rf_on(True)
-tr = rabi.Rabi(qubit_info, 
-    #                       np.linspace(-0.2, -0.20, 81), selective=False,
-                           np.linspace(-0.6, 0.6, 81), selective=False,
-    #                       np.linspace(-0.26, -0.18, 101), selective=False,
-    #                       np.linspace(-0.47,-0.41, 81), selective=False,                   
-                           plot_seqs=False, generate=True, repeat_pulse=1, seq=None,
-                           update=True, #extra_info=ef_info,
-                           proj_func='phase')
-tr.measure_keysight()
-pl.title('S31 with qubit1 field = %s'%(float(field0)))
-rabiamp1.append(tr.fit_params['amp'].value)
-rabiamp1_err.append(tr.fit_params['amp'].stderr)
-pl.close()
-
-dig.set_naverages(80000)
-#    SC_qubit.set_rf_on(True)
-#    qubitbrick.set_rf_on(True)
-tr = rabi.Rabi(qubit2_info, 
-    #                       np.linspace(-0.2, -0.20, 81), selective=False,
-                           np.linspace(-0.7, 0.7, 81), selective=False,
-    #                       np.linspace(-0.26, -0.18, 101), selective=False,
-    #                       np.linspace(-0.47,-0.41, 81), selective=False,                   
-                           plot_seqs=False, generate=True, repeat_pulse=1, seq=None,
-                           update=True, fix_period = qubit2ge.get_pi_amp()*2, #extra_info=ef_info,
-                           proj_func='phase')
-tr.measure_keysight()
-pl.title('S31 with qubit2 field = %s'%(float(field0)))    
-rabiamp2.append(tr.fit_params['amp'].value)
-rabiamp2_err.append(tr.fit_params['amp'].stderr)
-pl.close()
+sigma_x = proj_data[:,::2]
+sigma_y = proj_data[:,1::2]
 
 
-dig.set_naverages(10000)
-#    SC_qubit.set_rf_on(False)
-#    qubitbrick.set_rf_on(True)
-tr = rabi.Rabi(qubit_info, 
-    #                       np.linspace(-0.2, -0.20, 81), selective=False,
-                           np.linspace(-0.6, 0.6, 81), selective=False,
-    #                       np.linspace(-0.26, -0.18, 101), selective=False,
-    #                       np.linspace(-0.47,-0.41, 81), selective=False,                   
-                           plot_seqs=False, generate=True, repeat_pulse=1, seq=None,
-                           update=True, #extra_info=ef_info,
-                           proj_func='phase')
-tr.measure_keysight()
-pl.title('S31 with qubit1 field = %s'%(float(field0)))
-rabiamp3.append(tr.fit_params['amp'].value)
-rabiamp3_err.append(tr.fit_params['amp'].stderr)
-pl.close()
+env = np.sqrt(sigma_x**2 + sigma_y**2)
+
+pl.figure()
+X, Y = np.meshgrid(delays,fieldplot-0.005)
+pl.pcolormesh(X,Y,env)
+pl.colorbar()
+
+delay = 70
+sigma_raw = env[:, delay:delay + 10]
+
+sigma = np.mean(sigma_raw, 1)
+pl.figure()
+#pl.plot(fields,sigma, label = '%s ns'%(delays[delay]*1000))
+pl.plot(fields,-np.log(sigma), label = '%s ns'%(delays[delay]*1000))
+pl.ylabel('qubit decay rate')
+pl.xlabel('field(T)')
+pl.legend()
+        
+

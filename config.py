@@ -15,7 +15,6 @@ dot_awg_path = 'Z:\\_AWG\\123.awg'
 
 required_channels = (1, 2, 3, 4)
 
-
 #slave_triggers = (('4m1', 475),)
 # marker delay
 

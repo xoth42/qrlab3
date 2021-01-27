@@ -345,7 +345,4 @@ datadir = 'c:/_data'
 
 filename = 'c:/_data/Transmon_wTWPA_7GHz_cavity.hdf5'
 
-
-
-
 datafile = datasrv.get_file(filename)

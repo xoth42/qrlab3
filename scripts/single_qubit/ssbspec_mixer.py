@@ -45,17 +45,17 @@ def analysis(meas, data=None, fig=None):
 #    fig.canvas.draw()
         
     f = fit.Lorentzian(xs, ys)
-    if 0:
+    if 1:
         h0 = np.max(ys)-np.min(ys)
-        w0 = 0.05e6
+        w0 = 0.5e6
         pos = xs[np.argmax(ys)]
         p0 = [np.min(ys), w0*h0, pos, w0]
-    if 1:
+    if 0:
         h0 = np.min(ys)-np.max(ys)
         w0 = 0.5e6
         pos = xs[np.argmin(ys)]
         p0 = [np.max(ys), w0*h0, pos, w0]
-        p = f.fit(p0)
+    p = f.fit(p0)
     meas.height=f.get_height()
 #    print(meas.height)
     meas.center = -p[2]/1e6

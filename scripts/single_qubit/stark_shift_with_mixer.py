@@ -24,6 +24,12 @@ def analysis(meas, data=None, fig=None):
             if ys[iphase] > 0:
                 ys[iphase] = ys[iphase] -360    
     
+    fig.axes[0].plot(-xs/1e6, ys, 'ks', ms=3)
+    try: # This is a placeholder until stes is implemented w/ Alazar.
+        fig.axes[0].errorbar(-xs/1e6, ys, yerr=meas.get_errorbars(), fmt='.', 
+                         markersize = 0, ecolor='grey', linewidth=1)
+    except:
+        print('passed no errorbars')  
 
 
     
