@@ -14,6 +14,12 @@ def exp_decay(params, x, data):
 def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
     xs = meas.delays
+    
+    try: # This is a placeholder until stes is implemented w/ Alazar.
+        fig.axes[0].errorbar(xs/1e3, ys, yerr=meas.get_errorbars(), fmt='.', 
+                         markersize = 0, ecolor='grey', linewidth=1)
+    except:
+        print('passed no errorbars')  
 
     fig.axes[0].plot(xs/1e3, ys, 'ks', ms=3)
 
@@ -68,7 +74,7 @@ class FT1Measurement(Measurement1D):
 #            s.append(r_ef(np.pi,0))
 #            s.append(r(np.pi,0))
 #            s.append(r_ef(np.pi/2,0)) #fluxonium
-            s.append(self.get_readout_pulse())
+            s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
             s.append(Delay(1000))
 
         s = self.get_sequencer(s)

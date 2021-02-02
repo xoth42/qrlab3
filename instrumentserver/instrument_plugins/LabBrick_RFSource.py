@@ -200,8 +200,8 @@ class LabBrick_RFSource(Instrument):
 #        self.add_parameter('pulse_on', type=types.BooleanType,
 #                           flags=Instrument.FLAG_GET)
 
-        self.add_parameter('internal_pulse_stat', type=types.BooleanType,
-                           flags=Instrument.FLAG_GETSET)
+#        self.add_parameter('internal_pulse_stat', type=types.BooleanType,
+#                           flags=Instrument.FLAG_GETSET)
         self.add_parameter('external_pulse_stat', type=types.BooleanType,
                            flags=Instrument.FLAG_GETSET)
         self.external_mod_status = False

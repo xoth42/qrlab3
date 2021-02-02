@@ -46,6 +46,11 @@ def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
 
     fig.axes[0].plot(xs/1e3, ys, 'ks', ms=3, linestyle='-', markerfacecolor='red')
+    try: # This is a placeholder until stes is implemented w/ Alazar.
+        fig.axes[0].errorbar(xs/1e3, ys, yerr=meas.get_errorbars(), fmt='.', 
+                         markersize = 0, ecolor='grey', linewidth=1)
+    except:
+        print('passed no errorbars')
 
     amp0 = (np.max(ys) - np.min(ys)) / 2
     fftys = np.abs(np.fft.fft(ys - np.average(ys)))
@@ -269,10 +274,12 @@ class T2Measurement(Measurement1D):
 
             if self.postseq:
                 s_temp += [self.postseq]
-            s_temp += [Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ])]
+#            s_temp += [Combined([
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#                ])]
+                
+
     
 #            s.append(Delay(50000))
 
@@ -286,6 +293,7 @@ class T2Measurement(Measurement1D):
 #                Repeat(Constant(5000, 0.0001, chan=5), 60),         # Qubit/Readout master switch
 #            ]))
 
+            s_temp += [self.readout_driver.do_get_sequence(self.readout_qubit_info)]
             s_temp += [Delay(2000)]
             s.append(Join(s_temp))
 

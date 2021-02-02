@@ -31,6 +31,8 @@ import lmfit
 #fxb01 = mclient.get_qubit_info('fxb01')
 #fxa01 = mclient.get_qubit_info('fxa01')
 
+readout = 'readout_IQ'
+
 qubit_info = mclient.get_qubit_info('qubit1ge')
 ef_info = mclient.get_qubit_info('qubit1ef')
 #fh_info = mclient.get_qubit_info('qubit1fh')
@@ -69,15 +71,17 @@ if 0: # test digitizer DEMODULATED
     plt.show()
     bla
 
-if 0: # Check histogramming
+if 1: # Check histogramming
     from scripts.single_qubit import rabi
-    tr_e = rabi.Rabi(qubit_info, [qubit_info.pi_amp,], histogram=True, title='|e>')
+    tr_e = rabi.Rabi(qubit_info, [qubit_info.pi_amp,], histogram=True, title='|e>',
+                     readout=readout)
     tr_e.measure_keysight()
-    tr_g = rabi.Rabi(qubit_info, [0.001,], histogram=True, title='|g>')
+    tr_g = rabi.Rabi(qubit_info, [0.001,], histogram=True, title='|g>',
+                     readout=readout)
     tr_g.measure_keysight()
     
     
-if 0: # histogram calculating and plotting
+if 1: # histogram calculating and plotting
     e_data = tr_e.shot_data[:]
     g_data = tr_g.shot_data[:]
     

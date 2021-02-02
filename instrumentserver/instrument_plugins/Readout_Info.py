@@ -64,7 +64,10 @@ class Readout_Info(Instrument):
                 help='Envelope for FPGA',
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 set_func=lambda x: True, value='1')
-
+#        self.add_parameter('ref_freq',  type=types.FloatType,
+#                help='reference frequency is 50(MHz) or others',
+#                flags=Instrument.FLAG_GETSET|Instrument.FLAG_SOFTGET,
+#                set_func=lambda x: True, value = 50)#Yingying
         self.set(kwargs)
 
     def do_set_rfsource(self, val):
@@ -103,7 +106,7 @@ class Readout_Info(Instrument):
         if ins:
             return ins.set_frequency(val)
         
-    def do_get_sequence(self):
+    def do_get_sequence(self, readout_qubit_info):
         ro = Combined([
                     Constant(self.get_pulse_len(), 1, chan=self.get_readout_chan()),
                     Constant(self.get_pulse_len(), 1, chan=self.get_acq_chan())])

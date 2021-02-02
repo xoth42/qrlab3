@@ -62,7 +62,13 @@ def double_sin_fit_tilted(params, x, data):
 def analysis(meas, data=None, fig=None):
     xs = meas.delays
     ys, fig = meas.get_ys_fig(data, fig)
-
+    
+    try: # This is a placeholder until stes is implemented w/ Alazar.
+        fig.axes[0].errorbar(xs/1e3, ys, yerr=meas.get_errorbars(), fmt='.', 
+                         markersize = 0, ecolor='grey', linewidth=1)
+    except:
+        print('passed no errorbars')  
+        
     fig.axes[0].plot(xs/1e3, ys, 'ks', ms=3)
 
     amp0 = (np.max(ys) - np.min(ys)) / 2
@@ -148,7 +154,7 @@ class EFT2Measurement(Measurement1D):
         self.necho = necho
         self.double_freq=double_freq
         if seq is None:             #Dario: changed back to how other measurements are done
-            seq = Trigger(250)
+            seq = [Trigger(250)]
         self.seq = seq   
         self.postseq = postseq
 
@@ -230,40 +236,44 @@ class EFT2Measurement(Measurement1D):
             elen = 0
 
         for i, dt in enumerate(self.delays):
-            s.append(self.seq) #Ebru: Changed Trigger(dt=250) to self.seq 
-            s.append(Pad(Combined([self.gate_info1.rotate(np.pi,0), self.gate_info2.rotate(np.pi,0)]), 250, PAD_LEFT))
-            s.append(r_ef(np.pi/2, X_AXIS))
+
+#            s.append(self.seq) #Ebru: Changed Trigger(dt=250) to self.seq 
+#            s.append(Pad(Combined([self.gate_info1.rotate(np.pi,0), self.gate_info2.rotate(np.pi,0)]), 250, PAD_LEFT))
+#            s.append(r_ef(np.pi/2, X_AXIS))
+            s_temp = self.seq[:]
+            s_temp += [Pad(r_ge(np.pi, X_AXIS), 250, PAD_LEFT)]
+            s_temp += [r_ef(np.pi/2, X_AXIS)]
 
             # We want echos: <tau> (<echo> <2tau>)^n <tau>
             if e:
                 tau = int(np.round(dt / (2 * self.necho) - epadlen/2))
                 if tau < 0:
-                    s.append(Delay(dt))
+                    s_temp += [Delay(dt)]
                 else:
-                    s.append(Delay(tau))
+                    s_temp += [Delay(tau)]
                     for i in range(self.necho - 1):
-                        s.append(e)
-                        s.append(Delay(2*tau))
-                    s.append(e)
-                    s.append(Delay(tau))
+                        s_temp += [e]
+                        s_temp += [Delay(2*tau)]
+                    s_temp += [e]
+                    s_temp += [Delay(tau)]
 
             # Plain T2
             else:
-                s.append(Delay(dt))
+                s_temp += [Delay(dt)]
 
             # Measurement pulse
             angle = dt * 1e-9 * self.detune * 2 * np.pi
 #            s.append(Pad(r_ef(np.pi/2, angle), 250, PAD_RIGHT))
 #            s.append(Pad(r_ge(np.pi, X_AXIS), 250, PAD_RIGHT))
-            s.append(Join([r_ef(-np.pi/2, angle), Combined([self.gate_info1.rotate(-np.pi,0), self.gate_info2.rotate(-np.pi,0)])]))
+#            s.append(Join([r_ef(-np.pi/2, angle), Combined([self.gate_info1.rotate(-np.pi,0), self.gate_info2.rotate(-np.pi,0)])]))
+            s_temp += [Join([r_ef(-np.pi/2, angle), r_ge(-np.pi, X_AXIS)])]
 
             if self.postseq:
-                s.append(self.postseq)
-            s.append(Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ]))
-            s.append(Delay(10000))
+                s_temp += [self.postseq]
+            s_temp += [self.readout_driver.do_get_sequence(self.readout_qubit_info)]
+            
+            s_temp += [Delay(2000)]
+            s.append(Join(s_temp))
 
         s = self.get_sequencer(s)
         seqs = s.render()

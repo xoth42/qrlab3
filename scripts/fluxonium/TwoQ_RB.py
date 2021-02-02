@@ -504,7 +504,6 @@ class TwoQubit_RB(Measurement1D):
            recov_pulseSeq2.append(recovery_pulseSeq2)
            pulseSeq1.append(temp_pulseSeq1)
            pulseSeq2.append(temp_pulseSeq2)
-
         print('total # gates:', len(cliffordSeq1))
         print('total # gates:', len(cliffordSeq2))
 
@@ -728,14 +727,13 @@ class TwoQubit_RB(Measurement1D):
                     recov_index_list = pickle.load(filepath)
                     
                 for i in range(total_num_cliffords):
-                    for k in [1, -1, 1j, -1j,
+                    for k in [1, -1, 1j, -1j, 
                               (1+1j)/np.sqrt(2), (-1+1j)/np.sqrt(2), (-1-1j)/np.sqrt(2), (1-1j)/np.sqrt(2)]:
                         diff = matrix_cliffords.flatten() - cliff_mat_list[i].flatten()*k
                         if np.all((np.abs(diff) < 1e-3)):
                             print('found matrix in list at location', i)
                             recovery_index = recov_index_list[i]
                             break
-            
             
             recovery_seq_1 = []
             recovery_seq_2 = []
@@ -751,11 +749,11 @@ class TwoQubit_RB(Measurement1D):
             
             self.add_twoQ_clifford(recovery_index, recovery_seq_1, recovery_seq_2, temp_pulse_seq_1, temp_pulse_seq_2, temp_recov_len1, temp_recov_len2, temp_phi1, temp_phi2, virtualZ=self.virtual_recovery, generator = generator)
             matrix_recovery = evaluate_sequence(recovery_seq_1, recovery_seq_2, generator = generator)
-            print('recovery index is:', recovery_index)
+#            print('recovery index is:', recovery_index)
             print('matrix_recovery is:', matrix_recovery)
             matrix_total = np.matmul(matrix_recovery,matrix_cliffords)
             print('matrix_total is:', matrix_total)
-
+            print(CheckIdentity(matrix_total))
             return (recovery_seq_1, recovery_seq_2, temp_pulse_seq_1, temp_pulse_seq_2)
 
         if (self.use_lookup_table == False):

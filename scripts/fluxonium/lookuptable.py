@@ -7,7 +7,7 @@ from numpy import dot
 
 import pickle
 
-#from TwoQ_RB import TwoQubit_RB
+#import TwoQ_RB
 
 def CheckIdentity(matrix):
     """
@@ -86,9 +86,9 @@ def evaluate_sequence(gate_seq_1, gate_seq_2, generator):
                 gate_1 = np.matmul(np.matrix([[0, -1], [1, 0]]), gate_1)
             elif (gate_seq_1[i] == 'Ypm'):
                 gate_1 = np.matmul(np.matrix([[0, 1], [-1, 0]]), gate_1)
-            elif (gate_seq_1[i] == 'Z2m'):
-                gate_1 = np.matmul(np.matrix([[1+1j, 0], [0, 1-1j]]) / np.sqrt(2), gate_1)
             elif (gate_seq_1[i] == 'Z2p'):
+                gate_1 = np.matmul(np.matrix([[1+1j, 0], [0, 1-1j]]) / np.sqrt(2), gate_1)
+            elif (gate_seq_1[i] == 'Z2m'):
                 gate_1 = np.matmul(np.matrix([[1-1j, 0], [0, 1+1j]]) / np.sqrt(2), gate_1)
 
             if (gate_seq_2[i] == 'I'):
@@ -113,10 +113,10 @@ def evaluate_sequence(gate_seq_1, gate_seq_2, generator):
                 gate_2 = np.matmul(np.matrix([[0, -1], [1, 0]]), gate_2)
             elif (gate_seq_2[i] == 'Ypm'):
                 gate_2 = np.matmul(np.matrix([[0, 1], [-1, 0]]), gate_2)
-            elif (gate_seq_2[i] == 'Z2m'):
+            elif (gate_seq_2[i] == 'Z2p'):
                 gate_2 = np.matmul(np.matrix([[1+1j, 0], [0, 1-1j]]) / np.sqrt(2), gate_2)
-            elif (gate_seq_1[i] == 'Z2p'):
-                gate_1 = np.matmul(np.matrix([[1-1j, 0], [0, 1+1j]]) / np.sqrt(2), gate_1)
+            elif (gate_seq_2[i] == 'Z2m'):
+                gate_2 = np.matmul(np.matrix([[1-1j, 0], [0, 1+1j]]) / np.sqrt(2), gate_2)
 
             gate_12 = np.kron(gate_1, gate_2)
             
@@ -309,6 +309,129 @@ def add_singleQ_clifford(index, gate_seq, **kwargs):
         length_after = len(gate_seq)
         for i in range(3-(length_after-length_before)):
                 gate_seq.append('I')
+                
+def add_singleQ_clifford_virtualZ(index, gate_seq, **kwargs):
+        """Add single qubit clifford using virtual Z gates (24)."""
+        
+        length_before = len(gate_seq)
+        # Paulis
+        if index == 0:
+            gate_seq.append('I')
+
+        elif index == 1:
+            gate_seq.append('Xp')
+
+        elif index == 2:
+            gate_seq.append('Z2p')
+            gate_seq.append('Xp')
+            gate_seq.append('Z2m')
+        elif index == 3:
+            gate_seq.append('Zp')
+    
+        # 2pi/3 rotations
+        elif index == 4:
+            gate_seq.append('Z2p')
+            gate_seq.append('X2p')
+            
+        elif index == 5:
+
+            gate_seq.append('X2p')
+            gate_seq.append('Z2p')
+            gate_seq.append('X2m')
+            gate_seq.append('Z2m')
+        elif index == 6:
+            gate_seq.append('Z2p')
+            gate_seq.append('X2p')
+            gate_seq.append('Zp')
+
+        elif index == 7:
+
+            gate_seq.append('X2m')
+            gate_seq.append('Z2p')
+            gate_seq.append('X2m')
+            gate_seq.append('Z2m')
+        elif index == 8:
+            gate_seq.append('Z2p')
+            gate_seq.append('X2p')
+            gate_seq.append('Z2m')
+            gate_seq.append('X2p')
+        elif index == 9:
+            gate_seq.append('X2m')
+            gate_seq.append('Z2p')
+        elif index == 10:
+            gate_seq.append('Zp')
+            gate_seq.append('X2m')
+            gate_seq.append('Z2m')
+
+        elif index == 11:
+            gate_seq.append('X2m')
+            gate_seq.append('Z2m')
+
+    
+        # pi/2 rotations
+        elif index == 12:
+            gate_seq.append('X2p')
+        elif index == 13:
+            gate_seq.append('X2m')
+        elif index == 14:
+            gate_seq.append('Z2p')
+            gate_seq.append('X2p')
+            gate_seq.append('Z2m')
+        elif index == 15:
+            gate_seq.append('Z2p')
+            gate_seq.append('X2m')
+            gate_seq.append('Z2m')
+        elif index == 16:
+            gate_seq.append('Z2m')
+        elif index == 17:
+            gate_seq.append('Z2p')
+
+    
+        # Hadamard-Like
+        elif index == 18:
+            gate_seq.append('Z2p')
+            gate_seq.append('X2p')
+            gate_seq.append('Z2p')
+
+        elif index == 19:
+
+            gate_seq.append('Xp')
+            gate_seq.append('Z2p')
+            gate_seq.append('X2m')
+            gate_seq.append('Z2m')
+        elif index == 20:
+
+            gate_seq.append('Z2p')
+            gate_seq.append('Xp')
+            gate_seq.append('Z2m')
+            gate_seq.append('X2p')
+        elif index == 21:
+
+            gate_seq.append('Z2p')
+            gate_seq.append('Xp')
+            gate_seq.append('Z2m')
+            gate_seq.append('X2m')
+        elif index == 22:
+            gate_seq.append('Z2p')
+            gate_seq.append('Xp')
+
+        elif index == 23:
+            gate_seq.append('Z2p')
+            gate_seq.append('X2p')
+            gate_seq.append('Zp')
+            gate_seq.append('X2m')
+
+        else:
+            raise ValueError(
+                'index is out of range. it should be smaller than 24 and greater'
+                ' or equal to 0: ', str(index))
+    
+        length_after = len(gate_seq)
+        # Force the clifford to have a length of 4 gates
+        for i in range(4-(length_after-length_before)):
+            gate_seq.append('I')
+
+    
     
 def add_twoQ_clifford(index, gate_seq_1, gate_seq_2, generator = 'CNOT'):
         """Add single qubit clifford (11520 = 576 + 5184 + 5184 + 576)."""
@@ -809,7 +932,16 @@ with open('CZ_clifford_matrix_list.pickle', 'wb') as filepath:
     
 with open('CZ_recovery_table.pickle', 'wb') as filepath:
     pickle.dump(recovery_index_list, filepath)
-
+    
+    
+cliff_mat_list_virtualZ = []
+for i in range(num_2Q_cliffords):
+    print('Calculating 2Q clifford(w/ virtualZ) #:', i+1)
+    gateseq_1 = []
+    gateseq_2 = []
+    add_twoQ_clifford(i, gateseq_1, gateseq_2, generator = generator)
+    clifford_matrix = evaluate_sequence(gateseq_1, gateseq_2, generator = generator)
+    cliff_mat_list_virtualZ.append(clifford_matrix)
 ##
 '''
 iSWAP_CX_seq1 = ['X2m', 'Z2p', 'I', 'X2m', 'I', 'X2p', 'Y2m']

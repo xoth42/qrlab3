@@ -123,7 +123,7 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, ax=None):
 
 class ROCavSpectroscopy_keysight_mixer(Measurement1D):
 
-    def __init__(self, qubit_info, mixer_info,mixer_info2, powers, freqs, plot_type=None, qubit_pulse=False, seq=None,  **kwargs):
+    def __init__(self, qubit_info, mixer_info,mixer_info2, powers, freqs, plot_type=None, qubit_pulse=False, seq=None, postseq = None,  **kwargs):
         self.qubit_info = qubit_info
         self.freqs = freqs
         self.powers = powers
@@ -133,6 +133,7 @@ class ROCavSpectroscopy_keysight_mixer(Measurement1D):
         if seq is None:
             seq = Trigger(250)
         self.seq = seq
+        self.postseq = postseq
 
 
         if plot_type is None:
@@ -156,7 +157,7 @@ class ROCavSpectroscopy_keysight_mixer(Measurement1D):
         if self.qubit_pulse:
 #            s.append(Delay(2000))
             s.append(self.qubit_info.rotate(np.pi, 0))
-            s.append(Delay(400))
+#            s.append(Delay(400))
 #            s.append(Join([
 #                self.seq,
 #                self.qubit_info.rotate(np.pi, 0),
@@ -166,6 +167,9 @@ class ROCavSpectroscopy_keysight_mixer(Measurement1D):
 #                Constant(1, 0, chan=self.qubit_info.channels[1]),
 #                Constant(1, 0, chan=self.qubit_info.channels[0])
 #            ]))
+            
+        if self.postseq is not None:
+            s.append(self.postseq)
         if self.mixer_info.deltaf == 0:
             
             s.append(Combined([
@@ -177,10 +181,10 @@ class ROCavSpectroscopy_keysight_mixer(Measurement1D):
             ]))
         else:
             s.append(Combined([
-                Join([Delay(300),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
-                Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
-                Join([Delay(100),self.mixer_info.rotate(np.pi, 0),Delay(200)]),
-                Join([Delay(100),self.mixer_info2.rotate(np.pi, 0),Delay(200)])
+                Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
+#                Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+                Join([self.mixer_info.rotate(np.pi, 0),Delay(200)]),
+                Join([self.mixer_info2.rotate(np.pi, 0),Delay(200)])
 #                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
             ]))            
 #        s.append(Combined([
@@ -225,7 +229,7 @@ class ROCavSpectroscopy_keysight_mixer(Measurement1D):
 
             for ifreq, freq in enumerate(self.freqs):
                 self.readout_info.rfsource1.set_frequency(freq-self.mixer_info.deltaf)
-                self.readout_info.rfsource2.set_frequency(freq+50e6)
+#                self.readout_info.rfsource2.set_frequency(freq+50e6)
                 time.sleep(0.1)
 
                 ''' the parameter to setup avg shots shouldn't be naverages.

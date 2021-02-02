@@ -99,8 +99,13 @@ class Measurement(object):
         self.imagetype = imagetype
         self.print_progress = print_progress
         self.proj_func = proj_func
+        self.readout = readout
 
         # Build list of info objects
+        self.readout_qubit_info = None # JEFF - getting IQ readout working
+        if readout is 'readout_IQ':
+            self.readout_qubit_info = mclient.get_qubit_info(readout)
+        
         if infos is None:
             infos = []
         elif type(infos) is types.TupleType:
@@ -112,6 +117,8 @@ class Measurement(object):
                 infos.extend(extra_info)
             else:
                 infos.append(extra_info)
+        if readout is 'readout_IQ':
+            infos.append(self.readout_qubit_info)
         self.infos = infos
 
         self.analysis_func = analysis_func
@@ -120,9 +127,20 @@ class Measurement(object):
 
         self.instruments = mclient.instruments
         self.readout_info = mclient.get_readout_info(readout)
+        self.readout_driver = mclient.instruments.get(readout)
+
+            
         self._funcgen = mclient.instruments.get('funcgen')
-        self._dig = mclient.instruments.get('dig') #Dario
         self.use_sync = use_sync
+        
+        # Figure out the digitizor model
+        alz = mclient.instruments.get('alazar')
+        if alz is not None:
+            self.dig_type = 'alz'
+        else:
+            self.dig_type = 'key'
+        self._dig = mclient.instruments.get('dig') # Used for triggering if nothing else
+
 
     def setup_data(self, name):
         if self.keep_data:
@@ -402,7 +420,6 @@ class Measurement(object):
             print('inside acquisiton_loop, seeing if funcgen is on')
             self.start_awgs()
             time.sleep(1)
-
         # Setup and arm alazar
         if self.histogram:
             alz.setup_hist(self.cyclelen * alz.get_naverages(), self.shot_data)
@@ -437,7 +454,7 @@ class Measurement(object):
             if self.histogram:
                 ret = alz.take_hist(async=True)
             else:
-                ret = alz.take_experiment(avg_buf=self.avg_data, async=True, singleshotbin=self.singleshotbin, ste_buf=self.ste_data,
+                ret = alz.take_experiment(avg_buf=self.avg_data, async=True, singleshotbin=self.singleshotbin, cov_buf=self.cov_data,
                                           shot_buf=self.shot_data, #Dario
                                           IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius, proj_func=self.proj_func)
             if self.print_progress:
@@ -533,7 +550,8 @@ class Measurement(object):
             self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*alz.get_naverages()], dtype=np.complex)
             self.avg_data = None
             self.pp_data = None
-            self.ste_data = None
+            self.std_i_data = None
+            self.std_q_data = None
         elif self.singleshotbin:
             self.shot_data = None
             self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
@@ -557,7 +575,7 @@ class Measurement(object):
             else:
                 self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
                 self.pp_data = None
-            self.ste_data = self.data.create_dataset('ste', [self.cyclelen,], dtype=np.float)
+            self.cov_data = self.data.create_dataset('cov', [self.cyclelen,3], dtype=np.float)
 
     def measure(self):
         '''
@@ -568,7 +586,9 @@ class Measurement(object):
         Sets up data sets, performs initialization and updates plots if the
         class has an 'update' function.
         '''
-
+        if self.dig_type is 'key':
+            return self.measure_keysight()
+            
         self.setup_measurement()
         self.setup_measurement_data()
 
@@ -579,10 +599,10 @@ class Measurement(object):
             self.plot_histogram(self.shot_data[:])
   
         else:
-            avgs, stes = self.acquisition_loop(alz) # calls update function
+            avgs, cov = self.acquisition_loop(alz) # calls update function
             print('after acquisition loop')
             self.avg_data = avgs
-            self.ste_data = stes
+            self.cov_data = cov
             ret = self.analyze(self.get_ys(), fig=self.get_figure())
 
         if self.savefig:
@@ -615,6 +635,8 @@ class Measurement(object):
         progress_hid = dig.connect('capture-progress', self._capture_progress_cb)
         dataupd_hid = self.data.connect('changed', self._data_changed_cb)
         
+        print("Cycle length is %s"%(self.cyclelen))
+
         dig.stop_hvi()
         if self.histogram:
             dig.setup_hist(self.cyclelen * dig.get_naverages(), hist_buf = self.shot_data)
@@ -628,12 +650,19 @@ class Measurement(object):
         # Start measurement, either by starting the AWG or the function generator
         self.start_awgs()
         dig.start_hvi()
+
+#        ret = dig.take_experiment(avg_buf=self.avg_data, ste_buf=self.ste_data, 
+#                                  async=True, IQ_e=self.readout_info.IQe, 
+#                                  e_radius=self.readout_info.IQe_radius) 
+
         if self.histogram:
             ret = dig.take_hist(async=True)
         else:
-            ret = dig.take_experiment(avg_buf=self.avg_data, ste_buf=self.ste_data, 
+            take_ref = (self.readout is not 'readout_IQ')
+            ret = dig.take_experiment(avg_buf=self.avg_data, cov_buf=self.cov_data,
                                       async=True, IQ_e=self.readout_info.IQe, 
-                                      e_radius=self.readout_info.IQe_radius, proj_func=self.proj_func)
+                                      e_radius=self.readout_info.IQe_radius,
+                                      take_ref=take_ref)#, proj_func=self.proj_func)
         
         try:
             while not ret.is_valid() and not self._interrupted:
@@ -708,7 +737,8 @@ class Measurement(object):
             self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*dig.do_get_naverages()], dtype=np.complex)
             self.avg_data = None
             self.pp_data = None
-            self.ste_data = None
+            self.std_i_data = None
+            self.std_q_data = None
         elif self.singleshotbin:
             self.shot_data = None
             self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
@@ -723,7 +753,10 @@ class Measurement(object):
             else:
                 self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
                 self.pp_data = None
-            self.ste_data = self.data.create_dataset('ste', [self.cyclelen,], dtype=np.float)
+#            self.std_i_data = self.data.create_dataset('std_i', [self.cyclelen,], dtype=np.float)
+#            self.std_q_data = self.data.create_dataset('std_q', [self.cyclelen,], dtype=np.float)
+#            self.std_corr_data = self.data.create_dataset('std_corr', [self.cyclelen,], dtype=np.float)
+            self.cov_data = self.data.create_dataset('cov', [self.cyclelen,3], dtype=np.float)
 
     def measure_keysight(self):
         '''
@@ -736,7 +769,7 @@ class Measurement(object):
         self.setup_measurement_keysight()
         self.setup_measurement_data_keysight()
 
-        dig = self.instruments['dig']            
+        dig = self._dig            
         
 
         if self.histogram:
@@ -745,9 +778,9 @@ class Measurement(object):
             if self.cyclelen == 1:
                 self.plot_histogram(ret)
         else:
-            avgs, stes = self.acquisition_loop_keysight(dig) # calls update function
+            avgs, cov = self.acquisition_loop_keysight(dig) # calls update function
             self.avg_data = avgs
-            self.ste_data = stes
+            self.cov_data = cov
             ret = self.analyze(self.get_ys(), fig=self.get_figure())
 
         if self.savefig:
@@ -861,15 +894,45 @@ class Measurement(object):
 #        ys=np.concatenate((ys[1:], ys[:1]))
         return self.complex_to_real(ys)
 
-    def get_stes(self, data=None):
+    def get_errorbars(self, data=None):
         '''
         Return measured standard errors
         '''
         if data is None:
-            stes = self.ste_data[:]
+            naverages = self.get_naverages()
+            values = self.avg_data[:]
+            
+            # calculate amp based on projection type
+            if self.proj_func == 'amplitude':
+                theta = -np.angle(values)
+            elif self.proj_func == 'phase':
+                theta = -np.angle(values) + np.pi/2
+            elif self.proj_func == 'projection':
+                IQg = self.readout_info.IQg
+                IQe = self.readout_info.IQe
+                vproj = IQe - IQg
+                theta = -np.angle(vproj) * np.ones_like(values)
+                
+            eb = np.zeros_like(values)
+            for i in range(len(values)):
+                m = np.array([[self.cov_data[i,0], self.cov_data[i,2]],
+                              [self.cov_data[i,2], self.cov_data[i,1]]]) # unpack cov matrix
+                r = np.array([[np.cos(theta[i]), -np.sin(theta[i])],
+                              [np.sin(theta[i]), np.cos(theta[i])]]) # rotation matrix
+                m = np.matmul(r, m)
+                eb[i] = np.sqrt(np.abs(m[0,0]))/np.sqrt(naverages-1) # convert to std and then st error
+                if self.proj_func == 'phase':                       #Yingying, for phase errorbar
+                    eb[i] = np.arcsin(eb[i]/np.abs(self.avg_data[i])) * 180/np.pi
         else:
-            stes = data
-        return self.complex_to_real(stes)
+            eb = data
+        print(eb)
+        return eb
+
+    def get_naverages(self):
+        if self.dig_type is 'alz':
+            return self.instruments['alazar'].get_naverages()
+        else:
+            return self._dig.get_naverages()
 
     def post_process(self):
         '''
