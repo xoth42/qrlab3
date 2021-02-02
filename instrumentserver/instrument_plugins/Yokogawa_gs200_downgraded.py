@@ -47,13 +47,13 @@ class VISACommand(object):
         Functions based on the send definition act through "Listener Functions"
         in the Yoko 7651 manual
         '''
-        self.ins.write(self.command + str(arguments) + ';')
-        self.ins.write('E;')
+        self.ins.write(self.command + str(arguments))
+        self.ins.write('E')
 
-    def recieve(self):
+    def receive(self):
         '''
         This needs to work such that "Talker Functions" in the Yoko 7651 manual
-        communicate through the recieve function.
+        communicate through the receive function.
         Get a piece of info from the device.
         :return: A list of the results.
         '''
@@ -71,9 +71,9 @@ class VISACommand(object):
         return result
 
 
-class Yokogawa_7651_new(Instrument):
+class Yokogawa_gs200_downgraded(Instrument):
     def __init__(self, name, address, *args, **kwargs):
-        super(Yokogawa_7651_new, self).__init__(name, address=address,
+        super(Yokogawa_gs200_downgraded, self).__init__(name, address=address,
                                             term_chars='\r\n', **kwargs)
         # Determines whether the unit should be milliamps or amps.
         # Open the device
@@ -83,29 +83,42 @@ class Yokogawa_7651_new(Instrument):
 
         # Define all of the necesary commands that we'll need to interact with
         #  the device.
-        self.OS = VISACommand('OS', self.instrument) #OS is "Set Information Output"
+
         self.voltage_function = VISACommand('F1', self.instrument) #F1 is Function setting for voltage
-        self.auto_range_value = VISACommand('SA', self.instrument) #SA is for auto ranging mode (?)
-        self.range_value = VISACommand('S', self.instrument)
-        self.output = VISACommand('OD', self.instrument) #OD "Output Value Data Output"
+
         self.current_function = VISACommand('F5', self.instrument) #F5 is Function setting for current
-        self.polarity = VISACommand('SG', self.instrument) #SG is for specifying or altering polarity
-        self.output_state = VISACommand('O', self.instrument) #O is On/Off, i.e. O1 or O2
-        self.voltage_limit = VISACommand('LV', self.instrument) #LV is Voltage Limit Setting
-        self.current_limit = VISACommand('LA', self.instrument) #LA is Current Limit Setting
-        self.status = VISACommand('OC', self.instrument) #OC is "Status Code Output" 8 bit number to tell behavior of Yoko
-#        self.voltage_limit = VISACommand('LV', self.instrument) Repeated
+
+        self.range_value = VISACommand('S', self.instrument) #sets the value of the voltage or current that is output in a fixed range
+
+        self.auto_range_value = VISACommand('SA', self.instrument) #sets the value of a voltage or current that is output in the auto ranging mode 
+
+
+        self.output = VISACommand('OD', self.instrument) #outputs the data of the set output value
+
+        self.OS = VISACommand('OS', self.instrument) #Outputs the current panel setting information / #OS is "Set Information Output"
+
+
+        self.polarity = VISACommand('SG', self.instrument) #Specifying or altering the polarity of the set value
+
+        self.output_state = VISACommand('O', self.instrument) #Om sets the output on/off; m=0 (off) and m=1(on)
+
+        self.voltage_limit = VISACommand('LV', self.instrument) #Sets the voltage limit
+
+        self.current_limit = VISACommand('LA', self.instrument) #Sets the current limit
+
+        self.status = VISACommand('OC', self.instrument) #Outputs the current status
+        #OC is "Status Code Output" 8 bit number to tell behavior of Yoko
 
         self.add_parameter('output_state', type=types.IntType,
                            flags=Instrument.FLAG_GETSET,
                           )
         self.add_parameter('source_type', type=types.StringType,
                            flags=Instrument.FLAG_GETSET)
-        self.add_parameter('voltage_range', type=types.FloatType,
-                            flags=Instrument.FLAG_GETSET, units='V',
-                            )
+#        self.add_parameter('voltage_range', type=types.FloatType,
+#                            flags=Instrument.FLAG_GETSET, units='V',
+#                            )
         self.add_parameter('current_range', type=types.FloatType,
-                            flags=Instrument.FLAG_GETSET, units='V',
+                            flags=Instrument.FLAG_GETSET, units='mA',
                             )
         # self.add_parameter('voltage_range', type=types.IntType,
         #                    flags=Instrument.FLAG_GETSET, units='V',
@@ -122,21 +135,21 @@ class Yokogawa_7651_new(Instrument):
         # self.add_parameter('current_limit', type=types.IntType,
         #                    flags=Instrument.FLAG_GETSET, units='mA',
         #                    minvalue=5, maxvalue=120)
-        # self.add_parameter('voltage_limit', type=types.IntType,
-        #                    flags=Instrument.FLAG_GETSET, units='V',
-        #                    minvalue=1, maxvalue=30)
+        self.add_parameter('voltage_limit', type=types.IntType,
+                            flags=Instrument.FLAG_GETSET, units='V',
+                            minvalue=1, maxvalue=30)
         self.add_parameter('current', type=types.FloatType,
                            flags=Instrument.FLAG_GETSET, maxval=120,
                            minval=-120, units='mA')
         self.add_parameter('ramp_current', type=types.FloatType,
                            flags=Instrument.FLAG_GETSET, maxval=120,
                            minval=-120, units='mA')
-        self.add_parameter('voltage', type=types.FloatType,
-                   flags=Instrument.FLAG_GETSET, units='V',
-                   minvalue=-30.0, maxvalue=30.0)
-        self.add_parameter('ramp_voltage', type=types.FloatType,
-                   flags=Instrument.FLAG_GETSET, units='V',
-                   minvalue=-30.0, maxvalue=30.0)
+#        self.add_parameter('voltage', type=types.FloatType,
+#                   flags=Instrument.FLAG_GETSET, units='V',
+#                   minvalue=-30.0, maxvalue=30.0)
+#        self.add_parameter('ramp_voltage', type=types.FloatType,
+#                   flags=Instrument.FLAG_GETSET, units='V',
+#                   minvalue=-30.0, maxvalue=30.0)
 #        self.add_parameter('polarity', type=types.IntType,
 #                           flags=Instrument.FLAG_GETSET,
 #                           format_map={0: 'positive',
@@ -146,8 +159,12 @@ class Yokogawa_7651_new(Instrument):
 #                           flags=Instrument.FLAG_GET)
 
     def do_get_output(self):
-        return self.output.recieve()
+        return self.output.receive()
 
+    def do_get_panel(self):
+        return self.OS.receive()
+    
+    
     def do_set_output_state(self, state):
         if state not in [0, 1]:
             raise StateWrongValueError("Output state can be 0 or 1, nothing else.")
@@ -156,7 +173,7 @@ class Yokogawa_7651_new(Instrument):
 
     def do_get_output_state(self):
         print('yes')
-        state = self.status.recieve()
+        state = self.status.receive()
         digit = re.findall("[-+]?[.]?[\d]+(?:,\d\d\d)*[\.]?\d*(?:[eE][-+]?\d+)?", state)
         digit = float(digit[-1])
         state = bin(int(digit))
@@ -185,9 +202,6 @@ class Yokogawa_7651_new(Instrument):
         if (char == 'A'):
             return 'current'
             
-    def do_try(self):
-        print('yes')
-        return 2
                     
 # Voltage Functions:  
     
@@ -219,7 +233,7 @@ class Yokogawa_7651_new(Instrument):
 #            raise VoltageError('Not in voltage mode')
 #            return               
         v = self.do_get_voltage()
-        vstep = .01
+        vstep = .001
 #        bigger = np.max((abs(v),abs(vtarget)))
 #        self.do_set_voltage_range(bigger)
         if (v < vtarget):   
@@ -235,7 +249,7 @@ class Yokogawa_7651_new(Instrument):
     def do_set_ramp_voltage(self,v_target):
         self.do_ramp_voltage(v_target)
     
-    def do_get_ramp_voltage(self):
+    def do_get_ramp_voltage(self):   #I don't think this function is actually necessary - Ebru
         self.do_get_voltage()
 
     def do_set_voltage_range(self,R):
@@ -304,7 +318,7 @@ class Yokogawa_7651_new(Instrument):
 #            raise CurrentError('Not in current mode')
 #            return               
         i = self.do_get_current()
-        i_step = .0005 / 1000
+        i_step = .0005 / 1000 /2
 #        bigger = np.max((abs(i),abs(i_target)))
 #        self.do_set_current_range(bigger)
         if (i/1000 < i_target /1000 ):   
@@ -360,26 +374,26 @@ class Yokogawa_7651_new(Instrument):
             raise PolarityError('Polarity not 0, 1, or 2')
         self.polarity.send(polarity)
 
-    def do_get_polarity(self):
-        return None
-
+#    def do_get_polarity(self):
+#        return None
+#
     def do_set_voltage_limit(self, limit):
 #        self.current_function.send()
         self.voltage_limit.send(limit)
 
-    def do_get_voltage_limit(self):
-        return None
-
-    def do_get_output_data_value(self):
-        return None
-
-    def do_set_current_limit(self, limit):
-        self.current_limit.send(limit)
-
-    def do_get_current_limit(self):
-        return None
+#    def do_get_voltage_limit(self):
+#        return None
+#
+#    def do_get_output_data_value(self):
+#        return None
+#
+#    def do_set_current_limit(self, limit):  #this one seems problematic
+#        self.current_limit.send(limit)
+#
+#    def do_get_current_limit(self):
+#        return None
 
 
 if __name__ == '__main__':
-    test = Yokogawa_7651_new('test', address='GPIB0::6::INSTR') #why is this ::3 and not ::6? Uh oh.
+    test = Yokogawa_gs200_downgraded_test('test', address='GPIB0::6::INSTR') #why is this ::3 and not ::6? Uh oh.
     test.do_get_polarity()

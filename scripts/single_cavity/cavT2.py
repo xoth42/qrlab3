@@ -99,6 +99,11 @@ def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
 
     fig.axes[0].plot(xs/1e3, ys, 'ks', ms=3)
+    try: # This is a placeholder until stes is implemented w/ Alazar.
+        fig.axes[0].errorbar(xs/1e3, ys, yerr=meas.get_errorbars(), fmt='.', 
+                         markersize = 0, ecolor='grey', linewidth=1)
+    except:
+        print('passed no errorbars')
 
     amp0 = (np.max(ys) - np.min(ys)) / 2
     off0 = (np.max(ys) + np.min(ys)) / 2
@@ -281,11 +286,8 @@ class CavT2(Measurement1D):
                 if self.postseq:
                     temp_seq += [self.postseq]
 
-                temp_seq += [Combined([
-                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ])]
-                temp_seq += [Delay(93e3)]
+                temp_seq += [self.readout_driver.do_get_sequence(self.readout_qubit_info)]
+                temp_seq += [Delay(2000)]
                 s.append(Join(temp_seq))
     
         s = self.get_sequencer(s)

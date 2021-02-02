@@ -37,7 +37,12 @@ def analysis(meas, data=None, fig=None): #This is a temporary analysis for doubl
     xs = meas.delays
 
     fig.axes[0].plot(xs/1e3, ys, 'ks', ms=3)
-
+    try: # This is a placeholder until stes is implemented w/ Alazar.
+        fig.axes[0].errorbar(xs/1e3, ys, yerr=meas.get_errorbars(), fmt='.', 
+                         markersize = 0, ecolor='grey', linewidth=1)
+    except:
+        print('passed no errorbars')
+        
     if 1:
         params = lmfit.Parameters()
         params.add('ofs', value=np.min(ys))
