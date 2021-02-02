@@ -59,7 +59,8 @@ def analysis(meas, data=None, fig=None):
 
 class ROCavSpec_IQ(Measurement1D):
 
-    def __init__(self, qubit_info, amps, freqs, plot_type=None, qubit_pulse=False, seq=None,  **kwargs):
+    def __init__(self, qubit_info, amps, freqs, plot_type=None, qubit_pulse=False, seq=None,  
+                 comb_list = [], **kwargs):
         self.qubit_info = qubit_info
         self.freqs = freqs
         self.amps = amps
@@ -67,6 +68,7 @@ class ROCavSpec_IQ(Measurement1D):
         if seq is None:
             seq = Trigger(250)
         self.seq = seq
+        self.comb_list = comb_list
 
 
         if plot_type is None:
@@ -88,10 +90,15 @@ class ROCavSpec_IQ(Measurement1D):
                 s.append(self.seq)
                 if self.qubit_pulse:
                     s.append(self.qubit_info.rotate(np.pi, 0))
-        
-        
-                s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info,
-                                                             df = df, amp = amp))
+                
+                ro_seq = self.readout_driver.do_get_sequence(self.readout_qubit_info,
+                                                             df = df, amp = amp)
+                poly_seq = [ro_seq]
+                for comb in self.comb_list:
+                    poly_seq += comb.get_poly_seq(ro_seq.get_length() - comb.sigma*4, df)
+                    
+                s.append(Combined(poly_seq))
+
                 s.append(Delay(2000))
 
         s = self.get_sequencer(s)

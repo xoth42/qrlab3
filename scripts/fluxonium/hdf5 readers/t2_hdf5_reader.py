@@ -36,11 +36,11 @@ from scripts.single_qubit import T2measurement
 
 
 ''' Path to the .hdf5 file '''
-filepath = 'C:\Users\Wang_Lab\Desktop\hdf5_copies'
-hdf5_name = '\Aug19DblCavity_copy.hdf5'
+filepath = 'C:\Users\wanglab\Desktop\hdf5_copies'
+hdf5_name = '\Copy.hdf5'
 #hdf5_name = '20190204 Cooldown.hdf5'
-date = '20190801'
-time = '004730'
+date = '20201025'
+time = '121700'
 #time = '143054'
 
 experiment = 'T2Measurement'

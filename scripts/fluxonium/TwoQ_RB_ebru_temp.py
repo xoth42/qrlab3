@@ -30,11 +30,11 @@ def analysis(meas, data=None, fig=None):
     for i in range(len(meas.xs)/4):
         xs[i] = meas.xs[4*i]
     
-    y2d = ys.reshape(len(ys)/4,4)
-    y1s = y2d[:,0]
-    y2s = y2d[:,1]
-    y3s = y2d[:,2]
-    y4s = y2d[:,3]
+    y2d = ys.reshape(4,len(ys)/4)
+    y1s = y2d[0,:]
+    y2s = y2d[1,:]
+    y3s = y2d[2,:]
+    y4s = y2d[3,:]
     
     params = lmfit.Parameters()
     params.add('B', value=np.min(ys))
@@ -55,21 +55,18 @@ def analysis(meas, data=None, fig=None):
     fig.canvas.draw()
     
     ys = meas.avg_data   # We now pull complex data to process populations at this point  
-    y2d = ys.reshape(len(ys)/4,4)
-    y1s = y2d[:,0]
-    y2s = y2d[:,1]
-    y3s = y2d[:,2]
-    y4s = y2d[:,3]    
+    y2d = ys.reshape(4,len(ys)/4)
+    y1s = y2d[0,:]
+    y2s = y2d[1,:]
+    y3s = y2d[2,:]
+    y4s = y2d[3,:]    
+
 
     #3 is the number of calibration point here
-    calibration_qubit1_excited = (y1s[:3] + y2s[:3] + y3s[:3] + y4s[:3])/4
-    calibration_qubit2_excited = (y1s[3:6] + y2s[3:6] + y3s[3:6] + y4s[3:6])/4
-    calibration_bothqubits_excited = (y1s[6:9] + y2s[6:9] + y3s[6:9] + y4s[6:9])/4
-    calibration_ground = (y1s[9:12] + y2s[9:12] + y3s[9:12] + y4s[9:12])/4
-
-
-
-
+    calibration_qubit1_excited = y2s[:3] 
+    calibration_qubit2_excited = y3s[:3]
+    calibration_bothqubits_excited = y4s[:3]
+    calibration_ground = y1s[:3]
 
 
     Y3 = np.mean(calibration_qubit1_excited)
@@ -79,10 +76,10 @@ def analysis(meas, data=None, fig=None):
     print Y1, Y2, Y3, Y4
 
 
-    Igg = 0.891
-    Ieg = 0.0872
-    Ige = 0.0198
-    Iee = 0.0019
+    Igg = 0.8691419515005903
+    Ieg = 0.09027808839670717
+    Ige = 0.036761527015064785
+    Iee = 0.00381843308763781
 
 
     I_matrix = np.matrix([[Igg, Ige, Ieg, Iee], [Ige, Igg, Iee, Ieg], 
@@ -99,10 +96,10 @@ def analysis(meas, data=None, fig=None):
     Vee= np.asarray(V_vector[3]).reshape(-1)[0] 
 
 
-    rd = y1s[12:]
-    bl = y2s[12:]
-    gr = y3s[12:]
-    yw = y4s[12:]
+    rd = y1s[3:]
+    bl = y2s[3:]
+    gr = y3s[3:]
+    yw = y4s[3:]
 
 
 
@@ -114,7 +111,7 @@ def analysis(meas, data=None, fig=None):
     V_matrix = np.matrix([[Vgg, Vge, Veg, Vee], [Vge, Vgg, Vee, Veg], 
                           [Veg, Vee, Vgg, Vge], [Vee, Veg, Vge, Vgg]])
 
-    P = np.dot(np.linalg.inv(V_matrix), y_vector)  #those are already our real populations 
+    P = np.dot(np.linalg.inv(V_matrix), y_vector)  #those are already our true populations 
 #    print('P:', np.abs(P))
 #    print(np.real(P))
 
@@ -122,84 +119,20 @@ def analysis(meas, data=None, fig=None):
     Pgg = np.transpose(P[0])
     Pgg= Pgg.A1
 
+    Pge =  np.transpose(P[1])
+    Pge = Pge.A1
 
-#end of modified part
+    Peg =  np.transpose(P[2])
+    Peg = Peg.A1
 
-
-
-#    Veg = np.mean(calibration_qubit1_excited)
-#    Vge = np.mean(calibration_qubit2_excited)
-#    Vee = np.mean(calibration_bothqubits_excited)
-#    Vgg = np.mean(calibration_ground)
-#    print Veg, Vge, Vee, Vgg
-#
-#    rd = y1s[12:]
-#    bl = y2s[12:]
-#    gr = y3s[12:]
-#    yw = y4s[12:]
-#
-#
-##the original part    
-##    Pg1 = ((-rd-gr+bl+yw)/(Veg-Vgg+Vee-Vge)+1)/2
-##    Pg2 = ((-rd-bl+gr+yw)/(Vge-Vgg+Vee-Veg)+1)/2
-##
-##    Pegge = ((rd+yw-bl-gr)/(Vge+Veg-Vee-Vgg)+1)/2
-##    Pgg = (Pg1+Pg2-Pegge)/2
-##    Pg_cplx = (Pg1+Pg2-Pegge)/2
-##
-##    
-##    fig2, axes2 = plt.subplots(2)
-##    axes2[0].plot(xs[12:], np.real(Pgg))
-##    axes2[0].plot(xs[12:], np.real(Pg1*Pg2), color='r')
-##    axes2[1].plot(xs[12:], np.imag(Pgg))
-##    
-##    return [Pgg, Pg1, Pg2, Pg_cplx]
-## end of the original part
-#
-#
-#
-#
-#    
-    Pg1 = ((-rd-gr+bl+yw)/(Veg-Vgg+Vee-Vge)+1)/2
-    Pg2 = ((-rd-bl+gr+yw)/(Vge-Vgg+Vee-Veg)+1)/2
-#
-#    V_matrix = np.matrix([[Vgg, Vge, Veg, Vee], [Vge, Vgg, Vee, Veg], 
-#                          [Veg, Vee, Vgg, Vge], [Vee, Veg, Vge, Vgg]])
-#    y_vector = [rd, gr, bl, yw]
-#    P = np.dot(np.linalg.inv(V_matrix), y_vector)
-#
-#
-#    Igg = 0.8762473293856167
-#    Ieg = 0.08728002509852012
-#    Ige = 0.033168812572024906
-#    Iee = 0.0033038329438382008
-##    Igg = 0.8
-##    Ige = 0.05
-##    Ieg = 0.15
-##    Iee = 0.00
-#    
-#    I_matrix = np.matrix([[Igg, Ige, Ieg, Iee], [Ige, Igg, Iee, Ieg], 
-#                          [Ieg, Iee, Igg, Ige], [Iee, Ieg, Ige, Igg]])
-##    
-#    P_correct = np.dot(I_matrix, P)
-##
-#    Pgg = np.transpose(P_correct[0])
-##
-#    Pge = np.transpose(P_correct[1])
-##
-#    Peg = np.transpose(P_correct[2])
-##
-#    Pee = np.transpose(P_correct[3])
-#
-#
-#
-##    Pgg = np.transpose(P[0])
-#    Pgg= Pgg.A1
+    Pg1 = Pgg + Pge
+    Pg2 = Pgg + Peg
+    
     
     fig2, axes2 = plt.subplots(2)
-    axes2[0].plot(xs[12:], np.real(Pgg))
-    axes2[0].plot(xs[12:], np.real(Pg1*Pg2), color='r')
-    axes2[1].plot(xs[12:], np.imag(Pgg))
+    axes2[0].plot(xs[3:], np.real(Pgg))
+    axes2[0].plot(xs[3:], np.real(Pg1*Pg2), color='r')
+    axes2[1].plot(xs[3:], np.imag(Pgg))
     
     return [Pgg, Pg1, Pg2]
 
@@ -380,7 +313,7 @@ class TwoQubit_RB(Measurement1D):
         self.cancel_info = cancel_info
         self.N_cliffords = N_cliffords
         self.num_cal_points = num_cal_points
-        XS = np.asarray(range(N_cliffords+4*self.num_cal_points)) - (4*self.num_cal_points-1)
+        XS = np.asarray(range(N_cliffords+1*self.num_cal_points)) - (1*self.num_cal_points-1)
         self.xs = np.array([XS,XS,XS,XS]).transpose().flatten() # for plotting purposes
         self.filepath_lookup_table = ""
         self.cnum=cnum
@@ -400,8 +333,8 @@ class TwoQubit_RB(Measurement1D):
         self.num_gates = num_gates
         
             
-        super(TwoQubit_RB, self).__init__(4*(N_cliffords+4*num_cal_points), infos=(qubit_info,qubit2_info,twoQ_info,cancel_info), **kwargs)
-        self.data.create_dataset('Cliffords', data=range(4*(N_cliffords+4*num_cal_points)))
+        super(TwoQubit_RB, self).__init__(4*(N_cliffords+1*num_cal_points), infos=(qubit_info,qubit2_info,twoQ_info,cancel_info), **kwargs)
+        self.data.create_dataset('Cliffords', data=range(4*(N_cliffords+1*num_cal_points)))
 #        self.data.set_attrs(
 #            cnum=cnum,
 #            interleave=interleave
@@ -469,10 +402,10 @@ class TwoQubit_RB(Measurement1D):
 #               temp_pulseSeq2.append(Delay(q_len1))
 #               len1[0] = len1[0] + q_len1
 #               len2[0] = len2[0] + q_len1
-               temp_pulseSeq1.append(Delay(32))
-               temp_pulseSeq2.append(Delay(32))
-               len1[0] = len1[0] + 32
-               len2[0] = len2[0] + 32
+               temp_pulseSeq1.append(Delay(40))
+               temp_pulseSeq2.append(Delay(40))
+               len1[0] = len1[0] + 40
+               len2[0] = len2[0] + 40
 
            elif self.interleave == 'CX':
                cliffordSeq1.append('Ic')
@@ -504,6 +437,7 @@ class TwoQubit_RB(Measurement1D):
            recov_pulseSeq2.append(recovery_pulseSeq2)
            pulseSeq1.append(temp_pulseSeq1)
            pulseSeq2.append(temp_pulseSeq2)
+
         print('total # gates:', len(cliffordSeq1))
         print('total # gates:', len(cliffordSeq2))
 
@@ -516,80 +450,30 @@ class TwoQubit_RB(Measurement1D):
 
         
         self.num_gates = len(cliffordSeq1)
+        for ROpostseq in [None, r(np.pi,0), r2(np.pi,0),
+                          Combined([r(np.pi,0),r2(np.pi,0)])]:
 
-        for j in range(self.num_cal_points):
-            s.append(self.seq)
-#            temp_seq = Sequence()
-#            temp_seq.append(r(np.pi,0))   
-            for i in range(4):
-                s.append(self.seq)
-                s.append(r(np.pi,0))
-                s.append(Combined([
-                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                    ]))
-                s.append(Delay(1000))
-        print('appended calibration pi pulses qubit 1')
-
-
-        for j in range(self.num_cal_points):
-
-            temp_seq = Sequence()
-            temp_seq.append(r2(np.pi,0))   
-            for i in range(4):
+            for j in range(self.num_cal_points):
+    #            temp_seq = Sequence()
+    #            temp_seq.append(r(np.pi,0))   
+                    s.append(self.seq)
+                    if ROpostseq is not None:
+                        s.append(ROpostseq)
+                    s.append(Combined([
+                            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+                            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+                        ]))
+                    s.append(Delay(1000))
+            print('appended calibration pi pulses qubit 1')
+    
 
 
-                s.append(self.seq)
-                s.append(Join(temp_seq))
-                s.append(Combined([
-                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                    ]))
-                s.append(Delay(1000))
-        print('appended calibration pi pulses qubit 2')
 
-
-        for j in range(self.num_cal_points):
-
-            temp_seq = Sequence()
-            temp_seq.append(Combined([r(np.pi,0),r2(np.pi,0)]))   
-            for i in range(4):
-
-
-                s.append(self.seq)
-                s.append(Join(temp_seq))
-                s.append(Combined([
-                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                    ]))
-                s.append(Delay(1000))
-        print('appended calibration pi pulses for both qubits')
-
-        
-        
-        for j in range(self.num_cal_points):
-
-            temp_seq = Sequence()
-            s.append(Delay(24))   
-            for i in range(4):
-                s.append(self.seq)
-                s.append(Join(temp_seq))
-                s.append(Combined([
-                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                    ]))
-                s.append(Delay(1000))
-        print('appended calibration ground state')
-
-
-        for m in range(self.N_cliffords):
-
-            for ROpostseq in [None, r(np.pi,0), r2(np.pi,0),
-                              Combined([r(np.pi,0),r2(np.pi,0)])]:
+            for m in range(self.N_cliffords):
                 s.append(self.seq)
                 for k in range(m+1):
                     s.append(Combined([Join(pulseSeq1[k]), Join(pulseSeq2[k])]))
-#                    print(k, pulseSeq1[k], pulseSeq2[k])
+    #                    print(k, pulseSeq1[k], pulseSeq2[k])
                 s.append(Combined([Join(recov_pulseSeq1[m]), Join(recov_pulseSeq2[m])]))
             
                 if ROpostseq is not None:
@@ -598,8 +482,8 @@ class TwoQubit_RB(Measurement1D):
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
                 ]))
-#                s.append(Delay(200))
-
+    #                s.append(Delay(200))
+    
 #          
 #            # Avoid Error: zero-size array to reduction operation maximum which has no identity (05/05/2019)
 #            if (gateSeq1 == [] and gateSeq2 == []):
@@ -727,13 +611,14 @@ class TwoQubit_RB(Measurement1D):
                     recov_index_list = pickle.load(filepath)
                     
                 for i in range(total_num_cliffords):
-                    for k in [1, -1, 1j, -1j, 
+                    for k in [1, -1, 1j, -1j,
                               (1+1j)/np.sqrt(2), (-1+1j)/np.sqrt(2), (-1-1j)/np.sqrt(2), (1-1j)/np.sqrt(2)]:
                         diff = matrix_cliffords.flatten() - cliff_mat_list[i].flatten()*k
                         if np.all((np.abs(diff) < 1e-3)):
                             print('found matrix in list at location', i)
                             recovery_index = recov_index_list[i]
                             break
+            
             
             recovery_seq_1 = []
             recovery_seq_2 = []
@@ -749,11 +634,11 @@ class TwoQubit_RB(Measurement1D):
             
             self.add_twoQ_clifford(recovery_index, recovery_seq_1, recovery_seq_2, temp_pulse_seq_1, temp_pulse_seq_2, temp_recov_len1, temp_recov_len2, temp_phi1, temp_phi2, virtualZ=self.virtual_recovery, generator = generator)
             matrix_recovery = evaluate_sequence(recovery_seq_1, recovery_seq_2, generator = generator)
-#            print('recovery index is:', recovery_index)
+            print('recovery index is:', recovery_index)
             print('matrix_recovery is:', matrix_recovery)
             matrix_total = np.matmul(matrix_recovery,matrix_cliffords)
             print('matrix_total is:', matrix_total)
-            print(CheckIdentity(matrix_total))
+
             return (recovery_seq_1, recovery_seq_2, temp_pulse_seq_1, temp_pulse_seq_2)
 
         if (self.use_lookup_table == False):
@@ -2420,4 +2305,4 @@ class TwoQubit_RB(Measurement1D):
         self.Pgg = results[0]
         self.Pg1 = results[1]
         self.Pg2 = results[2]
-        return self.Pgg
+        return self.Pgg, self.Pg1, self.Pg2
