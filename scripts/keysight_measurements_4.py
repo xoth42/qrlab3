@@ -307,7 +307,7 @@ if 0: # Calibrate pi pulse
     tr.measure()
     bla
     
-if 0: # Time Rabi
+if 1: # Time Rabi
     from scripts.single_qubit import timerabi
     tr = timerabi.TimeRabi(qubit_info, np.linspace(1, 200, 51), amp=0.87)
     data = tr.measure_keysight()
@@ -325,7 +325,7 @@ if 0: # T1
     t1.measure()
 #    bla
 
-if 0: # T2
+if 1: # T2
     from single_qubit import T2measurement
     for i in range(1):
         t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0e3, 15e3, 91), detune=.5e6, 
