@@ -663,7 +663,6 @@ class Measurement(object):
                                       async=True, IQ_e=self.readout_info.IQe, 
                                       e_radius=self.readout_info.IQe_radius,
                                       take_ref=take_ref)#, proj_func=self.proj_func)
-
         
         try:
             while not ret.is_valid() and not self._interrupted:
@@ -900,9 +899,7 @@ class Measurement(object):
         Return measured standard errors
         '''
         if data is None:
-
             naverages = self.get_naverages()
-
             values = self.avg_data[:]
             
             # calculate amp based on projection type
