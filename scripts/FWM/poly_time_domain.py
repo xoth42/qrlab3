@@ -56,6 +56,7 @@ def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
     xs = meas.delays
     num_delays = len(xs)
+
     
     for i, info in enumerate(meas.qubit_list):
         if meas.bgcor:
@@ -63,7 +64,7 @@ def analysis(meas, data=None, fig=None):
         else:
             YS =  ys[i*num_delays : (i+1)*num_delays]
 
-
+        
         try: # This is a placeholder until stes is implemented w/ Alazar.
             fig.axes[0].errorbar(xs/1e3, YS, yerr=meas.get_errorbars(), fmt='.', 
                              markersize = 0, ecolor='grey', linewidth=1)
@@ -71,9 +72,10 @@ def analysis(meas, data=None, fig=None):
             print('passed no errorbars')  
         fig.axes[0].plot(xs/1e3, YS, ms=3, label = info.insname)
         
+        
         print 'average YS=', YS.mean()
         
-        if 0: # gompertz fit
+        if 1: # gompertz fit
             XS = xs
             params = lmfit.Parameters()
             params.add('ofs', value=YS[0])
@@ -95,7 +97,7 @@ def analysis(meas, data=None, fig=None):
             fig.axes[0].set_xlabel('Time [us]')
             fig.axes[1].plot(XS/1e3, gompertz(result.params, XS, YS), marker='s')
             
-        if 1: # exponential fit
+        if 0: # exponential fit
             Xs = xs[meas.skip_points:num_delays]
             YS = YS[meas.skip_points:num_delays]
             params = lmfit.Parameters()
@@ -202,7 +204,6 @@ class poly_time_domain(Measurement1D):
         s = Sequence()
         
         for info in self.qubit_list:
-            print(info.insname, info.deltaf)
             r = info.rotate_selective
             
             for dt in self.delays:
@@ -229,10 +230,12 @@ class poly_time_domain(Measurement1D):
                     poly_seq = []
                     for comb in self.comb_list:
                         poly_seq += comb.get_poly_seq(dt - comb.sigma*4, 0)
-                        
+                    if len(poly_seq) == 0:
+                        poly_seq += [Delay(dt)]
                     s.append(Combined(poly_seq))
                 s.append(Delay(self.post_delay))
-                
+#                s.append(r(np.pi, X_AXIS))
+        
                 if self.postseq:
                     s.append(self.postseq)
                 s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))

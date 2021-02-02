@@ -294,7 +294,7 @@ if 0: #Multiple times SSB spec
     bla
      
     
-if 1: # Calibrate pi pulse
+if 0: # Calibrate pi pulse
     from single_qubit import rabi
     tr = rabi.Rabi(qubit_info, 
 #                   np.linspace(-.7, .7, 51), selective=False,
@@ -335,7 +335,7 @@ if 0: # T2
         t2.measure_keysight()
     bla
     
-if 1: # T2echo
+if 0: # T2echo
     from single_qubit import T2measurement
 
     t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0.01e3, 20e3, 101),
