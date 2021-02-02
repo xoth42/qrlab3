@@ -110,6 +110,6 @@ class geophasecal(Measurement1D):
 
     def analyze(self, data=None, fig=None):
         self.fit_params = analysis(self, data=data, fig=fig)
-#        pi_amp = self.fit_params['period'].value / 2
+        pi_amp = self.fit_params['amp'].value
 
-        return
+        return pi_amp
