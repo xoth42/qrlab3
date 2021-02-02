@@ -223,7 +223,8 @@ class ROCavSpectroscopy_keysight(Measurement1D):
 
             for ifreq, freq in enumerate(self.freqs):
                 if self.readout is 'readout_IQ':
-                    self.readout_info.rfsource.set_frequency(freq)
+#                    self.readout_info.rfsource.set_frequency(freq)
+                    self.readout_info.rfsource.set_frequency(freq-self.readout_info.deltaf)#yingying change to readout freq
                 else:
                     self.readout_info.rfsource1.set_frequency(freq)
                     self.readout_info.rfsource2.set_frequency(freq+50e6)
@@ -237,7 +238,7 @@ class ROCavSpectroscopy_keysight(Measurement1D):
                 dig.setup_avg_shot()
                 dig.arm()
                 dig.start_hvi()
-                ret = dig.take_avg_shot(take_ref = self.readout is not 'readout_IQ')
+                ret = dig.take_avg_shot(take_ref = True)# self.readout is not 'readout_IQ')
 
                 dig.stop_hvi()
                 dig.release_buf()

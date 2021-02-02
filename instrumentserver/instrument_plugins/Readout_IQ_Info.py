@@ -56,7 +56,8 @@ class Readout_IQ_Info(Qubit_Info):
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 help='width of Gaussian Square wave',
                 set_func=lambda x: True, value=3000)
-
+#yingying 
+#        self.add
         self.set(kwargs)
         
 #        bad_parameters = ['w_quasilective',

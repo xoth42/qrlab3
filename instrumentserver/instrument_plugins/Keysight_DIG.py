@@ -556,6 +556,7 @@ class Keysight_DIG(Instrument):
             if take_ref:
                 self._demodB.demodulate(ref)
                 IQB = self._demodB.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
+                refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
             
             '''
             if take_ref:
@@ -573,8 +574,10 @@ class Keysight_DIG(Instrument):
             for j in range(self._npoints):
                 for k in range(self._naverages / self._ntransfers):
                     if take_ref:
-                        temp = np.mean(IQA[j + k*self._npoints,:]
-                                        * np.exp(-1j * np.angle(IQB[j + k*self._npoints,:])))
+
+                        temp = np.mean(IQA[j + k*self._npoints,:] * refs[j + k*self._npoints])## Yingying revert to old digitize function
+#                        temp = np.mean(IQA[j + k*self._npoints,:]
+#                                        * np.exp(-1j * np.angle(IQB[j + k*self._npoints,:])))
                     else:
                         temp =  np.mean(IQA[j + k*self._npoints,:])
                     avgs[j] += temp
@@ -782,7 +785,7 @@ class Keysight_DIG(Instrument):
         
         
         
-    def take_hist(self, num_demods=1):
+    def take_hist(self, num_demods=1, take_ref = True):
         acq_per_transfer = self.nacquisitions / self._ntransfers
         
         print('acq per transfer ', acq_per_transfer)
@@ -814,7 +817,9 @@ class Keysight_DIG(Instrument):
             
             try:
                 signal = np.array(self.dig.DAQbufferGet(self._main_channel), dtype=np.complex64)
-                ref = np.array(self.dig.DAQbufferGet(self._ref_channel), dtype=np.complex64)
+                if take_ref:
+                    ref = np.array(self.dig.DAQbufferGet(self._ref_channel), dtype=np.complex64)
+                        
             except ValueError, e:
                 print(str(e))
                 print('digitizer is likely not getting triggered')
@@ -823,13 +828,16 @@ class Keysight_DIG(Instrument):
             print(np.shape(signal))
                 
             self._demodA.demodulate(signal)
-            self._demodB.demodulate(ref)
             
             print(np.shape(self._demodA.IQ))
             
             IQA = self._demodA.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
-            IQB = self._demodB.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
-            refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
+            if take_ref:
+                self._demodB.demodulate(ref)                
+                IQB = self._demodB.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
+                refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
+            else:
+                refs = np.ones(len(IQA))  
 #            if self._ref_freq <0:
 #                refs = np.exp(1j * np.angle(np.average(IQB, 1)))
         
@@ -838,7 +846,7 @@ class Keysight_DIG(Instrument):
         
         self.hist_buf[:] = values
         return values
-    
+
     
     def release_buf(self):
         self.dig.DAQbufferPoolRelease(self._main_channel)
