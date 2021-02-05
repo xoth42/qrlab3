@@ -74,8 +74,8 @@ def double_sin_fit(params, x, data):
 
 ''' Path to the .hdf5 file '''
 filepath = 'C:/_Data/'
-hdf5_name = '01052021cooldown_circulator - Copy.hdf5'
-date = '20210112'
+hdf5_name = '01052021cooldown_circulator - Copy (2).hdf5'
+date = '20210128'
 #experiment = 'ROCavSpectroscopy_keysight'
 #experiment = 'Power_Sweep_VNA'
 f = h5.File(filepath + hdf5_name, 'r')
@@ -84,9 +84,9 @@ j = 0
 
 save_data = False
 CW_qubit = False
-field = 0.01
+field = -0.021
 nrows = 3
-repeat = 21
+repeat = 20
 fix_phi0 = None
 proj = 'projection'
 if j == 0:
@@ -105,7 +105,7 @@ else:
 for i, title in enumerate(f[date].keys()):
 #    print int(title[0:6])
 #    print int(title[0:6]) <= 020617
-    if int(title[0:6]) <= int('240000') and int(title[0:6]) > int('232724') and title[7:13] == exp_t:# and title[7:12] =='ROCav':
+    if int(title[0:6]) <= int('120210') and int(title[0:6]) > int('112256') and title[7:13] == exp_t:# and title[7:12] =='ROCav':
         print title
 
 
@@ -259,8 +259,8 @@ for i, title in enumerate(f[date].keys()):
         #    lmfit.report_fit(params)
         #    result2 = lmfit.minimize(t2_fit, result.params, args=(xs,ys))
             lmfit.report_fit(result.params)
-            freqs[l][j] = result.params['freq'].value
-            taus[l][j] = result.params['tau'].value
+#            freqs[l][j] = result.params['freq'].value
+#            taus[l][j] = result.params['tau'].value
 #            return_result.append(result.params)
             
             residues = changing_freq_fit(result.params, xs, ys)
@@ -294,6 +294,9 @@ for i, title in enumerate(f[date].keys()):
     
             result = lmfit.minimize(double_sin_fit, params3, args=(xs,ys))
             lmfit.report_fit(result.params)
+            
+            freqs[l][j] = result.params['freq'].value
+            taus[l][j] = result.params['tau'].value
             text = 'Fit, tau1=%.03f us, df1=%.03f kHz, amp1=%.02f \nFit, tau2=%.03f us, df2=%.03f kHz, amp2=%.02f'%(result.params['tau'].value/1000, result.params['freq'].value*1e6, result.params['amp'].value, result.params['tau'].value/1000, result.params['freq2'].value*1e6, result.params['amp2'].value)
             fig.axes[0].plot(xs/1e3, -double_sin_fit(result.params, xs, 0), label=text)
             fig.axes[0].legend()

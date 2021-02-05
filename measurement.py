@@ -656,7 +656,8 @@ class Measurement(object):
 #                                  e_radius=self.readout_info.IQe_radius) 
 
         if self.histogram:
-            ret = dig.take_hist(async=True)
+            take_ref = (self.readout is not 'readout_IQ')
+            ret = dig.take_hist(async=True, take_ref = take_ref)
         else:
             take_ref = (self.readout is not 'readout_IQ')
             ret = dig.take_experiment(avg_buf=self.avg_data, cov_buf=self.cov_data,

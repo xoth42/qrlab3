@@ -44,6 +44,7 @@ for filename in filelist:
     pl.plot(delays,x)
     pl.plot(delays,y)
     pl.plot(delays,np.sqrt(x**2 + y**2))
+    pl.close()
             
 proj_base = np.zeros((len(fields),npts))    
 
@@ -63,6 +64,7 @@ for filename in filelist_base:
     pl.plot(delays,x)
     pl.plot(delays,y)
     pl.plot(delays,np.sqrt(x**2 + y**2))
+    pl.close()
 
 
 sigma_x = proj_data[:,::2]
@@ -82,7 +84,7 @@ X, Y = np.meshgrid(delays,fieldplot-0.005)
 pl.pcolormesh(X,Y,env)
 pl.colorbar()
 
-delay = 70
+delay = 60
 sigma_raw = env[:, delay:delay + 10]
 
 sigma = np.mean(sigma_raw, 1)

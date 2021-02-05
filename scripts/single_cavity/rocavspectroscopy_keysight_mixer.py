@@ -181,10 +181,10 @@ class ROCavSpectroscopy_keysight_mixer(Measurement1D):
             ]))
         else:
             s.append(Combined([
-                Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
+                Join([Delay(5),Constant(int(self.mixer_info.w), 1, chan=self.readout_info.acq_chan)]),
 #                Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
-                Join([self.mixer_info.rotate(np.pi, 0),Delay(200)]),
-                Join([self.mixer_info2.rotate(np.pi, 0),Delay(200)])
+                Join([self.mixer_info.rotate(np.pi, 0),Delay(5)]),
+                Join([self.mixer_info2.rotate(np.pi, 0),Delay(5)])
 #                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
             ]))            
 #        s.append(Combined([
@@ -220,7 +220,10 @@ class ROCavSpectroscopy_keysight_mixer(Measurement1D):
         self.start_awgs()
 
         for ipower, power in enumerate(self.powers):
-            self.readout_info.rfsource1.set_power(power)
+            if self.readout == 'readout_IQ':
+                self.readout_info.rfsource.set_power(power)
+            else:
+                self.readout_info.rfsource1.set_power(power)
             print 'Power = %s' % (power, )
             time.sleep(2)
 
@@ -228,7 +231,10 @@ class ROCavSpectroscopy_keysight_mixer(Measurement1D):
             phases = []
 
             for ifreq, freq in enumerate(self.freqs):
-                self.readout_info.rfsource1.set_frequency(freq-self.mixer_info.deltaf)
+                if self.readout == 'readout_IQ':
+                    self.readout_info.rfsource.set_frequency(freq-self.mixer_info.deltaf)
+                else:
+                    self.readout_info.rfsource1.set_frequency(freq-self.mixer_info.deltaf)
 #                self.readout_info.rfsource2.set_frequency(freq+50e6)
                 time.sleep(0.1)
 
@@ -240,7 +246,10 @@ class ROCavSpectroscopy_keysight_mixer(Measurement1D):
                 dig.setup_avg_shot()
                 dig.arm()
                 dig.start_hvi()
-                ret = dig.take_avg_shot()
+                if self.readout == 'readout_IQ':
+                    ret = dig.take_avg_shot(take_ref = False)
+                else:
+                    ret = dig.take_avg_shot(take_ref = False)
 
                 dig.stop_hvi()
                 dig.release_buf()

@@ -66,11 +66,38 @@ def analysis(meas, data=None, fig=None):
     calibration_qubit2_excited = (y1s[3:6] + y2s[3:6] + y3s[3:6] + y4s[3:6])/4
     calibration_bothqubits_excited = (y1s[6:9] + y2s[6:9] + y3s[6:9] + y4s[6:9])/4
     calibration_ground = (y1s[9:12] + y2s[9:12] + y3s[9:12] + y4s[9:12])/4
-    Veg = np.mean(calibration_qubit1_excited)
-    Vge = np.mean(calibration_qubit2_excited)
-    Vee = np.mean(calibration_bothqubits_excited)
-    Vgg = np.mean(calibration_ground)
-    print Veg, Vge, Vee, Vgg
+
+
+
+
+
+
+    Y3 = np.mean(calibration_qubit1_excited)
+    Y2 = np.mean(calibration_qubit2_excited)
+    Y4 = np.mean(calibration_bothqubits_excited)
+    Y1 = np.mean(calibration_ground)
+    print Y1, Y2, Y3, Y4
+
+
+    Igg = 0.891
+    Ieg = 0.0872
+    Ige = 0.0198
+    Iee = 0.0019
+
+
+    I_matrix = np.matrix([[Igg, Ige, Ieg, Iee], [Ige, Igg, Iee, Ieg], 
+                          [Ieg, Iee, Igg, Ige], [Iee, Ieg, Ige, Igg]])
+#    
+    Y_vector = [Y1, Y2, Y3, Y4] #made of calibration points
+    V_vector = np.zeros(4)
+    
+    V_vector =  np.dot(np.linalg.inv(I_matrix), Y_vector)
+    V_vector=np.transpose(V_vector)
+    Vgg = np.asarray(V_vector[0]).reshape(-1)[0] 
+    Vge= np.asarray(V_vector[1]).reshape(-1)[0]
+    Veg = np.asarray(V_vector[2]).reshape(-1)[0]
+    Vee= np.asarray(V_vector[3]).reshape(-1)[0] 
+
 
     rd = y1s[12:]
     bl = y2s[12:]
@@ -78,53 +105,96 @@ def analysis(meas, data=None, fig=None):
     yw = y4s[12:]
 
 
-#the original part    
-#    Pg1 = ((-rd-gr+bl+yw)/(Veg-Vgg+Vee-Vge)+1)/2
-#    Pg2 = ((-rd-bl+gr+yw)/(Vge-Vgg+Vee-Veg)+1)/2
-#
-#    Pegge = ((rd+yw-bl-gr)/(Vge+Veg-Vee-Vgg)+1)/2
-#    Pgg = (Pg1+Pg2-Pegge)/2
-#    Pg_cplx = (Pg1+Pg2-Pegge)/2
-#
-#    
-#    fig2, axes2 = plt.subplots(2)
-#    axes2[0].plot(xs[12:], np.real(Pgg))
-#    axes2[0].plot(xs[12:], np.real(Pg1*Pg2), color='r')
-#    axes2[1].plot(xs[12:], np.imag(Pgg))
-#    
-#    return [Pgg, Pg1, Pg2, Pg_cplx]
-# end of the original part
-
-
 
 
     
+    y_vector = [rd, gr, bl, yw]
+
+
+    V_matrix = np.matrix([[Vgg, Vge, Veg, Vee], [Vge, Vgg, Vee, Veg], 
+                          [Veg, Vee, Vgg, Vge], [Vee, Veg, Vge, Vgg]])
+
+    P = np.dot(np.linalg.inv(V_matrix), y_vector)  #those are already our real populations 
+#    print('P:', np.abs(P))
+#    print(np.real(P))
+
+###    
+    Pgg = np.transpose(P[0])
+    Pgg= Pgg.A1
+
+
+#end of modified part
+
+
+
+#    Veg = np.mean(calibration_qubit1_excited)
+#    Vge = np.mean(calibration_qubit2_excited)
+#    Vee = np.mean(calibration_bothqubits_excited)
+#    Vgg = np.mean(calibration_ground)
+#    print Veg, Vge, Vee, Vgg
+#
+#    rd = y1s[12:]
+#    bl = y2s[12:]
+#    gr = y3s[12:]
+#    yw = y4s[12:]
+#
+#
+##the original part    
+##    Pg1 = ((-rd-gr+bl+yw)/(Veg-Vgg+Vee-Vge)+1)/2
+##    Pg2 = ((-rd-bl+gr+yw)/(Vge-Vgg+Vee-Veg)+1)/2
+##
+##    Pegge = ((rd+yw-bl-gr)/(Vge+Veg-Vee-Vgg)+1)/2
+##    Pgg = (Pg1+Pg2-Pegge)/2
+##    Pg_cplx = (Pg1+Pg2-Pegge)/2
+##
+##    
+##    fig2, axes2 = plt.subplots(2)
+##    axes2[0].plot(xs[12:], np.real(Pgg))
+##    axes2[0].plot(xs[12:], np.real(Pg1*Pg2), color='r')
+##    axes2[1].plot(xs[12:], np.imag(Pgg))
+##    
+##    return [Pgg, Pg1, Pg2, Pg_cplx]
+## end of the original part
+#
+#
+#
+#
+#    
     Pg1 = ((-rd-gr+bl+yw)/(Veg-Vgg+Vee-Vge)+1)/2
     Pg2 = ((-rd-bl+gr+yw)/(Vge-Vgg+Vee-Veg)+1)/2
-
-    V_matrix = np.matrix([[Vgg, Vge, Veg, Vee], [Vge, Vgg, Veg, Vee], 
-                          [Veg, Vee, Vgg, Vge], [Vee, Veg, Vge, Vgg]])
-    y_vector = [rd, gr, bl, yw]
-    P = np.dot(np.linalg.inv(V_matrix), y_vector)
-
-
-#    Igg = 1
-#    Ige = 0.0
-#    Ieg = 0.0
-#    Iee = 0.0
-
-    Igg = 0.8
-    Ige = 0.05
-    Ieg = 0.15
-    Iee = 0.00
-    
-    I_matrix = np.matrix([[Igg, Ige, Ieg, Iee], [Ige, Igg, Iee, Ieg], 
-                          [Ieg, Iee, Igg, Ige], [Iee, Ieg, Ige, Igg]])
-    
-    P_correct = np.dot(I_matrix, P)
-
-    Pgg = np.transpose(P_correct[0])
-    Pgg= Pgg.A1
+#
+#    V_matrix = np.matrix([[Vgg, Vge, Veg, Vee], [Vge, Vgg, Vee, Veg], 
+#                          [Veg, Vee, Vgg, Vge], [Vee, Veg, Vge, Vgg]])
+#    y_vector = [rd, gr, bl, yw]
+#    P = np.dot(np.linalg.inv(V_matrix), y_vector)
+#
+#
+#    Igg = 0.8762473293856167
+#    Ieg = 0.08728002509852012
+#    Ige = 0.033168812572024906
+#    Iee = 0.0033038329438382008
+##    Igg = 0.8
+##    Ige = 0.05
+##    Ieg = 0.15
+##    Iee = 0.00
+#    
+#    I_matrix = np.matrix([[Igg, Ige, Ieg, Iee], [Ige, Igg, Iee, Ieg], 
+#                          [Ieg, Iee, Igg, Ige], [Iee, Ieg, Ige, Igg]])
+##    
+#    P_correct = np.dot(I_matrix, P)
+##
+#    Pgg = np.transpose(P_correct[0])
+##
+#    Pge = np.transpose(P_correct[1])
+##
+#    Peg = np.transpose(P_correct[2])
+##
+#    Pee = np.transpose(P_correct[3])
+#
+#
+#
+##    Pgg = np.transpose(P[0])
+#    Pgg= Pgg.A1
     
     fig2, axes2 = plt.subplots(2)
     axes2[0].plot(xs[12:], np.real(Pgg))
@@ -132,7 +202,6 @@ def analysis(meas, data=None, fig=None):
     axes2[1].plot(xs[12:], np.imag(Pgg))
     
     return [Pgg, Pg1, Pg2]
-
 
 def CheckIdentity(matrix):
     """
@@ -164,7 +233,6 @@ def CheckIdentity(matrix):
         return True
     else:
         return False
-
 
 
 def evaluate_sequence(gate_seq_1, gate_seq_2, generator = 'CZ'):
@@ -436,13 +504,16 @@ class TwoQubit_RB(Measurement1D):
            recov_pulseSeq2.append(recovery_pulseSeq2)
            pulseSeq1.append(temp_pulseSeq1)
            pulseSeq2.append(temp_pulseSeq2)
-        
         print('total # gates:', len(cliffordSeq1))
         print('total # gates:', len(cliffordSeq2))
 
         print('recov_cliffordSeq1 is:', recov_cliffordSeq1)
         print('recov_cliffordSeq2 is:', recov_cliffordSeq2)
         
+#        print('pulseseq1 is:', pulseSeq1)
+
+
+
         
         self.num_gates = len(cliffordSeq1)
 
@@ -675,8 +746,10 @@ class TwoQubit_RB(Measurement1D):
             temp_phi1[0] = temp_phi1[0] + phase1[0]
             temp_phi2[0] = temp_phi2[0] + phase2[0]
             
+            
             self.add_twoQ_clifford(recovery_index, recovery_seq_1, recovery_seq_2, temp_pulse_seq_1, temp_pulse_seq_2, temp_recov_len1, temp_recov_len2, temp_phi1, temp_phi2, virtualZ=self.virtual_recovery, generator = generator)
             matrix_recovery = evaluate_sequence(recovery_seq_1, recovery_seq_2, generator = generator)
+#            print('recovery index is:', recovery_index)
             print('matrix_recovery is:', matrix_recovery)
             matrix_total = np.matmul(matrix_recovery,matrix_cliffords)
             print('matrix_total is:', matrix_total)

@@ -576,7 +576,7 @@ if 0: # SSB spec
 #        plt.close()
     bla
     
-if 1: # SSB spec with mixer
+if 0: # SSB spec with mixer
     from single_qubit import ssbspec_mixer
     #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
     for i in range(1):        
@@ -584,7 +584,7 @@ if 1: # SSB spec with mixer
         seq = sequencer.Trigger(600)
     #        seq = Join([seq, qubit2_info.rotate(np.pi/2, X_AXIS)])
         spec = ssbspec_mixer.SSBSpec_mixer(qubit_info, mixer_info1,mixer_info2,
-                                           np.linspace(-150e6, 150e6, 101), seq=seq, plot_seqs=False, 
+                                           np.linspace(-15e6, 15e6, 101), seq=seq, plot_seqs=False, 
                                            proj_func='projection')
         spec.measure_keysight()
 #        plt.close()
@@ -775,7 +775,7 @@ if 0: # Check histogramming
     dig.do_set_naverages(10000)
     bla
 
-if 0: # Power Rabi-Calibrate pi pulse with mixer
+if 1: # Power Rabi-Calibrate pi pulse with mixer
 
 #    for cool_time in [1e3,5e3,10e3,30e3]:
 #        for amp in [0.01, 0.01,0.02,0.04,0.08]:

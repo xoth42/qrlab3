@@ -49,12 +49,12 @@ gate3_info = mclient.get_gate_info('gate3')
 
 #Find read-out cavity and choose a power
 
-if 0: # RO Cavity spec
+if 1: # RO Cavity spec
     from scripts.single_cavity import rocavspectroscopy
     rofreq = 6543.09e6
     freq_range = 10e6
 
-    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-10, -10, 1),
+    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-8, -8, 1),
                                          np.linspace(rofreq - freq_range, rofreq + freq_range, 51), qubit_pulse=False)
     ro.measure()
     bla
@@ -64,11 +64,11 @@ if 0: # RO Cavity spec
 if 0: # Qubit spec
     from scripts.single_qubit import spectroscopy
 #    from scripts.single_qubit import spectroscopy_IQ
-    qubit_freq = 5200e6
+    qubit_freq = 5300e6
     freq_range = 200e6
     spec = spectroscopy.Spectroscopy(mclient.instruments['SCqubit'], qubit_info,
                                      np.linspace(qubit_freq-freq_range,
-                                                 qubit_freq+freq_range, 201),
+                                                 qubit_freq+freq_range, 501),
                                      [-10],
                                      plen=80000, amp=0.01, plot_seqs=False,
                                      freq_delay=.1) #1=1ns for plen
@@ -82,10 +82,10 @@ if 0: # Qubit spec
     bla
 
 """Qubit SSBspec"""
-if 1: # Qubit SSBspec
+if 0: # Qubit SSBspec
     from scripts.single_qubit import ssbspec
 #    postseq = sequencer.Delay(500)
-    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-5e6, 5e6, 101), plot_seqs=False, proj_func='amplitude')
+    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-10e6, 10e6, 101), plot_seqs=False, proj_func='amplitude')
     spec.measure()
 #    spec.measure_keysight()
     bla
@@ -122,7 +122,7 @@ if 0: # Power Rabi
         from scripts.single_qubit import rabi
 #        qubitgen.set_frequency(4532.71e6)
         tr = rabi.Rabi(qubit_info, np.linspace(-0.2, 0.2, 101), plot_seqs=False, generate=True, selective=False, repeat_pulse=1,
-                       update=True, proj_func='projection')
+                       update=True, proj_func='amplitude')
 #        from scripts.single_qubit import rabi_IQ
 #        tr = rabi_IQ.Rabi(qubit_info, np.linspace(0, 0.5, 101), plot_seqs=False, real_signals=False)
         data=tr.measure()
@@ -167,11 +167,11 @@ if 0: # EF SSBspec
 if 0: # EF rabi 
     from scripts.single_qubit import efrabi
 #    alz.set_naverages(2000)
-    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.2, 0.2, 101), plot_seqs=False, selective=False, generate=True, update=True, proj_func='projection')
+    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.2, 0.2, 101), plot_seqs=False, selective=False, generate=True, update=True, proj_func='amplitude')
     efr.measure()
     period = efr.fit_params['period'].value
     alz.set_naverages(10000)
-    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.2, 0.2, 101), first_pi=False, selective=False, force_period=period, generate=True, proj_func='projection')
+    efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.2, 0.2, 101), first_pi=False, selective=False, force_period=period, generate=True, proj_func='amplitude')
     efr.measure()
     alz.set_naverages(1000)
     bla
@@ -274,28 +274,27 @@ if 0: # Mixer calibration:
     cal.print_tuning_parameters()
     bla
 
-if 0: # Check histogramming
+if 1: # Check histogramming
     from scripts.single_qubit import rabi
     twpa = mclient.instruments['WF_twpa']
     RO = mclient.instruments['RObrick']
     ro = mclient.instruments['readout']
     alz.set_naverages(50000)
-#    alz.set_nsamples(1920)
-#    ro.set_pulse_len(1920)
-    int_lens = [1280, 1280, 1280]
-    pump_freqs = np.linspace(8.165e9, 8.165e9, 1)
+    alz.set_nsamples(640)
+#    ro.set_pulse_len(800)
+    p_lens = [640]
+    pump_freqs = np.linspace(8.1638e9, 8.1638e9, 1)
     pump_powers = np.linspace(-3.38, -3.38, 1)
-    RO_powers = np.linspace(3, 3, 1)
+    RO_powers = np.linspace(-10, -5, 6)
     fidelities = []
     ge_errors = []
     eg_errors = []
     overlap_errors = []
     SNRs = []
-    for length in int_lens:
-        alz.set_nsamples(length)
-        ro.set_pulse_len(length)
-        for freq in pump_freqs:
-            twpa.set_frequency(freq)
+    for p_len in p_lens:
+        ro.set_pulse_len(p_len)
+        for power in RO_powers:
+            RO.set_power(power)
 #            tr_g = rabi.Rabi(qubit_info, [0.0000001,], histogram=True, proj_func='amplitude', title='|g>')
 #            tr_g.measure()
 #            tr_e = rabi.Rabi(qubit_info, [qubit_info.pi_amp], histogram=True, proj_func='amplitude', title='|e>')
@@ -442,7 +441,7 @@ if 0: # Check histogramming
         #    plt.hist(g_data, bins=100, color='b', alpha=0.5)
 
 
-if 1: # TWPA histogram sweep
+if 0: # TWPA histogram sweep
     from scripts.single_qubit import rabi
     alz.set_naverages(50000)
     twpa = mclient.instruments['WF_twpa']
@@ -484,7 +483,7 @@ if 0: # T1
 #    t1times = np.zeros(len(range(1000)))
     for i in range(1):
         #postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
-        t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 60e3, 101), double_exp=False, generate=True, plot_seqs=False, proj_func='projection')
+        t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 100e3, 101), double_exp=False, generate=True, plot_seqs=False, proj_func='amplitude')
         t1.measure()
 #        t1times[i] = t1.analyze()
 #        plt.close()
@@ -493,13 +492,13 @@ if 0: # T1
 if 0: # T2
     from scripts.single_qubit import T2measurement
     for i in range(1):
-        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 20e3, 101), detune=0.2e6, double_freq=False, generate=True, proj_func='projection')
+        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 5e3, 101), detune=1e6, double_freq=False, generate=True, proj_func='amplitude')
         t2.measure()
     bla
 
 if 0: # T2echo
     from scripts.single_qubit import T2measurement
-    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(100, 30e3, 101), detune=0.2e6, echotype = T2measurement.ECHO_HAHN, necho=1, plot_seqs = False, generate=True,
+    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(100, 20e3, 101), detune=0.2e6, echotype = T2measurement.ECHO_HAHN, necho=2, plot_seqs = False, generate=True,
                                      proj_func='projection')
     t2.measure()
     bla

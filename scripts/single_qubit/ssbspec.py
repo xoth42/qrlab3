@@ -33,7 +33,7 @@ def analysis(meas, data=None, fig=None):
     fig.axes[0].set_ylabel('Intensity (AU)')
     fig.canvas.draw()
 
-    if 1: #For double Gaussian fit - qubit 2
+    if 0: #For double Gaussian fit - qubit 2
         params = lmfit.Parameters()
         params.add('background', value=max(ys), max=max(ys)+0.5)
         params.add('amp1', value=-(np.max(ys)-np.min(ys))/1.2)
@@ -81,7 +81,7 @@ def analysis(meas, data=None, fig=None):
 
 
 
-    if 0: #For single Gaussian fit
+    if 1: #For single Gaussian fit
         params = lmfit.Parameters()
         params.add('background', value=min(ys), min=min(ys)-5) #+np.absolute(min(ys))*0.5)
         params.add('amp1', value=-(np.min(ys)-np.max(ys))/1.2, min=0) #Chen reverted to positive peak 6/27
@@ -158,6 +158,7 @@ class SSBSpec(Measurement1D):
 
             if self.postseq:
                 s.append(self.postseq)
+
             s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
 
 

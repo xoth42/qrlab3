@@ -64,7 +64,7 @@ def analysis(meas, data=None, fig=None):
         fig.axes[0].legend(loc=0)
     
     fig.canvas.draw()
-    return
+    return result.params
 #    return result.params
 
 class TimeRabi_interleaved(Measurement1D):
@@ -238,4 +238,5 @@ class TimeRabi_interleaved(Measurement1D):
 
 
     def analyze(self, data=None, fig=None):
-        self.fit_params = analysis(self, data=data, fig=fig)
+        self.fit_params = analysis(self, data=data, fig=fig)        
+        return self.fit_params['period'].value

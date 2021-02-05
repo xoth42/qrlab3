@@ -36,7 +36,7 @@ mixer_info1_set = mclient.instruments['mixer_info1']
 mixer_info2_set = mclient.instruments['mixer_info2']
 SS_mixer_info1_set = mclient.instruments['SS_mixer_info1']
 SS_mixer_info2_set = mclient.instruments['SS_mixer_info2']
-
+readout_IQ = mclient.instruments['readout_IQ']
 readout_info = mclient.get_readout_info('readout')
 readout = mclient.instruments['readout']
 
@@ -74,17 +74,17 @@ if 0: #demag
 #####for qubit 1 readout
 if 1:   #qubit1 readout setting
     
-    ro_freq = 10.8093e9
+    ro_freq = 10.8082e9
     power = 10
     readout_info.rfsource1.set_frequency(ro_freq - mixer_info1.deltaf)
     readout_info.rfsource1.set_power(power)
 #    readout_info.rfsource2.set_frequency(ro_freq+50e6)
-    deltaf = 10.808e9 - ro_freq + mixer_info1.deltaf
+    deltaf = 10.811e9 - ro_freq + mixer_info1.deltaf
     SS_mixer_info1_set.set_deltaf(deltaf)
     SS_mixer_info1 = mclient.get_qubit_info('SS_mixer_info1')
     
     mixer_info1_set.set_pi_amp(.4)
-    mixer_info2_set.set_pi_amp(.4)
+    mixer_info2_set.set_pi_amp(0)
     mixer_info1_set.set_w(300)
     mixer_info2_set.set_w(300)
     dig.set_nsamples(500)
@@ -93,12 +93,15 @@ if 1:   #qubit1 readout setting
     
     from scripts.single_qubit import rabi_mixer
     tr_e = rabi_mixer.Rabi_mixer(qubit_info, mixer_info1, mixer_info2,[qubit_info.pi_amp,], histogram=True, title='|e>',
-                   )
+#                   readout = 'readout_IQ',
+                                 )
     tr_e.measure_keysight()
     tr_g = rabi_mixer.Rabi_mixer(qubit_info,mixer_info1, mixer_info2, [0.001,], histogram=True, title='|g>',
+#                                 readout = 'readout_IQ',
                    )
     tr_g.measure_keysight()
     tr = rabi_mixer.Rabi_mixer(qubit_info, mixer_info1, mixer_info2,[qubit_info.pi_amp/2,], histogram=True, title='|g>+|e>',
+#                               readout = 'readout_IQ',
                    )
     tr.measure_keysight()
     
@@ -109,7 +112,10 @@ if 1:   #qubit1 readout setting
     g_average = np.average(g_data)
     e_average = np.average(e_data)
     readout.set_IQg(g_average)
-    readout.set_IQe(e_average)    
+    readout.set_IQe(e_average)
+    readout_IQ.set_IQg(g_average)
+    readout_IQ.set_IQe(e_average)
+    readout_info = mclient.get_readout_info('readout')    
     midpoint = np.average([g_average, e_average])
 
     #setup plots
@@ -181,16 +187,16 @@ if 1: #ssb with stark shift with mixer with gaussian fit
             post_seq = sequencer.Delay(150)
             spec = stark_shift_with_mixer.Stark_shift_with_mixer(qubit_info, mixer_info1,mixer_info2, SS_mixer_info1, SS_mixer_info2,
                                                                  phase1, np.linspace(-50e6, 10e6,101), seq=seq, plot_seqs=False, postseq = post_seq,
-                                                                 proj_func='projection')
+                                                                 proj_func='phase',)# readout = 'readout_IQ')
             spec.measure_keysight()
-            plt.close()
+#            plt.close()
             shift = spec.center
 
    
 if 1:    #photon ramsey
     from single_qubit import photon_ramsey_test
 #    delay = np.linspace(130,260,6)
-    SS_mixer_info1_set.set_pi_amp_selective(0.3)
+    SS_mixer_info1_set.set_pi_amp_selective(0.4)
 
     SS_mixer_info1 = mclient.get_qubit_info('SS_mixer_info1')    
     delay = [200]
@@ -295,7 +301,7 @@ if 1:    #photon ramsey
 
 #####for qubit 2 readout
 
-if 1:   #qubit2 readout setting
+if 0:   #qubit2 readout setting
     
     ro_freq = 10.8034e9
     power = 10
@@ -389,7 +395,7 @@ if 1:   #qubit2 readout setting
     print('SNR = ', (means[1] - means[0]) / (stds[0] + stds[1])/2)
     
 dig.do_set_naverages(10000)
-if 1: #T2 mixer
+if 0: #T2 mixer
     from single_qubit import ramsey_measurement_xy
 #    seq = sequencer.Join([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0)])
     for i in range(1):
@@ -534,7 +540,7 @@ if 0:
         kwargs = dict()
         plt.savefig(fn, **kwargs)
 '''
-if 1:    #sigma_xy
+if 0:    #sigma_xy
     
     
     
@@ -642,7 +648,7 @@ if 1:    #sigma_xy
 
 
 
-if 1:   #CW_ramsey
+if 0:   #CW_ramsey
     from single_qubit import cw_ramsey_mixer
 #    SS_mixer_info1_set.set_pi_amp(0.000000001)
 #

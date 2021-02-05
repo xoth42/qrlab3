@@ -197,7 +197,7 @@ class Yokogawa_7651_new(Instrument):
             return None
         strng = self.do_get_output()
         digit = re.findall("[-+]?[.]?[\d]+(?:,\d\d\d)*[\.]?\d*(?:[eE][-+]?\d+)?", strng)
-        digit = float(digit[0])
+        digit = float(digit[0]) * 1000.0
         return digit
         
     def do_set_voltage(self, voltage): # WARNING: Jumps right to voltage you set, as long as in voltage mode (-Alex S. 5/1/19)
@@ -291,9 +291,9 @@ class Yokogawa_7651_new(Instrument):
         self.range_value.send(current / 1000)
 
     def do_get_current(self):
-#        if (self.do_get_source_type() != 'current'):
-##            raise CurrentError('Not in current mode')
-#            return None
+        if (self.do_get_source_type() != 'current'):
+#            raise CurrentError('Not in current mode')
+            return None
         strng = self.do_get_output()
         digit = re.findall("[-+]?[.]?[\d]+(?:,\d\d\d)*[\.]?\d*(?:[eE][-+]?\d+)?", strng)
         digit = float(digit[0]) * 1000
@@ -381,5 +381,5 @@ class Yokogawa_7651_new(Instrument):
 
 
 if __name__ == '__main__':
-    test = Yokogawa_7651_new('test', address='GPIB0::3::INSTR') #why is this ::3 and not ::6? Uh oh.
+    test = Yokogawa_7651_new('test', address='GPIB0::6::INSTR') #why is this ::3 and not ::6? Uh oh.
     test.do_get_polarity()
