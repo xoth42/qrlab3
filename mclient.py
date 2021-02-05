@@ -89,6 +89,9 @@ def get_qubit_info(name, detune=None):
     ret.sideband_channels = parse_chans(ret.sideband_channels)
     if ret.sideband_channels is None:
         ret.sideband_channels = ret.channels
+    fixed_phase = None # JEFF CHANGES
+    if name is 'readout_IQ':
+        fixed_phase = ret.fixed_phase
 
     # Setup channels for this element. If no sideband modulation is used
     # (i.e. <deltaf> = 0), render directly into <channels>, otherwise to
@@ -105,7 +108,11 @@ def get_qubit_info(name, detune=None):
             replace = True
         else:
             replace = False
-        ret.ssb = sequencer.SSB(period, ret.sideband_channels, ret.sideband_phase, outchans=ret.channels, replace=replace)
+            
+            
+        ret.ssb = sequencer.SSB(period, ret.sideband_channels, ret.sideband_phase, 
+                                outchans=ret.channels, replace=replace,
+                                fixed_phase = fixed_phase) # JEFF CHANGES FOR FIXED PHASE
 
     # Setup rotation
     r = ret.rotation
