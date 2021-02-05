@@ -67,7 +67,8 @@ readout_IQ = instruments.create('readout_IQ', 'Readout_IQ_Info', IQe=(1.0), IQg=
                                 w_selective=400,
                                 marker_bufwidth=250,
                                 marker_ofs=0,
-                                pulse_width=3500)
+                                pulse_width=3500,
+                                fixed_phase=0)
 
 
 

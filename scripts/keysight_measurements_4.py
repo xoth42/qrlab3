@@ -99,7 +99,7 @@ if 0: # cav transmission NEW IQ
     from single_cavity import ROCavSpec_IQ
     freq_range =1.5e6
     df = np.linspace(-freq_range, freq_range, 61)
-    amps = np.linspace(.1,.5, 3)
+    amps = np.linspace(.075, .1, 1)
 #    readout_IQ = mclient.instruments['readout_IQ']
 
     for i in range(1):    
@@ -259,14 +259,14 @@ if 0: # qubit SSB spec
 #for i in range(5):
     #dig.set_naverages(5000)
 #    readout_driver = mclient.instruments.get(readout)
-#    seq = sequencer.Sequence([sequencer.Trigger(400), 
+#    seq = sequencer.Sequence([sequencer.Trigger(400), s
 #                              sequencer.Delay(10e3)])
     spec = ssbspec.SSBSpec(qubit_info, np.concatenate((
 #                                        np.linspace(-1.5e6, 1.5e6, 71),
 #                                        np.linspace(-3.7e6, -.7e6, 51), 
 #                                       np.linspace(-5e6,1e6, 101),
  #                                      np.linspace(-2.8e6, 1e6, 101),
-                                            np.linspace(-2e6, 2e6, 51),
+                                            np.linspace(-8e6, 2e6, 51),
                                        )), 
                            seq=None, plot_seqs=False, readout='readout_IQ',
 #                           extra_info = [cavity_infoB, qubit_b0s, qubit_b2s, qubit_b4s, fwm_info, fwm_info_b2, fwm_info_b4]
@@ -297,8 +297,8 @@ if 0: #Multiple times SSB spec
 if 0: # Calibrate pi pulse
     from single_qubit import rabi
     tr = rabi.Rabi(qubit_info, 
-#                   np.linspace(-.7, .7, 51), selective=False,
-                   np.linspace(-.2, .2, 51), selective=.5,
+                   np.linspace(-.7, .7, 51), selective=False,
+#                   np.linspace(-.2, .2, 51), selective=.5,
 #                  np.linspace(-0.015, 0.015, 51), selective=True,
 #                   np.linspace(0.3, .5, 51), selective=False,
 #                   np.linspace(0.25, 0.4, 51), selective=False,
@@ -307,14 +307,14 @@ if 0: # Calibrate pi pulse
     tr.measure()
     bla
     
-if 1: # Time Rabi
+if 0: # Time Rabi
     from scripts.single_qubit import timerabi
     tr = timerabi.TimeRabi(qubit_info, np.linspace(1, 200, 51), amp=0.87)
     data = tr.measure_keysight()
     bla
 
     
-if 0: # T1
+if 1: # T1
 #    dig.set_trigger_period(500)
     from single_qubit import T1measurement
 #    t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0, 19e3, 20), 
@@ -325,11 +325,11 @@ if 0: # T1
     t1.measure()
 #    bla
 
-if 1: # T2
+if 0: # T2
     from single_qubit import T2measurement
     for i in range(1):
-        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0e3, 15e3, 91), detune=.5e6, 
-    #    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 3.9e3, 81), detune=2e6, 
+#        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0e3, 15e3, 91), detune=2e6, 
+        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 20e3, 81), detune=2e6, 
                                          double_freq=False, generate=True, seq=None,
                                          plot_seqs=False, readout='readout_IQ')
         t2.measure_keysight()
