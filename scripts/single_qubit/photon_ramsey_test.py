@@ -257,7 +257,7 @@ class Photon_Ramsey_Test(Measurement1D):
         s.append(self.seq)
         s.append(Delay(2000))
         ro = (Combined([
-            Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
+            Join([Delay(200),Constant(int(self.mixer_info1.w), 1, chan=self.readout_info.acq_chan)]),
 #            Join([Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),Delay(200)]),
             Join([self.mixer_info1.rotate(np.pi, 0),Delay(200)]),
             Join([self.mixer_info2.rotate(np.pi, 0),Delay(200)])

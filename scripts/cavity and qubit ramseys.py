@@ -72,9 +72,9 @@ if 0: #demag
         time.sleep(300)
 
 #####for qubit 1 readout
-if 1:   #qubit1 readout setting
+if 0:   #qubit1 readout setting
     
-    ro_freq = 10.8082e9
+    ro_freq = 10.8078e9
     power = 10
     readout_info.rfsource1.set_frequency(ro_freq - mixer_info1.deltaf)
     readout_info.rfsource1.set_power(power)
@@ -83,7 +83,7 @@ if 1:   #qubit1 readout setting
     SS_mixer_info1_set.set_deltaf(deltaf)
     SS_mixer_info1 = mclient.get_qubit_info('SS_mixer_info1')
     
-    mixer_info1_set.set_pi_amp(.4)
+    mixer_info1_set.set_pi_amp(0.3)
     mixer_info2_set.set_pi_amp(0)
     mixer_info1_set.set_w(300)
     mixer_info2_set.set_w(300)
@@ -92,16 +92,16 @@ if 1:   #qubit1 readout setting
     mixer_info2 = mclient.get_qubit_info('mixer_info2')
     
     from scripts.single_qubit import rabi_mixer
-    tr_e = rabi_mixer.Rabi_mixer(qubit_info, mixer_info1, mixer_info2,[qubit_info.pi_amp,], histogram=True, title='|e>',
-#                   readout = 'readout_IQ',
+    tr_e = rabi_mixer.Rabi_mixer(qubit2_info, mixer_info1, mixer_info2,[qubit_info.pi_amp,], histogram=True, title='|e>',
+                   readout = 'readout_IQ',
                                  )
     tr_e.measure_keysight()
-    tr_g = rabi_mixer.Rabi_mixer(qubit_info,mixer_info1, mixer_info2, [0.001,], histogram=True, title='|g>',
-#                                 readout = 'readout_IQ',
+    tr_g = rabi_mixer.Rabi_mixer(qubit2_info,mixer_info1, mixer_info2, [0.001,], histogram=True, title='|g>',
+                                 readout = 'readout_IQ',
                    )
     tr_g.measure_keysight()
-    tr = rabi_mixer.Rabi_mixer(qubit_info, mixer_info1, mixer_info2,[qubit_info.pi_amp/2,], histogram=True, title='|g>+|e>',
-#                               readout = 'readout_IQ',
+    tr = rabi_mixer.Rabi_mixer(qubit2_info, mixer_info1, mixer_info2,[qubit_info.pi_amp/2,], histogram=True, title='|g>+|e>',
+                               readout = 'readout_IQ',
                    )
     tr.measure_keysight()
     
@@ -170,7 +170,7 @@ if 1:   #qubit1 readout setting
     print('SNR = ', (means[1] - means[0]) / (stds[0] + stds[1])/2)
 
 dig.do_set_naverages(10000)
-if 1: #ssb with stark shift with mixer with gaussian fit
+if 0: #ssb with stark shift with mixer with gaussian fit
     from single_qubit import stark_shift_with_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
     phase1 =0
@@ -187,7 +187,7 @@ if 1: #ssb with stark shift with mixer with gaussian fit
             post_seq = sequencer.Delay(150)
             spec = stark_shift_with_mixer.Stark_shift_with_mixer(qubit_info, mixer_info1,mixer_info2, SS_mixer_info1, SS_mixer_info2,
                                                                  phase1, np.linspace(-50e6, 10e6,101), seq=seq, plot_seqs=False, postseq = post_seq,
-                                                                 proj_func='phase',)# readout = 'readout_IQ')
+                                                                 proj_func='projection', readout = 'readout_IQ')
             spec.measure_keysight()
 #            plt.close()
             shift = spec.center
@@ -213,9 +213,10 @@ if 1:    #photon ramsey
             freq_q = np.zeros([seq_num,repeat])
             for i in range(repeat):
                 t2 = photon_ramsey_test.Photon_Ramsey_Test(qubit_info, qubit2_info, SS_mixer_info1, mixer_info1,mixer_info2, 
-                                                                 np.linspace(0, 0.001e3*(points[k]-1),points[k]), detune=60e6, 
+                                                                 np.linspace(0, 0.001e3*(points[k]-1),points[k]), detune=30e6, 
                                                                  delay = delay[j], generate=True, fix_phi0 = 1.8,qubit_pulse = False,
-                                                                 seq=None, postseq=None, proj_func='projection', plot_seqs =False) #extra_info=[qubit2_info])
+                                                                 seq=None, postseq=None, proj_func='phase', plot_seqs =False,
+                                                                 readout = 'readout_IQ') #extra_info=[qubit2_info])
                 t2.measure_keysight()
                 if repeat * len(delay)* len(points) >5:
                     
@@ -225,7 +226,8 @@ if 1:    #photon ramsey
                 t2 = photon_ramsey_test.Photon_Ramsey_Test(qubit_info, qubit2_info, SS_mixer_info1, mixer_info1,mixer_info2, 
                                                                  np.linspace(0, 0.001e3*(points[k]-1),points[k]), detune=60e6, 
                                                                  delay = delay[j], generate=True, fix_phi0 = 1.8,qubit_pulse = True,
-                                                                 seq=None, postseq=None, proj_func='projection', plot_seqs =False) #extra_info=[qubit2_info])
+                                                                 seq=None, postseq=None, proj_func='projection', plot_seqs =False,
+                                                                 readout = 'readout_IQ') #extra_info=[qubit2_info])
                 t2.measure_keysight()
                 if repeat * len(delay)* len(points) >5:
                     
