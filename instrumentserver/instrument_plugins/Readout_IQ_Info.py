@@ -56,6 +56,10 @@ class Readout_IQ_Info(Qubit_Info):
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 help='width of Gaussian Square wave',
                 set_func=lambda x: True, value=3000)
+        self.add_parameter('fixed_phase', type=types.FloatType,
+                flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
+                help='lab phase of readout signal',
+                set_func=lambda x: True, value=0)
 
         self.set(kwargs)
         

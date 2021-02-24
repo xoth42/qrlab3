@@ -125,19 +125,27 @@ class Stark_shift_with_mixer(Measurement1D):
             
             ro = (Combined([
                 Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
-                Join([Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),Delay(200)]),
-                Join([Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
-                Join([Constant(self.readout_info.pulse_len, self.mixer_info2.pi_amp, chan=self.mixer_info2.channels[0]),Delay(200)])
+                Join([Constant(int(self.mixer_info.w), 1, chan=self.readout_info.readout_chan),Delay(200)]),
+                Join([Constant(int(self.mixer_info.w), self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
+                Join([Constant(int(self.mixer_info.w), self.mixer_info2.pi_amp, chan=self.mixer_info2.channels[0]),Delay(200)])
 
             ]))
         else:
+#            ro = (Combined([
+#                Join([Delay(200),Constant(int(self.mixer_info.w), 1, chan=self.readout_info.acq_chan)]),
+##                Join([Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+#                Join([self.mixer_info.rotate(np.pi, 0),Delay(200)]),
+##                Join([self.mixer_info2.rotate(np.pi, 0),Delay(200)])
+#
+#            ]))
             ro = (Combined([
-                Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
+                Constant(int(self.mixer_info.w), 1, chan=self.readout_info.acq_chan),
 #                Join([Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),Delay(200)]),
-                Join([self.mixer_info.rotate(np.pi, 0),Delay(200)]),
-                Join([self.mixer_info2.rotate(np.pi, 0),Delay(200)])
+                self.mixer_info.rotate(np.pi, 0),
+#                Join([self.mixer_info2.rotate(np.pi, 0),Delay(200)])
 
             ]))
+#            ro = self.readout_driver.do_get_sequence(self.readout_qubit_info)
         if self.SS_mixer_info1.deltaf == 0:
             stark = (Combined([
                 Join([Constant(int(self.SS_mixer_info.w) + 100, 1, chan=self.readout_info.readout_chan)]),

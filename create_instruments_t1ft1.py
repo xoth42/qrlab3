@@ -21,7 +21,7 @@ from mclient import instruments
 instruments.remove('dig')
 
 dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period=50,nsamples=500, naverages=10000,
-                         awg_list = [7, 8,10],if_period = 10)
+                         awg_list = [7, 8,10],if_period = 10, main_channel = 3, ref_channel = 4)
 
 
 
@@ -38,7 +38,7 @@ AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PR
 #AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 8,  AWG_PRODUCT = "M3202A", 
 #                          amps = [1.5,1.5,1.5,1.5], ofs = [0.001, -0.031, 0.094, 0])    #10.8041
 AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 8,  AWG_PRODUCT = "M3202A", 
-                          amps = [1.5,1.5,1.5,1.5], ofs = [0.001, -0.031, 0.078, 0])    # 10.8101
+                          amps = [1.5,1.5,1.5,1.5], ofs = [0.001, -0.031, 0.08, 0.019])    # 10.8101
 AWG3 = instruments.create('AWG3', 'Keysight_AWG', chassis = 0, slot = 10,  AWG_PRODUCT = "M3202A", 
                           amps = [1.5,1.5,1.5,1.5], ofs = [-0.005,0.01, 0, 0])
 
@@ -118,22 +118,25 @@ SC_RO = instruments.create('SC_RO', 'SC5511A', devid= '10001C09')#qubit 2
 readout = instruments.create('readout', 'Readout_Info', IQe=(30.69-48.9j), IQg=(31.27-48.64j),
                              IQe_radius=1 , rfsource1='SC_RO', rfsource2='SC_ref',
                              pulse_len=300, readout_chan='1m1', acq_chan='2m1')
-#readout_IQ = instruments.create('readout_IQ', 'Readout_IQ_Info', IQe=(9.025 + 1j*21.33), IQg=(5.480, 21.64),
-#                                IQe_radius= 1 , rfsource='RObrick',
-#                                acq_chan='2m1',
-#                                deltaf=-100e6,#16.9e3,
-#                                pi_amp=0.1,
-#                                pi_amp_selective=0.0115,
-#                                rotation='SQUARE',                             
-#                                rotation_selective = 'SQUARE',
-#                                channels='7,8',
-#                                sideband_channels='I9,Q9',
-#                                sideband_phase=0,
-#                                w=5,
-#                                w_selective=400,
-#                                marker_bufwidth=250,
-#                                marker_ofs=0,
-#                                pulse_width=300)
+
+instruments.remove('readout_IQ')
+readout_IQ = instruments.create('readout_IQ', 'Readout_IQ_Info', IQe=(9.025 + 1j*21.33), IQg=(5.480, 21.64),
+                                IQe_radius= 1 , rfsource='SC_RO',
+                                acq_chan='2m1',
+                                deltaf=-50e6,
+                                pi_amp=0.4,
+                                pi_amp_selective=0.4,
+                                rotation='Square',
+                                channels='7,8',
+                                sideband_channels='I9,Q9',
+                                sideband_phase=0,
+                                w=5,
+                                w_selective=200,                               
+                                marker_bufwidth=250,
+                                marker_ofs=0,
+                                pulse_width=300)
+
+
 #
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 

@@ -105,7 +105,7 @@ for field in fields:
     #    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])
     #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0), ef2_info.rotate(np.pi, 0)])
     #    Yoko.do_set_current(-0.00175)
-        mixer1_amp = 0.1
+        mixer1_amp = 0.08
         mixer2_amp = 0
         mixer_info1_set.set_pi_amp(mixer1_amp)
         mixer_info2_set.set_pi_amp(mixer2_amp)        

@@ -158,7 +158,9 @@ class SSBSpec(Measurement1D):
 
             if self.postseq:
                 s.append(self.postseq)
+
             s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+
 
             #Ebru, adding the 20000 delay
             s.append(Delay(2000))
