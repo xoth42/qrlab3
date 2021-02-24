@@ -142,10 +142,9 @@ def analysis(meas, data=None, fig=None):
 
 class EFT2Measurement(Measurement1D):
 
-    def __init__(self, gate_info1, gate_info2, ef_info, delays, detune=0, echotype=ECHO_NONE, necho=1, double_freq=False,
+    def __init__(self, ge_info, ef_info, delays, detune=0, echotype=ECHO_NONE, necho=1, double_freq=False,
                  postseq=None, seq=None, laser_power = None, **kwargs):
-        self.gate_info1 = gate_info1
-        self.gate_info2 = gate_info2
+        self.ge_info = ge_info
         self.ef_info = ef_info
         self.delays = delays
         self.xs = delays / 1e3        # For plotting purposes
@@ -158,7 +157,7 @@ class EFT2Measurement(Measurement1D):
         self.seq = seq   
         self.postseq = postseq
 
-        super(EFT2Measurement, self).__init__(len(delays), infos=(gate_info1, gate_info2, ef_info), **kwargs)
+        super(EFT2Measurement, self).__init__(len(delays), infos=(ge_info, ef_info), **kwargs)
         self.data.create_dataset('delays', data=delays)
         self.data.set_attrs(
             detune=detune,
@@ -225,7 +224,7 @@ class EFT2Measurement(Measurement1D):
     def generate(self):
         s = Sequence()
     
-#        r_ge = self.ge_info.rotate
+        r_ge = self.ge_info.rotate
         r_ef = self.ef_info.rotate
         e = self.get_echo_pulse()
         if e:
@@ -237,13 +236,10 @@ class EFT2Measurement(Measurement1D):
 
         for i, dt in enumerate(self.delays):
 
-#            s.append(self.seq) #Ebru: Changed Trigger(dt=250) to self.seq 
-#            s.append(Pad(Combined([self.gate_info1.rotate(np.pi,0), self.gate_info2.rotate(np.pi,0)]), 250, PAD_LEFT))
-#            s.append(r_ef(np.pi/2, X_AXIS))
-            s_temp = self.seq[:]
-            s_temp += [Pad(r_ge(np.pi, X_AXIS), 250, PAD_LEFT)]
-            s_temp += [r_ef(np.pi/2, X_AXIS)]
-
+            s.append(self.seq) #Ebru: Changed Trigger(dt=250) to self.seq 
+            s.append(Pad(r_ge(np.pi, X_AXIS), 250, PAD_LEFT))
+            s.append(r_ef(np.pi/2, X_AXIS))
+           
             # We want echos: <tau> (<echo> <2tau>)^n <tau>
             if e:
                 tau = int(np.round(dt / (2 * self.necho) - epadlen/2))
@@ -259,21 +255,20 @@ class EFT2Measurement(Measurement1D):
 
             # Plain T2
             else:
-                s_temp += [Delay(dt)]
+                s.append(Delay(dt))
 
             # Measurement pulse
             angle = dt * 1e-9 * self.detune * 2 * np.pi
 #            s.append(Pad(r_ef(np.pi/2, angle), 250, PAD_RIGHT))
 #            s.append(Pad(r_ge(np.pi, X_AXIS), 250, PAD_RIGHT))
 #            s.append(Join([r_ef(-np.pi/2, angle), Combined([self.gate_info1.rotate(-np.pi,0), self.gate_info2.rotate(-np.pi,0)])]))
-            s_temp += [Join([r_ef(-np.pi/2, angle), r_ge(-np.pi, X_AXIS)])]
+            s.append(Join([r_ef(-np.pi/2, angle), r_ge(-np.pi, X_AXIS)]))
 
             if self.postseq:
-                s_temp += [self.postseq]
-            s_temp += [self.readout_driver.do_get_sequence(self.readout_qubit_info)]
+                s.append(self.postseq)
+            s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
             
-            s_temp += [Delay(2000)]
-            s.append(Join(s_temp))
+            s.append(Delay(2000))
 
         s = self.get_sequencer(s)
         seqs = s.render()

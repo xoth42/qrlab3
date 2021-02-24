@@ -234,6 +234,7 @@ class Keysight_DIG(Instrument):
         num_slots = len(self._awg_list) #DARIO 1/31 dynamic slot assignment
         HVI_location = 'C:/qrlab/instrumentserver/instrument_plugins/HVI/' + str(num_slots) + 'slot' + str(self._trigger_period) + 'us.HVI'
 #        HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\1slot' + str(self._trigger_period) + 'us.HVI'
+
         self._hvi = CompiledHVI(HVI_location, self._chassis, self._awg_list) #DARIO 1/31 dynamic slot assignment
 
         self._hvi.stop()

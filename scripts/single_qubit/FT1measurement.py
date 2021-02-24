@@ -41,14 +41,13 @@ def analysis(meas, data=None, fig=None):
 
 class FT1Measurement(Measurement1D):
 
-    def __init__(self, gate_info1, gate_info2, ef_info, delays, seq=None, postseq=None, **kwargs):
-        self.gate_info1 = gate_info1
-        self.gate_info2 = gate_info2
+    def __init__(self, qubit_info, ef_info, delays, seq=None, postseq=None, **kwargs):
+        self.qubit_info = qubit_info
         self.ef_info = ef_info
         self.delays = delays
         self.xs = delays / 1e3      # For plotting purposes
 
-        super(FT1Measurement, self).__init__(len(delays), infos=(gate_info1, gate_info2, ef_info), **kwargs)
+        super(FT1Measurement, self).__init__(len(delays), infos=(qubit_info, ef_info), **kwargs)
         self.data.create_dataset('delays', data=delays)
         if seq is None:             #Ebru:Added the seq part for cooling
             seq = Trigger(250)
@@ -58,18 +57,17 @@ class FT1Measurement(Measurement1D):
     def generate(self):
         s = Sequence()
 
-#        r = self.ge_info.rotate
+        r = self.qubit_info.rotate
         r_ef = self.ef_info.rotate
         for i, dt in enumerate(self.delays):
             s.append(Join([
                 self.seq,   #Ebru: Changed Trigger(dt=250) to self.seq for cooling
-                Combined([self.gate_info2.rotate(np.pi,0),
-                self.gate_info1.rotate(np.pi,0)]),
+                r(np.pi,0),
                 r_ef(np.pi, 0),
             ]))
             if dt > 0:
                 s.append(Delay(dt))
-#            s.append(r(np.pi/2, 0))
+            s.append(r(np.pi/2, 0))
             # For Al better to do ef-pi, ge-pi to get contrast
 #            s.append(r_ef(np.pi,0))
 #            s.append(r(np.pi,0))
