@@ -38,7 +38,7 @@ AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PR
 #AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 8,  AWG_PRODUCT = "M3202A", 
 #                          amps = [1.5,1.5,1.5,1.5], ofs = [0.001, -0.031, 0.094, 0])    #10.8041
 AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 8,  AWG_PRODUCT = "M3202A", 
-                          amps = [1.5,1.5,1.5,1.5], ofs = [0.001, -0.031, 0.078, 0])    # 10.8101
+                          amps = [1.5,1.5,1.5,1.5], ofs = [0.001, -0.031, 0.08, 0.019])    # 10.8101
 AWG3 = instruments.create('AWG3', 'Keysight_AWG', chassis = 0, slot = 10,  AWG_PRODUCT = "M3202A", 
                           amps = [1.5,1.5,1.5,1.5], ofs = [-0.005,0.01, 0, 0])
 

@@ -33,8 +33,8 @@ readout_info = mclient.get_readout_info('readout')
 #qubit2_info = mclient.get_qubit_info('cavityAlice')
 os.chdir(r'C:/qrlab/scripts')
 
-fields = [0.03,-0.025, 0.02,-0.015,0.01,-0.008,0.006,-0.004, 0.0025, -0.001,0.0005,-0.00025, 0]
-#fields = - np.asarray(fields)
+fields = [-0.04,0.03,-0.025, 0.02,-0.015,0.01,-0.008,0.006,-0.004, 0.0025, -0.001,0.0005,-0.00025, 0]
+fields = - np.asarray(fields)
 #Magnet.do_set_PSwitch(1)
 #time.sleep(35)
 #fields = np.linspace(0,-0.05,26)
@@ -52,16 +52,16 @@ for field in fields:
     time.sleep(300)
 #    Magnet.do_set_PSwitch(0)
 #    time.sleep(350)
-    '''
+
     from single_cavity import rocavspectroscopy_keysight
 #    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0), ef2_info.rotate(np.pi, 0)])
 #    Yoko.do_set_current(-0.00175)
-    rofreq = 10.715e9
-    freq_range = 10e6
+    rofreq = 10.807e9
+    freq_range = 7e6
     ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(10, 10, 1),
                                              np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
-                                             qubit_pulse=False, seq=None)#,extra_info=[ef2_info])
+                                             qubit_pulse=False, seq=None, readout = 'readout_IQ')#,extra_info=[ef2_info])
     ro.measure()
     
 #by Yingying
@@ -74,6 +74,7 @@ for field in fields:
     plt.figure('phase  %sT'%(field))
     plt.plot(ro.freqs, ro.phasedata[0],label = label)   
     plt.legend()
+    '''
 #    ga = ro.ampdata[0]
 #    gp = ro.phasedata[0]
 #    g = ga * np.exp(1j*(gp/180 * np.pi))

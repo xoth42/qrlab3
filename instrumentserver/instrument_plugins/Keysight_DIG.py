@@ -234,6 +234,7 @@ class Keysight_DIG(Instrument):
         num_slots = len(self._awg_list) #DARIO 1/31 dynamic slot assignment
         HVI_location = 'C:/qrlab/instrumentserver/instrument_plugins/HVI/' + str(num_slots) + 'slot' + str(self._trigger_period) + 'us.HVI'
 #        HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\1slot' + str(self._trigger_period) + 'us.HVI'
+
         self._hvi = CompiledHVI(HVI_location, self._chassis, self._awg_list) #DARIO 1/31 dynamic slot assignment
 
         self._hvi.stop()
@@ -542,6 +543,7 @@ class Keysight_DIG(Instrument):
                     ref = np.array(self.dig.DAQbufferGet(self._ref_channel), dtype=np.complex64)
             except ValueError, e:
                 print(str(e))
+#            IQA = self._demodA.IQ.reshape([acq_per_transfer, self._nsample])
                 print('digitizer is likely not getting triggered')
                 raise ValueError
                         
@@ -613,7 +615,7 @@ class Keysight_DIG(Instrument):
         '''
     
     def test_dig(self, nsamples, npoints, naverages, ntransfers, captureDelay = 0, digScale = 2):
-        digChannels = [1, 2] 
+        digChannels = [self._main_channel, self._ref_channel] 
         errors = []
         errors += [self.dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)]
     
@@ -633,7 +635,11 @@ class Keysight_DIG(Instrument):
         self.dig.DAQstartMultiple(3)
         self.start_hvi()
     #    hvi.start()
-        
+    ########################
+        self._capturing = True 
+        self.set_interrupt(False)
+        self.emit('start-capture')    
+        #########################
         # Add code to either trigger digitizer or wait for first few cycles
         sums = np.zeros((npoints, nsamples), dtype = np.float64)
         sums_ref = np.zeros_like(sums, dtype = np.float64)
@@ -641,6 +647,7 @@ class Keysight_DIG(Instrument):
     #    return data
         averages_per_transfer = naverages / ntransfers
         temp = np.zeros(nsamples*npoints * averages_per_transfer, dtype = np.float64)
+        print temp
         temp_ref = np.zeros_like(temp)
         for transfer in range(ntransfers):
             try:
@@ -651,6 +658,8 @@ class Keysight_DIG(Instrument):
             except:
                 pass# modulo shit ain't workin. its ok
             temp = self.dig.DAQbufferGet(self._main_channel)
+#            temp = np.array(self.dig.DAQbufferGet(self._main_channel), dtype=np.complex64)
+            print temp
             temp_ref  = self.dig.DAQbufferGet(self._ref_channel)
             
             if type(temp) is float and temp < 0:
