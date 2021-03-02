@@ -238,7 +238,7 @@ class ROCavSpectroscopy_keysight(Measurement1D):
                 dig.setup_avg_shot()
                 dig.arm()
                 dig.start_hvi()
-                ret = dig.take_avg_shot(take_ref = True)# self.readout is not 'readout_IQ')
+                ret = dig.take_avg_shot(take_ref = False)# self.readout is not 'readout_IQ')
 
                 dig.stop_hvi()
                 dig.release_buf()

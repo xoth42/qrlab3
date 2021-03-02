@@ -42,7 +42,12 @@ fwm_info = mclient.get_qubit_info('fwm_info')
 
 qubit_a1b1 = mclient.get_qubit_info('qubit_a1b1')
 qubit_a2b2 = mclient.get_qubit_info('qubit_a2b2')
+qubit_a3b3 = mclient.get_qubit_info('qubit_a3b3')
+qubit_a4b4 = mclient.get_qubit_info('qubit_a4b4')
+qubit_a1 = mclient.get_qubit_info('qubit_a1')
+qubit_a2 = mclient.get_qubit_info('qubit_a2')
 qubit_b1 = mclient.get_qubit_info('qubit_b1')
+qubit_b2 = mclient.get_qubit_info('qubit_b2')
 
 
 readout= 'readout_IQ'
@@ -55,7 +60,13 @@ cR = cavity_infoR.rotate
 ge = qubit_info.rotate
 ges= qubit_info.rotate_selective
 geqs= qubit_info.rotate_quasilective
+
+ges_a1= qubit_a1.rotate_selective
+ges_a2= qubit_a2.rotate_selective
+ges_b1= qubit_b1.rotate_selective
+ges_b2= qubit_b1.rotate_selective
 geqs_b1= qubit_b1.rotate_quasilective
+geqs_b2= qubit_b2.rotate_quasilective
 ges_a1b1 = qubit_a1b1.rotate_quasilective
 #ef = ef_info.rotate
 #efs= ef_info.rotate_selective
@@ -66,9 +77,9 @@ ges_a1b1 = qubit_a1b1.rotate_quasilective
 #fwm_info = mclient.get_qubit_info('FWM_info')
 
 #fwm_comb = OCTlib.comb(fwm_info, [.034e6, .034e6], [.3, .3], vary = [0, 1], phases = [0, 0])
-fwm_comb = OCTlib.comb(fwm_info, [0], [.4], vary = [1], phases = [0])
+fwm_comb = OCTlib.comb(fwm_info, [-.223e6-.07e6], [.9], vary = [1], phases = [0])
 
-res_comb = OCTlib.comb(cavity_infoR, [80e3], [.005], vary = [0], phases = [0])
+res_comb = OCTlib.comb(cavity_infoR, [-.1e6], [.02], vary = [-1], phases = [0])
 
 
 
@@ -79,7 +90,7 @@ if 0: # Cavity disp calibration
 #for i in range(5):
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
 #    dig.set_trigger_period(2000)
-    disp = cavdisp.CavDisp(qubit_info, cavity_infoA, 2, 41, 0, seq=None,
+    disp = cavdisp.CavDisp(qubit_info, cavity_infoB, 3, 41, 0, seq=None,
                            delay=0, bgcor=True, update=False, generate=True,
                            plot_seqs = False, readout=readout
 #                           Qswitch_infoA=Qswitch_infoB, Qswitch_infoB=Qswitch_infoB,
@@ -94,7 +105,7 @@ if 0: # Cavity T1
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
 #    xs = np.concatenate((np.linspace(0e3, 50e3, 26), np.linspace(60e3, 1250e3, 55)))
 
-    t1 = cavT1.CavT1(qubit_info, cavity_infoB, 2, np.linspace(1e3, 1500e3, 51),
+    t1 = cavT1.CavT1(qubit_info, cavity_infoB, 2, np.linspace(1e3, 2500e3, 81),
                      proj_num=0, seq=None, postseq=None, bgcor=True, force_a0 = True,
                      readout=readout
 #                     extra_info=[ef_info,]
@@ -105,8 +116,8 @@ if 0: # Cavity T1
 
 if 0: # Cavity T2
     from single_cavity import cavT2
-    detune = 15e3
-    ct2 = cavT2.CavT2(qubit_info, cavity_infoA, .7, np.linspace(10e3, 400e3, 91), detune=detune, seq=None,
+    detune = 5e3
+    ct2 = cavT2.CavT2(qubit_info, cavity_infoB, .7, np.linspace(.1e3, 300e3, 101), detune=detune, seq=None,
                        postseq=None, bgcor=False, double_freq=False, readout=readout)
     ct2.measure_keysight()
 
@@ -138,7 +149,8 @@ if 0: # Cavity speco
 
 if 0: #SSB cavspec
     from single_cavity import ssbcavspec 
-    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoB, np.linspace(-2e6, 2e6, 61), readout=readout
+    cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoB, np.linspace(-3e6, 3e6, 91), 
+                                  readout='readout_IQ'
 #                                  postseq=efpi, extra_info=[ef_info,]
                                   )
     cspec.measure_keysight()
@@ -163,27 +175,49 @@ if 0: #cavity stark shift
 
 if 0: # number splitting:
     from single_qubit import ssbspec
-    dig.set_naverages(5000)
-    dig.set_trigger_period(4000)
-#    delay_t = 10e3
-#    post_delay = 20e3
-#    poly_seq = []
-#    poly_seq += fwm_comb.get_poly_seq(delay_t - fwm_comb.sigma*4, 0)
-#    poly_seq += res_comb.get_poly_seq(delay_t - res_comb.sigma*4, 0)
-#    seq = sequencer.Join([sequencer.Trigger(250), sequencer.Combined(poly_seq),
-#                          sequencer.Delay(post_delay)
-#                          ])
+    dig.set_naverages(2000)
+    dig.set_trigger_period(5000)
+    delay_t = 10e3
+    post_delay = 10e3
+    poly_seq = []
+    poly_seq += fwm_comb.get_poly_seq(delay_t - fwm_comb.sigma*4, 0)
+    poly_seq += res_comb.get_poly_seq(delay_t - res_comb.sigma*4, 0)
+    seq = sequencer.Join([sequencer.Trigger(250), sequencer.Combined(poly_seq),
+                          sequencer.Delay(post_delay)
+                          ])
      #                     cR(-0.24, 0)]) # t2 seq test
 #                          sequencer.Combined(fwm_comb.get_poly_seq(5e3 - fwm_comb.sigma*4, .2e6)),
 #                          sequencer.Delay(2e3)])
-        
-#    seq = sequencer.Join([sequencer.Trigger(250),cB(1.14, 0), 
-#                            geqs(2*np.pi, 0), cB(-.56, 0)]) # |1> state prep
-    seq = sequencer.Join([sequencer.Trigger(250),cB(1.55, 0), 
-                          sequencer.Combined([geqs(2*np.pi, 0), geqs_b1(2*np.pi, 0)]),
-                          cB(-.44, 0), 
-                          cA(1.1, 0)
-                          ]) # |2> state prep
+
+#    seq = sequencer.Join([sequencer.Trigger(250) , cB(np.sqrt(3), 0), cA(np.sqrt(3), 0)
+#                            ]) # coherent state prep   
+#    seq = sequencer.Join([sequencer.Trigger(250),cA(1.14, 0), ges(2*np.pi, 0), cA(-.56, 0),
+#                            ]) # |1> state prep
+    
+#    seq = sequencer.Join([sequencer.Trigger(250),cB(1.14, 0), geqs(2*np.pi, 0), cB(-.56, 0),
+#                          cA(1.14, 0), ges_b1(2*np.pi, 0), cA(-.56, 0)]) # |1>|1> state prep
+#    seq = sequencer.Join([sequencer.Trigger(250),cA(1.55, 0), 
+#                          sequencer.Combined([ges(2*np.pi, 0), ges_a1(2*np.pi, 0)]),
+#                          cA(-.44, 0), 
+#                          ]) # |2> state prep
+#    seq = sequencer.Join([sequencer.Trigger(250),cA(2.1, 0), 
+#                          sequencer.Combined([ges(2*np.pi, 0), ges_a1(2*np.pi, 0), ges_a2(2*np.pi, 0)]),
+#                          cA(-.32, 0), cB(np.sqrt(3), 0)
+#                          ]) # |3> state prep     
+    
+#    seq = sequencer.Join([sequencer.Trigger(250),cB(2.1, 0), 
+#                          sequencer.Combined([geqs(2*np.pi, 0), 
+#                                              geqs_b1(2*np.pi, 0), 
+#                                              geqs_b2(2*np.pi, 0)]),
+#                          cB(-.32, 0),
+#                          ]) # |3> state prep     
+#    seq = sequencer.Join([sequencer.Trigger(250),
+#                          cB(1.14, 0), geqs(2*np.pi, 0), cB(-.56, 0),
+#                          cA(1.14, 0), ges_b1(2*np.pi, 0), cA(-.56, 0)
+#                          ]) # |11> prep
+#    seq = sequencer.Join([sequencer.Trigger(250),cB(1.14, 0), geqs(2*np.pi, 0), cB(-.56, 0),
+#                          cA(1.14, 0), ges_b1(2*np.pi, 0), cA(-.56, 0),
+#                          cA(np.sqrt(0), 0), cB(np.sqrt(2), 0)]) # Displacment after 11 state state prep   
 #        for freqs in [
 ##                      np.linspace(-27e6, -17e6, 200),
 #                      np.linspace(-8.5e6, -6.5e6, 51),
@@ -192,15 +226,18 @@ if 0: # number splitting:
     spec = ssbspec.SSBSpec(qubit_info, #np.linspace(-30e6, 10e6, 21),
 #                           np.linspace(-10e6, 0.5e6, 151),
                            np.concatenate((
-#                                          np.linspace(-15e6, -11e6, 41),
-#                                          np.linspace(-12.5e6, -11e6, 31),
-#                                          np.linspace(-1e6, 1e6, 31),
-                                          np.linspace(-17e6, -11e6, 121),
+                                          np.linspace(-29e6, -25e6, 71),
+#                                          np.linspace(-18e6, -16e6, 21),
+#                                          np.linspace(-15.5e6, -13e6, 51),
+#                                          np.linspace(-8.5e6, -6.5e6, 21),
+#                                          np.linspace(-1e6, 1e6, 21),
                                            )),
 #                           extra_info= [fwm_comb.info, res_comb.info],
-                           extra_info= [cavity_infoA, cavity_infoB, cavity_infoR, fwm_info, qubit_b1],
+                           extra_info= [cavity_infoA, cavity_infoB, cavity_infoR, fwm_info, 
+                                        qubit_b1, qubit_b2,
+                                        qubit_a1, qubit_a2],
                            seq = seq,  plot_seqs=False,
-                           bgcor = True, readout=readout)
+                           bgcor = False, readout=readout)
     spec.measure_keysight()
     bla
 
@@ -335,46 +372,46 @@ if 0: # Ramsey revival to calibrate wigner tomo
     from scripts.single_qubit import RamseyRevival
     seq = sequencer.Join([sequencer.Trigger(250), cB(1.5, 0)])
     rr = RamseyRevival.RamseyRevival(qubit_info, ef_info, np.linspace(0, 400, 81), 
-                                     seq = seq, extra_info = cavity_infoB)
+                                     seq = seq, extra_info = cavity_infoB, readout=readout)
     rr.measure_keysight()
 
 if 0: # Wigner function by displaced parity for cavity B
     from scripts.single_cavity import WignerbyParity
 #    seq = sequencer.Join([prepareB, geph(pi/2,0), sequencer.Delay(950), cB(1.65, -pi*0.175),
 #                          geqs(pi,0), cB(-1.65, -pi*0.02)])
-#    seq = sequencer.Join([sequencer.Trigger(250), cB(.5, 0)])
+    seq = sequencer.Join([sequencer.Trigger(250), cB(1, 0)])
     disp = 1.5
-    seq = sequencer.Join([sequencer.Trigger(500), 
-                      cB(disp, 0), ge(np.pi/2, 0), 
-                      sequencer.Delay(65), 
-                      cB(disp, 0),
-                      geqs(np.pi, 0),
-                      cB(-disp, 0)
-                      ])
+#    seq = sequencer.Join([sequencer.Trigger(500), 
+#                      cB(disp, 0), ge(np.pi/2, 0), 
+#                      sequencer.Delay(65), 
+#                      cB(disp, 0),
+#                      geqs(np.pi, 0),
+#                      cB(-disp, 0)
+#                      ])
 
     
     Wfun = WignerbyParity.WignerFunction(qubit_info, ef_info, cavity_infoB,
                                          xs = np.linspace(-1.8,1.8,17), ys = np.linspace(-1.3,1.3,13),
-                                         t_ge=70, t_gf=0,
+                                         t_ge=53, t_gf=0,
                                          seq=seq, delay=5, bgcor=True, zmax=100, zmin=-100, 
-                                         extra_info = None)
+                                         extra_info = None, readout=readout)
     Wfun.measure_keysight()
 
 if 0: # Wigner function by displaced parity for cavity A
     from scripts.single_cavity import WignerbyParity
 #    seq = sequencer.Join([prepareB, geph(pi/2,0), sequencer.Delay(950), cB(1.65, -pi*0.175),
 #                          geqs(pi,0), cB(-1.65, -pi*0.02)])    
-#    seq = sequencer.Join([sequencer.Trigger(250)])
-    disp = 1.7
+#    seq = sequencer.Join([sequencer.Trigger(250), cA(1,0)])
+    disp = 1
     seq = sequencer.Join([sequencer.Trigger(250), cA(disp, 0), 
-                      ge(np.pi/2, 0), sequencer.Delay(270), cA(disp,0), 
+                      ge(np.pi/2, 0), sequencer.Delay(233), cA(disp,0), 
                       geqs(np.pi, 0), 
                       cA(-disp,0)])
     Wfun = WignerbyParity.WignerFunction(qubit_info, ef_info, cavity_infoA,
                                          xs = np.linspace(-1.8,1.8,19), ys = np.linspace(-1.3,1.3,13),
-                                         t_ge=270, t_gf=0,
+                                         t_ge=233, t_gf=0,
                                          seq=seq, delay=5, bgcor=True, zmax=100, zmin=-100, 
-                                         extra_info = None)
+                                         extra_info = None,readout=readout)
     Wfun.measure_keysight()
 
 
@@ -390,20 +427,20 @@ if 0: # Cavity cooling test
     
     
     
-if 0: # 2d poly ssbspec
+if 1: # 2d poly ssbspec
     from FWM import poly_fwm_ssbspec2d
-    dig.set_trigger_period(2500)
+    dig.set_trigger_period(5000)
     dig.set_naverages(2000)
-    fwm_freqs =  np.linspace(-100e3, 100e3, 21)
-    res_freqs =  np.linspace(-100e3, 100e3, 21)
+    fwm_freqs =  np.linspace(-200e3, 200e3, 21)
+    res_freqs =  np.linspace(-200e3, 200e3, 21)
 #    alice_comb = OCTlib.comb(cavity_infoA, [10e6], [.9], vary = [1], phases = [0])
 #    bob_comb = OCTlib.comb(cavity_infoB, [-10e6], [.9], vary = [-1], phases = [0])
 #    alice_freqs =  np.linspace(-1e6, 1e6, 11)
 #    bob_freqs =  np.linspace(-1e6, 1e6, 11)
     delay_times=[15e3]
 #    amps = [.005, .01, .02]
-    seq = sequencer.Trigger(200)
-    for delay_t in delay_times:
+#    for info in [qubit_info, qubit_a1b1, qubit_a2b2, qubit_a3b3]:
+    for info in [qubit_a4b4]:
 #        for amp in amps:
 #            res_comb.amps = [amp]
 #            fwm_comb.amps = [.5]
@@ -415,9 +452,9 @@ if 0: # 2d poly ssbspec
 #                                                )
 #            ssb2d.measure_keysight()
             
-        ssb2d = poly_fwm_ssbspec2d.poly_fwm_ssbspec2d(qubit_a1b1, fwm_comb, res_comb,
-                                            fwm_freqs, res_freqs, delay_t,
-                                            seq = seq, post_delay = 20e3, bgcor = False,
+        ssb2d = poly_fwm_ssbspec2d.poly_fwm_ssbspec2d(info, fwm_comb, res_comb,
+                                            fwm_freqs, res_freqs, 20e3,
+                                            seq = None, post_delay = 20e3, bgcor = True,
                                             extra_info = [], readout=readout
                                             )
         ssb2d.measure_keysight()
@@ -429,15 +466,18 @@ if 0: # poly ssbspec to find transition
 #    alice_comb = OCTlib.comb(cavity_infoA, [0], [.1], vary = [1], phases = [0])
 #    bob_comb = OCTlib.comb(cavity_infoB, [0], [.1], vary = [0], phases = [0], detunings = [20e6])
 
-    freqs = np.linspace(-.2e6, .2e6, 91)
+    freqs =  np.linspace(-.5e6, .5e6, 51)
     delay_times=[15e3]
         
+    
+#    seq = sequencer.Join([sequencer.Trigger(250),cB(1.14, 0), geqs(2*np.pi, 0), cB(-.56, 0),
+#                          cA(1.14, 0), ges_b1(2*np.pi, 0), cA(-.56, 0)]) # |1>|1> state prep    
 #    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoR.rotate(.7, 0)])
     for delay_t in delay_times:
         ssb = poly_fwm_ssbspec.poly_fwm_ssbspec(qubit_a1b1, [fwm_comb, res_comb],
                                                 freqs, delay_t, post_delay = 20e3,
                                                 seq = None, plot_seqs = False,
-                                                bgcor   = True,
+                                                bgcor   = False,
                                                 extra_info = [cavity_infoR],
                                                 readout=readout
                                                 )
@@ -465,26 +505,27 @@ if 0: # t2 under drive for stark shift
 if 0: # time domain
     from FWM import poly_time_domain
     comb_list = [fwm_comb, res_comb]
-#    comb_list = []
-    qubit_list = [qubit_a1b1, qubit_a2b2, ]
+#    comb_list = [fwm_comb]
+    qubit_list = [qubit_info, qubit_a1b1, qubit_a2b2, qubit_a3b3]
 #    seq = [sequencer.Trigger(200), cavity_infoR.rotate(2, 0)]
 #    seq += [sequencer.Sequence(fwm_comb_static.get_poly_seq(5e3 - fwm_comb_static.sigma*4, 0))]
-#    seq = sequencer.Join([sequencer.Trigger(250),cB(1.14, 0), geqs(2*np.pi, 0), cB(-.56, 0), cA(.65, 0)])
+#    seq = sequencer.Join([sequencer.Trigger(250),cB(1.14, 0), geqs(2*np.pi, 0), cB(-.56, 0),
+#                          cA(1.14, 0), ges_b1(2*np.pi, 0), cA(-.56, 0)]) # |1>|1> state prep    
 #    seq = sequencer.Join([sequencer.Trigger(250),cB(1.55, 0), 
 #                          sequencer.Combined([geqs(2*np.pi, 0), geqs_b1(2*np.pi, 0)]),
 #                          cB(-.44, 0), 
 #                          cA(1.2, 0)
 #                          ]) # |2> state preps
     delays = np.concatenate([
-                             np.linspace(.1e3, 30e3, 21), 
-#                             np.linspace(100e3, 400e3, 5)
+                             np.linspace(.1e3, 20e3, 21), 
+#                             np.linspace(200e3, 500e3, 11)
                             ])
 #    seq = sequencer.Join([sequencer.Trigger(200), cA(.8, 0), cB(.8, 0)])
 #    seq = sequencer.Join([sequencer.Trigger(200), cR(2, 0)])
     
 #    MXG = mclient.instruments['MXGdrive']
-#    freq_range = .2e6
-#    freqs = np.linspace(-freq_range, freq_range, 1)
+#    freq_range = .3e6
+#    freqs = np.linspace(-freq_range, freq_range, 15)-.1e6
 #    taus = []
 #    dtaus = []
 #    for FWM_freq in freqs:
@@ -493,11 +534,10 @@ if 0: # time domain
 #        fwm_comb.detunings = [FWM_freq]
 #        fwm_comb.amps = [0]
     td = poly_time_domain.poly_time_domain(comb_list, qubit_list, delays,
-                                       plot_seqs=False, bgcor=True, seq=None, 
-    #                                       extra_info = [qubit_info, cavity_infoA, cavity_infoB],
+                                       plot_seqs=False, bgcor=False, seq=None, 
                                        extra_info = [qubit_info, qubit_b1, cavity_infoR, 
                                                      cavity_infoA, cavity_infoB],
-                                       readout=readout, post_delay=1e3)
+                                       readout=readout, post_delay=5e3)
     params = td.measure()
 #        taus += [params['tau'].value]
 #        dtaus += [params['tau'].stderr]

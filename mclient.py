@@ -350,15 +350,15 @@ datasrv = objsh.helper.find_object('dataserver')
 datadir = 'c:/_data'
 
 
-<<<<<<< HEAD
+#<<<<<<< HEAD
 
 filename = 'c:/_data/01052021cooldown_circulator.hdf5'
 
 
-=======
+#=======
 #filename = 'c:/_data/Fluxonium31october.hdf5'
 #=======
->>>>>>> 9b303aa76becad2a4c58e5bab34e9c74b4802978
+#>>>>>>> 9b303aa76becad2a4c58e5bab34e9c74b4802978
 
 
 filename = 'c:/_data/122020_Joint_Tomography.hdf5'

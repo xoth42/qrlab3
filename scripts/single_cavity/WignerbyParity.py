@@ -128,13 +128,15 @@ class WignerFunction(Measurement2D):
 
                 if self.delay:
                     temp_seq += [Delay(self.delay)]
-
-                temp_seq += [Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ])]
-                temp_seq += [Delay(2000)]
+                
                 s.append(Join(temp_seq))
+#                temp_seq += [Combined([
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#                ])]
+                s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+                s.append(Delay(2000))
+                
 
         s = self.get_sequencer(s)
         seqs = s.render(debug=False)
