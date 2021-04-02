@@ -63,19 +63,19 @@ def analysis(meas, data=None, fig=None):
             YS =  ys[i*num_delays : (i+1)*num_delays] - ys[-num_delays:]
         else:
             YS =  ys[i*num_delays : (i+1)*num_delays]
-
+        
         
         try: # This is a placeholder until stes is implemented w/ Alazar.
             fig.axes[0].errorbar(xs/1e3, YS, yerr=meas.get_errorbars(), fmt='.', 
                              markersize = 0, ecolor='grey', linewidth=1)
         except:
             print('passed no errorbars')  
-        fig.axes[0].plot(xs/1e3, YS, ms=3, label = info.insname)
+        fig.axes[0].plot(xs/1e3, YS, '.',  ms=3, label = info.insname)
         
         
         print 'average YS=', YS.mean()
         
-        if 1: # gompertz fit
+        if 0: # gompertz fit
             XS = xs
             params = lmfit.Parameters()
             params.add('ofs', value=YS[0])
@@ -97,7 +97,7 @@ def analysis(meas, data=None, fig=None):
             fig.axes[0].set_xlabel('Time [us]')
             fig.axes[1].plot(XS/1e3, gompertz(result.params, XS, YS), marker='s')
             
-        if 0: # exponential fit
+        if 1: # exponential fit
             Xs = xs[meas.skip_points:num_delays]
             YS = YS[meas.skip_points:num_delays]
             params = lmfit.Parameters()
@@ -109,7 +109,8 @@ def analysis(meas, data=None, fig=None):
     #        result2 = lmfit.minimize(exp_decay, result.params, args=(xs,ys))
             lmfit.report_fit(result.params)
     
-            fig.axes[0].plot(Xs/1e3, -exp_decay(result.params, Xs, 0), label='Fit, tau = %.03f us +/- %.03f us '%(result.params['tau'].value/1000.0, result.params['tau'].stderr/1000.0))
+            fig.axes[0].plot(Xs/1e3, -exp_decay(result.params, Xs, 0), linestyle = 'dashed',
+                    label='Fit, tau = %.03f us +/- %.03f us '%(result.params['tau'].value/1000.0, result.params['tau'].stderr/1000.0))
             fig.axes[0].legend(loc=0)
             fig.axes[0].set_ylabel('Intensity [AU]')
             fig.axes[0].set_xlabel('Time [us]')        

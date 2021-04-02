@@ -48,8 +48,8 @@ cR = cavity_infoR.rotate
 ge = qubit_info.rotate
 ges= qubit_info.rotate_selective
 geqs= qubit_info.rotate_quasilective
-#ef = ef_info.rotate
-#efs= ef_info.rotate_selective
+ef = ef_info.rotate
+efs= ef_info.rotate_selective
 #efpi = sequencer.Sequence(ef_info.rotate(np.pi, 0))
 
 #geqs2 = qubit2_info.rotate_quasilective
@@ -70,8 +70,8 @@ if 0: # Cavity disp calibration
 
 #for i in range(5):
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
-#    dig.set_trigger_period(100)
-    disp = cavdisp.CavDisp(qubit_info, cavity_infoA, 2.5, 41, 0, seq=None,
+    dig.set_trigger_period(3000)
+    disp = cavdisp.CavDisp(qubit_info, cavity_infoB, 2.5, 41, 0, seq=None,
                            delay=0, bgcor=True, update=False, generate=True,
                            plot_seqs = False, readout='readout_IQ'
 #                           Qswitch_infoA=Qswitch_infoB, Qswitch_infoB=Qswitch_infoB,
@@ -204,12 +204,12 @@ if 0: #Sideband modulated number splitting:
     disp2= -0.24
     seq = sequencer.Join([sequencer.Trigger(250), cB(disp, 0),
                       ges(2*np.pi, 0), cB(disp2,0)])
-#    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate(1, 0)])
+#    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoB.rotate(1, 0)])
     spec = ssbspec.SSBSpec(qubit_info, #np.linspace(-30e6, 10e6, 21),
 #                           np.linspace(-3e6, .5e6, 81),
                            np.concatenate((
 #                                           np.linspace(-7e6, -5e6, 101),
-                                           np.linspace(-7e6, 1e6, 101),
+                                           np.linspace(-7e6, -4.5e6, 101),
 #                                           np.linspace(-0.5e6, 0.5e6, 31), 
 #                                           
                                            )),
@@ -252,18 +252,34 @@ if 0: #Alice spec with qubit pulse
 
 if 0: #EF Sideband modulated number splitting:
     from single_qubit import ssbspec
-    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate(1, 0), qubit_info.rotate(np.pi,0)])
+    seq = sequencer.Join([sequencer.Trigger(250), cA(1, 0), qubit_info.rotate(np.pi,0)])
 #    postseq = qubit_info.rotate(np.pi/2,0)
-    postseq = sequencer.Sequence(qubit_info.rotate(np.pi/2, 0))
+    postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
     spec = ssbspec.SSBSpec(ef_info, np.concatenate((
 #                                                    np.linspace(-22e6, -18e6, 71),  
 #                                                    np.linspace(-12e6, -8e6, 71),
-                                                    np.linspace(-10e6, 1e6, 91),
+                                                    np.linspace(-5e6, -2.5e6, 91),
                                                     )),
                            extra_info= [qubit_info, cavity_infoA],
-                           seq =seq,  postseq = postseq, plot_seqs=False)
+                           seq =seq,  postseq = postseq, plot_seqs=False, readout='readout_IQ')
     spec.measure_keysight()
     bla
+    
+if 0: #GF Sideband modulated number splitting:
+    from single_qubit import ssbspec
+    seq = sequencer.Join([sequencer.Trigger(250), cA(1, 0), ge(np.pi/2,0), ef(np.pi, 0)])
+#    postseq = qubit_info.rotate(np.pi/2,0)
+    postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
+    spec = ssbspec.SSBSpec(ef_info, np.concatenate((
+#                                                    np.linspace(-22e6, -18e6, 71),  
+#                                                    np.linspace(-12e6, -8e6, 71),
+                                                    np.linspace(-5e6, -2.5e6, 91),
+                                                    )),
+                           extra_info= [qubit_info, cavity_infoA],
+                           seq =seq,  postseq = postseq, plot_seqs=False, readout='readout_IQ')
+    spec.measure_keysight()
+    bla
+
 
 if 0: #mixer calibration:
     from single_qubit import mixer_calibration
@@ -339,9 +355,10 @@ if 0: # make a cat
 
 if 0: # Ramsey revival to calibrate wigner tomo
     from scripts.single_qubit import RamseyRevival
-    seq = sequencer.Join([sequencer.Trigger(250), cA(1.5, 0)])
-    rr = RamseyRevival.RamseyRevival(qubit_info, ef_info, np.linspace(0, 2000, 151), 
-                                     seq = seq, extra_info = cavity_infoA , readout='readout_IQ')
+    seq = sequencer.Join([sequencer.Trigger(250), cA(1.5, 0), ge(np.pi, 0)])
+    postseq = sequencer.Join([ge(np.pi, 0)])
+    rr = RamseyRevival.RamseyRevival(ef_info, ef_info, np.linspace(0, 600, 151), 
+                                     seq = seq, postseq=postseq, extra_info = [cavity_infoA,qubit_info ] , readout='readout_IQ')
     rr.measure_keysight()
 
 if 0: # Wigner function by displaced parity for cavity B
@@ -367,25 +384,27 @@ if 0: # Wigner function by displaced parity for cavity B
                                          extra_info = None, readout='readout_IQ')
     Wfun.measure_keysight()
 
-if 0: # Wigner function by displaced parity for cavity A
-    from scripts.single_cavity import WignerbyParity
+if 1: # Wigner function by displaced parity for cavity A
+    from scripts.single_cavity import WignerbyParity_2
     disp = 0.561
     disp2 = -0.24 #-0.24 should be -0.26?
 
-    seq = sequencer.Join([sequencer.Trigger(250), cA(disp, 0),
-                      ges(2*np.pi, 0), cA(disp2,0)])
+#    seq = sequencer.Join([sequencer.Trigger(250), cA(disp, 0),
+#                      ges(2*np.pi, 0), cA(disp2,0)])
 
-   
-#    disp = 2.5
+#   
+    disp = 1
 #    seq = sequencer.Join([sequencer.Trigger(250), cA(disp, 0), 
-#                      ge(np.pi/2, 0), sequencer.Delay(277), cA(disp,0), 
+#                      ge(np.pi/2, 0), sequencer.Delay(233), cA(disp,0), 
 #                      geqs(np.pi, 0), 
 #                      cA(-disp,0)])
-    Wfun = WignerbyParity.WignerFunction(qubit_info, ef_info, cavity_infoA,
-                                         xs = np.linspace(-1.2,1.2,21), ys = np.linspace(-1.2,1.2,21),
-                                         t_ge=233, t_gf=0,
-                                         seq=seq, delay=5, bgcor=True, zmax=-100, zmin=100, 
-                                         extra_info = None, readout='readout_IQ')
+    seq = sequencer.Join([sequencer.Trigger(250), cA(disp, 0), ge(np.pi, 0)])
+    
+    Wfun = WignerbyParity_2.WignerFunction2(qubit_info, ef_info, cavity_infoA,
+                                         xs = np.linspace(-1.5,1.52,21), ys = np.linspace(-1.5,1.5,21),
+                                         t_ge=0, t_gf=0, t_ef=102,
+                                         seq=seq, delay=5, bgcor=False, zmin=0, zmax=100, 
+                                         readout='readout_IQ')
     
     Wfun.measure_keysight()
 

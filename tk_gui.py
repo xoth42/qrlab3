@@ -94,8 +94,8 @@ def fetch_instruments():
 # A list with the names of the currently active instruments as entries.
 list_of_instruments = fetch_instruments()
 if list_of_instruments == []:
-    message = 'Error: the instrument server has no instruments. Was there an ' \
-              'issue in creating instruments?'
+    message = 'Error: the instrument server has no instruments. Was there an issue in creating '
+    'instruments?'
     raise NoInstrumentsException(message)
 
 

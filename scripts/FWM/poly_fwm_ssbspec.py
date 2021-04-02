@@ -66,7 +66,7 @@ class poly_fwm_ssbspec(Measurement1D):
         
         self.bgcor = bgcor
         if seq is None:
-            seq = Trigger(500)
+            seq = [Trigger(500)]
         self.seq = seq
         self.postseq = postseq
         self.xs = freqs / 1e6       # For plot
@@ -89,20 +89,22 @@ class poly_fwm_ssbspec(Measurement1D):
             for i_bg in range(2):
                 if i_bg == 1 and not self.bgcor:
                     continue
-                s.append(self.seq)
+                s_temp = self.seq[:]
                 poly_seq = []
                 for comb in self.comb_list:
                     poly_seq += comb.get_poly_seq(self.delay_t - comb.sigma*4, df)
                         
-                s.append(Combined(poly_seq))
-                s.append(Delay(self.post_delay))
+                s_temp += [Combined(poly_seq)]
+                s_temp += [Delay(self.post_delay)]
                 if i_bg == 0:
-                    s.append(r(np.pi, X_AXIS))
+                    s_temp += [r(np.pi, X_AXIS)]
         
                 if self.postseq:
-                    s.append(self.postseq)
-                s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
-                s.append(Delay(2000))
+                    s_temp += [self.postseq]
+                    
+                s_temp += [self.readout_driver.do_get_sequence(self.readout_qubit_info)]
+                s_temp += [Delay(2000)]
+                s.append(Join(s_temp))
                 
         s = self.get_sequencer(s)
         seqs = s.render()
