@@ -28,21 +28,31 @@ def S21(params, x, y):
 
 
 
-def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, square_amps=True, ax=None):
+def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, square_amps=False, ax=None):
     if ax is None:
         ax = plt.figure().add_subplot(111)
     ax2 = ax.twinx()
 
     if square_amps:
         ampdata = ampdata[:]**2
-        
+      
+    
     if plot_type == SPEC:
         for ipower, power in enumerate(powers):
-            ax.plot(freqs/1e6, ampdata[ipower,:], label='Power %.02f dB'%power)
-            ax2.plot(freqs/1e6, ampdata[ipower,:], label='Power %.02f dB'%power)
-
+            ax.plot(freqs/1e6, (ampdata[ipower,:]), label='Power %.02f dB'%power)
+            ax2.plot(freqs/1e6, (ampdata[ipower,:]), label='Power %.02f dB'%power)
+            
+            
+        max_amp=np.zeros((len(powers),len(freqs)), dtype=float)     
+        for ipower in range(0, len(powers)):
+            for ifreq in range(0, len(freqs)):
+                max_amp[ipower][ifreq]=20*np.log10(ampdata[ipower,ifreq])-powers[ipower]-78
+         
+        
         fs = freqs
         amps = ampdata[0,:]
+        
+        
 #        f = fit.Lorentzian(fs, amps)
 #        h0 = np.max(amps)
 #        w0 = 2e6
@@ -97,6 +107,13 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, square_amp
             os.makedirs(fdir)
         kwargs = dict()
         plt.savefig(fn, **kwargs)
+        ##  Shruti adding a 2D plot
+        #plt.figure()
+        #plt.pcolormesh(freqs/1e9,powers, max_amp, cmap=plt.get_cmap('RdBu'), vmin=-40)
+        #plt.colorbar()
+        #plt.xlabel('Frequency [GHz]')
+        #plt.ylabel('Power [dBm]')
+        
         return result
     if plot_type == POWER:
 #        ax1 = f.add_subplot(2,1,1)
@@ -161,10 +178,8 @@ class ROCavSpectroscopy_keysight(Measurement1D):
 #                Constant(1, 0, chan=self.qubit_info.channels[0])
 #            ]))
 
-        s.append(Combined([
-            Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
-            Join([Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),Delay(200)]),
-        ]))
+        s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+
 #        s.append(Combined([
 #            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
 #            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
@@ -198,16 +213,21 @@ class ROCavSpectroscopy_keysight(Measurement1D):
         self.start_awgs()
 
         for ipower, power in enumerate(self.powers):
-            self.readout_info.rfsource1.set_power(power)
-            print 'Power = %s' % (power, )
-            time.sleep(2)
+            if self.readout is not 'readout_IQ':
+                self.readout_info.rfsource1.set_power(power)
+                print 'Power = %s' % (power, )
+                time.sleep(1)
 
             amps = []
             phases = []
 
             for ifreq, freq in enumerate(self.freqs):
-                self.readout_info.rfsource1.set_frequency(freq)
-                self.readout_info.rfsource2.set_frequency(freq+50e6)
+                if self.readout is 'readout_IQ':
+#                    self.readout_info.rfsource.set_frequency(freq)
+                    self.readout_info.rfsource.set_frequency(freq-self.readout_info.deltaf)#yingying change to readout freq
+                else:
+                    self.readout_info.rfsource1.set_frequency(freq)
+                    self.readout_info.rfsource2.set_frequency(freq+50e6)
                 time.sleep(0.1)
 
                 ''' the parameter to setup avg shots shouldn't be naverages.
@@ -218,7 +238,7 @@ class ROCavSpectroscopy_keysight(Measurement1D):
                 dig.setup_avg_shot()
                 dig.arm()
                 dig.start_hvi()
-                ret = dig.take_avg_shot()
+                ret = dig.take_avg_shot(take_ref = False)# self.readout is not 'readout_IQ')
 
                 dig.stop_hvi()
                 dig.release_buf()

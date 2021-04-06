@@ -1738,6 +1738,7 @@ class SequenceOperation(object):
         self.inplace = inplace
         self.ttr = ttr
 
+
     def func(self, el, now):
         if self._ext_func:
             return self._ext_func(el, now)
@@ -1747,14 +1748,18 @@ class SequenceOperation(object):
         '''
         Apply operation to a completely rendered sequence.
         '''
+
         seq_out = []
         now = 0
         for el in s.seq:
+#            print s.seq
             # Reset time when trigger occurs
             if self.ttr and el.get_trigger():
                 now = 0
             if isinstance(el, Pulse):
+
                 el = self.func(el, now)
+
             seq_out.append(el)
             now += el.get_length()
 
@@ -1789,10 +1794,11 @@ class ModulateSequence(SequenceOperation):
     period <if_period> and additional phase <phase> (-pi/2 gives a sine wave).
     '''
 
-    def __init__(self, if_period, phase, amp=1.0):
+    def __init__(self, if_period, phase, amp=1.0, fixed_phase = None):
         self.if_period = if_period
         self.phase = phase
         self.amp = amp
+        self.fixed_phase = fixed_phase
         super(ModulateSequence, self).__init__()
 
     def func(self, el, now):
@@ -1802,8 +1808,12 @@ class ModulateSequence(SequenceOperation):
 
 #        if el.repeat > 1 and np.abs(len(el.get_data()) % self.if_period) > 1e-4:  EBRU COMMENTED THIS OUT
 #            raise ValueError('Unable to modulate repeated blocks not a multiple of if_period')
-
-        phi0 = float(now % self.if_period) / self.if_period * 2 * np.pi + self.phase
+        if self.fixed_phase is None:
+            phi0 = float(now % self.if_period) / self.if_period * 2 * np.pi + self.phase
+#            print 'with now, phi0 is : %s, now:%s'%(phi0,now)
+        else:
+            phi0 = self.fixed_phase + self.phase
+#            print 'with fixed phase, phi0 is : %s'%(phi0)
         phis = np.linspace(0, 2*np.pi*len(data)/self.if_period, len(data), endpoint=False)
         data = data * self.amp * np.cos(phis + phi0)
         deg = np.rad2deg(phi0 % 2*np.pi)
@@ -1924,7 +1934,8 @@ class SSB:
     period should be negative.
     '''
 
-    def __init__(self, if_period, chans, dphi, outchans=None, amps=(1.0, 1.0), replace=None):
+    def __init__(self, if_period, chans, dphi, outchans=None, amps=(1.0, 1.0), 
+                 replace=None, fixed_phase=None):
         self.if_period = if_period
         self.chans = chans
         self.dphi = dphi
@@ -1936,20 +1947,24 @@ class SSB:
             else:
                 replace = False
         self.replace = replace
+        self.fixed_phase = fixed_phase
 
 
     def modulate(self, seqs):
         # From I channel to I/Q outputs
         if self.chans[0] in seqs:
-            m0 = ModulateSequence(self.if_period, 0, self.amps[0])
-            m1 = ModulateSequence(self.if_period, np.pi/2 + self.dphi, self.amps[1])
+            m0 = ModulateSequence(self.if_period, 0, self.amps[0], fixed_phase = self.fixed_phase)
+            m1 = ModulateSequence(self.if_period, np.pi/2 + self.dphi, self.amps[1], 
+                                  fixed_phase = self.fixed_phase)
             c0m0 = m0.apply(seqs[self.chans[0]])
             c0m1 = m1.apply(seqs[self.chans[0]])
 
         # From Q channel to I/Q outputs
         if self.chans[1] in seqs:
-            m0 = ModulateSequence(self.if_period, -np.pi/2, self.amps[0])
-            m1 = ModulateSequence(self.if_period, self.dphi, self.amps[1])
+            m0 = ModulateSequence(self.if_period, -np.pi/2, self.amps[0], 
+                                  fixed_phase = self.fixed_phase)
+            m1 = ModulateSequence(self.if_period, self.dphi, self.amps[1], 
+                                  fixed_phase = self.fixed_phase)
             c1m0 = m0.apply(seqs[self.chans[1]])
             c1m1 = m1.apply(seqs[self.chans[1]])
 

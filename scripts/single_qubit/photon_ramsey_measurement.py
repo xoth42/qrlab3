@@ -103,10 +103,14 @@ def analysis(meas, data=None, fig=None):
 #
 #    elif meas.echotype == ECHO_HAHN:
 #        params.add('phi0', value=-np.pi/2, min=-1.2*np.pi, max=1.2*np.pi) #DARIO added to fit better for echo vs plain T2
-    if ys[0] < np.average(ys):
-        params.add('phi0', value=-np.pi/2, min=-1.2*np.pi, max=1.2*np.pi, vary=True)
+    if meas.fix_phi0 is None:   
+        if ys[0] < np.average(ys):
+            params.add('phi0', value=-np.pi/2, min=-1.2*np.pi, max=1.2*np.pi, vary=True)
+        else:
+            params.add('phi0', value=np.pi/2, min=-1.2*np.pi, max=1.2*np.pi, vary=True) #Yingying changed phi0 to checking value of first point
     else:
-        params.add('phi0', value=np.pi/2, min=-1.2*np.pi, max=1.2*np.pi, vary=True) #Yingying changed phi0 to checking value of first point
+        params.add('phi0', value = meas.fix_phi0, vary=False)
+    
     result = lmfit.minimize(changing_freq_fit, params, args=(xs, ys))
 #    lmfit.report_fit(params)
 #    result2 = lmfit.minimize(t2_fit, result.params, args=(xs,ys))
@@ -166,7 +170,7 @@ def analysis(meas, data=None, fig=None):
 
 class Photon_Ramsey_Measurement_mixer(Measurement1D):
 
-    def __init__(self, qubit_info1,qubit_info2, SS_mixer_info1, mixer_info1,mixer_info2, delays, detune=0, delay = 0, qubit_pulse=False,
+    def __init__(self, qubit_info1,qubit_info2, SS_mixer_info1, mixer_info1,mixer_info2, delays, detune=0, fix_phi0 = None, delay = 0, qubit_pulse=False,
                  double_freq=False, seq=None, postseq=None, selective=True, Qswitch_infoA=None, Qswitch_infoB=None, **kwargs):
         self.qubit_info1 = qubit_info1
         self.qubit_info2 = qubit_info2
@@ -177,6 +181,7 @@ class Photon_Ramsey_Measurement_mixer(Measurement1D):
 #        self.timescale = timescale
 #        self.qubit_pre = qubit_pre
         self.delays = delays
+        self.fix_phi0 = fix_phi0
         self.xs = delays / 1e3        # For plotting purposes
         self.detune = detune
         self.delay = delay
@@ -200,7 +205,7 @@ class Photon_Ramsey_Measurement_mixer(Measurement1D):
     def generate(self):
         s = Sequence()
         ro = (Combined([
-            Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
+            Join([Delay(200),Constant(int(self.mixer_info1.w), 1, chan=self.readout_info.acq_chan)]),
 #            Join([Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),Delay(200)]),
             Join([self.mixer_info1.rotate(np.pi, 0),Delay(200)]),
             Join([self.mixer_info2.rotate(np.pi, 0),Delay(200)])
@@ -223,8 +228,11 @@ class Photon_Ramsey_Measurement_mixer(Measurement1D):
         for i, dt in enumerate(self.delays):
             s.append(self.seq)
 #            s.append(Constant(10, 1, chan=self.readout_info.acq_chan))
+            s.append(Delay(300))
             if self.qubit_pulse:
                 s.append(self.qubit_info2.rotate(np.pi, 0))
+            else:
+                s.append(Delay(80))  
             s.append(Delay(self.delay))   
             s.append(r(np.pi, X_AXIS))#s.append(Pad(r(np.pi/2, X_AXIS), 250, PAD_LEFT))
 #            s.append(Combined([

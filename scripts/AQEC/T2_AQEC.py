@@ -45,6 +45,12 @@ def analysis(meas, data=None, fig=None):
     xs = meas.delays
     ys, fig = meas.get_ys_fig(data, fig)
 
+    try: # This is a placeholder until stes is implemented w/ Alazar.
+        fig.axes[0].errorbar(xs/1e3, ys, yerr=meas.get_errorbars(), fmt='.', 
+                         markersize = 0, ecolor='grey', linewidth=1)
+    except:
+        print('passed no errorbars')  
+
     fig.axes[0].plot(xs/1e3, ys, 'ks', ms=3)
 
     amp0 = (np.max(ys) - np.min(ys)) / 2
@@ -58,10 +64,10 @@ def analysis(meas, data=None, fig=None):
     params.add('amp', value=amp0, min=0)
     params.add('tau', value=xs[-1], min=10, max=2e5)
     params.add('freq', value=f0, min=0)
-    if meas.echotype == ECHO_NONE:
-        params.add('phi0', value=-np.pi/2, min=-1.2*np.pi, max=1.2*np.pi, vary=True)  #Changed to plus sign for accommodate for amplitude RO, need a good LT solution
-    elif meas.echotype == ECHO_HAHN:
-        params.add('phi0', value=-np.pi/2, min=-1.2*np.pi, max=1.2*np.pi) #DARIO added to fit better for echo vs plain T2
+    if ys[0] < np.average(ys):
+        params.add('phi0', value=-np.pi/2, min=-1.2*np.pi, max=1.2*np.pi, vary=True)
+    else:
+        params.add('phi0', value=np.pi/2, min=-1.2*np.pi, max=1.2*np.pi, vary=True) #Yingying changed phi0 to checking value of first point
     result = lmfit.minimize(t2_fit, params, args=(xs, ys))
 #    lmfit.report_fit(params)
 #    result2 = lmfit.minimize(t2_fit, result.params, args=(xs,ys))
@@ -251,10 +257,7 @@ class T2_AQEC(Measurement1D):
 
             if self.postseq:
                 s_temp += [self.postseq]
-            s_temp += [Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ])]
+            s_temp += [self.readout_driver.do_get_sequence(self.readout_qubit_info)]
     
 
             s_temp += [Delay(2000)]

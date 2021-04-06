@@ -40,7 +40,7 @@ def analysis(meas, data=None, fig=None):
 
 class WignerFunction(Measurement2D):
 
-    def __init__(self, qubit_info, ef_info, cav_info, xs, ys, t_ge=0, t_gf=0,
+    def __init__(self, qubit_info, ef_info, cav_info, xs, ys, t_ge=0, t_gf=0, 
                  #amax=None, N=None, amaxx=None, Nx=None, amaxy=None, Ny=None,
                  cav_switch=None, seq=None, delay=0, saveas=None, bgcor=False,
                  zmin=None, zmax=None, Qswitch_infoA=None, Qswitch_infoB=None, 
@@ -50,6 +50,7 @@ class WignerFunction(Measurement2D):
         self.cav_info = cav_info
         self.t_ge = t_ge
         self.t_gf = t_gf
+        
         self.QswA = Qswitch_infoA
         self.QswB = Qswitch_infoB
         if seq is None:
@@ -128,13 +129,15 @@ class WignerFunction(Measurement2D):
 
                 if self.delay:
                     temp_seq += [Delay(self.delay)]
-
-                temp_seq += [Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ])]
-                temp_seq += [Delay(2000)]
+                
                 s.append(Join(temp_seq))
+#                temp_seq += [Combined([
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#                ])]
+                s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+                s.append(Delay(2000))
+                
 
         s = self.get_sequencer(s)
         seqs = s.render(debug=False)

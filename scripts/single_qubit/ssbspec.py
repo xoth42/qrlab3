@@ -22,18 +22,25 @@ def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
     xs = -meas.detunings
     fig.axes[0].plot(xs/1e6, ys, '.')
+    
+    try: # This is a placeholder until stes is implemented w/ Alazar.
+        fig.axes[0].errorbar(xs/1e6, ys, yerr=meas.get_errorbars(), fmt='.', 
+                         markersize = 0, ecolor='grey', linewidth=1)
+    except:
+        print('passed no errorbars')
+        
     fig.axes[0].set_xlabel('Detuning (MHz)')
     fig.axes[0].set_ylabel('Intensity (AU)')
     fig.canvas.draw()
 
-    if 0: #For double Gaussian fit
+    if 0: #For double Gaussian fit - qubit 2
         params = lmfit.Parameters()
-        params.add('background', value=min(ys), min=min(ys)+0.5)
-        params.add('amp1', value=(np.max(ys)-np.min(ys))/1.2, min=4)
-        params.add('amp2', value=(np.max(ys)-np.min(ys))/1.2, min=4)
+        params.add('background', value=max(ys), max=max(ys)+0.5)
+        params.add('amp1', value=-(np.max(ys)-np.min(ys))/1.2)
+        params.add('amp2', value=-(np.max(ys)-np.min(ys))/1.2)
         params.add('sigma', value=(xs[-1]-xs[0])/12, max=(xs[-1]-xs[0])/2)
-        params.add('center1', value=xs[np.argmax(ys)], min=xs[0], max=xs[-1])
-        params.add('center2', value=(xs[np.argmax(ys)]+xs[-1])/2, min=xs[0], max=xs[-1])
+        params.add('center1', value=xs[np.argmin(ys)])
+        params.add('center2', value=(xs[np.argmin(ys)]+xs[-1])/2)
             
         result = lmfit.minimize(double_gaussian, params, args=(xs, ys))
         lmfit.report_fit(result.params)
@@ -41,6 +48,39 @@ def analysis(meas, data=None, fig=None):
         fig.axes[0].plot(xs/1e6, -double_gaussian(result.params, xs, 0))
         fig.canvas.draw()
         return result.params
+
+
+
+    if 0: #For double Gaussian fit - qubit1
+        params = lmfit.Parameters()
+        params.add('background', value=min(ys), min=min(ys)+0.5)
+        params.add('amp1', value=(np.max(ys)-np.min(ys))/1.2)
+        params.add('amp2', value=(np.max(ys)-np.min(ys))/1.2)
+        params.add('sigma', value=(xs[-1]-xs[0])/12, max=(xs[-1]-xs[0])/2)
+        params.add('center1', value=xs[np.argmax(ys)], min=xs[0], max=xs[-1])
+        params.add('center2', value=(xs[np.argmax(ys)]-xs[-1])/2, min=xs[0], max=xs[-1])
+            
+        result = lmfit.minimize(double_gaussian, params, args=(xs, ys))
+        lmfit.report_fit(result.params)
+    
+        fig.axes[0].plot(xs/1e6, -double_gaussian(result.params, xs, 0))
+        fig.canvas.draw()
+        return result.params
+
+#
+
+
+
+
+
+
+
+
+
+
+
+
+
     if 1: #For single Gaussian fit
         params = lmfit.Parameters()
         params.add('background', value=min(ys), min=min(ys)-5) #+np.absolute(min(ys))*0.5)
@@ -92,14 +132,15 @@ class SSBSpec(Measurement1D):
     def generate(self):
         s = Sequence()
 
-        ro = Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-        ])
+#        ro = Combined([
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#        ])
 
         if self.bgcor:
             plen = self.qubit_info.rotate_selective.base(np.pi, 0).get_length()
-            s.append(Join([self.seq, Delay(plen), ro]))
+            s.append(Join([self.seq, Delay(plen)]))
+            s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
 
         for i, df in enumerate(self.detunings):
 #        for df in self.detunings:
@@ -117,7 +158,9 @@ class SSBSpec(Measurement1D):
 
             if self.postseq:
                 s.append(self.postseq)
-            s.append(ro)
+
+            s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+
 
             #Ebru, adding the 20000 delay
             s.append(Delay(2000))

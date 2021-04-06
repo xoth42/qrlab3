@@ -45,7 +45,7 @@ def analysis(meas, data=None, fig=None, period=None):
 
 class geophasecal(Measurement1D):
 
-    def __init__(self, control_info, zx90_info, gate_info1, phases, seq=None, repeat_pulse=1, delay=0, postseq = None,
+    def __init__(self, control_info, ZZ_info, gate_info1, phases, seq=None, repeat_pulse=1, delay=0, postseq = None,
                  **kwargs):
         self.control_info = control_info
         self.zx90_info = zx90_info
@@ -71,16 +71,17 @@ class geophasecal(Measurement1D):
 
         for i, phase in enumerate(self.phases):
             r = self.control_info.rotate
-            zx90 = self.zx90_info.rotate
+            ZZ_info = self.ZZ_info.rotate
             t = self.gate_info1.rotate
 #
-
-            for i in range(self.repeat_pulse):
-                s.append(self.zx90_info.rotate(-np.pi,0))
-#                s.append(r(np.pi,0))
-                s.append(self.zx90_info.rotate(-np.pi,0))
-#                s.append(r(np.pi,0))
-
+            s.append(r(np.pi/2,0))
+            s.append(self.ZZ_info.rotate(np.pi,0))            
+#            for i in range(self.repeat_pulse):
+#                s.append(self.zx90_info.rotate(-np.pi,0))
+##                s.append(r(np.pi,0))
+#                s.append(self.zx90_info.rotate(-np.pi,0))
+##                s.append(r(np.pi,0))
+#
             s.append(r(-np.pi/2, phase))
 #            s.append(t(np.pi, 0))
         

@@ -30,9 +30,12 @@ def analysis(meas, data=None, fig=None):
     xs = meas.amps
 
     fig.axes[0].plot(xs, ys, 'ks', ms=3)
-    fig.axes[0].errorbar(xs, ys, yerr=meas.get_stes(), fmt='.', 
+    try: # This is a placeholder until stes is implemented w/ Alazar.
+        fig.axes[0].errorbar(xs, ys, yerr=meas.get_errorbars(), fmt='.', 
                          markersize = 0, ecolor='grey', linewidth=1)
-    
+    except:
+        print('passed no errorbars')  
+
 
     amp0 = (np.max(ys) - np.min(ys)) / 2
     if ys[len(ys)/2]>np.average(ys):
@@ -144,10 +147,8 @@ class Rabi(Measurement1D):
             if self.postseq is not None:
                 s.append(self.postseq)
             s.append(Delay(100))
-            s.append(Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ]))
+#            s.append(Constant(100, 1, chan = 'I1'))
+            s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
             s.append(Delay(2000))
 
 
@@ -217,7 +218,7 @@ class Rabi(Measurement1D):
                     mclient.instruments[self.qubit_info.insname].set_pi2_amp(self.pi2_amp)
 
 
-        return self.pi_amp,
+        return self.fit_params
 
     ''' JEFF. Used to populate data in measuremnt from hdf5 file instead of a measurement for analysis. '''
     def load_data(self, filepath, exp_path):

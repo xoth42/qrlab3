@@ -56,14 +56,22 @@ def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
     xs = meas.delays
     num_delays = len(xs)
+
     
     for i, info in enumerate(meas.qubit_list):
         if meas.bgcor:
             YS =  ys[i*num_delays : (i+1)*num_delays] - ys[-num_delays:]
         else:
             YS =  ys[i*num_delays : (i+1)*num_delays]
-
-        fig.axes[0].plot(xs/1e3, YS, ms=3, label = info.insname)
+        
+        
+        try: # This is a placeholder until stes is implemented w/ Alazar.
+            fig.axes[0].errorbar(xs/1e3, YS, yerr=meas.get_errorbars(), fmt='.', 
+                             markersize = 0, ecolor='grey', linewidth=1)
+        except:
+            print('passed no errorbars')  
+        fig.axes[0].plot(xs/1e3, YS, '.',  ms=3, label = info.insname)
+        
         
         print 'average YS=', YS.mean()
         
@@ -89,7 +97,7 @@ def analysis(meas, data=None, fig=None):
             fig.axes[0].set_xlabel('Time [us]')
             fig.axes[1].plot(XS/1e3, gompertz(result.params, XS, YS), marker='s')
             
-        if 0: # exponential fit
+        if 1: # exponential fit
             Xs = xs[meas.skip_points:num_delays]
             YS = YS[meas.skip_points:num_delays]
             params = lmfit.Parameters()
@@ -101,13 +109,14 @@ def analysis(meas, data=None, fig=None):
     #        result2 = lmfit.minimize(exp_decay, result.params, args=(xs,ys))
             lmfit.report_fit(result.params)
     
-            fig.axes[0].plot(Xs/1e3, -exp_decay(result.params, Xs, 0), label='Fit, tau = %.03f us +/- %.03f us '%(result.params['tau'].value/1000.0, result.params['tau'].stderr/1000.0))
+            fig.axes[0].plot(Xs/1e3, -exp_decay(result.params, Xs, 0), linestyle = 'dashed',
+                    label='Fit, tau = %.03f us +/- %.03f us '%(result.params['tau'].value/1000.0, result.params['tau'].stderr/1000.0))
             fig.axes[0].legend(loc=0)
             fig.axes[0].set_ylabel('Intensity [AU]')
             fig.axes[0].set_xlabel('Time [us]')        
 
 
-        if 1: # two-scale exponential fit overdamped but near critical damping 
+        if 0: # two-scale exponential fit overdamped but near critical damping 
             XS = xs
             params = lmfit.Parameters()
             params.add('ofs', value=YS[0], vary=True)
@@ -152,8 +161,9 @@ def analysis(meas, data=None, fig=None):
 
     fig.canvas.draw()
     
-    return result.params['gamma_avg'].value
+#    return result.params['gamma_avg'].value
 #    return half_life
+    return result.params
 
 
 class poly_time_domain(Measurement1D):
@@ -186,9 +196,9 @@ class poly_time_domain(Measurement1D):
         self.ampdata = self.data.create_dataset('amplitudes', shape=[len(delays)])
         self.data.create_dataset('delays', data=self.delays)
         self.data.set_attrs(
-                fwm_amps = comb_list[0].amps,
-                ge_amps = comb_list[1].amps,
-                stark_shift = comb_list[0].stark_shift
+#                fwm_amps = comb_list[0].amps,
+#                ge_amps = comb_list[1].amps,
+#                stark_shift = comb_list[0].stark_shift
         )
 
     def generate(self):
@@ -203,17 +213,15 @@ class poly_time_domain(Measurement1D):
                     poly_seq = []
                     for comb in self.comb_list:
                         poly_seq += comb.get_poly_seq(dt - comb.sigma*4, 0)
-                        
+                    if len(poly_seq) == 0:
+                        poly_seq += [Delay(dt)]
                     s.append(Combined(poly_seq))
                 s.append(Delay(self.post_delay))
                 s.append(r(np.pi, X_AXIS))
         
                 if self.postseq:
                     s.append(self.postseq)
-                s.append(Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ]))
+                s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
                 s.append(Delay(2000))
                 
         if self.bgcor:
@@ -223,16 +231,15 @@ class poly_time_domain(Measurement1D):
                     poly_seq = []
                     for comb in self.comb_list:
                         poly_seq += comb.get_poly_seq(dt - comb.sigma*4, 0)
-                        
+                    if len(poly_seq) == 0:
+                        poly_seq += [Delay(dt)]
                     s.append(Combined(poly_seq))
                 s.append(Delay(self.post_delay))
-                
+#                s.append(r(np.pi, X_AXIS))
+        
                 if self.postseq:
                     s.append(self.postseq)
-                s.append(Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ]))
+                s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
                 s.append(Delay(2000))
                 
         s = self.get_sequencer(s)

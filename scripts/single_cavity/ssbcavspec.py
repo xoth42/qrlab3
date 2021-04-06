@@ -7,6 +7,13 @@ from measurement import Measurement1D
 def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
     xs = meas.detunings
+    
+    try: # This is a placeholder until stes is implemented w/ Alazar.
+        fig.axes[0].errorbar(xs/1e6, ys, yerr=meas.get_errorbars(), fmt='.', 
+                         markersize = 0, ecolor='grey', linewidth=1)
+    except:
+        print('passed no errorbars')
+    
     fig.axes[0].plot(xs/1e6, ys)
     fig.axes[0].set_xlabel('Detuning (MHz)')
     fig.axes[0].set_ylabel('Intensity (AU)')
@@ -46,10 +53,14 @@ class SSBCavSpec(Measurement1D):
                 self.qubit_info.rotate_selective(np.pi, 0)
                 ]))
             s.append(self.postseq)
-            s.append(Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ]))
+            
+            s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+            s.append(Delay(2000))
+ 
+#            s.append(Combined([
+##                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+ #                   Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#                ]))
 
 #            s.append(Repeat(Delay(1000), 20))   # wait for alazar acquisition to finish
 #            s.append(Combined([

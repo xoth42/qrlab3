@@ -89,6 +89,9 @@ def get_qubit_info(name, detune=None):
     ret.sideband_channels = parse_chans(ret.sideband_channels)
     if ret.sideband_channels is None:
         ret.sideband_channels = ret.channels
+    fixed_phase = None # JEFF CHANGES
+    if name is 'readout_IQ':
+        fixed_phase = ret.fixed_phase
 
     # Setup channels for this element. If no sideband modulation is used
     # (i.e. <deltaf> = 0), render directly into <channels>, otherwise to
@@ -105,7 +108,11 @@ def get_qubit_info(name, detune=None):
             replace = True
         else:
             replace = False
-        ret.ssb = sequencer.SSB(period, ret.sideband_channels, ret.sideband_phase, outchans=ret.channels, replace=replace)
+            
+            
+        ret.ssb = sequencer.SSB(period, ret.sideband_channels, ret.sideband_phase, 
+                                outchans=ret.channels, replace=replace,
+                                fixed_phase = fixed_phase) # JEFF CHANGES FOR FIXED PHASE
 
     # Setup rotation
     r = ret.rotation
@@ -270,6 +277,9 @@ def get_qubits():
 
 def get_readout_info(readout='readout'):
     ret = get_container_object(readout)
+    if readout is 'readout_IQ': # JEFF- changed to get IQ readout working
+        ret.rfsource = instruments.get(ret.rfsource)
+        return ret
     ret.rfsource1 = instruments.get(ret.rfsource1)
     ret.rfsource2 = instruments.get(ret.rfsource2)
     return ret
@@ -340,8 +350,12 @@ datasrv = objsh.helper.find_object('dataserver')
 datadir = 'c:/_data'
 
 
-filename = 'c:/_data/20210105cooldown_circulator_VNA.hdf5'
 
+filename = 'c:/_data/20210402cooldown_circulator_VNA.hdf5'
+
+
+
+#filename = 'c:/_data/032021_Joint_Tomography.hdf5'
 
 
 datafile = datasrv.get_file(filename)

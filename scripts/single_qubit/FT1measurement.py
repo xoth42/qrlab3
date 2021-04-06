@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pulseseq.sequencer import *
 from pulseseq.pulselib import *
+from pulseseq import sequencer
 from measurement import Measurement1D
 import h5py
 import lmfit
@@ -13,6 +14,12 @@ def exp_decay(params, x, data):
 def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
     xs = meas.delays
+    
+    try: # This is a placeholder until stes is implemented w/ Alazar.
+        fig.axes[0].errorbar(xs/1e3, ys, yerr=meas.get_errorbars(), fmt='.', 
+                         markersize = 0, ecolor='grey', linewidth=1)
+    except:
+        print('passed no errorbars')  
 
     fig.axes[0].plot(xs/1e3, ys, 'ks', ms=3)
 
@@ -34,27 +41,28 @@ def analysis(meas, data=None, fig=None):
 
 class FT1Measurement(Measurement1D):
 
-    def __init__(self, ge_info, ef_info, delays, seq=None, **kwargs):
-        self.ge_info = ge_info
+    def __init__(self, qubit_info, ef_info, delays, seq=None, postseq=None, **kwargs):
+        self.qubit_info = qubit_info
         self.ef_info = ef_info
         self.delays = delays
         self.xs = delays / 1e3      # For plotting purposes
 
-        super(FT1Measurement, self).__init__(len(delays), infos=(ge_info, ef_info), **kwargs)
+        super(FT1Measurement, self).__init__(len(delays), infos=(qubit_info, ef_info), **kwargs)
         self.data.create_dataset('delays', data=delays)
         if seq is None:             #Ebru:Added the seq part for cooling
             seq = Trigger(250)
-        self.seq = seq        
+        self.seq = seq    
+        self.postseq=postseq
 
     def generate(self):
         s = Sequence()
 
-        r = self.ge_info.rotate
+        r = self.qubit_info.rotate
         r_ef = self.ef_info.rotate
         for i, dt in enumerate(self.delays):
             s.append(Join([
                 self.seq,   #Ebru: Changed Trigger(dt=250) to self.seq for cooling
-                r(np.pi, 0),
+                r(np.pi,0),
                 r_ef(np.pi, 0),
             ]))
             if dt > 0:
@@ -64,7 +72,7 @@ class FT1Measurement(Measurement1D):
 #            s.append(r_ef(np.pi,0))
 #            s.append(r(np.pi,0))
 #            s.append(r_ef(np.pi/2,0)) #fluxonium
-            s.append(self.get_readout_pulse())
+            s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
             s.append(Delay(1000))
 
         s = self.get_sequencer(s)

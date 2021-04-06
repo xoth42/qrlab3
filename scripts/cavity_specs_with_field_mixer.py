@@ -58,9 +58,30 @@ os.chdir(r'C:/qrlab/scripts')
 #Magnet.do_set_PSwitch(1)
 #time.sleep(1000)
 
-dig.set_naverages(40000)
-dig.do_set_trigger_period(100)
-fields = np.linspace(0,-0.05,26)
+if 0: #demag
+#    avgs = [3000]
+    fields = [0.03, -0.025, 0.02, -0.015, 0.01,-0.005, 0.0025, -0.001,0.0005,-0.00025, 0]
+#    fields = - np.asarray(fields)
+    #Magnet.do_set_PSwitch(1)
+    #time.sleep(35)
+    #fields = np.linspace(0,-0.05,26)
+    for field in fields:
+        print(field)
+        if abs(field)>0.01:
+            Magnet.do_set_field(0)
+            time.sleep(400)
+    
+        
+    #    Magnet.do_set_PSwitch(1)
+    #    time.sleep(35)
+    #            
+        Magnet.do_set_field(field)
+        time.sleep(300)
+
+dig.set_naverages(60000)
+dig.do_set_trigger_period(50)
+fields = np.linspace(0,-0.05,11)
+repeat = 10
 for field in fields:
 #    if abs(field)>0.01:
 #        Magnet.do_set_field(0)
@@ -77,129 +98,68 @@ for field in fields:
     Magnet.do_set_PSwitch(0)
     print('cooling PSwitch')
     time.sleep(350)
-#    ro_freq = 10.8117e9zA
-#    power = 10
-#    readout_info.rfsource1.set_frequency(ro_freq)
-#    readout_info.rfsource1.set_power(power)
-#    readout_info.rfsource2.set_frequency(ro_freq+50e6)
-
     
+    for j in range(repeat):
+          
+        from single_cavity import rocavspectroscopy_keysight_mixer
+    #    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])
+    #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0), ef2_info.rotate(np.pi, 0)])
+    #    Yoko.do_set_current(-0.00175)
+        mixer1_amp = 0.08
+        mixer2_amp = 0
+        mixer_info1_set.set_pi_amp(mixer1_amp)
+        mixer_info2_set.set_pi_amp(mixer2_amp)        
+        mixer_info1_set.set_w(1000)
+        mixer_info2_set.set_w(1000)
+        dig.set_nsamples(1000)        
+        mixer_info1 = mclient.get_qubit_info('mixer_info1')
+        mixer_info2 = mclient.get_qubit_info('mixer_info2') 
     
-#    from single_qubit import ssbspec
-#    seq = sequencer.Sequence([sequencer.Trigger(400), qubit2_info.rotate(np.pi, 0)])
-##    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate_selective(np.pi, 0)])
-#    postseq = sequencer.Sequence(qubit2_info.rotate(np.pi, 0))
-##    postseq = sequencer.Sequence(qubit_info.rotate_selective(np.pi, 0))
-#    spec = ssbspec.SSBSpec(ef2_info, np.linspace(-40e6, 10e6, 101), seq=seq, postseq = postseq, extra_info=qubit2_info, plot_seqs=False, generate=True, proj_func='phase')
-#    spec.measure_keysight()
+        rofreq = 10.807e9
+        freq_range = 7e6
+        ro = rocavspectroscopy_keysight_mixer.ROCavSpectroscopy_keysight_mixer(qubit2_info, mixer_info1,mixer_info2, np.linspace(10, 10, 1),
+                                                 np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
+                                                 qubit_pulse=False, seq=None)#,extra_info=[ef2_info])
+        ro.measure()
+        
+    #by Yingying
+        plt.close()
+        plt.close()
+        plt.figure('amp  %sT'%(field))
+        label = ' qubit in g state, field = %sT'%(field)
+        plt.plot(ro.freqs, ro.ampdata[0],label = label) 
+        plt.legend()
+        plt.figure('phase  %sT'%(field))
+        plt.plot(ro.freqs, ro.phasedata[0],label = label)   
+        plt.legend()
     
-#    from single_qubit import efrabi
-#
-#    efr = efrabi.EFRabi(qubit2_info, ef2_info, np.linspace(-0.7, 0.7, 101), first_pi=True,second_pi=True, seq=None, generate=True, update=True,
-#                            proj_func='phase')
-#    efr.measure_keysight()
-#
-#
-#    
-#    from single_qubit import T1measurement
-#    t1 = T1measurement.T1Measurement(qubit2_info, #np.linspace(0, 500e3, 101),
-#                                         np.linspace(0e3, 50e3, 101),
-##                                         np.concatenate((np.linspace(5e3, 5e3, 50), np.linspace(6e3, 6e3, 51))),
-#                                         double_exp=False, generate=True, plot_seqs=False, proj_func='phase', seq=None)    
-#    t1.measure_keysight()
-#    
-#    from single_qubit import FT1measurement
-#    ft1 = FT1measurement.FT1Measurement(qubit2_info, ef2_info, np.linspace(0, 20e3, 101), seq=None, proj_func='phase')
-##        ft1 = FT1measurement.FT1Measurement(qubit_info, ef_info, np.concatenate((np.linspace(0, 1e3, 31), np.linspace(1.01e3, 5e3, 31))), seq=None, proj_func='phase')
-#
-#    ft1.measure_keysight()    
+        ro = rocavspectroscopy_keysight_mixer.ROCavSpectroscopy_keysight_mixer(qubit2_info, mixer_info1,mixer_info2, np.linspace(10, 10, 1),
+                                                 np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
+                                                 qubit_pulse=True, seq=None)#,extra_info=[ef2_info])
+        ro.measure()
+        plt.close()
+        plt.close()
+        plt.figure('amp  %sT'%(field))
+        label = ' qubit2 in e state'
+        plt.plot(ro.freqs, ro.ampdata[0],label = label) 
+        plt.legend()
     
-    from single_cavity import rocavspectroscopy_keysight_mixer
-#    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])
-#    seq = sequencer.Sequence([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0), ef2_info.rotate(np.pi, 0)])
-#    Yoko.do_set_current(-0.00175)
-    mixer1_amp = .7
-    mixer_info1_set.set_pi_amp(mixer1_amp)
-    mixer_info1 = mclient.get_qubit_info('mixer_info1')
-    rofreq = 10.8175e9
-    freq_range = 17.5e6
-    ro = rocavspectroscopy_keysight_mixer.ROCavSpectroscopy_keysight_mixer(qubit2_info, mixer_info1, np.linspace(10, 10, 1),
-                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
-                                             qubit_pulse=False, seq=None)#,extra_info=[ef2_info])
-    ro.measure()
+        fn = os.path.join(r'C:\_Data', 'images/%s_amp%sT.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime()),field))
+        fdir = os.path.split(fn)[0]
+        if not os.path.isdir(fdir):
+            os.makedirs(fdir)
+        kwargs = dict()
+        plt.savefig(fn, **kwargs)
+        plt.figure('phase  %sT'%(field))
+        plt.plot(ro.freqs, ro.phasedata[0],label = label)   
+        plt.legend()
     
-#by Yingying
-    plt.close()
-    plt.close()
-    plt.figure('amp  %sT'%(field))
-    label = ' qubit in g state, field = %sT'%(field)
-    plt.plot(ro.freqs, ro.ampdata[0],label = label) 
-    plt.legend()
-    plt.figure('phase  %sT'%(field))
-    plt.plot(ro.freqs, ro.phasedata[0],label = label)   
-    plt.legend()
-##    ga = ro.ampdata[0]
-##    gp = ro.phasedata[0]
-##    g = ga * np.exp(1j*(gp/180 * np.pi))
-    ro = rocavspectroscopy_keysight_mixer.ROCavSpectroscopy_keysight_mixer(qubit2_info, mixer_info1, np.linspace(10, 10, 1),
-                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
-                                             qubit_pulse=True, seq=None)#,extra_info=[ef2_info])
-    ro.measure()
-    plt.close()
-    plt.close()
-    plt.figure('amp  %sT'%(field))
-    label = ' qubit1 in e state'
-    plt.plot(ro.freqs, ro.ampdata[0],label = label) 
-    plt.legend()
-#    plt.figure('phase  %sT'%(field))
-#    plt.plot(ro.freqs, ro.phasedata[0],label = label)   
-#    plt.legend()
-#    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit2_info, np.linspace(-6, 10, 1),
-#                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 401),
-#                                             qubit_pulse=True, seq=None)#,extra_info=[ef2_info])
-#    ro.measure()
-#    plt.close()
-#    plt.close()
-#    plt.figure('amp  %sT'%(field))
-#    label = ' qubit2 in e state'
-#    plt.plot(ro.freqs, ro.ampdata[0],label = label) 
-#    plt.legend()
-    fn = os.path.join(r'C:\_Data', 'images/%s_amp%sT.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime()),field))
-    fdir = os.path.split(fn)[0]
-    if not os.path.isdir(fdir):
-        os.makedirs(fdir)
-    kwargs = dict()
-    plt.savefig(fn, **kwargs)
-    plt.figure('phase  %sT'%(field))
-    plt.plot(ro.freqs, ro.phasedata[0],label = label)   
-    plt.legend()
-#    seq = sequencer.Sequence([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0), ef2_info.rotate(np.pi, 0)])
-#    ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit2_info, np.linspace(10,10,1),
-#                                             np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
-#                                             qubit_pulse=False, seq=seq ,extra_info=[ef2_info])
-#    ro.measure()
-#    plt.close()
-#    plt.close()
-#    plt.figure('amp  %sT'%(field))
-#    label = ' qubit2 in f state'
-#    plt.plot(ro.freqs, ro.ampdata[0],label = label) 
-#    plt.legend()
-#    fn = os.path.join(r'C:\_Data', 'images/%s_amp%sT.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime()),field))
-#    fdir = os.path.split(fn)[0]
-#    if not os.path.isdir(fdir):
-#        os.makedirs(fdir)
-#    kwargs = dict()
-#    plt.savefig(fn, **kwargs)
-#    
-#    plt.figure('phase  %sT'%(field))
-#    plt.plot(ro.freqs, ro.phasedata[0],label = label)   
-#    plt.legend()
-    fn = os.path.join(r'C:\_Data', 'images/%s_phase%sT.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime()),field))
-    fdir = os.path.split(fn)[0]
-    if not os.path.isdir(fdir):
-        os.makedirs(fdir)
-    kwargs = dict()
-    plt.savefig(fn, **kwargs)
+        fn = os.path.join(r'C:\_Data', 'images/%s_phase%sT.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime()),field))
+        fdir = os.path.split(fn)[0]
+        if not os.path.isdir(fdir):
+            os.makedirs(fdir)
+        kwargs = dict()
+        plt.savefig(fn, **kwargs)
     
     
 #while(True):

@@ -112,7 +112,7 @@ def rabi_test(qubitge, qubit_info, seq, range):
 def T2R(qubit_info,seq=None): 
     postseq =  gate_info2.rotate(np.pi,0)
     
-    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(10, 1e3, 81), detune=4e6, plot_seqs = False, generate=True,
+    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(10, 1e3, 81), detune=2e6, plot_seqs = False, generate=True,
                                      proj_func='phase', seq=seq, postseq=None, extra_info = gate_info2)
     t2.measure()
 
@@ -139,29 +139,105 @@ def Drag_test(qubit_info):
 #Based on the spectroscopy, we assume that we have an idea about where the qubit frequencies should be 
 #We also assume that we have a good guess of what the selective pi amp should be  (w_selective suggestion = 200)
 #
-
+#T2R_list_1=[]
+#T2R_list_2=[]
+#T2R_list_1_err=[]
+#T2R_list_2_err = []
+#
+#
+#T2E_list_1=[]
+#T2E_list_2=[]
+#T2E_list_1_err=[]
+#T2E_list_2_err = []
+#
+#
+#T1_list_1=[]
+#T1_list_2=[]
+#T1_list_1_err=[]
+#T1_list_2_err = []
 
 if 0:
-    ZZ.set_rf_on(False)
-    coolgen.set_rf_on(False)
-    alz.set_naverages(2500)
-    qubitnew1 = ssb_check(qubit1ge, qubit1ge_2, qubit_info,  np.linspace(-10e6, 10e6, 61))
-    alz.set_naverages(8000)
-#
-    qubitnew2 = ssb_check(qubit2ge, qubit2ge_2, qubit2_info,  np.linspace(-10e6, 10e6, 61))
-    qubits = mclient.get_qubits()
-    qubit_info = mclient.get_qubit_info('qubit1ge')
-    qubit_info2 = mclient.get_qubit_info('qubit1ge_2')
-    qubit2_info = mclient.get_qubit_info('qubit2ge')
-    qubit2_info2 = mclient.get_qubit_info('qubit2ge_2')
+    #T2R on qubit1
+    t2 = T2measurement.T2Measurement(gate_info1, np.linspace(10, 1e3, 81), detune=2e6, plot_seqs = False, generate=True,
+                                     proj_func='phase', seq=seq_cool, postseq=None, extra_info = gate_info2)
+    t2.measure()
+    T2R_list_1.append(t2.fit_params['tau'].value)
+    T2R_list_1_err.append(t2.fit_params['tau'].stderr)
+    #T2R on qubit 2
+    t2 = T2measurement.T2Measurement(gate_info2, np.linspace(10, 1e3, 81), detune=2e6, plot_seqs = False, generate=True,
+                                     proj_func='phase', seq=seq_cool, postseq=None, extra_info = gate_info2)
+    t2.measure()
+    T2R_list_2.append(t2.fit_params['tau'].value)
+    T2R_list_2_err.append(t2.fit_params['tau'].stderr)
+
+    #T2E on qubit 1
+    t2 = T2measurement.T2Measurement(gate_info1, np.linspace(10, 4e3, 81), detune=2e6, echotype = T2measurement.ECHO_HAHN, necho=1, plot_seqs = False, generate=True,
+                                     proj_func='phase', seq=seq_cool)
+
+    t2.measure()
+    T2E_list_1.append(t2.fit_params['tau'].value)
+    T2E_list_1_err.append(t2.fit_params['tau'].stderr)
+
+    #T2E on qubit 2
+    t2 = T2measurement.T2Measurement(gate_info2, np.linspace(10, 4e3, 81), detune=2e6, echotype = T2measurement.ECHO_HAHN, necho=1, plot_seqs = False, generate=True,
+                                     proj_func='phase', seq=seq_cool)
+
+    t2.measure()
+    T2E_list_2.append(t2.fit_params['tau'].value)
+    T2E_list_2_err.append(t2.fit_params['tau'].stderr)
+
+    #T1 on qubit 1
+    t1 = T1measurement.T1Measurement(gate_info1, np.linspace(0, 50e3, 81), double_exp=False, generate=True, plot_seqs=False,
+                                         proj_func='phase', seq=seq_cool, postseq=None, extra_info=gate_info2)  #Note the rep time is 50us
+    t1.measure()
+    T1_list_1.append(t1.fit_params['tau'].value)
+    T1_list_1_err.append(t1.fit_params['tau'].stderr)
+
+
+
+    #T1 on qubit 2
+    t1 = T1measurement.T1Measurement(gate_info2, np.linspace(0, 50e3, 81), double_exp=False, generate=True, plot_seqs=False,
+                                         proj_func='phase', seq=seq_cool, postseq=None, extra_info=gate_info2)  #Note the rep time is 50us
+    t1.measure()
+    T1_list_2.append(t1.fit_params['tau'].value)
+    T1_list_2_err.append(t1.fit_params['tau'].stderr)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+if 0:
+#    ZZ.set_rf_on(False)
+#    coolgen.set_rf_on(False)
+    alz.set_naverages(2000)
+    qubitnew1 = ssb_check(qubit1ge, qubit1ge_2, qubit_info,  np.linspace(-5e6, 5e6, 81))
+#    alz.set_naverages(3000)
+##
+#    qubitnew2 = ssb_check(qubit2ge, qubit2ge_2, qubit2_info,  np.linspace(-15e6, 15e6, 81))
+#    qubits = mclient.get_qubits()
+#    qubit_info = mclient.get_qubit_info('qubit1ge')
+#    qubit_info2 = mclient.get_qubit_info('qubit1ge_2')
+#    qubit2_info = mclient.get_qubit_info('qubit2ge')
+#    qubit2_info2 = mclient.get_qubit_info('qubit2ge_2')
     #This should confirm that we are in the good region.
     
 #    Getting some cooling prediction
-    alz.set_naverages(2500)
-    cool_freq = (cavity - gaius_freq - qubitnew2)/2
-    coolgen.set_rf_on(True)
-    freq_range = 15e6        
-    cooling_spec(3420e6, 15e6, qubit2_info, [11,12,13])
+#    alz.set_naverages(2500)
+#    cool_freq = (cavity - gaius_freq - qubitnew2)/2
+#    coolgen.set_rf_on(True)
+#    freq_range = 15e6        
+#    cooling_spec(3420e6, 15e6, qubit2_info, [11,12,13])
 ##    
     bla
 
@@ -179,7 +255,7 @@ if 0:
     ZZ.set_rf_on(True)
     alz.set_naverages(2000)
     power_range = np.linspace(10,10, 1)
-    freq_range = np.linspace(3527.5e6, 3531.5e6, 7)
+    freq_range = np.linspace(3528.0e6, 3529.0e6, 7)
     ZZ_tune(qubit_info, power_range, freq_range, extra_info = qubit2_info)
     bla    
 
@@ -189,40 +265,42 @@ if 0:
 
 if 0:
 #    Rabi checking pi amps from 5/6 for both qubits
-    rabi_test(qubit1ge, qubit_info, seq_cool,np.linspace(-0.15, 0.15, 61))   
-    rabi_test(qubit2ge, qubit2_info, seq_cool,np.linspace(-0.2, 0.2, 61))   
-            
-    
-    #SSB to update sidenband frequencies (measures through 5/6, updates both qubit_info delta's)
-
-    qubitnew1 = ssb_check(qubit1ge, qubit1ge_2, qubit_info, np.linspace(-6e6, 6e6, 81))
-    qubitnew2 = ssb_check(qubit2ge, qubit2ge_2, qubit2_info, np.linspace(-6e6, 6e6, 81))
-    qubits = mclient.get_qubits()
-    qubit_info = mclient.get_qubit_info('qubit1ge')
-    qubit_info2 = mclient.get_qubit_info('qubit1ge_2')
-    qubit2_info = mclient.get_qubit_info('qubit2ge')
-    qubit2_info2 = mclient.get_qubit_info('qubit2ge_2')
+#    rabi_test(qubit1ge, qubit_info, seq_cool,np.linspace(-0.1, 0.1, 61))   
+#    rabi_test(qubit2ge, qubit2_info, seq_cool,np.linspace(-0.2, 0.2, 61))   
+#            
+#    
+#    #SSB to update sidenband frequencies (measures through 5/6, updates both qubit_info delta's)
+#
+#    qubitnew1 = ssb_check(qubit1ge, qubit1ge_2, qubit_info, np.linspace(-6e6, 6e6, 81))
+#    qubitnew2 = ssb_check(qubit2ge, qubit2ge_2, qubit2_info, np.linspace(-6e6, 6e6, 81))
+#    qubits = mclient.get_qubits()
+#    qubit_info = mclient.get_qubit_info('qubit1ge')
+#    qubit_info2 = mclient.get_qubit_info('qubit1ge_2')
+#    qubit2_info = mclient.get_qubit_info('qubit2ge')
+#    qubit2_info2 = mclient.get_qubit_info('qubit2ge_2')
 #    
 #    #Running cooling spec one more time
-    cool_freq = (cavity - gaius_freq - qubitnew2)/2
-    freq_range = 35e6        
-    cooling_spec(3420.0e6, 15e6, qubit2_info, [11,12,13])
+#    cool_freq = (cavity - gaius_freq - qubitnew2)/2
+#    freq_range = 35e6        
+#    cooling_spec(3420e6, 15e6, qubit2_info, [12,13])
     bla
     #manually set the frequency and power
 #coolgen.set_power()
 #coolgen.set_frequency()
 #coolgen.set_rf_on(True)
 #    
+    
 
 if 1:
-#    #Update all 4 pi amp's
+    #Update all 4 pi amp's
 #    rabi_test(qubit1ge, qubit_info, seq_cool, np.linspace(-0.15, 0.15, 61))   
 #    rabi_test(qubit2ge, qubit2_info, seq_cool, np.linspace(-0.2, 0.2, 61))   
 #    rabi_test(qubit1ge_2, qubit_info2, seq_cool, np.linspace(-0.5, 0.5, 61))   
 #    rabi_test(qubit2ge_2, qubit2_info2, seq_cool, np.linspace(-0.5, 0.5, 61))   
-#    
-    T2R(gate_info1, seq=seq_cool)
+#    for i in range(1):    
     T2R(gate_info2, seq=seq_cool)
+#    T2R(gate_info2, seq=seq_cool)
+    
         
 #    T2E(qubit_info, seq=seq_cool)
 #    T2E(qubit2_info, seq=seq_cool)

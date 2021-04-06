@@ -20,8 +20,8 @@ def analysis(meas, data=None, fig=None):
     ax.set_ylim(ys.min(), ys.max())
 #    if meas.zmin is not None and meas.zmax is not None:  (was trying to force set data range for color bar)
 #        ax.set_zlim(meas.zmin, meas.zmax())
-    ax.set_xlabel('fwm detuning (mhz)')
-    ax.set_ylabel('ge detuning (mhz)')
+    ax.set_xlabel(meas.comb1.info.insname + ' detuning (mhz)')
+    ax.set_ylabel(meas.comb2.info.insname + ' detuning (mhz)')
     fig.canvas.draw()
 
 class poly_fwm_ssbspec2d(Measurement2D):
@@ -30,7 +30,7 @@ class poly_fwm_ssbspec2d(Measurement2D):
                  post_delay = 1e3, seq=None, postseq=None, bgcor=False, **kwargs):
         self.qubit_info = qubit_info
         self.comb1 = comb1
-        self.comb2 = comb2        
+        self.comb2 = comb2
         self.comb1_freqs = comb1_freqs
         self.comb2_freqs = comb2_freqs
         self.delay_t = delay_t
@@ -44,7 +44,7 @@ class poly_fwm_ssbspec2d(Measurement2D):
         self.ys = ys/1e6
  
         if seq is None:
-            seq = Trigger(500)
+            seq = [Trigger(500)]
         self.seq = seq
         self.postseq = postseq       
 
@@ -71,23 +71,22 @@ class poly_fwm_ssbspec2d(Measurement2D):
                 for i_bg in range(2):
                     if i_bg == 1 and not self.bgcor:
                         continue
-                    s.append(self.seq)
+                    s_temp = self.seq[:]
                     poly_seq = []
                     poly_seq += self.comb1.get_poly_seq(self.delay_t - self.comb1.sigma*4, df1)
                     poly_seq += self.comb2.get_poly_seq(self.delay_t - self.comb2.sigma*4, df2)
-                            
-                    s.append(Combined(poly_seq))
-                    s.append(Delay(self.post_delay))
+                    
+                    s_temp += [Combined(poly_seq)]
+                    s_temp += [Delay(self.post_delay)]
                     if i_bg == 0:
-                        s.append(r(np.pi, X_AXIS))
+                        s_temp += [r(np.pi, X_AXIS)]
             
                     if self.postseq:
-                        s.append(self.postseq)
-                    s.append(Combined([
-                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                    ]))
-                    s.append(Delay(2000))
+                        s_temp += [self.postseq]
+                        
+                    s_temp += [self.readout_driver.do_get_sequence(self.readout_qubit_info)]
+                    s_temp += [Delay(2000)]
+                    s.append(Join(s_temp))
 
                     
         s = self.get_sequencer(s)

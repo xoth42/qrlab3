@@ -27,6 +27,10 @@ ZZ = mclient.instruments['ZZ']
 qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')
 qubit_info2 = mclient.get_qubit_info('qubit1ge_2')
+efinfo = mclient.get_qubit_info('efinfo')
+gate_info1 = mclient.get_gate_info('sq_gate1')
+gate_info2 = mclient.get_gate_info('sq_gate2')
+ZZ_info = mclient.get_gate_info('ZZ_gate')
 gate_info1 = mclient.get_gate_info('sq_gate1')
 gate_info2 = mclient.get_gate_info('sq_gate2')
 
@@ -45,28 +49,29 @@ qubit2_info2 = mclient.get_qubit_info('qubit2ge_2')
 
 
 
-if 1: # RO Cavity spec
+if 0: # RO Cavity spec
     from scripts.single_cavity import rocavspectroscopy
 #    rofreq = 7515.5e6
-    rofreq = 7564.6e6
-    freq_range = 15e6
-    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(5, 10, 1),
-                                         np.linspace(rofreq - freq_range, rofreq + freq_range, 61), qubit_pulse=False)
+    rofreq = 7550.6e6
+    freq_range = 20e6
+    ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(5,5, 1),
+                                         np.linspace(rofreq - freq_range, rofreq + freq_range,21), qubit_pulse=False)
     ro.measure()
     bla
     
     
 if 0:# Qubit spec
     from scripts.single_qubit import spectroscopy
-#    from scripts.single_qubit import spectroscopy_IQ
-
-    qubit_freq = 1192e6
-    freq_range = 0e6
-    spec = spectroscopy.Spectroscopy(mclient.instruments['gaius01'], qubit_info,
+    cool = sequencer.Constant(int(4e3),1,chan='3m1')
+    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info2.rotate(np.pi,0), gate_info1.rotate(np.pi,0)])
+    postseq = gate_info2.rotate(np.pi,0)
+    qubit_freq = 1.535e9
+    freq_range = 20e6
+    spec = spectroscopy.Spectroscopy(mclient.instruments['cool'], qubit_info,
                                          np.linspace(qubit_freq-freq_range,
-                                                     qubit_freq+freq_range, 11),
-                                             [-15],
-                                        plen=2000, amp=0.2, plot_seqs=False, seq=None) #1=1ns for plen
+                                                     qubit_freq+freq_range, 41),
+                                             [5],
+                                        plen=100, amp=0.000001, seq=None,  postseq=None, plot_seqs=False, extra_info=gate_info2) #1=1ns for plen
     spec.measure()
     bla    
 
@@ -93,21 +98,18 @@ if 0: # Qubit SSBspec
 #    for i in [-15,-10,-5,0,5,10]:
 #    RObrick.do_set_power(i)
     cool = sequencer.Constant(int(4e3),1,chan='3m1')
-    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), 
-#                          qubit2_info.rotate(np.pi,0)
-                          ])
+    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
 #
-    for power in np.linspace(0, 16, 1):
 #        coolgen.set_power(power)
-        for freq in np.linspace(3.380e9,3.450e9,1):
-            alz.set_naverages(8000)
+    for freq in np.linspace(3.380e9,3.450e9,1):
+        alz.set_naverages(3500)
 #            coolgen.set_frequency(freq)
 #            cool = sequencer.Constant(int(8e3),1,chan='3m1')
 #            seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), 
 ##                                  qubit2_info2.rotate(np.pi, 0)
 #                                  ])
-            spec = ssbspec.SSBSpec(qubit_info, np.linspace(-4e6, 4e6, 81), proj_func='phase', seq=seq, extra_info=qubit2_info)
-            spec.measure()
+        spec = ssbspec.SSBSpec(qubit_info, np.linspace(-60e6, 60e6, 181), proj_func='phase', seq=None, extra_info=gate_info2)
+        spec.measure()
 #            plt.close()
 #    spec.measure_keysight()
     bla
@@ -115,7 +117,7 @@ if 0: # Qubit SSBspec
     
     """Power Rabi -- Pi pulse calibration"""
 
-if 0: # Calibrate pi pulse
+if 1: # Calibrate pi pulse
     from scripts.single_qubit import rabi
 #    for x in np.linspace(7.54741e9,7.54770e9,30):
 #    for cool_time in [0.00001e3, 5e3, 10e3, 50e3, 100e3]:
@@ -139,9 +141,12 @@ if 0: # Calibrate pi pulse
 #    cool = sequencer.Constant(int(200e3),1,chan='3m1')
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(200)])
     for i in range(1):
-        cool = sequencer.Constant(int(4e3),1,chan='3m1')
-        seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])# qubit2_info.rotate(np.pi, 0)])
-#        postseq = qubit2_info.rotate(np.pi, 0)
+#        cool = sequencer.Constant(int(4e3),1,chan='3m1')
+##        seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), sequencer.Combined([gate_info2.rotate(np.pi,0), gate_info1.rotate(np.pi,0)]), qubit_info3.rotate(np.pi,0)])# qubit2_info.rotate(np.pi, 0)])
+#        seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info2.rotate(np.pi,0), gate_info1.rotate(np.pi,0)])
+##        seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info1.rotate(np.pi,0)])
+#        postseq = sequencer.Join([gate_info1.rotate(np.pi,0)])
+#        postseq = sequencer.Combined([gate_info2.rotate(np.pi,0), gate_info1.rotate(np.pi,0)])
 #    for i in range(1): 
 #        M =np.empty(3)
 #        WF_xxx.set_rf_on(0)
@@ -149,12 +154,12 @@ if 0: # Calibrate pi pulse
 #            WF_xxx.set_power(wf_power)
 #            for wf_freq in np.linspace(7.904615e9,7.90461e9,1):
 #                WF_xxx.set_frequency(wf_freq)
-        tr = rabi.Rabi(gate_info2, np.linspace(-0.15, 0.15, 61), selective=False,
+        tr = rabi.Rabi(qubit_info, np.linspace(-0.2, 0.2, 51), selective=False,
                 #                   np.linspace(0.75, 0.95, 101), selective=False,
                 #                           np.linspace(-0.2, 0.2, 61), selective=True,
                                    plot_seqs=False, generate=True, repeat_pulse=1,  #n=3 has a bug
-                                   update=True, seq=seq,
-                                   postseq=None, proj_func='phase', extra_info=qubit2_info)
+                                   update=True, seq=None,
+                                   postseq=None, proj_func='phase', extra_info=[gate_info1, gate_info2])
         data=tr.measure()
 #                amp=tr.fit_params['amp'].value
 #                K=[]
@@ -189,18 +194,21 @@ if 0: # Qubit EFspec - ef_info is not defined
 
 if 0: # EF SSBspec
     from scripts.single_qubit import ssbspec
-    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate(np.pi, 0)])
-#    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate_selective(np.pi, 0)])
-    postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
-#    postseq = sequencer.Sequence(qubit_info.rotate_selective(np.pi, 0))
-    spec = ssbspec.SSBSpec(ef_info, np.linspace(-5e6, 5e6, 81), seq=seq, postseq = None, extra_info=qubit_info, plot_seqs=False, generate=True, proj_func='phase')
+    cool = sequencer.Constant(int(4e3),1,chan='3m1')
+#    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150),  gate_info2.rotate(np.pi,0)])
+#    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150),  gate_info1.rotate(np.pi,0)])
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150),  gate_info2.rotate(np.pi,0), gate_info1.rotate(np.pi,0)])# qubit2_info.rotate(np.pi, 0)])
+#    for postseq in [None, sequencer.Join([gate_info1.rotate(np.pi,0)]), sequencer.Join([gate_info2.rotate(np.pi,0)]), sequencer.Join([gate_info2.rotate(np.pi,0), gate_info1.rotate(np.pi,0)])]:
+    postseq = sequencer.Join([gate_info1.rotate(np.pi,0)])
+#    postseq = sequencer.Combined([gate_info2.rotate(np.pi,0), gate_info1.rotate(np.pi,0)])
+    spec = ssbspec.SSBSpec(qubit_info3, np.linspace(-15e6, 15e6, 101), seq=seq, postseq = postseq, extra_info=[gate_info2, gate_info1], plot_seqs=False, generate=True, proj_func='phase')
     spec.measure()
     bla
 
 if 0: # EF rabi   #manipulated this because i use it for the pre (red) pulse for the blue transition - ebru
     from scripts.single_qubit import efrabi
     for i in range(1):
-        alz.set_naverages(15000)
+        alz.set_naverages(1000)
         efr = efrabi.EFRabi(qubit_info, qubit2_info2, np.linspace(-0.4, 0.4, 101),  seq = None, plot_seqs=False, second_pi=False, selective=False, generate=True, update=True,
                              proj_func='phase')
         efr.measure()
@@ -265,7 +273,7 @@ if 0: # AllXY  # there is a separate allxy with a pre pulse for the blue transit
 #    plt.figure()
 ##    for i in range(N):
 #        plt.plot(allxy_result[i,:])
-    alz.set_naverages(8000)
+    alz.set_naverages(4000)
 #    bla
 
 if 0: # Randomized benchmarking
@@ -408,52 +416,64 @@ if 0: #Temporary: histogram - the set of 3 points looped together - super ineffi
     
 if 0: # T1
     from scripts.single_qubit import T1measurement
-    alz.set_naverages(5000)
+    alz.set_naverages(20000)
 #    t1times = np.zeros(len(range(1000)))
     for i in range(1):
 #    for i in range(1):
 #        #postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
         cool = sequencer.Constant(int(4e3),1,chan='3m1')
-        seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])#
-        t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0,5e3,51), np.linspace(5.1e3, 40e3, 51))), double_exp=True, generate=True, plot_seqs=False,
-#        t1 = T1measurement.T1Measurement(qubit2_info, np.linspace(0, 40e3, 81), double_exp=False, generate=True, plot_seqs=False,
-                                         proj_func='phase', seq=None)
+#        seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])#
+#        seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info1.rotate(np.pi,0)])
+        seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150),  gate_info1.rotate(np.pi,0)])
+        postseq = sequencer.Join([gate_info1.rotate(np.pi,0)])
+#        postseq = sequencer.Join([gate_info1.rotate(np.pi,0), gate_info2.rotate(np.pi,0)])
+#        t1 = T1measurement.T1Measurement(qubit_info3, np.concatenate((np.linspace(0,5e3,51), np.linspace(5.1e3, 40e3, 51))), double_exp=True, generate=True, plot_seqs=False,
+        t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 20e3, 51), double_exp=False, generate=True, plot_seqs=False,
+                                         proj_func='phase', seq=None, postseq=None)
         t1.measure()
 #        t1times[i] = t1.analyze()
 #        plt.close()
     bla
 
-if 1: # T2
+if 0: # T2
     from scripts.single_qubit import T2measurement
     cool = sequencer.Constant(int(4e3),1,chan='3m1')
-    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
+#    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
+#    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info1.rotate(np.pi,0)])
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info2.rotate(np.pi,0), gate_info1.rotate(np.pi,0)])
+    postseq = gate_info1.rotate(np.pi,0)
+#    postseq = sequencer.Join([gate_info1.rotate(np.pi,0), gate_info2.rotate(np.pi,0)])
     if 1:
 #        coolgen.set_rf_on(True)
 #    
     #    for i in range(1):
-        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 2e3, 81), detune=2e6, double_freq=False, 
-                                         generate=True, postseq=None,extra_info =qubit_info,
-                                             proj_func='phase', seq=seq_cool)
+        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 0.4e3, 31), detune=8e6, double_freq=False, 
+                                         generate=True, postseq=None, extra_info =[gate_info1, gate_info2],
+                                             proj_func='phase', seq=None)
         t2.measure()
         bla
 
 if 0: # T2echo
     from scripts.single_qubit import T2measurement
     cool = sequencer.Constant(int(4e3),1,chan='3m1')
-    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
-#    for i in range(1):
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info2.rotate(np.pi,0), gate_info1.rotate(np.pi,0)])
+    postseq = gate_info1.rotate(np.pi,0)
 #    alz.set_naverages(4000)
-    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(10, 2e3, 81), detune=4e6, echotype = T2measurement.ECHO_HAHN, necho=1, plot_seqs = False, generate=True,
-                                     proj_func='phase', seq=seq_cool)
+    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(10, 4e3, 81), detune=1e6, echotype = T2measurement.ECHO_HAHN, necho=1, plot_seqs = False, generate=True,
+                                     seq=None, postseq=None, extra_info =[gate_info1, gate_info2], proj_func='phase')
     t2.measure()
     bla
 
 if 0: # FT1
     from scripts.single_qubit import FT1measurement
     #ft1times = np.zeros(len(range(20)))
+
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
+    postseq = sequencer.Join([gate_info1.rotate(np.pi,0)])
+
     for i in range(1):
-        ft1 = FT1measurement.FT1Measurement(qubit_info, ef_info, 
-                                            np.concatenate((np.linspace(0, 10e3, 81), np.linspace(11e3, 15e3, 11))), 
+        ft1 = FT1measurement.FT1Measurement(gate_info1, gate_info2, qubit_info3, 
+                                            np.concatenate((np.linspace(0, 10e3, 51), np.linspace(11e3, 20e3, 11))), seq=seq, postseq=postseq,
                                                            proj_func='phase')
         ft1.measure()
         #ft1times[i] = ft1.analyze()
@@ -462,8 +482,9 @@ if 0: # FT1
 
 if 0: # EFT2
     from scripts.single_qubit import EFT2measurement # frequency stability of |f> vs |e>
-
-    eft2 = EFT2measurement.EFT2Measurement(qubit_info, ef_info, np.linspace(0, 3e3, 51), detune=2e6, double_freq=False, plot_seqs = False, echotype = EFT2measurement.ECHO_NONE,
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
+    postseq = sequencer.Join([gate_info1.rotate(np.pi,0)])
+    eft2 = EFT2measurement.EFT2Measurement(gate_info1, gate_info2, qubit_info3, np.linspace(0, 20e3, 51), detune=0e6, double_freq=False, postseq=postseq, seq=seq, plot_seqs = False, echotype = EFT2measurement.ECHO_NONE,
                                                proj_func='phase')
     eft2.measure()
 
@@ -706,7 +727,7 @@ if 0:
 
 '''2D CR Tune-ups'''
 
-if 1: # Tune up for time vs detuning   
+if 0: # Tune up for time vs detuning   
     
     from scripts.fluxonium import CRtuning_timevsdet
     

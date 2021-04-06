@@ -61,9 +61,9 @@ def changing_freq_fit(params, x, data):
     '''
 
     sine = np.sin(2 * np.pi * x * (params['freq'].value + params['A']*np.exp(-params['slope'].value * x) ) + params['phi0'].value)
-    exp = np.exp(-(x*((1 / params['tau'].value) + params['A2'].value*np.exp(-x*params['slope'].value))))
+    exp = np.exp(-(x*((1 / params['tau'].value) + params['A2'].value*np.exp(-x*params['slope'].value/2))))
     est = params['ofs'].value + params['amp'].value * exp * sine
-    print params
+#    print params
     return data - est
 
 def analysis(meas, data=None, fig=None):
@@ -95,7 +95,7 @@ def analysis(meas, data=None, fig=None):
         
         params.add('slope', value=.01,min = 0, vary = True)
         params.add('A', value = -1e-3, max = 0, vary = True)
-        params.add('A2', value = 2e-4, vary = True)
+        params.add('A2', value = 2e-4, min = 0, vary = True)
 #    if meas.echotype == ECHO_NONE:
 #
 #        params.add('phi0', value=np.pi/2, min=-1.2*np.pi, max=1.2*np.pi, vary=True)  #Changed to plus sign for accommodate for amplitude RO, need a good LT solution
@@ -113,11 +113,15 @@ def analysis(meas, data=None, fig=None):
 
     if meas.double_freq == False:
         fig.axes[0].plot(xs/1e3, -changing_freq_fit(result.params, xs, 0), 
-                label='Fit, tau=%.03f us, df=%.03f kHz, df_final = %.03f kHz,\n df_average = %.03f kHz'%(
+                label='Fit, tau=%.03f us, df=%.03f kHz, df_final = %.03f kHz,\n df_average = %.03f kHz\n tau_i = %.04f us, tau_f = %.04f us, tau_ave = %.04f us'%(
                         result.params['tau'].value/1000, 
                         result.params['freq'].value*1e6 + result.params['A']*1e6*np.exp(-xs[0]*result.params['slope']),
                         result.params['freq'].value*1e6 + result.params['A']*1e6*np.exp(-xs[-1]*result.params['slope']),
-                        np.average(result.params['freq'].value*1e6 + result.params['A']*1e6*np.exp(-xs*result.params['slope']))))
+                        np.average(result.params['freq'].value*1e6 + result.params['A']*1e6*np.exp(-xs*result.params['slope'])),
+                        0.001/((1/result.params['tau'].value) + result.params['A2'].value*np.exp(-xs[0]*result.params['slope'].value/2)),
+                        0.001/((1/result.params['tau'].value) + result.params['A2'].value*np.exp(-xs[-1]*result.params['slope'].value/2)),
+                        0.001/np.average((1/result.params['tau'].value) + result.params['A2'].value*np.exp(-xs*result.params['slope'].value/2))                   
+                        ))
         fig.axes[0].legend()
         fig.axes[0].set_ylabel('Intensity [AU]')
         fig.axes[0].set_xlabel('Time [us]')

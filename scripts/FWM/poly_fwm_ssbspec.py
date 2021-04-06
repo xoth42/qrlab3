@@ -25,6 +25,12 @@ def analysis(meas, data=None, fig=None):
     ys, fig = meas.get_ys_fig(data, fig)
     xs = meas.freqs
 
+    try: # This is a placeholder until stes is implemented w/ Alazar.
+        fig.axes[0].errorbar(xs/1e6, ys, yerr=meas.get_errorbars(), fmt='.', 
+                         markersize = 0, ecolor='grey', linewidth=1)
+    except:
+        print('passed no errorbars')  
+        
     f = fit.Lorentzian(xs, ys)
     if 0:
         h0 = np.max(ys)-np.min(ys)
@@ -60,7 +66,7 @@ class poly_fwm_ssbspec(Measurement1D):
         
         self.bgcor = bgcor
         if seq is None:
-            seq = Trigger(500)
+            seq = [Trigger(500)]
         self.seq = seq
         self.postseq = postseq
         self.xs = freqs / 1e6       # For plot
@@ -83,23 +89,22 @@ class poly_fwm_ssbspec(Measurement1D):
             for i_bg in range(2):
                 if i_bg == 1 and not self.bgcor:
                     continue
-                s.append(self.seq)
+                s_temp = self.seq[:]
                 poly_seq = []
                 for comb in self.comb_list:
                     poly_seq += comb.get_poly_seq(self.delay_t - comb.sigma*4, df)
                         
-                s.append(Combined(poly_seq))
-                s.append(Delay(self.post_delay))
+                s_temp += [Combined(poly_seq)]
+                s_temp += [Delay(self.post_delay)]
                 if i_bg == 0:
-                    s.append(r(np.pi, X_AXIS))
+                    s_temp += [r(np.pi, X_AXIS)]
         
                 if self.postseq:
-                    s.append(self.postseq)
-                s.append(Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ]))
-                s.append(Delay(2000))
+                    s_temp += [self.postseq]
+                    
+                s_temp += [self.readout_driver.do_get_sequence(self.readout_qubit_info)]
+                s_temp += [Delay(2000)]
+                s.append(Join(s_temp))
                 
         s = self.get_sequencer(s)
         seqs = s.render()

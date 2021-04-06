@@ -12,18 +12,14 @@ import types
 from instrument import Instrument
 from windfreak import SynthHD
 
-
-synth = SynthHD('COM10')     #For computer 6
-
-#synth = SynthHD('COM3')   #For computer 4
- 
-
+# Please check what COM-port you have the windfreak connected to and then change self.synth in line 21
 
 class WFT1153(Instrument):
     
     
     def __init__(self, name, channel_index = 0, serial=None):
-        self.synth = SynthHD('COM10')
+        self.synth = SynthHD('COM3')
+
 
         self.channel_index = channel_index
         

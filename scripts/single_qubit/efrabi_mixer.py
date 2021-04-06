@@ -26,8 +26,8 @@ def analysis(meas, data=None, fig=None, period=None):
     fig.axes[0].plot(xs, ys, 'ks', ms=3)
 
     amp0 = (np.min(ys) - np.max(ys)) / 2
-#    if ys[0]>np.average(ys):
-#        amp0 = -amp0
+    if ys[int(np.where(xs)[0][0])]<np.average(ys):
+        amp0 = -amp0
     fftys = np.abs(np.fft.fft(ys - np.average(ys)))
     fftfs = np.fft.fftfreq(len(ys), xs[1]-xs[0])
     period0 = 1 / np.abs(fftfs[np.argmax(fftys)])
@@ -55,13 +55,14 @@ def analysis(meas, data=None, fig=None, period=None):
 
 class EFRabi_mixer(Measurement1D):
 
-    def __init__(self, ge_info, ef_info, mixer_info, amps, first_pi=True, second_pi=True, selective=False,
+    def __init__(self, ge_info, ef_info, mixer_info, mixer_info2, amps, first_pi=True, second_pi=True, selective=False,
                  update=False, seq=None, repeat_pulse=1, laser_power = None,
                  force_period=None, postseq = None,
                  **kwargs):
         self.ge_info = ge_info
         self.ef_info = ef_info
         self.mixer_info = mixer_info
+        self.mixer_info2 = mixer_info2
         self.amps = amps
         self.first_pi = first_pi
         self.second_pi = second_pi
@@ -77,7 +78,7 @@ class EFRabi_mixer(Measurement1D):
             seq = Trigger(250)
         self.seq = seq
 
-        super(EFRabi_mixer, self).__init__(len(amps), infos=(ge_info, ef_info, mixer_info), **kwargs)
+        super(EFRabi_mixer, self).__init__(len(amps), infos=(ge_info, ef_info, mixer_info,mixer_info2), **kwargs)
         self.data.create_dataset('areas', data=amps)
         if laser_power:
             self.data.set_attrs(laser_power =self.laser_power)
@@ -104,9 +105,11 @@ class EFRabi_mixer(Measurement1D):
             if self.postseq:
                 s.append(self.postseq)
             s.append(Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
                     Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                    Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0])
+                    Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.sideband_channels[0]),
+                    Constant(self.readout_info.pulse_len, self.mixer_info2.pi_amp, chan=self.mixer_info2.sideband_channels[0]),
+
                 ]))
             s.append(Delay(2000))
 

@@ -20,7 +20,12 @@ def analysis(meas, data=None, fig=None):
     xs = meas.delays
 
     fig.axes[0].plot(xs/1e3, ys, 'ks', ms=3, linestyle='-', markerfacecolor='red' )
-
+    try: # This is a placeholder until stes is implemented w/ Alazar.
+        fig.axes[0].errorbar(xs/1e3, ys, yerr=meas.get_errorbars(), fmt='.', 
+                         markersize = 0, ecolor='grey', linewidth=1)
+    except:
+        print('passed no errorbars')  
+        
     if meas.double_exp == False:
         params = lmfit.Parameters()
         params.add('ofs', value=np.min(ys))
@@ -86,39 +91,21 @@ class T1Measurement(Measurement1D):
 
     def generate(self):
         s = Sequence()
-#        s.append(Constant(250, 0, chan=4))
-#        s.append(Constant(250, 1, chan='4m1'))
-        
+
         
         r = self.qubit_info.rotate
         for i, dt in enumerate(self.delays):
             s.append(self.seq)
             s.append(r(np.pi, 0))
-#            s.append(Combined([
-#                    Constant(25000, 0.1, chan=self.qubit_info.sideband_channels[0]),
-#                    Constant(25000, 0.1, chan=self.qubit_info.sideband_channels[1]),
-#            ]))
+
             s.append(Delay(dt))
 
             if self.postseq is not None:
                 s.append(self.postseq)
-#            s.append(self.get_readout_pulse())
             
-#            s.append(Delay(20))
-            s.append(Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-            ]))
+            readout_phase = dt * np.pi /float(10) #(int(dt + 3)/10)* np.pi
+            s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info, phase = -readout_phase) )
             s.append(Delay(2000))
-            #Ebru: changed the delay from 1000 to 20000.
-
-#            s.append(Repeat(Delay(1000), 20))   # wait for alazar acquisition to finish
-#            s.append(Combined([
-#                Repeat(Constant(8000, 0.4, chan=self.QswB.sideband_channels[0]), 70),
-#                Repeat(Constant(8000, 0.4, chan=self.QswB.sideband_channels[1]), 70),
-#                Repeat(Constant(8000, 1, chan='1m1'), 70),     # Readout pump tone switch
-#                Repeat(Constant(8000, 0.0001, chan=5), 70),         # Qubit/Readout master switch
-#            ]))
 
         s = self.get_sequencer(s)
         seqs = s.render()

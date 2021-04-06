@@ -6,8 +6,8 @@ import csv
 
 
 AWG_PRODUCT = "M3202A"
-CHASSIS = 0
-AWG_SLOT = 7
+CHASSIS = 1
+AWG_SLOT = 8
 
 # CREATE AND OPEN MODULES
 awg = key.SD_AOU()
