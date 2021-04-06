@@ -85,8 +85,8 @@ qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
 #AWG1.do_set_waveform_delay(200000)
 #bla
 #instruments.remove('Magnet')
-Magnet = instruments.create('Magnet','AMI_430')
-print 'Magnet OK'
+#Magnet = instruments.create('Magnet','AMI_430')
+#print 'Magnet OK'
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='TCPIP0::172.30.56.25::4000::SOCKET')
 #
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB1::17::INSTR')

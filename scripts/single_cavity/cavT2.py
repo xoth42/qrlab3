@@ -242,11 +242,12 @@ class CavT2(Measurement1D):
                 if self.postseq:
                     temp_seq += [self.postseq]
 
-                temp_seq += [Combined([
-                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ])]
+#                temp_seq += [Combined([
+#                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+#                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#                ])]
                 s.append(Join(temp_seq))
+                s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
 
         s = self.get_sequencer(s)
         seqs = s.render(debug=False)

@@ -16,7 +16,7 @@ class AMI_430(Instrument):
     def __init__(self, name, **kwargs):
         super(AMI_430, self).__init__(name)
         
-        self.ser = serial.Serial('COM3', 
+        self.ser = serial.Serial('COM8', 
                                  baudrate= 115200, 
                                  parity=serial.PARITY_NONE, 
                                  stopbits= serial.STOPBITS_ONE, 

@@ -464,7 +464,7 @@ class Keysight_DIG(Instrument):
                 if num_points >= 10:
                     self._ntransfers = self._naverages/100
                 else:
-                    self._ntransfers = self._naverages/2000  # May 2019: Less frequent update when number of points is small
+                    self._ntransfers = max(1, self._naverages/2000)  # May 2019: Less frequent update when number of points is small
             else:
                 self._ntransfers = self._naverages
         elif(self._naverages % ntransfers == 0):
@@ -559,6 +559,7 @@ class Keysight_DIG(Instrument):
                 self._demodB.demodulate(ref)
                 IQB = self._demodB.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
                 refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
+                print(refs)
             
             '''
             if take_ref:
@@ -635,11 +636,7 @@ class Keysight_DIG(Instrument):
         self.dig.DAQstartMultiple(3)
         self.start_hvi()
     #    hvi.start()
-    ########################
-        self._capturing = True 
-        self.set_interrupt(False)
-        self.emit('start-capture')    
-        #########################
+
         # Add code to either trigger digitizer or wait for first few cycles
         sums = np.zeros((npoints, nsamples), dtype = np.float64)
         sums_ref = np.zeros_like(sums, dtype = np.float64)
