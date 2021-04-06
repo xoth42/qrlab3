@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.interactive(True)
 import os
 import time
 import lmfit 
@@ -15,13 +17,13 @@ from matplotlib import gridspec
 filepath = 'C:\_Data\\'
 #hdf5_name = 'VNAtestJan30.hdf5'
 #hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
-hdf5_name = '0827cooldown_circualtor_VNA.hdf5'
+hdf5_name = '20210105cooldown_circulator_VNA - Copy (3).hdf5'
 
-date = '20191128'
-time = '233939'
+date = '20210217'
+time = '180916'
 experiment = 'Power_Sweep_VNA'
 
-fit_S12 = True
+fit_S12 = False
 
 fit_S11 = False
 fit_S12_two_modes_V2 = False
@@ -121,12 +123,13 @@ Z = np.transpose(mag)
 #X,Y = np.meshgrid(field, freq)
 X,Y = np.meshgrid(powerplot, freq)
 pl.xlim(X.min(), X.max())
-pl.pcolormesh(X,Y,Z)
+pl.pcolormesh(X,Y,Z,vmax = -40, vmin = -70)
 pl.colorbar()
 #pl.title('YIG FMR Spectrum, S11 Measurement')
 #pl.xlabel('Magnetic Field(mT)')
 pl.ylabel('Frequency(GHz)')
-pl.close()
+pl.show()
+#pl.close()
 
 
 
@@ -166,8 +169,8 @@ for i in range(len(real))[:]:
 
     
 
-    freqs = freq[400:800]
-    datas = real[i][400:800] + 1j*imag[i][400:800]
+#    freqs = freq[400:800]
+#    datas = real[i][400:800] + 1j*imag[i][400:800]
     
 #    freqs = freqs[0:300]
 #    datas = datas[0:300]
@@ -301,69 +304,71 @@ for i in range(len(real))[:]:
 fig.axes[1].set_aspect('equal', 'box')
     
 pl.legend()
+pl.show()
+f.close()
+##pl.figure()
+##pl.errorbar(xlist, kappa_a/1000000, yerr = kappa_a_err/1000000, fmt ='o', label='kappa_tot')
+##pl.xlabel('drive power (dbm)')
+##pl.ylabel('linewidth(MHz)')
+##pl.legend(loc='upper right')
+###pl.savefig(save_filepath + 'kappas.png')
+##pl.figure()
+##pl.errorbar(xlist, kappa_prod, yerr = kappa_prod_err, fmt ='o', label='kappa_prod')
+##pl.xlabel('drive power (dBm)')
+##pl.legend(loc='upper right')
+##pl.figure()
+##pl.scatter(xlist, Q_result, label='total Q')
+###    pl.xlabel('field(T)')
+###    pl.xlabel('different measurement')
+##pl.xlabel('drive power (dBm)')
+##pl.ylabel('Q')
+##pl.legend(loc='upper right')
+###pl.savefig(save_filepath + 'Qs.png')
+#
+#
+#lin_power = xlist
+##lin_power = np.power(10,xlist/10)
+##lin_power[0] = 0
 #pl.figure()
-#pl.errorbar(xlist, kappa_a/1000000, yerr = kappa_a_err/1000000, fmt ='o', label='kappa_tot')
-#pl.xlabel('drive power (dbm)')
+#pl.errorbar(lin_power, omega_c/1e9, yerr =omega_c_err/1e9, fmt ='o', label='frequency')
+#if fit_S12_two_modes_V2 or fit_S12_two_modes_V3:
+#    pl.errorbar(lin_power, omega_c2/1e9, yerr =omega_c2_err/1e9, fmt ='o', label='frequency')
+##    pl.xlabel('field(T)')
+##    pl.xlabel('different measurement')
+##n=19
+##m,b = np.polyfit(lin_power[0:n],omega_c[0:n]/1e9,1)
+##print 'frequencu(GHz) = %s * power(mW) + %s'%(m,b)
+##print 'slope for frequency:', m
+##pl.plot(lin_power, lin_power*m + b,label = 'frequencu(GHz) = %s * power(mW) + %s'%(m,b))
+##pl.xlabel('drive power(mW)')
+#pl.ylabel('frequency(GHz)')
+#pl.legend(loc='upper right')
+#
+##pl.figure()
+##pl.scatter(lin_power, Q_result, label='total Q')
+###    pl.xlabel('field(T)')
+###    pl.xlabel('different measurement')
+###pl.xlabel('drive power (mW)')
+##pl.ylabel('Q')
+##pl.legend(loc='upper right')
+#
+#
+#pl.figure()
+#pl.errorbar(lin_power, kappa_a/1000000, yerr = kappa_a_err/1000000, fmt ='o', label='kappa_tot')
+#if fit_S12_two_modes_V2 or fit_S12_two_modes_V3:
+#    pl.errorbar(lin_power, kappa_a2/1000000, yerr = kappa_a2_err/1000000, fmt ='o')
+##n=6
+##m,b = np.polyfit(lin_power[0:n],kappa_a[0:n]/1e6,1)
+##pl.plot(lin_power, lin_power*m + b)
+##print 'slope for kappa:', m
+##pl.xlabel('drive power (mW)')
 #pl.ylabel('linewidth(MHz)')
 #pl.legend(loc='upper right')
-##pl.savefig(save_filepath + 'kappas.png')
-#pl.figure()
-#pl.errorbar(xlist, kappa_prod, yerr = kappa_prod_err, fmt ='o', label='kappa_prod')
-#pl.xlabel('drive power (dBm)')
-#pl.legend(loc='upper right')
-#pl.figure()
-#pl.scatter(xlist, Q_result, label='total Q')
-##    pl.xlabel('field(T)')
-##    pl.xlabel('different measurement')
-#pl.xlabel('drive power (dBm)')
-#pl.ylabel('Q')
-#pl.legend(loc='upper right')
-##pl.savefig(save_filepath + 'Qs.png')
-
-
-lin_power = xlist
-#lin_power = np.power(10,xlist/10)
-#lin_power[0] = 0
-pl.figure()
-pl.errorbar(lin_power, omega_c/1e9, yerr =omega_c_err/1e9, fmt ='o', label='frequency')
-if fit_S12_two_modes_V2 or fit_S12_two_modes_V3:
-    pl.errorbar(lin_power, omega_c2/1e9, yerr =omega_c2_err/1e9, fmt ='o', label='frequency')
-#    pl.xlabel('field(T)')
-#    pl.xlabel('different measurement')
-#n=19
-#m,b = np.polyfit(lin_power[0:n],omega_c[0:n]/1e9,1)
-#print 'frequencu(GHz) = %s * power(mW) + %s'%(m,b)
-#print 'slope for frequency:', m
-#pl.plot(lin_power, lin_power*m + b,label = 'frequencu(GHz) = %s * power(mW) + %s'%(m,b))
-#pl.xlabel('drive power(mW)')
-pl.ylabel('frequency(GHz)')
-pl.legend(loc='upper right')
-
-#pl.figure()
-#pl.scatter(lin_power, Q_result, label='total Q')
-##    pl.xlabel('field(T)')
-##    pl.xlabel('different measurement')
-##pl.xlabel('drive power (mW)')
-#pl.ylabel('Q')
-#pl.legend(loc='upper right')
-
-
-pl.figure()
-pl.errorbar(lin_power, kappa_a/1000000, yerr = kappa_a_err/1000000, fmt ='o', label='kappa_tot')
-if fit_S12_two_modes_V2 or fit_S12_two_modes_V3:
-    pl.errorbar(lin_power, kappa_a2/1000000, yerr = kappa_a2_err/1000000, fmt ='o')
-#n=6
-#m,b = np.polyfit(lin_power[0:n],kappa_a[0:n]/1e6,1)
-#pl.plot(lin_power, lin_power*m + b)
-#print 'slope for kappa:', m
-#pl.xlabel('drive power (mW)')
-pl.ylabel('linewidth(MHz)')
-pl.legend(loc='upper right')
-
 #
-pl.figure()
-pl.errorbar(lin_power, kappa_prod, yerr = kappa_prod_err, fmt ='o', label='kappa_prod')
-if  fit_S12_two_modes_V3:
-    pl.errorbar(lin_power, kappa_prod2, yerr = kappa_prod2_err, fmt ='o')
-#pl.xlabel('drive power (mW)')
-pl.legend(loc='upper right')
+##
+#pl.figure()
+#pl.errorbar(lin_power, kappa_prod, yerr = kappa_prod_err, fmt ='o', label='kappa_prod')
+#if  fit_S12_two_modes_V3:
+#    pl.errorbar(lin_power, kappa_prod2, yerr = kappa_prod2_err, fmt ='o')
+##pl.xlabel('drive power (mW)')
+#pl.legend(loc='upper right')

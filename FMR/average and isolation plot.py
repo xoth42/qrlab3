@@ -13,16 +13,16 @@ def Average(a, n):
 #        print np.average(a[i:i+n])
         
     return b
-naverages  = 10
+naverages  = 1
 #datas_p = datas
-datas_p1 = np.zeros([len(fields),1601 - naverages + 1],dtype = complex)
-for i in range(len(datas_p)):
-    datas_p1[i] = Average(datas_p[i], naverages)
+datas_p1 = np.zeros([len(fields),401 - naverages + 1],dtype = complex)
+for i in range(len(datas)):
+    datas_p1[i] = Average(datas[i], naverages)
 
 #datas_n = datas
-datas_n1 = np.zeros([len(fields),1601 - naverages + 1],dtype = complex)
-for i in range(len(datas_n)):
-    datas_n1[i] = Average(datas_n[i], naverages)
+datas_n1 = np.zeros([len(fields),401 - naverages + 1],dtype = complex)
+for i in range(len(datas)):
+    datas_n1[i] = Average(datas2[i], naverages)
 
 freq1 =  Average(freq, naverages)
 pl.figure()
@@ -42,7 +42,8 @@ pl.ylabel('Frequency(GHz)')
 
 itime = 15
 pl.figure()
+for itime in [10,11,12,13,14,15]:
 #pl.plot(freq1, mag_p[itime], label = '-%sT'%(fields[itime]))
 #pl.plot(freq1 ,mag_n[itime], label = '%sT'%(fields[itime]))
-pl.plot(freq1 ,mag_n[itime] - mag_p[itime], label = '%sT, isolation, average = %s'%(fields[itime],naverages))
+    pl.plot(freq1 ,mag_n[itime] - mag_p[itime], label = '%sT, isolation, average = %s'%(fields[itime],naverages))
 pl.legend()

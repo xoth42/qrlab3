@@ -23,17 +23,23 @@ import os
 def TwoModesFitting(params, fields, ws):
     wa_p = []
     wb_p = []
+    wp_p = []
     for i, field in enumerate(fields):
+        wpp = params['wp'] + params['ani_diag']* (1-np.abs(field/params['ani_null_field'])) -1j* params['wpi']/2
+        wnn = params['wn'] - params['ani_diag']* (1-np.abs(field/params['ani_null_field'])) -1j* params['wni']/2
+        wpn = 1j*field *params['k'] + params['ani_g'] * (1-np.abs(field/params['ani_null_field']))
+        wnp = -1j*field *params['k'] + params['ani_g'] * (1-np.abs(field/params['ani_null_field']))
         H = np.array([[params['wa']-1j*params['wai']/2, 0,   params['ga'], params['ga2']], 
                       [0,  params['wb']-1j*params['wbi']/2, -params['ga'], params['ga2']],
-                      [params['ga'],-params['ga'],  params['wp'], -1j*field * params['k']+ params['g']],
-                      [params['ga2'],params['ga2'], 1j*field*params['k']+ params['g'], params['wn'] - 1j *params['wni']/2]])
+                      [params['ga'],-params['ga'],  wpp, wpn],
+                      [params['ga2'],params['ga2'], wnp, wnn]])
     
     
     
         e,v =LA.eig(H)
         m = np.argsort(abs(v[0]))
         n = np.argsort(abs(v[1]))
+        ind_lst = [0,1,2,3]
         if m[3] == n[3]:
             if abs(e[n[2]] - ws[i]) < abs(e[m[3]] - ws[i]):
                 wa_p.append(e[n[2]])
@@ -41,6 +47,8 @@ def TwoModesFitting(params, fields, ws):
             else:
                 wa_p.append(e[m[3]])
                 wb_p.append(e[n[2]])
+            ind_lst.remove(m[3])
+            ind_lst.remove(n[2])
         else:
             if abs(e[n[3]] - ws[i]) < abs(e[m[3]] - ws[i]):
                 wa_p.append(e[n[3]])
@@ -48,7 +56,13 @@ def TwoModesFitting(params, fields, ws):
             else:
                 wa_p.append(e[m[3]])
                 wb_p.append(e[n[3]])
-                
+            ind_lst.remove(m[3])
+            ind_lst.remove(n[3])
+#        wp_p.append(e[np.argmax(abs(v[2]))])
+        if e[ind_lst[0]]>e[ind_lst[1]]:
+            wp_p.append(e[ind_lst[0]])
+        else:
+            wp_p.append(e[ind_lst[1]])
         
 #        n = np.argmax(v[1])
 #        wa_p = 
@@ -66,13 +80,16 @@ def TwoModesFitting(params, fields, ws):
 #                wa_p.append(e[3])
 #                wb_p.append(e[2])
             
-    est1= np.concatenate((np.asarray(wa_p),np.asarray(wb_p)))
+    est1= np.concatenate((np.asarray(wa_p),np.asarray(wb_p),np.asarray(wp_p)[0:6]))
     est = np.concatenate((np.real(est1),-np.imag(est1)))
 #    est = np.real(est1)
-    off = (ws - est)**4
+    off = np.abs(ws - est)
 #    print off
-    off[len(off)/2:] = off[len(off)/2:]
-    off[:len(off)/2] = off[:len(off)/2]
+#    off[len(off)/2:] = off[len(off)/2:]
+#    off[:len(off)/2] = off[:len(off)/2]
+    off[52:58] = off[52:58]*.05
+    off[110:] = off[110:]*.05
+    
     return off
 
 
@@ -82,20 +99,24 @@ vary_params = False
 params.add('wa', value=10.8104, vary = False, min = 10.809, max = 10.815)
 params.add('wb', value=10.804, vary = False, min = 10.80, max = 10.809)
 params.add('wai', value=0.00015, vary = False)
-params.add('wbi', value=0.0008, vary = False)
-params.add('wp', value=10.750, vary = False, max= 10.8 )#,vary = False)
-params.add('wn', value=10.780, vary = False, max = 10.9)#,max= 11.5,min = 10.9)
-params.add('wni', value=0.320, vary = vary_params)
-params.add('ga', value=0.020, max = .03, vary = vary_params)
+params.add('wbi', value=0.00100, vary = False)
+params.add('wp', value=10.72, vary = False, min = 10, max= 10.8 )#,vary = False)
+params.add('wn', value=10.85, vary = False ,min = 10.2, max = 10.9)#,max= 11.5,min = 10.9)
+params.add('wni', value=0.36, min = 0, vary = False)
+params.add('ga', value=0.02, max = .03, vary = False)
 #params.add('gb', value=0.02)
-params.add('ga2', value=0.010, max = .02, vary = vary_params)
+params.add('ga2', value=0.008, max = .02, vary = False)
 #params.add('gb2', value=0.008)
-params.add('g',value = 0.030, vary = vary_params)
 
-params.add('k', value = 8,vary = False)
-params.add('wpi', value=0.003, vary = False)#,vary = False)
+params.add('ani_diag', value=0.07, vary= False)
+params.add('ani_g', value=0.08, vary=False)
+params.add('ani_null_field', value=0.07, vary=False)
+
+#params.add('g',value = 0.030, vary = vary_params)
+
+params.add('k', value = 8, vary = False)
+params.add('wpi', value=0.002, vary = False)#,vary = False)
 params.add('slp',value = 0, vary = False)
-
 
 
 #omega_c = freq1[0]
@@ -139,9 +160,35 @@ kappa_prod2 = data_txt[11]
 kappa_prod2_err = data_txt[12]
 phi21 = data_txt[13]
 phi21_err = data_txt[14]
-fields = np.linspace(0, -0.05,26)       
+fields = np.linspace(0, -0.05,26)  
+
+data_txt3 = np.loadtxt('C:\\Users\\WangLab\\Documents\\circulator results\\20210111_163703\\three_mode_results.txt')
+data_txt3 = np.transpose(data_txt3)
+omega_c3 = data_txt3[1]
+freq1_err3 = data_txt3[2]
+omega_c23 = data_txt3[3]
+freq2_err3 = data_txt3[4]
+omega_c33 = data_txt3[5]
+freq3_err3 = data_txt3[6]
+kappa_a3 = data_txt3[7]
+kappa_tot1_err3 = data_txt3[8]
+kappa_a23 = data_txt3[9]
+kappa_tot2_err3 = data_txt3[10]
+kappa_a33 = data_txt3[11]
+kappa_tot3_err3 = data_txt3[12]
+kappa_prod13 = data_txt3[13]
+kappa_prod1_err3 = data_txt3[14]
+kappa_prod23 = data_txt3[15]
+kappa_prod2_err3 = data_txt3[16]
+kappa_prod33 = data_txt3[17]
+kappa_prod3_err3 = data_txt3[18]
+phi213 = data_txt3[19]
+phi21_err3 = data_txt3[20]
+phi313 = data_txt3[21]
+phi31_err3 = data_txt3[22]
+fields3 = np.linspace(0, -0.05,26)     
          
-data = np.concatenate([omega_c,omega_c2,kappa_a/2,kappa_a2/2])
+data = np.concatenate([omega_c,omega_c2,omega_c23[0:6],kappa_a/2,kappa_a2/2,kappa_a23[0:6]/2])
 result = lmfit.minimize(TwoModesFitting, params, args=(fields, data/1e9))
 lmfit.report_fit(result.params)
 
@@ -177,13 +224,17 @@ w4 = []
 
 wa_p = []
 wb_p = []
-
+wp_p = []
 
 for i,field in enumerate(fields):
+    wpp = result.params['wp'].value + result.params['ani_diag'].value* (1-np.abs(field/result.params['ani_null_field'].value)) -1j* result.params['wpi'].value/2
+    wnn = result.params['wn'].value - result.params['ani_diag'].value* (1-np.abs(field/result.params['ani_null_field'].value)) -1j* result.params['wni'].value/2
+    wpn = 1j*field *result.params['k'].value + result.params['ani_g'].value * (1-np.abs(field/result.params['ani_null_field'].value))
+    wnp = -1j*field *result.params['k'].value + result.params['ani_g'].value * (1-np.abs(field/result.params['ani_null_field'].value))
     H = np.array([[result.params['wa'].value-1j*result.params['wai'].value/2, 0,   result.params['ga'].value, result.params['ga2'].value], 
                   [0,  result.params['wb'].value-1j*result.params['wbi'].value/2, -result.params['ga'].value, result.params['ga2'].value],
-                  [result.params['ga'].value,-result.params['ga'].value,  result.params['wp'].value -1j* result.params['wpi'].value/2 + field*result.params['slp'].value, -1j*field *result.params['k'].value+ result.params['g'].value],
-                  [result.params['ga2'].value,result.params['ga2'].value, 1j*field*result.params['k'].value+ result.params['g'].value, result.params['wn'].value + field*result.params['slp'].value - 1j *result.params['wni'].value/2]])
+                  [result.params['ga'].value,-result.params['ga'].value,  wpp, wpn],
+                  [result.params['ga2'].value,result.params['ga2'].value, wnp, wnn]])
 
 
 
@@ -191,6 +242,7 @@ for i,field in enumerate(fields):
     
     m = np.argsort(abs(v[0]))
     n = np.argsort(abs(v[1]))
+    ind_lst = [0,1,2,3]
     if m[3] == n[3]:
         if abs(e[n[2]] - data[i]) < abs(e[m[3]] - data[i]):
             wa_p.append(e[n[2]])
@@ -198,6 +250,8 @@ for i,field in enumerate(fields):
         else:
             wa_p.append(e[m[3]])
             wb_p.append(e[n[2]])
+        ind_lst.remove(m[3])
+        ind_lst.remove(n[2])
     else:
         if abs(e[n[3]] - data[i]) < abs(e[m[3]] - data[i]):
             wa_p.append(e[n[3]])
@@ -205,37 +259,37 @@ for i,field in enumerate(fields):
         else:
             wa_p.append(e[m[3]])
             wb_p.append(e[n[3]])
+        ind_lst.remove(m[3])
+        ind_lst.remove(n[3])
+#    wp_p.append(e[np.argmax(abs(v[2]))])
+    if e[ind_lst[0]]>e[ind_lst[1]]:
+        wp_p.append(e[ind_lst[0]])
+    else:
+        wp_p.append(e[ind_lst[1]])
     
     w1.append(e[0])
     w2.append(e[1])
     w3.append(e[2])
     w4.append(e[3])
-    
-data_txt3 = np.loadtxt('C:\\Users\\WangLab\\Documents\\circulator results\\20210111_163703\\three_mode_results.txt')
-data_txt3 = np.transpose(data_txt3)
-omega_c3 = data_txt3[1]
-freq1_err3 = data_txt3[2]
-omega_c23 = data_txt3[3]
-freq2_err3 = data_txt3[4]
-omega_c33 = data_txt3[5]
-freq3_err3 = data_txt3[6]
-kappa_a3 = data_txt3[7]
-kappa_tot1_err3 = data_txt3[8]
-kappa_a23 = data_txt3[9]
-kappa_tot2_err3 = data_txt3[10]
-kappa_a33 = data_txt3[11]
-kappa_tot3_err3 = data_txt3[12]
-kappa_prod13 = data_txt3[13]
-kappa_prod1_err3 = data_txt3[14]
-kappa_prod23 = data_txt3[15]
-kappa_prod2_err3 = data_txt3[16]
-kappa_prod33 = data_txt3[17]
-kappa_prod3_err3 = data_txt3[18]
-phi213 = data_txt3[19]
-phi21_err3 = data_txt3[20]
-phi313 = data_txt3[21]
-phi31_err3 = data_txt3[22]
-fields3 = np.linspace(0, -0.05,26)
+
+est1= np.concatenate((np.asarray(wa_p),np.asarray(wb_p),np.asarray(wp_p)[0:6]))
+est = np.concatenate((np.real(est1),-np.imag(est1)))
+
+resid = (est - data/1e9)
+
+pl.figure()
+pl.title('residual')
+pl.plot(fields,resid[0:26], label = 'wa')
+pl.plot(fields,resid[26:52], label = 'wb')
+pl.plot(fields[0:6],resid[52:58], label = 'wp')
+pl.plot(fields,resid[58:84], label = 'ka')
+pl.plot(fields,resid[84:110], label = 'kb')
+pl.plot(fields[0:6],resid[110:], label = 'kp')
+
+pl.legend()
+
+
+
 
 
 pl.figure()
@@ -250,6 +304,9 @@ pl.plot(fields, np.real(w1), label = 'fitting eigenvalue_real')
 pl.plot(fields, np.real(w2))
 pl.plot(fields, np.real(w3))
 pl.plot(fields, np.real(w4))
+pl.plot(fields, wa_p, label = 'wa')
+pl.plot(fields, wb_p, label = 'wb')
+pl.plot(fields, wp_p, label = 'wp')
 pl.ylim(10.7,10.9)
 #pl.plot(fields, np.real(wa_p), label = 'wa_p')
 #pl.plot(fields, np.real(wb_p), label = 'wb_p')
@@ -273,6 +330,13 @@ pl.plot(fields,- np.imag(w4))
 pl.xlabel('fields (T)')
 pl.ylabel('GHz')
 pl.legend()
+
+
+#x = np.linspace(0,.07)
+#pl.figure()
+#pl.plot(x,(1-(x/.07)))
+#pl.plot(x,np.exp(-x/.05))
+
 
 
 '''

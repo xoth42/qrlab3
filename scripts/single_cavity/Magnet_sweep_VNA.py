@@ -15,11 +15,15 @@ import objectsharer as objsh
 import time
 import numpy as np
 from matplotlib import gridspec
+import os
+import config
+import time
 #
 #SPEC   = 0
 #POWER  = 1
 
 def analysis(fields, freqs, realdata, imagdata, fig_name, full_fig_name, Sij, fig=None):
+    fn = None
     fig = pl.figure()
     a=[0,0,0,0]
     
@@ -66,6 +70,13 @@ def analysis(fields, freqs, realdata, imagdata, fig_name, full_fig_name, Sij, fi
         pl.colorbar( a[k],fig.axes[len(Sij)+k])
         
     pl.suptitle(full_fig_name)
+    if fn is None:
+        fn = os.path.join(config.datadir, 'images/%s_Power_Sweep_VNA.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
+    fdir = os.path.split(fn)[0]
+    if not os.path.isdir(fdir):
+        os.makedirs(fdir)
+    kwargs = dict()
+    fig.savefig(fn, **kwargs)
 
 class Magnet_Sweep_VNA(Measurement1D):
 

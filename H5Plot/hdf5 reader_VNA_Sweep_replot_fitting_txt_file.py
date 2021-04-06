@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Fri Mar 12 18:56:30 2021
+
+@author: WangLab
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Mon Mar 23 22:38:49 2020
 
 @author: WangLab
@@ -18,6 +25,10 @@ import matplotlib.pyplot as pl
 import json
 from matplotlib import gridspec
 
+datas = np.loadtxt(r'C:\Users\WangLab\Documents\circulator results\2021-03-11 16-09-18\\0to-0.05colorplot_Z.txt')
+
+datas = datas[:len(datas)/2] + 1j * datas[len(datas)/2:]
+datas_p_plot = np.transpose(datas)
 
 def S21_two_modes_V3(params, x, y):
     est = np.sqrt(params['kappa_prod1'])/(-1j*(x-params['omega_c'])-(params['kappa_a1'])/2.0 )* np.exp(1j*params['phi1'])
@@ -55,18 +66,8 @@ def S21_two_modes_V4(params, x, y):
 limit_for_off = 1
 
 
-''' Path to the .hdf5 file '''
-#filepath = 'C:\\Users\\WangLab\\Documents\\yingying\\'
-filepath = 'C:\_Data\\'
-#hdf5_name = 'VNAtestJan30.hdf5'
-#hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
-hdf5_name = '20210105cooldown_circulator_VNA - Copy (2).hdf5'
 
-date = '20210310'
-#time = '233434'
-#experiment = 'Power_Sweep_VNA'
-
-fields = np.linspace(0,0.05,26)
+fields = np.linspace(0,-0.05,26)
 #fields = np.linspace(0.05, 0.002,13)
 
 ''' Primary x axis and secondary if 2d'''
@@ -74,19 +75,18 @@ fields = np.linspace(0,0.05,26)
 #x2_key = 'powers'
 all_field = False
 new_fig = False
-two_modes = True
-three_modes = False
+two_modes = False
+three_modes = True
 
-j = 0 #index of the power from the color plot used 0 = lowest power
 
-final_plot = False
+final_plot =True
 
-itime = 0 #index of the field being analyzed so you can save your place and work on only fitting a few fields at a time
+itime = 24 #index of the field being analyzed so you can save your place and work on only fitting a few fields at a time
 
 save_data = False
-
-if itime == 0:
-    datas = np.zeros([len(fields),1601],dtype = complex)
+num_fits = 2
+#if itime == 0:
+#    datas = np.zeros([len(fields),1601],dtype = complex)
 if two_modes:
     if itime == 0:
         
@@ -152,53 +152,22 @@ f = h5.File(filepath + hdf5_name, 'r')
 
 #
 
-
+freq = np.linspace(10.75e9,10.85e9,1601)
 #freq1 = np.zeros([nrows,len(fields)])
 #freq2 = np.zeros([nrows,len(fields)])
 #freq1_err = np.zeros([nrows,len(fields)])
 #freq2_err = np.zeros([nrows,len(fields)])  
 
-for i, title in enumerate(f[date].keys()):
-#    print int(title[0:6])
-#    print int(title[0:6]) <= 020617
-    if int(title[0:6]) <= int('174122') and int(title[0:6]) > int('174121') and title[7:12] =='Power':
-#for i in range(len(fields)):
-#    if 1:
-        print title
+for i in range(num_fits):
 
-
-
-        x_key = 'freqs'
-        #x2_key = 'powers'
-        exp = f[date][title]
-#    exp = f['/' + date1 + '/' + time + '_' + experiment]
-        y_keys = exp.keys()
-        #print(y_keys)
-        
-        #y_keys.remove(x_key)
-        #y_keys.remove(x2_key)
-        freq = exp['freqs'].value
-        #current = exp['currents'].value
-#        powers = exp['powers'].value
-        real = exp['realS21'].value
-        imag = exp['imaginaryS21'].value
-        
-        datas[itime] = real[j] + 1j * imag[j]
-        
-        '''Conversion factor from Yoko current in mA to actual magnetic field in mT'''
-        #if current.any() < 0.5:
-        #    field = current*529.37 + 0.49
-        #else:
-        #    field = -268.93 * (current)**2 + 839.69*current - 88.67
-        
         '''Plot'''
         freqs = freq
-#        fig = pl.figure()
-#        gs = gridspec.GridSpec(1, 2)
-#        fig.add_subplot(gs[0])
-#        fig.add_subplot(gs[1])
-#        fig.axes[1].plot(np.real(datas[itime]),np.imag(datas[itime]), label= 'field = %sT'%(fields[itime]))
-#        fig.axes[0].plot(freq/1e9,np.abs(datas[itime]), label= 'field = %sT'%(fields[itime]))
+        fig = pl.figure()
+        gs = gridspec.GridSpec(1, 2)
+        fig.add_subplot(gs[0])
+        fig.add_subplot(gs[1])
+        fig.axes[1].plot(np.real(datas[itime]),np.imag(datas[itime]), label= 'field = %sT'%(fields[itime]))
+        fig.axes[0].plot(freq/1e9,np.abs(datas[itime]), label= 'field = %sT'%(fields[itime]))
         if two_modes:    
             params = lmfit.Parameters()
             params.add('kappa_prod1', value=6e10, min = 0)#,vary = False)
@@ -265,26 +234,30 @@ for i, title in enumerate(f[date].keys()):
         if three_modes:
             change_variables = True
             params = lmfit.Parameters()
-            params.add('kappa_prod1', value=8.5793e11, min = 0,vary = change_variables)
-            params.add('omega_c', value=10.824e9,vary = change_variables)
-            params.add('kappa_a1', value=3.5e7, min = 0,vary = change_variables)
+            params.add('kappa_prod1', value=2.55e10, min = 0,vary = change_variables)
+            params.add('omega_c', value=10.811e9,vary = change_variables)
+            params.add('kappa_a1', value=2.2e6, min = 0,vary = change_variables)
             if np.max(np.abs(datas[itime])) < limit_for_off:
 #                params.add('roff',value =-0.00197706,vary = change_variables)
 #                params.add('ioff',value = 0.00067385, vary = change_variables)
                 params.add('roff',value =(datas[itime][0].real+ datas[itime][-1].real)/2,vary = change_variables)
                 params.add('ioff',value = (datas[itime][0].imag+ datas[itime][-1].imag)/2, vary = change_variables)
-            params.add('phi1',value = -2.6, max = 1.5*np.pi, min = -1.5*np.pi,vary = change_variables)
+            params.add('phi1',value = 0, max = 1.5*np.pi, min = -1.5*np.pi,vary = change_variables)
                 
         
-            params.add('kappa_prod2', value= 1.9e12, min = 0,vary = change_variables)
-            params.add('omega_c2', value=10.777e9,vary = change_variables)
-            params.add('kappa_a2', value = 9.6e7, min = 0,vary = change_variables)
-            params.add('phi21',value =3.9, max = 1.5*np.pi, min = -1.5*np.pi,vary = change_variables)
+#            params.add('kappa_prod2', value= 7e11, min = 0,vary = change_variables)
+#            params.add('omega_c2', value=10.8e9, vary = change_variables)
+#            params.add('kappa_a2', value =60e6,vary = change_variables)
+#            params.add('phi21',value =-2.5, max = 1.5*np.pi, min = -1.5*np.pi,vary = change_variables)
+            params.add('kappa_prod2', value= 0, vary = False)
+            params.add('omega_c2', value=10.785e9,vary = False)
+            params.add('kappa_a2', value =8e7, min = 0,vary = False)
+            params.add('phi21',value =-2.5, max = 1.5*np.pi, min = -1.5*np.pi,vary = False)
         
-            params.add('kappa_prod3', value= 6e9, min = 0,vary = change_variables)
-            params.add('omega_c3', value=10.807e9,vary = change_variables)
-            params.add('kappa_a3', value = 1.4e6, min = 0,vary = change_variables)
-            params.add('phi31',value =-2, max = 1.5*np.pi, min = -1.5*np.pi,vary = change_variables)
+            params.add('kappa_prod3', value= 1.2e9, min = 0,vary = change_variables)
+            params.add('omega_c3', value=10.804e9, vary = change_variables)
+            params.add('kappa_a3', value =3e6,vary = change_variables)
+            params.add('phi31',value =-1.93, max = 1.5*np.pi, min = -1.5*np.pi,vary = change_variables)
         #    if itime == 0:
         #        params = lmfit.Parameters()
         #        params.add('kappa_prod1', value= 1e9, min = 0)#,vary = False)
@@ -372,7 +345,7 @@ if final_plot:
     f.close()
         
         
-    lin_power = xlist
+    lin_power = fields
     #lin_power = np.power(10,xlist/10)
     #lin_power[0] = 0
     if two_modes:
@@ -495,7 +468,7 @@ if save_data: #printing all values
         if not os.path.exists(save_filepath):
             os.makedirs(save_filepath)
             
-        np.savetxt(save_filepath + 'three_mode_results.txt',
+        np.savetxt(save_filepath + 'three_mode_results_neg.txt',
                    np.column_stack((fields,omega_c, omega_c_err, omega_c2, omega_c2_err,omega_c3, omega_c3_err, 
                                     kappa_a, kappa_a_err,kappa_a2,kappa_a2_err, kappa_a3, kappa_a3_err,
                                     kappa_prod, kappa_prod_err, kappa_prod2,kappa_prod2_err,kappa_prod3,kappa_prod3_err,
@@ -546,7 +519,7 @@ if all_field:
     if not os.path.exists(save_filepath):
         os.makedirs(save_filepath)
         
-    np.savetxt(save_filepath + '0to-0.05colorplot_Z.txt',
+    np.savetxt(save_filepath + '0to0.05colorplot_Z.txt',
                np.concatenate([datas.real,datas.imag]))
 
 
