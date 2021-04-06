@@ -241,7 +241,7 @@ class ROCavSpectroscopy_keysight_mixer_cw(Measurement1D):
 
             for ifreq, freq in enumerate(self.freqs):
                 self.readout_info.rfsource1.set_frequency(freq-self.mixer_info.deltaf)
-                self.readout_info.rfsource2.set_frequency(freq+50e6)
+#                self.readout_info.rfsource2.set_frequency(freq+50e6)
                 time.sleep(0.1)
 
                 ''' the parameter to setup avg shots shouldn't be naverages.

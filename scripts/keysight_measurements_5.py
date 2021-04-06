@@ -43,8 +43,9 @@ SS_mixer_info1_set = mclient.instruments['SS_mixer_info1']
 SS_mixer_info2_set = mclient.instruments['SS_mixer_info2']
 #qubit03_info = mclient.get_qubit_info('qubit1_03')
 #qubit14_info = mclient.get_qubit_info('qubit1_14')
-#readout_info = mclient.get_readout_info('readout')
-readout = 'readout_IQ'
+readout_info = mclient.get_readout_info('readout')
+#readout = 'readout_IQ'
+readout = mclient.instruments['readout']
 #cavity_infoA = mclient.get_qubit_info('cavityAlice')
 #RO_info = mclient.get_qubit_info('RO')
 #qubit2_info = mclient.get_qubit_info('cavityAlice')
@@ -177,7 +178,7 @@ if 0: # cav transmission
     readout_info.rfsource2.set_frequency(ro_freq+50e6)
     bla
 
-if 0: # cav transmission with mixer
+if 1: # cav transmission with mixer
 #    time.sleep(300)
     from single_cavity import rocavspectroscopy_keysight_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])
@@ -198,7 +199,7 @@ if 0: # cav transmission with mixer
     plt.close()
     plt.close()
     
-    figure_name = '0.04 T test1'
+    figure_name = '-0.05 T test1'
     
     plt.figure('amp%s'%(figure_name))
     plt.plot(ro.freqs,ro.ampdata[0],label = 'g')
@@ -231,16 +232,16 @@ if 0: # cav transmission with mixer
     
     plt.legend()
     
-    ro_freq = 10.8022e9
+    ro_freq = 10.805e9
     power = 10
     mixer_info1 = mclient.get_qubit_info('mixer_info1')
     mixer_info2 = mclient.get_qubit_info('mixer_info2')
     readout_info.rfsource1.set_frequency(ro_freq - mixer_info1.deltaf)
     readout_info.rfsource1.set_power(power)
     readout_info.rfsource1.set_rf_on(True)
-    readout_info.rfsource2.set_power(10)
-    readout_info.rfsource2.set_rf_on(True)
-    readout_info.rfsource2.set_frequency(ro_freq+50e6)
+#    readout_info.rfsource2.set_power(10)
+#    readout_info.rfsource2.set_rf_on(True)
+#    readout_info.rfsource2.set_frequency(ro_freq+50e6)
     bla
 
 
@@ -301,7 +302,7 @@ if 0: # cav transmission with mixer and CW qubit drive
 #    Yoko.do_set_current(-0.00175)
 #    mixer1_amp = .3
 #    mixer_info1_set.set_pi_amp(mixer1_amp)
-    mixer1_amp = 0.06
+    mixer1_amp = 0.1
     mixer2_amp = 0
     
     mixer_info1_set.set_pi_amp(mixer1_amp)
@@ -310,8 +311,8 @@ if 0: # cav transmission with mixer and CW qubit drive
     mixer_info1 = mclient.get_qubit_info('mixer_info1')
     mixer_info2 = mclient.get_qubit_info('mixer_info2')
     phase = 0
-    rofreq = 10.805e9
-    freq_range = 5e6
+    rofreq = 10.807e9
+    freq_range = 7e6
     ro = rocavspectroscopy_keysight_mixer_cw.ROCavSpectroscopy_keysight_mixer_cw(qubit_info, mixer_info1, mixer_info2, phase, 
                                              np.linspace(10,10,1),np.linspace(rofreq-freq_range, rofreq+freq_range, 101),
                                              qubit_pulse=False, seq=None)#,extra_info=[ef2_info])
@@ -319,7 +320,7 @@ if 0: # cav transmission with mixer and CW qubit drive
     plt.close()
     plt.close()
     
-    figure_name = 'Qubit 1'
+    figure_name = 'Qubit 1 Chi S31 -.05T V1'
     
     plt.figure('amp%s'%(figure_name))
     plt.plot(ro.freqs,ro.ampdata[0],label = 'g')
@@ -584,7 +585,7 @@ if 0: # SSB spec with mixer
         seq = sequencer.Trigger(600)
     #        seq = Join([seq, qubit2_info.rotate(np.pi/2, X_AXIS)])
         spec = ssbspec_mixer.SSBSpec_mixer(qubit_info, mixer_info1,mixer_info2,
-                                           np.linspace(-15e6, 15e6, 101), seq=seq, plot_seqs=False, 
+                                           np.linspace(-30e6, 10e6, 101), seq=seq, plot_seqs=False, 
                                            proj_func='projection')
         spec.measure_keysight()
 #        plt.close()
@@ -701,6 +702,22 @@ if 0: # Power Rabi-Calibrate pi pulse
 
 
 if 0: # Check histogramming
+    ro_freq = 10.8072e9
+    power = 10
+    readout_info.rfsource1.set_frequency(ro_freq - mixer_info1.deltaf)
+    readout_info.rfsource1.set_power(power)
+#    readout_info.rfsource2.set_frequency(ro_freq+50e6)
+    deltaf = 10.811e9 - ro_freq + mixer_info1.deltaf
+    SS_mixer_info1_set.set_deltaf(deltaf)
+    SS_mixer_info1 = mclient.get_qubit_info('SS_mixer_info1')
+    
+    mixer_info1_set.set_pi_amp(0.4)
+    mixer_info2_set.set_pi_amp(0)
+    mixer_info1_set.set_w(300)
+    mixer_info2_set.set_w(300)
+    dig.set_nsamples(500)
+    mixer_info1 = mclient.get_qubit_info('mixer_info1')
+    mixer_info2 = mclient.get_qubit_info('mixer_info2')
     from scripts.single_qubit import rabi_mixer
     tr_e = rabi_mixer.Rabi_mixer(qubit_info, mixer_info1, mixer_info2,[qubit_info.pi_amp,], histogram=True, title='|e>',
                    )
@@ -775,7 +792,7 @@ if 0: # Check histogramming
     dig.do_set_naverages(10000)
     bla
 
-if 1: # Power Rabi-Calibrate pi pulse with mixer
+if 0: # Power Rabi-Calibrate pi pulse with mixer
 
 #    for cool_time in [1e3,5e3,10e3,30e3]:
 #        for amp in [0.01, 0.01,0.02,0.04,0.08]:

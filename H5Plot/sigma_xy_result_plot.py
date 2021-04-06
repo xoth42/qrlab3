@@ -12,7 +12,7 @@ import re
 import matplotlib.pyplot as pl
 
 
-foldername = 'sigma_xy'
+foldername = 'sigma_xy_redo'
 
 filepath = 'C:\\Users\\Wang_Lab\\Documents\\circulator results\\01052021cooldown_circulator\\%s'%(foldername) 
 
@@ -20,23 +20,29 @@ filelist = glob.glob(r'%s\\*T_results.txt'%(filepath))
 filelist_base = glob.glob(r'%s\\*T_base_results.txt'%(filepath))
 
 
-fields = np.linspace(-0.05, 0.05, 11)
-fieldplot = np.linspace(-0.05,0.06,12)
-
+fields_fin = np.linspace(-.05,.05,21)
+#fieldplot = np.asarray([-0.05, -0.04, -0.03, -0.02, -0.01,  0.  ,0.005,  0.01, 0.015, 0.02,  0.03, 0.04,  0.05,0.06])
+#fields = np.asarray([0,.005,.01,.015,.02,-.05,-.04,-.03,-.02,-.01,.03,0,.04,.05,.02,.025,.035,.045,0,
+#                     -.005,-.01,-.015,-.02,-.025,-.03,-.035,-.04,-.045,-.05,-.005,-.015,-.015,-.025,
+#                     -.035,-.045,0,.005,.01,.015,.02,.025,.03])
+#fieldplot = fields
+trials = 41
+fields = np.zeros(trials)
 npts = 242
 delays = np.linspace(0,0.24,121)
-proj_data = np.zeros((len(fields),npts))
+proj_data = np.zeros((trials,npts))
 
 #print filelist
-for filename in filelist:
+for i,filename in enumerate(filelist):
 # Read the array from file
 #    if filename[95]!=filename[96]:
     print '\n'
     print filename
     num = [float(s) for s in re.findall(r'-?\d+\.?\d*', filename)]
     proj = np.loadtxt(filename,delimiter=",")
-    ifield = np.argmin(np.abs(fields - num[-1]))
-    proj_data[ifield] = proj
+#    ifield = np.argmin(np.abs(fields - num[-1]))
+    proj_data[i] = proj
+    fields[i] = num[-1]
     x = proj[::2]
     y = proj[1::2]
     pl.figure()
@@ -46,17 +52,17 @@ for filename in filelist:
     pl.plot(delays,np.sqrt(x**2 + y**2))
     pl.close()
             
-proj_base = np.zeros((len(fields),npts))    
+proj_base = np.zeros((trials,npts))    
 
-for filename in filelist_base:
+for i,filename in enumerate(filelist_base):
 # Read the array from file
 #    if filename[95]!=filename[96]:
     print '\n'
     print filename
     num = [float(s) for s in re.findall(r'-?\d+\.?\d*', filename)]
     proj = np.loadtxt(filename,delimiter=",")
-    ifield = np.argmin(np.abs(fields - num[-1]))
-    proj_base[ifield] = proj
+#    ifield = np.argmin(np.abs(fields - num[-1]))
+    proj_base[i] = proj
     x = proj[::2]
     y = proj[1::2]
     pl.figure()
@@ -76,8 +82,9 @@ sigma_y_b = proj_base[:,1::2]
 env = np.sqrt(sigma_x**2 + sigma_y**2)
 
 env_base = np.sqrt(sigma_x_b**2 + sigma_y_b**2)
-
-env = env/env_base
+#env_base[9] = 1
+#
+#env = env/env_base
 
 pl.figure()
 X, Y = np.meshgrid(delays,fieldplot-0.005)
@@ -88,12 +95,8 @@ delay = 60
 sigma_raw = env[:, delay:delay + 10]
 
 sigma = np.mean(sigma_raw, 1)
-pl.figure()
-#pl.plot(fields,sigma, label = '%s ns'%(delays[delay]*1000))
-pl.plot(fields,-np.log(sigma), label = '%s ns'%(delays[delay]*1000))
-pl.ylabel('qubit decay rate')
-pl.xlabel('field(T)')
-pl.legend()
+sigma_stdv = np.std(sigma_raw, 1)/3
+
         
 
 angle_data = np.arctan((sigma_y)/sigma_x)
@@ -109,19 +112,77 @@ for j in range(len(angle_base)):
             angle_base[j][i+1:] = angle_base[j][i+1:] + np.pi
             
 angle_data = angle_base - angle_data
+angle = np.zeros((len(fields),10))
+for i in range(len(fields)):
+    angle[i] = angle_data[i, delay-5:delay+5] - angle_data[i,0]
+angle_plot = np.mean(angle,1)
+angle_stdv = np.std(angle,1)/(3*2*np.pi*0.120)
+freq = angle_plot/(2*np.pi*0.120)
 
+freq_fin = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
+freq_err_fin = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
+sigma_fin = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
+sigma_err_fin = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
+env_fin =[[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
+angle_data_fin = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
+
+
+for i in range(len(fields)):
+    ifield = np.argmin(np.abs(fields[i] - fields_fin))
+    freq_fin[ifield].append(freq[i])
+    freq_err_fin[ifield].append(angle[i][:])
+    sigma_fin[ifield].append(sigma[i])
+    sigma_err_fin[ifield].append(sigma_raw[i][:])
+    env_fin[ifield].append(env[i])
+    angle_data_fin[ifield].append(angle_data[i]-angle_data[i][0])
+    
+    
+freq_plot = np.zeros(len(fields_fin))
+freq_err_plot = np.zeros(len(fields_fin))
+sigma_plot = np.zeros(len(fields_fin))
+sigma_err_plot = np.zeros(len(fields_fin))
+env_plot =[]
+angle_data_plot = []
+for i in range(len(fields_fin)):
+    freq_plot[i]=np.mean(freq_fin[i])
+    sigma_plot[i]=np.mean(sigma_fin[i])
+    freq_err_plot[i]=np.std(freq_err_fin[i])/np.sqrt(10*len(freq_err_fin[i]))
+    sigma_err_plot[i]=np.std(sigma_err_fin[i])/np.sqrt(10*len(freq_err_fin[i]))
+    env_plot.append(np.mean(env_fin[i],0))
+    angle_data_plot.append(np.mean(angle_data_fin[i],0))
+
+    
+    
+    
+    
+pl.figure()
+#pl.plot(fields,sigma, label = '%s ns'%(delays[delay]*1000))
+pl.errorbar(fields_fin,-np.log(sigma_plot),sigma_err_plot/sigma_plot, fmt = 'o', label = '%s ns'%(delays[delay]*1000))
+pl.ylabel('qubit decay rate')
+pl.xlabel('field(T)')
+pl.legend()
 
 pl.figure()
-pl.title('accumulated phase')
-X, Y = np.meshgrid(delays,fieldplot-0.005)
-pl.pcolormesh(X,Y,angle_data)
+pl.title('Accumulated Phase')
+pl.xlabel('Time(ns)')
+pl.ylabel('Field(T)')
+X, Y = np.meshgrid(delays*1e3,fields_fin-0.005)
+pl.pcolormesh(X,Y,angle_data_plot,vmin = 0)
+pl.colorbar()
+
+pl.figure()
+pl.title('Envelope Function')
+pl.ylabel('Field(T)')
+pl.xlabel('Time(ns)')
+X, Y = np.meshgrid(delays*1e3,fields_fin-0.005)
+pl.pcolormesh(X,Y,env_plot)
 pl.colorbar()
 
 
-angle = angle_data[:, delay] - angle_data[:,0]
-freq = angle/(2*np.pi*0.140)
+
+
 pl.figure()
-pl.plot(fields,freq, label = '%s ns'%(delays[delay]*1000))
+pl.errorbar(fields_fin,freq_plot,freq_err_plot/(2*np.pi*0.120),fmt ='o', label = '%s ns'%(delays[delay]*1000))
 pl.ylabel('qubit shift freq')
 pl.xlabel('field(T)')
 pl.legend()
@@ -129,7 +190,7 @@ pl.legend()
 
 pl.figure()
 pl.title('stark shift vs. dephasing')
-pl.plot(-np.log(sigma),freq, label = '%s ns'%(delays[delay]*1000))
+pl.scatter(-np.log(sigma),freq, label = '%s ns'%(delays[delay]*1000))
 pl.ylabel('qubit shift freq')
 pl.xlabel('dephasing decay rate')
 pl.legend()

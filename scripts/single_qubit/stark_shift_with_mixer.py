@@ -142,7 +142,7 @@ class Stark_shift_with_mixer(Measurement1D):
                 Constant(int(self.mixer_info.w), 1, chan=self.readout_info.acq_chan),
 #                Join([Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),Delay(200)]),
                 self.mixer_info.rotate(np.pi, 0),
-#                Join([self.mixer_info2.rotate(np.pi, 0),Delay(200)])
+                self.mixer_info2.rotate(np.pi, 0),
 
             ]))
 #            ro = self.readout_driver.do_get_sequence(self.readout_qubit_info)
@@ -179,6 +179,7 @@ class Stark_shift_with_mixer(Measurement1D):
             s.append(Join([
                 self.seq,
                 stark,
+#                Delay(100),
                 g(),
             ]))
 #            s.append(self.seq)

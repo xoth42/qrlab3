@@ -74,8 +74,9 @@ def changing_freq_fit_plot(params, x, data):
 
 ''' Path to the .hdf5 file '''
 filepath = 'C:/_Data/'
-hdf5_name = '01052021cooldown_circulator - Copy (2).hdf5'
-date = '20210114'
+hdf5_name = '01052021cooldown_circulator - Copy.hdf5'
+date = '20210308'
+#date = '20210301'
 save_data = True
 #experiment = 'ROCavSpectroscopy_keysight'
 #experiment = 'Power_Sweep_VNA'
@@ -84,13 +85,19 @@ j = 0
 
 end_val_ind = 100
 pts = 242
-avg_factor = 5
-CW_qubit = False
-field = -.05
+
+field = 0.03
 base = False
+#base = True
+
 nrows = 2
 fields = 1
 fix_phi0 = None
+if base == True:
+    avg_factor = 1
+else:
+    avg_factor = 5
+        
 if j == 0:
     freqs = np.zeros([nrows,fields])
     taus = np.zeros([nrows,fields])
@@ -106,7 +113,7 @@ exp_t = 'Ramsey_Measurement_mixer_xy'
 for i, title in enumerate(f[date].keys()):
 #    print int(title[0:6])
 #    print int(title[0:6]) <= 020617
-    if int(title[0:6]) <= int('225909') and int(title[0:6]) > int('225028') and title[7:] == exp_t:# and title[7:12] =='ROCav':
+    if int(title[0:6]) <= int('015241') and int(title[0:6]) > int('005340')  and title[7:] == exp_t:# and title[7:12] =='ROCav':
         print 'j = %s'%(j)
         print title
 
@@ -270,9 +277,13 @@ for i, title in enumerate(f[date].keys()):
             
             pl.figure()
             pl.title('envelope graph')
-            pl.plot(xs/1e3, np.sqrt((ys_als[0]-offset)**2 + (ys_als[1]-offset)**2)/norm_scale)
-            pl.plot(xs/1e3, (ys_als[0]-offset)/norm_scale, label = 'sigma x')
-            pl.plot(xs/1e3, (ys_als[1]-offset)/norm_scale, label = 'sigma y')
+            pl.plot(xs, np.sqrt((ys_als[0]-offset)**2 + (ys_als[1]-offset)**2)/norm_scale)
+            pl.plot(xs, (ys_als[0]-offset)/norm_scale, label = 'sigma x')
+            pl.plot(xs, (ys_als[1]-offset)/norm_scale, label = 'sigma y')
+            pl.xlabel('Time(nanoseconds)')
+            pl.ylabel('<\u03C3>')
+            pl.legend(loc=1, prop={'size': 16})
+
             
             angle_data = np.arctan((ys_als[1]-offset)/(ys_als[0]-offset))
             
@@ -282,10 +293,12 @@ for i, title in enumerate(f[date].keys()):
             pl.figure()
             pl.title('accumulated phase')
             pl.plot(xs/1e3, angle_data)
+            pl.xlabel('Time(microseconds)')
+            pl.ylabel('Phase')
     #        if j >0:            
     #            pl.close()
             if save_data:
-                main_filepath = 'C:\\Users\\Wang_Lab\\Documents\\circulator results\\01052021cooldown_circulator\\sigma_xy\\'
+                main_filepath = 'C:\\Users\\Wang_Lab\\Documents\\circulator results\\01052021cooldown_circulator\\sigma_xy_redo\\'
                 end_time = list(str(datetime.datetime.now())[:19])
                 end_time[13] = '-'
                 end_time[16] = '-'

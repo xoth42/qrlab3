@@ -388,12 +388,12 @@ datas_errs = list(np.asarray(freq2_err)/1e9) + list(np.asarray(freq1_err)/1e9) +
 
 fields = np.linspace(0,-.05,26)
 
-fix_vary = True
+fix_vary = False
 params = lmfit.Parameters()
 params.add('gamma1',value = .00001, vary = False)
 params.add('gamma2',value = .00001, vary = False)
 # params.add('gamma3',value = 0, vary = fix_vary)
-params.add('gamma4',value = .0972*2, vary = fix_vary)
+params.add('gamma4',value = .00972*2, vary = fix_vary)
 params.add('wb',value = 10.8110259, vary = False)
 params.add('wa',value = 10.8055980, vary = False)
 params.add('wp',value = 10.7226776, vary = fix_vary)
