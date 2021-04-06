@@ -93,10 +93,12 @@ class QFunction(Measurement2D):
                     s.append(Delay(self.delay))
                 if self.postseq:
                     s.append(self.postseq)
-                s.append(Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ]))
+#                s.append(Combined([
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#                ]))
+                s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+                    
                 s.append(Delay(800))
                 
                 

@@ -32,6 +32,8 @@ import lmfit
 #fxa01 = mclient.get_qubit_info('fxa01')
 
 readout = 'readout_IQ'
+dig = mclient.instruments['dig']
+
 
 qubit_info = mclient.get_qubit_info('qubit1ge')
 ef_info = mclient.get_qubit_info('qubit1ef')
@@ -71,7 +73,8 @@ if 0: # test digitizer DEMODULATED
     plt.show()
     bla
 
-if 1: # Check histogramming
+
+def take_snr():
     from scripts.single_qubit import rabi
     tr_e = rabi.Rabi(qubit_info, [qubit_info.pi_amp,], histogram=True, title='|e>',
                      readout=readout)
@@ -81,7 +84,55 @@ if 1: # Check histogramming
     tr_g.measure_keysight()
     
     
+    plt.close(tr_e.get_figure())
+    plt.close(tr_g.get_figure())
+    
+    e_data = tr_e.shot_data[:]
+    g_data = tr_g.shot_data[:]
+
+    g_average = np.average(g_data)
+    e_average = np.average(e_data)    
+    m = (np.imag(g_average) - np.imag(e_average))/(np.real(g_average) - np.real(e_average))
+    b = np.imag(g_average) - m * np.real(g_average)
+    
+    g_project = (np.real(g_data) + np.imag(g_data)*m) / np.sqrt(1 + m**2)
+    e_project = (np.real(e_data) + np.imag(e_data)*m) / np.sqrt(1 + m**2)
+    g_hist, g_bins = np.histogram(g_project, bins=100)
+    e_hist, e_bins = np.histogram(e_project, bins=100)
+    
+    # fit projections
+    xs = [g_bins[:-1], e_bins[:-1]]
+    means = []
+    stds = []
+    for i, ys in enumerate([g_hist, e_hist]):
+        params = lmfit.Parameters()
+        params.add('amp', value=np.max(ys), min=0)
+        params.add('mean', value=np.mean(ys))
+        params.add('std', value=np.std(ys), min=0)
+        result = lmfit.minimize(gaussian, params, args=(xs[i], ys))
+        means += [result.params['mean']]
+        stds += [result.params['std']]
+        #lmfit.report_fit(result.params)
+    
+    snr = (means[1] - means[0]) / (stds[0] + stds[1])/2
+    print('SNR = ', snr)
+    return snr
+
+if 0: # Check histogramming
+    dig.set_naverages(10000)
+    take_snr()
+    
+    
 if 1: # histogram calculating and plotting
+    dig.set_naverages(10000)
+    from scripts.single_qubit import rabi
+    tr_e = rabi.Rabi(qubit_info, [qubit_info.pi_amp,], histogram=True, title='|e>',
+                     readout=readout)
+    tr_e.measure_keysight()
+    tr_g = rabi.Rabi(qubit_info, [0.001,], histogram=True, title='|g>',
+                     readout=readout)
+    tr_g.measure_keysight()
+
     e_data = tr_e.shot_data[:]
     g_data = tr_g.shot_data[:]
     
@@ -91,7 +142,7 @@ if 1: # histogram calculating and plotting
     midpoint = np.average([g_average, e_average])
 
     #setup plots
-    lim = 400
+    lim = 2000
     xvec = np.linspace(-lim, lim, 100)
     fig = plt.figure(figsize=(6, 8))
     gs = gridspec.GridSpec(2, 1, height_ratios=[3,1])
@@ -139,7 +190,7 @@ if 1: # histogram calculating and plotting
         ax2.plot(xs[i], -gaussian(result.params, xs[i], 0), color=colors[i], linestyle='dashed')
     
     
-    print('SNR = ', (means[1] - means[0]) / (stds[0] + stds[1])/2)
+    print('SNR = ', np.abs(means[1] - means[0]) / (stds[0] + stds[1])/2)
     '''
     ax2.plot(np.linspace(-lim, lim, 100), gaussian(np.linspace(-lim, lim, 100), 
                          g_mean, g_std), linestyle='dashed', color='b')
@@ -148,11 +199,28 @@ if 1: # histogram calculating and plotting
     '''
     
     
+if 0: #calibrate twpa (correct w/ snr)
+    dig.set_naverages(2000)
+    rf_twpa = mclient.instruments['WF_twpa']
+    twpa_powers = np.linspace(-3.1, -2.7, 5)
+    freq = 7.849e9
+    freq_range = 5e6
+    twpa_freqs = np.linspace(freq-freq_range, freq+freq_range, 100)
     
-#    e_data = np.abs(e_data)
-#    g_data = np.abs(g_data)
-#    plt.hist(e_data, bins=100, color='r', alpha=0.5)
-#    plt.hist(g_data, bins=100, color='b', alpha=0.5)
+    snrs = np.zeros((len(twpa_powers), len(twpa_freqs)))
+    for i, power in enumerate(twpa_powers):
+        rf_twpa.set_power(power)
+        time.sleep(.1)
+        for j, freq in enumerate(twpa_freqs):
+            rf_twpa.set_frequency(freq)
+            time.sleep(.1)
+            snrs[i,j] = take_snr()
+    
+    plt.figure()
+    plt.pcolormesh(twpa_freqs, twpa_powers, snrs)
+    plt.colorbar()
+    
+
 
 
 if 0: # cav transmission
@@ -178,7 +246,7 @@ if 0: # cav transmission
 
 
     
-if 0: # Calibrate TWPA SNR
+if 0: # Calibrate TWPA SNR (questionable???)
     def analysis(twpa_powers, twpa_freqs, ampdata, ax=None):
         if ax is None:
             fig = plt.figure()

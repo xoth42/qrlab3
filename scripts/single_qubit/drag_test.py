@@ -73,10 +73,7 @@ class drag_test(Measurement1D):
             s.append(r(np.pi/2, Y_AXIS, drag=coeff))
             if self.postseq is not None:
                 s.append(self.postseq)
-            s.append(Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ]))
+            s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
             s.append(Delay(2000))
         for i, coeff in enumerate(self.coeffs):
             s.append(self.seq)
@@ -88,10 +85,12 @@ class drag_test(Measurement1D):
 #            s.append(r(np.pi/2, X_AXIS, drag=coeff))
             if self.postseq is not None:
                 s.append(self.postseq)
-            s.append(Combined([
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-                ]))
+#            s.append(Combined([
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+#                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#                ]))
+#            s.append(Delay(2000))
+            s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
             s.append(Delay(2000))
         s = self.get_sequencer(s)
         seqs = s.render()

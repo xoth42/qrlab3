@@ -234,6 +234,7 @@ class Keysight_DIG(Instrument):
         num_slots = len(self._awg_list) #DARIO 1/31 dynamic slot assignment
         HVI_location = 'C:/qrlab/instrumentserver/instrument_plugins/HVI/' + str(num_slots) + 'slot' + str(self._trigger_period) + 'us.HVI'
 #        HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\1slot' + str(self._trigger_period) + 'us.HVI'
+
         self._hvi = CompiledHVI(HVI_location, self._chassis, self._awg_list) #DARIO 1/31 dynamic slot assignment
 
         self._hvi.stop()
@@ -463,7 +464,7 @@ class Keysight_DIG(Instrument):
                 if num_points >= 10:
                     self._ntransfers = self._naverages/100
                 else:
-                    self._ntransfers = self._naverages/2000  # May 2019: Less frequent update when number of points is small
+                    self._ntransfers = max(1, self._naverages/2000)  # May 2019: Less frequent update when number of points is small
             else:
                 self._ntransfers = self._naverages
         elif(self._naverages % ntransfers == 0):
