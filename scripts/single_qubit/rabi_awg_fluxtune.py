@@ -100,7 +100,7 @@ def analysis(meas, data=None, fig=None):
 
     return result.params
 
-class Rabi(Measurement1D):
+class Rabi_AWG_Fluxtune(Measurement1D):
 
     def __init__(self, qubit_info, amps, update=False, seq=None, r_axis=0, fix_phase=True, cancel_info=None,
                  fix_period=None, repeat_pulse=1, postseq=None, selective=False, heralding=False, fit_type=FIT_AMP, **kwargs):
@@ -121,45 +121,28 @@ class Rabi(Measurement1D):
         self.selective = selective
         self.heralding = heralding
         
-        if cancel_info is not None:
-            super(Rabi, self).__init__(len(amps), infos=(qubit_info, cancel_info), **kwargs)
-        else:
-            if self.heralding:
-                super(Rabi, self).__init__(2*len(amps), infos=(qubit_info), **kwargs)
-            else:
-                super(Rabi, self).__init__(len(amps), infos=(qubit_info), **kwargs)
+        
+        super(Rabi_AWG_Fluxtune, self).__init__(len(amps), infos=(qubit_info), **kwargs)
             
         self.data.create_dataset('amps', data=amps)
 
     def generate(self):  #That is the original generate function 
         s = Sequence()
         for i, amp in enumerate(self.amps):
-            s.append(self.seq)
+            s_temp = [Combined([
+                    Constant(250, 0.1, chan='4m1'),
+                    self.seq])]
             
-            if self.heralding:
-                s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
-                s.append(Delay(500))
-            
-            if self.cancel_info is not None:
-                for j in range(self.repeat_pulse):
-                    s.append(Combined([self.qubit_info.rotate(0, self.r_axis, amp=amp),
-                                       self.cancel_info.rotate(np.pi, self.r_axis)
-                            ]))
-            else:
-                if self.selective==1:
-                    s.append(Repeat(self.qubit_info.rotate_selective(0, self.r_axis, amp=amp), self.repeat_pulse))
-                elif self.selective==0.5:
-                    s.append(Repeat(self.qubit_info.rotate_quasilective(0, self.r_axis, amp=amp), self.repeat_pulse))
-                else:
-                    s.append(Repeat(self.qubit_info.rotate(0, self.r_axis, amp=amp), self.repeat_pulse))
+            s_temp += [Combined([Constant(80, 0.1, chan='4m1'),
+                                 Repeat(self.qubit_info.rotate(0, self.r_axis, amp=amp), self.repeat_pulse)])]
             if self.postseq is not None:
-                s.append(self.postseq)
-            s.append(Delay(100))
-#            s.append(Constant(100, 1, chan = 'I1'))
-            s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
-            s.append(Delay(2000))
+                s_temp += [self.postseq]
 
-
+            s_temp += [Combined([
+                    Constant(self.readout_info.pulse_len, 0.1, chan='4m1'),
+                    self.readout_driver.do_get_sequence(self.readout_qubit_info)])]
+            s_temp += [Constant(98680, 0.1, chan='4m1')]
+            s.append(Join(s_temp))
 
         s = self.get_sequencer(s)
         seqs = s.render()
