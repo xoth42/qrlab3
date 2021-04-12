@@ -47,7 +47,7 @@ ef_info = mclient.get_qubit_info('qubit1ef')
 
 #Find read-out cavity and choose a power
 
-if 0: # RO Cavity spec
+if 1: # RO Cavity spec
     from scripts.single_cavity import rocavspectroscopy
     rofreq = 6542e6
     freq_range = 10e6
@@ -169,7 +169,7 @@ if 0: # EF SSBspec
     spec.measure()
     bla
 
-if 1: # EF rabi 
+if 0: # EF rabi 
     from scripts.single_qubit import efrabi
     alz.set_naverages(5000)
     efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.2, 0.2, 81), plot_seqs=False, selective=False, generate=True, update=True, proj_func='amplitude')
@@ -892,14 +892,14 @@ if 0: # T2
         t2.measure()
     bla
 
-if 1: # T2echo
+if 0: # T2echo
     from scripts.single_qubit import T2measurement
     t2 = T2measurement.T2Measurement(qubit_info, np.linspace(100, 20e3, 61), detune=0.3e6, echotype = T2measurement.ECHO_HAHN, necho=3, plot_seqs = False, generate=True,
                                      proj_func='amplitude')
     t2.measure()
     bla
     
-if 1: # T1, T2e loop
+if 0: # T1, T2e loop
     from scripts.single_qubit import T1measurement
     from scripts.single_qubit import T2measurement
 
@@ -984,7 +984,7 @@ if 0: # T1/FT1 interleaved
         t1ft1.measure()
     bla
     
-if 0: # Coil Response test
+if 1: # Coil Response test
     from scripts.single_qubit import coil_response
     for i in range(1):
         #postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))

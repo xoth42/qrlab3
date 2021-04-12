@@ -96,16 +96,16 @@ class CoilResponse(Measurement1D):
         r = self.qubit_info.rotate
         for i, dt in enumerate(self.delays):
             s.append(self.seq)
-            s.append(Constant(int(dt), 0.1, chan='4m1'))
+            s.append(Constant(int(dt), 0.1, chan='3m1'))
             
-            s.append(Combined([Constant(int(self.qubit_info.w*4.0), 0.1, chan='4m1'), 
+            s.append(Combined([Constant(int(self.qubit_info.w*4.0), 0.1, chan='3m1'), 
                                r(np.pi, 0)]))
 
             if self.postseq is not None:
                 s.append(self.postseq)
 
             s.append(Combined([
-                    Constant(self.readout_info.pulse_len, 0.1, chan='4m1'),
+                    Constant(self.readout_info.pulse_len, 0.1, chan='3m1'),
                     self.readout_driver.do_get_sequence(self.readout_qubit_info)]))
             s.append(Delay(2000))
 

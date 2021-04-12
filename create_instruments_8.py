@@ -9,13 +9,13 @@ from mclient import instruments
 
 
 
-#WF_twpa = instruments.create('WF_twpa', 'WFT1153', serial='1153')
+WF_twpa = instruments.create('WF_twpa', 'WFT1153', serial='1153')
 
 instruments.remove('dig')
-dig = instruments.create('dig', 'Keysight_DIG', chassis = 1, slot = 3, trigger_period = 100, 
-                         trigger_only = True, awg_list = [8])
+dig = instruments.create('dig', 'Keysight_DIG', chassis = 1, slot = 3, trigger_period = 1000, 
+                         trigger_only = True, awg_list = [7,8,10])
 
-yoko = instruments.create('yoko', 'Yokogawa_7651_old', address = 'GPIB0::3::INSTR')
+#yoko = instruments.create('yoko', 'Yokogawa_7651_old', address = 'GPIB0::3::INSTR')
 #yoko = instruments.create('yoko', 'Yokogawa_7651_new', address = 'GPIB0::3::INSTR')
 #signalhound = instruments.create('signalhound', 'SignalHoundSM200A', 'S/N 18104217')
 
@@ -31,7 +31,7 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                               w=20,
                               w_quasilective=160, #120,
                               w_selective=500,
-                              channels='3,4',
+                              channels='5,6',
                               sideband_channels='I1,Q1',
                               sideband_phase=0)
 
@@ -42,7 +42,7 @@ qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
                             rotation='Gaussian',
                             w=20,
                             w_selective=500,
-                            channels='3,4',
+                            channels='5,6',
                             sideband_channels='I2,Q2',
                             sideband_phase=0)
 
@@ -57,7 +57,7 @@ qubit2ge = instruments.create('qubit2ge', 'Qubit_Info',
                               w=20,
                               w_quasilective=160, #120,
                               w_selective=500,
-                              channels='3,4',
+                              channels='5,6',
                               sideband_channels='I3,Q3',
                               sideband_phase=0)
 
@@ -89,11 +89,11 @@ RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=19151,
 
 Qbrick = instruments.create('Qbrick', 'LabBrick_RFSource', serial=14510)
 
-AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 1, slot = 8,
+AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 1, slot = 7,
                               AWG_PRODUCT = "M3202A",
                               amps = [1.5, 1.5, 1.5, 1.5], ofs = [0, 0, 0.011, 0.015])
 
-AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 1, slot = 7,
+AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 1, slot = 8,
                               AWG_PRODUCT = "M3202A",
                               amps = [1.5,1.5,1.5,1.5], ofs = [0, 0, 0, 0])
 
