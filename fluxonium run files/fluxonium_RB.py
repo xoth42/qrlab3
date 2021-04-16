@@ -20,18 +20,18 @@ coolgen= mclient.instruments['cool']
 ZZ = mclient.instruments['ZZ']
 
 qubits = mclient.get_qubits()
-#qubit_info = mclient.get_qubit_info('qubit1ge')
+qubit_info = mclient.get_qubit_info('qubit1ge')
 #qubit_info2 = mclient.get_qubit_info('qubit1ge_2')
 #qubit2_info = mclient.get_qubit_info('qubit2ge')
 #qubit2_info2 = mclient.get_qubit_info('qubit2ge_2')
 
-gate_info1 = mclient.get_gate_info('sq_gate1')
-gate_info2 = mclient.get_gate_info('sq_gate2')
-cancel_info = mclient.get_gate_info('cancel_gate')
-#zx90_info = mclient.get_gate_info('zx90_gate')
-cx_info = mclient.get_gate_info('cx_gate')
-ZZ_info = mclient.get_gate_info('ZZ_gate')
-CZ = mclient.instruments['ZZ_gate']
+#gate_info1 = mclient.get_gate_info('sq_gate1')
+#gate_info2 = mclient.get_gate_info('sq_gate2')
+#cancel_info = mclient.get_gate_info('cancel_gate')
+##zx90_info = mclient.get_gate_info('zx90_gate')
+#cx_info = mclient.get_gate_info('cx_gate')
+#ZZ_info = mclient.get_gate_info('ZZ_gate')
+#CZ = mclient.instruments['ZZ_gate']
 
 
 from scripts.single_qubit import ssbspec
@@ -243,11 +243,11 @@ if 0:
     p.measure()
     bla
 
-if 0: 
+if 1: 
     from scripts.single_qubit import Pi2_train
 #    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info1.rotate(np.pi,0)])
 #    postseq = gate_info1.rotate(np.pi,0) 
-    p = Pi2_train.Pi2_train(gate_info2, np.linspace(0.13, 0.14, 61), seq=seq_cool, postseq=None, repeat_pulse=10, proj_func='phase',
+    p = Pi2_train.Pi2_train(qubit_info, np.linspace(0.06, 0.07, 51), seq=None, postseq=None, repeat_pulse=10, proj_func='phase',
 #                            extra_info=gate_info1
                             )
     p.measure()

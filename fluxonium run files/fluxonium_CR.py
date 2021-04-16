@@ -315,7 +315,7 @@ if 0: #CZ Rabi with echo
 
 
 
-if 0: # Time Rabi
+if 1: # Time Rabi
     from scripts.single_qubit import timerabi
     alz.set_naverages(20000)
     cool = sequencer.Constant(int(4e3),1,chan='3m1')
@@ -323,8 +323,8 @@ if 0: # Time Rabi
 #    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info2.rotate(np.pi,0)])    
     postseq =  gate_info1.rotate(np.pi,0)
 #    postseq =  sequencer.Combined([gate_info1.rotate(np.pi,0), gate_info2.rotate(np.pi,0)])
-    tr = timerabi.TimeRabi(qubit_info, np.linspace(0,50, 41), amp=1, 
-                           seq=None, postseq=None, proj_func='phase', plot_seqs=False, extra_info=[gate_info1, gate_info2])
+    tr = timerabi.TimeRabi(qubit_info, np.linspace(0,50, 41), amp=0.3, 
+                           seq=None, postseq=None, proj_func='phase', plot_seqs=False #extra_info=[gate_info1, gate_info2])
     data = tr.measure()
     bla
 

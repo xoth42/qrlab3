@@ -79,9 +79,9 @@ class Spectroscopy(Measurement1D):
 #            s.append(Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan)) 
 #            s.append(Delay(5000))
                 
-#        s.append(Constant(self.plen, self.amp, chan=chs[0]))
-#        s.append(Constant(self.plen, self.amp, chan=chs[1]))
-        s.append(Constant(self.plen,1, chan='3m1'))
+        s.append(Constant(self.plen, self.amp, chan=chs[0]))
+        s.append(Constant(self.plen, self.amp, chan=chs[1]))
+#        s.append(Constant(self.plen,1, chan='3m1'))
         s.append(Delay(80))
         #till here, it is what it was
 

@@ -294,7 +294,7 @@ class T2Measurement(Measurement1D):
 #            ]))
 
             s_temp += [self.readout_driver.do_get_sequence(self.readout_qubit_info)]
-            s_temp += [Delay(2000)]
+            s_temp += [Delay(80)]
             s.append(Join(s_temp))
 
         s = self.get_sequencer(s)
