@@ -57,7 +57,8 @@ def analysis(meas, data=None, fig=None):
     xs = meas.delays
     num_delays = len(xs)
 
-    
+    colors = ['tab:blue', 'tab:orange', 'tab:purple', 'tab:green', 'tab:red', 
+              'tab:brown', 'tab:pink', 'tab:grey', 'tab:olive', 'tab:cyan']
     for i, info in enumerate(meas.qubit_list):
         if meas.bgcor:
             YS =  ys[i*num_delays : (i+1)*num_delays] - ys[-num_delays:]
@@ -70,11 +71,16 @@ def analysis(meas, data=None, fig=None):
                              markersize = 0, ecolor='grey', linewidth=1)
         except:
             print('passed no errorbars')  
-        fig.axes[0].plot(xs/1e3, YS, '.',  ms=3, label = info.insname)
+        label = info.insname
+        if label[0] is '_':
+            label = label[1:]
+        fig.axes[0].plot(xs/1e3, YS, ms=5, label = label,
+                color = colors[i])
+        print(label)
         
         
-        print 'average YS=', YS.mean()
-        
+#        print 'average YS=', YS.mean()
+        result = None
         if 0: # gompertz fit
             XS = xs
             params = lmfit.Parameters()
@@ -97,7 +103,7 @@ def analysis(meas, data=None, fig=None):
             fig.axes[0].set_xlabel('Time [us]')
             fig.axes[1].plot(XS/1e3, gompertz(result.params, XS, YS), marker='s')
             
-        if 1: # exponential fit
+        if 0: # exponential fit
             Xs = xs[meas.skip_points:num_delays]
             YS = YS[meas.skip_points:num_delays]
             params = lmfit.Parameters()
@@ -110,7 +116,8 @@ def analysis(meas, data=None, fig=None):
             lmfit.report_fit(result.params)
     
             fig.axes[0].plot(Xs/1e3, -exp_decay(result.params, Xs, 0), linestyle = 'dashed',
-                    label='Fit, tau = %.03f us +/- %.03f us '%(result.params['tau'].value/1000.0, result.params['tau'].stderr/1000.0))
+                    label='Fit, tau = %.03f us +/- %.03f us '%(result.params['tau'].value/1000.0, result.params['tau'].stderr/1000.0),
+                    color = colors[i])
             fig.axes[0].legend(loc=0)
             fig.axes[0].set_ylabel('Intensity [AU]')
             fig.axes[0].set_xlabel('Time [us]')        
@@ -163,23 +170,26 @@ def analysis(meas, data=None, fig=None):
     
 #    return result.params['gamma_avg'].value
 #    return half_life
-    return result.params
+    if result is not None:
+        return result.params
 
 
 class poly_time_domain(Measurement1D):
 
     def __init__(self, comb_list, qubit_list, delays, post_delay = 1e3,
-                 seq=None, postseq=None, bgcor=False, skip_points = 1, **kwargs):
+                 seq=None, postseq=None, bgcor=False, skip_points = 1, 
+                 reset_seq = None, **kwargs):
         self.comb_list = comb_list
         self.qubit_list = qubit_list
         self.delays = delays
         self.post_delay = post_delay
         self.bgcor = bgcor
         if seq is None:
-            seq = Trigger(500)
+            seq = [Trigger(250)]
         self.seq = seq
         self.postseq = postseq
         self.skip_points = skip_points
+        self.reset_seq = reset_seq
     
         if bgcor:
             n_rep = len(qubit_list)+1
@@ -208,39 +218,47 @@ class poly_time_domain(Measurement1D):
             r = info.rotate_selective
             
             for dt in self.delays:
-                s.append(self.seq)
+                s_temp = self.seq[:]
                 if dt > 0:
                     poly_seq = []
                     for comb in self.comb_list:
                         poly_seq += comb.get_poly_seq(dt - comb.sigma*4, 0)
                     if len(poly_seq) == 0:
                         poly_seq += [Delay(dt)]
-                    s.append(Combined(poly_seq))
-                s.append(Delay(self.post_delay))
-                s.append(r(np.pi, X_AXIS))
+                    s_temp += [Combined(poly_seq)]
+                s_temp += [Delay(self.post_delay)]
+                s_temp += [r(np.pi, X_AXIS)]
         
                 if self.postseq:
-                    s.append(self.postseq)
-                s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
-                s.append(Delay(2000))
+                    s_temp += [self.postseq]
+                s_temp += [self.readout_driver.do_get_sequence(self.readout_qubit_info)]
+                if self.reset_seq is not None:
+                    s_temp += [self.reset_seq]
+                s_temp += [Delay(2000)]
+                s.append(Join(s_temp))
                 
         if self.bgcor:
             for dt in self.delays:
-                s.append(self.seq)
+                s_temp = self.seq[:]
                 if dt > 0:
                     poly_seq = []
                     for comb in self.comb_list:
                         poly_seq += comb.get_poly_seq(dt - comb.sigma*4, 0)
                     if len(poly_seq) == 0:
                         poly_seq += [Delay(dt)]
-                    s.append(Combined(poly_seq))
-                s.append(Delay(self.post_delay))
+                    s_temp += [Combined(poly_seq)]
+                s_temp += [Delay(self.post_delay)]
 #                s.append(r(np.pi, X_AXIS))
         
                 if self.postseq:
-                    s.append(self.postseq)
-                s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
-                s.append(Delay(2000))
+                    s_temp += [self.postseq]
+                s_temp += [self.readout_driver.do_get_sequence(self.readout_qubit_info)]
+                if self.reset_seq is not None:
+                    s_temp += [self.reset_seq]
+                s_temp += [Delay(2000)]
+                s.append(Join(s_temp))
+
+
                 
         s = self.get_sequencer(s)
         seqs = s.render()

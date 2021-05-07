@@ -144,8 +144,10 @@ class JointWigner(Measurement2D):
                     
                 alpha = disp[0] + 1j * disp[1]
                 beta = disp[2] + 1j* disp[3]
-                temp_seq += [Combined(c1(np.abs(alpha), np.angle(alpha) - self.rotation), 
-                                      c2(np.abs(beta),  np.angle(beta)  - self.rotation))]
+                temp_seq += [Combined([c1(np.abs(alpha), np.angle(alpha) - self.rotation), 
+                                       c2(np.abs(beta),  np.angle(beta)  - self.rotation)])]
+#                temp_seq += [c1(np.abs(alpha), np.angle(alpha) - self.rotation)]
+#                temp_seq += [c2(np.abs(beta),  np.angle(beta)  - self.rotation)]
 
                 if i_bg == 0:
                     temp_seq += [ge(np.pi/2, X_AXIS)]
@@ -195,4 +197,5 @@ class JointWigner(Measurement2D):
         return ys
 
     def analyze(self, data=None, fig=None):
-        self.fit_params = analysis(self, data, fig)
+        if self.plot_type is not 'noPlot':
+            self.fit_params = analysis(self, data, fig)
