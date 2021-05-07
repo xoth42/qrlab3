@@ -23,18 +23,18 @@ from matplotlib import gridspec
 filepath = 'C:\_Data\\'
 #hdf5_name = 'VNAtestJan30.hdf5'
 #hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
-hdf5_name = '0827cooldown_circualtor_VNA.hdf5'
+hdf5_name = '20210105cooldown_circulator_VNA - Copy.hdf5'
 #hdf5_name = '0612cooldown_FMR - Copy.hdf5'
 
-date = '20190911'
-time = '160959'
-#experiment = 'SingleTrace'
-experiment = 'SingleTraceNoAsync'
+date = '20210128'
+time = '182303'
+experiment = 'SingleTrace'
+#experiment = 'SingleTraceNoAsync'
 
-fit_S12 = False
+fit_S12 = True
 fit_S11 = False
 fit_S12_two_modes = False
-fit_S12_two_modes_V2 = True
+fit_S12_two_modes_V2 = False
 fit_S12_two_modes_V3 = False
 fft = False
 subtract = False
@@ -134,14 +134,12 @@ if subtract:
 
 
 
-<<<<<<< HEAD
-#mag = 10*np.log10(real**2 + imag**2)
+
 datas = real + 1j*imag
-datas = datas * np.exp(1j *15e-9 * freq)
+#datas = datas * np.exp(1j *15e-9 * freq)
 mag = np.abs(datas)
-=======
-mag = 10*np.log10(real**2 + imag**2)
->>>>>>> 5c21725b30c6ee1b75eef793459e9efc73485f49
+mag = 20*np.log10(mag)
+
 
 fig = pl.figure()
 gs = gridspec.GridSpec(1, 2)
@@ -270,65 +268,59 @@ if fit_S12_two_modes_V3:
     fitdata2 = np.sqrt(result.params['kappa_prod2'].value)/(-1j*(freqs-result.params['omega_c2'].value)-(result.params['kappa_a2'].value)/2.0 )* np.exp(1j*(result.params['phi21'].value + result.params['phi1'].value))
     fitdata = fitdata1 + fitdata2
     fitdatadB = 20*np.log10(np.abs(fitdata))
-<<<<<<< HEAD
     
     fig.axes[0].plot(freqs/float(1e9), np.abs(fitdata),'--' )
     fig.axes[1].plot(fitdata.real,fitdata.imag, '--')
     
-if fit_S12_three_modes:
-    params = lmfit.Parameters()
-    params.add('kappa_prod1', value=2e9, min = 0)#,vary = False)
-    params.add('omega_c', value=10.808e9)#,vary = False)
-    params.add('kappa_a1', value=1e6, min = 0)#,vary = False)
-    if np.max(np.abs(datas)) < limit_for_off:
-        params.add('roff',value =(datas[0][0].real+ datas[0][-1].real)/2)#,vary = False)
-        params.add('ioff',value = (datas[0][0].imag+ datas[0][-1].imag)/2)#, vary = False)
-    params.add('phi1',value =2, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
-        
-
-    params.add('kappa_prod2', value= 1e11, min = 0)#,vary = False)
-    params.add('omega_c2', value=10.83e9)#,vary = False)
-    params.add('kappa_a2', value = 2e7, min = 0)#,vary = False)
-    params.add('phi21',value =-3, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
-
-    params.add('kappa_prod3', value= 1e11, min = 0)#,vary = False)
-    params.add('omega_c3', value=10.79e9)#,vary = False)
-    params.add('kappa_a3', value = 50e6, min = 0)#,vary = False)
-    params.add('phi31',value =-1, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
-#    if itime == 0:
-#        params = lmfit.Parameters()
-#        params.add('kappa_prod1', value= 1e9, min = 0)#,vary = False)
-#        params.add('omega_c', value=10.711e9)#,vary = False)
-#        params.add('kappa_a', value=2e6, min = 0)#,vary = False)
-#        if np.max(np.abs(datas)) < limit_for_off:
-#            params.add('roff',value =(datas[itime][0].real+ datas[itime][-1].real)/2,vary = False)
-#            params.add('ioff',value = (datas[itime][0].imag+ datas[itime][-1].imag)/2, vary = False)
-#        params.add('phi1',value = -3, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
-#                
+#if fit_S12_three_modes:
+#    params = lmfit.Parameters()
+#    params.add('kappa_prod1', value=2e9, min = 0)#,vary = False)
+#    params.add('omega_c', value=10.808e9)#,vary = False)
+#    params.add('kappa_a1', value=1e6, min = 0)#,vary = False)
+#    if np.max(np.abs(datas)) < limit_for_off:
+#        params.add('roff',value =(datas[0][0].real+ datas[0][-1].real)/2)#,vary = False)
+#        params.add('ioff',value = (datas[0][0].imag+ datas[0][-1].imag)/2)#, vary = False)
+#    params.add('phi1',value =2, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
+#        
+#
+#    params.add('kappa_prod2', value= 1e11, min = 0)#,vary = False)
+#    params.add('omega_c2', value=10.83e9)#,vary = False)
+#    params.add('kappa_a2', value = 2e7, min = 0)#,vary = False)
+#    params.add('phi21',value =-3, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
+#
+#    params.add('kappa_prod3', value= 1e11, min = 0)#,vary = False)
+#    params.add('omega_c3', value=10.79e9)#,vary = False)
+#    params.add('kappa_a3', value = 50e6, min = 0)#,vary = False)
+#    params.add('phi31',value =-1, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
+##    if itime == 0:
+##        params = lmfit.Parameters()
+##        params.add('kappa_prod1', value= 1e9, min = 0)#,vary = False)
+##        params.add('omega_c', value=10.711e9)#,vary = False)
+##        params.add('kappa_a', value=2e6, min = 0)#,vary = False)
+##        if np.max(np.abs(datas)) < limit_for_off:
+##            params.add('roff',value =(datas[itime][0].real+ datas[itime][-1].real)/2,vary = False)
+##            params.add('ioff',value = (datas[itime][0].imag+ datas[itime][-1].imag)/2, vary = False)
+##        params.add('phi1',value = -3, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
+##                
+##    
+##        params.add('kappa_prod2', value= 3e9, min = 0)#,vary = False)
+##        params.add('omega_c2', value=10.711e9)#,vary = False)
+##        params.add('kappa_a2', value=1.5e6, min = 0)#,vary = False)
+##        params.add('phi21',value = 4.2, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
+#    result = lmfit.minimize(S21_three_modes, params, args=(freqs, datas))
+#    lmfit.report_fit(result.params)
+#    fitdata1 = np.sqrt(result.params['kappa_prod1'].value)/(-1j*(freqs-result.params['omega_c'].value)-(result.params['kappa_a1'].value)/2.0 )* np.exp(1j*result.params['phi1'].value)
+#    if np.max(np.abs(datas)) < limit_for_off:
+#        fitdata1 = fitdata1 + result.params['roff'].value + 1j*result.params['ioff'].value
+#    fitdata2 = np.sqrt(result.params['kappa_prod2'].value)/(-1j*(freqs-result.params['omega_c2'].value)-(result.params['kappa_a2'].value)/2.0 )* np.exp(1j*(result.params['phi21'].value + result.params['phi1'].value))
+#    fitdata3 = np.sqrt(result.params['kappa_prod3'].value)/(-1j*(freqs-result.params['omega_c3'].value)-(result.params['kappa_a3'].value)/2.0 )* np.exp(1j*(result.params['phi31'].value + result.params['phi1'].value))
+#    fitdata = fitdata1 + fitdata2 + fitdata3
+#    fitdatadB = 20*np.log10(np.abs(fitdata))
 #    
-#        params.add('kappa_prod2', value= 3e9, min = 0)#,vary = False)
-#        params.add('omega_c2', value=10.711e9)#,vary = False)
-#        params.add('kappa_a2', value=1.5e6, min = 0)#,vary = False)
-#        params.add('phi21',value = 4.2, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
-    result = lmfit.minimize(S21_three_modes, params, args=(freqs, datas))
-    lmfit.report_fit(result.params)
-    fitdata1 = np.sqrt(result.params['kappa_prod1'].value)/(-1j*(freqs-result.params['omega_c'].value)-(result.params['kappa_a1'].value)/2.0 )* np.exp(1j*result.params['phi1'].value)
-    if np.max(np.abs(datas)) < limit_for_off:
-        fitdata1 = fitdata1 + result.params['roff'].value + 1j*result.params['ioff'].value
-    fitdata2 = np.sqrt(result.params['kappa_prod2'].value)/(-1j*(freqs-result.params['omega_c2'].value)-(result.params['kappa_a2'].value)/2.0 )* np.exp(1j*(result.params['phi21'].value + result.params['phi1'].value))
-    fitdata3 = np.sqrt(result.params['kappa_prod3'].value)/(-1j*(freqs-result.params['omega_c3'].value)-(result.params['kappa_a3'].value)/2.0 )* np.exp(1j*(result.params['phi31'].value + result.params['phi1'].value))
-    fitdata = fitdata1 + fitdata2 + fitdata3
-    fitdatadB = 20*np.log10(np.abs(fitdata))
-    
-    fig.axes[0].plot(freqs/float(1e9), np.abs(fitdata),'--' )
-    fig.axes[1].plot(fitdata.real,fitdata.imag, '--')
+#    fig.axes[0].plot(freqs/float(1e9), np.abs(fitdata),'--' )
+#    fig.axes[1].plot(fitdata.real,fitdata.imag, '--')
 if fit_S12 or fit_S11 or fit_S12_two_modes or fit_S12_two_modes_V2 :
 
-=======
-#    fig.axes[0].set_title(figname)
-#    pl.suptitle(figname)
-if fit_S12 or fit_S11 or fit_S12_two_modes or fit_S12_two_modes_V2 or fit_S12_two_modes_V3:
->>>>>>> 5c21725b30c6ee1b75eef793459e9efc73485f49
     fig.axes[0].plot(freqs/float(1e9), fitdatadB,'--' )
     fig.axes[1].plot(fitdata.real,fitdata.imag, '--', label = 'total Q = %s\n kappa_tot = %sMHz'%(result.params['omega_c'].value/result.params['kappa_a'].value, result.params['kappa_a'].value/1e6))
     fig.axes[1].plot(fitdata.real[0:len(fitdata)/2],fitdata.imag[0:len(fitdata)/2], '--')

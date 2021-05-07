@@ -11,6 +11,7 @@ import lmfit
 
 
 import matplotlib
+matplotlib.interactive(True)
 import h5py as h5
 import numpy as np
 import matplotlib.pyplot as pl
@@ -59,27 +60,30 @@ limit_for_off = 1
 filepath = 'C:\_Data\\'
 #hdf5_name = 'VNAtestJan30.hdf5'
 #hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
-hdf5_name = '0626cooldown_circualtor_VNA - Copy.hdf5'
+hdf5_name = '20210105cooldown_circulator_VNA - Copy (2).hdf5'
 
-date = '20200629'
+date = '20210310'
 #time = '233434'
-experiment = 'Power_Sweep_VNA'
+#experiment = 'Power_Sweep_VNA'
 
-fields = np.linspace(0,-0.05,26)
+fields = np.linspace(0,0.05,26)
 #fields = np.linspace(0.05, 0.002,13)
 
 ''' Primary x axis and secondary if 2d'''
 #x_key = 'freqs'
 #x2_key = 'powers'
-
-two_modes = False
+all_field = False
+new_fig = False
+two_modes = True
 three_modes = False
 
-j = 0
+j = 0 #index of the power from the color plot used 0 = lowest power
 
-final_plot = True
+final_plot = False
 
-itime = 4
+itime = 0 #index of the field being analyzed so you can save your place and work on only fitting a few fields at a time
+
+save_data = False
 
 if itime == 0:
     datas = np.zeros([len(fields),1601],dtype = complex)
@@ -157,7 +161,9 @@ f = h5.File(filepath + hdf5_name, 'r')
 for i, title in enumerate(f[date].keys()):
 #    print int(title[0:6])
 #    print int(title[0:6]) <= 020617
-    if int(title[0:6]) <= int('110625') and int(title[0:6]) > int('000000') and title[7:12] =='Power':
+    if int(title[0:6]) <= int('174122') and int(title[0:6]) > int('174121') and title[7:12] =='Power':
+#for i in range(len(fields)):
+#    if 1:
         print title
 
 
@@ -187,27 +193,27 @@ for i, title in enumerate(f[date].keys()):
         
         '''Plot'''
         freqs = freq
-        fig = pl.figure()
-        gs = gridspec.GridSpec(1, 2)
-        fig.add_subplot(gs[0])
-        fig.add_subplot(gs[1])
-        fig.axes[1].plot(real[j],imag[j], label= 'field = %sT'%(fields[itime]))
-        fig.axes[0].plot(freq/1e9,np.abs(datas[itime]), label= 'field = %sT'%(fields[itime]))
+#        fig = pl.figure()
+#        gs = gridspec.GridSpec(1, 2)
+#        fig.add_subplot(gs[0])
+#        fig.add_subplot(gs[1])
+#        fig.axes[1].plot(np.real(datas[itime]),np.imag(datas[itime]), label= 'field = %sT'%(fields[itime]))
+#        fig.axes[0].plot(freq/1e9,np.abs(datas[itime]), label= 'field = %sT'%(fields[itime]))
         if two_modes:    
             params = lmfit.Parameters()
-            params.add('kappa_prod1', value=0.4e9, min = 0)#,vary = False)
-            params.add('omega_c', value=10.806e9)#,vary = False)
-            params.add('kappa_a1', value=1.3e6, min = 0)#,vary = False)
+            params.add('kappa_prod1', value=6e10, min = 0)#,vary = False)
+            params.add('omega_c', value=10.81e9, vary = True)#,vary = False)
+            params.add('kappa_a1', value=3.5e6, min = 0)#,vary = False)
             if np.max(np.abs(datas)) < limit_for_off:
                 params.add('roff',value =(datas[itime][0].real+ datas[itime][-1].real)/2)#,vary = False)
                 params.add('ioff',value = (datas[itime][0].imag+ datas[itime][-1].imag)/2)#, vary = False)
-            params.add('phi1',value =-2, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
+            params.add('phi1',value =-.666, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
                 
         
-            params.add('kappa_prod2', value= 2e8, min = 0)#,vary = False)
-            params.add('omega_c2', value=10.82e9)#,vary = False)
-            params.add('kappa_a2', value = 40e6, min = 0)#,vary = False)
-            params.add('phi21',value =-3, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
+            params.add('kappa_prod2', value= 2.1e10, min = 0)#,vary = False)
+            params.add('omega_c2', value=10.8045e9)#,vary = False)
+            params.add('kappa_a2', value = 2e6, min = 0)#,vary = False)
+            params.add('phi21',value = -2.4, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
             
         #    if itime == 0:
         #        params = lmfit.Parameters()
@@ -224,7 +230,10 @@ for i, title in enumerate(f[date].keys()):
         #        params.add('omega_c2', value=10.711e9)#,vary = False)
         #        params.add('kappa_a2', value=1.5e6, min = 0)#,vary = False)
         #        params.add('phi21',value = 4.2, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
-            result = lmfit.minimize(S21_two_modes_V3, params, args=(freqs, datas[itime]))
+
+            xs = freqs[480:1600]
+            ys = datas[itime][480:1600]
+            result = lmfit.minimize(S21_two_modes_V3, params, args=(xs,ys))
             lmfit.report_fit(result.params)
             fitdata1 = np.sqrt(result.params['kappa_prod1'].value)/(-1j*(freqs-result.params['omega_c'].value)-(result.params['kappa_a1'].value)/2.0 )* np.exp(1j*result.params['phi1'].value)
             if np.max(np.abs(datas)) < limit_for_off:
@@ -256,26 +265,26 @@ for i, title in enumerate(f[date].keys()):
         if three_modes:
             change_variables = True
             params = lmfit.Parameters()
-            params.add('kappa_prod1', value=1.86e11, min = 0,vary = change_variables)
-            params.add('omega_c', value=10.807e9,vary = change_variables)
-            params.add('kappa_a1', value=3e6, min = 0,vary = change_variables)
+            params.add('kappa_prod1', value=8.5793e11, min = 0,vary = change_variables)
+            params.add('omega_c', value=10.824e9,vary = change_variables)
+            params.add('kappa_a1', value=3.5e7, min = 0,vary = change_variables)
             if np.max(np.abs(datas[itime])) < limit_for_off:
 #                params.add('roff',value =-0.00197706,vary = change_variables)
 #                params.add('ioff',value = 0.00067385, vary = change_variables)
                 params.add('roff',value =(datas[itime][0].real+ datas[itime][-1].real)/2,vary = change_variables)
                 params.add('ioff',value = (datas[itime][0].imag+ datas[itime][-1].imag)/2, vary = change_variables)
-            params.add('phi1',value = 4.71, max = 1.5*np.pi, min = -1.5*np.pi,vary = change_variables)
+            params.add('phi1',value = -2.6, max = 1.5*np.pi, min = -1.5*np.pi,vary = change_variables)
                 
         
-            params.add('kappa_prod2', value= 1.75e11, min = 0,vary = change_variables)
-            params.add('omega_c2', value=10.807e9,vary = change_variables)
-            params.add('kappa_a2', value = 2.8902e6, min = 0,vary = change_variables)
-            params.add('phi21',value =-3.2, max = 1.5*np.pi, min = -1.5*np.pi,vary = change_variables)
+            params.add('kappa_prod2', value= 1.9e12, min = 0,vary = change_variables)
+            params.add('omega_c2', value=10.777e9,vary = change_variables)
+            params.add('kappa_a2', value = 9.6e7, min = 0,vary = change_variables)
+            params.add('phi21',value =3.9, max = 1.5*np.pi, min = -1.5*np.pi,vary = change_variables)
         
-            params.add('kappa_prod3', value= 7.68e8, min = 0,vary = change_variables)
-            params.add('omega_c3', value=10.808e9,vary = change_variables)
-            params.add('kappa_a3', value = 2.1133e6, min = 0,vary = change_variables)
-            params.add('phi31',value =4.711, max = 1.5*np.pi, min = -1.5*np.pi,vary = change_variables)
+            params.add('kappa_prod3', value= 6e9, min = 0,vary = change_variables)
+            params.add('omega_c3', value=10.807e9,vary = change_variables)
+            params.add('kappa_a3', value = 1.4e6, min = 0,vary = change_variables)
+            params.add('phi31',value =-2, max = 1.5*np.pi, min = -1.5*np.pi,vary = change_variables)
         #    if itime == 0:
         #        params = lmfit.Parameters()
         #        params.add('kappa_prod1', value= 1e9, min = 0)#,vary = False)
@@ -331,7 +340,8 @@ for i, title in enumerate(f[date].keys()):
             phi31[itime] = result.params['phi31'].value
             phi31_err[itime] = result.params['phi31'].stderr
         itime = itime + 1
-if final_plot:    
+if final_plot: 
+
     pl.figure()
     matplotlib.rc('xtick', labelsize=24) 
     matplotlib.rc('ytick', labelsize=24)
@@ -339,11 +349,18 @@ if final_plot:
     axis_font = {'fontname':'Arial', 'size':'24'}
     fieldplot = np.concatenate((fields, np.zeros(1) + fields[1]-fields[0] + fields[-1]))
     mag = 20*np.log10(np.abs(datas))
-    Z = np.transpose(mag)
+    Z = np.transpose(mag)#-mag2)
     #X,Y = np.meshgrid(field, freq)
     X,Y = np.meshgrid(fieldplot, freq)
     pl.xlim(X.min(), X.max())
-    pl.pcolormesh(X,Y/1e9,Z,vmax = -10, vmin = -50)#,vmax = -30, vmin = -80)
+#    pl.pcolormesh(X,Y/1e9,Z,vmax = 40, vmin = 0, cmap = 'RdBu')
+#    pl.pcolormesh(X,Y/1e9,Z,vmax = -10,vmin = -100)
+#    mag2 = 20*np.log10(np.abs(datas2))
+#    Z2 = np.transpose(mag2)
+#    #X,Y = np.meshgrid(field, freq)
+#    X,Y = np.meshgrid(fieldplot, freq)
+#    pl.xlim(X.min(), X.max())
+    pl.pcolormesh(X,Y/1e9,Z)#,vmax = -30, vmin = -80)
 #    cbar = pl.colorbar()
 #    cbar.set_label('dB',rotation=0, **axis_font)
     pl.colorbar()
@@ -351,10 +368,11 @@ if final_plot:
     pl.xlabel('Magnetic Field(T)', **axis_font)
     pl.ylabel('Frequency(GHz)', **axis_font)
     #pl.close()
+
     f.close()
         
         
-#    lin_power = xlist
+    lin_power = xlist
     #lin_power = np.power(10,xlist/10)
     #lin_power[0] = 0
     if two_modes:
@@ -427,8 +445,129 @@ if final_plot:
         pl.errorbar(lin_power,phi31, yerr = phi31_err, fmt ='o', label='phi31')
     #pl.xlabel('drive power (mW)')
     pl.legend(loc='upper right') 
-    data = np.concatenate([omega_c, omega_c2, kappa_a,kappa_a2])
-    np.savetxt('C:\Users\WangLab\Documents\yingying\\0317cooldown_S21 cavity freqs and kappas.txt', data)
+#    data = np.concatenate([omega_c, omega_c2, kappa_a,kappa_a2])
+#    np.savetxt('C:\Users\WangLab\Documents\yingying\\0317cooldown_S21 cavity freqs and kappas.txt', data)
     
     
+
+
+if save_data: #printing all values
+#    print('omega_c',omega_c)
+#    print('omega_c_err',omega_c_err)
+#    print('omega_c2',omega_c2)
+#    print('omega_c2_err',omega_c2_err)
+#    print('kappa_a',kappa_a)
+#    print('kappa_a_err',kappa_a_err)
+#    print('kappa_a2',kappa_a2)
+#    print('kappa_a2_err',kappa_a2_err)
+#    print('kappa_prod',kappa_prod)
+#    print('kappa_prod_err',kappa_prod_err)
+#    print('kappa_prod2',kappa_prod2)
+#    print('kappa_prod2_err',kappa_prod2_err)
+#    print('phi21',phi21)
+#    print('ph
+    if two_modes:
+        '''Save the data for later analysis'''
+        end_time = date + '_' + title[0:6]
+        main_filepath = 'C:/Users/WangLab/Documents/circulator results/'
+        time_stamp = end_time
+        save_filepath = main_filepath + ''.join(time_stamp) + '/'
+        
+        
+        if not os.path.exists(save_filepath):
+            os.makedirs(save_filepath)
+            
+        np.savetxt(save_filepath + 'results.txt',
+                   np.column_stack((fields,omega_c, omega_c_err, omega_c2, omega_c2_err,kappa_a, kappa_a_err,kappa_a2,kappa_a2_err, kappa_prod, kappa_prod_err, kappa_prod2,
+                                    kappa_prod2_err, phi21, phi21_err)),
+                   header = 
+                   
+                   'fields,omega_c, omega_c_err, omega_c2, omega_c2_err,kappa_a, kappa_a_err,kappa_a2,kappa_a2_err, kappa_prod, kappa_prod_err, kappa_prod2, kappa_prod2_err, phi21, phi21_err')
+    
+    if three_modes:
+        '''Save the data for later analysis'''
+        end_time = date + '_' + title[0:6]
+        main_filepath = 'C:/Users/WangLab/Documents/circulator results/'
+        time_stamp = end_time
+        save_filepath = main_filepath + ''.join(time_stamp) + '/'
+        
+        
+        if not os.path.exists(save_filepath):
+            os.makedirs(save_filepath)
+            
+        np.savetxt(save_filepath + 'three_mode_results.txt',
+                   np.column_stack((fields,omega_c, omega_c_err, omega_c2, omega_c2_err,omega_c3, omega_c3_err, 
+                                    kappa_a, kappa_a_err,kappa_a2,kappa_a2_err, kappa_a3, kappa_a3_err,
+                                    kappa_prod, kappa_prod_err, kappa_prod2,kappa_prod2_err,kappa_prod3,kappa_prod3_err,
+                                     phi21, phi21_err, phi31, phi31_err)),
+                   header = 
+                   
+                   'fields,omega_c, omega_c_err, omega_c2, omega_c2_err,omega_c3, omega_c3_err, kappa_a, kappa_a_err,kappa_a2,kappa_a2_err,kappa_a3,kappa_a3_err, kappa_prod, kappa_prod_err, kappa_prod2, kappa_prod2_err,kappa_prod3, kappa_prod3_err, phi21, phi21_err, phi31,phi31_err')
+
+
+
+if all_field:
+    fig = pl.figure('all_field')
+    if new_fig:
+        fig = pl.figure('all_field')
+        gs = gridspec.GridSpec(1, 1)
+
+        fig.add_subplot(gs[0])
+#        fig.axes[i].set_title('%s%s'%(fig_name,self.Sij[i]))
+        fig.axes[0].set_xlim(-0.051, 0.051)
+        fig.axes[0].set_ylim(10.78,10.83)
+
+#        fig.axes[i].pcolormesh(x, y, z,vmax=np.max(z))#,vmin = np.max([np.min(z),-200]))
+
+    fieldplot = np.concatenate((fields - 0.5*(fields[1]-fields[0]), np.zeros(1) + fields[1]-fields[0] + fields[-1]))
+    mag = 20*np.log10(np.abs(datas))
+    Z = np.transpose(mag)#-mag2)
+    #X,Y = np.meshgrid(field, freq)
+    X,Y = np.meshgrid(fieldplot, freq)
+#    pl.xlim(X.min(), X.max())
+#    pl.pcolormesh(X,Y/1e9,Z,vmax = 40, vmin = 0, cmap = 'RdBu')
+#    pl.pcolormesh(X,Y/1e9,Z,vmax = -10,vmin = -100)
+#    mag2 = 20*np.log10(np.abs(datas2))
+#    Z2 = np.transpose(mag2)
+#    #X,Y = np.meshgrid(field, freq)
+#    X,Y = np.meshgrid(fieldplot, freq)
+#    pl.xlim(X.min(), X.max())
+    pl.pcolormesh(X,Y/1e9,Z, vmax = -10, vmin = -50)#,vmax = -30, vmin = -80)
+                       
+#    pl.colorbar()                  
+    end_time = list(str(datetime.datetime.now())[:19])
+    end_time[13] = '-'
+    end_time[16] = '-'
+    main_filepath = 'C:/Users/WangLab/Documents/circulator results/'
+    time_stamp = end_time
+    save_filepath = main_filepath + ''.join(time_stamp) + '/'
+    
+    
+    if not os.path.exists(save_filepath):
+        os.makedirs(save_filepath)
+        
+    np.savetxt(save_filepath + '0to-0.05colorplot_Z.txt',
+               np.concatenate([datas.real,datas.imag]))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

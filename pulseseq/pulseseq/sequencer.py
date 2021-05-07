@@ -1738,6 +1738,7 @@ class SequenceOperation(object):
         self.inplace = inplace
         self.ttr = ttr
 
+
     def func(self, el, now):
         if self._ext_func:
             return self._ext_func(el, now)
@@ -1747,14 +1748,18 @@ class SequenceOperation(object):
         '''
         Apply operation to a completely rendered sequence.
         '''
+
         seq_out = []
         now = 0
         for el in s.seq:
+#            print s.seq
             # Reset time when trigger occurs
             if self.ttr and el.get_trigger():
                 now = 0
             if isinstance(el, Pulse):
+
                 el = self.func(el, now)
+
             seq_out.append(el)
             now += el.get_length()
 
@@ -1805,8 +1810,10 @@ class ModulateSequence(SequenceOperation):
 #            raise ValueError('Unable to modulate repeated blocks not a multiple of if_period')
         if self.fixed_phase is None:
             phi0 = float(now % self.if_period) / self.if_period * 2 * np.pi + self.phase
+#            print 'with now, phi0 is : %s, now:%s'%(phi0,now)
         else:
             phi0 = self.fixed_phase + self.phase
+#            print 'with fixed phase, phi0 is : %s'%(phi0)
         phis = np.linspace(0, 2*np.pi*len(data)/self.if_period, len(data), endpoint=False)
         data = data * self.amp * np.cos(phis + phi0)
         deg = np.rad2deg(phi0 % 2*np.pi)

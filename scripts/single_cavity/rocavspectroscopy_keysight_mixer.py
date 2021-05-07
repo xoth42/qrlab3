@@ -34,7 +34,7 @@ def S21(params, x, y):
 
 
 
-def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, ax=None):
+def analysis(powers, freqs, ampdata, phasedata=None, full_fig_name = None, plot_type=POWER, ax=None):
     if ax is None:
         ax = plt.figure().add_subplot(111)
     ax2 = ax.twinx()
@@ -81,6 +81,7 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, ax=None):
         plt.legend()
         plt.ylabel('Intensity [AU]')
         plt.xlabel('Frequency [MHz]')
+        plt.suptitle(full_fig_name)
         ## Yingying add it to save the figure 
         fn = os.path.join(config.datadir, 'images/%s_cavspecamp.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
         fdir = os.path.split(fn)[0]
@@ -93,6 +94,7 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, ax=None):
             plt.plot(freqs/1e6, phasedata[ipower,:], label='Power %.02f dB'%power)
         plt.ylabel('Phase Angle')
         plt.xlabel('Frequency [MHz]')
+        plt.suptitle(full_fig_name)
         ## Yingying add it to save the figure 
         fn = os.path.join(config.datadir, 'images/%s_cavspecphase.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
         fdir = os.path.split(fn)[0]
@@ -113,6 +115,7 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, ax=None):
         ax2.set_ylabel('Angle [deg]')
         ax.set_xlabel('Power [dB]')
         ax2.set_xlabel('Power [dB]')
+        plt.suptitle(full_fig_name)
 ## Yingying add it to save the figure        
         fn = os.path.join(config.datadir, 'images/%s_cavspec.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
         fdir = os.path.split(fn)[0]
@@ -144,6 +147,8 @@ class ROCavSpectroscopy_keysight_mixer(Measurement1D):
         self.plot_type = plot_type
 
         super(ROCavSpectroscopy_keysight_mixer, self).__init__(1, infos=(qubit_info,mixer_info,mixer_info2), **kwargs)
+        print self.data.get_fullname()
+        self.full_fig_name = self.data.get_fullname()
         self.data.create_dataset('powers', data=powers)
         self.data.create_dataset('freqs', data=freqs)
         self.ampdata = self.data.create_dataset('amplitudes', shape=(len(powers),len(freqs)))
@@ -249,7 +254,7 @@ class ROCavSpectroscopy_keysight_mixer(Measurement1D):
                 if self.readout == 'readout_IQ':
                     ret = dig.take_avg_shot(take_ref = False)
                 else:
-                    ret = dig.take_avg_shot(take_ref = False)
+                    ret = dig.take_avg_shot(take_ref = True)
 
                 dig.stop_hvi()
                 dig.release_buf()
@@ -325,5 +330,5 @@ class ROCavSpectroscopy_keysight_mixer(Measurement1D):
     def analyze(self, data=None, ax=None):
         pax = ax if (ax is not None) else plt.figure().add_subplot(111)
         ampdata = data if (data is not None) else self.ampdata
-        self.fit_params = analysis(self.powers, self.freqs, ampdata, self.phasedata, self.plot_type, ax=pax)
+        self.fit_params = analysis(self.powers, self.freqs, ampdata, self.phasedata, self.full_fig_name, self.plot_type, ax=pax)
 #Yingying add return fitting params

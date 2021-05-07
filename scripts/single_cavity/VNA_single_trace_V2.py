@@ -23,30 +23,41 @@ limit_for_off = 1
 
 def S21(params, x, y):
     est = np.sqrt(params['kappa_prod'])/(-1j*(x-params['omega_c'])-(params['kappa_a'])/2.0 )
+#    est = np.conjugate(est)
     if np.max(np.abs(y)) < limit_for_off:
         est = est + params['roff'] + 1j*params['ioff']
     est = est * np.exp(1j*params['phi'])
     
     return np.sqrt((y.real - est.real)**2 + (y.imag - est.imag)**2)
     
-    
-def S11(params, x, y):
+#    
+#def S11(params, x, y): #original
+#
+#    est = (-1 - params['kappa_1'] / (1j*(x-params['omega_c'])-params['kappa_a']/2))*params['A']
+#    return y - abs(est)
+##    if np.max(np.abs(y)) < limit_for_off:
+##        est = est + params['roff'] + 1j*params['ioff']
+##    est = est * np.exp(1j*params['phi'])
+##    return np.sqrt((y.real - est.real)**2 + (y.imag - est.imag)**2)
+#    
 
-    est = (-1 - params['kappa_1'] / (1j*(x-params['omega_c'])-params['kappa_a']/2))*params['A']
+def S11(params, x, y): #ebru modifying temporarily to match with maryland expression
+
+    est = (+1 - params['kappa_1'] / (1j*(x-params['omega_c'])+params['kappa_a']/2))*params['A']
     return y - abs(est)
 #    if np.max(np.abs(y)) < limit_for_off:
 #        est = est + params['roff'] + 1j*params['ioff']
 #    est = est * np.exp(1j*params['phi'])
 #    return np.sqrt((y.real - est.real)**2 + (y.imag - est.imag)**2)
-    
         
-def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
+def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, title = '', fig=None):
     fn = None
     if fig is None:
         fig = plt.figure()
         gs = gridspec.GridSpec(1, 2, width_ratios=[1,1])
         fig.add_subplot(gs[0])
-        fig.add_subplot(gs[1])
+        add_title = fig.add_subplot(gs[1])
+        add_title.set_title(title) 
     freqs = freqdata[0,:]
     datas = realdata[0,:] + 1j*imagdata[0,:] 
     datasdB = 20*np.log10(np.abs(datas))
@@ -56,15 +67,15 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
 
 
         params.add('kappa_prod', value= (np.max(np.abs(datas))*0.5e6)**2.001, min = 0)#,vary = False)
-        params.add('omega_c', value=freqs[np.argmax(np.abs(datas))]*1.00002,min = freqs[np.argmax(np.abs(datas))]*0.9998, max = freqs[np.argmax(np.abs(datas))] * 1.0002)#,vary = False)
-        params.add('kappa_a', value=1e6, min = 0)#, max = 4e6)#,vary = False)
+        params.add('omega_c', value=freqs[np.argmax(np.abs(datas))]*1.00002,min = freqs[np.argmax(np.abs(datas))]*0.998, max = freqs[np.argmax(np.abs(datas))] * 1.002)#,vary = False)
+        params.add('kappa_a', value=5e6, min = 0)#, max = 4e6)#,vary = False)
 
 
 
         if np.max(np.abs(datas)) < limit_for_off:
             params.add('roff',value = np.real(datas[0]))#,vary = False)
             params.add('ioff',value = np.imag(datas[0]))#, vary = False)
-        params.add('phi',value = 0, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
+        params.add('phi',value = 1, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
                 
     #    datas = realdata[0,:]+ 1j*imagdata[0,:]    
         result = lmfit.minimize(S21, params, args=(freqs, datas))
@@ -103,12 +114,14 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
     fig.axes[0].plot(freqs/float(1e9), datasdB )
 #    fig.axes[0].set_title(figname)
     plt.suptitle(figname)
+#    plt.title(title)
     if fit_S12 or fit_S11:
         fig.axes[0].plot(freqs/float(1e9), fitdatadB,'--' )
     plt.xlabel('freq(GHz)')
     plt.ylabel('dB')
     
-    
+
+       
 #    if plot_type == 1:
 
 
@@ -136,7 +149,7 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, fig=None):
         return result.params
 class SingleTrace(Measurement1D):
 
-    def __init__(self,freqs, average_factor, avelimit, if_bandwidth, fit_S12, fit_S11, **kwargs):
+    def __init__(self,freqs, average_factor, avelimit, if_bandwidth, fit_S12, fit_S11,title, **kwargs):
         self.freqs =freqs
 #        self.meas_info = meas_info
 #        self.device_info = device_info
@@ -146,6 +159,7 @@ class SingleTrace(Measurement1D):
         self.if_bandwidth = if_bandwidth
         self.fit_S12 = fit_S12
         self.fit_S11 = fit_S11
+        self.title = title
         self.fig = None
 
         self.fit_params = None
@@ -183,7 +197,7 @@ class SingleTrace(Measurement1D):
         ave = self.avelimit
         VNA.set_average_factor(ave)
         count = 0
-
+        self.save_settings()
         while count < self.average_factor:
             ave = self.avelimit
             
@@ -300,7 +314,7 @@ class SingleTrace(Measurement1D):
         
 
 
-        self.fit_params = analysis(self.freqdata, self.realdata, self.imagdata, self.fit_S12, self.fit_S11,figname = self.figname, fig=self.fig)
+        self.fit_params = analysis(self.freqdata, self.realdata, self.imagdata, self.fit_S12, self.fit_S11,figname = self.figname, title = self.title,fig=self.fig)
 
         
         

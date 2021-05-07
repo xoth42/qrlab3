@@ -40,24 +40,23 @@ def changing_freq_fit(params, x, data):
 
 ''' Path to the .hdf5 file '''
 filepath = 'C:/_Data/'
-hdf5_name = '01052021cooldown_circulator - Copy (2).hdf5'
-date = '20210114'
+hdf5_name = '01052021cooldown_circulator - Copy.hdf5'
+date = '20210301'
 #experiment = 'ROCavSpectroscopy_keysight'
 #experiment = 'Power_Sweep_VNA'
 f = h5.File(filepath + hdf5_name, 'r')
 j = 0
 
 
-save_data = True
-CW_qubit = True
-field = -.05
+save_data = False
+CW_qubit = False
+#CW_qubit = False
+field = -.005
 nrows = 3
-repeat = 21
+
 fix_phi0 = None
 proj = 'projection'
-if j == 0:
-    freqs = np.zeros([nrows,repeat])
-    taus = np.zeros([nrows,repeat])
+
 #
 #if three_modes:
 #    if j == 0:
@@ -65,13 +64,18 @@ if j == 0:
 #        freq2 = np.zeros([nrows,len(fields)])
 if CW_qubit:
     exp_t = 'CW_Ram'
+    repeat = 21
 else:
     exp_t = 'Photon'
-
+    repeat = 20
+if j == 0:
+    freqs = np.zeros([nrows,repeat])
+    taus = np.zeros([nrows,repeat])
+f0_plt = np.zeros(repeat)
 for i, title in enumerate(f[date].keys()):
 #    print int(title[0:6])
 #    print int(title[0:6]) <= 020617
-    if int(title[0:6]) <= int('233857') and int(title[0:6]) > int('230116') and title[7:13] == exp_t:# and title[7:12] =='ROCav':
+    if int(title[0:6]) <= int('153632') and int(title[0:6]) > int('135421') and title[7:13] == exp_t:# and title[7:12] =='ROCav':
         print j
         print title
 
@@ -112,6 +116,7 @@ for i, title in enumerate(f[date].keys()):
             ys = ((ys_cplx[0::seq_num] + ys_cplx[1::seq_num])/2)
 
             p = np.polyfit(np.real(ys), np.imag(ys), 1)
+#            p[0]=1.646
             vproj = 1 + 1j*p[0]
 
             vproj /= np.abs(vproj)
@@ -130,10 +135,10 @@ for i, title in enumerate(f[date].keys()):
         
         if np.max(ys_als) - np.min(ys_als)>300:# and meas.proj_func is 'phase':
     
-            for i in range(len(ys_als)):
+            for p in range(len(ys_als)):
                 for iphase in range(len(ys_als[0])):
-                    if ys_als[i][iphase] > 0:
-                        ys_als[i][iphase] = ys_als[i][iphase] -360  
+                    if ys_als[p][iphase] > 0:
+                        ys_als[p][iphase] = ys_als[p][iphase] -360  
 #        fig.axes[0].plot(xs/1e3, ys, 'ks', ms=3, linestyle='-', markerfacecolor='red')
     
 #        amp0 = (np.max(ys) - np.min(ys)) / 2
@@ -198,6 +203,8 @@ for i, title in enumerate(f[date].keys()):
             fftfs = np.fft.fftfreq(len(ys), np.abs(xs[1]-xs[0]))
             f0 = np.abs(fftfs[np.argmax(fftys)])
             print 'Delta f estimate: %.03f kHz' % (f0 * 1e6)
+            if l == 2:
+                f0_plt[j] = f0
         
             params = lmfit.Parameters()
             params.add('ofs', value=np.average(ys))
@@ -276,7 +283,7 @@ if repeat >1:
         data_to_save = np.concatenate([freqs[l], taus[l]])
         
         if save_data:
-            main_filepath = 'C:\\Users\\Wang_Lab\\Documents\\circulator results\\01052021cooldown_circulator\\CW_ramsey\\'
+            main_filepath = 'C:\\Users\\Wang_Lab\\Documents\\circulator results\\01052021cooldown_circulator\\CW_ramsey_redo\\'
             end_time = list(str(datetime.datetime.now())[:19])
             end_time[13] = '-'
             end_time[16] = '-'
@@ -303,3 +310,5 @@ if repeat >1:
                     np.average(freq_q[l]*1000), np.std(freq_q[l])/np.sqrt(len(freq_q[l]))*1000))
         pl.legend()
 
+pl.figure()
+pl.plot(range(repeat),f0_plt)
