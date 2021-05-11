@@ -20,13 +20,15 @@ filelist = glob.glob(r'%s\\*T_results.txt'%(filepath))
 filelist_base = glob.glob(r'%s\\*T_base_results.txt'%(filepath))
 
 
+#fields_fin = np.asarray([0,0.0001])#np.linspace(-.05,.05,21)
 fields_fin = np.linspace(-.05,.05,21)
 #fieldplot = np.asarray([-0.05, -0.04, -0.03, -0.02, -0.01,  0.  ,0.005,  0.01, 0.015, 0.02,  0.03, 0.04,  0.05,0.06])
+#fieldplot = np.asarray([0,0.0001])
 #fields = np.asarray([0,.005,.01,.015,.02,-.05,-.04,-.03,-.02,-.01,.03,0,.04,.05,.02,.025,.035,.045,0,
 #                     -.005,-.01,-.015,-.02,-.025,-.03,-.035,-.04,-.045,-.05,-.005,-.015,-.015,-.025,
 #                     -.035,-.045,0,.005,.01,.015,.02,.025,.03])
 #fieldplot = fields
-trials = 41
+trials = 42
 fields = np.zeros(trials)
 npts = 242
 delays = np.linspace(0,0.24,121)
@@ -86,12 +88,12 @@ env_base = np.sqrt(sigma_x_b**2 + sigma_y_b**2)
 #
 #env = env/env_base
 
-pl.figure()
-X, Y = np.meshgrid(delays,fieldplot-0.005)
-pl.pcolormesh(X,Y,env)
-pl.colorbar()
+#pl.figure()
+#X, Y = np.meshgrid(delays,fieldplot-0.005)
+#pl.pcolormesh(X,Y,env)
+#pl.colorbar()
 
-delay = 60
+delay = 100
 sigma_raw = env[:, delay:delay + 10]
 
 sigma = np.mean(sigma_raw, 1)
@@ -116,8 +118,8 @@ angle = np.zeros((len(fields),10))
 for i in range(len(fields)):
     angle[i] = angle_data[i, delay-5:delay+5] - angle_data[i,0]
 angle_plot = np.mean(angle,1)
-angle_stdv = np.std(angle,1)/(3*2*np.pi*0.120)
-freq = angle_plot/(2*np.pi*0.120)
+angle_stdv = np.std(angle,1)/(3*2*np.pi*delays[delay])
+freq = angle_plot/(2*np.pi*delays[delay])
 
 freq_fin = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
 freq_err_fin = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
@@ -126,7 +128,12 @@ sigma_err_fin = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
 env_fin =[[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
 angle_data_fin = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
 
-
+#freq_fin = [[],[]]
+#freq_err_fin = [[],[]]
+#sigma_fin = [[],[]]
+#sigma_err_fin = [[],[]]
+#env_fin =[[],[]]
+#angle_data_fin = [[],[]]
 for i in range(len(fields)):
     ifield = np.argmin(np.abs(fields[i] - fields_fin))
     freq_fin[ifield].append(freq[i])
@@ -157,32 +164,32 @@ for i in range(len(fields_fin)):
     
 pl.figure()
 #pl.plot(fields,sigma, label = '%s ns'%(delays[delay]*1000))
-pl.errorbar(fields_fin,-np.log(sigma_plot),sigma_err_plot/sigma_plot, fmt = 'o', label = '%s ns'%(delays[delay]*1000))
+pl.errorbar(fields_fin,-np.log(sigma_plot)/(delays[delay]),sigma_err_plot/sigma_plot/(delays[delay]), fmt = 'o', label = '%s ns'%(delays[delay]*1000))
 pl.ylabel('qubit decay rate')
 pl.xlabel('field(T)')
 pl.legend()
 
-pl.figure()
-pl.title('Accumulated Phase')
-pl.xlabel('Time(ns)')
-pl.ylabel('Field(T)')
-X, Y = np.meshgrid(delays*1e3,fields_fin-0.005)
-pl.pcolormesh(X,Y,angle_data_plot,vmin = 0)
-pl.colorbar()
+#pl.figure()
+#pl.title('Accumulated Phase')
+#pl.xlabel('Time(ns)')
+#pl.ylabel('Field(T)')
+#X, Y = np.meshgrid(delays*1e3,fields_fin-0.005)
+#pl.pcolormesh(X,Y,angle_data_plot,vmin = 0)
+#pl.colorbar()
+#
+#pl.figure()
+#pl.title('Envelope Function')
+#pl.ylabel('Field(T)')
+#pl.xlabel('Time(ns)')
+#X, Y = np.meshgrid(delays*1e3,fields_fin-0.005)
+#pl.pcolormesh(X,Y,env_plot)
+#pl.colorbar()
+
+
+
 
 pl.figure()
-pl.title('Envelope Function')
-pl.ylabel('Field(T)')
-pl.xlabel('Time(ns)')
-X, Y = np.meshgrid(delays*1e3,fields_fin-0.005)
-pl.pcolormesh(X,Y,env_plot)
-pl.colorbar()
-
-
-
-
-pl.figure()
-pl.errorbar(fields_fin,freq_plot,freq_err_plot/(2*np.pi*0.120),fmt ='o', label = '%s ns'%(delays[delay]*1000))
+pl.errorbar(fields_fin,freq_plot,freq_err_plot/(2*np.pi**delays[delay]),fmt ='o', label = '%s ns'%(delays[delay]*1000))
 pl.ylabel('qubit shift freq')
 pl.xlabel('field(T)')
 pl.legend()

@@ -112,7 +112,8 @@ def analysis(meas, data=None, fig=None):
 
 class SSBSpec(Measurement1D):
 
-    def __init__(self, qubit_info, detunings, seq=None, postseq=None, bgcor=False, coplay_delay=0, **kwargs):
+    def __init__(self, qubit_info, detunings, seq=None, postseq=None, bgcor=False, 
+                 coplay_delay=0, reset_seq=None, **kwargs):
         self.qubit_info = qubit_info
         if seq is None:
             seq = Trigger(250)
@@ -122,6 +123,7 @@ class SSBSpec(Measurement1D):
         self.xs = detunings / 1e6       # For plot
         self.bgcor = bgcor
         self.coplay_delay=coplay_delay
+        self.reset_seq = reset_seq
 
         npoints = len(detunings)
         if bgcor:
@@ -163,6 +165,7 @@ class SSBSpec(Measurement1D):
 
 
             #Ebru, adding the 20000 delay
+            s.append(self.reset_seq)
             s.append(Delay(2000))
         s = self.get_sequencer(s)
         seqs = s.render()

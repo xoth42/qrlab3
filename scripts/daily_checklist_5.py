@@ -51,8 +51,8 @@ readout = 'readout_IQ'
 os.chdir(r'C:/qrlab/scripts')
 
 
-ro_freq_qubit2 = 10.8064e9
-ro_freq_qubit1 = 10.8056e9
+ro_freq_qubit2 = 10.815e9
+ro_freq_qubit1 = 10.811e9
 
 
 power = 10
@@ -62,7 +62,7 @@ deltaf = 10.811e9 - ro_freq_qubit2 + mixer_info1.deltaf
 SS_mixer_info1_set.set_deltaf(deltaf)
 SS_mixer_info1 = mclient.get_qubit_info('SS_mixer_info1')
 
-mixer_info1_set.set_pi_amp(.12)
+mixer_info1_set.set_pi_amp(.01)
 mixer_info2_set.set_pi_amp(.12)
 mixer_info1 = mclient.get_qubit_info('mixer_info1')
 mixer_info2 = mclient.get_qubit_info('mixer_info2')
@@ -74,7 +74,7 @@ for i in range(1):
 #        RObrick.do_set_power(i)
     seq = sequencer.Trigger(600)
 #        seq = Join([seq, qubit2_info.rotate(np.pi/2, X_AXIS)])
-    spec = ssbspec_mixer.SSBSpec_mixer(qubit2_info, mixer_info1,mixer_info2, np.linspace(-20e6, 20e6, 101), seq=seq, 
+    spec = ssbspec_mixer.SSBSpec_mixer(qubit2_info, mixer_info1,mixer_info2, np.linspace(-10e6, 10e6, 101), seq=seq, 
                                        plot_seqs=True, proj_func='phase')
     spec.measure_keysight()
     
@@ -91,7 +91,7 @@ for i in range(1):
 
     tr = rabi_mixer.Rabi_mixer(qubit2_info, mixer_info1, mixer_info2,
 #                               np.linspace(-0.9, 0.9, 81), selective=False,
-                               np.linspace(-0.7, 0.7, 101), selective=False,
+                               np.linspace(-0.8, 0.8, 101), selective=False,
 #                               np.linspace(-0.14, 0.14, 81), selective=True,
 #                               np.linspace(-0.1, 0.1, 81), selective=True,
         #                       np.linspace(-0.47,-0.41, 81), selective=False,                   
@@ -111,7 +111,7 @@ from single_qubit import T1measurement_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
 
 t1 = T1measurement_mixer.T1Measurement_mixer(qubit2_info, mixer_info1,mixer_info2, #np.linspace(0, 500e3, 101),
-                                     np.linspace(0.1e3, 30e3, 101),
+                                     np.linspace(0.1e3, 3e3, 101),
 #                                         np.concatenate((np.linspace(5e3, 5e3, 50), np.linspace(6e3, 6e3, 51))),
                                      double_exp=False, generate=True, plot_seqs=False, proj_func='phase', seq=None)    
 t1.measure_keysight()    
@@ -147,10 +147,16 @@ for i in range(1):
 power = 10
 readout_info.rfsource1.set_frequency(ro_freq_qubit1 - mixer_info1.deltaf)
 readout_info.rfsource1.set_power(power)
-deltaf = 10.808e9 - ro_freq_qubit1 + mixer_info1.deltaf
+deltaf = 10.811e9 - ro_freq_qubit1 + mixer_info1.deltaf
 SS_mixer_info1_set.set_deltaf(deltaf)
 SS_mixer_info1 = mclient.get_qubit_info('SS_mixer_info1')
-    
+ 
+
+mixer_info1_set.set_pi_amp(.12)
+mixer_info2_set.set_pi_amp(.12)
+mixer_info1 = mclient.get_qubit_info('mixer_info1')
+mixer_info2 = mclient.get_qubit_info('mixer_info2')
+   
 from single_qubit import ssbspec_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
 for i in range(1):        

@@ -1,5 +1,8 @@
 
 import time
+import numpy as np
+import itertools
+
 
 if 1:
     import os
@@ -9,14 +12,14 @@ if 1:
 from mclient import instruments
 
 
-WF_twpa = instruments.create('WF_twpa', 'WFT1153', serial = '1153')
+WF_twpa = instruments.create('WF_twpa', 'WFT1153', COM_adrs='COM3', serial = '1153')
 #WF_ref = instruments.create('WF_ref', 'WFT1153_ch2')
 #WF_ref.do_set_rfsource('WF_ro')
 #bla
 
 
 dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period = 500, trigger_only = False,
-                         naverages = 400, nsamples = 1500, awg_list = [7, 8, 9])
+                         naverages = 400, nsamples = 2000, awg_list = [7, 8, 9])
 
 AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PRODUCT = "M3202A", 
                           amps = [1.5,1.5,1.5,1.5], ofs = [0, 0, -0.0099, -0.007])
@@ -52,6 +55,23 @@ MXG = instruments.create('MXGbob', 'Agilent_Generator', address = 'USB0::0x0957:
 #                           pulse_len=2500, readout_chan='2m1', acq_chan='1m1')
 
 
+''' 
+1-3: qubit
+7: A
+8: B
+9: R
+10: RO
+11: A rotating frame
+12: B rotating frame
+15-17: cav reset stuff
+20: FWM
+>100: All cav number dependant qubits
+
+
+
+'''
+
+
 readout_IQ = instruments.create('readout_IQ', 'Readout_IQ_Info', IQe=(1.0), IQg=(0.1),
                                 IQe_radius= 1 , rfsource='SCref',
                                 acq_chan='1m1',
@@ -67,7 +87,7 @@ readout_IQ = instruments.create('readout_IQ', 'Readout_IQ_Info', IQe=(1.0), IQg=
                                 w_selective=400,
                                 marker_bufwidth=250,
                                 marker_ofs=0,
-                                pulse_width=3500,
+                                pulse_width=4500,
                                 fixed_phase=0)
 
 
@@ -125,31 +145,37 @@ cavityA = instruments.create('cavityA', 'Qubit_Info',
 
 cavityB = instruments.create('cavityB', 'Qubit_Info',
                             deltaf=60e6,
-                            pi_amp=1,
+                            pi_amp=1.5,
                             pi_amp_selective=0.01,
                             rotation='Gaussian',
                             channels='9,10',
                             sideband_channels='I8,Q8',
                             sideband_phase=0,
-                            w=10,
+                            w=7,
                             w_selective=400,
                             marker_bufwidth=250,
                             marker_ofs=0)
 
 
+
+
+
 cavityR = instruments.create('cavityR', 'Qubit_Info',
                             deltaf=50e6,#16.9e3,
-                            pi_amp=.614,
+                            pi_amp=1,
                             pi_amp_selective=0.0115,
                             rotation='SQUARE',                             
                             rotation_selective = 'SQUARE',
                             channels='11,12',
                             sideband_channels='I9,Q9',
                             sideband_phase=0,
-                            w=250,
+                            w=50,
                             w_selective=400,
                             marker_bufwidth=250,
                             marker_ofs=0)
+
+
+
 
 
 fwm_info = instruments.create('fwm_info', 'Qubit_Info',
@@ -188,626 +214,127 @@ fwm_info = instruments.create('fwm_info', 'Qubit_Info',
 #                              marker_bufwidth=1500,
 #                              marker_ofs=0)
 
-qubit_a1b1 = instruments.create('qubit_a1b1', 'Qubit_Info',
-                              deltaf=-107.3e6,
-                              pi_amp=.798,
-                              pi2_amp=.375,
-                              drag=-0.292,
-                              pi_amp_quasilective=.0725,
-                              pi_amp_selective=0.019,
-                              rotation='Gaussian',
-                              w=8,
-                              w_quasilective=80,
-                              w_selective=300,
-                              channels='5,6',
-                              sideband_channels='I4,Q4',
-                              sideband_phase=0)
-
-qubit_a2b2 = instruments.create('qubit_a2b2', 'Qubit_Info',
-                              deltaf=-114.11e6,
-                              pi_amp=.798,
-                              pi2_amp=.375,
-                              drag=-0.292,
-                              pi_amp_quasilective=.0725,
-                              pi_amp_selective=0.019,
-                              rotation='Gaussian',
-                              w=8,
-                              w_quasilective=80,
-                              w_selective=300,
-                              channels='5,6',
-                              sideband_channels='I5,Q5',
-                              sideband_phase=0)
-
-qubit_a3b3 = instruments.create('qubit_a3b3', 'Qubit_Info',
-                              deltaf=-120.89e6,
-                              pi_amp=.798,
-                              pi2_amp=.375,
-                              drag=-0.292,
-                              pi_amp_quasilective=.0725,
-                              pi_amp_selective=0.019,
-                              rotation='Gaussian',
-                              w=8,
-                              w_quasilective=80,
-                              w_selective=300,
-                              channels='5,6',
-                              sideband_channels='I6,Q6',
-                              sideband_phase=0)
-
-qubit_a4b4 = instruments.create('qubit_a4b4', 'Qubit_Info',
-                              deltaf=-127.5e6,
-                              pi_amp=.798,
-                              pi2_amp=.375,
-                              drag=-0.292,
-                              pi_amp_quasilective=.0725,
-                              pi_amp_selective=0.019,
-                              rotation='Gaussian',
-                              w=8,
-                              w_quasilective=80,
-                              w_selective=300,
-                              channels='5,6',
-                              sideband_channels='I30,Q30',
-                              sideband_phase=0)
-
-qubit_a1 = instruments.create('qubit_a1', 'Qubit_Info',
-                              deltaf=-101.8e6,
-                              pi_amp=.798,
-                              pi2_amp=.375,
-                              drag=-0.292,
-                              pi_amp_quasilective=.0725,
-                              pi_amp_selective=0.019,
-                              rotation='Gaussian',
-                              w=8,
-                              w_quasilective=80,
-                              w_selective=300,
-                              channels='5,6',
-                              sideband_channels='I12,Q12',
-                              sideband_phase=0)
-
-qubit_a2 = instruments.create('qubit_a2', 'Qubit_Info',
-                              deltaf=-103.6e6,
-                              pi_amp=.798,
-                              pi2_amp=.375,
-                              drag=-0.292,
-                              pi_amp_quasilective=.0725,
-                              pi_amp_selective=0.019,
-                              rotation='Gaussian',
-                              w=8,
-                              w_quasilective=80,
-                              w_selective=300,
-                              channels='5,6',
-                              sideband_channels='I13,Q13',
-                              sideband_phase=0)
-
-qubit_b1 = instruments.create('qubit_b1', 'Qubit_Info',
-                              deltaf=-105.83e6,
-                              pi_amp=.798,
-                              pi2_amp=.375,
-                              drag=-0.292,
-                              pi_amp_quasilective=.0725,
-                              pi_amp_selective=0.019,
-                              rotation='Gaussian',
-                              w=8,
-                              w_quasilective=80,
-                              w_selective=300,
-                              channels='5,6',
-                              sideband_channels='I11,Q11',
-                              sideband_phase=0)
-
-qubit_b2 = instruments.create('qubit_b2', 'Qubit_Info',
-                              deltaf=-111.4e6,
-                              pi_amp=.798,
-                              pi2_amp=.375,
-                              drag=-0.292,
-                              pi_amp_quasilective=.0725,
-                              pi_amp_selective=0.019,
-                              rotation='Gaussian',
-                              w=8,
-                              w_quasilective=80,
-                              w_selective=300,
-                              channels='5,6',
-                              sideband_channels='I14,Q14',
-                              sideband_phase=0)
-
-# stark shifted cavity to track the rotation durring AQEC
-#cavityAs = instruments.create('cavityAs', 'Qubit_Info',
-##                            deltaf=56e6-2.85e3,#16.9e3,
-#                            deltaf=56e6-18.22e3,#16.9e3,
-#                            pi_amp=.833,
-#                            pi_amp_selective=0.05,
-#                            rotation='Gaussian',
-#                            channels='7,8',
-#                            sideband_channels='I8,Q8',
-#                            sideband_phase=0,
-#                            w=30,
-#                            w_selective=400,
-#                            marker_bufwidth=250,
-#                            marker_ofs=0)
 
 
+# these infos for a rotating fram for tomography
+cavityArf = instruments.create('_cavityArf', 'Qubit_Info',
+                            deltaf=40e6,
+                            pi_amp=0.845,
+                            pi_amp_selective=0.01,
+                            rotation='Gaussian',
+                            channels='7,8',
+                            sideband_channels='I11,Q11',
+                            sideband_phase=0,
+                            w=7, 
+                            w_selective=400,
+                            marker_bufwidth=250,
+                            marker_ofs=0)
 
-#cavityB = instruments.create('cavityB', 'Qubit_Info',
-#                            deltaf=-41e6,
-#                            pi_amp=.8,
-#                            pi_amp_selective=0.020,
-#                            pi_amp_quasilective = 1.67,
-#                            rotation='Gaussian',
-#                            channels='11,12',
-#                            sideband_channels='I8,Q8',
-#                            sideband_phase=0,
-#                            w=10,
-#                            w_selective=500,
-#                            w_quasilective=65,
-#                            marker_bufwidth=250,
-#                            marker_channel='3m1',
-#                            marker_ofs=0)
+cavityBrf = instruments.create('_cavityBrf', 'Qubit_Info',
+                            deltaf=60e6,
+                            pi_amp=1.5,
+                            pi_amp_selective=0.01,
+                            rotation='Gaussian',
+                            channels='9,10',
+                            sideband_channels='I12,Q12',
+                            sideband_phase=0,
+                            w=7,
+                            w_selective=400,
+                            marker_bufwidth=250,
+                            marker_ofs=0)
 
-
-'''
-qubit_a1 = instruments.create('qubit_a1', 'Qubit_Info',
-                              deltaf=-100e6-chi2*0.5,
-                              pi_amp=1.000,
-                              pi2_amp=0.4869,
-                              drag=-0.292,
-                              pi_amp_quasilective=0.0630,
-                              pi_amp_selective=0.00909,
-                              rotation='Gaussian',
-                              w=5,
-                              w_quasilective=60,
-                              w_selective=500,
-                              channels='5,6',
-                              sideband_channels='I11,Q11',
-                              sideband_phase=0)
-
-
-qubit_a2 = instruments.create('qubit_a2', 'Qubit_Info',
-                              deltaf=-100e6-chi2,
-                              pi_amp=1.000,
-                              pi2_amp=0.4869,
-                              drag=-0.292,
-                              pi_amp_quasilective=0.0630,
-                              pi_amp_selective=0.00909,
-                              rotation='Gaussian',
-                              w=5,
-                              w_quasilective=60,
-                              w_selective=500,
-                              channels='5,6',
-                              sideband_channels='I12,Q12',
-                              sideband_phase=0)
-
-qubit_a3 = instruments.create('qubit_a3', 'Qubit_Info',
-                              deltaf=-100e6-chi2*1.5,
-                              pi_amp=1.000,
-                              pi2_amp=0.4869,
-                              drag=-0.292,
-                              pi_amp_quasilective=0.0630,
-                              pi_amp_selective=0.00909,
-                              rotation='Gaussian',
-                              w=5,
-                              w_quasilective=60,
-                              w_selective=500,
-                              channels='5,6',
-                              sideband_channels='I13,Q13',
-                              sideband_phase=0)
-
-qubit_a4 = instruments.create('qubit_a4', 'Qubit_Info',
-                              deltaf=-100e6-chi2*2,
-                              pi_amp=1.000,
-                              pi2_amp=0.4869,
-                              drag=-0.292,
-                              pi_amp_quasilective=0.0630,
-                              pi_amp_selective=0.00909,
-                              rotation='Gaussian',
-                              w=5,
-                              w_quasilective=60,
-                              w_selective=500,
-                              channels='5,6',
-                              sideband_channels='I14,Q14',
-                              sideband_phase=0)
-
-qubit_a5 = instruments.create('qubit_a5', 'Qubit_Info',
-                              deltaf=-100e6-chi2*2.5,
-                              pi_amp=1.000,
-                              pi2_amp=0.4869,
-                              drag=-0.292,
-                              pi_amp_quasilective=0.0630,
-                              pi_amp_selective=0.00909,
-                              rotation='Gaussian',
-                              w=5,
-                              w_quasilective=60,
-                              w_selective=500,
-                              channels='5,6',
-                              sideband_channels='I15,Q15',
-                              sideband_phase=0)
-
-qubit_a6 = instruments.create('qubit_a6', 'Qubit_Info',
-                              deltaf=-100e6-chi2*3,
-                              pi_amp=1.000,
-                              pi2_amp=0.4869,
-                              drag=-0.292,
-                              pi_amp_quasilective=0.0630,
-                              pi_amp_selective=0.00909,
-                              rotation='Gaussian',
-                              w=5,
-                              w_quasilective=60,
-                              w_selective=500,
-                              channels='5,6',
-                              sideband_channels='I16,Q16',
-                              sideband_phase=0)
-
-qubit_a7 = instruments.create('qubit_a7', 'Qubit_Info',
-                              deltaf=-100e6-chi2*3.5,
-                              pi_amp=1.000,
-                              pi2_amp=0.4869,
-                              drag=-0.292,
-                              pi_amp_quasilective=0.0630,
-                              pi_amp_selective=0.00909,
-                              rotation='Gaussian',
-                              w=5,
-                              w_quasilective=60,
-                              w_selective=500,
-                              channels='5,6',
-                              sideband_channels='I17,Q17',
-                              sideband_phase=0)
-'''
+cavityAreset = instruments.create('cavAreset', 'Qubit_Info',
+                            deltaf=40e6 + 20e6,
+                            pi_amp=0.845,
+                            pi_amp_selective=0.01,
+                            rotation='Gaussian',
+                            channels='7,8',
+                            sideband_channels='I15,Q15',
+                            sideband_phase=0,
+                            w=7, 
+                            w_selective=400,
+                            marker_bufwidth=250,
+                            marker_ofs=0)
 
 
+cavityBreset = instruments.create('cavBreset', 'Qubit_Info',
+                            deltaf=60e6 + 20e6,
+                            pi_amp=1.5,
+                            pi_amp_selective=0.01,
+                            rotation='Gaussian',
+                            channels='9,10',
+                            sideband_channels='I16,Q16',
+                            sideband_phase=0,
+                            w=7,
+                            w_selective=400,
+                            marker_bufwidth=250,
+                            marker_ofs=0)
 
-
-
-#qubit_a0s = instruments.create('qubit_a0s', 'Qubit_Info',
-#                             deltaf=-100.00e6-FWM_info_SS,
-#                              pi_amp=0.727,
-#                              pi2_amp=0.358,
-#                              drag=0,
-#                              pi_amp_quasilective=0.0630,
-#                              pi_amp_selective=0.0113,
-#                              rotation='Gaussian',
-#                              w=7,
-#                              w_quasilective=60,
-#                              w_selective=500,
-#                              channels='5,6',
-#                              sideband_channels='I40,Q40',
-#                              sideband_phase=0)         
-#
-#qubit_a2s = instruments.create('qubit_a2s', 'Qubit_Info',
-#                             deltaf=-102.64e6-FWM_info_SS,
-#                              pi_amp=0.727,
-#                              pi2_amp=0.358,
-#                              drag=0,
-#                              pi_amp_quasilective=0.0630,
-#                              pi_amp_selective=0.0113,
-#                              rotation='Gaussian',
-#                              w=7,
-#                              w_quasilective=60,
-#                              w_selective=500,
-#                              channels='5,6',
-#                              sideband_channels='I41,Q41',
-#                              sideband_phase=0)         
-#
-#qubit_a4s = instruments.create('qubit_a4s', 'Qubit_Info',
-#                             deltaf=-105.28-FWM_info_SS,
-#                              pi_amp=0.727,
-#                              pi2_amp=0.358,
-#                              drag=0,
-#                              pi_amp_quasilective=0.0630,
-#                              pi_amp_selective=0.0113,
-#                              rotation='Gaussian',
-#                              w=7,
-#                              w_quasilective=60,
-#                              w_selective=500,
-#                              channels='5,6',
-#                              sideband_channels='I42,Q42',
-#                              sideband_phase=0)         
-
-#FWM_info = instruments.create('FWM_info', 'Qubit_Info',
-#                              deltaf=-60.09e6,
-#                              pi_amp=0.642,
-#                              pi2_amp=0,
-#                              drag=0,
-#                              pi_amp_quasilective=0.0102,
-#                              pi_amp_selective=0.014,
-#                              rotation='SQUARE',
-#                              rotation_selective = 'SQUARE',
-#                              w=5,
-#                              w_quasilective=100,
-#                              w_selective=300,
-#                              channels='9,10',
-#                              sideband_channels='I20,Q20',
-#                              sideband_phase=.08,
-#                              marker_bufwidth=1500,
-#                              marker_ofs=0)
-
-#FWM_info_a2 = instruments.create('FWM_info_a2', 'Qubit_Info',
-#                              deltaf=-57.56e6+FWM_info_SS,
-#                              pi_amp=0.642,
-#                              pi2_amp=0,
-#                              drag=0,
-#                              pi_amp_quasilective=0.0102,
-#                              pi_amp_selective=0.014,
-#                              rotation='SQUARE',
-#                              rotation_selective = 'SQUARE',
-#                              w=5,
-#                              w_quasilective=100,
-#                              w_selective=300,
-#                              channels='9,10',
-#                              sideband_channels='I21,Q21',
-#                              sideband_phase=.08,
-#                              marker_bufwidth=1500,
-#                              marker_ofs=0)
-#
-#FWM_info_a4 = instruments.create('FWM_info_a4', 'Qubit_Info',
-#                              deltaf=-54.72e6+FWM_info_SS,
-#                              pi_amp=0.642,
-#                              pi2_amp=0,
-#                              drag=0,
-#                              pi_amp_quasilective=0.0102,
-#                              pi_amp_selective=0.014,
-#                              rotation='SQUARE',
-#                              rotation_selective = 'SQUARE',
-#                              w=5,
-#                              w_quasilective=100,
-#                              w_selective=300,
-#                              channels='9,10',
-#                              sideband_channels='I23,Q23',
-#                              sideband_phase=.08,
-#                              marker_bufwidth=1500,
-#                              marker_ofs=0)
-
-
-
-
-'''
-qubit_b1 = instruments.create('qubit_b1', 'Qubit_Info',
-                             deltaf=-101.45e6,
-                              pi_amp=.82,
-                              pi2_amp=0,
-                              drag=0,
-                              pi_amp_quasilective=.0214,
-                              pi_amp_selective=0.00905,
-                              rotation='Gaussian',
-                              w=6,
-                              w_quasilective=160, #120,
-                              w_selective=400,
-                              channels='5,6',
-                              sideband_channels='I11,Q11',
-                              sideband_phase=0)
-
-qubit_b2 = instruments.create('qubit_b2', 'Qubit_Info',
-                             deltaf=-102.9e6,
-                              pi_amp=.82,
-                              pi2_amp=0,
-                              drag=0,
-                              pi_amp_quasilective=.0214,
-                              pi_amp_selective=0.0091,
-                              rotation='Gaussian',
-                              w=6,
-                              w_quasilective=160, #120,
-                              w_selective=400,
-                              channels='5,6',
-                              sideband_channels='I12,Q12',
-                              sideband_phase=0)
-
-qubit_b3 = instruments.create('qubit_b3', 'Qubit_Info',
-                             deltaf=-104.35e6,
-                              pi_amp=.82,
-                              pi2_amp=0,
-                              drag=0,
-                              pi_amp_quasilective=.0214,
-                              pi_amp_selective=0.0091,
-                              rotation='Gaussian',
-                              w=6,
-                              w_quasilective=160, #120,
-                              w_selective=400,
-                              channels='5,6',
-                              sideband_channels='I13,Q13',
-                              sideband_phase=0)
-
-qubit_b4 = instruments.create('qubit_b4', 'Qubit_Info',
-                             deltaf=-105.8e6,
-                              pi_amp=.82,
-                              pi2_amp=0,
-                              drag=0,
-                              pi_amp_quasilective=.0214,
-                              pi_amp_selective=0.0091,
-                              rotation='Gaussian',
-                              w=6,
-                              w_quasilective=160, #120,
-                              w_selective=400,
-                              channels='5,6',
-                              sideband_channels='I14,Q14',
-                              sideband_phase=0)
-
-
-qubit_b0s = instruments.create('qubit_b0s', 'Qubit_Info',
-                             deltaf=-100.00e6-FWM_info_SS,
-                              pi_amp=.82,
-                              pi2_amp=0,
-                              drag=0,
-                              pi_amp_quasilective=.0214,
-                              pi_amp_selective=0.0121,
-                              rotation='Gaussian',
-                              w=6,
-                              w_quasilective=160, #120,
-                              w_selective=300,
-                              channels='5,6',
-                              sideband_channels='I30,Q30',
-                              sideband_phase=0)          
-
-
-qubit_b2s = instruments.create('qubit_b2s', 'Qubit_Info',
-                             deltaf=-102.90e6-FWM_info_SS,
-                              pi_amp=.82,
-                              pi2_amp=0,
-                              drag=0,
-                              pi_amp_quasilective=.0214,
-                              pi_amp_selective=0.0121,
-                              rotation='Gaussian',
-                              w=6,
-                              w_quasilective=160, #120,
-                              w_selective=300,
-                              channels='5,6',
-                              sideband_channels='I32,Q32',
-                              sideband_phase=0)          
-
-qubit_b4s = instruments.create('qubit_b4s', 'Qubit_Info',
-                             deltaf=-105.8e6-FWM_info_SS,
-                              pi_amp=.82,
-                              pi2_amp=0,
-                              drag=0,
-                              pi_amp_quasilective=.0214,
-                              pi_amp_selective=0.0121,
-                              rotation='Gaussian',
-                              w=6,
-                              w_quasilective=160, #120,
-                              w_selective=300,
-                              channels='5,6',
-                              sideband_channels='I34,Q34',
-                              sideband_phase=0)          
-'''
-
-
-'''
-FWM_info_b2 = instruments.create('FWM_info_b2', 'Qubit_Info',
-                              deltaf=-68.1e6+FWM_info_SS,
-                              pi_amp=0.642,
-                              pi2_amp=0,
-                              drag=0,
-                              pi_amp_quasilective=0.0102,
-                              pi_amp_selective=0.014,
-                              rotation='SQUARE',
-                              rotation_selective = 'SQUARE',
-                              w=5,
-                              w_quasilective=100,
-                              w_selective=300,
-                              channels='9,10',
-                              sideband_channels='I22,Q22',
-                              sideband_phase=.4,
-                              marker_bufwidth=250,
-                              marker_channel='13m1',
-                              marker_ofs=0)
-
-FWM_info_b4 = instruments.create('FWM_info_b4', 'Qubit_Info',
-                              deltaf=-65.2e6+FWM_info_SS,
-                              pi_amp=0.642,
-                              pi2_amp=0,
-                              drag=0,
-                              pi_amp_quasilective=0.0102,
-                              pi_amp_selective=0.014,
-                              rotation='SQUARE',
-                              rotation_selective = 'SQUARE',
-                              w=5,
-                              w_quasilective=100,
-                              w_selective=300,
-                              channels='9,10',
-                              sideband_channels='I24,Q24',
-                              sideband_phase=.4,
-                              marker_bufwidth=250,
-                              marker_channel='13m1',
-                              marker_ofs=0)
-'''
-
-
-
-#cavityR = instruments.create('cavityR', 'Qubit_Info',
-#                              deltaf=36e6,
-#                              pi_amp=0.642,
-#                              pi2_amp=0,
-#                              drag=0,
-#                              pi_amp_quasilective=0.0102,
-#                              pi_amp_selective=0.014,
-#                              rotation='Gaussian',
-#                              rotation_selective = 'Gaussian',
-#                              w=5,
-#                              w_quasilective=100,
-#                              w_selective=300,
-#                              channels='9,10',
-#                              sideband_channels='I6,Q6',
-#                              sideband_phase=0.22)
+cavityRreset = instruments.create('cavRreset', 'Qubit_Info',
+                            deltaf=50e6 + 20e6,#16.9e3,
+                            pi_amp=1,
+                            pi_amp_selective=0.0115,
+                            rotation='SQUARE',                             
+                            rotation_selective = 'SQUARE',
+                            channels='11,12',
+                            sideband_channels='I17,Q17',
+                            sideband_phase=0,
+                            w=50,
+                            w_selective=400,
+                            marker_bufwidth=250,
+                            marker_ofs=0)
 
 
 
 
 
 
-#qubit_a1b1 = instruments.create('qubit_a1b1', 'Qubit_Info',
-#                              deltaf=-106.0e6,
-#                              pi_amp=.80,
-#                              pi2_amp=0,
-#                              drag=0,
-#                              pi_amp_quasilective=.0214, #.0356,
-#                              pi_amp_selective=0.0156,
-#                              rotation='Gaussian',
-#                              w=6,
-#                              w_quasilective=160, #120,
-#                              w_selective=300,
-#                              channels='5,6',
-#                              sideband_channels='I11,Q11',
-#                              sideband_phase=0)
-#
-#qubit_a2b2 = instruments.create('qubit_a2b2', 'Qubit_Info',
-#                              deltaf=-112.0e6,
-#                              pi_amp=.80,
-#                              pi2_amp=0,
-#                              drag=0,
-#                              pi_amp_quasilective=.0214, #.0356,
-#                              pi_amp_selective=0.0156,
-#                              rotation='Gaussian',
-#                              w=6,
-#                              w_quasilective=160, #120,
-#                              w_selective=300,
-#                              channels='5,6',
-#                              sideband_channels='I12,Q12',
-#                              sideband_phase=0)
-#
-#qubit_a3b3 = instruments.create('qubit_a3b3', 'Qubit_Info',
-#                              deltaf=-118.0e6,
-#                              pi_amp=.80,
-#                              pi2_amp=0,
-#                              drag=0,
-#                              pi_amp_quasilective=.0214, #.0356,
-#                              pi_amp_selective=0.0156,
-#                              rotation='Gaussian',
-#                              w=6,
-#                              w_quasilective=160, #120,
-#                              w_selective=300,
-#                              channels='5,6',
-#                              sideband_channels='I13,Q13',
-#                              sideband_phase=0)
+# Some code to generate all the cavity number dependant qubit info objects easily
+# Calculate generic dfreqs
+N = 5
+chi_a = 1.8e6
+chi_b = 5.75e6
+dfreqs = np.zeros((N, N))
+#for i, j in itertools.product(range(N), range(N)):
+#    dfreqs[i, j] = -100e6 - chi_a * i - chi_b * j
+    
+
+# Setting specific frequencies to correct errors
+dfreqs[1, 1] = -107.3e6
+dfreqs[2, 2] = -114.11e6
+dfreqs[3, 3] = -120.89e6
+
+#delta =1
+dfreqs[1, 0] = -101.8e6
+dfreqs[2, 1] = -108.73e6
+dfreqs[3, 2] = -115.6e6
 
 
-#
+#delta=-1
+dfreqs[0, 1] = -105.75e6
+dfreqs[1, 2] = -112.41e6
+dfreqs[2, 3] = -118.75e6
 
-#
-#qubit_a2b1 = instruments.create('qubit_a2b1', 'Qubit_Info',
-#                              deltaf=-110.0e6,
-#                              pi_amp=.80,
-#                              pi2_amp=0,
-#                              drag=0,
-#                              pi_amp_quasilective=.0214, #.0356,
-#                              pi_amp_selective=0.0156,
-#                              rotation='Gaussian',
-#                              w=6,
-#                              w_quasilective=160, #120,
-#                              w_selective=300,
-#                              channels='5,6',
-#                              sideband_channels='I18,Q18',
-#                              sideband_phase=0)
+dfreqs[4, 4] = -127.5e6
 
-#qubit1bob4 = instruments.create('qubit1bob4', 'Qubit_Info',
-#                             deltaf=-104.2e6,
-#                              pi_amp=.82,
-#                              pi2_amp=0,
-#                              drag=0,
-#                              pi_amp_quasilective=.0214, #.0356,
-#                              pi_amp_selective=0.0152,
-#                              rotation='Gaussian',
-#                              w=6,
-#                              w_quasilective=160, #120,
-#                              w_selective=300,
-#                              channels='5,6',
-#                              sideband_channels='I4,Q4',
-#                              sideband_phase=0)
-
+for i, j in itertools.product(range(N), range(N)):
+    if dfreqs[i,j] != 0:
+        instruments.create('_qubit_a' + str(i) + 'b' + str(j), 'Qubit_Info',
+                           deltaf = dfreqs[i, j],
+                           sideband_channels='I1' + str(100+10*i+j) + ',Q1' + str(100+10*i+j),
+                           pi_amp=.798,
+                           pi2_amp=.375,
+                           drag=-0.292,
+                           pi_amp_quasilective=.0725,
+                           pi_amp_selective=0.019,
+                           rotation='Gaussian',
+                           w=8,
+                           w_quasilective=80,
+                           w_selective=300,
+                           channels='5,6',
+                           sideband_phase=0)
+        
+        
 
 
 

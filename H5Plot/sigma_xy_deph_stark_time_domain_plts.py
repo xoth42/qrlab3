@@ -1,0 +1,285 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Apr 26 11:00:41 2021
+
+@author: Wang_Lab
+"""
+
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Dec 14 20:18:24 2020
+
+@author: Wang_Lab
+"""
+
+
+import numpy as np
+import glob
+import re
+import matplotlib.pyplot as pl
+
+
+foldername = 'sigma_xy_redo'
+
+filepath = 'C:\\Users\\Wang_Lab\\Documents\\circulator results\\01052021cooldown_circulator\\%s'%(foldername) 
+
+filelist = glob.glob(r'%s\\*T_results.txt'%(filepath))
+filelist_base = glob.glob(r'%s\\*T_base_results.txt'%(filepath))
+
+
+#fields_fin = np.asarray([0,0.0001])#np.linspace(-.05,.05,21)
+fields_fin = np.linspace(-.05,.05,21)
+#fieldplot = np.asarray([-0.05, -0.04, -0.03, -0.02, -0.01,  0.  ,0.005,  0.01, 0.015, 0.02,  0.03, 0.04,  0.05,0.06])
+#fieldplot = np.asarray([0,0.0001])
+#fields = np.asarray([0,.005,.01,.015,.02,-.05,-.04,-.03,-.02,-.01,.03,0,.04,.05,.02,.025,.035,.045,0,
+#                     -.005,-.01,-.015,-.02,-.025,-.03,-.035,-.04,-.045,-.05,-.005,-.015,-.015,-.025,
+#                     -.035,-.045,0,.005,.01,.015,.02,.025,.03])
+#fieldplot = fields
+trials = 42
+fields = np.zeros(trials)
+npts = 242
+delays = np.linspace(0,0.24,121)
+proj_data = np.zeros((trials,npts))
+date = '04282021'
+save_data = True
+
+smoothing = True
+
+#print filelist
+for i,filename in enumerate(filelist): # looping through text files to append the data to the proj_data array for the non-base runs
+# Read the array from file
+#    if filename[95]!=filename[96]:
+    print '\n'
+    print filename
+    num = [float(s) for s in re.findall(r'-?\d+\.?\d*', filename)]
+    proj = np.loadtxt(filename,delimiter=",")
+#    ifield = np.argmin(np.abs(fields - num[-1]))
+    proj_data[i] = proj
+    fields[i] = num[-1]
+    x = proj[::2]
+    y = proj[1::2]
+    pl.figure()
+    pl.title('%sT'%(num[-1]))
+    pl.plot(delays,x)
+    pl.plot(delays,y)
+    pl.plot(delays,np.sqrt(x**2 + y**2))
+    pl.close()
+            
+proj_base = np.zeros((trials,npts))    
+
+for i,filename in enumerate(filelist_base): # looping through text files to append the data to the proj_data array for the non-base runs
+# Read the array from file
+#    if filename[95]!=filename[96]:
+    print '\n'
+    print filename
+    num = [float(s) for s in re.findall(r'-?\d+\.?\d*', filename)]
+    proj = np.loadtxt(filename,delimiter=",")
+#    ifield = np.argmin(np.abs(fields - num[-1]))
+    proj_base[i] = proj
+    x = proj[::2]
+    y = proj[1::2]
+    pl.figure()
+    pl.title('%sT'%(num[-1]))
+    pl.plot(delays,x)
+    pl.plot(delays,y)
+    pl.plot(delays,np.sqrt(x**2 + y**2))
+    pl.close()
+
+#getting the sigmax and sigmay curves from the projected data
+sigma_x = proj_data[:,::2]
+sigma_y = proj_data[:,1::2]
+
+sigma_x_b = proj_base[:,::2]
+sigma_y_b = proj_base[:,1::2]
+
+
+#adding the x and y stuff in quadrature to get the envelope function
+env = np.sqrt(sigma_x**2 + sigma_y**2)
+
+env_base = np.sqrt(sigma_x_b**2 + sigma_y_b**2)
+
+
+#delay = 100
+#sigma_raw = env[:, delay:delay + 10]
+#
+#sigma = np.mean(sigma_raw, 1)
+#sigma_stdv = np.std(sigma_raw, 1)/3
+
+        
+#getting the phase to add continually instead of just being modulus 2pi
+angle_data = np.arctan((sigma_y)/sigma_x)
+for j in range(len(angle_data)):
+    for i in range(len(angle_data[0])-1):
+        if angle_data[j][i+1] < (angle_data[j][i]-.75*np.pi/2):
+            angle_data[j][i+1:] = angle_data[j][i+1:] + np.pi
+            
+angle_base = np.arctan((sigma_y_b)/sigma_x_b)
+for j in range(len(angle_base)):
+    for i in range(len(angle_base[0])-1):
+        if angle_base[j][i+1] < (angle_base[j][i]-.75*np.pi/2):
+            angle_base[j][i+1:] = angle_base[j][i+1:] + np.pi
+            
+angle_data = angle_base - angle_data # subtracting the base evolution of the qubit to get additional stark shift
+#angle = np.zeros((len(fields),10))
+#for i in range(len(fields)):
+#    angle[i] = angle_data[i, delay-5:delay+5] - angle_data[i,0]
+#angle_plot = np.mean(angle,1)
+#angle_stdv = np.std(angle,1)/(3*2*np.pi*delays[delay])
+#freq = angle_plot/(2*np.pi*delays[delay])
+
+freq_fin = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
+freq_err_fin = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
+sigma_fin = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
+sigma_err_fin = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
+env_fin =[[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
+angle_data_fin = [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
+
+
+for i in range(len(fields)): #appending the data into a final list that will be averaged so there is one set of data per field point
+    ifield = np.argmin(np.abs(fields[i] - fields_fin))
+#    freq_fin[ifield].append(angle_data[i])
+#    freq_err_fin[ifield].append(angle[i][:])
+#    sigma_fin[ifield].append(env[i])
+#    sigma_err_fin[ifield].append(sigma_raw[i][:])
+    env_fin[ifield].append(env[i])
+    angle_data_fin[ifield].append(angle_data[i]-angle_data[i][0])
+
+for i in range(len(fields_fin)): #taking the average of all the duplicates of data to get one set of points for each field
+    env_fin[i]=np.mean(env_fin[i], axis = 0)
+    angle_data_fin[i]=np.mean(angle_data_fin[i], axis = 0)
+
+time_step = .002
+
+if smoothing:#rolling average to smooth out the data
+    smooth_cut = 11
+    
+    smoothed_env = np.zeros((len(fields_fin),len(env_fin[0])-(smooth_cut-1)))
+    smoothed_stark = np.zeros((len(fields_fin),len(angle_data_fin[0])-(smooth_cut-1)))
+    for j in range(len(fields_fin)):
+        for i in range(len(env_fin[0])-(smooth_cut-1)):
+            smoothed_env[j][i] = np.mean(env_fin[j][i:i+smooth_cut])
+            smoothed_stark[j][i] = np.mean(angle_data_fin[j][i:i+smooth_cut])
+    
+    deph_rate = np.zeros((len(fields_fin),len(smoothed_env[0])-2))
+    stark_rate = np.zeros((len(fields_fin),len(smoothed_stark[0])-2))
+
+
+    for j in range(len(fields_fin)):
+        for i in range(len(smoothed_env[0])-2):
+            deph_rate[j][i] = (-np.log(smoothed_env[j][i+2]) + np.log(smoothed_env[j][i]))/time_step
+            stark_rate[j][i] = (smoothed_stark[j][i+2] - smoothed_stark[j][i])/time_step
+    
+    time_start = (smooth_cut-1)/2+1
+    
+    for i in range(len(fields_fin)):
+        pl.figure()
+        pl.title('instantaneous dephasing rate at %s T'%(fields_fin[i]))
+        pl.plot(delays[time_start:-time_start],deph_rate[i])
+        pl.xlabel('Time(microseconds)')
+        pl.ylabel('Dephasing rate(1/microseconds)')
+        
+        pl.figure()
+        pl.title('instantaneous stark rate at %s T'%(fields_fin[i]))
+        pl.plot(delays[time_start:-time_start],stark_rate[i]/(2*np.pi))
+        pl.xlabel('Time(microseconds)')
+        pl.ylabel('Stark shift rate (MHz)')
+else:
+
+    deph_rate = np.zeros((len(fields_fin),len(env_fin[0])-2))
+    stark_rate = np.zeros((len(fields_fin),len(angle_data_fin[0])-2))
+
+
+    for j in range(len(fields_fin)):
+        for i in range(len(env_fin[0])-2):
+            deph_rate[j][i] = (-np.log(env_fin[j][i+2]) + np.log(env_fin[j][i]))/time_step
+            stark_rate[j][i] = (angle_data_fin[j][i+2] - angle_data_fin[j][i])/time_step
+        
+        
+        
+    for i in range(len(fields_fin)):
+        pl.figure()
+        pl.title('instantaneous dephasing rate at %s T'%(fields_fin[i]))
+        pl.plot(delays[1:-1],deph_rate[i])
+        pl.xlabel('Time(microseconds)')
+        pl.ylabel('Dephasing rate(1/microseconds)')
+        
+        pl.figure()
+        pl.title('instantaneous stark rate at %s T'%(fields_fin[i]))
+        pl.plot(delays[1:-1],stark_rate[i]/(2*np.pi))
+        pl.xlabel('Time(microseconds)')
+        pl.ylabel('Stark shift rate (MHz)')
+        
+if save_data:
+        main_filepath = 'C:\\Users\\Wang_Lab\\Documents\\circulator results\\Time_domain_analysis\\'
+        
+        save_filepath = main_filepath + date
+
+        np.savetxt(save_filepath + ' %s_%sT_base_results.txt'%(time_stamp,field), (proj-offset)/norm_scale)
+        else:
+            np.savetxt(save_filepath + ' %s_%sT_results.txt'%(time_stamp,field), (proj-offset)/norm_scale)
+        avg_data_array = np.zeros((avg_factor,pts))
+
+
+#        
+#        
+#freq_plot = np.zeros(len(fields_fin))
+#freq_err_plot = np.zeros(len(fields_fin))
+#sigma_plot = np.zeros(len(fields_fin))
+#sigma_err_plot = np.zeros(len(fields_fin))
+#env_plot =[]
+#angle_data_plot = []
+#for i in range(len(fields_fin)):
+#    freq_plot[i]=np.mean(freq_fin[i])
+#    sigma_plot[i]=np.mean(sigma_fin[i])
+#    freq_err_plot[i]=np.std(freq_err_fin[i])/np.sqrt(10*len(freq_err_fin[i]))
+#    sigma_err_plot[i]=np.std(sigma_err_fin[i])/np.sqrt(10*len(freq_err_fin[i]))
+#    env_plot.append(np.mean(env_fin[i],0))
+#    angle_data_plot.append(np.mean(angle_data_fin[i],0))
+#
+#    
+#    
+#    
+#    
+#pl.figure()
+##pl.plot(fields,sigma, label = '%s ns'%(delays[delay]*1000))
+#pl.errorbar(fields_fin,-np.log(sigma_plot)/(delays[delay]),sigma_err_plot/sigma_plot/(delays[delay]), fmt = 'o', label = '%s ns'%(delays[delay]*1000))
+#pl.ylabel('qubit decay rate')
+#pl.xlabel('field(T)')
+#pl.legend()
+#
+##pl.figure()
+##pl.title('Accumulated Phase')
+##pl.xlabel('Time(ns)')
+##pl.ylabel('Field(T)')
+##X, Y = np.meshgrid(delays*1e3,fields_fin-0.005)
+##pl.pcolormesh(X,Y,angle_data_plot,vmin = 0)
+##pl.colorbar()
+##
+##pl.figure()
+##pl.title('Envelope Function')
+##pl.ylabel('Field(T)')
+##pl.xlabel('Time(ns)')
+##X, Y = np.meshgrid(delays*1e3,fields_fin-0.005)
+##pl.pcolormesh(X,Y,env_plot)
+##pl.colorbar()
+#
+
+
+#
+#pl.figure()
+#pl.errorbar(fields_fin,freq_plot,freq_err_plot/(2*np.pi**delays[delay]),fmt ='o', label = '%s ns'%(delays[delay]*1000))
+#pl.ylabel('qubit shift freq')
+#pl.xlabel('field(T)')
+#pl.legend()
+#
+#
+#pl.figure()
+#pl.title('stark shift vs. dephasing')
+#pl.scatter(-np.log(sigma),freq, label = '%s ns'%(delays[delay]*1000))
+#pl.ylabel('qubit shift freq')
+#pl.xlabel('dephasing decay rate')
+#pl.legend()
+
+
+
+
