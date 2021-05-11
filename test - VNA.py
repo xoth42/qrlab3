@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as pl
 from pulseseq import sequencer, pulselib
 import matplotlib as mpl
+from matplotlib import gridspec
 #from t1t2_plotting import smart_T1_delays
 import math as math
 import datetime
@@ -93,7 +94,7 @@ if 0: #sweep sets of field ranges and get 2D plot
     VNA.set_trigger_source('internal')
     
     a = [0]
-    a[0] = np.linspace(-0.02,0.02,41)
+    a[0] = np.linspace(-0.01,0.01,41)
 #    a[1] = np.linspace(0.1,0,101)
 #    a[2] = np.linspace(0,-0.1,101)
 #    a[3] = np.linspace(-0.1,0,101)
@@ -101,35 +102,48 @@ if 0: #sweep sets of field ranges and get 2D plot
         
     #    a= np.log10(a)*10
     #    a[0] = -11
-        ro = Magnet_sweep_VNA.Magnet_Sweep_VNA(fields = a[i], freqs = np.linspace(7.52e9, 7.57e9, 601),
-                                                       average_factor =1, avelimit =1,if_bandwidth = 1000, Sij =['S21'],fig_name ='field sweep',comment = 'Yig cavity')
+        ro = Magnet_sweep_VNA.Magnet_Sweep_VNA(fields = a[i], freqs = np.linspace(10.8e9, 10.814e9, 101),
+                                                       average_factor =10, avelimit =10,if_bandwidth = 100, Sij =['S21'],fig_name ='field sweep',comment = 'demag test')
         #we can take all 4 S params data at the same time when VNA is calibrated, if not, we can only take the data with same output ports at the same time. 
         ro.measure()
         pl.show()
     bla
     
 if 0: #sweep power and get 2D plot
+
+#    time.sleep(300)
     from scripts.single_cavity import power_sweep_VNA
     VNA.set_timeout(40000)
     VNA.do_enable_averaging(True)
     VNA.set_averaging_trigger(1)
     VNA.set_trigger_source('internal')
-
-    a = np.linspace(-40,0,2)
+    VNA.set_power(-38)
+    drive_brick = mclient.instruments['SC_qubit']
+    drive_brick.do_set_power(0)
+    drive_brick.set_frequency(8.334e9)
+    drive_brick.set_rf_on(False)
+    a = np.linspace(-25,0,6)
+#    a = np.linspace(-40,-30,5)
 #    a= np.log10(a)*10
 #    a[0] = -11
-    average_factor = np.ceil(np.power(10, -a/10 - 1.5))
-    average_factor [0] = 100
-    ro = power_sweep_VNA.Power_Sweep_VNA(powers = a, freqs = np.linspace(8.127e9, 8.137e9, 101),
-                                                   average_factor = average_factor, avelimit =2,if_bandwidth = 10, Sij =['S21'],fig_name ='power sweep of 330 ',comment = 'yig cavity')
+#    average_factor = np.ceil(np.power(10, -a/10 -1.3 )) + 9
+    average_factor = np.zeros(len(a)) + 7500
+    print (np.sum(average_factor)*1.2 + len(a)*10)/3600
+    ro = power_sweep_VNA.Power_Sweep_VNA(powers = a, freqs = np.linspace(10.80e9, 10.815e9, 121),
+                                                   average_factor = average_factor, avelimit =40,if_bandwidth = 100, Sij =['S21'],fig_name ='S21 qubit drive power sweep ',comment = '')
+    
     #we can take all 4 S params data at the same time when VNA is calibrated, if not, we can only take the data with same output ports at the same time. 
     ro.measure()
     pl.show()
+    
+
+    
+    
     bla
 
 if 0: #sweep power and changing frequency
     from scripts.single_cavity import power_sweep_varies_freq_VNA
-
+    
     VNA.set_timeout(40000)
     VNA.do_enable_averaging(True)
     VNA.set_averaging_trigger(1)
@@ -148,40 +162,168 @@ if 0: #sweep power and changing frequency
     pl.show()
     bla
 
+if 0: #sweep brick frequency and get 2D plot
 
-
-if 0: #get single trace from VNA, for long meaasurements
-    from scripts.single_cavity import VNA_single_trace_V2
-#    print 'OK2'
+    from scripts.single_cavity import frequency_sweep_VNA
     VNA.set_timeout(40000)
     VNA.do_enable_averaging(True)
     VNA.set_averaging_trigger(1)
     VNA.set_trigger_source('internal')
-
-
-
-    ro = VNA_single_trace_V2.SingleTrace(
-#            freqs = np.linspace(7.865e9, 7.875e9, 101), 
-#            freqs = np.linspace(8.032e9, 8.042e9, 101),
-#            freqs = np.linspace(8.123e9, 8.133e9, 101),
-            freqs = np.linspace(8.179e9, 8.189e9, 101),
-#            freqs = np.linspace(7.394e9, 7.404e9, 101),
-            average_factor =1, 
-            avelimit = 2, 
-            if_bandwidth = 10, 
-            fit_S12 = 1, fit_S11 =0)
-
-
-
-
-
-#    print 'ok3'
+    VNA.set_power(-38)
+    drive_brick = mclient.instruments['SC_qubit']
+    drive_brick.do_set_power(-5)
+    a = np.linspace(8.33e9, 8.335e9,6)
+#    a= np.log10(a)*10
+#    a[0] = -11
+    average_factor = np.zeros(len(a)) + 1000
+#    average_factor [0] = 100
+    print (np.sum(average_factor)*1.2 + len(a)*10)/3600
+    ro = frequency_sweep_VNA.Freq_Sweep_VNA(drive_brick = drive_brick,sweep_freqs = a, freqs = np.linspace(10.8e9, 10.815e9, 121),
+                                            average_factor = average_factor, avelimit =20,if_bandwidth = 100, Sij =['S21'],
+                                            fig_name ='S21 drive freq sweep at -0.05T ',comment = '')
+    #we can take all 4 S params data at the same time when VNA is calibrated, if not, we can only take the data with same output ports at the same time. 
     ro.measure()
-#    print 'ok4'
-#    a=ro.ampdata
-#    b= ro.freqdata
-#    print 'ok5'
     pl.show()
+    bla
+
+if 0: #demag
+    fields = [ -0.04, 0.03, -0.025, 0.02, -0.015, 0.01, -0.008, 0.006, -0.004, 0.0025, -0.001,0.0005,-0.00025, 0]
+    fields = -np.asarray(fields)
+    #Magnet.do_set_PSwitch(1)
+    #time.sleep(35)
+    #fields = np.linspace(0,-0.05,26)
+    for field in fields:
+        print(field)
+        if abs(field)>0.01:
+            Magnet.do_set_field(0)
+            time.sleep(400)
+    
+        
+    #    Magnet.do_set_PSwitch(1)
+    #    time.sleep(35)
+    #            
+        Magnet.do_set_field(field)
+        time.sleep(300)
+    
+if 0: #get repeated single trace from VNA, for long meaasurements
+    repeat = 20
+    powerlist = np.linspace(-25,-10,2)
+    average_factor = 300
+    print len(powerlist)*(5 + repeat*1.6*average_factor)/float(3600)
+    fieldlist = [0.04,0.05]
+    for field in fieldlist:
+        if float(Magnet.do_get_PSwitch()) == 1:
+        
+            Magnet.do_set_field(field)
+            time.sleep(100)
+    
+            
+            Magnet.do_set_PSwitch(0)
+            time.sleep(320)
+            try:
+                while not float(Magnet.do_get_PSwitch()) == 0:
+        
+                    objsh.helper.backend.main_loop(100)
+        
+            except:
+                print 'error in setting persistent mode'
+            
+        elif abs(float(Magnet.do_get_field()) - field) > 0.0002:
+            print 'heat PSwitch first'
+            exit
+            
+        
+            
+        field0 = Magnet.do_get_field()
+        print 'field at %sT'%(float(field0))
+            
+        for ipower, power in enumerate(powerlist):
+            drive_brick = mclient.instruments['SC_qubit']
+            drive_brick.do_set_power(power)
+            drive_brick.set_frequency(8.334e9)
+            if ipower == 0:
+                drive_brick.set_rf_on(False)
+            else:                
+                drive_brick.set_rf_on(True)
+            figname = '%sT overlay %sdB'%(field,power)
+            time.sleep(10)    
+            for i in range(repeat):
+        #        Magnet.do_set_PSwitch(1)
+        #        time.sleep(40)
+        #        Magnet.do_set_PSwitch(0)
+        #        time.sleep(350)
+                from scripts.single_cavity import VNA_single_trace_V2
+            #    print 'OK2'
+                VNA.set_s_param('21')
+                VNA.set_timeout(40000)
+                VNA.do_enable_averaging(True)
+                VNA.set_averaging_trigger(1)
+                VNA.set_trigger_source('internal')
+                VNA.set_power(-38)
+    
+                if i==0:
+                    fig = None
+                
+                if fig is None:        
+                    fig = pl.figure(figname)
+                    label = '%sdB'%(power)
+                    gs = gridspec.GridSpec(1, 2, width_ratios=[1,1])
+                    fig.add_subplot(gs[0])
+                    fig.add_subplot(gs[1])
+            
+                ro = VNA_single_trace_V2.SingleTrace(
+            #            freqs = np.linspace(7.865e9, 7.875e9, 101), 
+            #            freqs = np.linspace(8.032e9, 8.042e9, 101),
+            #            freqs = np.linspace(8.123e9, 8.133e9, 101),
+                        freqs = np.linspace(10.78e9, 10.83e9, 1601),
+            #            freqs = np.linspace(7.394e9, 7.404e9, 101),
+                        average_factor =average_factor, 
+                        avelimit = 10, 
+                        if_bandwidth = 1000, 
+                        fit_S12 = 1, fit_S11 =0, title = '%sdB'%(power))
+            
+            
+            
+            
+            
+            #    print 'ok3'
+                ro.measure()
+            #    print 'ok4'
+            #    a=ro.ampdata
+            #    b= ro.freqdata
+            #    print 'ok5'
+                pl.show()
+                pl.close()
+                
+                fig = pl.figure(figname)
+                freqs = ro.freqdata[0,:]
+                datas = ro.realdata[0,:] + 1j*ro.imagdata[0,:] 
+                datas_scatter = np.average(datas)
+                datasdB = 20*np.log10(datas)
+        #        fig.axes[0].scatter(i,datasdB)
+                fig.axes[0].plot(freqs/float(1e9), datasdB )
+                
+            
+                pl.xlabel('freq(GHz)')
+                pl.ylabel('dB')
+                pl.legend()
+                fig.axes[1].plot( datas.real, datas.imag,label = label)
+            
+                pl.xlabel('I')
+                pl.ylabel('Q')
+                fig.axes[1].set_aspect('equal', 'box')
+                pl.legend()
+        Magnet.do_set_PSwitch(1)
+        time.sleep(35)
+        
+        try:
+            while not float(Magnet.do_get_PSwitch()) == 1:
+    
+                objsh.helper.backend.main_loop(100)
+    
+        except:
+            print 'error in getting out of persistent mode'  
+        
     bla 
 
 
@@ -190,8 +332,7 @@ if 1: #get single trace from VNA, withoout waiting, just take screenshot and fit
     from scripts.single_cavity import VNA_single_trace_V2
 #    print 'OK2'
     freqs = VNA.do_get_xaxis()
-    ro = VNA_single_trace_V2.SingleTraceNoAsync(freqs, fit_S12 = 1, fit_S11 =0)
-
+    ro = VNA_single_trace_V2.SingleTraceNoAsync(freqs, fit_S12 = 0, fit_S11 =1)
     ro.measure()
 
     pl.show()
@@ -289,4 +430,102 @@ if 0: #sweep field to
     pl.savefig(save_filepath + 'Qs.png')
     
 #    magnet.do_set_field(0)
+    bla
+
+if 0: #sweep for different frequency range, with and without qubit drive
+    from scripts.single_cavity import power_sweep_VNA
+    VNA.set_timeout(40000)
+    VNA.do_enable_averaging(True)
+    VNA.set_averaging_trigger(1)
+    VNA.set_trigger_source('internal')
+    VNA.set_power(-30)
+    drive_brick = mclient.instruments['SC_qubit']
+    drive_brick.do_set_power(0)
+    drive_brick.set_frequency(8.334e9)
+
+
+    fieldlist = np.linspace(0,-.05,6)
+    PS_Switch_freqs = np.linspace(10.78e9,10.83e9 , 1601)
+    for field in fieldlist:
+        if float(Magnet.do_get_PSwitch()) == 1:
+        
+            Magnet.do_set_field(field)
+            time.sleep(100)
+    
+            
+            Magnet.do_set_PSwitch(0)    
+            from scripts.single_cavity import VNA_single_trace_V2
+            ro = VNA_single_trace_V2.SingleTrace(freqs = PS_Switch_freqs, 
+                                             average_factor =200, avelimit = 10, if_bandwidth = 1000, fit_S12 = 1, fit_S11 =0)
+            ro.measure()
+            pl.show()
+            pl.close()
+            try:
+                while not float(Magnet.do_get_PSwitch()) == 0:
+        
+                    objsh.helper.backend.main_loop(100)
+        
+            except:
+                print 'error in setting persistent mode'
+            
+        elif abs(float(Magnet.do_get_field()) - field) > 0.0002:
+            print 'heat PSwitch first'
+            exit
+            
+        
+            
+        field0 = Magnet.do_get_field()
+        print 'field at %sT'%(float(field0))
+        
+
+    
+    
+        freqs_list = [np.linspace(10.7e9,10.78e9,101), np.linspace(10.78e9,10.83e9,1601),np.linspace(10.83e9,10.9e9,101)]
+                     
+        
+        
+        for freqs in freqs_list:
+            drive_brick.set_rf_on(True)
+            a = np.linspace(-30,0,4)
+        #    a= np.log10(a)*10
+        #    a[0] = -11
+            average_factor = np.ceil(np.power(10, -a/10 +0.6 )) + 9
+        #    average_factor [0] = 100
+            print (np.sum(average_factor)*1.8 + len(a)*10)/3600
+            ro = power_sweep_VNA.Power_Sweep_VNA(powers = a, freqs = freqs,
+                                                 average_factor = average_factor, avelimit =40,if_bandwidth = 1000, Sij =['S21'],
+                                                 fig_name ='S21 sweep %sT with qubit drive'%(field),comment = '')
+            
+            #we can take all 4 S params data at the same time when VNA is calibrated, if not, we can only take the data with same output ports at the same time. 
+            ro.measure()
+            pl.show()
+            
+            drive_brick.set_rf_on(False)
+            
+            ro = power_sweep_VNA.Power_Sweep_VNA(powers = a, freqs = freqs,average_factor = average_factor, avelimit =40,
+                                                 if_bandwidth = 1000, Sij =['S21'],fig_name ='S21 sweep %sT without qubit drive'%(field),comment = '')
+            
+            #we can take all 4 S params data at the same time when VNA is calibrated, if not, we can only take the data with same output ports at the same time. 
+            ro.measure()
+            pl.show()
+    #    if not field == fieldlist[-1]:
+        
+        
+        
+        Magnet.do_set_PSwitch(1)
+        from scripts.single_cavity import VNA_single_trace_V2
+        ro = VNA_single_trace_V2.SingleTrace(freqs = PS_Switch_freqs, 
+                                         average_factor =20, avelimit = 10, if_bandwidth = 1000, fit_S12 = 0, fit_S11 =0)
+        ro.measure()
+        pl.show()
+        pl.close()
+        
+        try:
+            while not float(Magnet.do_get_PSwitch()) == 1:
+    
+                objsh.helper.backend.main_loop(100)
+    
+        except:
+            print 'error in getting out of persistent mode'        
+    
     bla

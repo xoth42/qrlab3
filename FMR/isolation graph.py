@@ -16,7 +16,7 @@ import matplotlib.pyplot as pl
 filepath = r"C:\Users\WangLab\Documents\yingying\circulator\12192018 cooldown"
 
 
-if 1: # get the graph of difference between two file
+if 0: # get the graph of difference between two file
     # Read the array from file
 #    filepath = 'C:\Users\WangLab\Documents\\11282018 cooldowm\\'
 
@@ -119,7 +119,7 @@ if 1: # get the graph of difference between two file
     pl.xlabel('Magnetic Field [Oe]')
     pl.ylabel('Frequency [GHZ]')
 #    pl.xlim(.4,.795)
-    pl.ylim(9,12)
+#    pl.ylim(9,12)
     pl.show()
 
 
@@ -147,29 +147,36 @@ if 1: # get the graph of difference between two file
     pl.show()
     
     ax = pl.subplot(gs[1, 0])
-    pl.pcolormesh(X, Y, iso,cmap='RdBu', vmin=0, vmax=40)
+    pl.pcolormesh(X, Y, iso,cmap='RdBu')
     pl.ylim([np.min(Y),np.max(Y)])
     pl.xlim([np.min(X),np.max(X)])
     pl.colorbar()
-    pl.ylim(8,)
+#    pl.ylim(8,)
+    pl.clim(0,-40)
     pl.xlabel('Magnetic Field(mT)')
     pl.ylabel('Frequency (GHZ)')
     
     ax = pl.subplot(gs[1, 1])
-    pl.pcolormesh(X, Y, iso,cmap='RdBu', vmin=0, vmax=40)
+    pl.pcolormesh(X, Y, iso,cmap='RdBu')
     pl.ylim([np.min(Y),np.max(Y)])
     pl.xlim([np.min(X),np.max(X)])
     pl.colorbar()
     pl.xlabel('Magnetic Field(mT)')
     pl.ylabel('Frequency (GHZ)')
-    pl.xlim(10,35)
-    pl.ylim(10.9,11.5)
+    pl.clim(0,-40)
+#    pl.xlim(10,35)
+#    pl.ylim(10.9,11.5)
 
 
-if 0: #get the graph of a single file
+if 1: #get the graph of a single file
     # Read the array from file
+    #filepath = r"C:\Users\WangLab\Documents\TConnolly\calibrated_circulator\transition1-2"
+    filepath = r"C:\Users\WangLab\Documents\yingying\FMR_Yingying_Onedrive"
+    filepath = r"C:\Users\WangLab\Documents\yingying\circulator with new pins"
+#    C:\Users\WangLab\Documents\yingying\FMR_Yingying_Onedrive
 #    filepath = 'C:\Users\WangLab\Documents\\11282018 cooldowm\\'
-    filename ='%s\\circulator_weak_coupling_S21_0.0_0.07_0.001_ave_factor_7_18-10-56'%(filepath)
+    filename ='%s\\circulator_Vs_S12_port3_terminated_0_4_0.01_11-20-2018'%(filepath)
+#    filename = '%s\\circulator_fridge_S31_(negative)_field_0.0_-0.8_0.005_ave_factor_10-0729'%(filepath)
     new_data = np.loadtxt('%s.txt'%(filename))
     print new_data.shape
     # Note that this returned a 2D array!

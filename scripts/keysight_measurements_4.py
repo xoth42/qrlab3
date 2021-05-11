@@ -122,11 +122,11 @@ if 0: # cav transmission NEW IQ
 if 0: # cav transmission OLD
     from single_cavity import rocavspectroscopy_keysight
     
-    rofreq = 7318.22e6
+    rofreq = 7318.35e6
 #    rofreq = 7320e6
     freq_range = 1.5e6
     freqs = np.linspace(rofreq-freq_range, rofreq+freq_range, 71)
-    powers = np.linspace(-8,-6,1) 
+    powers = np.linspace(-8,-6,1) # doesn't matter for readout_iq
 
 
     readout_IQ = mclient.instruments['readout_IQ']
@@ -137,7 +137,7 @@ if 0: # cav transmission OLD
                                                  qubit_pulse=False, seq=None, readout = readout,
                                                  plot_seqs = True)
         ro.measure()
-    
+
     '''amp = ro.ampdata[:]
     f= open('ampdata_2d_HP.txt', 'w')
     f.write(str(amp))
@@ -298,14 +298,14 @@ if 0: #Multiple times SSB spec
 if 0: # Calibrate pi pulse
     from single_qubit import rabi
     dig.set_naverages(200)
-    dig.set_trigger_period(400)
+    dig.set_trigger_period(500)
     tr = rabi.Rabi(qubit_info, 
-#                   np.linspace(-.9, .9, 51), selective=False,
+                   np.linspace(-.9, .9, 51), selective=False,
 #                   np.linspace(-.2, .2, 51), selective=.5,
 #                  np.linspace(-0.025, 0.025, 51), selective=True,
-                   np.linspace(.35, .45, 51), selective=False,
+#                   np.linspace(.35, .45, 51), selective=False,
 #                   np.linspace(0.25, 0.4, 51), selective=False,
-                   plot_seqs=False, generate=True, repeat_pulse=10, update=False, 
+                   plot_seqs=False, generate=True, repeat_pulse=1, update=False, 
                    seq=None, readout='readout_IQ')
     tr.measure()
     bla
@@ -317,7 +317,7 @@ if 0: # Time Rabi
     bla
 
     
-if 0: # T1
+if 1: # T1
 #    dig.set_trigger_period(500)
     from single_qubit import T1measurement
 #    t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0, 19e3, 20), 
@@ -332,11 +332,13 @@ if 0: # T2
     from single_qubit import T2measurement
     for i in range(1):
 #        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0e3, 15e3, 91), detune=2e6, 
-        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 15e3, 101), detune=.5e6, 
-                                         double_freq=False, generate=True, seq=None,
+        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 20e3, 101), detune=.5e6, 
+                                         double_freq=True, generate=True, seq=None,
                                          plot_seqs=False, readout='readout_IQ')
         t2.measure_keysight()
-    bla
+#        plt.close(t2.get_figure())
+
+    
     
 if 0: # T2echo
     from single_qubit import T2measurement

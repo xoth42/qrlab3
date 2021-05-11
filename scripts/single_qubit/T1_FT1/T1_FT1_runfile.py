@@ -15,18 +15,20 @@ qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')
 qubit2_info = mclient.get_qubit_info('qubit2ge')
 ef_info = mclient.get_qubit_info('qubit1ef')
-qubit2_info = mclient.get_qubit_info('qubit2ge')
+alz = mclient.instruments['alazar']
+
 
 ge = mclient.instruments['qubit1ge']
 ef = mclient.instruments['qubit1ef']
 ge2 = mclient.instruments['qubit2ge']
 
 yoko = mclient.instruments['yoko']
-SCqubit = mclient.instruments['SCqubit']
+Qbrick = mclient.instruments['Qbrick']
 RObrick = mclient.instruments['RObrick']
 refbrick = mclient.instruments['refbrick']
 
 readout_info = mclient.get_readout_info('readout')
+ro = mclient.instruments['readout']
 
 AWG1 = mclient.instruments['AWG1']
 
@@ -473,8 +475,8 @@ if 0: #T1_FT1 toggle flux
 
 if 1: # T1_FT1 (new)
     from scripts.single_qubit import T1measurement, FT1measurement, rabi
-    for i in range(100):
-        N = 60 # number of full curves you want to take for each T1 and FT1
+    for i in range(500):
+        N = 10 # number of full curves you want to take for each T1 and FT1
         '''Create all your empty arrays to save fit parameters in'''
         t1_results = np.zeros((N, 5))
         t1_errs = np.zeros((N,5))
@@ -488,37 +490,37 @@ if 1: # T1_FT1 (new)
         minimize the errors on your fit parameters'''
         t1delays = np.concatenate((np.logspace(1, 3, num=3, endpoint=False), 
                                  np.logspace(3, 4, num=11, endpoint=False), 
-                                 np.logspace(4, 5, num=31)))
+                                 np.logspace(4, 4.8, num=21)))
         ft1delays = np.concatenate((np.logspace(1, 3, num=3, endpoint=False), 
                                  np.logspace(3, 4, num=11, endpoint=False), 
-                                 np.logspace(4, 5, num=31)))
+                                 np.logspace(4, 4.6, num=31)))
         t1Bdelays = np.concatenate((np.logspace(1, 3, num=3, endpoint=False), 
                                  np.logspace(3, 4, num=11, endpoint=False), 
-                                 np.logspace(4, 5, num=31)))
+                                 np.logspace(4, 4.8, num=31)))
         
         '''Settings for measuring |e> lifetimes detuned from f_max '''
-        detuned_currents = np.linspace(3.315, 3.415, 5)
-        RO_freq_detuned = 8154e6
+        detuned_currents = np.linspace(1.517, 1.567, 5)
+#        RO_freq_detuned = 6543.53e6
         
         
         '''Settings for measuring |f> lifetime at sweet_spot (ss)'''
-        ss_current = 0
-        RO_freq_ss = 8160.5e6
+        ss_current = -1.26
+#        RO_freq_ss = 6543.53e6
         
         
         '''Constant settings'''
-        SCqubit.set_frequency(6734.77e6)
+        Qbrick.set_frequency(5421e6)
 #        RObrick.set_power(-5)
         
-        RObrick.set_frequency(RO_freq_detuned)
-        refbrick.set_frequency(RO_freq_detuned + 50e6)
+#        RObrick.set_frequency(RO_freq_detuned)
+#        refbrick.set_frequency(RO_freq_detuned + 50e6)
     
         
         start_time = list(str(datetime.datetime.now())[:19])
         start_time[13] = '-'
         start_time[16] = '-'
         yoko.do_set_output_state(1)
-        alz.set_naverages(1500)
+        alz.set_naverages(500)
         for j in range(N):
             print '###############'
             print j
@@ -527,9 +529,9 @@ if 1: # T1_FT1 (new)
             
             if j == 0:
                 '''Find range of detuned frequencies to drive'''
-                ssbspec_freqs = np.linspace(-15e6, 15e6, 151)
+                ssbspec_freqs = np.linspace(-10e6, 10e6, 151)
                 w_q = np.zeros_like(detuned_currents)
-                alz.set_naverages(1000)
+                alz.set_naverages(500)
                 for k in range(len(detuned_currents)):
             
                     yoko.do_set_current(detuned_currents[k])
@@ -541,21 +543,22 @@ if 1: # T1_FT1 (new)
                     seq = sequencer.Trigger(250)        
                     spec = ssbspec.SSBSpec(qubit2_info, ssbspec_freqs, seq=seq, plot_seqs=False)
                     spec.measure()
-                    drive_freq = SCqubit.get_frequency()
+                    drive_freq = Qbrick.get_frequency()
                     w_q[k] = ssbspec_freqs[np.argmin(spec.get_ys())]
                     plt.close()
                     time.sleep(1)
-                alz.set_naverages(1500)
+                alz.set_naverages(500)
             for k in range(len(detuned_currents)):
                 yoko.do_set_current(detuned_currents[k])
                 time.sleep(.5)
-                ge2.set('deltaf', -353.3e6 + w_q[k])
+                ge2.set('deltaf', -375.52e6 + w_q[k])
                 
             
-            
+                ro.set_IQg((84.205946826+119.160092229j))
+                ro.set_IQe((83.3646291389+117.588541459j))
                 '''Do the T1 measurement and save the fit parameters'''
                 t1 = T1measurement.T1Measurement(qubit2_info, t1delays, double_exp=False, generate=True, plot_seqs=False,
-                                                 proj_func='amplitude')
+                                                 proj_func='projection')
                 t1.measure()
                 t1_results[j][k] = t1.fit_params['tau'].value/1000
                 t1_errs[j][k] = t1.fit_params['tau'].stderr/1000
@@ -564,13 +567,15 @@ if 1: # T1_FT1 (new)
             '''Switch your instruments to the values needed to do the FT1 measurement at f_max'''
             yoko.do_set_current(ss_current)
             
-            RObrick.set_frequency(RO_freq_ss)
-            refbrick.set_frequency(RO_freq_ss+50e6)
+#            RObrick.set_frequency(RO_freq_ss)
+#            refbrick.set_frequency(RO_freq_ss+50e6)
 #            alz.set_naverages(1500)
             
+            ro.set_IQg((-42.6642809017+198.754568834j))
+            ro.set_IQe((55.88779936+54.5801623745j))
             '''Do the FT1 measurement and save the fit parameters'''
             ft1 = FT1measurement.FT1Measurement(qubit_info, ef_info, ft1delays, generate=True,
-                                                proj_func='amplitude')
+                                                proj_func='projection')
             ft1.measure()
             ft1_result[j] = ft1.fit_params['tau'].value/1000
             ft1_err[j] = ft1.fit_params['tau'].stderr/1000
@@ -578,7 +583,7 @@ if 1: # T1_FT1 (new)
             
             '''Do a T1 measurement at f_max'''
             t1 = T1measurement.T1Measurement(qubit_info, t1Bdelays, double_exp=False, generate=True, plot_seqs=False,
-                                             proj_func='amplitude')
+                                             proj_func='projection')
             t1.measure()
             t1B_result[j] = t1.fit_params['tau'].value/1000
             t1B_err[j] = t1.fit_params['tau'].stderr/1000
@@ -586,8 +591,8 @@ if 1: # T1_FT1 (new)
             
             '''Switch instrument settings back to be able to measure detuned T1s again'''
         
-            RObrick.set_frequency(RO_freq_detuned)
-            refbrick.set_frequency(RO_freq_detuned + 50e6)
+#            RObrick.set_frequency(RO_freq_detuned)
+#            refbrick.set_frequency(RO_freq_detuned + 50e6)
             
     
         end_time = list(str(datetime.datetime.now())[:19])
@@ -596,10 +601,10 @@ if 1: # T1_FT1 (new)
         
         yoko.do_set_output_state(0)
         
-#        '''These are just showing you how good your fits were for this run'''
+        '''These are just showing you how good your fits were for this run'''
 #        print('Average percent error on %.0f T1 measurements was %.03f:' %(int(N), np.average(t1_err/t1_result)))
-#        print('Average percent error on %.0f FT1 measurements was %.03f:' %(int(N), np.average(ft1_err/ft1_result)))
-#        print('Average percent error on %.0f T1(B) measurements was %.03f:' %(int(N), np.average(t1B_err/t1B_result)))
+        print('Average percent error on %.0f FT1 measurements was %.03f:' %(int(N), np.average(ft1_err/ft1_result)))
+        print('Average percent error on %.0f T1(B) measurements was %.03f:' %(int(N), np.average(t1B_err/t1B_result)))
 #        
         main_filepath = 'C:/Users/WangLabPC7/Documents/DRosenstock/t1ft1/'
         time_stamp = start_time + list(str(' to ')) + end_time
@@ -647,12 +652,15 @@ if 1: # T1_FT1 (new)
 #                       ', applied current (B) = ' + str(B_current) + str(' mA') + 
 #                       ', pulse_len = ' + str(4.0*ge.get('w')) + str(' ns'))
         
-#        '''Plot the data'''
-#        plt.figure()
-#        plt.errorbar(range(len(t1_result)), t1_result, yerr = t1_err, label='|e> decay')
-#        plt.errorbar(range(len(ft1_result)), ft1_result, yerr = ft1_err, label='|f> decay')
-#        plt.errorbar(range(len(t1B_result)), t1B_result, yerr = t1B_err, label='|e>(B) decay')
-#        plt.xlabel('Measurement iterations')
-#        plt.ylabel('lifetime (us)')
-#        plt.legend(loc='upper right')
-#        plt.savefig(save_filepath + 'decays.png')
+        '''Plot the data'''
+        plt.figure()
+        for i in range(5):
+            plt.errorbar(range(len(t1_results)), t1_results[:,i], yerr = t1_errs[:,i], label='|e> decay, %.0f' %(w_q[i]))
+        plt.errorbar(range(len(ft1_result)), ft1_result, yerr = ft1_err, label='|f> decay')
+        plt.errorbar(range(len(t1B_result)), t1B_result, yerr = t1B_err, label='|e>(B) decay')
+        plt.xlabel('Measurement iterations')
+        plt.ylabel('lifetime (us)')
+        plt.legend(loc='upper right')
+        plt.savefig(save_filepath + 'decays.png')
+        
+        time.sleep(60)

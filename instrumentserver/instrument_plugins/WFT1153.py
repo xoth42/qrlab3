@@ -18,7 +18,7 @@ class WFT1153(Instrument):
     
     
     def __init__(self, name, channel_index = 0, serial=None):
-        self.synth = SynthHD('COM3')
+        self.synth = SynthHD('COM4')
 
 
         self.channel_index = channel_index
@@ -30,8 +30,9 @@ class WFT1153(Instrument):
          
         
         print(self.channel_index)
-        self._min_freq = 10.e6
-        self._max_freq = 15000.e6
+        print(self.synth[self.channel_index].frequency)
+        self._min_freq = 10e6
+        self._max_freq = 15000e6
         self._min_power = -70.
         self._max_power = 20.
         
