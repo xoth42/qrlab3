@@ -101,7 +101,7 @@ if 0:
         plt.show()
         
 
-if 1:
+if 0:
         alz.setup_avg_shot(10000)
         buf = alz.take_avg_shot(timeout=50000)
     
