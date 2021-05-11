@@ -17,11 +17,20 @@ from matplotlib import gridspec
 filepath = 'C:\_Data\\'
 #hdf5_name = 'VNAtestJan30.hdf5'
 #hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
-hdf5_name = '20210105cooldown_circulator_VNA - Copy (3).hdf5'
+hdf5_name = '0625cooldown_circulator - Copy (4).hdf5'
+#hdf5_name = '20210402cooldown_circulator_VNA - Copy.hdf5'
 
-date = '20210217'
-time = '180916'
-experiment = 'Power_Sweep_VNA'
+date = '20190715'
+time = '185824'
+#time = '123511'
+#time = '130920'
+#date = '20210505'
+#time = '152726'
+experiment = 'Magnet_Sweep_VNA'
+#experiment = 'Power_Sweep_VNA'
+
+
+
 
 fit_S12 = False
 
@@ -85,7 +94,9 @@ y_keys = exp.keys()
 #y_keys.remove(x2_key)
 freq = exp['freqs'].value
 #current = exp['currents'].value
-powers = exp['powers'].value
+#powers = exp['powers'].value        # Changed 4/28/21 - Alex S.
+powers = exp['fields'].value        # Changed 4/28/21 - Alex S.
+
 real = exp['realS21'].value
 imag = exp['imaginaryS21'].value
 
@@ -121,9 +132,10 @@ powerplot = np.concatenate((powers, np.zeros(1) + powers[1]-powers[0] + powers[-
 mag = 10*np.log10(real**2 + imag**2)
 Z = np.transpose(mag)
 #X,Y = np.meshgrid(field, freq)
-X,Y = np.meshgrid(powerplot, freq)
+X,Y = np.meshgrid(powerplot, freq/1e9)
 pl.xlim(X.min(), X.max())
-pl.pcolormesh(X,Y,Z,vmax = -40, vmin = -70)
+#pl.pcolormesh(X,Y,Z,vmax = -40, vmin = -70)
+pl.pcolormesh(X,Y,Z)
 pl.colorbar()
 #pl.title('YIG FMR Spectrum, S11 Measurement')
 #pl.xlabel('Magnetic Field(mT)')
@@ -159,7 +171,7 @@ if fit_S12 or fit_S11 or fit_S12_two_modes_V2 or fit_S12_two_modes_V3:
 
 
 
-for i in range(len(real))[:]:
+for i in range(len(real))[:]:#100:120]:
 
     fig.axes[1].plot(real[i],imag[i], label= 'power = %sdB'%(powers[i]))
     fig.axes[0].plot(freq/1e9,mag[i], label= 'power = %sdB'%(powers[i]))
