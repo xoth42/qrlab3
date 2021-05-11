@@ -18,8 +18,8 @@ class CompiledHVI(object):
 #                                                                   (digitizer-less) chassis
 #        self.assignHardware(2, 0, 10)
             
-#        self.assignHardware(0, 0, 7)
-#        self.assignHardware(1, 0, 8)
+#        self.assignHardware(0, 1, 7)
+#        self.assignHardware(1, 1, 8) #DARIO changing something for PC8 4/8/21
         
 
         self.hvi.compile()

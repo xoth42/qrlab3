@@ -8,7 +8,7 @@ import win32api
 import msvcrt
 
 # Load DLL, 64-bit seems to require windll, 32-bit cdll.
-_DLL_FILE = r'c:\windows\system32\ATSApi.dll'
+_DLL_FILE = 'C:\\Windows\\System32\\ATSApi.dll'
 try:
     ats = ctypes.windll.LoadLibrary(_DLL_FILE)
     ats.AlazarGetStatus(0)

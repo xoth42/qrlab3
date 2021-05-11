@@ -782,13 +782,14 @@ real part is applied to I and the imaginary part to Q.
             if singleshotbin:
                 if IQ_e is not None and e_radius is not None:
                     data = self.ge_criteria(IQ, IQ_e, e_radius)
+                    print(data)
                     # Now data is an array of 0s and 1s representing |e> or |g>
                 else:
                     data = IQ
                     singleshotbin = False
             else:
                 data = IQ
-            temp_ste[:, i] = data/cyclereps
+                temp_ste[:, i] = data/cyclereps
                 # Now data is remains an array of IQs
             if data_sum is not None:
                 data_sum += data
@@ -856,7 +857,7 @@ real part is applied to I and the imaginary part to Q.
         nbufs, N = self.break_records(N, nsamples=self.get_nsamples())
         self.set_nrecperbuf(N)
         logging.info('%s, %s' % (nbufs, N))
-
+        print('nbufs, N:', nbufs, N)
         if nbufs != 1:
             self.set_nbuffers(min(4, nbufs))
         else:
@@ -873,6 +874,7 @@ real part is applied to I and the imaginary part to Q.
             hist_buf = np.ones((nbufs*N*num_demods,), dtype=np.complex) * np.nan
 #            logging.info('setup_hist: histogram shots buffer size (with demod/weighting): %s' % (hist_buf.shape))
         self._hist_buf = hist_buf
+        print('hist_buf shape:', np.shape(hist_buf))
 
 
         ####### WRITING TO FILE
@@ -902,6 +904,7 @@ real part is applied to I and the imaginary part to Q.
         ntot = self.get_ntotal_rec()
         nbufs = ntot / cycles
         tmp_buf = []
+        print('cycles, ntot, nbufs:', cycles, ntot, nbufs)
         while i < nbufs:
             if (i % 10) == 0:
                 logging.info('Acquiring %d', i*cycles)
@@ -916,13 +919,14 @@ real part is applied to I and the imaginary part to Q.
 
             buf = self.get_next_buffer(acqtimeout)
             IQ_buf = self.get_IQ_rel(buf, cycles)
+            print('shape IQ_buf:', np.shape(IQ_buf))
 #            self._hist_buf[i*cycles*num_demod:(i+1)*cycles*num_demod] = IQ_buf
             tmp_buf.extend(IQ_buf)
             self._card.post_buffers(buf)
             i += 1
 
         self._hist_buf[buf_index:buf_index+len(tmp_buf)] = tmp_buf
-
+        print('shape tmp_buf:', np.shape(tmp_buf))
 
         self.end_capture()
 

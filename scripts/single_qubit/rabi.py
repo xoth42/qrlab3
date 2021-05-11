@@ -103,7 +103,7 @@ def analysis(meas, data=None, fig=None):
 class Rabi(Measurement1D):
 
     def __init__(self, qubit_info, amps, update=False, seq=None, r_axis=0, fix_phase=True, cancel_info=None,
-                 fix_period=None, repeat_pulse=1, postseq=None, selective=False, fit_type=FIT_AMP, **kwargs):
+                 fix_period=None, repeat_pulse=1, postseq=None, selective=False, heralding=False, fit_type=FIT_AMP, **kwargs):
         self.qubit_info = qubit_info
         self.cancel_info = cancel_info
         self.amps = amps
@@ -119,11 +119,15 @@ class Rabi(Measurement1D):
         self.r_axis = r_axis
         self.fit_type = fit_type
         self.selective = selective
+        self.heralding = heralding
         
         if cancel_info is not None:
             super(Rabi, self).__init__(len(amps), infos=(qubit_info, cancel_info), **kwargs)
         else:
-            super(Rabi, self).__init__(len(amps), infos=(qubit_info), **kwargs)
+            if self.heralding:
+                super(Rabi, self).__init__(2*len(amps), infos=(qubit_info), **kwargs)
+            else:
+                super(Rabi, self).__init__(len(amps), infos=(qubit_info), **kwargs)
             
         self.data.create_dataset('amps', data=amps)
 
@@ -131,6 +135,10 @@ class Rabi(Measurement1D):
         s = Sequence()
         for i, amp in enumerate(self.amps):
             s.append(self.seq)
+            
+            if self.heralding:
+                s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+                s.append(Delay(500))
             
             if self.cancel_info is not None:
                 for j in range(self.repeat_pulse):

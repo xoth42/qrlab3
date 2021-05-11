@@ -457,6 +457,7 @@ class Measurement(object):
                 ret = alz.take_experiment(avg_buf=self.avg_data, async=True, singleshotbin=self.singleshotbin, cov_buf=self.cov_data,
                                           shot_buf=self.shot_data, #Dario
                                           IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius, proj_func=self.proj_func)
+
             if self.print_progress:
                 logging.info('Acquiring...')
             while not ret.is_valid() and not self._interrupted:

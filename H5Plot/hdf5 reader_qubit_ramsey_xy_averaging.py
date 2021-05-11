@@ -75,9 +75,9 @@ def changing_freq_fit_plot(params, x, data):
 ''' Path to the .hdf5 file '''
 filepath = 'C:/_Data/'
 hdf5_name = '01052021cooldown_circulator - Copy.hdf5'
-date = '20210308'
+date = '20210224'
 #date = '20210301'
-save_data = True
+save_data = False
 #experiment = 'ROCavSpectroscopy_keysight'
 #experiment = 'Power_Sweep_VNA'
 f = h5.File(filepath + hdf5_name, 'r')
@@ -86,7 +86,7 @@ j = 0
 end_val_ind = 100
 pts = 242
 
-field = 0.03
+field = 0
 base = False
 #base = True
 
@@ -113,7 +113,7 @@ exp_t = 'Ramsey_Measurement_mixer_xy'
 for i, title in enumerate(f[date].keys()):
 #    print int(title[0:6])
 #    print int(title[0:6]) <= 020617
-    if int(title[0:6]) <= int('015241') and int(title[0:6]) > int('005340')  and title[7:] == exp_t:# and title[7:12] =='ROCav':
+    if int(title[0:6]) <= int('183353') and int(title[0:6]) > int('182514')  and title[7:] == exp_t:# and title[7:12] =='ROCav':
         print 'j = %s'%(j)
         print title
 
@@ -298,7 +298,7 @@ for i, title in enumerate(f[date].keys()):
     #        if j >0:            
     #            pl.close()
             if save_data:
-                main_filepath = 'C:\\Users\\Wang_Lab\\Documents\\circulator results\\01052021cooldown_circulator\\sigma_xy_redo\\'
+                main_filepath = 'C:\\Users\\Wang_Lab\\Documents\\circulator results\\01052021cooldown_circulator\\sigma_xy_qubiy1\\'
                 end_time = list(str(datetime.datetime.now())[:19])
                 end_time[13] = '-'
                 end_time[16] = '-'
@@ -337,4 +337,9 @@ f.close()
 #
 #    pl.legend()
 
-
+pl.figure()
+pl.title('accumulated phase')
+pl.plot(xs/1e3, angle_data-angle_data2)
+pl.xlabel('Time(microseconds)')
+pl.ylabel('Phase')
+pl.legend()

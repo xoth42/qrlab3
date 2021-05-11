@@ -38,7 +38,7 @@ logger.addHandler(handler)
 #Josh made this number bigger on 7/25/18 to try and stop timeout errors.
 
 
-DEFAULT_TIMEOUT = 60000      # Timeout in msec
+DEFAULT_TIMEOUT = 600000      # Timeout in msec
 
 REDUCE_LATENCY  = True      # Use Voodoo latency reduction?
 

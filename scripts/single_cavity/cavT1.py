@@ -136,8 +136,9 @@ class CavT1(Measurement1D):
 
                 s.append(self.seq)
                 s.append(c(np.abs(self.disp), np.angle(self.disp)))
-
-                s.append(Delay(delay))
+                
+                if delay > 0: 
+                    s.append(Delay(delay))
 
                 if not bg:
                     s.append(r(np.pi, X_AXIS))

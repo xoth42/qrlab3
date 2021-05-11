@@ -45,12 +45,12 @@ def analysis(meas, data=None, fig=None):
 #    fig.canvas.draw()
         
     f = fit.Lorentzian(xs, ys)
-    if 1:
+    if np.average(ys) < (np.max(ys) + np.min(ys))/2:
         h0 = np.max(ys)-np.min(ys)
         w0 = 0.5e6
         pos = xs[np.argmax(ys)]
         p0 = [np.min(ys), w0*h0, pos, w0]
-    if 0:
+    else:
         h0 = np.min(ys)-np.max(ys)
         w0 = 0.5e6
         pos = xs[np.argmin(ys)]
