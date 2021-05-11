@@ -12,7 +12,7 @@ if 1:
 from mclient import instruments
 
 
-WF_twpa = instruments.create('WF_twpa', 'WFT1153', serial = '1153')
+WF_twpa = instruments.create('WF_twpa', 'WFT1153', COM_adrs='COM3', serial = '1153')
 #WF_ref = instruments.create('WF_ref', 'WFT1153_ch2')
 #WF_ref.do_set_rfsource('WF_ro')
 #bla
@@ -63,6 +63,7 @@ MXG = instruments.create('MXGbob', 'Agilent_Generator', address = 'USB0::0x0957:
 10: RO
 11: A rotating frame
 12: B rotating frame
+15-17: cav reset stuff
 20: FWM
 >100: All cav number dependant qubits
 
@@ -242,6 +243,46 @@ cavityBrf = instruments.create('_cavityBrf', 'Qubit_Info',
                             marker_bufwidth=250,
                             marker_ofs=0)
 
+cavityAreset = instruments.create('cavAreset', 'Qubit_Info',
+                            deltaf=40e6 + 20e6,
+                            pi_amp=0.845,
+                            pi_amp_selective=0.01,
+                            rotation='Gaussian',
+                            channels='7,8',
+                            sideband_channels='I15,Q15',
+                            sideband_phase=0,
+                            w=7, 
+                            w_selective=400,
+                            marker_bufwidth=250,
+                            marker_ofs=0)
+
+
+cavityBreset = instruments.create('cavBreset', 'Qubit_Info',
+                            deltaf=60e6 + 20e6,
+                            pi_amp=1.5,
+                            pi_amp_selective=0.01,
+                            rotation='Gaussian',
+                            channels='9,10',
+                            sideband_channels='I16,Q16',
+                            sideband_phase=0,
+                            w=7,
+                            w_selective=400,
+                            marker_bufwidth=250,
+                            marker_ofs=0)
+
+cavityRreset = instruments.create('cavRreset', 'Qubit_Info',
+                            deltaf=50e6 + 20e6,#16.9e3,
+                            pi_amp=1,
+                            pi_amp_selective=0.0115,
+                            rotation='SQUARE',                             
+                            rotation_selective = 'SQUARE',
+                            channels='11,12',
+                            sideband_channels='I17,Q17',
+                            sideband_phase=0,
+                            w=50,
+                            w_selective=400,
+                            marker_bufwidth=250,
+                            marker_ofs=0)
 
 
 

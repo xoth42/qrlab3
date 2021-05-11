@@ -328,7 +328,7 @@ if 1: # T1
     t1.measure()
 #    bla
 
-if 0: # T2
+if 1: # T2
     from single_qubit import T2measurement
     for i in range(1):
 #        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0e3, 15e3, 91), detune=2e6, 
@@ -340,7 +340,7 @@ if 0: # T2
 
     
     
-if 0: # T2echo
+if 1: # T2echo
     from single_qubit import T2measurement
 
     t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0.01e3,80e3, 101),
