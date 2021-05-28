@@ -353,10 +353,6 @@ datadir = 'c:/_data'
 
 filename = 'c:/_data/052021_Joint_Tomography.hdf5'
 
-<<<<<<< HEAD
-filename = 'c:/_data/04222021cooldown_circulator.hdf5'
-=======
->>>>>>> f69b07b2fb690cba414bd3e960e1895a5ae56003
 
 
 datafile = datasrv.get_file(filename)

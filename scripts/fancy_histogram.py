@@ -123,7 +123,7 @@ if 0: # Check histogramming
     take_snr()
     
     
-if 1: # histogram calculating and plotting
+if 0: # histogram calculating and plotting
     dig.set_naverages(10000)
     from scripts.single_qubit import rabi
     tr_e = rabi.Rabi(qubit_info, [qubit_info.pi_amp,], histogram=True, title='|e>',
@@ -142,7 +142,7 @@ if 1: # histogram calculating and plotting
     midpoint = np.average([g_average, e_average])
 
     #setup plots
-    lim = 2000
+    lim = 100
     xvec = np.linspace(-lim, lim, 100)
     fig = plt.figure(figsize=(6, 8))
     gs = gridspec.GridSpec(2, 1, height_ratios=[3,1])
@@ -199,12 +199,12 @@ if 1: # histogram calculating and plotting
     '''
     
     
-if 0: #calibrate twpa (correct w/ snr)
+if 1: #calibrate twpa (correct w/ snr)
     dig.set_naverages(2000)
     rf_twpa = mclient.instruments['WF_twpa']
-    twpa_powers = np.linspace(-3.05, -2.95, 5)
+    twpa_powers = np.linspace(-4, -2, 5)
     freq = 7.844e9
-    freq_range = 1e6
+    freq_range = 10e6
     twpa_freqs = np.linspace(freq-freq_range, freq+freq_range, 50)
     
     snrs = np.zeros((len(twpa_powers), len(twpa_freqs)))
