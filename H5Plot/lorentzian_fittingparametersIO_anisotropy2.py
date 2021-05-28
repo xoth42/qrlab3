@@ -37,6 +37,7 @@ import json
 from matplotlib import gridspec
 import scipy.linalg as la
 import matplotlib
+#import lmfit
 matplotlib.interactive(True)
 
 
@@ -268,7 +269,7 @@ phi21_err = np.concatenate((data_txt_neg[14][::-1],data_txt[14]))
 
 replace_one_point = True
 if replace_one_point:
-    itime = 15
+    itime = 36
     kappa_tot1[itime] = result.params['kappa_a1'].value
     kappa_tot1_err[itime] = result.params['kappa_a1'].stderr
     freq1[itime] = result.params['omega_c'].value
@@ -621,7 +622,7 @@ fitting_kprod = [3.65e10,8.6e10,1.3447e9]
 
 fields = fields
 delta = delta
-plt.figure()
+plt.figure('F')
 
 plt.title('Frequencies (  )')
 plt.xlabel('Fields(T)')
@@ -637,7 +638,7 @@ plt.errorbar(fields,np.asarray(freq1)/1e9,yerr = np.asarray(freq1_err)/1e9,fmt =
 plt.ylim(10.7,10.9)
 plt.legend()
 
-plt.figure()
+plt.figure('L')
 
 plt.title('Linewidth (  )')
 plt.xlabel('Fields(T)')
@@ -653,16 +654,16 @@ plt.errorbar(fields,np.asarray(kappa_tot1)/1e6,yerr = np.asarray(kappa_tot1_err)
 #    plt.scatter([0],fitting_ktot[i]/1e9, marker = 'o')
 plt.legend()
 
-plt.figure()
+plt.figure('A')
 
 plt.title('Amplitude (A)')
 plt.xlabel('Fields(T)')
 plt.ylabel('Amplitude(MHz)')
 for i in range(len(kappa_prod_2[0])):
-    plt.plot(delta,[(pt[i]*1e3) for pt in kappa_prod_2],label = 'model mode %s'%(i+1))
+    plt.plot(delta,[(pt[i]*1e3) for pt in np.asarray(kappa_prod_2)],label = 'model mode %s'%(i+1))
 plt.errorbar(fields,(np.asarray(kappa_prod2)/1e6),yerr = (np.asarray(kappa_prod2_err)/1e6),fmt ='o', color = 'tab:orange',label = 'data mode 1')
 plt.errorbar(fields,(np.asarray(kappa_prod1)/1e6),yerr = (np.asarray(kappa_prod1_err)/1e6),fmt ='o',color = 'tab:blue',label = 'data mode 2')
-plt.ylim((0,.8))
+#plt.ylim((0,.8))
 #for i in range(len(fitting_data)):
 #    plt.scatter([0],fitting_kprod[i]**.5/1e9, marker = 'o')
 plt.legend()

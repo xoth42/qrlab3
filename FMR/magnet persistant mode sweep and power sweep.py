@@ -22,7 +22,7 @@ VNA.do_enable_averaging(True)
 VNA.set_averaging_trigger(1)
 VNA.set_trigger_source('internal')
 
-if 1: #demag
+if 0: #demag
     from scripts.single_cavity import VNA_single_trace_V2
     fields = [-0.04,0.03,-0.025,0.02, -0.015, 0.01, -0.008, 0.006, -0.004, 0.0025, -0.001,0.0005,-0.00025, 0]
 #    fields = -np.asarray(fields)
@@ -54,8 +54,8 @@ if 1: #demag
 
 filename = '20201106'
 filenames = []
-fieldlist = np.linspace(0,-0.05,26)
-freqs = np.linspace(10.75e9,10.85e9 , 1601)
+fieldlist = np.linspace(0,0.05,26)
+freqs = np.linspace(10.72e9,10.85e9 , 1601)
 for field in fieldlist:
     if float(Magnet.do_get_PSwitch()) == 1:
     
@@ -90,11 +90,14 @@ for field in fieldlist:
 
     from scripts.single_cavity import power_sweep_VNA
 
-    power = np.linspace(-40,0,5)
-    average_factor = np.ceil(np.power(10, -power/10 -1.3)) + 9
-    print (np.sum(average_factor)*1.6 + len(power)*10)/3600
-    ro = power_sweep_VNA.Power_Sweep_VNA(powers = power, freqs = np.linspace(10.75e9,10.85e9,1601),
-                                                   average_factor = average_factor, avelimit = 40,if_bandwidth =1000, Sij =['S21'],fig_name ='S21 power sweep at %sT '%(field),comment = '')
+    power = np.linspace(-50,0,7)
+    average_factor = np.ceil(np.power(10, -power/10 -2 )) + 9
+#    average_factor = np.zeros(len(a)) + 7500
+    print (np.sum(average_factor)*2 + len(average_factor)*10)/3600
+#    average_factor = np.ceil(np.power(10, -power/10 )) + 9
+#    print (np.sum(average_factor)*1.6 + len(power)*10)/3600
+    ro = power_sweep_VNA.Power_Sweep_VNA(powers = power, freqs = np.linspace(10.72e9,10.85e9,201),
+                                                   average_factor = average_factor, avelimit = 40,if_bandwidth =100, Sij =['S21'],fig_name ='S32 power sweep at %sT '%(field),comment = '')
     ro.measure()
     digit = re.findall("[-+]?[.]?[\d]+(?:,\d\d\d)*[\.]?\d*(?:[eE][-+]?\d+)?", ro.data.get_fullname())
     filenames.append(int(digit[-1]))

@@ -29,14 +29,14 @@ limit_for_off = 1
 filepath = 'C:\_Data\\'
 #hdf5_name = 'VNAtestJan30.hdf5'
 #hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
-hdf5_name = '20210105cooldown_circulator_VNA - Copy.hdf5'
+hdf5_name = '20210402cooldown_circulator_VNA - Copy.hdf5'
 
-date = '20210129'
-time = '022138'
+date = '20210408'
+time = '234300'
 experiment = 'Power_Sweep_VNA'
 
 #fields = np.linspace(0, 0.05,26)
-fields = np.linspace(0.05, 0.002,13)
+fields = np.linspace(0,-0.05,26)
 
 ''' Primary x axis and secondary if 2d'''
 #x_key = 'freqs'

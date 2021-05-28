@@ -114,7 +114,7 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, square_amp
         #plt.xlabel('Frequency [GHz]')
         #plt.ylabel('Power [dBm]')
         
-        return result
+        return result.params
     if plot_type == POWER:
 #        ax1 = f.add_subplot(2,1,1)
 #        ax2 = f.add_subplot(2,1,2)
@@ -315,4 +315,5 @@ class ROCavSpectroscopy_keysight(Measurement1D):
         pax = ax if (ax is not None) else plt.figure().add_subplot(111)
         ampdata = data if (data is not None) else self.ampdata
         self.fit_params = analysis(self.powers, self.freqs, ampdata, self.phasedata, self.plot_type, ax=pax)
+        return self.fit_params['omega_c'].value, self.fit_params['kappa_a'].value
 #Yingying add return fitting params

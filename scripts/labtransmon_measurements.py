@@ -16,7 +16,7 @@ import lmfit
 import os
 os.chdir(r'c:\qrlab')
 
-alz = mclient.instruments['alazar']
+#alz = mclient.instruments['alazar']
 
 def gaussian(params, x, data):
     return data - params['amp'] * np.exp(-.5 * ((x - params['mean']) / params['std'])**2)
@@ -47,27 +47,28 @@ ef_info = mclient.get_qubit_info('qubit1ef')
 
 #Find read-out cavity and choose a power
 
-if 1: # RO Cavity spec
-    from scripts.single_cavity import rocavspectroscopy
-    rofreq = 6542e6
-    freq_range = 10e6
+if 0: # RO Cavity spec
+    from scripts.single_cavity import rocavspectroscopy_keysight
+    rofreq = 6530e6
+    freq_range = 15e6
     for pulse in [False]:
-        ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(-10, -10, 1),
-                                             np.linspace(rofreq - freq_range, rofreq + freq_range, 51), qubit_pulse=pulse)
+        ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(-15, -15, 1),
+                                             np.linspace(rofreq - freq_range, rofreq + freq_range, 101), qubit_pulse=pulse)
         ro.measure()
+
     bla
  
     
 #Find qubit
-if 0: # Qubit spec
-    from scripts.single_qubit import spectroscopy
+if 1: # Qubit spec
+    from scripts.single_qubit import spectroscopy_keysight
 #    from scripts.single_qubit import spectroscopy_IQ
-    qubit_freq = 5307e6
-    freq_range = 20e6
-    spec = spectroscopy.Spectroscopy(mclient.instruments['Qbrick'], qubit_info,
+    qubit_freq = 8600e6
+    freq_range = 200e6
+    spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['Qbrick'], qubit_info,
                                      np.linspace(qubit_freq-freq_range,
-                                                 qubit_freq+freq_range, 41),
-                                     [-10],
+                                                 qubit_freq+freq_range, 251),
+                                     [-15],
                                      plen=80000, amp=0.01, plot_seqs=False,
                                      freq_delay=.1) #1=1ns for plen
 
@@ -75,15 +76,15 @@ if 0: # Qubit spec
 #                                     np.linspace(702e6, 710e6, 81), [-30],
 #                                    plen=250*100, amp=0.1, ssb=False, plot_seqs=False)
 
+#    spec.measure()
     spec.measure()
-#    spec.measure_keysight()
     bla
 
 """Qubit SSBspec"""
 if 0: # Qubit SSBspec
     from scripts.single_qubit import ssbspec
-    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-2.5e6, 2.5e6, 81), plot_seqs=False, proj_func='amplitude')
-    spec.measure()
+    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-10e6, 10e6, 101), plot_seqs=False, proj_func='phase')
+    spec.measure_keysight()
     bla
 
 '''Flux-tuned SSBspec'''
@@ -91,10 +92,9 @@ if 0: # Flux-tuned SSBspec
     from scripts.single_qubit import ssbspec
     Yoko = mclient.instruments['yoko']
     
-    currents = np.linspace(-1, 2.5, 11)
+    currents = np.linspace(0.4, 2.5, 11)
     q_freq = np.zeros_like(currents)
-    freqs = np.linspace(-50e6, 5e6, 101)
-    alz.set_naverages(2500)
+    freqs = np.linspace(-150e6, 5e6, 101)
     for i in range(len(currents)):
         
         Yoko.do_set_current(currents[i])
@@ -102,7 +102,7 @@ if 0: # Flux-tuned SSBspec
         
         seq = sequencer.Trigger(250)        
         spec = ssbspec.SSBSpec(qubit_info, freqs, seq=seq, plot_seqs=False, proj_func='amplitude')
-        spec.measure()
+        spec.measure_keysight()
         q_freq[i] = freqs[np.argmin(spec.get_ys())]
     
     print(currents)
@@ -116,13 +116,12 @@ if 0: # Flux-tuned SSBspec
 if 0: # Power Rabi
     for i in range(1):
         from scripts.single_qubit import rabi
-        alz.set_naverages(2000)
 #        qubitgen.set_frequency(4532.71e6)
-        tr = rabi.Rabi(qubit_info, np.linspace(-0.6, 0.6, 51), plot_seqs=False, generate=True, selective=False, repeat_pulse=1,
-                       update=True, proj_func='amplitude')
+        tr = rabi.Rabi(qubit_info, np.linspace(-0.5, 0.5, 101), plot_seqs=False, generate=True, selective=False, repeat_pulse=1,
+                       update=True, proj_func='phase')
 #        from scripts.single_qubit import rabi_IQ
 #        tr = rabi_IQ.Rabi(qubit_info, np.linspace(0, 0.5, 101), plot_seqs=False, real_signals=False)
-        data=tr.measure()
+        data=tr.measure_keysight()
 #        neg = tr.avg_data
 #        qubitgen.set_frequency(4535.51e6)
 #        tr = rabi.Rabi(qubit_info, np.linspace(-0.2, 0.2, 101), plot_seqs=False, generate=True, selective=True, repeat_pulse=1,
@@ -839,8 +838,8 @@ if 0: # T1
 #    t1times = np.zeros(len(range(10)))
     for i in range(1):
         #postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
-        t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 60e3, 101), double_exp=False, generate=True, plot_seqs=False, proj_func='amplitude')
-        t1.measure()
+        t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 5e3, 101), double_exp=False, generate=True, plot_seqs=False, proj_func='phase')
+        t1.measure_keysight()
 #        t1times[i] = t1.analyze()
 #        plt.close()
     bla
@@ -888,13 +887,13 @@ if 0: # T1 vs. flux
 if 0: # T2
     from scripts.single_qubit import T2measurement
     for i in range(1):
-        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 10e3, 101), detune=0.5e6, double_freq=False, generate=True)
-        t2.measure()
+        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 4e3, 101), detune=1e6, double_freq=False, generate=True)
+        t2.measure_keysight()
     bla
 
-if 0: # T2echo
+if 1: # T2echo
     from scripts.single_qubit import T2measurement
-    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(100, 20e3, 61), detune=0.3e6, echotype = T2measurement.ECHO_HAHN, necho=3, plot_seqs = False, generate=True,
+    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(100, 4e3, 61), detune=1e6, echotype = T2measurement.ECHO_HAHN, necho=3, plot_seqs = False, generate=True,
                                      proj_func='amplitude')
     t2.measure()
     bla

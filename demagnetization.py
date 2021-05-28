@@ -26,21 +26,21 @@ VNA = mclient.instruments['VNA']
 #qubit03_info = mclient.get_qubit_info('qubit1_03')
 #qubit14_info = mclient.get_qubit_info('qubit1_14')
 
-readout_info = mclient.get_readout_info('readout')
-mixer_info1 = mclient.get_qubit_info('mixer_info1')
-SS_mixer_info1 = mclient.get_qubit_info('SS_mixer_info1')
-SS_mixer_info2 = mclient.get_qubit_info('SS_mixer_info2')
-mixer_info2 = mclient.get_qubit_info('mixer_info2')
-mixer_info1_set = mclient.instruments['mixer_info1']
-mixer_info2_set = mclient.instruments['mixer_info2']
-#cavity_infoA = mclient.get_qubit_info('cavityAlice')
-#RO_info = mclient.get_qubit_info('RO')
-#qubit2_info = mclient.get_qubit_info('cavityAlice')
-os.chdir(r'C:/qrlab/scripts')
+#readout_info = mclient.get_readout_info('readout')
+#mixer_info1 = mclient.get_qubit_info('mixer_info1')
+#SS_mixer_info1 = mclient.get_qubit_info('SS_mixer_info1')
+#SS_mixer_info2 = mclient.get_qubit_info('SS_mixer_info2')
+#mixer_info2 = mclient.get_qubit_info('mixer_info2')
+#mixer_info1_set = mclient.instruments['mixer_info1']
+#mixer_info2_set = mclient.instruments['mixer_info2']
+##cavity_infoA = mclient.get_qubit_info('cavityAlice')
+##RO_info = mclient.get_qubit_info('RO')
+##qubit2_info = mclient.get_qubit_info('cavityAlice')
+#os.chdir(r'C:/qrlab/scripts')
 
-#fields = [-0.04,0.03,-0.025, 0.02,-0.015,0.01,-0.008,0.006,-0.004, 0.0025, -0.001,0.0005,-0.00025, 0]
-fields = [-0.025, 0.02,-0.015,0.01,-0.008,0.006,-0.004, 0.0025, -0.001,0.0005,-0.00025, 0]
-fields = - np.asarray(fields)
+fields = [-0.04, 0.03,-0.025, 0.02,-0.015,0.01,-0.008,0.006,-0.004, 0.0025, -0.001,0.0005,-0.00025, 0]
+#fields = [-0.025, 0.02,-0.015,0.01,-0.008,0.006,-0.004, 0.0025, -0.001,0.0005,-0.00025, 0]
+#fields = - np.asarray(fields)
 
 #Magnet.do_set_PSwitch(1)
 #time.sleep(35)
@@ -60,14 +60,14 @@ for field in fields:
 #    Magnet.do_set_PSwitch(0)
 #    time.sleep(350)
 
-#    from scripts.single_cavity import VNA_single_trace_V2
+    from scripts.single_cavity import VNA_single_trace_V2
 #    print 'OK2'
     freqs = VNA.do_get_xaxis()
     ro = VNA_single_trace_V2.SingleTraceNoAsync(freqs, fit_S12 = 1, fit_S11 =0)
 
     ro.measure()
 
-    plt.show()
+    pl.show()
     '''
 
 
@@ -93,7 +93,7 @@ for field in fields:
     plt.figure('phase  %sT'%(field))
     plt.plot(ro.freqs, ro.phasedata[0],label = label)   
     plt.legend()
-    '''
+
 #    ga = ro.ampdata[0]
 #    gp = ro.phasedata[0]
 #    g = ga * np.exp(1j*(gp/180 * np.pi))
