@@ -135,7 +135,7 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, square_amp
         kwargs = dict()
         plt.savefig(fn, **kwargs)
 
-class ROCavSpectroscopy_keysight(Measurement1D):
+class roic_test_dig_sequence(Measurement1D):
 
     def __init__(self, qubit_info, powers, freqs, plot_type=None, qubit_pulse=False, seq=None,  **kwargs):
         self.qubit_info = qubit_info
@@ -154,7 +154,7 @@ class ROCavSpectroscopy_keysight(Measurement1D):
                 plot_type = SPEC
         self.plot_type = plot_type
 
-        super(ROCavSpectroscopy_keysight, self).__init__(1, infos=(qubit_info,), **kwargs)
+        super(roic_test_dig_sequence, self).__init__(1, infos=(qubit_info,), **kwargs)
         self.data.create_dataset('powers', data=powers)
         self.data.create_dataset('freqs', data=freqs)
         self.ampdata = self.data.create_dataset('amplitudes', shape=(len(powers),len(freqs)))
@@ -178,18 +178,13 @@ class ROCavSpectroscopy_keysight(Measurement1D):
 #                Constant(1, 0, chan=self.qubit_info.channels[0])
 #            ]))
 
-#        s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+
 
         s.append(Combined([
-            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+            Constant(self.readout_info.pulse_len, 1, chan='1m1'),
+            Constant(self.readout_info.pulse_len, 1, chan='2m1'),
+            Constant(self.readout_info.pulse_len, 1, chan='3m1'),
         ]))
-
-#        s.append(Combined([
-#            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.acq_chan)),
-#            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.readout_chan_I)),
-#            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.readout_chan_Q)),
-#        ]))
 
     
         s.append(Delay(2000))
@@ -238,7 +233,7 @@ class ROCavSpectroscopy_keysight(Measurement1D):
                 dig.setup_avg_shot()
                 dig.arm()
                 dig.start_hvi()
-                ret = dig.take_avg_shot()# self.readout is not 'readout_IQ')
+                ret = dig.take_avg_shot(take_ref = False)# self.readout is not 'readout_IQ')
 
                 dig.stop_hvi()
                 dig.release_buf()

@@ -26,9 +26,9 @@ qubit_info = mclient.get_qubit_info('qubit1ge')
 #qubit2_info = mclient.get_qubit_info('cavityAlice')
 os.chdir(r'C:/qrlab/scripts')
 
-if 0: # test digitizer
+if 1: # test digitizer
     dig = mclient.instruments['dig']
-    data = dig.test_dig(2000, 1, 100, 1)
+    data = dig.test_dig(3000, 1, 5000, 1)
     print(np.shape(data))
     plt.figure()
     plt.plot(data[0][0][:], label = 'sig')
