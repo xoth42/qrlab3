@@ -109,7 +109,7 @@ if 0: #sweep sets of field ranges and get 2D plot
         pl.show()
     bla
     
-if 0: #sweep power and get 2D plot
+if 1: #sweep power and get 2D plot
 
 #    time.sleep(300)
     from scripts.single_cavity import power_sweep_VNA
@@ -118,19 +118,23 @@ if 0: #sweep power and get 2D plot
     VNA.set_averaging_trigger(1)
     VNA.set_trigger_source('internal')
     VNA.set_power(-38)
-    drive_brick = mclient.instruments['SC_qubit']
-    drive_brick.do_set_power(0)
-    drive_brick.set_frequency(8.334e9)
-    drive_brick.set_rf_on(False)
-    a = np.linspace(-25,0,6)
-#    a = np.linspace(-40,-30,5)
+#    drive_brick = mclient.instruments['SC_qubit']
+#    drive_brick.do_set_power(0)
+#    drive_brick.set_frequency(8.334e9)
+#    drive_brick.set_rf_on(False)
+#    a = np.linspace(-80,10,10)
+    a = np.linspace(-10,10,21)
+#    a = np.linspace(-60,10,15)
+#    a = np.linspace(-80,-70,2)
 #    a= np.log10(a)*10
 #    a[0] = -11
-#    average_factor = np.ceil(np.power(10, -a/10 -1.3 )) + 9
-    average_factor = np.zeros(len(a)) + 7500
-    print (np.sum(average_factor)*1.2 + len(a)*10)/3600
-    ro = power_sweep_VNA.Power_Sweep_VNA(powers = a, freqs = np.linspace(10.80e9, 10.815e9, 121),
-                                                   average_factor = average_factor, avelimit =40,if_bandwidth = 100, Sij =['S21'],fig_name ='S21 qubit drive power sweep ',comment = '')
+    average_factor = np.ceil(np.power(10, -a/10 -3.5)) + 9
+#    average_factor = np.zeros(len(a)) + 7500
+    print (np.sum(average_factor)*1 + len(a)*10)/3600
+    ro = power_sweep_VNA.Power_Sweep_VNA(powers = a, 
+#                                         freqs = np.linspace(10.767e9, 10.772e9, 101),
+                                         freqs = np.linspace(7.018e9, 7.021e9, 51),
+                                         average_factor = average_factor, avelimit =40,if_bandwidth = 100, Sij =['S21'],fig_name ='S31 power sweep -0.03T ',comment = '')
     
     #we can take all 4 S params data at the same time when VNA is calibrated, if not, we can only take the data with same output ports at the same time. 
     ro.measure()
@@ -148,14 +152,14 @@ if 0: #sweep power and changing frequency
     VNA.do_enable_averaging(True)
     VNA.set_averaging_trigger(1)
     VNA.set_trigger_source('internal')
-
-    a = np.linspace(0,1,21)
-    center_freq = -0.1739* a + 5.5604
+    VNA.set_power(0)
+    a = np.linspace(0,1,3)
+    center_freq = 2* a + 7
     center_freq = center_freq * 1e9
-    a= np.log10(a)*10
-    a[0] = -14
-    ro = power_sweep_varies_freq_VNA.Power_Sweep_Varies_freq_VNA(powers = a, center_freqs = center_freq, span = 30e6, VNA_points = 401,
-                                                   average_factor =500, avelimit =10,if_bandwidth = 100, Sij =['S21'],fig_name ='pump power sweep ',comment = 'power sweep for qubit in waveguide')
+#    a= np.log10(a)*10
+    print (9000 * len(a) *1.6 + len(a)*10)/3600.0
+    ro = power_sweep_varies_freq_VNA.Power_Sweep_Varies_freq_VNA(powers = a, center_freqs = center_freq, span = 2e9, VNA_points = 1601,
+                                                   average_factor =9, avelimit =10,if_bandwidth = 1000, Sij =['S21'],fig_name ='0dB S31 sweep ',comment = 'fine sweep for -60dB S31')
 
     #we can take all 4 S params data at the same time when VNA is calibrated, if not, we can only take the data with same output ports at the same time. 
     ro.measure()
@@ -328,11 +332,49 @@ if 0: #get repeated single trace from VNA, for long meaasurements
 
 
 
-if 1: #get single trace from VNA, withoout waiting, just take screenshot and fit it.
+
+
+    
+if 1: #get single trace from VNA, for long meaasurements
+            
+
+    from scripts.single_cavity import VNA_single_trace_V2
+#    print 'OK2'
+    VNA.set_s_param('21')
+    VNA.set_timeout(40000)
+    VNA.do_enable_averaging(True)
+    VNA.set_averaging_trigger(1)
+    VNA.set_trigger_source('internal')
+    power = -30
+    VNA.set_power(power)
+    average_factor = 1
+    print (average_factor *0.8 )/3600.0
+
+    ro = VNA_single_trace_V2.SingleTrace(
+#            freqs = np.linspace(7.865e9, 7.875e9, 101), 
+#            freqs = np.linspace(8.032e9, 8.042e9, 101),
+#            freqs = np.linspace(8.123e9, 8.133e9, 101),
+#            freqs = np.linspace(10.764e9, 10.774e9, 201),
+            freqs = np.linspace(7.018e9, 7.021e9, 101),
+            average_factor =average_factor, 
+            avelimit = 20, 
+            if_bandwidth = 1000, 
+            fit_S12 = 1, fit_S11 =0, title = '%sdB'%(power))
+
+
+
+
+
+#    print 'ok3'
+    ro.measure()
+       
+    bla 
+
+if 0: #get single trace from VNA, withoout waiting, just take screenshot and fit it.
     from scripts.single_cavity import VNA_single_trace_V2
 #    print 'OK2'
     freqs = VNA.do_get_xaxis()
-    ro = VNA_single_trace_V2.SingleTraceNoAsync(freqs, fit_S12 = 0, fit_S11 =1)
+    ro = VNA_single_trace_V2.SingleTraceNoAsync(freqs, fit_S12 = 1, fit_S11 =0)
     ro.measure()
 
     pl.show()

@@ -22,33 +22,38 @@ from matplotlib import gridspec
 filepath = 'C:\_Data\\'
 #hdf5_name = 'VNAtestJan30.hdf5'
 #hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
-hdf5_name = '0531cooldown_FMR.hdf5'
-hdf5_name = '0531cooldown_FMR - Copy.hdf5'
+#hdf5_name = '0531cooldown_FMR.hdf5'
+#hdf5_name = '0531cooldown_FMR - Copy.hdf5'
 #hdf5_name = 'FMR_RT_0515 - Copy.hdf5'
-
-date = '20190607'
-time = '130705'
-
-#experiment = 'Power_Sweep_Varies_freq_VNA'
-experiment = 'Current_Sweep_Varies_freq_VNA'
+hdf5_name = '20210402cooldown_circulator_VNA - Copy.hdf5'
+#date = '20190607'
+#time = '130705'
+date = '20210429'
+time = '211406'
+date = '20210430'
+time = '100309'
+experiment = 'Power_Sweep_Varies_freq_VNA'
+#experiment = 'Current_Sweep_Varies_freq_VNA'
 #experiment = 'Current_Sweep_VNA'
-fit_S12 = True
+fit_S12 = False
 fit_S11 = False
-seperate_fitting_figure = True
+seperate_fitting_figure = False
 
 #xlabel = 'current(mA)'
-#xlabel = 'different measurements'
-xlabel= 'field (T)'
+xlabel = 'different measurements'
+#xlabel= 'field (T)'
 
-subtract =True
+subtract =False
 
 if subtract:
 #    hdf5_name_s = '0531cooldown_FMR.hdf5'
     hdf5_name_s = hdf5_name
-    date_s = '20190607'
-    time_s = '131321'
-    experiment_s = 'Current_Sweep_Varies_freq_VNA'
-
+#    date_s = '20190607'
+#    time_s = '131321'
+    date_s = '20210430'
+    time_s = '100309'
+#    experiment_s = 'Current_Sweep_Varies_freq_VNA'
+    experiment_s = 'Power_Sweep_Varies_freq_VNA'
 def S21(params, x, y):
     est = np.sqrt(params['kappa_prod'])/(-1j*(x-params['omega_c'])-(params['kappa_a'])/2.0 )
     if np.max(np.abs(y)) < limit_for_off:
@@ -78,8 +83,8 @@ y_keys = exp.keys()
 #y_keys.remove(x_key)
 #y_keys.remove(x2_key)
 freq = exp['freqs'].value
-currents = exp['currents'].value
-
+#currents = exp['currents'].value
+currents = exp['powers'].value
 real = exp['realS21'].value
 imag = exp['imaginaryS21'].value
 
@@ -93,8 +98,8 @@ if subtract:
     #y_keys.remove(x2_key)
     freq_s = exp_s['freqs'].value
 
-    currents_s = exp_s['currents'].value
-    
+#    currents_s = exp_s['currents'].value
+    currents_s = exp['powers'].value    
     real_s = exp_s['realS21'].value
     imag_s = exp_s['imaginaryS21'].value
     real = real - real_s
@@ -122,10 +127,10 @@ mag = 10*np.log10(real**2 + imag**2)
 ##pl.xlabel('Magnetic Field(mT)')
 #pl.ylabel('Frequency(GHz)')
 
-fig = pl.figure()
-gs = gridspec.GridSpec(1, 2)
-fig.add_subplot(gs[0])
-fig.add_subplot(gs[1])
+fig = pl.figure(1)
+#gs = gridspec.GridSpec(1, 2)
+#fig.add_subplot(gs[0])
+#fig.add_subplot(gs[1])
 
 
 if fit_S12 or fit_S11:
@@ -210,7 +215,7 @@ for i in range(len(real))[0:]:
     fig.axes[1].set_aspect('equal', 'box')
     
     pl.legend()
-
+f.close()
 
 
 #pl.figure()

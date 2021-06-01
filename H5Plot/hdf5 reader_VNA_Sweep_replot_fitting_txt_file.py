@@ -25,7 +25,7 @@ import matplotlib.pyplot as pl
 import json
 from matplotlib import gridspec
 
-datas = np.loadtxt(r'C:\Users\WangLab\Documents\circulator results\2021-03-11 16-09-18\\0to-0.05colorplot_Z.txt')
+datas = np.loadtxt(r'C:\Users\WangLab\Documents\circulator results\2021-03-11 16-09-18\\0to0.05colorplot_Z.txt')
 
 datas = datas[:len(datas)/2] + 1j * datas[len(datas)/2:]
 datas_p_plot = np.transpose(datas)
@@ -67,21 +67,21 @@ limit_for_off = 1
 
 
 
-fields = np.linspace(0,-0.05,26)
+fields = np.linspace(0,0.05,26)
 #fields = np.linspace(0.05, 0.002,13)
 
 ''' Primary x axis and secondary if 2d'''
 #x_key = 'freqs'
 #x2_key = 'powers'
-all_field = False
+all_field = True
 new_fig = False
 two_modes = False
-three_modes = True
+three_modes = False
 
 
 final_plot =True
 
-itime = 24 #index of the field being analyzed so you can save your place and work on only fitting a few fields at a time
+itime = 10 #index of the field being analyzed so you can save your place and work on only fitting a few fields at a time
 
 save_data = False
 num_fits = 2
@@ -148,7 +148,7 @@ if three_modes:
 #        date1 = date
 #            
 #    f = h5.File(filepath + hdf5_name, 'r')
-f = h5.File(filepath + hdf5_name, 'r')
+#f = h5.File(filepath + hdf5_name, 'r')
 
 #
 
@@ -170,18 +170,18 @@ for i in range(num_fits):
         fig.axes[0].plot(freq/1e9,np.abs(datas[itime]), label= 'field = %sT'%(fields[itime]))
         if two_modes:    
             params = lmfit.Parameters()
-            params.add('kappa_prod1', value=6e10, min = 0)#,vary = False)
+            params.add('kappa_prod1', value=2e11, min = 0)#,vary = False)
             params.add('omega_c', value=10.81e9, vary = True)#,vary = False)
-            params.add('kappa_a1', value=3.5e6, min = 0)#,vary = False)
+            params.add('kappa_a1', value=7e6, min = 0)#,vary = False)
             if np.max(np.abs(datas)) < limit_for_off:
                 params.add('roff',value =(datas[itime][0].real+ datas[itime][-1].real)/2)#,vary = False)
                 params.add('ioff',value = (datas[itime][0].imag+ datas[itime][-1].imag)/2)#, vary = False)
-            params.add('phi1',value =-.666, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
+            params.add('phi1',value =-2, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
                 
         
-            params.add('kappa_prod2', value= 2.1e10, min = 0)#,vary = False)
+            params.add('kappa_prod2', value=1e10, min = 0)#,vary = False)
             params.add('omega_c2', value=10.8045e9)#,vary = False)
-            params.add('kappa_a2', value = 2e6, min = 0)#,vary = False)
+            params.add('kappa_a2', value = 5e6, min = 0)#,vary = False)
             params.add('phi21',value = -2.4, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
             
         #    if itime == 0:
@@ -342,7 +342,7 @@ if final_plot:
     pl.ylabel('Frequency(GHz)', **axis_font)
     #pl.close()
 
-    f.close()
+#    f.close()
         
         
     lin_power = fields

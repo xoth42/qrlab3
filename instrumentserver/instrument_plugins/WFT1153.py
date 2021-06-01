@@ -17,8 +17,8 @@ from windfreak import SynthHD
 class WFT1153(Instrument):
     
     
-    def __init__(self, name, channel_index = 0, serial=None):
-        self.synth = SynthHD('COM4')
+    def __init__(self, name, channel_index = 0, COM_adrs='COM3', serial=None):
+        self.synth = SynthHD(COM_adrs)
 
 
         self.channel_index = channel_index

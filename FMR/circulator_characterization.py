@@ -46,8 +46,8 @@ pl.rcParams.update({'font.size': font})
 f.subplots_adjust(hspace=0)
 
 
-ax[0].set(title = 'Circulator Performance',xlim = [10,11],ylim = [-50,0])
-ax[1].set(xlabel = 'frequency (GHz)',ylabel = 'Loss (%)',xlim = [10,11])
+#ax[0].set(title = 'Circulator Performance',xlim = [10,11],ylim = [-50,0])
+#ax[1].set(xlabel = 'frequency (GHz)',ylabel = 'Loss (%)',xlim = [10,11])
 ax[0].set_ylabel('dB', color='red')
 ax[0].tick_params(axis='y', labelcolor='red')
 ax[0].plot(frequency,S11_dB, label= r'$\mathrm{S_{11}}$',color = 'red', linewidth = w)
@@ -67,5 +67,5 @@ ax[1].plot(frequency,loss,linewidth = w)
 f.tight_layout()
 pl.subplots_adjust(hspace = .075)
 pl.show()
-pl.savefig(r'C:\Users\WangLab\Documents\yingying\RT_circulator_414mV_082918\CirculatorV3.svg')
+pl.savefig(r'C:\Users\WangLab\Documents\yingying\RT_circulator_414mV_082918\CirculatorV4.svg')
 

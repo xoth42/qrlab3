@@ -19,8 +19,8 @@ print 'VNA OK'
 
 
 ##instruments.remove('Magnet')
-#Magnet = instruments.create('Magnet','AMI_430')
-#print 'Magnet OK'
+Magnet = instruments.create('Magnet','AMI_430')
+print 'Magnet OK'
 
 #SC_qubit = instruments.create('SC_qubit', 'SC5511A', devid= '10001C09')
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='TCPIP0::172.30.56.25::4000::SOCKET')
