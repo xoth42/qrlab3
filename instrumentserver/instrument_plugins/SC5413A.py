@@ -314,5 +314,3 @@ class SC5413A(Instrument):
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.DEBUG)
     lb = Instrument.test(LB_DLL)
-    
-    

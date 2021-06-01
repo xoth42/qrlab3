@@ -114,7 +114,7 @@ def analysis(powers, freqs, ampdata, phasedata=None, plot_type=POWER, square_amp
         #plt.xlabel('Frequency [GHz]')
         #plt.ylabel('Power [dBm]')
         
-        return result
+        return result.params
     if plot_type == POWER:
 #        ax1 = f.add_subplot(2,1,1)
 #        ax2 = f.add_subplot(2,1,2)
@@ -178,12 +178,12 @@ class ROCavSpectroscopy_keysight(Measurement1D):
 #                Constant(1, 0, chan=self.qubit_info.channels[0])
 #            ]))
 
-        s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+#        s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
 
-#        s.append(Combined([
-#            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-#            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-#        ]))
+        s.append(Combined([
+            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+        ]))
 
 #        s.append(Combined([
 #            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.acq_chan)),
@@ -238,7 +238,7 @@ class ROCavSpectroscopy_keysight(Measurement1D):
                 dig.setup_avg_shot()
                 dig.arm()
                 dig.start_hvi()
-                ret = dig.take_avg_shot(take_ref = False)# self.readout is not 'readout_IQ')
+                ret = dig.take_avg_shot()# self.readout is not 'readout_IQ')
 
                 dig.stop_hvi()
                 dig.release_buf()
@@ -315,4 +315,5 @@ class ROCavSpectroscopy_keysight(Measurement1D):
         pax = ax if (ax is not None) else plt.figure().add_subplot(111)
         ampdata = data if (data is not None) else self.ampdata
         self.fit_params = analysis(self.powers, self.freqs, ampdata, self.phasedata, self.plot_type, ax=pax)
+        return self.fit_params['omega_c'].value, self.fit_params['kappa_a'].value
 #Yingying add return fitting params

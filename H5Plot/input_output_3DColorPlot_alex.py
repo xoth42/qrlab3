@@ -26,9 +26,9 @@ limit_for_off = 1
 
 fields = np.linspace(-0.05,0.05,51)
 
-f1 = 10.78
-f2 = 10.83
-freqs_all = np.linspace(f1,f2,6000)
+f1 = 10.83
+f2 = 10.78
+freqs_all = np.linspace(f1,f2,1601)
 
 freqs_all = np.array(freqs_all, dtype = object)
 
@@ -223,11 +223,11 @@ for i in range(len(fields)):
 #    print(str_params[i] + ' = ' + str(param[i]))
 
 plt.figure()
-plt.title('Experiment S31')
+plt.title('Theory S31 k = %sMHz'%(gamma4*1000))
 plt.xlabel('Fields(T)')
 plt.ylabel('Frequency(GHz)')
 
-plt.pcolormesh(fields,freqs_all,np.transpose(20*np.log10(HH)), vmax = -10, vmin = -50)
+plt.pcolormesh(fields,freqs_all,np.transpose(20*np.log10(HH)), vmax = -30, vmin = -80)
 plt.colorbar().set_label('(dB)')
 plt.show()
 

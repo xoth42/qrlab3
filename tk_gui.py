@@ -85,10 +85,14 @@ class NoInstrumentsException(Exception):
 def fetch_instruments():
     '''
     Fetches the instruments and returns them in a nice list.
+    Containing 'temp' or starting with '_' hides an instrument
     :return:
     '''
     instr = objsh.helper.find_object('instruments')
-    return [x for x in instr.list_instruments() if 'temp' not in x]
+    instr_list = [x for x in instr.list_instruments() if 'temp' not in x
+                                                      and x[0] is not '_']
+    instr_list.sort()
+    return instr_list
 
 
 # A list with the names of the currently active instruments as entries.
@@ -462,6 +466,7 @@ class InstrumentInformationDisplayFrame():
 def produce_initial_display_dictionary():
     list_of_instruments = fetch_instruments()
     display_window = {}
+    
     for instrument in list_of_instruments:
         display_window[instrument] = InstrumentInformationDisplayFrame(
             root_window,

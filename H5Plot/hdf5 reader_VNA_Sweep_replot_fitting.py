@@ -60,13 +60,14 @@ limit_for_off = 1
 filepath = 'C:\_Data\\'
 #hdf5_name = 'VNAtestJan30.hdf5'
 #hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
-hdf5_name = '20210105cooldown_circulator_VNA - Copy (2).hdf5'
+hdf5_name = '20210402cooldown_circulator_VNA - Copy (2).hdf5'
 
-date = '20210310'
-#time = '233434'
-#experiment = 'Power_Sweep_VNA'
+date = '20210409'
+#time = '234300'
+experiment = 'Power_Sweep_VNA'
 
-fields = np.linspace(0,0.05,26)
+#fields = np.linspace(0, 0.05,26)
+fields = np.linspace(0,-0.05,26)
 #fields = np.linspace(0.05, 0.002,13)
 
 ''' Primary x axis and secondary if 2d'''
@@ -79,11 +80,11 @@ three_modes = False
 
 j = 0 #index of the power from the color plot used 0 = lowest power
 
-final_plot = False
+final_plot = True
 
-itime = 0 #index of the field being analyzed so you can save your place and work on only fitting a few fields at a time
+itime = 19 #index of the field being analyzed so you can save your place and work on only fitting a few fields at a time
 
-save_data = False
+save_data = True
 
 if itime == 0:
     datas = np.zeros([len(fields),1601],dtype = complex)
@@ -161,7 +162,7 @@ f = h5.File(filepath + hdf5_name, 'r')
 for i, title in enumerate(f[date].keys()):
 #    print int(title[0:6])
 #    print int(title[0:6]) <= 020617
-    if int(title[0:6]) <= int('174122') and int(title[0:6]) > int('174121') and title[7:12] =='Power':
+    if int(title[0:6]) <= int('160600') and int(title[0:6]) > int('120000') and title[7:12] =='Power':
 #for i in range(len(fields)):
 #    if 1:
         print title
@@ -193,27 +194,27 @@ for i, title in enumerate(f[date].keys()):
         
         '''Plot'''
         freqs = freq
-#        fig = pl.figure()
-#        gs = gridspec.GridSpec(1, 2)
-#        fig.add_subplot(gs[0])
-#        fig.add_subplot(gs[1])
-#        fig.axes[1].plot(np.real(datas[itime]),np.imag(datas[itime]), label= 'field = %sT'%(fields[itime]))
-#        fig.axes[0].plot(freq/1e9,np.abs(datas[itime]), label= 'field = %sT'%(fields[itime]))
+        fig = pl.figure()
+        gs = gridspec.GridSpec(1, 2)
+        fig.add_subplot(gs[0])
+        fig.add_subplot(gs[1])
+        fig.axes[1].plot(np.real(datas[itime]),np.imag(datas[itime]), label= 'field = %sT'%(fields[itime]))
+        fig.axes[0].plot(freq/1e9,np.abs(datas[itime]), label= 'field = %sT'%(fields[itime]))
         if two_modes:    
             params = lmfit.Parameters()
-            params.add('kappa_prod1', value=6e10, min = 0)#,vary = False)
-            params.add('omega_c', value=10.81e9, vary = True)#,vary = False)
-            params.add('kappa_a1', value=3.5e6, min = 0)#,vary = False)
+            params.add('kappa_prod1', value=4.64e9, min = 0)#,vary = False)
+            params.add('omega_c', value=10.810e9, vary = True)#,vary = False)
+            params.add('kappa_a1', value=.97e6, min = 0)#,vary = False)
             if np.max(np.abs(datas)) < limit_for_off:
                 params.add('roff',value =(datas[itime][0].real+ datas[itime][-1].real)/2)#,vary = False)
                 params.add('ioff',value = (datas[itime][0].imag+ datas[itime][-1].imag)/2)#, vary = False)
-            params.add('phi1',value =-.666, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
+            params.add('phi1',value =.6, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
                 
         
-            params.add('kappa_prod2', value= 2.1e10, min = 0)#,vary = False)
-            params.add('omega_c2', value=10.8045e9)#,vary = False)
-            params.add('kappa_a2', value = 2e6, min = 0)#,vary = False)
-            params.add('phi21',value = -2.4, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
+            params.add('kappa_prod2', value= 1.4e8, min = 0)#,vary = False)
+            params.add('omega_c2', value=10.803e9)#,vary = False)
+            params.add('kappa_a2', value = 2.5e6, min = 0)#,vary = False)
+            params.add('phi21',value = -1.7, max = 1.5*np.pi, min = -1.5*np.pi)#,vary = False)
             
         #    if itime == 0:
         #        params = lmfit.Parameters()
@@ -360,7 +361,7 @@ if final_plot:
 #    #X,Y = np.meshgrid(field, freq)
 #    X,Y = np.meshgrid(fieldplot, freq)
 #    pl.xlim(X.min(), X.max())
-    pl.pcolormesh(X,Y/1e9,Z)#,vmax = -30, vmin = -80)
+    pl.pcolormesh(X,Y/1e9,Z,vmax = -30, vmin = -80)
 #    cbar = pl.colorbar()
 #    cbar.set_label('dB',rotation=0, **axis_font)
     pl.colorbar()
@@ -472,24 +473,56 @@ if save_data: #printing all values
         main_filepath = 'C:/Users/WangLab/Documents/circulator results/'
         time_stamp = end_time
         save_filepath = main_filepath + ''.join(time_stamp) + '/'
-        
+#        save_filepath = 'C:\\Users\\WangLab\\Documents\\circulator results\\2021-03-11 16-09-18\\'
         
         if not os.path.exists(save_filepath):
             os.makedirs(save_filepath)
             
-        np.savetxt(save_filepath + 'results.txt',
+        np.savetxt(save_filepath + 'results-0.05to0.05.txt',
                    np.column_stack((fields,omega_c, omega_c_err, omega_c2, omega_c2_err,kappa_a, kappa_a_err,kappa_a2,kappa_a2_err, kappa_prod, kappa_prod_err, kappa_prod2,
                                     kappa_prod2_err, phi21, phi21_err)),
                    header = 
                    
                    'fields,omega_c, omega_c_err, omega_c2, omega_c2_err,kappa_a, kappa_a_err,kappa_a2,kappa_a2_err, kappa_prod, kappa_prod_err, kappa_prod2, kappa_prod2_err, phi21, phi21_err')
-    
+
+                   
+        save_filepath = 'C:\\Users\\WangLab\\Documents\\circulator results\\2021-03-11 16-09-18\\'
+        
+        if not os.path.exists(save_filepath):
+            os.makedirs(save_filepath)
+            
+        np.savetxt(save_filepath + 'results-0.05to0.05.txt',
+                   np.column_stack((fields,freq1, freq1_err,freq2, freq2_err,kappa_tot1, kappa_tot1_err,kappa_tot2,kappa_tot2_err, kappa_prod1, kappa_prod1_err, kappa_prod2,
+                                    kappa_prod2_err, phi21, phi21_err)),
+                   header = 
+                   
+                   'fields,omega_c, omega_c_err, omega_c2, omega_c2_err,kappa_a, kappa_a_err,kappa_a2,kappa_a2_err, kappa_prod, kappa_prod_err, kappa_prod2, kappa_prod2_err, phi21, phi21_err')
+
+                   
+                   
+                   
+                   
+                   
+#freq2 = np.concatenate((data_txt_neg[3][::-1],data_txt[1]))
+#freq2_err = np.concatenate((data_txt_neg[4][::-1],data_txt[2]))
+#freq1 = np.concatenate((data_txt_neg[1][::-1],data_txt[3]))
+#freq1_err = np.concatenate((data_txt_neg[2][::-1],data_txt[4]))
+#kappa_tot2 = np.concatenate((data_txt_neg[7][::-1],data_txt[5]))
+#kappa_tot2_err = np.concatenate((data_txt_neg[8][::-1],data_txt[6]))
+#kappa_tot1 = np.concatenate((data_txt_neg[5][::-1],data_txt[7]))
+#kappa_tot1_err = np.concatenate((data_txt_neg[6][::-1],data_txt[8]))
+#kappa_prod2 = np.concatenate((data_txt_neg[11][::-1],data_txt[9]))
+#kappa_prod2_err = np.concatenate((data_txt_neg[12][::-1],data_txt[10]))
+#kappa_prod1 = np.concatenate((data_txt_neg[9][::-1],data_txt[11]))
+#kappa_prod1_err = np.concatenate((data_txt_neg[10][::-1],data_txt[12]))
+#phi21 = np.concatenate((data_txt_neg[13][::-1],data_txt[13]))
+#phi21_err = np.concatenate((data_txt_neg[14][::-1],data_txt[14]))    
     if three_modes:
         '''Save the data for later analysis'''
         end_time = date + '_' + title[0:6]
         main_filepath = 'C:/Users/WangLab/Documents/circulator results/'
         time_stamp = end_time
-        save_filepath = main_filepath + ''.join(time_stamp) + '/'
+#        save_filepath = main_filepath + ''.join(time_stamp) + '/'
         
         
         if not os.path.exists(save_filepath):
@@ -503,6 +536,7 @@ if save_data: #printing all values
                    header = 
                    
                    'fields,omega_c, omega_c_err, omega_c2, omega_c2_err,omega_c3, omega_c3_err, kappa_a, kappa_a_err,kappa_a2,kappa_a2_err,kappa_a3,kappa_a3_err, kappa_prod, kappa_prod_err, kappa_prod2, kappa_prod2_err,kappa_prod3, kappa_prod3_err, phi21, phi21_err, phi31,phi31_err')
+
 
 
 

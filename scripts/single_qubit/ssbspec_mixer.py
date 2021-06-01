@@ -45,12 +45,12 @@ def analysis(meas, data=None, fig=None):
 #    fig.canvas.draw()
         
     f = fit.Lorentzian(xs, ys)
-    if 1:
+    if np.average(ys) < (np.max(ys) + np.min(ys))/2:
         h0 = np.max(ys)-np.min(ys)
         w0 = 0.5e6
         pos = xs[np.argmax(ys)]
         p0 = [np.min(ys), w0*h0, pos, w0]
-    if 0:
+    else:
         h0 = np.min(ys)-np.max(ys)
         w0 = 0.5e6
         pos = xs[np.argmin(ys)]
@@ -108,6 +108,11 @@ class SSBSpec_mixer(Measurement1D):
                 Join([Delay(100),self.mixer_info2.rotate(np.pi, 0),Delay(200)])
 #                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
             ]))
+#            ro = (Combined([
+#                    Constant(int(self.mixer_info.w), 1, chan=self.readout_info.acq_chan),
+##                Join([Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+#                self.mixer_info.rotate(np.pi, 0),
+#                self.mixer_info2.rotate(np.pi, 0)]))
 
         if self.bgcor:
             plen = self.qubit_info.rotate_selective.base(np.pi, 0).get_length()

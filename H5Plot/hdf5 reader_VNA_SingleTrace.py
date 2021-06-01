@@ -23,26 +23,28 @@ from matplotlib import gridspec
 filepath = 'C:\_Data\\'
 #hdf5_name = 'VNAtestJan30.hdf5'
 #hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
-hdf5_name = '20210105cooldown_circulator_VNA - Copy.hdf5'
+hdf5_name = '20210402cooldown_circulator_VNA - Copy.hdf5'
 #hdf5_name = '0612cooldown_FMR - Copy.hdf5'
 
-date = '20210128'
-time = '182303'
-experiment = 'SingleTrace'
-#experiment = 'SingleTraceNoAsync'
+date = '20210429'
+time = '121801'
+#date = '20210430'
+#time = '113907'
+#experiment = 'SingleTrace'
+experiment = 'SingleTraceNoAsync'
 
-fit_S12 = True
+fit_S12 = False
 fit_S11 = False
 fit_S12_two_modes = False
 fit_S12_two_modes_V2 = False
 fit_S12_two_modes_V3 = False
 fft = False
-subtract = False
+subtract = True
 if subtract:
 #    hdf5_name_s = '0531cooldown_FMR.hdf5'
     hdf5_name_s = hdf5_name
-    date_s = '20190815'
-    time_s = '161707'
+    date_s = '20210429'
+    time_s = '115619'
     experiment_s = 'SingleTrace'
     experiment_s = 'SingleTraceNoAsync'
 def S21(params, x, y):
@@ -142,6 +144,7 @@ mag = 20*np.log10(mag)
 
 
 fig = pl.figure()
+
 gs = gridspec.GridSpec(1, 2)
 fig.add_subplot(gs[0])
 fig.add_subplot(gs[1])

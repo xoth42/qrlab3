@@ -88,11 +88,12 @@ class Spectroscopy_Keysight(Measurement1D):
         if self.postseq:
             s.append(self.postseq)
             
-        s.append(Combined([
-            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-        ])) 
-          
+#        s.append(Combined([
+#            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
+#            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
+#        ])) 
+        s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+ 
 
 
 ##Ebru
@@ -117,7 +118,7 @@ class Spectroscopy_Keysight(Measurement1D):
         self.start_awgs()
 
         for ipower, power in enumerate(self.ro_powers):
-            self.readout_info.rfsource1.set_power(power)
+            self.readout_info.rfsource.set_power(power)
             print 'Power = %s' % (power, )
             time.sleep(self.pow_delay)
 

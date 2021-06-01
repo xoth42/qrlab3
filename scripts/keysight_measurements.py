@@ -26,9 +26,9 @@ qubit_info = mclient.get_qubit_info('qubit1ge')
 #qubit2_info = mclient.get_qubit_info('cavityAlice')
 os.chdir(r'C:/qrlab/scripts')
 
-if 0: # test digitizer
+if 1: # test digitizer
     dig = mclient.instruments['dig']
-    data = dig.test_dig(2000, 1, 1, 1)
+    data = dig.test_dig(3000, 1, 5000, 1)
     print(np.shape(data))
     plt.figure()
     plt.plot(data[0][0][:], label = 'sig')
@@ -45,6 +45,19 @@ if 0: # test digitizer DEMODULATED
     plt.plot(np.real(avgs), label = 'real')
     plt.plot(np.imag(avgs), label = 'imag')
     plt.plot(np.abs(avgs), label = 'abs')
+    plt.legend() 
+    plt.show()
+    bla
+    
+if 1: # test digitizer ROIC 4 channels
+    dig = mclient.instruments['dig']
+    data = dig.test_dig_ROIC(2000, 1, 1, 1)
+    print(np.shape(data))
+    plt.figure()
+    plt.plot(data[0][0][:], label = '1')
+    plt.plot(data[1][0][:], label = '2')
+    plt.plot(data[2][0][:], label = '3')
+    plt.plot(data[3][0][:], label = '4')
     plt.legend() 
     plt.show()
     bla

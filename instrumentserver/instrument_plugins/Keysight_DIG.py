@@ -234,6 +234,8 @@ class Keysight_DIG(Instrument):
         num_slots = len(self._awg_list) #DARIO 1/31 dynamic slot assignment
         HVI_location = 'C:/qrlab/instrumentserver/instrument_plugins/HVI/' + str(num_slots) + 'slot' + str(self._trigger_period) + 'us.HVI'
 #        HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\1slot' + str(self._trigger_period) + 'us.HVI'
+#        HVI_location = 'C:/qrlab/instrumentserver/instrument_plugins/HVI/2slot100us_Dariotesting_Teja.HVI'
+
 
         self._hvi = CompiledHVI(HVI_location, self._chassis, self._awg_list) #DARIO 1/31 dynamic slot assignment
 
@@ -681,6 +683,81 @@ class Keysight_DIG(Instrument):
        
         return sums / naverages, sums_ref / naverages
     
+    def test_dig_ROIC(self, nsamples, npoints, naverages, ntransfers, captureDelay = 0, digScale = 2):
+        digChannels = [1, 2, 3, 4] 
+        errors = []
+        errors += [self.dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)]
+    
+        self.release_buf()
+    
+        for i in range(len(digChannels)):   
+           errors += [self.dig.DAQtriggerExternalConfig(digChannels[i], key.SD_TriggerExternalSources.TRIGGER_EXTERN, 
+                                                key.SD_TriggerBehaviors.TRIGGER_RISE, key.SD_SyncModes.SYNC_NONE)]
+           errors += [self.dig.DAQflush(digChannels[i])]
+           errors += [self.dig.channelInputConfig(digChannels[i], digScale, key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)]
+           errors += [self.dig.DAQconfig(digChannels[i], nsamples, npoints * naverages, captureDelay, key.SD_TriggerModes.EXTTRIG)]
+           errors += [self.dig.DAQbufferPoolConfig(digChannels[i], nsamples * npoints * naverages / ntransfers, 100)]
+        if any(error < 0 for error in errors):
+            print('test_dig errors:', errors)
+        
+        assert(naverages % ntransfers == 0)
+        self.dig.DAQstartMultiple(15)
+        self.start_hvi()
+    #    hvi.start()
+
+        # Add code to either trigger digitizer or wait for first few cycles
+        sums1 = np.zeros((npoints, nsamples), dtype = np.float64)
+        sums2 = np.zeros_like(sums1, dtype = np.float64)
+        sums3 = np.zeros_like(sums1, dtype = np.float64)
+        sums4 = np.zeros_like(sums1, dtype = np.float64)
+           
+    #    return data
+        averages_per_transfer = naverages / ntransfers
+        temp = np.zeros(nsamples*npoints * averages_per_transfer, dtype = np.float64)
+#        print temp
+        temp_ref = np.zeros_like(temp)
+        for transfer in range(ntransfers):
+            try:
+                if transfer % (ntransfers/10) == 0: 
+                    print(str(transfer) + r'/' + str(ntransfers) + ' transfers done')
+    
+                    gc.collect()
+            except:
+                pass# modulo shit ain't workin. its ok
+            temp = self.dig.DAQbufferGet(1)
+#            temp = np.array(self.dig.DAQbufferGet(self._main_channel), dtype=np.complex64)
+            print (np.shape(temp), temp)
+            temp2  = self.dig.DAQbufferGet(2)
+            print (np.shape(temp2), temp2)
+            temp3  = self.dig.DAQbufferGet(3)
+            print (np.shape(temp3), temp3)
+            temp4  = self.dig.DAQbufferGet(4)
+            print (np.shape(temp4), temp4)
+            
+            
+            if type(temp) is float and temp < 0:
+                print('error thrown with code ', temp)
+                
+            if(not len(temp) == naverages * nsamples):
+                print('Buffer gave some wack shit, or maybe no shit at all:')
+                print(np.shape(temp), temp)
+                print(np.shape(temp_ref), temp_ref)
+                raise ValueError
+
+            samples_per_average = nsamples * npoints
+            for i in range(averages_per_transfer):
+                for j in range(npoints):
+                    sums1[j] += temp[i * samples_per_average + j * nsamples : i * samples_per_average + (j+1) * nsamples]
+                    sums2[j] += temp2[i * samples_per_average + j * nsamples : i * samples_per_average + (j+1) * nsamples]
+                    sums3[j] += temp3[i * samples_per_average + j * nsamples : i * samples_per_average + (j+1) * nsamples]
+                    sums4[j] += temp4[i * samples_per_average + j * nsamples : i * samples_per_average + (j+1) * nsamples]
+          
+        self.stop_hvi()
+        
+        for i in range(len(digChannels)):
+            self.dig.DAQbufferPoolRelease(digChannels[i])
+       
+        return sums1 / naverages, sums2 / naverages, sums3 / naverages, sums4 / naverages
     
     def test_dig_demod(self, nsamples, naverages, captureDelay = 0):
         digChannels = [1, 2] 

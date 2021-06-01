@@ -123,7 +123,7 @@ if 0: # Check histogramming
     take_snr()
     
     
-if 1: # histogram calculating and plotting
+if 0: # histogram calculating and plotting
     dig.set_naverages(10000)
     from scripts.single_qubit import rabi
     tr_e = rabi.Rabi(qubit_info, [qubit_info.pi_amp,], histogram=True, title='|e>',
@@ -142,7 +142,7 @@ if 1: # histogram calculating and plotting
     midpoint = np.average([g_average, e_average])
 
     #setup plots
-    lim = 2000
+    lim = 100
     xvec = np.linspace(-lim, lim, 100)
     fig = plt.figure(figsize=(6, 8))
     gs = gridspec.GridSpec(2, 1, height_ratios=[3,1])
@@ -199,13 +199,13 @@ if 1: # histogram calculating and plotting
     '''
     
     
-if 0: #calibrate twpa (correct w/ snr)
+if 1: #calibrate twpa (correct w/ snr)
     dig.set_naverages(2000)
     rf_twpa = mclient.instruments['WF_twpa']
-    twpa_powers = np.linspace(-3.1, -2.7, 5)
-    freq = 7.849e9
-    freq_range = 5e6
-    twpa_freqs = np.linspace(freq-freq_range, freq+freq_range, 100)
+    twpa_powers = np.linspace(-4, -2, 5)
+    freq = 7.844e9
+    freq_range = 10e6
+    twpa_freqs = np.linspace(freq-freq_range, freq+freq_range, 50)
     
     snrs = np.zeros((len(twpa_powers), len(twpa_freqs)))
     for i, power in enumerate(twpa_powers):
@@ -216,8 +216,15 @@ if 0: #calibrate twpa (correct w/ snr)
             time.sleep(.1)
             snrs[i,j] = take_snr()
     
+    print('max of ' + str(np.max(snrs)) + ' at ' 
+          + str(twpa_powers[np.argmax(snrs)/len(twpa_freqs)]) + 'dbm and ' 
+          + str(twpa_freqs[np.argmax(snrs)%len(twpa_freqs)]/1e6) + 'mhz')
+    
     plt.figure()
-    plt.pcolormesh(twpa_freqs, twpa_powers, snrs)
+    plt.yticks(twpa_powers)   # dumb stuff to make plotting nicer
+    ys = np.concatenate((twpa_powers, np.array([2 * twpa_powers[-1] - twpa_powers[-2]])))
+    ys -= (ys[1]-ys[0])/2
+    plt.pcolormesh(twpa_freqs, ys, snrs)
     plt.colorbar()
     
 
