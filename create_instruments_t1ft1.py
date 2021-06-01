@@ -42,7 +42,23 @@ AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 8,  AWG_PR
 AWG3 = instruments.create('AWG3', 'Keysight_AWG', chassis = 0, slot = 10,  AWG_PRODUCT = "M3202A", 
                           amps = [1.5,1.5,1.5,1.5], ofs = [-0.005,0.01, 0, 0])
 
-
+alz = instruments.create('alazar', 'Alazar_Daemon')
+alz.set_ch1_range('200mV')
+alz.set_ch2_range('200mV')
+alz.set_nsamples(960)
+alz.set_naverages(2000)
+alz.set_ch1_coupling('AC')
+alz.set_ch2_coupling('AC')
+alz.set_clock_source('EXT10M')
+#alz.set_clock_source('INT')
+alz.set_sample_rate('1GEXT10')
+alz.set_engJ_trig_src('EXT')
+alz.set_engJ_trig_lvl(128+5)
+alz.set_real_signals(False)
+alz.set_timeout(10e3)
+alz.setup_clock()
+alz.setup_channels()
+alz.setup_trigger()
 '''
 RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=19151, use_extref=True)
 refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511, use_extref=True) 
@@ -136,11 +152,9 @@ readout_IQ = instruments.create('readout_IQ', 'Readout_IQ_Info', IQe=(9.025 + 1j
                                 marker_ofs=0,
                                 pulse_width=300)
 
-
-#
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 
-                             deltaf=184e6,
+                             deltaf=-450e6,
                               pi_amp=0.3196,#0.404,  # 0.1594,
                               pi2_amp=0,
                               drag=0,
@@ -152,9 +166,28 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 
                               w_quasilective=100,
                               w_selective=120,
-                              channels='3,4',
-                              sideband_channels='I1,Q1',
-                              sideband_phase=0.16)
+                              channels='7,8',
+                              sideband_channels='I9,Q9',
+                              sideband_phase=0)
+
+#
+#qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
+#
+#                             deltaf=184e6,
+#                              pi_amp=0.3196,#0.404,  # 0.1594,
+#                              pi2_amp=0,
+#                              drag=0,
+#                              pi_amp_quasilective=0.9,
+#                              pi_amp_selective=0.0513,
+#                              rotation='Gaussian',
+#                              rotation_selective = 'Square',
+#                              w=8,
+#
+#                              w_quasilective=100,
+#                              w_selective=120,
+#                              channels='3,4',
+#                              sideband_channels='I1,Q1',
+#                              sideband_phase=0.16)
 #
 qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
                             deltaf=-92.2e6,
@@ -172,7 +205,7 @@ qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
 
 qubit2ge = instruments.create('qubit2ge', 'Qubit_Info',
 
-                             deltaf=88.6e6,
+                             deltaf=94.9e6,
                               pi_amp=0.576,#0.4648,
 #                             pi_amp = 0.742,
                               pi2_amp=0,
@@ -402,23 +435,23 @@ SS_mixer_info2 = instruments.create('SS_mixer_info2', 'Qubit_Info',
 
 # Setup Alazar
 
-alz = instruments.create('alazar', 'Alazar_Daemon')
-alz.set_ch1_range('200mV')
-alz.set_ch2_range('200mV')
-alz.set_nsamples(1600)
-alz.set_naverages(2000)
-alz.set_ch1_coupling('AC')
-alz.set_ch2_coupling('AC')
-alz.set_clock_source('EXT10M')
-#alz.set_clock_source('INT')
-alz.set_sample_rate('1GEXT10')
-alz.set_engJ_trig_src('EXT')
-alz.set_engJ_trig_lvl(128+5)
-alz.set_real_signals(False)
-alz.set_timeout(10e3)
-alz.setup_clock()
-alz.setup_channels()
-alz.setup_trigger()
+#alz = instruments.create('alazar', 'Alazar_Daemon')
+#alz.set_ch1_range('200mV')
+#alz.set_ch2_range('200mV')
+#alz.set_nsamples(1600)
+#alz.set_naverages(2000)
+#alz.set_ch1_coupling('AC')
+#alz.set_ch2_coupling('AC')
+#alz.set_clock_source('EXT10M')
+##alz.set_clock_source('INT')
+#alz.set_sample_rate('1GEXT10')
+#alz.set_engJ_trig_src('EXT')
+#alz.set_engJ_trig_lvl(128+5)
+#alz.set_real_signals(False)
+#alz.set_timeout(10e3)
+#alz.setup_clock()
+#alz.setup_channels()
+#alz.setup_trigger()
 
 
 

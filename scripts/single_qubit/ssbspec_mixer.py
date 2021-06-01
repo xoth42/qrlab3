@@ -108,6 +108,11 @@ class SSBSpec_mixer(Measurement1D):
                 Join([Delay(100),self.mixer_info2.rotate(np.pi, 0),Delay(200)])
 #                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
             ]))
+#            ro = (Combined([
+#                    Constant(int(self.mixer_info.w), 1, chan=self.readout_info.acq_chan),
+##                Join([Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+#                self.mixer_info.rotate(np.pi, 0),
+#                self.mixer_info2.rotate(np.pi, 0)]))
 
         if self.bgcor:
             plen = self.qubit_info.rotate_selective.base(np.pi, 0).get_length()
