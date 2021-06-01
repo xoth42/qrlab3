@@ -111,7 +111,7 @@ class CRtuning_time_phase(Measurement2D):
 #                    s.append(self.gate_info2.rotate(np.pi,0)) #Chen changed to always measure with control qubit in e
                 else:
                     s.append(g)
-                    s.append(self.gate_info2.rotate(np.pi,0)) #Chen changed to always measure with control qubit in e
+#                    s.append(self.gate_info2.rotate(np.pi,0)) #Chen changed to always measure with control qubit in e
                      
                 if self.postseq:
                     s.append(self.postseq)

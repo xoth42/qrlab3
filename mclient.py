@@ -350,7 +350,21 @@ datasrv = objsh.helper.find_object('dataserver')
 datadir = 'c:/_data'
 
 
+<<<<<<< HEAD
+filename = 'c:/_data/Fluxonium2021april.hdf5'
+=======
 
+<<<<<<< HEAD
 filename = 'c:/_data/20210528cooldown_circulator_VNA.hdf5'
+=======
+
+<<<<<<< HEAD
+filename = 'c:/_data/04222021cooldown_circulator.hdf5'
+
+
+=======
+>>>>>>> 37416039b86dc539f1ea91bea6c084adb6f0c2fb
+>>>>>>> f44ba29bddaa81d54feeada5af47c10967d3e048
+>>>>>>> 5270e1446f7fa4d80b69fd7b00f332952de5ae7b
 
 datafile = datasrv.get_file(filename)

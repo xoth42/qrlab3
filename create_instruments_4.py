@@ -11,7 +11,7 @@ if 1:
 
 from mclient import instruments
 
-
+#yoko = instruments.create('yoko', 'Yokogawa_7651_old', address = 'GPIB0::3::INSTR')
 WF_twpa = instruments.create('WF_twpa', 'WFT1153', COM_adrs='COM3', serial = '1153')
 #WF_ref = instruments.create('WF_ref', 'WFT1153_ch2')
 #WF_ref.do_set_rfsource('WF_ro')
@@ -25,10 +25,10 @@ AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 7,  AWG_PR
                           amps = [1.5,1.5,1.5,1.5], ofs = [0, 0, -0.0099, -0.007])
  
 AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 8,  AWG_PRODUCT = "M3202A",
-                          amps = [1, 1, 1.5, 1.5], ofs = [0.015, 0.009, -0.02, -0.09]) #[.020, 0.026, 0.022, .01]) 
+                          amps = [1, 1, 1.5, 1.5], ofs = [-0.035, 0.01, -0.02, -0.09]) #[.020, 0.026, 0.022, .01]) 
 
 AWG3 = instruments.create('AWG3', 'Keysight_AWG', chassis = 0, slot = 9,  AWG_PRODUCT = "M3202A",
-                          amps = [1.5, 1.5, 1.5, 1.5], ofs = [-0.023, -0.037, 0.042, 0.031]) 
+                          amps = [1.5, 1.5, 1.5, 1.5], ofs = [-0.023, -0.037, 0.06, 0.02]) 
 
 #AWG4 = instruments.create('AWG4', 'Keysight_AWG', chassis = 0, slot = 10,  AWG_PRODUCT = "M3202A",
 #                          amps = [1.5, 1.5, 1.5, 1.5], ofs = [0, 0, 0.0389, -.1145]) 
@@ -76,7 +76,7 @@ readout_IQ = instruments.create('readout_IQ', 'Readout_IQ_Info', IQe=(1.0), IQg=
                                 IQe_radius= 1 , rfsource='SCref',
                                 acq_chan='1m1',
                                 deltaf=50e6,#16.9e3,
-                                pi_amp=0.04,
+                                pi_amp=0.01,
                                 pi_amp_selective=0.0115,
                                 rotation='SQUARE',                             
                                 rotation_selective = 'SQUARE',
@@ -94,15 +94,15 @@ readout_IQ = instruments.create('readout_IQ', 'Readout_IQ_Info', IQe=(1.0), IQg=
 
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                               deltaf=-100e6,
-                              pi_amp=.827,
+                              pi_amp=0.11,
                               pi2_amp=.384,
                               drag=-0.292,
                               pi_amp_quasilective=.068,
-                              pi_amp_selective=0.01965,
+                              pi_amp_selective=0.1,
                               rotation='Gaussian',
-                              w=8,
+                              w=20,
                               w_quasilective=80,
-                              w_selective=300,
+                              w_selective=100,
                               channels='5,6',
                               sideband_channels='I1,Q1',
                               sideband_phase=0)
@@ -215,7 +215,7 @@ fwm_info = instruments.create('fwm_info', 'Qubit_Info',
 #                              marker_ofs=0)
 
 
-
+'''
 # these infos for a rotating fram for tomography
 cavityArf = instruments.create('_cavityArf', 'Qubit_Info',
                             deltaf=40e6,
@@ -334,7 +334,7 @@ for i, j in itertools.product(range(N), range(N)):
                            channels='5,6',
                            sideband_phase=0)
         
-        
+'''  
 
 
 
