@@ -247,7 +247,10 @@ if 1:
     from scripts.single_qubit import Pi2_train
 #    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info1.rotate(np.pi,0)])
 #    postseq = gate_info1.rotate(np.pi,0) 
-    p = Pi2_train.Pi2_train(qubit_info, np.linspace(0.06, 0.07, 51), seq=None, postseq=None, repeat_pulse=10, proj_func='phase',
+    cool = sequencer.Constant(int(10e3),1,chan='3m1')
+    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
+
+    p = Pi2_train.Pi2_train(qubit_info, np.linspace(0.12, 0.14, 51), seq=None, postseq=None, repeat_pulse=10, proj_func='phase',
 #                            extra_info=gate_info1
                             )
     p.measure()

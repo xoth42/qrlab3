@@ -75,7 +75,7 @@ def double_sin_fit(params, x, data):
 ''' Path to the .hdf5 file '''
 filepath = 'C:/_Data/'
 hdf5_name = '01052021cooldown_circulator - Copy.hdf5'
-date = '20210112'
+date = '20210306'
 #experiment = 'ROCavSpectroscopy_keysight'
 #experiment = 'Power_Sweep_VNA'
 f = h5.File(filepath + hdf5_name, 'r')
@@ -84,9 +84,9 @@ j = 0
 
 save_data = False
 CW_qubit = False
-field = 0.01
+field = 0.015
 nrows = 3
-repeat = 21
+repeat = 20
 fix_phi0 = None
 proj = 'projection'
 if j == 0:
@@ -105,7 +105,7 @@ else:
 for i, title in enumerate(f[date].keys()):
 #    print int(title[0:6])
 #    print int(title[0:6]) <= 020617
-    if int(title[0:6]) <= int('240000') and int(title[0:6]) > int('232724') and title[7:13] == exp_t:# and title[7:12] =='ROCav':
+    if int(title[0:6]) <= int('015018') and int(title[0:6]) > int('000644') and title[7:13] == exp_t:# and title[7:12] =='ROCav':
         print title
 
 
@@ -235,8 +235,8 @@ for i, title in enumerate(f[date].keys()):
             params = lmfit.Parameters()
             params.add('ofs', value=np.average(ys))
             params.add('amp', value=amp0, min=0.1)
-            params.add('tau', value=max(xs)*0.7, min=1, max=2e5)
-            params.add('freq', value=f0, min=0)
+            params.add('tau', value=max(xs)*0.6, min=1, max=2e5)
+            params.add('freq', value=0.055, min=0, max = 0.07)
             params.add('slope', value=0,vary = False)
             params.add('A', value = 0, vary = False)
             params.add('A2', value = 0, vary = False)
@@ -259,8 +259,8 @@ for i, title in enumerate(f[date].keys()):
         #    lmfit.report_fit(params)
         #    result2 = lmfit.minimize(t2_fit, result.params, args=(xs,ys))
             lmfit.report_fit(result.params)
-            freqs[l][j] = result.params['freq'].value
-            taus[l][j] = result.params['tau'].value
+#            freqs[l][j] = result.params['freq'].value
+#            taus[l][j] = result.params['tau'].value
 #            return_result.append(result.params)
             
             residues = changing_freq_fit(result.params, xs, ys)
@@ -275,7 +275,7 @@ for i, title in enumerate(f[date].keys()):
             params2.add('amp', value=amp0, min=0)
             params2.add('tau', value=xs[-1], min=10, max=200000)
             params2.add('freq', value=f0, min=0)
-            params2.add('phi0', value=-np.pi/2.0, min=-1.2*np.pi, max=1.2*np.pi)
+            params2.add('phi0', value=-np.pi/2.0, min=-1.5*np.pi, max=1.5*np.pi)
             result = lmfit.minimize(t2_fit, params2, args=(xs, residues))
             lmfit.report_fit(result.params)
     #        fig.axes[1].plot(xs/1e3, -t2_fit(result.params, xs, 0), label='Fit, tau=%.03f us, df=%.03f kHz'%(result.params['tau'].value/1000, result.params['freq'].value*1e6))
@@ -290,10 +290,13 @@ for i, title in enumerate(f[date].keys()):
             params3.add('amp2', value=result.params['amp'].value, min=0, max=params['amp'].value*2)
     #        params3.add('tau2', value=result.params['tau'].value, min=10, max=200000)
             params3.add('freq2', value=result.params['freq'].value, min=0, max=20e-2)
-            params3.add('phi2', value=result.params['phi0'].value, min=-1.2*np.pi, max=1.2*np.pi)
+            params3.add('phi2', value=result.params['phi0'].value, min=-1.5*np.pi, max=1.5*np.pi)
     
             result = lmfit.minimize(double_sin_fit, params3, args=(xs,ys))
             lmfit.report_fit(result.params)
+            
+            freqs[l][j] = result.params['freq'].value
+            taus[l][j] = result.params['tau'].value
             text = 'Fit, tau1=%.03f us, df1=%.03f kHz, amp1=%.02f \nFit, tau2=%.03f us, df2=%.03f kHz, amp2=%.02f'%(result.params['tau'].value/1000, result.params['freq'].value*1e6, result.params['amp'].value, result.params['tau'].value/1000, result.params['freq2'].value*1e6, result.params['amp2'].value)
             fig.axes[0].plot(xs/1e3, -double_sin_fit(result.params, xs, 0), label=text)
             fig.axes[0].legend()

@@ -234,6 +234,7 @@ class Keysight_DIG(Instrument):
         num_slots = len(self._awg_list) #DARIO 1/31 dynamic slot assignment
         HVI_location = 'C:/qrlab/instrumentserver/instrument_plugins/HVI/' + str(num_slots) + 'slot' + str(self._trigger_period) + 'us.HVI'
 #        HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\1slot' + str(self._trigger_period) + 'us.HVI'
+
         self._hvi = CompiledHVI(HVI_location, self._chassis, self._awg_list) #DARIO 1/31 dynamic slot assignment
 
         self._hvi.stop()
@@ -463,7 +464,7 @@ class Keysight_DIG(Instrument):
                 if num_points >= 10:
                     self._ntransfers = self._naverages/100
                 else:
-                    self._ntransfers = self._naverages/2000  # May 2019: Less frequent update when number of points is small
+                    self._ntransfers = max(1, self._naverages/2000)  # May 2019: Less frequent update when number of points is small
             else:
                 self._ntransfers = self._naverages
         elif(self._naverages % ntransfers == 0):
@@ -542,6 +543,7 @@ class Keysight_DIG(Instrument):
                     ref = np.array(self.dig.DAQbufferGet(self._ref_channel), dtype=np.complex64)
             except ValueError, e:
                 print(str(e))
+#            IQA = self._demodA.IQ.reshape([acq_per_transfer, self._nsample])
                 print('digitizer is likely not getting triggered')
                 raise ValueError
                         
@@ -556,6 +558,8 @@ class Keysight_DIG(Instrument):
             if take_ref:
                 self._demodB.demodulate(ref)
                 IQB = self._demodB.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
+                refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
+                print(refs)
             
             '''
             if take_ref:
@@ -573,8 +577,10 @@ class Keysight_DIG(Instrument):
             for j in range(self._npoints):
                 for k in range(self._naverages / self._ntransfers):
                     if take_ref:
-                        temp = np.mean(IQA[j + k*self._npoints,:]
-                                        * np.exp(-1j * np.angle(IQB[j + k*self._npoints,:])))
+
+                        temp = np.mean(IQA[j + k*self._npoints,:] * refs[j + k*self._npoints])## Yingying revert to old digitize function
+#                        temp = np.mean(IQA[j + k*self._npoints,:]
+#                                        * np.exp(-1j * np.angle(IQB[j + k*self._npoints,:])))
                     else:
                         temp =  np.mean(IQA[j + k*self._npoints,:])
                     avgs[j] += temp
@@ -610,7 +616,7 @@ class Keysight_DIG(Instrument):
         '''
     
     def test_dig(self, nsamples, npoints, naverages, ntransfers, captureDelay = 0, digScale = 2):
-        digChannels = [1, 2] 
+        digChannels = [self._main_channel, self._ref_channel] 
         errors = []
         errors += [self.dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)]
     
@@ -630,7 +636,7 @@ class Keysight_DIG(Instrument):
         self.dig.DAQstartMultiple(3)
         self.start_hvi()
     #    hvi.start()
-        
+
         # Add code to either trigger digitizer or wait for first few cycles
         sums = np.zeros((npoints, nsamples), dtype = np.float64)
         sums_ref = np.zeros_like(sums, dtype = np.float64)
@@ -638,6 +644,7 @@ class Keysight_DIG(Instrument):
     #    return data
         averages_per_transfer = naverages / ntransfers
         temp = np.zeros(nsamples*npoints * averages_per_transfer, dtype = np.float64)
+        print temp
         temp_ref = np.zeros_like(temp)
         for transfer in range(ntransfers):
             try:
@@ -648,6 +655,8 @@ class Keysight_DIG(Instrument):
             except:
                 pass# modulo shit ain't workin. its ok
             temp = self.dig.DAQbufferGet(self._main_channel)
+#            temp = np.array(self.dig.DAQbufferGet(self._main_channel), dtype=np.complex64)
+            print temp
             temp_ref  = self.dig.DAQbufferGet(self._ref_channel)
             
             if type(temp) is float and temp < 0:
@@ -782,7 +791,7 @@ class Keysight_DIG(Instrument):
         
         
         
-    def take_hist(self, num_demods=1):
+    def take_hist(self, num_demods=1, take_ref = True):
         acq_per_transfer = self.nacquisitions / self._ntransfers
         
         print('acq per transfer ', acq_per_transfer)
@@ -814,7 +823,9 @@ class Keysight_DIG(Instrument):
             
             try:
                 signal = np.array(self.dig.DAQbufferGet(self._main_channel), dtype=np.complex64)
-                ref = np.array(self.dig.DAQbufferGet(self._ref_channel), dtype=np.complex64)
+                if take_ref:
+                    ref = np.array(self.dig.DAQbufferGet(self._ref_channel), dtype=np.complex64)
+                        
             except ValueError, e:
                 print(str(e))
                 print('digitizer is likely not getting triggered')
@@ -823,13 +834,16 @@ class Keysight_DIG(Instrument):
             print(np.shape(signal))
                 
             self._demodA.demodulate(signal)
-            self._demodB.demodulate(ref)
             
             print(np.shape(self._demodA.IQ))
             
             IQA = self._demodA.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
-            IQB = self._demodB.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
-            refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
+            if take_ref:
+                self._demodB.demodulate(ref)                
+                IQB = self._demodB.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
+                refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
+            else:
+                refs = np.ones(len(IQA))  
 #            if self._ref_freq <0:
 #                refs = np.exp(1j * np.angle(np.average(IQB, 1)))
         
@@ -838,7 +852,7 @@ class Keysight_DIG(Instrument):
         
         self.hist_buf[:] = values
         return values
-    
+
     
     def release_buf(self):
         self.dig.DAQbufferPoolRelease(self._main_channel)

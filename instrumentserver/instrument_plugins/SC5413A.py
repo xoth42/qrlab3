@@ -90,6 +90,7 @@ class SC5413A(Instrument):
 #        lb_dll.sc5413a_get_device_status.argtypes = [ctypes.POINTER(ctypes.c_int),
 #                                                    ctypes.POINTER(device_status_t)]
         lb_dll.sc5413a_GetDeviceStatus(self._handle, deviceStatus_temp.contents)
+
         
 #        lb_dll.sc5413a_InitDevice(self._handle, deviceStatus_temp.contents) #DARIO to-do 
 
@@ -119,6 +120,8 @@ class SC5413A(Instrument):
         self._max_freq = 6000000000
         self._min_power = -50
         self._max_power = 10
+        self._linDacMin = 0
+        self._linDacMax = 16383
 
         
     
@@ -129,17 +132,16 @@ class SC5413A(Instrument):
         self.add_parameter('frequency', type=types.FloatType,
             flags=Instrument.FLAG_SET, units='Hz',
             minval=self._min_freq, maxval=self._max_freq,
-            display_scale=6, value = deviceParams.ch1Frequency)
+            display_scale=6)
         self.add_parameter('gain', type=types.FloatType,
             flags=Instrument.FLAG_SET, units='dBm',
-            minval=self._min_gain, maxval=self._max_gain,
-            display_scale=6, value = deviceParams.ch2Frequency)
+            display_scale=6)
         self.add_parameter('amplifier', type=types.BooleanType,
-            flags=Instrument.FLAG_SET, value = True)
+            flags=Instrument.FLAG_GETSET, value = deviceStatus.rfAmpEnable)
         self.add_parameter('path', type=types.BooleanType,
-            flags=Instrument.FLAG_SET, value = True)
+            flags=Instrument.FLAG_GETSET, value = deviceStatus.rfPath) # 0 is main path, 1 is aux path
         self.add_parameter('lo_output', type=types.BooleanType,
-            flags=Instrument.FLAG_SET, value = True)
+            flags=Instrument.FLAG_GETSET, value = deviceStatus.loEnable)
 
         
         
@@ -197,9 +199,6 @@ class SC5413A(Instrument):
 #        lb_dll.sc5413a_GetDeviceParams(self._handle, deviceParams)
 #        return float(deviceParams.ch2Frequency)
 
-    def do_set_frequency(self, freq_Hz):
-        return lb_dll.sc5413a_SetFrequency(self._handle, ctypes.c_ulonglong(int(freq_Hz)))
-
 #    def do_get_ch1_power(self):
 #        deviceParams = deviceParams_t()        
 #        lb_dll.sc5413a_GetDeviceParams(self._handle, deviceParams)
@@ -209,6 +208,14 @@ class SC5413A(Instrument):
 #        deviceParams = deviceParams_t()        
 #        lb_dll.sc5413a_GetDeviceParams(self._handle, deviceParams)
 #        return deviceParams.ch2PowerLevel
+
+
+    def do_set_frequency(self, freq_Hz):
+        return lb_dll.sc5413a_SetFrequency(self._handle, ctypes.c_ulonglong(int(freq_Hz)))
+
+    def do_init(self):
+        lb_dll.sc5413a_InitDevice(self._handle,ctypes.c_bool(False))
+        
 
     def do_set_gain(self, gain):
         return lb_dll.sc5413a_SetRfGain(self._handle, ctypes.c_float(gain))
@@ -231,9 +238,17 @@ class SC5413A(Instrument):
         else:
             return lb_dll.sc5413a_SetLoOut(self._handle, 0)
         
-    
-    
-    
+    def do_set_linearityDAC(self, IQ, level):
+        
+        if IQ not in ['I', 'Q']:
+            raise Exception("IQ must be 'I' or 'Q'")
+            
+        if level > self._linDacMax or level < self._linDacMin:
+            raise Exception('level must be in the %s-%s range' % (self._linDacMin, self._linDacMax))
+        
+        return lb_dll.sc5413a_SetLinearityDac(self._handle, ctypes.c_char(IQ), ctypes.c_short(level))
+        
+        
     '''
     def do_get_model(self):
         return self._modelname
@@ -296,6 +311,8 @@ class SC5413A(Instrument):
 
 
 
-#if __name__ == '__main__':
-#    logging.getLogger().setLevel(logging.DEBUG)
-#    lb = Instrument.test(LabBrick_RFSourceDLL)
+if __name__ == '__main__':
+    logging.getLogger().setLevel(logging.DEBUG)
+    lb = Instrument.test(LB_DLL)
+    
+    
