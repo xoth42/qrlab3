@@ -119,7 +119,7 @@ if 0: # cav transmission NEW IQ
 
 
 
-if 0: # cav transmission OLD
+if 1: # cav transmission OLD
     from single_cavity import rocavspectroscopy_keysight
     
     rofreq = 7274.8e6
@@ -131,7 +131,7 @@ if 0: # cav transmission OLD
 
     readout_IQ = mclient.instruments['readout_IQ']
 
-    for i in [.1]:    
+    for i in [.04]:
         readout_IQ.set_amp(i)
         ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, powers, freqs,
                                                  qubit_pulse=False, seq=None, readout = readout,
@@ -317,7 +317,7 @@ if 0: # Time Rabi
     bla
 
     
-if 0 # T1
+if 0: # T1
 #    dig.set_trigger_period(500)
     from single_qubit import T1measurement
     t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0, 19e3, 20), 
@@ -328,7 +328,7 @@ if 0 # T1
     t1.measure()
     
 
-if 1: # T2
+if 0: # T2
     from single_qubit import T2measurement
     for i in range(1):
 #        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0e3, 15e3, 91), detune=2e6, 

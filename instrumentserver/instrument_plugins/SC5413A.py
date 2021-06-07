@@ -120,6 +120,8 @@ class SC5413A(Instrument):
         self._max_freq = 6000000000
         self._min_power = -50
         self._max_power = 10
+        self._linDacMin = 0
+        self._linDacMax = 16383
 
         
     
@@ -236,9 +238,17 @@ class SC5413A(Instrument):
         else:
             return lb_dll.sc5413a_SetLoOut(self._handle, 0)
         
-    
-    
-    
+    def do_set_linearityDAC(self, IQ, level):
+        
+        if IQ not in ['I', 'Q']:
+            raise Exception("IQ must be 'I' or 'Q'")
+            
+        if level > self._linDacMax or level < self._linDacMin:
+            raise Exception('level must be in the %s-%s range' % (self._linDacMin, self._linDacMax))
+        
+        return lb_dll.sc5413a_SetLinearityDac(self._handle, ctypes.c_char(IQ), ctypes.c_short(level))
+        
+        
     '''
     def do_get_model(self):
         return self._modelname

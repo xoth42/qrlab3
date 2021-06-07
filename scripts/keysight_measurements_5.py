@@ -792,7 +792,7 @@ if 0: # Check histogramming
     dig.do_set_naverages(10000)
     bla
 
-if 0: # Power Rabi-Calibrate pi pulse with mixer
+if 1: # Power Rabi-Calibrate pi pulse with mixer
 
 #    for cool_time in [1e3,5e3,10e3,30e3]:
 #        for amp in [0.01, 0.01,0.02,0.04,0.08]:
@@ -803,7 +803,7 @@ if 0: # Power Rabi-Calibrate pi pulse with mixer
     from single_qubit import rabi_mixer
     import time
     update_proj =False
-    postseq = sequencer.Delay(150)
+#    postseq = sequencer.Delay(150)
 #    seq = sequencer.Sequence([sequencer.Trigger(400)])
 #    seq = sequencer.Sequence([sequencer.Trigger(400), qubit_info.rotate(np.pi, 0)])
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate_selective(np.pi, 0)])
@@ -811,14 +811,14 @@ if 0: # Power Rabi-Calibrate pi pulse with mixer
 #    postseq = sequencer.Sequence(qubit_info.rotate_selective(np.pi, 0))
     tr = rabi_mixer.Rabi_mixer(qubit_info, mixer_info1, mixer_info2,
 #                               np.linspace(-0.4, 0.4, 81), selective=False,
-#                               np.linspace(-0.6, 0.6, 81), selective=False,
-                               np.linspace(-0.2, 0.2, 81), selective=True,
+                               np.linspace(-0.1, 0.1, 81), selective=False,
+#                               np.linspace(-0.2, 0.2, 81), selective=True,
 #                               np.linspace(-0.6, 0.6, 81), selective=True,
         #                       np.linspace(-0.47,-0.41, 81), selective=False,                   
-                               plot_seqs=False, generate=True, repeat_pulse=1,postseq = postseq,# seq=seq,postseq = postseq, fix_period = 0.38087745,
+                               plot_seqs=False, generate=True, repeat_pulse=1,postseq = None,# seq=seq,postseq = postseq, fix_period = 0.38087745,
                                update=False, #extra_info=[qubit_info],
-                               proj_func='projection')
-    tr.measure_keysight()
+                               proj_func='amplitude')
+    tr.measure()
     
     if update_proj:
         if np.abs(tr.avg_data[np.argmax(abs(tr.avg_data))] - tr.avg_data[len(tr.amps)/2]) < np.abs(tr.avg_data[np.argmin(abs(tr.avg_data))] - tr.avg_data[len(tr.amps)/2]):

@@ -239,7 +239,7 @@ class CW_ROCavSpectroscopy_Mixer(Measurement1D):
 ##                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
 #        ])) 
         if self.qubit_pulse == True:
-            cw_amp = 1
+            cw_amp = 0.7
         else:
             cw_amp = 0
         

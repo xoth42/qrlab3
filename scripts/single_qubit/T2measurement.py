@@ -41,6 +41,7 @@ def double_sin_fit(params, x, data):
     est = params['ofs'].value + params['amp'].value * exp1 * sin1 + params['amp2'].value * exp2 * sin2
     return data - est
 
+
 def analysis(meas, data=None, fig=None):
     xs = meas.delays
     ys, fig = meas.get_ys_fig(data, fig)
@@ -110,11 +111,11 @@ def analysis(meas, data=None, fig=None):
         params3.add('ofs', value=params['ofs'].value)
         params3.add('amp', value=params['amp'].value, min=0, max=params['amp'].value*2)
         params3.add('tau', value=params['tau'].value, min=10, max=200000)
-        params3.add('freq', value=params['freq'].value, min=0, max=2e-3)
+        params3.add('freq', value=params['freq'].value, min=0)#, max=2e-3)
         params3.add('phi0', value=params['phi0'].value, min=-1.2*np.pi, max=1.2*np.pi)
         params3.add('amp2', value=result.params['amp'].value, min=0, max=params['amp'].value*2)
 #        params3.add('tau2', value=result.params['tau'].value, min=10, max=200000)
-        params3.add('freq2', value=result.params['freq'].value, min=0, max=2e-3)
+        params3.add('freq2', value=result.params['freq'].value, min=0)#, max=2e-3)
         params3.add('phi2', value=result.params['phi0'].value, min=-1.2*np.pi, max=1.2*np.pi)
 
         result = lmfit.minimize(double_sin_fit, params3, args=(xs,ys))
@@ -126,9 +127,10 @@ def analysis(meas, data=None, fig=None):
         fig.axes[0].set_xlabel('Time [us]')
         fig.axes[1].plot(xs/1e3, double_sin_fit(result.params, xs, ys), marker='s')
         fig.canvas.draw()
-        return params3
+       # return params3
 
     return result.params
+
 
 class T2Measurement(Measurement1D):
 
@@ -248,9 +250,13 @@ class T2Measurement(Measurement1D):
 #                s.append(Delay(tau))
                 
                 for i in range(self.necho):
-                    s_temp += [Delay(2*tau)]
+                    
+                    if tau!=0: # LLG
+                        s_temp += [Delay(2*tau)]
                     s_temp += [e]
-                s_temp += [Delay(2*tau)]
+                    
+                if tau!=0: # LLG
+                    s_temp += [Delay(2*tau)]
 #                tau = int(np.round(dt / (2 * self.necho) - epadlen/2))
 #                if tau < 0:
 #                    s.append(Delay(dt))
@@ -295,6 +301,7 @@ class T2Measurement(Measurement1D):
 
             s_temp += [self.readout_driver.do_get_sequence()]
             s_temp += [Delay(2000)]
+
             s.append(Join(s_temp))
 
         s = self.get_sequencer(s)

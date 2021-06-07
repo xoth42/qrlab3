@@ -28,7 +28,7 @@ Created on Fri Jul  3 15:33:18 2020
 
 import os
 import time
-#import lmfit 
+import lmfit 
 
 import h5py as h5
 import numpy as np
@@ -267,7 +267,7 @@ phi21_err = np.concatenate((data_txt_neg[14][::-1],data_txt[14]))
 #phi21 = np.concatenate((data_txt_neg[19][::-1],data_txt[19]))
 #phi21_err = np.concatenate((data_txt_neg[20][::-1],data_txt[20]))
 
-replace_one_point = True
+replace_one_point = False
 if replace_one_point:
     itime = 36
     kappa_tot1[itime] = result.params['kappa_a1'].value
@@ -328,7 +328,7 @@ params.add('kb', value = .001, vary = False)
 params.add('wp',value = 10.72, vary = False, max = 10.8)
 params.add('wn',value = 10.82, vary = False)
 params.add('wni_an',value = 0, vary = False)
-params.add('ga',value = 0.010, vary = False)
+params.add('ga',value = 0.01, vary = False)
 params.add('ga2',value = .005, vary = False)
 params.add('ga_an',value = 0.0095, vary = False)
 params.add('ga2_an',value = .003, vary = False)
@@ -364,8 +364,8 @@ ga_an = result.params['ga_an'].value
 ga2_an = result.params['ga2_an'].value
 gab_rat = result.params['gab_rat'].value
 gab2_rat = result.params['gab2_rat'].value
-gb = gab_rat*ga
-gb2 = gab2_rat*ga2
+gb =ga
+gb2 = ga2
 gb_an = gab_rat*ga_an
 gb2_an = gab2_rat*ga2_an
 spl = result.params['spl'].value
@@ -622,7 +622,7 @@ fitting_kprod = [3.65e10,8.6e10,1.3447e9]
 
 fields = fields
 delta = delta
-plt.figure('F')
+plt.figure()
 
 plt.title('Frequencies (  )')
 plt.xlabel('Fields(T)')
@@ -638,7 +638,7 @@ plt.errorbar(fields,np.asarray(freq1)/1e9,yerr = np.asarray(freq1_err)/1e9,fmt =
 plt.ylim(10.7,10.9)
 plt.legend()
 
-plt.figure('L')
+plt.figure()
 
 plt.title('Linewidth (  )')
 plt.xlabel('Fields(T)')
@@ -654,14 +654,17 @@ plt.errorbar(fields,np.asarray(kappa_tot1)/1e6,yerr = np.asarray(kappa_tot1_err)
 #    plt.scatter([0],fitting_ktot[i]/1e9, marker = 'o')
 plt.legend()
 
-plt.figure('A')
+plt.figure()
 
 plt.title('Amplitude (A)')
 plt.xlabel('Fields(T)')
 plt.ylabel('Amplitude(MHz)')
 for i in range(len(kappa_prod_2[0])):
-    plt.plot(delta,[(pt[i]*1e3) for pt in np.asarray(kappa_prod_2)],label = 'model mode %s'%(i+1))
-plt.errorbar(fields,(np.asarray(kappa_prod2)/1e6),yerr = (np.asarray(kappa_prod2_err)/1e6),fmt ='o', color = 'tab:orange',label = 'data mode 1')
+    if i == 1:
+        plt.plot(delta,[(pt[i]) for pt in (3*np.asarray(kappa_prod_2)*1e3)],label = '3*model mode %s'%(i+1))
+    else:
+        plt.plot(delta,[(pt[i]) for pt in (np.asarray(kappa_prod_2)*1e3)],label = 'model mode %s'%(i+1))
+plt.errorbar(fields,3*(np.asarray(kappa_prod2)/1e6),yerr = (np.asarray(kappa_prod2_err)/1e6),fmt ='o', color = 'tab:orange',label = '3*data mode 1')
 plt.errorbar(fields,(np.asarray(kappa_prod1)/1e6),yerr = (np.asarray(kappa_prod1_err)/1e6),fmt ='o',color = 'tab:blue',label = 'data mode 2')
 #plt.ylim((0,.8))
 #for i in range(len(fitting_data)):

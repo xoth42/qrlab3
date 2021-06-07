@@ -42,7 +42,7 @@ def analysis(meas, data=None, fig=None):
         fig.axes[0].set_xlabel('Time [us]')
         fig.axes[1].plot(xs, exp_decay(result.params, xs, ys), marker='s')
 
-
+        
 
 
     else:
@@ -104,6 +104,7 @@ class T1Measurement(Measurement1D):
                 s.append(self.postseq)
             
             s.append(self.readout_driver.do_get_sequence())
+
             s.append(Delay(2000))
 
         s = self.get_sequencer(s)
