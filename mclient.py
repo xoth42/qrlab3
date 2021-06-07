@@ -352,11 +352,10 @@ datadir = 'c:/_data'
 
 
 
-<<<<<<< HEAD
+
 filename = 'c:/_data/04222021cooldown_circulator.hdf5'
 
 
-=======
->>>>>>> 37416039b86dc539f1ea91bea6c084adb6f0c2fb
+
 
 datafile = datasrv.get_file(filename)
