@@ -293,7 +293,7 @@ class T2Measurement(Measurement1D):
 #                Repeat(Constant(5000, 0.0001, chan=5), 60),         # Qubit/Readout master switch
 #            ]))
 
-            s_temp += [self.readout_driver.do_get_sequence(self.readout_qubit_info)]
+            s_temp += [self.readout_driver.do_get_sequence()]
             s_temp += [Delay(2000)]
             s.append(Join(s_temp))
 

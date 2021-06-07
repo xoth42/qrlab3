@@ -178,7 +178,7 @@ class ROCavSpectroscopy_keysight(Measurement1D):
 #                Constant(1, 0, chan=self.qubit_info.channels[0])
 #            ]))
 
-        s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+        s.append(self.readout_driver.do_get_sequence())
 
 #        s.append(Combined([
 #            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
