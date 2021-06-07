@@ -35,8 +35,8 @@ from scripts.single_qubit import drag_test
 gate_info1 = mclient.get_gate_info('sq_gate1')
 gate_info2 = mclient.get_gate_info('sq_gate2')
 #zx90_info = mclient.get_gate_info('zx90_gate')
-cx_info = mclient.get_gate_info('cx_gate')
-cancel_info = mclient.get_gate_info('cancel_gate')
+#cx_info = mclient.get_gate_info('cx_gate')
+#cancel_info = mclient.get_gate_info('cancel_gate')
 
 
 
@@ -61,7 +61,7 @@ def ssb_check(qubitge, qubitge_2, qubit_info, range):  #single gaussian fit
 
 def cooling_spec(cool_freq, freq_range, qubit_info, power_list):
     cool = cooling_tune_brickonoff.Cooling_tune_brickonoff(mclient.instruments['cool'], mclient.instruments['gaius01'], 
-                                                           qubit2_info, np.linspace(cool_freq-freq_range, cool_freq+freq_range,31),
+                                                           qubit_info, np.linspace(cool_freq-freq_range, cool_freq+freq_range,31),
                                      power_list, '3m1', seq=None, plot_seqs=False) #1=1ns for plen
     cool.measure()
 
@@ -220,8 +220,8 @@ if 0:
 if 0:
 #    ZZ.set_rf_on(False)
 #    coolgen.set_rf_on(False)
-    alz.set_naverages(2000)
-    qubitnew1 = ssb_check(qubit1ge, qubit1ge_2, qubit_info,  np.linspace(-5e6, 5e6, 81))
+#    alz.set_naverages(2000)
+#    qubitnew1 = ssb_check(qubit1ge, qubit1ge_2, qubit_info,  np.linspace(-5e6, 5e6, 81))
 #    alz.set_naverages(3000)
 ##
 #    qubitnew2 = ssb_check(qubit2ge, qubit2ge_2, qubit2_info,  np.linspace(-15e6, 15e6, 81))
@@ -233,11 +233,11 @@ if 0:
     #This should confirm that we are in the good region.
     
 #    Getting some cooling prediction
-#    alz.set_naverages(2500)
+    alz.set_naverages(50000)
 #    cool_freq = (cavity - gaius_freq - qubitnew2)/2
-#    coolgen.set_rf_on(True)
-#    freq_range = 15e6        
-#    cooling_spec(3420e6, 15e6, qubit2_info, [11,12,13])
+    coolgen.set_rf_on(True)
+    freq_range = 15e6        
+    cooling_spec(3520e6, 15e6, qubit_info, [8,14])
 ##    
     bla
 
