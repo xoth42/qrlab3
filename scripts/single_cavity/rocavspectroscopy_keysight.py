@@ -178,12 +178,7 @@ class ROCavSpectroscopy_keysight(Measurement1D):
 #                Constant(1, 0, chan=self.qubit_info.channels[0])
 #            ]))
 
-#        s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
-
-        s.append(Combined([
-            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
-            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
-        ]))
+        s.append(self.readout_driver.do_get_sequence())
 
 #        s.append(Combined([
 #            Constant(self.readout_info.pulse_len, 1, chan=int(self.readout_info.acq_chan)),
@@ -238,7 +233,7 @@ class ROCavSpectroscopy_keysight(Measurement1D):
                 dig.setup_avg_shot()
                 dig.arm()
                 dig.start_hvi()
-                ret = dig.take_avg_shot()# self.readout is not 'readout_IQ')
+                ret = dig.take_avg_shot(take_ref=self.readout is not 'readout_IQ')# self.readout is not 'readout_IQ')
 
                 dig.stop_hvi()
                 dig.release_buf()
