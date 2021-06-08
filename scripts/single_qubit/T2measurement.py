@@ -257,6 +257,7 @@ class T2Measurement(Measurement1D):
                     
                 if tau!=0: # LLG
                     s_temp += [Delay(2*tau)]
+#                    
 #                tau = int(np.round(dt / (2 * self.necho) - epadlen/2))
 #                if tau < 0:
 #                    s.append(Delay(dt))
