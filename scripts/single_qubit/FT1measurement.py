@@ -72,7 +72,7 @@ class FT1Measurement(Measurement1D):
 #            s.append(r_ef(np.pi,0))
 #            s.append(r(np.pi,0))
 #            s.append(r_ef(np.pi/2,0)) #fluxonium
-            s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+            s.append(self.readout_driver.do_get_sequence())
             s.append(Delay(1000))
 
         s = self.get_sequencer(s)

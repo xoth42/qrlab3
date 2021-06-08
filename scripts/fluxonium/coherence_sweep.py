@@ -37,16 +37,15 @@ ge = mclient.instruments['qubit1ge']
 dig = mclient.instruments['dig']
 os.chdir(r'C:/qrlab/scripts')
 
-start_freq =4286e6
+start_freq =3933e6
 #start_freq = 1245.31e6 #This should not be a guess but some frequency previously confirmed to be the correct qubit freq at the given flux point.
-stop_freq = 2000e6
+stop_freq = 5900e6
 #
 #start_current = 1.99e-3  #This is the flux point in question for the frequency above
-start_current = -0.0874
-stop_current = 0.112
-
+start_current =-2.87
+stop_current = 0
 #stop_current = -1.876e-3
-current_step=0.0025
+current_step=0.01
 yoko.do_ramp_current(start_current)
 qbrick.set_frequency(start_freq)
 fxn_freq1D=[]
@@ -63,13 +62,23 @@ t1_ofs_err = []
 t1_amp = []
 t1_amp_err = []
 
-
+#
 T1_Ypoints = []
-T1_Xpoints = np.linspace(0, 60e3, 51)
+T1_Xpoints = np.linspace(0, 60e3, 61)
 
 pi_amp=[]
 rabi_contrast=[]
 
+
+t2_err=[]
+t2_amp = []
+t2_ofs=[]
+t2Echo_result=[]
+t2Echo_err=[]
+t2Echo_amp=[]
+t2Echo_ofs=[]
+T2_Ypoints = []
+T2E_Ypoints = []
 
 
 from single_qubit import ssbspec_lorentzianfit
@@ -79,14 +88,14 @@ from scripts.single_qubit import T1measurement
 from scripts.single_qubit import T2measurement
 
 
-alz.set_naverages(3500)
+alz.set_naverages(5000)
 QK_freq = start_freq
 current = start_current
 ROpower_initial = 5 
 sweep_pow = [5, 0, -5] #bunu linspace tarzi bir seye donusturmek gerekebilir
 
 seq = sequencer.Trigger(600)
-spec = ssbspec_lorentzianfit.SSBSpec_lorentzianfit(qubit_info, np.linspace(-40e6, 40e6, 151), seq=None, plot_seqs=False, proj_func='phase')
+spec = ssbspec_lorentzianfit.SSBSpec_lorentzianfit(qubit_info,np.linspace(-30e6, 40e6, 101), seq=None, plot_seqs=False, proj_func='phase')
 spec.measure()
 #plt.close()
     
@@ -95,12 +104,12 @@ YS = spec.get_ys()
 width = spec.width()
 height = spec.height
 center = spec.center
-alz.set_naverages(3500)
+alz.set_naverages(5000)
 
 QK_freq = QK_freq + spec.center * 1e6
 qbrick.set_frequency(QK_freq)
 
-tr = rabi.Rabi(qubit_info, np.linspace(-0.25, 0.25, 51), plot_seqs=False, generate=True, selective=False, repeat_pulse=1, seq=None,
+tr = rabi.Rabi(qubit_info, np.linspace(-0.65, 0.65, 51), plot_seqs=False, generate=True, selective=False, repeat_pulse=1, seq=None,
                    update=False, proj_func='phase')
 
 data=tr.measure()      
@@ -111,10 +120,10 @@ rabi_contrast.append(tr.fit_params['amp'].value)
 #qubit1ge.set_pi_amp_selective(tr.pi_amp/10)
 qubit_info = mclient.get_qubit_info('qubit1ge')
 
-alz.set_naverages(3500)
+alz.set_naverages(10000)
 
 t1 = T1measurement.T1Measurement(qubit_info, #np.linspace(0, 0.8e3, 100),
-                                    np.linspace(0, 60e3, 51),
+                                   np.linspace(0, 30e3, 31),
                                      double_exp=False, generate=True, plot_seqs=False, proj_func='phase', seq=None)
 t1.measure()
 
@@ -127,7 +136,29 @@ t1_amp_err.append(t1.fit_params['amplitude'].stderr)
 T1_Ypoints.append(t1.get_ys())
 
 
-alz.set_naverages(3500)
+#t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 5e3, 51), detune=1e6, double_freq=False, generate=True, 
+#                                         seq=None,  postseq=None, proj_func='phase')
+#t2.measure()
+#t2_result.append(t2.fit_params['tau'].value)
+#t2_err.append(t2.fit_params['tau'].stderr)
+#t2_ofs.append(t2.fit_params['ofs'].value)
+#T2_Ypoints.append(t2.get_ys())
+#
+#
+#t2_amp.append(t2.fit_params['amp'].value)
+
+#
+#t2 = T2measurement.T2Measurement(qubit_info, np.linspace(10, 4e3, 51), detune=1e6, echotype = T2measurement.ECHO_HAHN, necho=1, seq=None, plot_seqs = False, generate=True, proj_func='phase')
+#t2.measure()
+#t2Echo_result.append(t2.fit_params['tau'].value)
+#t2Echo_err.append(t2.fit_params['tau'].stderr)
+#t2Echo_ofs.append(t2.fit_params['ofs'].value)
+#t2Echo_amp.append(t2.fit_params['amp'].value)
+#T2E_Ypoints.append(t2.get_ys())
+#
+
+
+alz.set_naverages(5000)
 
 fxn_freq1D.append(QK_freq)
 fxn_current.append(current)
@@ -136,7 +167,7 @@ fxn_ROpowers.append(ROpower_initial)
 
 #time.sleep(.01)   
 
-while QK_freq > stop_freq and current < stop_current:
+while QK_freq < stop_freq and current < stop_current:
 #    if current == 2e-3:
 #        dig.do_set_naverages = 2000
     current = current + current_step
@@ -152,7 +183,7 @@ while QK_freq > stop_freq and current < stop_current:
 #    qubit_info = mclient.get_qubit_info('qubit1ge')
 
 
-    alz.set_naverages(3500)
+    alz.set_naverages(5000)
     seq = sequencer.Trigger(600)
     spec = ssbspec_lorentzianfit.SSBSpec_lorentzianfit(qubit_info, np.linspace(-60e6, 60e6, 151), seq=None, plot_seqs=False, proj_func='phase')
     spec.measure()
@@ -183,10 +214,10 @@ while QK_freq > stop_freq and current < stop_current:
 #        qubit_info = mclient.get_qubit_info('qubit1ge')
 #
 
-        alz.set_naverages(3500)
+        alz.set_naverages(5000)
 
         seq = sequencer.Trigger(600)
-        spec = ssbspec_lorentzianfit.SSBSpec_lorentzianfit(qubit_info, np.linspace(-60e6, 60e6, 151), seq=None, plot_seqs=False, proj_func='phase')
+        spec = ssbspec_lorentzianfit.SSBSpec_lorentzianfit(qubit_info, np.linspace(-30e6, 40e6, 101), seq=None, plot_seqs=False, proj_func='phase')
         spec.measure()
 #        plt.close()
     
@@ -207,9 +238,9 @@ while QK_freq > stop_freq and current < stop_current:
         
         QK_freq = QK_freq + spec.center * 1e6
         qbrick.set_frequency(QK_freq)
-        alz.set_naverages(3500)
+        alz.set_naverages(5000)
         
-        tr = rabi.Rabi(qubit_info, np.linspace(-0.25, 0.25, 51), plot_seqs=False, generate=True, selective=False, repeat_pulse=1,
+        tr = rabi.Rabi(qubit_info, np.linspace(-0.65, 0.65, 51), plot_seqs=False, generate=True, selective=False, repeat_pulse=1,
                    update=False, seq=None, proj_func='phase')
         data=tr.measure()
 #        pi_amps[i] = tr.pi_amp         
@@ -218,12 +249,12 @@ while QK_freq > stop_freq and current < stop_current:
         rabi_contrast.append(tr.fit_params['amp'].value)
 
         qubit_info = mclient.get_qubit_info('qubit1ge')
-        alz.set_naverages(3500)
+        alz.set_naverages(5000)
 #        t1 = T1measurement.T1Measurement(qubit_info, np.concatenate(np.linspace(0.1e3, 1.9e3, 19), np.linspace(2e3, 20e3, 36), np.linspace(22e3, 550e3, 60)), double_exp=True, generate=True, plot_seqs=False, proj_func='phase')
 
         
         t1 = T1measurement.T1Measurement(qubit_info, #np.linspace(0, 0.8e3, 100),
-                                    np.linspace(0, 60e3, 51),
+                                    np.linspace(0, 30e3, 31),
                                      double_exp=False, generate=True, plot_seqs=False, proj_func='phase', seq=None)
         t1.measure()
         
@@ -235,6 +266,35 @@ while QK_freq > stop_freq and current < stop_current:
         t1_amp_err.append(t1.fit_params['amplitude'].stderr)
         T1_Ypoints.append(t1.get_ys())
         
+#        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 2e3, 101), detune=1e6, double_freq=False, generate=True, 
+#                                                 seq=None,  postseq=None, proj_func='phase')
+#        t2.measure()
+#        t2_result.append(t2.fit_params['tau'].value)
+#        t2_err.append(t2.fit_params['tau'].stderr)
+#        t2_ofs.append(t2.fit_params['ofs'].value)
+#        T2_Ypoints.append(t2.get_ys())
+#        
+#        
+#        t2_amp.append(t2.fit_params['amp'].value)
+        
+#        
+#        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(10, 4e3, 51), detune=1e6, echotype = T2measurement.ECHO_HAHN, necho=1, seq=None, plot_seqs = False, generate=True, proj_func='phase')
+#        t2.measure()
+#        t2Echo_result.append(t2.fit_params['tau'].value)
+#        t2Echo_err.append(t2.fit_params['tau'].stderr)
+#        t2Echo_ofs.append(t2.fit_params['ofs'].value)
+#        t2Echo_amp.append(t2.fit_params['amp'].value)
+#        T2E_Ypoints.append(t2.get_ys())
+#    
+
+
+
+
+
+
+
+
+
         
         fxn_freq1D.append(QK_freq) 
         fxn_current.append(current)

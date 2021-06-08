@@ -18,7 +18,7 @@ alz = mclient.instruments['alazar']
 #alz = mclient.instruments['alazar']
 alz.set_ch1_range('40mV')
 alz.set_ch2_range('40mV')
-alz.set_nsamples(1280)
+alz.set_nsamples(1280*2)
 alz.set_naverages(1000)
 alz.set_ch1_coupling('AC')
 alz.set_ch2_coupling('AC')
@@ -31,7 +31,7 @@ alz.setup_channels()
 alz.setup_trigger()
 
 
-if 1:
+if 0:
         alz.setup_shots(1)
         buf = alz.take_raw_shots()
         plt.figure()
@@ -74,7 +74,7 @@ if 0:
             plt.subplot(313)
             plt.plot(Q)
             
-if 0:        
+if 1:        
         alz.setup_shots(1)
         buf = alz.take_demod_shots()
 #        buf2 = moving_average(buf)
@@ -126,7 +126,7 @@ if 0:
 #        plt.plot(np.angle(buf, deg=True))
         
         
-if 0:
+if 1:
         N = 1000
         alz.setup_shots(N)
         nsamp = alz.get_nsamples()

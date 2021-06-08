@@ -156,7 +156,7 @@ class Rabi(Measurement1D):
                 s.append(self.postseq)
             s.append(Delay(100))
 #            s.append(Constant(100, 1, chan = 'I1'))
-            s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+            s.append(self.readout_driver.do_get_sequence())
             s.append(Delay(2000))
 
 

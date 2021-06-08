@@ -131,7 +131,7 @@ class Spectroscopy_Keysight(Measurement1D):
                 dig.setup_avg_shot()
                 dig.arm()
                 dig.start_hvi()
-                ret = dig.take_avg_shot()
+                ret = dig.take_avg_shot(take_ref = (self.readout != 'readout_IQ'))
                 #Yingying to add a main loop, suggesting to help with the spectroscopy crash
                 
                 try:
