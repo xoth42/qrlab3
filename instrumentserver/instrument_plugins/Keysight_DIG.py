@@ -459,6 +459,27 @@ class Keysight_DIG(Instrument):
         self.release_buf()
             
         return avg/self._naverages
+    
+    def take_raw_shot_ROIC(self, acqtimeout=None, I_chan=3, Q_chan=4):
+        signal = np.zeros(self._nsamples, dtype = np.complex64)
+        ref = np.zeros_like(signal)
+        try:
+            I = self.dig.DAQbufferGet(I_chan)
+            Q = self.dig.DAQbufferGet(Q_chan)
+        except ValueError, e:
+            print(str(e))
+            print('digitizer is likely not getting triggered')
+            raise ValueError
+            
+        if(not len(signal) == self._nsamples):
+            print('Buffer gave some wack shit, or maybe no shit at all:')
+            print(np.shape(signal), signal)
+            print(np.shape(ref), ref)
+            raise ValueError
+            
+        self.release_buf()
+        
+        return [I, Q]
         
     def setup_experiment(self, num_points, ntransfers = None, take_ref = True):
         if ntransfers is None:

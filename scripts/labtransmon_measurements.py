@@ -60,7 +60,7 @@ if 0: # RO Cavity spec
  
     
 #Find qubit
-if 1: # Qubit spec
+if 0: # Qubit spec
     from scripts.single_qubit import spectroscopy_keysight
 #    from scripts.single_qubit import spectroscopy_IQ
     qubit_freq = 5659e6
@@ -81,7 +81,7 @@ if 1: # Qubit spec
     bla
 
 """Qubit SSBspec"""
-if 0: # Qubit SSBspec
+if 1: # Qubit SSBspec
     from scripts.single_qubit import ssbspec
     spec = ssbspec.SSBSpec(qubit_info, np.linspace(-10e6, 10e6, 151), plot_seqs=False, proj_func='amplitude')
     spec.measure_keysight()
