@@ -321,7 +321,7 @@ if 0: # T1
 #    dig.set_trigger_period(500)
     from single_qubit import T1measurement
     t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0, 19e3, 20), 
-                                                                 np.linspace(20e3, 160e3, 31))), 
+                                                                 np.linspace(20e3, 200e3, 31))), 
 #    t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0, 90e3, 101),)), 
                                      double_exp=False, generate=True, plot_seqs=False, seq=None, 
                                      readout='readout_IQ')

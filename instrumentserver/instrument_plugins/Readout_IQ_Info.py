@@ -5,6 +5,21 @@ from pulseseq.pulselib import *
 from Pulse_Info import Pulse_Info
 import numpy as np
 
+
+""" 
+Made by Jeff 6/8/2021
+
+Designed for an IQ mixer but will work for a 3 port mixer or even two mixers.
+For a 3 port mixer assign a fake value to the second channel number (make it
+higher then any real channel).
+For two mixers give 4 channel numbers and use the amp_secondary parameter. For
+two 3 port mixers use real, fake, real, fake for the channel numbers.
+
+TODO: Be a bit more careful about the sideband phase and the fixed phase. 
+possibly add two phases for two mixers. 
+"""
+
+
 class Readout_IQ_Info(Pulse_Info):
 
     def __init__(self, name, **kwargs):
@@ -25,19 +40,19 @@ class Readout_IQ_Info(Pulse_Info):
         self.add_parameter('acq_chan', type=types.StringType,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 set_func=lambda x: True)
-        self.add_parameter('acq_len', type=types.IntType,
-                flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-                help='Acquisition length for FPGA',
-                set_func=lambda x: True, value=3000)
         self.add_parameter('pulse_width', type=types.IntType,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 help='width of Gaussian Square wave',
-                set_func=lambda x: True, value=3000)                
+                set_func=lambda x: True, value=3000)
         self.add_parameter('sigma', type=types.IntType,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 help='sigma of Gaussian Square wave rise and fall',
                 set_func=lambda x: True, value=10)        
         self.add_parameter('amp', type=types.FloatType,
+                flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
+                help='amplitude of readout pulse',
+                set_func=lambda x: True, value=0)        
+        self.add_parameter('amp_secondary', type=types.FloatType,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 help='amplitude of readout pulse',
                 set_func=lambda x: True, value=0)
@@ -78,26 +93,10 @@ class Readout_IQ_Info(Pulse_Info):
         if srv:
             self._ins = srv.get(self.get_rfsource())
 
-    def do_get_power(self):
-        ins = self._get_ins()
-        if ins:
-            return ins.get_power()
 
-    def do_set_power(self, val):
-        ins = self._get_ins()
-        if ins:
-            return ins.set_power(val)
-
-    def do_get_frequency(self):
-        return 1
-    
-    def do_set_frequency(self, val):
-        ins = self._get_ins()
-        if ins:
-            return ins.set_frequency(val)
-
-    def do_get_sequence(self, phase = np.pi/4, amp = None, chop=4):
+    def do_get_sequence(self, phase = np.pi/4, amp = None, amp_secondary= None, chop=4):
         if amp is None: amp = self.get_amp()
+        if amp_secondary is None: amp_secondary = self.get_amp_secondary()
         width = int(self.get_pulse_width())
         sigma = int(self.get_sigma())
         
@@ -112,37 +111,48 @@ class Readout_IQ_Info(Pulse_Info):
         ys[mask] = np.exp(-((ts[mask]-width/2)/sigma)**2)
 
         # send it to the different channels based on the phase
-        
         ys *= np.exp(-1.0j*phase)
         data_i = np.real(ys)
         data_q = np.imag(ys)
         
         # now we need to modulate it 
         phis = 2 * np.pi * np.arange(0, len(ys)) / self.get_sideband_period()
-        data_i *= amp * np.cos(phis)
-        data_q *= amp * np.sin(phis)
+        data_i *= np.cos(phis)
+        data_q *= np.sin(phis)
 
         # load it up
         channels = self.get_channels().split(',')
-        return Combined([DataPulse(data_i, amp = amp, chan=int(channels[0]), 
-                                         filename = 'RO_I_pulse'),
-                         DataPulse(data_q, amp = amp, chan=int(channels[1]), 
-                                         filename = 'RO_Q_pulse'),
-                         Constant(sigma * 4 + width, 1, chan=self.get_acq_chan())])
-        
-
-    def do_get_sequence_old(self, readout_qubit_info, df = 0, phase = 0, amp = None):
-        if amp is None: amp = self.get_pi_amp()
-        pulse_width = int(self.get_pulse_width())
-        w = int(self.get_w())
-        g = DetunedGaussSquare(pulse_width, w, chans=readout_qubit_info.sideband_channels)
-        if df != 0:
-            period = 1e9 / df
+        if len(channels) == 2:
+            return Combined([DataPulse(amp * data_i, amp = amp, chan=int(channels[0]), 
+                                             filename = 'RO_I_pulse'),
+                             DataPulse(amp * data_q, amp = amp, chan=int(channels[1]), 
+                                             filename = 'RO_Q_pulse'),
+                             Constant(sigma * 4 + width, 1, chan=self.get_acq_chan())])
+        elif len(channels) == 4:
+            return Combined([DataPulse(amp * data_i, amp = amp, chan=int(channels[0]), 
+                                             filename = 'RO1_I_pulse'),
+                             DataPulse(amp * data_q, amp = amp, chan=int(channels[1]), 
+                                             filename = 'RO1_Q_pulse'),
+                             DataPulse(amp_secondary * data_i, amp = amp_secondary, chan=int(channels[2]), 
+                                             filename = 'RO2_I_pulse'),
+                             DataPulse(amp_secondary * data_q, amp = amp_secondary, chan=int(channels[3]), 
+                                             filename = 'RO2_Q_pulse'),
+                             Constant(sigma * 4 + width, 1, chan=self.get_acq_chan())])
         else:
-            period = 1e50
-        g.add(amp, period, phases = (phase, phase-np.pi/2))
-        ro = Combined([
-            g(),
-            Constant(w * 4 + pulse_width, 1, chan=self.get_acq_chan())])
-#        ro = readout_qubit_info.rotate(1, 0)
-        return ro
+            print('something is wrong with channels')
+
+#    def do_get_sequence_old(self, readout_qubit_info, df = 0, phase = 0, amp = None):
+#        if amp is None: amp = self.get_pi_amp()
+#        pulse_width = int(self.get_pulse_width())
+#        w = int(self.get_w())
+#        g = DetunedGaussSquare(pulse_width, w, chans=readout_qubit_info.sideband_channels)
+#        if df != 0:
+#            period = 1e9 / df
+#        else:
+#            period = 1e50
+#        g.add(amp, period, phases = (phase, phase-np.pi/2))
+#        ro = Combined([
+#            g(),
+#            Constant(w * 4 + pulse_width, 1, chan=self.get_acq_chan())])
+##        ro = readout_qubit_info.rotate(1, 0)
+#        return ro
