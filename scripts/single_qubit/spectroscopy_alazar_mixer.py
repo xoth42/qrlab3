@@ -1,3 +1,17 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jun 03 12:11:30 2021
+
+@author: Wang_Lab
+"""
+
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jun 03 12:03:10 2021
+
+@author: Wang_Lab
+"""
+
 from measurement import Measurement1D
 import matplotlib.pyplot as plt
 from pulseseq.sequencer import *
@@ -11,7 +25,7 @@ import config
 SPEC   = 0
 POWER  = 1
 
-class Spectroscopy_Keysight(Measurement1D):
+class Spectroscopy_Mixer(Measurement1D):
     '''
     Perform qubit spectroscopy.
 
@@ -25,12 +39,14 @@ class Spectroscopy_Keysight(Measurement1D):
     pulse.
     '''
 
-    def __init__(self, qubit_rfsource, qubit_info,  q_freqs, ro_powers,
+    def __init__(self, qubit_rfsource, qubit_info, mixer_info1, mixer_info2, q_freqs, ro_powers,
                  plen, amp=1, seq=None, postseq=None,
                  pow_delay=1, freq_delay=0.1, plot_type=None,
                  **kwargs):
         self.qubit_rfsource = qubit_rfsource
         self.qubit_info = qubit_info
+        self.mixer_info1 = mixer_info1
+        self.mixer_info2 = mixer_info2
 #        self.ef_info = ef_info
         self.ro_powers = ro_powers
         self.q_freqs = q_freqs
@@ -50,13 +66,19 @@ class Spectroscopy_Keysight(Measurement1D):
                 plot_type = SPEC
         self.plot_type = plot_type
 
-        super(Spectroscopy_Keysight, self).__init__(1, infos=qubit_info, **kwargs)
+        super(Spectroscopy_Mixer, self).__init__(1, infos=(qubit_info,mixer_info1,mixer_info2), **kwargs)
         self.data.create_dataset('powers', data=ro_powers)
         self.data.create_dataset('freqs', data=q_freqs)
         self.ampdata = self.data.create_dataset('amplitudes', shape=[len(ro_powers),len(q_freqs)])
         self.phasedata = self.data.create_dataset('phases', shape=[len(ro_powers),len(q_freqs)]) 
 
     def generate(self):
+#        ro = self.readout_driver.do_get_sequence(self.readout_qubit_info)
+        ro =Combined([
+            Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
+#            Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+            Join([self.mixer_info1.rotate(np.pi, 0),Delay(200)]),
+            Join([self.mixer_info2.rotate(np.pi, 0),Delay(200)])])
         s = Sequence(self.seq)
         chs = self.qubit_info.sideband_channels
 
@@ -92,7 +114,7 @@ class Spectroscopy_Keysight(Measurement1D):
 #            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
 #            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
 #        ])) 
-        s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+        s.append(ro)
  
 
 
@@ -108,52 +130,54 @@ class Spectroscopy_Keysight(Measurement1D):
         seqs = s.render()
         return seqs
 
+        
     def measure(self):
-        dig = self.instruments['dig']
-
         # Generate and load sequences
+        alz = self.instruments['alazar']
+        alz.set_interrupt(False)
+        try:
+            dig = self.instruments['dig']
+            dig.start_hvi()
+        except:
+            print('no digitizer object for trigger')
+
         seqs = self.generate()
-        self.stop_awgs()
         self.load(seqs)
         self.start_awgs()
 
         for ipower, power in enumerate(self.ro_powers):
-            self.readout_info.rfsource.set_power(power)
+            self.readout_info.rfsource1.set_power(power)
             print 'Power = %s' % (power, )
             time.sleep(self.pow_delay)
 
             amps = []
             phases = []
+
             for freq in self.q_freqs:
                 self.qubit_rfsource.set_frequency(freq)
                 time.sleep(self.freq_delay)
                 
-                dig.setup_avg_shot()
-                dig.arm()
-                dig.start_hvi()
-                ret = dig.take_avg_shot(take_ref = (self.readout != 'readout_IQ'))
-                #Yingying to add a main loop, suggesting to help with the spectroscopy crash
-                
+                alz.setup_avg_shot(alz.get_naverages())
+                ret = alz.take_avg_shot(async=True)
                 try:
                     while not ret.is_valid():
                         objsh.helper.backend.main_loop(100)
-                except:
-                    dig.set_interrupt(True)
+                except Exception, e:
+                    alz.set_interrupt(True)
+                    print 'Error: %s' % (str(e), )
+                    return
 
-                dig.release_buf()
-
-
-                IQ = np.average(ret)
+                IQ = np.average(ret.get())
                 amps.append(np.abs(IQ))
                 phases.append(np.angle(IQ, deg=True))
                 print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
+                print 'I,Q = %.03f, %.03f' % (np.real(IQ), np.imag(IQ))
 
             self.ampdata[ipower,:] = amps
-
             self.phasedata[ipower,:] = phases
+            
 
         self.analyze()
-
     def analyze(self):
         f = plt.figure()
 

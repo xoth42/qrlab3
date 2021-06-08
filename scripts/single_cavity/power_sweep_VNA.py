@@ -80,7 +80,7 @@ def analysis(powers, freqs, realdata, imagdata, fig_name, full_fig_name, Sij, fi
 
 class Power_Sweep_VNA(Measurement1D):
 
-    def __init__(self, powers, freqs, average_factor,avelimit,if_bandwidth, Sij, fig_name,comment, **kwargs):
+    def __init__(self, powers, freqs, average_factor,avelimit,if_bandwidth, Sij, fig_name,comment,sweep_SC_qubit, **kwargs):
         self.powers = powers
 #        print 'self.powers', self.powers
         self.freqs = freqs
@@ -91,6 +91,7 @@ class Power_Sweep_VNA(Measurement1D):
         self.fig_name = fig_name
         self.comment = comment
         self.dpowers = powers[1] - powers[0]
+        self.sweep_SC_qubit = sweep_SC_qubit
 #        self.sleeptime_field = sleeptime_field
 #        self.plot_type = plot_type
 #
@@ -128,7 +129,7 @@ class Power_Sweep_VNA(Measurement1D):
         # Generate and load sequences
         VNA = self.instruments['VNA']
 #        Yoko = self.instruments['Yoko']
-#        SCqubit = self.instruments['SC_qubit']
+        SCqubit = self.instruments['SC_qubit']
 
 
         VNA.set_start_freq(self.freqs[0])
@@ -156,12 +157,16 @@ class Power_Sweep_VNA(Measurement1D):
         VNA.set_if_bandwidth(self.if_bandwidth)
         
         for ipower, power in enumerate(self.powers):
-            VNA.set_power(power)
-#            if ipower == 0:
-#                SCqubit.set_rf_on(False)
-#            else:
-#                SCqubit.set_rf_on(True)                
-#            SCqubit.set_power(power)
+            
+#            VNA.set_power(power)
+            if self.sweep_SC_qubit:
+                if ipower == 0:
+                    SCqubit.set_rf_on(False)
+                else:
+                    SCqubit.set_rf_on(True)                
+                SCqubit.set_power(power)
+            else:
+                VNA.set_power(power)
             time.sleep(10)
             if self.average_factor[ipower] < avelimit:
                 avelimit = self.average_factor[ipower]

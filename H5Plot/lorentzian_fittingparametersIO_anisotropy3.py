@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Mon Jun 07 17:08:43 2021
+
+@author: WangLab
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Fri Mar 05 16:48:49 2021
 
 @author: WangLab
@@ -53,26 +60,26 @@ def Sij_resid(params,x,y):
     kb = param['kb']
     ga = param['ga']
     ga2 = param['ga2']
-    gab_rat = param['gab_rat']
-    gab2_rat = param['gab_rat']
-    gb = ga*gab_rat
-    gb2 = ga2*gab2_rat
+#    gab_rat = param['gab_rat']
+#    gab2_rat = param['gab_rat']
+    gb = ga
+    gb2 = ga2
     ga_an = param['ga_an']
     ga2_an = param['ga2_an']
-    gb_an = ga_an*gab_rat
-    gb2_an = ga2_an*gab2_rat
+    gb_an = ga_an
+    gb2_an = ga2_an
     wp = param['wp']
     k = param['k']
     spl = param['spl']
     wp = param['wp']
     wn = param['wn']
-    wni_an = param['wni_an']
+#    wni_an = param['wni_an']
     gamma1 = param['gamma1']
     gamma2 = param['gamma2']
     # gamma3 = param['gamma3']
     gamma4 = param['gamma4']
     A = param['A']
-    ani_diag = param['ani_diag']
+#    ani_diag = param['ani_diag']
     null_field = param['null_field']
     
 
@@ -91,10 +98,10 @@ def Sij_resid(params,x,y):
     
     
     for i in range(len(delta)): #getting model data for each field delta
-        wpp = wp + ani_diag*((1/np.cosh(delta[i]/null_field)))
-        wnn = wn - ani_diag*((1/np.cosh(delta[i]/null_field))) - 1j*(wni_an/2)*((1/np.cosh(delta[i]/null_field)))
-        wpn = -1j*delta[i]*k+spl*((1/np.cosh(delta[i]/null_field)))
-        wnp = 1j*delta[i]*k+spl*((1/np.cosh(delta[i]/null_field)))
+        wpp = wp
+        wnn = wn
+        wpn = -1j*delta[i]*k+spl
+        wnp = 1j*delta[i]*k+spl
         ga_tot = ga + ga_an*((1/np.cosh(delta[i]/null_field)))
         ga2_tot = ga2 + ga2_an*((1/np.cosh(delta[i]/null_field)))
         gb_tot = gb + gb_an*((1/np.cosh(delta[i]/null_field)))
@@ -316,29 +323,28 @@ fields = np.concatenate((np.linspace(-.05,0,26),np.linspace(0,.05,26)))
 
 fix_vary = False
 params = lmfit.Parameters()
-ani_diag = 0.07
 params.add('gamma1',value = .00015, min = 0, max = .001, vary = False)
 params.add('gamma2',value = .0006, min = 0, max = .005, vary = False)
 params.add('gamma3',value = 0.002, vary = False)
-params.add('gamma4',value = .58, min = 0, vary = False)
+params.add('gamma4',value = .7, min = 0, vary = False)
 params.add('wa',value = 10.8104, vary = False)
 params.add('wb',value = 10.804, vary = False)
 params.add('ka', value = .0005, vary = False)
 params.add('kb', value = .001, vary = False)
-params.add('wp',value = 10.72, vary = False, max = 10.8)
-params.add('wn',value = 10.82, vary = False)
-params.add('wni_an',value = 0, vary = False)
-params.add('ga',value = 0.011, vary = False)
+params.add('wp',value = 10.795, vary = False, max = 10.8)
+params.add('wn',value = 10.805, vary = False)
+#params.add('wni_an',value = 0, vary = False)
+params.add('ga',value = 0.01, vary = False)
 params.add('ga2',value = .005, vary = False)
-params.add('ga_an',value = 0.009, vary = False)
-params.add('ga2_an',value = .005, vary = False)
-params.add('gab_rat',value = 1, vary = False)
-params.add('gab2_rat',value = 1, vary = False)
-params.add('spl',value = 0.105, vary = False, min=-0.05, max=0.12)
-params.add('A',value = .40, vary = False)
+params.add('ga_an',value = 0.0095, vary = False)
+params.add('ga2_an',value = .0035, vary = False)
+#params.add('gab_rat',value = 1, vary = False)
+#params.add('gab2_rat',value = 1, vary = False)
+params.add('spl',value = 0.1, vary = False, min=-0.05, max=0.12)
+params.add('A',value = .45, vary = False)
 params.add('k',value =9, vary = False)
-params.add('ani_diag',value = 0.068, vary = False)
-params.add('null_field' ,value = 0.030, vary = False)
+#params.add('ani_diag',value = 0.068, vary = False)
+params.add('null_field' ,value = 0.018, vary = False)
 
 
 # params.add('phi',value = 0, vary = fix_vary)
@@ -357,22 +363,22 @@ ka = result.params['ka'].value
 kb = result.params['kb'].value
 wp = result.params['wp'].value
 wn = result.params['wn'].value
-wni_an = result.params['wni_an'].value
+#wni_an = result.params['wni_an'].value
 ga = result.params['ga'].value
 ga2 = result.params['ga2'].value
 ga_an = result.params['ga_an'].value
 ga2_an = result.params['ga2_an'].value
-gab_rat = result.params['gab_rat'].value
-gab2_rat = result.params['gab2_rat'].value
+#gab_rat = result.params['gab_rat'].value
+#gab2_rat = result.params['gab2_rat'].value
 gb =ga
 gb2 = ga2
-gb_an = gab_rat*ga_an
-gb2_an = gab2_rat*ga2_an
+gb_an = ga_an
+gb2_an = ga2_an
 spl = result.params['spl'].value
 # delta = result.params['delta'].value
 A=result.params['A'].value
 k = result.params['k'].value
-ani_diag = result.params['ani_diag'].value
+#ani_diag = result.params['ani_diag'].value
 null_field = result.params['null_field'].value
 
 # phi = result.params['phi']
@@ -394,14 +400,14 @@ eig_3 = []
 kappa_prod_comp = []
 
 for i in range(len(delta)):
-    wpp = wp + ani_diag*((1/np.cosh(delta[i]/null_field)))
-    wnn = wn - ani_diag*((1/np.cosh(delta[i]/null_field))) - 1j*(wni_an/2)*((1/np.cosh(delta[i]/null_field)))
-    wpn = -1j*delta[i]*k+spl*((1/np.cosh(delta[i]/null_field)))
-    wnp = 1j*delta[i]*k+spl*((1/np.cosh(delta[i]/null_field)))
+    wpp = wp
+    wnn = wn
+    wpn = -1j*delta[i]*k+spl
+    wnp = 1j*delta[i]*k+spl
     ga_tot = ga + ga_an*((1/np.cosh(delta[i]/null_field)))
     ga2_tot = ga2 + ga2_an*((1/np.cosh(delta[i]/null_field)))
-    gb_tot = gb + gb_an*((1/np.cosh(delta[i]/null_field)))
-    gb2_tot = gb2 + gb2_an*((1/np.cosh(delta[i]/null_field)))
+    gb_tot = ga + ga_an*((1/np.cosh(delta[i]/null_field)))
+    gb2_tot = ga2 + ga2_an*((1/np.cosh(delta[i]/null_field)))
     H = np.array([[wa-1j*ka/2,0,ga_tot,ga2_tot],
                   [0,wb-1j*kb/2,-gb_tot,gb2_tot],
                   [ga_tot,-gb_tot,wpp,wpn],

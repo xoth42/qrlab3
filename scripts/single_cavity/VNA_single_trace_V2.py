@@ -91,11 +91,11 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, title = ''
 #    ampdata = 20*np.log10(np.sqrt(realdata[0,:]**2 + imagdata[0,:]**2))
     if fit_S11:
         params = lmfit.Parameters()
-        params.add('kappa_1', value=2.1305e+05)
+        params.add('kappa_1', value=1e+05)
         params.add('omega_c', value=freqs[np.argmin(np.abs(datas))]*1.0001)
         params.add('kappa_a', value=3.0022e+06)
         params.add('A', value=1)
-#        params.add('phi',value = -1, max = np.pi, min = -np.pi)#,vary = False)
+#        params.add('phi',value = 1.5, max = np.pi, min = -np.pi)#,vary = False)
 #        if np.max(np.abs(datas)) < limit_for_off:
 #            params.add('roff',value = 1e-5)#,vary = False)
 #            params.add('ioff',value = 1e-5)#, vary = False)
@@ -107,6 +107,8 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, title = ''
         print ('total Q: ',result.params['omega_c'].value/result.params['kappa_a'].value)
         print ('coupling Q: ',result.params['omega_c'].value/result.params['kappa_1'].value)
         fitdata = (-1 - result.params['kappa_1'].value / (-1j*(freqs-result.params['omega_c'].value)-result.params['kappa_a'].value/2))*result.params['A'].value
+# * np.exp(1j*result.params['phi'].value)
+
         fitdatadB = 20*np.log10(np.abs(fitdata))
 
 
@@ -168,6 +170,7 @@ class SingleTrace(Measurement1D):
 #        self.plot_type = plot_type
 
         super(SingleTrace, self).__init__(1, **kwargs)
+        
         self.figname = self.data.get_fullname()
 #        self.data.create_dataset('freqs', data = self.freqs)
         self.freqdata = self.data.create_dataset('freqs', shape=[1,len(self.freqs)])

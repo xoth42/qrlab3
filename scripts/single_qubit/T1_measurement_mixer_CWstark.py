@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jun 03 16:44:21 2021
+
+@author: Wang_Lab
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from pulseseq.sequencer import *
@@ -20,12 +27,9 @@ def analysis(meas, data=None, fig=None):
     xs = meas.delays
 
     fig.axes[0].plot(xs/1e3, ys, 'ks', ms=3, linestyle='-', markerfacecolor='red' )
-    try: # This is a placeholder until stes is implemented w/ Alazar.
-        fig.axes[0].errorbar(xs/1e3, ys, yerr=meas.get_errorbars(), fmt='.', 
+    fig.axes[0].errorbar(xs/1e3, ys, yerr=meas.get_errorbars(), fmt='.', 
                          markersize = 0, ecolor='grey', linewidth=1)
-    except:
-        print('passed no errorbars')  
-        
+
     if meas.double_exp == False:
         params = lmfit.Parameters()
         params.add('ofs', value=np.min(ys))
@@ -42,7 +46,7 @@ def analysis(meas, data=None, fig=None):
         fig.axes[0].set_xlabel('Time [us]')
         fig.axes[1].plot(xs, exp_decay(result.params, xs, ys), marker='s')
 
-        
+
 
 
     else:
@@ -69,43 +73,85 @@ def analysis(meas, data=None, fig=None):
     meas.fit_params = result.params
     return result.params
 
-class T1Measurement(Measurement1D):
+class T1Measurement_mixer_CWstark(Measurement1D):
 
-    def __init__(self, qubit_info, delays, double_exp=False, seq=None,
+    def __init__(self, qubit_info, mixer_info1, mixer_info2, ss_mixer_info, delays, double_exp=False, seq=None,
                  postseq=None,laser_power = None, Qswitch_infoB=None, **kwargs):
         self.qubit_info = qubit_info
+        self.mixer_info1 = mixer_info1
+        self.mixer_info2 = mixer_info2
+        self.ss_mixer_info = ss_mixer_info
         self.delays = delays
         self.xs = delays / 1e3      # For plotting purposes
         self.double_exp = double_exp
         self.laser_power = laser_power
         if seq is None:
-            seq = Trigger(250)
+            seq = [Trigger(250)]
         self.seq = seq
         self.postseq = postseq
         self.QswB = Qswitch_infoB
 
-        super(T1Measurement, self).__init__(len(delays), infos=qubit_info, **kwargs)
+        super(T1Measurement_mixer_CWstark, self).__init__(len(delays), infos=(qubit_info, mixer_info1, mixer_info2, ss_mixer_info), **kwargs)
         self.data.create_dataset('delays', data=delays)
 #        self.data.set_attrs(laser_power =self.laser_power)
 
 
     def generate(self):
         s = Sequence()
+#        s.append(Constant(250, 0, chan=4))
+#        s.append(Constant(250, 1, chan='4m1'))
+        if self.mixer_info1.deltaf == 0:
+            ro = [Combined([
+                Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
+    #            Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+                Join([Constant(int(self.mixer_info1.w),self.mixer_info1.pi_amp,chan = self.mixer_info1.sideband_channels[0]),Delay(200)]),
+                Join([Constant(int(self.mixer_info2.w),self.mixer_info2.pi_amp,chan = self.mixer_info2.sideband_channels[0]),Delay(200)])
+    #                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
+            ])]
+        else:
+            ro = [Combined([
+                Join([Delay(200),Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan)]),
+    #            Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+                Join([self.mixer_info1.rotate(np.pi, 0),Delay(200)]),
+                Join([self.mixer_info2.rotate(np.pi, 0),Delay(200)])
+    #                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
+            ])]   
+    
+        stark = Join([Constant(int(1000 + self.qubit_info.w*4), self.ss_mixer_info.pi_amp, chan=self.ss_mixer_info.sideband_channels[0]),Delay(5)])
 
-        
         r = self.qubit_info.rotate
         for i, dt in enumerate(self.delays):
             s.append(self.seq)
-            s.append(r(np.pi, 0))
-
-            s.append(Delay(dt))
+#            s.append(r(np.pi, 0))
+            r_delay = Join([Delay(1000),r(np.pi, 0),Delay(5)])
+            s.append(Combined([stark,
+                r_delay]))
+#            s.append(Combined([
+#                    Constant(25000, 0.1, chan=self.qubit_info.sideband_channels[0]),
+#                    Constant(25000, 0.1, chan=self.qubit_info.sideband_channels[1]),
+#            ]))
+            if dt > 0:  
+                s.append(Delay(dt))
 
             if self.postseq is not None:
                 s.append(self.postseq)
-            
-            s.append(self.readout_driver.do_get_sequence())
 
+            s.append(ro)
             s.append(Delay(2000))
+            #Ebru: changed the delay from 1000 to 20000.
+#            s_temp = self.seq[:]
+#            r_delay = Join([Delay(1000),r(np.pi, 0),Delay(5)])
+#            s_temp += [Combined([stark,
+#                r_delay])]
+#            if dt >0:
+#                s_temp += [Delay(dt)]
+#            
+#            if self.postseq:
+#                s_temp += [self.postseq]
+#                
+#            s_temp += ro
+#            s_temp += [Delay(2000)]
+#            s.append(Join(s_temp))
 
         s = self.get_sequencer(s)
         seqs = s.render()

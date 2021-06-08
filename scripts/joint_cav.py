@@ -40,13 +40,13 @@ cavity_infoR = mclient.get_qubit_info('cavityR')
 fwm_info = mclient.get_qubit_info('fwm_info')
 
 
-qubit_a1b1 = mclient.get_qubit_info('_qubit_a1b1')
-qubit_a2b2 = mclient.get_qubit_info('_qubit_a2b2')
-qubit_a3b3 = mclient.get_qubit_info('_qubit_a3b3')
+#qubit_a1b1 = mclient.get_qubit_info('_qubit_a1b1')
+#qubit_a2b2 = mclient.get_qubit_info('_qubit_a2b2')
+#qubit_a3b3 = mclient.get_qubit_info('_qubit_a3b3')
 #qubit_a4b4 = mclient.get_qubit_info('_qubit_a4b4')
-qubit_a1 = mclient.get_qubit_info('_qubit_a1b0')
+#qubit_a1 = mclient.get_qubit_info('_qubit_a1b0')
 #qubit_a2 = mclient.get_qubit_info('_qubit_a2b0')
-qubit_b1 = mclient.get_qubit_info('_qubit_a0b1')
+#qubit_b1 = mclient.get_qubit_info('_qubit_a0b1')
 #qubit_b2 = mclient.get_qubit_info('_qubit_a0b2')
 
 
@@ -79,12 +79,12 @@ geqs= qubit_info.rotate_quasilective
 #fwm_comb = OCTlib.comb(fwm_info, [.034e6, .034e6], [.3, .3], vary = [0, 1], phases = [0, 0])
 
 # big state pumping for 10us
-fwm_comb = OCTlib.comb(fwm_info, [-275e3], [.6], vary = [1], phases = [np.pi])
-res_comb = OCTlib.comb(cavity_infoR, [-45e3], [.02], vary = [1], phases = [0])
+#fwm_comb = OCTlib.comb(fwm_info, [-275e3], [.6], vary = [1], phases = [np.pi])
+#res_comb = OCTlib.comb(cavity_infoR, [-45e3], [.02], vary = [1], phases = [0])
 
-Areset_comb = OCTlib.comb(mclient.get_qubit_info('cavAreset'), [0], [.2], vary = [1], phases = [0])
-Breset_comb = OCTlib.comb(mclient.get_qubit_info('cavBreset'), [0], [.2], vary = [1], phases = [0])
-Rreset_comb = OCTlib.comb(mclient.get_qubit_info('cavRreset'), [0], [.2], vary = [1], phases = [0])
+#Areset_comb = OCTlib.comb(mclient.get_qubit_info('cavAreset'), [0], [.2], vary = [1], phases = [0])
+#Breset_comb = OCTlib.comb(mclient.get_qubit_info('cavBreset'), [0], [.2], vary = [1], phases = [0])
+#Rreset_comb = OCTlib.comb(mclient.get_qubit_info('cavRreset'), [0], [.2], vary = [1], phases = [0])
 
 # 00+11 pumping for 12us
 #fwm_comb = OCTlib.comb(fwm_info, [-195e3-13e3+.2e6], [.5], vary = [1], phases = [0])
@@ -128,8 +128,8 @@ if 0: # Cavity disp calibration
 #for i in range(5):
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
 #    dig.set_trigger_period(2000)
-    disp = cavdisp.CavDisp(qubit_info, cavity_infoR, 2, 41, 0, seq=None,
-                           delay=5e3, bgcor=True, update=False, generate=True,
+    disp = cavdisp.CavDisp(qubit_info, cavity_infoA, 3, 41, 0, seq=None,
+                           delay=.1e3, bgcor=True, update=False, generate=True,
                            plot_seqs = False, readout=readout
 #                           Qswitch_infoA=Qswitch_infoB, Qswitch_infoB=Qswitch_infoB,
 #                           extra_info=[Qswitch_infoA, Qswitch_infoB,],
@@ -143,9 +143,9 @@ if 0: # Cavity T1
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
 #    xs = np.concatenate((np.linspace(0e3, 50e3, 26), np.linspace(60e3, 1250e3, 55)))
 
-    t1 = cavT1.CavT1(qubit_info, cavity_infoR, 2, np.linspace(0, 5e3, 81),
-                     proj_num=0, seq=None, postseq=sequencer.Delay(5e3), bgcor=True, 
-                     force_a0 = False,
+    t1 = cavT1.CavT1(qubit_info, cavity_infoB, 2, np.linspace(0, 2500e3, 41),
+                     proj_num=0, seq=None, postseq=sequencer.Delay(5e3), bgcor=False, 
+                     force_a0 = True,
                      readout=readout
 #                     extra_info=[ef_info,]
                      )
@@ -212,22 +212,23 @@ if 0: #cavity stark shift
     bla
 
 
-if 0: # number splitting:
+if 1: # number splitting:
     from single_qubit import ssbspec
-    dig.set_naverages(1000)
-    dig.set_trigger_period(5000)
+#    dig.set_naverages(1000)
+#    dig.set_trigger_period(5000)
     
     
-    delay_t = 10e3
-    post_delay = 5e3
-    poly_seq = []
-    poly_seq += fwm_comb.get_poly_seq(delay_t - fwm_comb.sigma*4, 0)
-    poly_seq += res_comb.get_poly_seq(delay_t - res_comb.sigma*4, 0)
-    seq = sequencer.Join([sequencer.Trigger(250), sequencer.Combined(poly_seq),
-                          sequencer.Delay(post_delay)
-                          ])
+#    delay_t = 10e3
+#    post_delay = 5e3
+#    poly_seq = []
+#    poly_seq += fwm_comb.get_poly_seq(delay_t - fwm_comb.sigma*4, 0)
+#    poly_seq += res_comb.get_poly_seq(delay_t - res_comb.sigma*4, 0)
+#    seq = sequencer.Join([sequencer.Trigger(250), sequencer.Combined(poly_seq),
+#                          sequencer.Delay(post_delay)
+#                          ])
         
-    
+    seq = sequencer.Join([sequencer.Trigger(250),cA(1, 0)
+                          ])   
 #    seq = sequencer.Join([sequencer.Trigger(250),cA(1.14, 0), ges(2*np.pi, 0), cA(-.56, 0), 
 #                          sequencer.Combined(poly_seq), sequencer.Delay(post_delay)
 #                          ])
@@ -271,7 +272,7 @@ if 0: # number splitting:
     spec = ssbspec.SSBSpec(qubit_info, #np.linspace(-30e6, 10e6, 21),
 #                           np.linspace(-10e6, 0.5e6, 151),
                            np.concatenate((
-                                          np.linspace(-15e6, 1.5e6, 101),
+                                          np.linspace(-17e6, .5e6, 101),
 #                                          np.linspace(-28e6, -24e6, 44),
 #                                          np.linspace(-22e6, -20e6, 21),
 #                                          np.linspace(-15e6, -13e6, 21),
@@ -281,8 +282,8 @@ if 0: # number splitting:
 #                           extra_info= [fwm_comb.info, res_comb.info],
                            extra_info= [cavity_infoA, cavity_infoB, cavity_infoR, fwm_info],
                            seq = seq,  plot_seqs=False,
-                           bgcor = True, readout=readout,
-                           reset_seq = get_reset(fwm_comb))
+                           bgcor = False, readout=readout,
+                           reset_seq = None)
     spec.measure_keysight()
     bla
 
@@ -335,18 +336,37 @@ if 0: # RO cavity shift
     f.close()'''
     
     bla
-
-if 0: #EF Sideband modulated number splitting:
+    
+if 0: #GE Sideband modulated number splitting:
     from single_qubit import ssbspec
-    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate(1, 0), qubit_info.rotate(np.pi,0)])
+    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate(1.5, 0)])
 #    postseq = qubit_info.rotate(np.pi/2,0)
-    postseq = sequencer.Sequence(qubit_info.rotate(np.pi/2, 0))
-    spec = ssbspec.SSBSpec(ef_info, np.concatenate((
+#    postseq = sequencer.Sequence(qubit_info.rotate(np.pi/2, 0))
+    spec = ssbspec.SSBSpec(qubit_info, np.concatenate((
 #                                                    np.linspace(-22e6, -18e6, 71),  
 #                                                    np.linspace(-12e6, -8e6, 71),
                                                     np.linspace(-10e6, 1e6, 91),
                                                     )),
-                           extra_info= [qubit_info, cavity_infoA, cavity_infoB],
+                           extra_info= [cavity_infoA, cavity_infoB],
+                           seq =seq,  postseq = None, plot_seqs=False, readout=readout)
+    spec.measure_keysight()
+    bla
+
+
+if 0: #EF Sideband modulated number splitting:
+    from single_qubit import ssbspec
+    seq = sequencer.Join([sequencer.Trigger(250), qubit_info.rotate(np.pi,0), cavity_infoA.rotate(1, 0)])
+#    postseq = qubit_info.rotate(np.pi/2,0)
+    dig.set_trigger_period(3000)
+    dig.set_naverages(5000)
+
+    postseq = sequencer.Sequence(qubit_info.rotate(np.pi/2, 0))
+    spec = ssbspec.SSBSpec(ef_info, np.concatenate((
+#                                                    np.linspace(-22e6, -18e6, 71),  
+#                                                    np.linspace(-12e6, -8e6, 71),
+                                                    np.linspace(-30e6, 3e6, 201),
+                                                    )),
+                           extra_info= [qubit_info, cavity_infoA],
                            seq =seq,  postseq = postseq, plot_seqs=False, readout=readout)
     spec.measure_keysight()
     bla
@@ -718,7 +738,7 @@ if 0: # t2 under drive for stark shift
         st2.measure()
         
         
-if 1: # time domain
+if 0: # time domain
     from FWM import poly_time_domain
     
     dig.set_trigger_period(7500)

@@ -142,7 +142,7 @@ class CW_Stark_shift_with_mixer(Measurement1D):
         if self.SS_mixer_info.deltaf == 0:
             stark = (Combined([
 #                Join([Constant(int(self.SS_mixer_info.w) + 100, 1, chan=self.readout_info.readout_chan)]),
-                Join([Constant(int(10000 + self.qubit_info.w_selective*4), self.SS_mixer_info.pi_amp, chan=self.SS_mixer_info.channels[0]),Delay(5)]),
+                Join([Constant(int(1000 + self.qubit_info.w_selective*4), self.SS_mixer_info.pi_amp, chan=self.SS_mixer_info.channels[0]),Delay(5)]),
 #                Join([Delay(100),Constant(int(self.SS_mixer_info2.w), self.SS_mixer_info2.pi_amp, chan=self.SS_mixer_info2.channels[0])]),
 
             ]))
@@ -154,7 +154,7 @@ class CW_Stark_shift_with_mixer(Measurement1D):
 #                Join([self.SS_mixer_info1.rotate(np.pi*np.exp(-slope*self.damp_delay), self.phase1),Delay(10)]),
 #                Join([self.SS_mixer_info2.rotate(np.pi, 0),Delay(10)])
 #            ]))
-            stark = Join([Constant(int(10000 + self.qubit_info.w_selective*4), self.SS_mixer_info.pi_amp, chan=self.SS_mixer_info.sideband_channels[0]),Delay(5)])
+            stark = Join([Constant(int(1000 + self.qubit_info.w_selective*4), self.SS_mixer_info.pi_amp, chan=self.SS_mixer_info.sideband_channels[0]),Delay(5)])
 #            stark = Join([self.SS_mixer_info1.rotate(np.pi, self.phase1),self.SS_mixer_info1.rotate(np.pi, self.phase1 +3.141)])
         if self.bgcor:
             plen = self.qubit_info.rotate_selective.base(np.pi, 0).get_length()
@@ -168,7 +168,7 @@ class CW_Stark_shift_with_mixer(Measurement1D):
             else:
                 period = 1e50
             g.add(self.qubit_info.pi_amp_selective, period)
-            g_delay = Join([Delay(10000),g(),Delay(5)])
+            g_delay = Join([Delay(1000),g(),Delay(5)])
             s.append(Join([
                 self.seq,
                 Combined([stark,
@@ -183,7 +183,7 @@ class CW_Stark_shift_with_mixer(Measurement1D):
                 s.append(self.postseq)
             s.append(ro)
             #Ebru, adding the 20000 delay
-            s.append(Delay(20000))
+            s.append(Delay(2000))
 
         s = self.get_sequencer(s)
         seqs = s.render()

@@ -105,7 +105,7 @@ class EFRabi(Measurement1D):
 #                    Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
 #                ]))
             
-            s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+            s.append(self.readout_driver.do_get_sequence())
             s.append(Delay(1000))
 
         s = self.get_sequencer(s)

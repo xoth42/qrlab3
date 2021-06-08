@@ -111,7 +111,8 @@ print 'Magnet OK'
 #sc1 = instruments.create('sc1', 'SC5511A', devid='100016B6')
 
 #sc2 = instruments.create('sc2', 'SC5511A', devid='100016B5')
-
+#WF_qubit1 = instruments.create('WF_qubit1', 'WFT1153', COM_adrs='COM4', serial = '1152')
+#WF_qubit2 = instruments.create('WF_qubit2', 'WFT1153_ch2')
 
 
 #efBrick = instruments.create('efBrick', 'LabBrick_RFSource', serial=18238, use_extref=True) # qubit
@@ -129,7 +130,8 @@ print 'Magnet OK'
 
 #SC_qubit1FWM = instruments.create('SC_qubit1FWM', 'SC5506A', devid= '10001FA3')
 #SSdrive = instruments.create('SSdrive', 'SC5511A', devid= '10001C09')#qubit 2
-SC_RO = instruments.create('SC_RO', 'SC5511A', devid= '10001C09')#qubit 2
+SC_RO = instruments.create('SC_RO', 'SC5511A', devid= '10001C09')
+SC_qubit = instruments.create('SC_qubit', 'SC5511A', devid= '10001D31')
 #SS_drive = instruments.create('SS_drive', 'SC5511A', devid= '10001D2F')
 readout = instruments.create('readout', 'Readout_Info', IQe=(30.69-48.9j), IQg=(31.27-48.64j),
                              IQe_radius=1 , rfsource1='SC_RO', rfsource2='SC_ref',
@@ -154,7 +156,7 @@ readout_IQ = instruments.create('readout_IQ', 'Readout_IQ_Info', IQe=(9.025 + 1j
 
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 
-                             deltaf=-450e6,
+                             deltaf=-373e6,
                               pi_amp=0.3196,#0.404,  # 0.1594,
                               pi2_amp=0,
                               drag=0,
@@ -205,7 +207,7 @@ qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
 
 qubit2ge = instruments.create('qubit2ge', 'Qubit_Info',
 
-                             deltaf=94.9e6,
+                             deltaf=200e6,
                               pi_amp=0.576,#0.4648,
 #                             pi_amp = 0.742,
                               pi2_amp=0,
@@ -254,7 +256,7 @@ qubit2ef = instruments.create('qubit2ef', 'Qubit_Info',
 #                            w=10000,
 #                            w_selective=200)
 mixer_info1 = instruments.create('mixer_info1', 'Qubit_Info',
-                            deltaf=-50e6,
+                            deltaf=50e6,
                             pi_amp=0.06,
                             pi_amp_selective=0.01,
                             rotation='Square',
@@ -266,7 +268,7 @@ mixer_info1 = instruments.create('mixer_info1', 'Qubit_Info',
 #for SS_mixer_info1 pi_amp/w is for normal stark shift and pi_amp_selective/w_selective is for single photon calibrated pulse
 #to be used in the photon ramsey measurement
 SS_mixer_info1 = instruments.create('SS_mixer_info1', 'Qubit_Info',
-                            deltaf=-47.8e6,
+                            deltaf=47.8e6,
                             pi_amp=0.7,
                             pi_amp_selective=0.4,
                             rotation='Square',
@@ -281,7 +283,7 @@ SS_mixer_info1 = instruments.create('SS_mixer_info1', 'Qubit_Info',
 #                            marker_ofs = 0)
 
 mixer_info2 = instruments.create('mixer_info2', 'Qubit_Info',
-                            deltaf=-50e6,
+                            deltaf=50e6,
                             pi_amp=.06,
                             pi_amp_selective=0.01,
                             rotation='Square',
@@ -295,7 +297,7 @@ mixer_info2 = instruments.create('mixer_info2', 'Qubit_Info',
 #                            marker_ofs = 0)
 
 SS_mixer_info2 = instruments.create('SS_mixer_info2', 'Qubit_Info',
-                            deltaf=-50e6,
+                            deltaf=50e6,
                             pi_amp=0,
                             pi_amp_selective=0,
                             rotation='Square',

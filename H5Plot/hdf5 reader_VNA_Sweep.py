@@ -17,17 +17,17 @@ from matplotlib import gridspec
 filepath = 'C:\_Data\\'
 #hdf5_name = 'VNAtestJan30.hdf5'
 #hdf5_name = 'YIG_Copper_Cavity_sweep_test.hdf5'
-hdf5_name = '0625cooldown_circulator - Copy (4).hdf5'
-#hdf5_name = '20210402cooldown_circulator_VNA - Copy.hdf5'
+#hdf5_name = '0625cooldown_circulator - Copy (4).hdf5'
+hdf5_name = '20210518cooldown_circulator_VNA - Copy.hdf5'
 
-date = '20190715'
-time = '185824'
+date = '20210521'
+time = '162502'
 #time = '123511'
 #time = '130920'
 #date = '20210505'
 #time = '152726'
-experiment = 'Magnet_Sweep_VNA'
-#experiment = 'Power_Sweep_VNA'
+#experiment = 'Magnet_Sweep_VNA'
+experiment = 'Power_Sweep_VNA'
 
 
 
@@ -94,8 +94,8 @@ y_keys = exp.keys()
 #y_keys.remove(x2_key)
 freq = exp['freqs'].value
 #current = exp['currents'].value
-#powers = exp['powers'].value        # Changed 4/28/21 - Alex S.
-powers = exp['fields'].value        # Changed 4/28/21 - Alex S.
+powers = exp['powers'].value        # Changed 4/28/21 - Alex S.
+#powers = exp['fields'].value        # Changed 4/28/21 - Alex S.
 
 real = exp['realS21'].value
 imag = exp['imaginaryS21'].value
