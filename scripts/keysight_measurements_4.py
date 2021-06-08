@@ -119,7 +119,7 @@ if 0: # cav transmission NEW IQ
 
 
 
-if 1: # cav transmission OLD
+if 0: # cav transmission OLD
     from single_cavity import rocavspectroscopy_keysight
     
     rofreq = 7274.8e6
@@ -734,28 +734,30 @@ if 0: # stark shift measurments
         pumpFG.set_rf_on(False)       
     
 
-if 0: # overnight coherence measurements
+if 1: # overnight coherence measurements
     from single_qubit import T1measurement
     from single_qubit import T2measurement
     from single_qubit import efrabi
     from single_qubit import FT1measurement
+    from single_qubit import EFT2measurement
     dig.set_trigger_period(500)
-    dig.set_naverages(500)
-    for i in range(200):
+    dig.set_naverages(1000)
+    for i in range(100000):
         
-        t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0, 90e3, 101),)), 
+        t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0, 19e3, 20), 
+                                                                     np.linspace(20e3, 160e3, 31))), 
                                          double_exp=False, generate=True, plot_seqs=False, seq=None, 
                                          readout='readout_IQ')
         t1.measure()
         
         
-        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 55e3, 151), detune=.25e6, 
+        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 55e3, 121), detune=.1e6, 
                                          double_freq=False, generate=True, seq=None,
                                          plot_seqs=False, readout='readout_IQ')
         t2.measure_keysight()
         
-        t2e = T2measurement.T2Measurement(qubit_info, np.linspace(0.01e3, 65e3, 151),
-                                         detune=0.25e6, double_freq=False,
+        t2e = T2measurement.T2Measurement(qubit_info, np.linspace(0.01e3, 65e3, 121),
+                                         detune=0.1e6, double_freq=False,
                                          echotype = T2measurement.ECHO_HAHN, necho=1, 
                                          plot_seqs = False, generate=True, readout=readout)
         t2e.measure_keysight()
@@ -766,21 +768,28 @@ if 0: # overnight coherence measurements
                             selective=False, generate=True, postseq = None, update=False, readout='readout_IQ')
         efr.measure_keysight()
         period = efr.fit_params['period'].value
-        dig.set_naverages(3000)
+        dig.set_naverages(5000)
         efr2 = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.9, 0.9, 51), first_pi=False, 
                             selective=False, force_period=period, postseq= None, generate=True, readout='readout_IQ')
         efr2.measure_keysight()
-        dig.set_naverages(500)
+        dig.set_naverages(1000)
         
         
         ft1 = FT1measurement.FT1Measurement(qubit_info, ef_info, np.linspace(0, 40e3, 101), 
                                             readout=readout)
         ft1.measure_keysight()
+    
 
+        ft2 = EFT2measurement.EFT2Measurement(qubit_info, ef_info, np.linspace(.1e3, 10e3, 151),
+                                               detune=2e6, 
+                                               double_freq=True, generate=True, seq=None, readout=readout)
+        ft2.measure_keysight()
+        
         plt.close(t1.get_figure())
         plt.close(t2.get_figure())
         plt.close(t2e.get_figure())
         plt.close(efr.get_figure())
         plt.close(efr2.get_figure())
         plt.close(ft1.get_figure())
+        plt.close(ft2.get_figure())
 
