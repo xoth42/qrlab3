@@ -65,14 +65,19 @@ class roic_roomtemp_testing(Measurement1D):
         chs = self.qubit_info.sideband_channels
         chs2 = self.qubit2_info.sideband_channels
 
-        pre_LO = Constant(self.plen_LO, self.amp_LO, chan=chs2[0])
+        pre_LO = Combined([
+                Constant(self.plen_LO, self.amp_LO, chan=chs2[0]),
+                Constant(self.plen_LO, self.amp_LO, chan=chs2[1])
+        ])
         
         
         RF = Combined([
             Constant(self.plen_RF, self.amp_RF * np.cos(self.phase), chan=chs[0]),
             Constant(self.plen_RF, self.amp_RF * np.sin(self.phase), chan=chs[1]),
             Constant(self.plen_RF, self.amp_LO, chan=chs2[0]),
-            Constant(self.plen_RF, 1, chan=self.readout_info.acq_chan)
+            Constant(self.plen_RF, self.amp_LO, chan=chs2[1]),
+            Constant(self.plen_RF, 1, chan=self.readout_info.acq_chan),
+            Constant(self.plen_RF, 1, chan='1m1')
         ])
     
 #        LO = Constant(self.plen_LO/2, self.amp_LO, chan=chs2[0])
@@ -112,7 +117,8 @@ class roic_roomtemp_testing(Measurement1D):
                 dig.setup_avg_shot()
                 dig.arm()
                 dig.start_hvi()
-                ret = dig.take_avg_shot()
+#                ret = dig.take_avg_shot()
+                I, Q = dig.take_raw_shot_ROIC(I_chan=3, Q_chan=4)
                 #Yingying to add a main loop, suggesting to help with the spectroscopy crash
                 
                 try:
@@ -124,62 +130,21 @@ class roic_roomtemp_testing(Measurement1D):
                 dig.release_buf()
 
 
-                IQ = np.average(ret)
-                amps.append(np.abs(IQ))
-                phases.append(np.angle(IQ, deg=True))
-                print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
+#                IQ = np.average(ret)
+#                amps.append(np.abs(IQ))
+#                phases.append(np.angle(IQ, deg=True))
+#                print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
+#
+            self.I_data = I
 
-            self.ampdata[ipower,:] = amps
-
-            self.phasedata[ipower,:] = phases
+            self.Q_data = Q
+                
 
         self.analyze()
 
     def analyze(self):
-        f = plt.figure()
-
-        if self.plot_type == SPEC:
-            ax1 = f.add_subplot(2,1,1)
-            ax2 = f.add_subplot(2,1,2)
-            for ipower, power in enumerate(self.ro_powers):
-                ax1.plot(self.q_freqs/1e6, self.ampdata[ipower,:], label='Amps, Power %.01f dB'%power)
-                ax2.plot(self.q_freqs/1e6, self.phasedata[ipower,:], label='Phase, Power %.01f dB'%power)
-            fs = self.q_freqs
-            amps = self.ampdata[0,:]
-#            phases = self.phasedata[0,:]
-            f = fit.Lorentzian(fs, amps)
-#            f = fit.Lorentzian(fs, phases)
-            h0 = np.max(amps)/2.0
-            w0 = 2e6
-            pos = fs[np.argmax(amps)]
-            p0 = [np.max(amps), w0*h0, pos, w0]
-            p = f.fit(p0)
-            txt = 'Center = %.03f MHz' % (p[2]/1e6,)
-            print 'Fit gave: %s' % (txt,)
-            ax1.plot(fs/1e6, f.func(p, fs), label=txt)
-
-            ax1.legend()
-            ax2.legend()
-            ax1.set_ylabel('Intensity [AU]')
-            ax2.set_xlabel('Frequency [MHz]')
-
-        if self.plot_type == POWER:
-            ax1 = f.add_subplot(2,1,1)
-            ax2 = f.add_subplot(2,1,2)
-            for ifreq, freq in enumerate(self.q_freqs):
-                ax1.plot(self.ro_powers, self.ampdata[:,ifreq], label='RF @ %.03f MHz'%(freq/1e6,))
-                ax2.plot(self.ro_powers, self.phasedata[:,ifreq], label='RF @ %.03f MHz'%(freq/1e6,))
-            ax1.legend()
-            ax2.legend()
-            ax1.set_ylabel('Intensity [AU]')
-            ax2.set_ylabel('Angle [deg]')
-            ax1.set_xlabel('Power [dB]')
-            ax2.set_xlabel('Power [dB]')
-#        plt.savefig('out/' + str(int(self.q_freqs[0]/1e6)) + '.png')
-        ## Yingying add it to save the figure        
-        fn = os.path.join(config.datadir, 'images/%s_qubitspec.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
-        fdir = os.path.split(fn)[0]
-        if not os.path.isdir(fdir):
-            os.makedirs(fdir)
-        kwargs = dict()
-        plt.savefig(fn, **kwargs)
+        plt.figure()
+        plt.plot(self.I_data, label='I_data')
+        plt.plot(self.Q_data, label='Q_data')
+        plt.legend()
+     

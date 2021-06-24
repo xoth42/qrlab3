@@ -30,7 +30,7 @@ yoko = instruments.create('yoko', 'Yokogawa_gs200_downgraded', address = 'GPIB0:
 
 #
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
-                              deltaf=-178.320e6,
+                              deltaf=-100e6,
                               pi_amp=0.062, 
                               pi2_amp=0,
                               drag=0.00,
@@ -42,7 +42,7 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                               w_selective=100,
                               channels='5,6',
                               sideband_channels='I1,Q1',
-                              sideband_phase=-0.2)
+                              sideband_phase=0)
 #qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 #                              deltaf=228524449.5,
 #                              pi_amp=0.078947, 
@@ -217,7 +217,7 @@ qubit2ge_2 = instruments.create('qubit2ge_2', 'Qubit_Info',
 #                              drag=0.0,
 #                              rotation='GaussianSquare',
 #                              w=6,
-#                              sq_len=52,
+#                               sq_len=52,
 #                              chop=3,
 #                              channels='7,8',
 #                              sideband_channels='I19,Q19',
@@ -370,7 +370,7 @@ AWG3 = instruments.create('AWG3', 'Keysight_AWG', chassis = 0, slot = 9,
 
 
 ZZ = instruments.create('ZZ', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270760::INSTR')
-#gaius01 = instruments.create('gaius01', 'LabBrick_RFSource', serial=21514, use_extref=True)
+#gaius01_3 = instruments.create('gaius01_3', 'LabBrick_RFSource', serial=21514, use_extref=True)
 #gaius01 = instruments.create('gaius01', 'LabBrick_RFSource', serial=21513, use_extref=True)
 
 #
@@ -379,7 +379,7 @@ refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14510, use
 #
 RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=17912, use_extref=True)
 ##control_drive = instruments.create('control_drive', 'LabBrick_RFSource', serial=21513,  use_extref=True)
-gaius01_2= instruments.create('gaius01_2', 'LabBrick_RFSource', serial=21515,  use_extref=True)
+#gaius01_2= instruments.create('gaius01_2', 'LabBrick_RFSource', serial=21515,  use_extref=True)
 ##instruments.remove('SCref')
 #SCref = instruments.create('SCref', 'SC5511A', devid='10001D31')
 #cool = instruments.create('cool', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270760::INSTR')

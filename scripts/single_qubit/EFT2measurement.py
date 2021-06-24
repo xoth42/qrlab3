@@ -266,7 +266,7 @@ class EFT2Measurement(Measurement1D):
 
             if self.postseq:
                 s.append(self.postseq)
-            s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+            s.append(self.readout_driver.do_get_sequence())
             
             s.append(Delay(2000))
 

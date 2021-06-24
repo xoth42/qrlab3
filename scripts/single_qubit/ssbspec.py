@@ -141,8 +141,11 @@ class SSBSpec(Measurement1D):
 
         if self.bgcor:
             plen = self.qubit_info.rotate_selective.base(np.pi, 0).get_length()
-            s.append(Join([self.seq, Delay(plen), self.postseq]))
-            s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+            
+            s.append(Join([self.seq, Delay(plen)]))
+            if self.post_seq is not None:
+                s.append(self.postseq)
+            s.append(self.readout_driver.do_get_sequence())
 
         for i, df in enumerate(self.detunings):
 #        for df in self.detunings:
@@ -161,11 +164,12 @@ class SSBSpec(Measurement1D):
             if self.postseq:
                 s.append(self.postseq)
 
-            s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+            s.append(self.readout_driver.do_get_sequence())
 
 
             #Ebru, adding the 20000 delay
-            s.append(self.reset_seq)
+            if self.reset_seq is not None:
+                s.append(self.reset_seq)
             s.append(Delay(2000))
         s = self.get_sequencer(s)
         seqs = s.render()

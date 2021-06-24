@@ -12,7 +12,7 @@ from mclient import instruments
 
 #raspi = instruments.create('raspi', 'raspi_manager')
 
-#WF_twpa = instruments.create('WF_twpa', 'WFT1153', serial='1153', COM_adrs='COM4')
+WF_twpa = instruments.create('WF_twpa', 'WFT1153', serial='1153', COM_adrs='COM4')
 #
 #instruments.remove('dig')
 dig = instruments.create('dig', 'Keysight_DIG', chassis = 1, slot = 3, trigger_period = 100, 
@@ -29,11 +29,11 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                               pi2_amp=0,
                               drag=0,
                               pi_amp_quasilective=.01,
-                              pi_amp_selective=.006,
+                              pi_amp_selective=.7,
                               rotation='Gaussian',
                               w=5,
                               w_quasilective=160, #120,
-                              w_selective=500,
+                              w_selective=20,
                               channels='3,4',
                               sideband_channels='I1,Q1',
                               sideband_phase=-0.15)
@@ -81,7 +81,7 @@ qubit2ge = instruments.create('qubit2ge', 'Qubit_Info',
 
 readout = instruments.create('readout', 'Readout_Info', IQe=(17.3018176573+31.8619779296j), IQg=(-46.0239832844+85.7199238753j),
                            IQe_radius= 1 , rfsource1='RObrick', rfsource2='refbrick',
-                         pulse_len=1000, readout_chan='2m1', acq_chan='1m1')
+                         pulse_len=1000, readout_chan='2m1', acq_chan='5m1')
 
 Qbrick = instruments.create('Qbrick', 'LabBrick_RFSource', serial=18239,
                           use_extref=True)
