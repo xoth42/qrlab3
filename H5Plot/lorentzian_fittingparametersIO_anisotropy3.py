@@ -102,10 +102,14 @@ def Sij_resid(params,x,y):
         wnn = wn
         wpn = -1j*delta[i]*k+spl
         wnp = 1j*delta[i]*k+spl
-        ga_tot = ga + ga_an*((1/np.cosh(delta[i]/null_field)))
-        ga2_tot = ga2 + ga2_an*((1/np.cosh(delta[i]/null_field)))
-        gb_tot = gb + gb_an*((1/np.cosh(delta[i]/null_field)))
-        gb2_tot = gb2 + gb2_an*((1/np.cosh(delta[i]/null_field)))
+#        ga_tot = ga + ga_an*((1/np.cosh(delta[i]/null_field)))
+#        ga2_tot = ga2 + ga2_an*((1/np.cosh(delta[i]/null_field)))
+#        gb_tot = gb + gb_an*((1/np.cosh(delta[i]/null_field)))
+#        gb2_tot = gb2 + gb2_an*((1/np.cosh(delta[i]/null_field)))
+        ga_tot = ga + ga_an*(1-np.abs(delta[i]/delta[-1]))
+        ga2_tot = ga2 + ga2_an*(1-np.abs(delta[i]/delta[-1]))
+        gb_tot = gb + gb_an*(1-np.abs(delta[i]/delta[-1]))
+        gb2_tot = gb2 + gb2_an*(1-np.abs(delta[i]/delta[-1]))
         H = np.array([[wa-1j*ka/2,0,ga_tot,ga2_tot],
                       [0,wb-1j*kb/2,-gb_tot,gb2_tot],
                       [ga_tot,-gb_tot,wpp,wpn],
@@ -324,27 +328,27 @@ fields = np.concatenate((np.linspace(-.05,0,26),np.linspace(0,.05,26)))
 fix_vary = False
 params = lmfit.Parameters()
 params.add('gamma1',value = .00015, min = 0, max = .001, vary = False)
-params.add('gamma2',value = .0006, min = 0, max = .005, vary = False)
+params.add('gamma2',value = .00015, min = 0, max = .005, vary = False)
 params.add('gamma3',value = 0.002, vary = False)
-params.add('gamma4',value = .7, min = 0, vary = False)
+params.add('gamma4',value = .73, min = 0, vary = False)
 params.add('wa',value = 10.8104, vary = False)
 params.add('wb',value = 10.804, vary = False)
-params.add('ka', value = .0005, vary = False)
-params.add('kb', value = .001, vary = False)
-params.add('wp',value = 10.795, vary = False, max = 10.8)
-params.add('wn',value = 10.805, vary = False)
+params.add('ka', value = .001, vary = False)
+params.add('kb', value = .0015, vary = False)
+params.add('wp',value = 10.704, vary = False, max = 10.8)
+params.add('wn',value = 10.813, vary = False)
 #params.add('wni_an',value = 0, vary = False)
-params.add('ga',value = 0.01, vary = False)
-params.add('ga2',value = .005, vary = False)
-params.add('ga_an',value = 0.0095, vary = False)
-params.add('ga2_an',value = .0035, vary = False)
+params.add('ga',value = 0.009, vary = False)
+params.add('ga2',value = .0065, vary = False)
+params.add('ga_an',value = 0.068, vary = False)
+params.add('ga2_an',value = .005, vary = False)
 #params.add('gab_rat',value = 1, vary = False)
 #params.add('gab2_rat',value = 1, vary = False)
-params.add('spl',value = 0.1, vary = False, min=-0.05, max=0.12)
+params.add('spl',value = 0.115, vary = False, min=-0.05, max=0.12)
 params.add('A',value = .45, vary = False)
-params.add('k',value =9, vary = False)
+params.add('k',value = 9, vary = False)
 #params.add('ani_diag',value = 0.068, vary = False)
-params.add('null_field' ,value = 0.018, vary = False)
+params.add('null_field' ,value = 0.0185, vary = False)
 
 
 # params.add('phi',value = 0, vary = fix_vary)
@@ -404,10 +408,10 @@ for i in range(len(delta)):
     wnn = wn
     wpn = -1j*delta[i]*k+spl
     wnp = 1j*delta[i]*k+spl
-    ga_tot = ga + ga_an*((1/np.cosh(delta[i]/null_field)))
-    ga2_tot = ga2 + ga2_an*((1/np.cosh(delta[i]/null_field)))
-    gb_tot = ga + ga_an*((1/np.cosh(delta[i]/null_field)))
-    gb2_tot = ga2 + ga2_an*((1/np.cosh(delta[i]/null_field)))
+    ga_tot = ga + ga_an*(1-np.abs(delta[i]/delta[-1]))
+    ga2_tot = ga2 + ga2_an*(1-np.abs(delta[i]/delta[-1]))
+    gb_tot = ga + ga_an*(1-np.abs(delta[i]/delta[-1]))
+    gb2_tot = ga2 + ga2_an*(1-np.abs(delta[i]/delta[-1]))
     H = np.array([[wa-1j*ka/2,0,ga_tot,ga2_tot],
                   [0,wb-1j*kb/2,-gb_tot,gb2_tot],
                   [ga_tot,-gb_tot,wpp,wpn],
@@ -641,7 +645,7 @@ plt.errorbar(fields,np.asarray(freq2)/1e9,yerr = np.asarray(freq2_err)/1e9,fmt =
 plt.errorbar(fields,np.asarray(freq1)/1e9,yerr = np.asarray(freq1_err)/1e9,fmt ='o',color = 'tab:blue',label = 'data mode 2')
 #for i in range(len(fitting_data)):
 #    plt.scatter([0],fitting_data[i], marker = 'o')
-plt.ylim(10.7,10.9)
+#plt.ylim(10.7,10.9)
 plt.legend()
 
 plt.figure()
@@ -677,7 +681,42 @@ plt.errorbar(fields,(np.asarray(kappa_prod1)/1e6),yerr = (np.asarray(kappa_prod1
 #    plt.scatter([0],fitting_kprod[i]**.5/1e9, marker = 'o')
 plt.legend()
 
+amp = np.transpose(np.asarray(kappa_prod_2))
 
+Amp_rat_1 = (amp[0][100:]/amp[0][0:101][::-1])
+Amp_rat_2 = (amp[1][100:]/amp[1][0:101][::-1])
+
+Amp_rat_ex1 = (np.asarray(kappa_prod1[26:])/np.asarray(kappa_prod1[0:26][::-1]))
+Amp_rat_ex2 = (np.asarray(kappa_prod2[26:])/np.asarray(kappa_prod2[0:26][::-1]))
+
+
+Amp_rat_err1 = np.zeros(len(Amp_rat_ex1))
+Amp_rat_err2 = np.zeros(len(Amp_rat_ex2))
+
+for i in range(len(Amp_rat_err1)):
+    Amp_rat_err1[i] = Amp_rat_ex1[i]*np.sqrt((kappa_prod1_err[26+i]/kappa_prod1[26+i])**2+(kappa_prod1_err[25-i]/kappa_prod1[25-i])**2)
+    Amp_rat_err2[i] = Amp_rat_ex2[i]*np.sqrt((kappa_prod2_err[26+i]/kappa_prod2[26+i])**2+(kappa_prod2_err[25-i]/kappa_prod2[25-i])**2)
+
+rat_fields = list(fields[26:])
+#rat_fields.reverse()
+rat_fields_t = list(delta[100:])
+#rat_fields_t.reverse()
+    
+
+plt.figure()
+
+plt.title('Amplitude ratio')
+plt.xlabel('Fields(T)')
+plt.ylabel('Amplitude ratio')
+
+plt.plot(rat_fields_t,Amp_rat_1, '--', label = 'model mode 1')
+plt.plot(rat_fields_t,Amp_rat_2, '-.', label = 'model mode 2')
+plt.errorbar(rat_fields,Amp_rat_ex2,yerr = Amp_rat_err2,fmt ='o', color = 'tab:orange',label = 'data mode 2')
+plt.errorbar(rat_fields,Amp_rat_ex1,yerr = Amp_rat_err1,fmt ='^',color = 'tab:blue',label = 'data mode 1')
+#plt.ylim((0,.8))
+#for i in range(len(fitting_data)):
+#    plt.scatter([0],fitting_kprod[i]**.5/1e9, marker = 'o')
+plt.legend()
 
 
 
