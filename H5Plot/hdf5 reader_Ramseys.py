@@ -40,22 +40,22 @@ def changing_freq_fit(params, x, data):
 
 ''' Path to the .hdf5 file '''
 filepath = 'C:/_Data/'
-hdf5_name = '01052021cooldown_circulator - Copy.hdf5'
-date = '20210301'
+hdf5_name = '04222021cooldown_circulator - Copy.hdf5'
+date = '20210624'
 #experiment = 'ROCavSpectroscopy_keysight'
 #experiment = 'Power_Sweep_VNA'
 f = h5.File(filepath + hdf5_name, 'r')
-j = 0
+j = 10
 
 
 save_data = False
 CW_qubit = False
 #CW_qubit = False
-field = -.005
+field = -0.04
 nrows = 3
 
-fix_phi0 = None
-proj = 'projection'
+fix_phi0 =2.3#None
+proj = 'phase'
 
 #
 #if three_modes:
@@ -75,7 +75,7 @@ f0_plt = np.zeros(repeat)
 for i, title in enumerate(f[date].keys()):
 #    print int(title[0:6])
 #    print int(title[0:6]) <= 020617
-    if int(title[0:6]) <= int('153632') and int(title[0:6]) > int('135421') and title[7:13] == exp_t:# and title[7:12] =='ROCav':
+    if int(title[0:6]) <= int('240000') and int(title[0:6]) > int('000000') and title[7:13] == exp_t:# and title[7:12] =='ROCav':
         print j
         print title
 
@@ -121,6 +121,13 @@ for i, title in enumerate(f[date].keys()):
 
             vproj /= np.abs(vproj)
             ys_als[2] = np.real(ys) * vproj.real  + np.imag(ys) * vproj.imag
+            comp_data = ys
+            pl.figure('complex plane')
+            pl.scatter(np.real(comp_data),np.imag(comp_data), label = '%s'%(i))
+            p = np.polyfit(np.real(comp_data), np.imag(comp_data), 1)
+            pl.plot(np.linspace(np.min(np.real(comp_data)), np.max(np.real(comp_data)), 11), 
+                    p[0] * np.linspace(np.min(np.real(comp_data)), np.max(np.real(comp_data)), 11) + p[1])
+        
         fig = pl.figure()
         fig.add_subplot(111)
 #        gs = gridspec.GridSpec(2, 1, height_ratios=[3,1])
@@ -208,7 +215,7 @@ for i, title in enumerate(f[date].keys()):
         
             params = lmfit.Parameters()
             params.add('ofs', value=np.average(ys))
-            params.add('amp', value=amp0, min=0.1)
+            params.add('amp', value=amp0, min=0.01)
             params.add('tau', value=max(xs)*0.7, min=1, max=2e5)
             params.add('freq', value=f0, min=0)
             params.add('slope', value=0,vary = False)

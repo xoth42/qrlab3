@@ -224,13 +224,24 @@ class ROCavSpectroscopy_Mixer(Measurement1D):
 #            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
 #            Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan),
 #        ]))
-        s.append(Combined([
-            Join([Delay(5),Constant(int(self.mixer_info.w), 1, chan=self.readout_info.acq_chan)]),
-#                Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
-            Join([self.mixer_info.rotate(np.pi, 0),Delay(5)]),
-            Join([self.mixer_info2.rotate(np.pi, 0),Delay(5)])
-#                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
-        ])) 
+#        s.append(Combined([
+#            Join([Delay(5),Constant(int(self.mixer_info.w), 1, chan=self.readout_info.acq_chan)]),
+##                Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+#            Join([self.mixer_info.rotate(np.pi, 0),Delay(5)]),
+#            Join([self.mixer_info2.rotate(np.pi, 0),Delay(5)])
+##                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
+#        ]))
+        if self.readout != 'readout_IQ':
+            s.append(Combined([
+                Join([Delay(5),Constant(int(self.mixer_info.w), 1, chan=self.readout_info.acq_chan)]),
+    #                Join([Constant(self.readout_info.pulse_len + 100, 1, chan=self.readout_info.readout_chan),Delay(200)]),
+                Join([self.mixer_info.rotate(np.pi, 0),Delay(5)]),
+                Join([self.mixer_info2.rotate(np.pi, 0),Delay(5)])
+    #                Join([Delay(100),Constant(self.readout_info.pulse_len, self.mixer_info.pi_amp, chan=self.mixer_info.channels[0]),Delay(200)]),
+            ]))
+        else:
+            
+            s.append(self.readout_driver.do_get_sequence())
     
         s.append(Delay(1500)) # Chen 5/4 to battle with the minimum pulse length requirement of 2000
 
@@ -256,7 +267,10 @@ class ROCavSpectroscopy_Mixer(Measurement1D):
         self.start_awgs()
 
         for ipower, power in enumerate(self.powers):
-            self.readout_info.rfsource1.set_power(power)
+            if self.readout != 'readout_IQ':
+                self.readout_info.rfsource1.set_power(power)
+            else:
+                self.readout_info.rfsource.set_power(power)
             print 'Power = %s' % (power, )
             time.sleep(1)
 
@@ -264,12 +278,16 @@ class ROCavSpectroscopy_Mixer(Measurement1D):
             phases = []
 
             for ifreq, freq in enumerate(self.freqs):
-                self.readout_info.rfsource1.set_frequency(freq-self.mixer_info.deltaf)
+                if self.readout != 'readout_IQ':
+                    self.readout_info.rfsource1.set_frequency(freq-self.mixer_info.deltaf)
+                else:
+                    self.readout_info.rfsource.set_frequency(freq-self.mixer_info.deltaf)
 #                self.readout_info.rfsource2.set_frequency(freq+50e6)
                 time.sleep(.5)
                 
+                take_ref = (self.readout is not 'readout_IQ')
                 alz.setup_avg_shot(alz.get_naverages())
-                ret = alz.take_avg_shot(async=True)
+                ret = alz.take_avg_shot(async=True, take_ref=take_ref)
                 try:
                     while not ret.is_valid():
                         objsh.helper.backend.main_loop(100)

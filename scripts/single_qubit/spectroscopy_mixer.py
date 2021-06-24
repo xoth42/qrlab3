@@ -133,7 +133,7 @@ class Spectroscopy_Mixer(Measurement1D):
         self.start_awgs()
 
         for ipower, power in enumerate(self.ro_powers):
-            self.readout_info.rfsource.set_power(power)
+#            self.readout_info.rfsource.set_power(power)
             print 'Power = %s' % (power, )
             time.sleep(self.pow_delay)
 

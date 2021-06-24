@@ -64,7 +64,7 @@ def analysis(meas, data=None, fig=None):
 
     params = lmfit.Parameters()
     params.add('ofs', value=np.average(ys))
-    params.add('amp', value=amp0, min=0.1)
+    params.add('amp', value=amp0, min=0.01)
     params.add('tau', value=xs[-1], min=10, max=2e5)
     params.add('freq', value=meas.detune/1e9, min=0)
 #    if meas.echotype == ECHO_NONE:

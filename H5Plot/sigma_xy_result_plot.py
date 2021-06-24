@@ -12,23 +12,23 @@ import re
 import matplotlib.pyplot as pl
 
 
-foldername = 'sigma_xy_redo'
+foldername = 'sigma_xy_qubit2'
 
-filepath = 'C:\\Users\\Wang_Lab\\Documents\\circulator results\\01052021cooldown_circulator\\%s'%(foldername) 
+filepath = 'C:\\Users\\Wang_Lab\\Documents\\circulator results\\06062021cooldown_circulator\\%s'%(foldername) 
 
 filelist = glob.glob(r'%s\\*T_results.txt'%(filepath))
 filelist_base = glob.glob(r'%s\\*T_base_results.txt'%(filepath))
 
 
 #fields_fin = np.asarray([0,0.0001])#np.linspace(-.05,.05,21)
-fields_fin = np.linspace(-.05,.05,21)
+fields_fin = np.linspace(0,.05,2)
 #fieldplot = np.asarray([-0.05, -0.04, -0.03, -0.02, -0.01,  0.  ,0.005,  0.01, 0.015, 0.02,  0.03, 0.04,  0.05,0.06])
 #fieldplot = np.asarray([0,0.0001])
 #fields = np.asarray([0,.005,.01,.015,.02,-.05,-.04,-.03,-.02,-.01,.03,0,.04,.05,.02,.025,.035,.045,0,
 #                     -.005,-.01,-.015,-.02,-.025,-.03,-.035,-.04,-.045,-.05,-.005,-.015,-.015,-.025,
 #                     -.035,-.045,0,.005,.01,.015,.02,.025,.03])
 #fieldplot = fields
-trials = 42
+trials = 2
 fields = np.zeros(trials)
 npts = 242
 delays = np.linspace(0,0.24,121)
@@ -88,10 +88,11 @@ env_base = np.sqrt(sigma_x_b**2 + sigma_y_b**2)
 #
 #env = env/env_base
 
-#pl.figure()
-#X, Y = np.meshgrid(delays,fieldplot-0.005)
-#pl.pcolormesh(X,Y,env)
-#pl.colorbar()
+pl.figure()
+fieldplot = np.concatenate([fields_fin, np.asarray([fields_fin[-1] * 2 - fields_fin[-2]])])
+X, Y = np.meshgrid(delays,fieldplot)
+pl.pcolormesh(X,Y,env)
+pl.colorbar()
 
 delay = 100
 sigma_raw = env[:, delay:delay + 10]

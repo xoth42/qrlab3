@@ -95,11 +95,11 @@ if 0: # test digitizer DEMODULATED
     
 if 0: #set readout and cavity displacement freq
     
-    ro_freq = 10.7943e9
-    cav_disp = 10.796e9
+    ro_freq = 10.8102e9
+    cav_disp = 10.811e9
     power = 10
-    mixer_info1_set.set_pi_amp(0.02)
-    mixer_info2_set.set_pi_amp(0)
+    mixer_info1_set.set_pi_amp(0.1)
+    mixer_info2_set.set_pi_amp(0.1)
     mixer_deltaf = 50e6
     mixer_info1_set.set_deltaf(mixer_deltaf)
     mixer_info2_set.set_deltaf(mixer_deltaf)
@@ -352,7 +352,7 @@ if 0: # cav transmission with mixer and CW qubit drive
     bla
 
 
-if 1: #alazar cavity spec
+if 0: #alazar cavity spec
     from scripts.single_cavity import rocavspectroscopy_mixer
 #    rofreq = 7515.5e6
     amps = np.linspace(0.01,.02,1)
@@ -707,9 +707,9 @@ if 0: #ssb with stark shift with mixer with lorentzian fit
     from single_qubit import stark_shift_with_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
     postseq = sequencer.Delay(150)
-    phase1 = 3.141
+    phase1 = 0
 
-    SS_mixer_info1_set.set_pi_amp(0.6)
+    SS_mixer_info1_set.set_pi_amp(0.7)
 
     SS_mixer_info1 = mclient.get_qubit_info('SS_mixer_info1')
     for i in range(1):        
@@ -717,9 +717,9 @@ if 0: #ssb with stark shift with mixer with lorentzian fit
         seq = sequencer.Trigger(600)
 #        seq = Join([seq, qubit2_info.rotate(np.pi/2, X_AXIS)])
         spec = stark_shift_with_mixer.Stark_shift_with_mixer(qubit_info, mixer_info1,mixer_info2,SS_mixer_info1,SS_mixer_info2, 
-                                                             phase1, np.linspace(-40e6, 20e6, 101), seq=seq, postseq = postseq, plot_seqs=False, 
-                                                             proj_func='phase')
-        spec.measure_keysight()
+                                                             phase1, np.linspace(-20e6, 20e6, 101), seq=seq, postseq = postseq, plot_seqs=False, 
+                                                             proj_func='amplitude')
+        spec.measure()
 #        plt.close()
     shift = spec.center
     bla
@@ -797,8 +797,8 @@ if 0: # Power Rabi-Calibrate pi pulse
         #                       np.linspace(-0.47,-0.41, 81), selective=False,                   
                                plot_seqs=False, generate=True, repeat_pulse=1,# seq=seq,postseq = postseq,
                                update=True, #extra_info=[qubit2_info, ef2_info],
-                               proj_func='phase',readout = 'readout_IQ')
-    tr.measure_keysight()
+                               proj_func='amplitude')
+    tr.measure()
     
     if update_proj:
         if np.abs(tr.avg_data[np.argmax(abs(tr.avg_data))] - tr.avg_data[len(tr.amps)/2]) < np.abs(tr.avg_data[np.argmin(abs(tr.avg_data))] - tr.avg_data[len(tr.amps)/2]):
@@ -922,8 +922,8 @@ if 0: # Power Rabi-Calibrate pi pulse with mixer
 #    postseq = sequencer.Sequence(qubit_info.rotate_selective(np.pi, 0))
     tr = rabi_mixer.Rabi_mixer(qubit_info, mixer_info1, mixer_info2,
 #                               np.linspace(-0.4, 0.4, 81), selective=False,
-                               np.linspace(-0.7, 0.7, 81), selective=False,
-#                               np.linspace(-0.2, 0.2, 81), selective=True,
+#                               np.linspace(-0.5, 0.5, 81), selective=False,
+                               np.linspace(-0.07, 0.07, 81), selective=True,
 #                               np.linspace(-0.6, 0.6, 81), selective=True,
         #                       np.linspace(-0.47,-0.41, 81), selective=False,                   
                                plot_seqs=False, generate=True, repeat_pulse=1,postseq = None,# seq=seq,postseq = postseq, fix_period = 0.38087745,
@@ -1081,7 +1081,7 @@ if 0: # T1 mixer
     t1 = T1measurement_mixer.T1Measurement_mixer(qubit_info, mixer_info1, mixer_info2, #np.linspace(0, 500e3, 101),
                                          np.linspace(0e3, 2e3, 101),
 #                                         np.concatenate((np.linspace(5e3, 5e3, 50), np.linspace(6e3, 6e3, 51))),
-                                         double_exp=False, generate=True, plot_seqs=False, proj_func='amplitude', seq=None)    
+                                         double_exp=False, generate=True, plot_seqs=True, proj_func='amplitude', seq=None)    
     t1.measure()
     bla
 
@@ -1118,14 +1118,14 @@ if 0: #T2 mixer
     from single_qubit import T2measurement_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0)])
     for i in range(1):
-        t2 = T2measurement_mixer.T2Measurement_mixer(qubit_info, mixer_info1, mixer_info2, np.linspace(0, 1e3, 101), detune=8e6, 
-                                                     double_freq=True, generate=True, echotype = 'HANN',
-                                                     seq=None, postseq=None, proj_func='projection') #extra_info=[qubit2_info])
+        t2 = T2measurement_mixer.T2Measurement_mixer(qubit_info, mixer_info1, mixer_info2, np.linspace(0, 1.2e3, 101), detune=7e6, 
+                                                     double_freq=False, generate=True, echotype = 'HANN',
+                                                     seq=None, postseq=None, proj_func='amplitude') #extra_info=[qubit2_info])
 #        t2 = T2measurement.T2Measurement(qubit_info, np.concatenate((np.linspace(0.1e3, 2.6e3, 81), np.linspace(2.61e3, 10e3, 81))), detune=0.5e6, double_freq=False, generate=True, 
 #                                         seq=seq, extra_info=ef_info, postseq=None, proj_func='phase')
 
         
-        t2.measure_keysight()
+        t2.measure()
     bla
     
 if 0: #ramsey mixer
@@ -1274,10 +1274,10 @@ if 0: # EF SSBspec mixer
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate_selective(np.pi, 0)])
     postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
 #    postseq = sequencer.Sequence(qubit_info.rotate_selective(np.pi, 0))
-    spec = ssbspec_mixer.SSBSpec_mixer(ef_info, mixer_info1, mixer_info2, np.linspace(-10e6, 10e6, 101), 
+    spec = ssbspec_mixer.SSBSpec_mixer(ef_info, mixer_info1, mixer_info2, np.linspace(-30e6, 30e6, 101), 
                                        seq=seq, postseq = postseq, extra_info=qubit_info, plot_seqs=False, generate=True, 
-                                       proj_func='projection')
-    spec.measure_keysight()
+                                       proj_func='amplitude')
+    spec.measure()
 #    fit_freq=spec.center
 #    deltaf_1 = ef2_info_set.get_deltaf()
 #    ef2_info_set.set_deltaf(deltaf_1+fit_freq*1e6)
@@ -1348,18 +1348,18 @@ if 1: # EF rabi mixer
 #                                   sequencer.Constant(int(cool_time), 0.1, chan=ef_info.sideband_channels[1]),
 #                                   sequencer.Constant(int(cool_time), 1, chan='3m1')])
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
-#    dig.set_naverages(4000)
-#    efr = efrabi_mixer.EFRabi_mixer(qubit_info, ef_info, mixer_info1, mixer_info2, np.linspace(-0.6, 0.6, 101), first_pi=True,
-#                                    second_pi=True, seq=None, generate=True, update=True,
-#                                    proj_func='projection')
-#    efr.measure_keysight()
-#    period = efr.fit_params['period'].value
-    dig.set_naverages(30000)
-    efr = efrabi_mixer.EFRabi_mixer(qubit_info, ef_info, mixer_info1, mixer_info2, np.linspace(-0.6, 0.6, 101), first_pi=False, 
+    alz.set_naverages(5000)
+    efr = efrabi_mixer.EFRabi_mixer(qubit_info, ef_info, mixer_info1, mixer_info2, np.linspace(-0.5, 0.5, 101), first_pi=True,
+                                    second_pi=True, seq=None, generate=True, update=True,
+                                    proj_func='amplitude')
+    efr.measure()
+    period = efr.fit_params['period'].value
+    alz.set_naverages(30000)
+    efr = efrabi_mixer.EFRabi_mixer(qubit_info, ef_info, mixer_info1, mixer_info2, np.linspace(-0.5, 0.5, 101), first_pi=False, 
                                     second_pi=True, selective=False, seq=None, generate=True,
-                                    force_period = period, proj_func='projection')
-    efr.measure_keysight()
-    dig.set_naverages(6000)
+                                    force_period = period, proj_func='amplitude')
+    efr.measure()
+#    alz.set_naverages(6000)
     bla
 
 if 0: # FT1 
