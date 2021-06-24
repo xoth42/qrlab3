@@ -123,14 +123,15 @@ if 0: # Check histogramming
     take_snr()
     
     
-if 1: # histogram calculating and plotting
+if 0: # histogram calculating and plotting
     dig.set_naverages(10000)
     from scripts.single_qubit import rabi
+#    post_seq = sequencer.Delay(5)
     tr_e = rabi.Rabi(qubit_info, [qubit_info.pi_amp,], histogram=True, title='|e>',
-                     readout=readout)
+                     readout=readout, postseq = None)
     tr_e.measure_keysight()
     tr_g = rabi.Rabi(qubit_info, [0.001,], histogram=True, title='|g>',
-                     readout=readout)
+                     readout=readout, postseq = None)
     tr_g.measure_keysight()
 
     e_data = tr_e.shot_data[:]
@@ -142,7 +143,7 @@ if 1: # histogram calculating and plotting
     midpoint = np.average([g_average, e_average])
 
     #setup plots
-    lim = 20
+    lim = 10
     xvec = np.linspace(-lim, lim, 100)
     fig = plt.figure(figsize=(6, 8))
     gs = gridspec.GridSpec(2, 1, height_ratios=[3,1])
