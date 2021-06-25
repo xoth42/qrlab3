@@ -43,10 +43,10 @@ dig = mclient.instruments['dig']
 
 if 0: # RO Cavity spec
     from scripts.single_cavity import rocavspectroscopy_keysight
-    rofreq = 8269e6
-    freq_range = 5e6
+    rofreq = 6525e6
+    freq_range = 15e6
     for pulse in [False]:
-        ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(-10, 0, 1),
+        ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(10, 10, 1),
                                              np.linspace(rofreq - freq_range, rofreq + freq_range, 101), qubit_pulse=pulse)
         ro.measure()
 
@@ -59,42 +59,44 @@ if 0: # RO Cavity spec w/TWPA sweep
     sweep_twpa = True
     if sweep_twpa:
         twpa = mclient.instruments['WF_twpa']
-        powers = np.linspace(-7, -5, 3)
-        freqs = np.linspace(8.15e9, 8.18e9, 31)
+        powers = np.linspace(-8, -6.5, 16)
+        freqs = np.linspace(8.16e9, 8.195e9, 151)
         for power in powers:
             twpa.set_power(power)
             for freq in freqs:
                 twpa.set_frequency(freq)
-                ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(-5, -5, 1),
-                                                     np.linspace(rofreq - freq_range, rofreq + freq_range, 61), qubit_pulse=False)
+                ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(-15, -15, 1),
+                                                     np.linspace(rofreq - freq_range, rofreq + freq_range, 51), qubit_pulse=False)
                 ro.measure()
+                plt.close('all')
     bla
     
 if 0: # Qubit spec
     from scripts.single_qubit import spectroscopy_keysight
-    qubit_freq = 6731.72e6
-    freq_range = 0e6
-    spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['Qbrick'], qubit2_info,
+    qubit_freq = 5500e6
+    freq_range = 500e6
+    spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['Qbrick'], qubit_info,
                                      np.linspace(qubit_freq-freq_range,
-                                                 qubit_freq+freq_range, 11),
-                                     [-25],
-                                     plen=80000, amp=0.2, plot_seqs=False,
+                                                 qubit_freq+freq_range, 1001),
+                                     [-15],
+                                     plen=20000, amp=0.05, plot_seqs=False,
                                      freq_delay=.1) #1=1ns for plen
 
     spec.measure()
     bla
 
 """Qubit SSBspec"""
-if 1: # Qubit SSBspec
+
+if 0: # Qubit SSBspec
     from scripts.single_qubit import ssbspec
-    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-50e6,50e6, 151), plot_seqs=False, proj_func='amplitude')
+    spec = ssbspec.SSBSpec(qubit_info, np.linspace(-20e6,20e6, 151), plot_seqs=False, proj_func='amplitude')
     spec.measure_keysight()
     bla
-
+    
 if 0: # Power Rabi
     for i in range(1):
         from scripts.single_qubit import rabi
-        tr = rabi.Rabi(qubit_info, np.linspace(-0.3, 0.3, 101), plot_seqs=False, generate=True, selective=False, repeat_pulse=1,
+        tr = rabi.Rabi(qubit_info, np.linspace(-0.4, 0.4, 101), plot_seqs=False, generate=True, selective=False, repeat_pulse=1,
                        update=True, proj_func='amplitude')
 
         tr.measure_keysight()     
@@ -102,8 +104,8 @@ if 0: # Power Rabi
     
 if 0: # T1
     from scripts.single_qubit import T1measurement
-    for i in range(50):
-        t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 60e3, 101), double_exp=False, generate=True, plot_seqs=False, proj_func='amplitude')
+    for i in range(1):
+        t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 40e3, 101), double_exp=False, generate=True, plot_seqs=False, proj_func='amplitude')
         t1.measure_keysight()
     bla
     
@@ -182,7 +184,7 @@ if 0: # T1, T2 vs. flux
                                      np.linspace(qubitspec_centerfreq-qubit_freq_range,
                                                  qubitspec_centerfreq+qubit_freq_range, 1001),
                                      [-15],
-                                     plen=80000, amp=0.000001, plot_seqs=False,
+                                     plen=80000, amp=0.01, plot_seqs=False,
                                      freq_delay=.1)
         spec.measure()
         qfreq = np.linspace(qubitspec_centerfreq-qubit_freq_range,
@@ -245,7 +247,25 @@ if 0: # Sweep Raspberry Pi parameter(s) and record currents
     tstamp = time.strftime("%Y%m%d%H%M")
     filename = 'C:\qrlab\scripts\ROIC\currents_' + str(tstamp) + '.csv'
     np.savetxt(filename, currents)
-        
+
+if 1: # Sweep chip param, get voltage
+    DMM = mclient.instruments['DMM']
+    wait_time = 0.5
+    indices_to_sweep = [38, 39]
+    sweep_range = np.linspace(0, 255, 256)
+    voltages = []
+    
+    for i in range(len(sweep_range)):
+        chipdata[indices_to_sweep[0]] = int(sweep_range[i])
+        for j in range(len(sweep_range)):
+            chipdata[indices_to_sweep[1]] = int(sweep_range[j])
+            raspi.send_data_(chipdata)
+            time.sleep(wait_time)
+            voltages.append(float(DMM.do_get_voltage()))
+            print(i, j, chipdata[indices_to_sweep[0]], chipdata[indices_to_sweep[1]])
+    tstamp = time.strftime("%Y%m%d%H%M")
+    filename = 'C:\qrlab\scripts\ROIC\DACvoltages_' + str(tstamp) + '.csv'
+    np.savetxt(filename, voltages)        
 
 if 0: # 
     raspi = mclient.instruments['raspi']
@@ -276,67 +296,41 @@ if 0: # Sequence to run before doing test dig for ROIC
 
 if 1: # Sweep phase of RF pulse for ROIC RT test
     from scripts.single_qubit import ROIC_roomtemp_testing
-    qubit_freq = 6731.87e6
+    qubit_freq = 6625.1e6
     freq_range = 0e6
     phases = np.linspace(0, 2*np.pi, 5)
     dig = mclient.instruments['dig']
     threshold = 100
-    count = 400
+    count = 10
     PWR = np.linspace(0.001,0.01,1)
     for pwr in PWR:
         roic_stats = []
         for phase in [0]:
             #raspi.send_data_(chip_data)
-            print("currents" + str([float(Agilent1.do_get_current()), float(Agilent2.do_get_current()), float(Agilent3.do_get_current()), float(Keithley.do_get_current())]))
+            print("currents" + str([float(LNA23.do_get_current()), float(BBAC.do_get_current()), float(LNA1.do_get_current()), float(IREF.do_get_current())]))
             roic_phase = ROIC_roomtemp_testing.roic_roomtemp_testing(mclient.instruments['Qbrick'], qubit_info, qubit2_info,
                                              np.linspace(qubit_freq-freq_range,
-                                                         qubit_freq+freq_range, 5),
+                                                         qubit_freq+freq_range, count),
                                              [-15],
-                                             plen_RF=1000, plen_LO=80000, amp_RF=0.1, amp_LO=0.2, phase=np.pi, plot_seqs=True,
+                                             plen_RF=1000, plen_LO=80000, amp_RF=0.1, amp_LO=0.6, phase=phase, plot_seqs=True,
                                              freq_delay=.1) #1=1ns for plen
         
-            roic_phase.measure()
-            plt.close()
-            threshold_list = []; Itrig=0; Qtrig=0
-            for i in range(count):
-                data = dig.test_dig_ROIC(2000, 1, 2000, 1)
-                if np.max(data[2][0][:]) > threshold:
-                    Itrig = 1
-                else:
-                    Itrig = 0
-                if np.max(data[3][0][:]) > threshold:
-                    Qtrig = 1
-                else:
-                    Qtrig = 0
-                
-                threshold_list.append([Itrig,Qtrig])
-    #            plt.figure()
-                plt.plot(data[0][0][:], label = '1')
-                plt.plot(data[1][0][:], label = '2')
-                plt.plot(data[2][0][:], label = '3')
-                plt.plot(data[3][0][:], label = '4')
-                plt.legend() 
-        #        plt.show()
-            probs = (np.sum(threshold_list, axis=0)/float(count)).tolist()
-            iprobs = probs[0]
-            qprobs = probs[1]
-            temp = [phase*180/np.pi,iprobs,qprobs]
-            print(temp)
-            roic_stats.append(temp)
-        np.savetxt('C:\qrlab\scripts\ROIC\stats_RF_'+str(pwr)+'_time_'+str(time.strftime("%Y%m%d%H%M"))+'.csv',np.asarray(roic_stats))
-        stats_array = np.asarray(roic_stats)
-        fig = plt.figure()
-        gs = gridspec.GridSpec(1,2)
-        ax1 = fig.add_subplot(gs[0,0])
-        ax2 = fig.add_subplot(gs[0,1])
-        ax1.plot(stats_array[:,0], stats_array[:,1], label='I')
-        ax1.plot(stats_array[:,0], stats_array[:,2], label='Q')
-        ax1.set_ylim(0,1)
-        ax2.plot(stats_array[:,1], stats_array[:,2], label='IQ')
-        ax2.set_xlim(0,1)
-        ax2.set_ylim(0,1)
-        gs.tight_layout(fig,rect[1,0,2,1])
-        plt.show()
+            roic_phase.measure(threshold=threshold)
+
+#        np.savetxt('C:\qrlab\scripts\ROIC\stats_RF_'+str(pwr)+'_time_'+str(time.strftime("%Y%m%d%H%M"))+'.csv',np.asarray(roic_stats))
+#        stats_array = np.asarray(roic_stats)
+#        fig = plt.figure()
+#        gs = gridspec.GridSpec(1,2)
+#        ax1 = fig.add_subplot(gs[0,0])
+#        ax2 = fig.add_subplot(gs[0,1])
+#        ax1.plot(stats_array[:,0], stats_array[:,1], label='I')
+#        ax1.plot(stats_array[:,0], stats_array[:,2], label='Q')
+#        ax1.set_ylim(0,1)
+#        ax2.plot(stats_array[:,1], stats_array[:,2], label='IQ')
+#        ax2.set_xlim(0,1)
+#        ax2.set_ylim(0,1)
+#        gs.tight_layout(fig,rect[1,0,2,1])
+#        plt.show()
     bla
     
 if 0: # test digitizer ROIC 4 channels

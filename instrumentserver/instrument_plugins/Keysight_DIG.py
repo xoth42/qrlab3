@@ -417,6 +417,33 @@ class Keysight_DIG(Instrument):
         
         if any(error < 0 for error in errors):
             print('setup_avg_shot errors: ', errors)
+            
+    def setup_raw_shot_ROIC(self, ntransfers = None, I_chan=3, Q_chan=4):
+        if ntransfers is None:
+            ntransfers = 1
+            
+        naverages = 1 # I want this for now, possibly change in future.. DARIO 6/9/21
+        
+        self.release_buf()
+        
+        errors = []
+            
+        errors += [self.dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)]
+        for channel in [I_chan, Q_chan]:
+            errors += [self.dig.DAQtriggerExternalConfig(channel, key.SD_TriggerExternalSources.TRIGGER_EXTERN, 
+                                    key.SD_TriggerBehaviors.TRIGGER_RISE, key.SD_SyncModes.SYNC_NONE)]
+            errors += [self.dig.DAQflush(channel)]
+            errors += [self.dig.channelInputConfig(channel, VOLTAGE_SCALE, 
+                                                   key.AIN_Impedance.AIN_IMPEDANCE_50, 
+                                                   key.AIN_Coupling.AIN_COUPLING_DC)]
+            errors += [self.dig.DAQconfig(channel, self._nsamples, naverages, 
+                                          self._main_delay, key.SD_TriggerModes.EXTTRIG)]
+            errors += [self.dig.DAQbufferPoolConfig(channel, self._nsamples * naverages / ntransfers, 
+                                                    self._timeout)]
+#            self.set_demod(self._nsamples * naverages / ntransfers, avg_periods=1) #TODO: change avg_periods?
+        
+        if any(error < 0 for error in errors):
+            print('setup_raw_shot errors: ', errors)
 
 
     def take_avg_shot(self, acqtimeout=None, take_ref=True):
@@ -461,20 +488,22 @@ class Keysight_DIG(Instrument):
         return avg/self._naverages
     
     def take_raw_shot_ROIC(self, acqtimeout=None, I_chan=3, Q_chan=4):
-        signal = np.zeros(self._nsamples, dtype = np.complex64)
-        ref = np.zeros_like(signal)
+        I = np.zeros(self._nsamples, dtype = np.complex64)
+        Q = np.zeros_like(I)
         try:
             I = self.dig.DAQbufferGet(I_chan)
+            print(np.shape(I), I)
             Q = self.dig.DAQbufferGet(Q_chan)
+            print(np.shape(Q), Q)
         except ValueError, e:
             print(str(e))
             print('digitizer is likely not getting triggered')
             raise ValueError
             
-        if(not len(signal) == self._nsamples):
+        if(not len(I) == self._nsamples):
             print('Buffer gave some wack shit, or maybe no shit at all:')
-            print(np.shape(signal), signal)
-            print(np.shape(ref), ref)
+            print(np.shape(I), I)
+            print(np.shape(Q), Q)
             raise ValueError
             
         self.release_buf()
