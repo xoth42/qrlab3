@@ -84,7 +84,7 @@ class poly_fwm_ssbspec2d(Measurement2D):
                     if self.postseq:
                         s_temp += [self.postseq]
                         
-                    s_temp += [self.readout_driver.do_get_sequence(self.readout_qubit_info)]
+                    s_temp += [self.readout_driver.do_get_sequence()]
                     s_temp += [Delay(2000)]
                     s.append(Join(s_temp))
 

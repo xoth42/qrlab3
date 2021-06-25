@@ -122,20 +122,20 @@ if 0: #sweep power and get 2D plot
 #    drive_brick.do_set_power(0)
 #    drive_brick.set_frequency(8.333e9)
 #    drive_brick.set_rf_on(False)
-#    a = np.linspace(-60,10,10)
+    a = np.linspace(-40,10,6)
 #    a = np.linspace(-10,10,21)
-    a = np.linspace(-85,5,10)
+#    a = np.linspace(-85,5,10)
 #    a = np.linspace(-80,-70,2)
 #    a= np.log10(a)*10
 #    a[0] = -11
-    average_factor = np.ceil(np.power(10, -a/10 -4.5)) + 9
+    average_factor = np.ceil(np.power(10, -a/10 -2)) + 9
 #    average_factor = np.zeros(len(a)) + 10
-    print (np.sum(average_factor)*2 + len(a)*10)/3600
+    print (np.sum(average_factor)*1.6 + len(a)*10)/3600
     ro = power_sweep_VNA.Power_Sweep_VNA(powers = a, 
-                                         freqs = np.linspace(10.371e9, 10.374e9, 201),
+                                         freqs = np.linspace(10.7e9, 10.9e9, 1601),
 #                                         freqs = np.linspace(7.018e9, 7.021e9, 51),
-                                         average_factor = average_factor, avelimit =10,if_bandwidth = 100, Sij =['S21'],
-                                        fig_name ='S31 qubit power sweep 0.03T ',comment = '', sweep_SC_qubit = False)
+                                         average_factor = average_factor, avelimit =10,if_bandwidth = 1000, Sij =['S21'],
+                                        fig_name ='S31 power sweep 0T ',comment = '', sweep_SC_qubit = False)
     
     #we can take all 4 S params data at the same time when VNA is calibrated, if not, we can only take the data with same output ports at the same time. 
     ro.measure()
@@ -143,41 +143,41 @@ if 0: #sweep power and get 2D plot
 
 
     
-    a = np.linspace(-85,5,10)
-#    a = np.linspace(-80,-70,2)
-#    a= np.log10(a)*10
-#    a[0] = -11
-    average_factor = np.ceil(np.power(10, -a/10 -4.5)) + 9
-#    average_factor = np.zeros(len(a)) + 10
-    print (np.sum(average_factor)*2 + len(a)*10)/3600
-    ro = power_sweep_VNA.Power_Sweep_VNA(powers = a, 
-                                         freqs = np.linspace(10.794e9, 10.8e9, 201),
-#                                         freqs = np.linspace(7.018e9, 7.021e9, 51),
-                                         average_factor = average_factor, avelimit =10,if_bandwidth = 100, Sij =['S21'],
-                                        fig_name ='S31 cavity power sweep 0.03T ',comment = '', sweep_SC_qubit = False)
-    #we can take all 4 S params data at the same time when VNA is calibrated, if not, we can only take the data with same output ports at the same time. 
-    ro.measure()
-    pl.show() 
-
-
-    
-
-    a = np.linspace(-65,5,8)
-#    a = np.linspace(-80,-70,2)
-#    a= np.log10(a)*10
-#    a[0] = -11
-    average_factor = np.ceil(np.power(10, -a/10 -3)) + 9
-#    average_factor = np.zeros(len(a)) + 10
-    print (np.sum(average_factor)*1.6 + len(a)*10)/3600
-    ro = power_sweep_VNA.Power_Sweep_VNA(powers = a, 
-                                         freqs = np.linspace(10.65e9, 10.85e9, 1601),
-#                                         freqs = np.linspace(7.018e9, 7.021e9, 51),
-                                         average_factor = average_factor, avelimit =10,if_bandwidth = 1000, Sij =['S21'],
-                                        fig_name ='S31 cavity power sweep 0.03T ',comment = '', sweep_SC_qubit = False)
-    
-    #we can take all 4 S params data at the same time when VNA is calibrated, if not, we can only take the data with same output ports at the same time. 
-    ro.measure()
-    pl.show()    
+#    a = np.linspace(-85,5,10)
+##    a = np.linspace(-80,-70,2)
+##    a= np.log10(a)*10
+##    a[0] = -11
+#    average_factor = np.ceil(np.power(10, -a/10 -4.5)) + 9
+##    average_factor = np.zeros(len(a)) + 10
+#    print (np.sum(average_factor)*2 + len(a)*10)/3600
+#    ro = power_sweep_VNA.Power_Sweep_VNA(powers = a, 
+#                                         freqs = np.linspace(10.794e9, 10.8e9, 201),
+##                                         freqs = np.linspace(7.018e9, 7.021e9, 51),
+#                                         average_factor = average_factor, avelimit =10,if_bandwidth = 100, Sij =['S21'],
+#                                        fig_name ='S31 cavity power sweep 0.03T ',comment = '', sweep_SC_qubit = False)
+#    #we can take all 4 S params data at the same time when VNA is calibrated, if not, we can only take the data with same output ports at the same time. 
+#    ro.measure()
+#    pl.show() 
+#
+#
+#    
+#
+#    a = np.linspace(-65,5,8)
+##    a = np.linspace(-80,-70,2)
+##    a= np.log10(a)*10
+##    a[0] = -11
+#    average_factor = np.ceil(np.power(10, -a/10 -3)) + 9
+##    average_factor = np.zeros(len(a)) + 10
+#    print (np.sum(average_factor)*1.6 + len(a)*10)/3600
+#    ro = power_sweep_VNA.Power_Sweep_VNA(powers = a, 
+#                                         freqs = np.linspace(10.65e9, 10.85e9, 1601),
+##                                         freqs = np.linspace(7.018e9, 7.021e9, 51),
+#                                         average_factor = average_factor, avelimit =10,if_bandwidth = 1000, Sij =['S21'],
+#                                        fig_name ='S31 cavity power sweep 0.03T ',comment = '', sweep_SC_qubit = False)
+#    
+#    #we can take all 4 S params data at the same time when VNA is calibrated, if not, we can only take the data with same output ports at the same time. 
+#    ro.measure()
+#    pl.show()    
     
     bla
 

@@ -84,9 +84,9 @@ def analysis(meas, data=None, fig=None):
     if 1: #For single Gaussian fit
         params = lmfit.Parameters()
         params.add('background', value=min(ys), min=min(ys)-5) #+np.absolute(min(ys))*0.5)
-        params.add('amp1', value=-(np.min(ys)-np.max(ys))/1.2, min=0) #Chen reverted to positive peak 6/27
+        params.add('amp1', value=(np.min(ys)-np.max(ys))/1.2) #Chen reverted to positive peak 6/27
         params.add('sigma', value=(xs[-1]-xs[0])/12, max=(xs[-1]-xs[0])/2)
-        params.add('center1', value=xs[np.argmax(ys)], min=xs[0], max=xs[-1])
+        params.add('center1', value=xs[np.argmin(ys)], min=xs[0], max=xs[-1])
         
         result = lmfit.minimize(single_gaussian, params, args=(xs, ys))
         lmfit.report_fit(result.params)
@@ -141,8 +141,13 @@ class SSBSpec(Measurement1D):
 
         if self.bgcor:
             plen = self.qubit_info.rotate_selective.base(np.pi, 0).get_length()
-            s.append(Join([self.seq, Delay(plen), self.postseq]))
-            s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+
+            
+            s.append(Join([self.seq, Delay(plen)]))
+            if self.post_seq is not None:
+                s.append(self.postseq)
+            s.append(self.readout_driver.do_get_sequence())
+
 
         for i, df in enumerate(self.detunings):
 #        for df in self.detunings:
@@ -165,7 +170,8 @@ class SSBSpec(Measurement1D):
 
 
             #Ebru, adding the 20000 delay
-            s.append(self.reset_seq)
+            if self.reset_seq is not None:
+                s.append(self.reset_seq)
             s.append(Delay(2000))
         s = self.get_sequencer(s)
         seqs = s.render()

@@ -67,21 +67,21 @@ limit_for_off = 1
 
 
 
-fields = np.linspace(0,0.05,26)
+fields = np.linspace(0,-0.05,26)
 #fields = np.linspace(0.05, 0.002,13)
 
 ''' Primary x axis and secondary if 2d'''
 #x_key = 'freqs'
 #x2_key = 'powers'
-all_field = True
+all_field = False
 new_fig = False
-two_modes = False
+two_modes = True
 three_modes = False
 
 
-final_plot =True
+final_plot =False
 
-itime = 10 #index of the field being analyzed so you can save your place and work on only fitting a few fields at a time
+itime = 0 #index of the field being analyzed so you can save your place and work on only fitting a few fields at a time
 
 save_data = False
 num_fits = 2
@@ -152,7 +152,7 @@ if three_modes:
 
 #
 
-freq = np.linspace(10.75e9,10.85e9,1601)
+freq = np.linspace(10.78e9,10.85e9,1601)
 #freq1 = np.zeros([nrows,len(fields)])
 #freq2 = np.zeros([nrows,len(fields)])
 #freq1_err = np.zeros([nrows,len(fields)])

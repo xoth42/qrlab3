@@ -445,12 +445,15 @@ class Measurement(object):
                 self.start_awgs()
 
         try:
+            take_ref = (self.readout is not 'readout_IQ')
             if self.histogram:
-                ret = alz.take_hist(async=True)
+                #TODO: implement take_ref=False for take_hist JEFF
+                ret = alz.take_hist(async=True, take_ref=take_ref)
             else:
                 ret = alz.take_experiment(avg_buf=self.avg_data, async=True, singleshotbin=self.singleshotbin, cov_buf=self.cov_data,
                                           shot_buf=self.shot_data, #Dario
-                                          IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius, proj_func=self.proj_func)
+                                          IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius, proj_func=self.proj_func,
+                                          take_ref=take_ref)
 
             if self.print_progress:
                 logging.info('Acquiring...')
@@ -650,11 +653,10 @@ class Measurement(object):
 #                                  async=True, IQ_e=self.readout_info.IQe, 
 #                                  e_radius=self.readout_info.IQe_radius) 
 
+        take_ref = (self.readout is not 'readout_IQ')
         if self.histogram:
-            take_ref = (self.readout is not 'readout_IQ')
             ret = dig.take_hist(async=True, take_ref = take_ref)
         else:
-            take_ref = (self.readout is not 'readout_IQ')
             ret = dig.take_experiment(avg_buf=self.avg_data, cov_buf=self.cov_data,
                                       async=True, IQ_e=self.readout_info.IQe, 
                                       e_radius=self.readout_info.IQe_radius,

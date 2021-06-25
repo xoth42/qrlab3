@@ -601,7 +601,7 @@ real part is applied to I and the imaginary part to Q.
 
         return buf
 
-    def take_avg_shot(self, acqtimeout=None):
+    def take_avg_shot(self, acqtimeout=None, take_ref=True):
         '''
         returns one IQ pair per IF period averaged over total number of records.
         Doesn't apply weighting function.
@@ -627,14 +627,18 @@ real part is applied to I and the imaginary part to Q.
             IQA = self._demodA.IQ.reshape([Nperbuf, periods])
 
             # Calculate reference angles
-            self._demodB.demodulate(buf[Nperbuf*nsamples:])
-            IQB = self._demodB.IQ.reshape([Nperbuf, periods])
-            refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
+            if take_ref:
+                self._demodB.demodulate(buf[Nperbuf*nsamples:])
+                IQB = self._demodB.IQ.reshape([Nperbuf, periods])
+                refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
 
             if avg is None:
                 avg = np.zeros_like(IQA[0,:])
             for j in range(Nperbuf):
-                avg += IQA[j,:] * refs[j]
+                if take_ref:
+                    avg += IQA[j,:] * refs[j]
+                else:
+                    avg += IQA[j,:]
             self._card.post_buffers(buf)
             i += Nperbuf
 
@@ -707,7 +711,7 @@ real part is applied to I and the imaginary part to Q.
             logging.warning(msg)
             raise Exception(msg)
 
-    def get_IQ_rel(self, buf, cycles):
+    def get_IQ_rel(self, buf, cycles, take_ref):
         '''
         Return relative IQ values for every shot (1 IQ / shot).
         This takes into account weighting functions
@@ -716,8 +720,12 @@ real part is applied to I and the imaginary part to Q.
         buf = np.array(buf, dtype=np.complex64)
         blen = len(buf)
         self._demodA.demodulate(buf[:blen/2])
-        self._demodB.demodulate(buf[blen/2:])
-        phase_corr = np.exp(-1j * np.angle(self._demodB.IQ))
+        if take_ref:
+            self._demodB.demodulate(buf[blen/2:])
+            phase_corr = np.exp(-1j * np.angle(self._demodB.IQ))
+        else:
+            phase_corr = 1
+            
         percycle = len(self._demodA.IQ) / cycles
         IQA = self._demodA.IQ.reshape((cycles, percycle))
 
@@ -735,7 +743,7 @@ real part is applied to I and the imaginary part to Q.
         return (abs(IQ-IQ_e)-e_radius < 0)*1
 
     def take_experiment(self, acqtimeout=None, avg_buf=None, singleshotbin=False, cov_buf=None, shot_buf=None, IQ_e=None, e_radius=None,
-                        proj_func='amplitude', num_demod=1):
+                        proj_func='amplitude', num_demod=1, take_ref=True):
         '''
             Performs experiment. Each cycle will be demodulated into 1 point,
             and each cycle will be averaged together.
@@ -773,7 +781,7 @@ real part is applied to I and the imaginary part to Q.
 
 #            print 'buf: %s, cycle: %s, cyclereps: %s' % (buf.shape, cycles, cyclereps)
 
-            IQ = self.get_IQ_rel(buf, cycles * cyclereps)
+            IQ = self.get_IQ_rel(buf, cycles * cyclereps, take_ref)
             # performs a running average
 #            print "i=", i, "\n"
             if cyclereps > 1:
@@ -894,7 +902,7 @@ real part is applied to I and the imaginary part to Q.
     def cleanup_temp(self, filename):
         pass
 
-    def take_hist(self, acqtimeout=None, num_demod=1):
+    def take_hist(self, acqtimeout=None, num_demod=1, take_ref=True):
         if acqtimeout is None:
             acqtimeout = self.get_timeout()
 
@@ -918,7 +926,7 @@ real part is applied to I and the imaginary part to Q.
                     tmp_buf = []
 
             buf = self.get_next_buffer(acqtimeout)
-            IQ_buf = self.get_IQ_rel(buf, cycles)
+            IQ_buf = self.get_IQ_rel(buf, cycles, take_ref)
             print('shape IQ_buf:', np.shape(IQ_buf))
 #            self._hist_buf[i*cycles*num_demod:(i+1)*cycles*num_demod] = IQ_buf
             tmp_buf.extend(IQ_buf)

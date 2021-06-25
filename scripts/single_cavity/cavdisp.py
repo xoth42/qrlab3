@@ -130,7 +130,7 @@ class CavDisp(Measurement1D):
 #                ]))
 #                s.append(Delay(2000))
                     
-                s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+                s.append(self.readout_driver.do_get_sequence())
                 s.append(Delay(2000))
 
             if self.QswA is not None or self.QswB is not None:
