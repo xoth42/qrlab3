@@ -31,11 +31,16 @@ class CRtuning_time_phase(Measurement2D):
 
 #The purpose here is to sweep over time and detuning for the combined pulse without the pi pulse on the control qubit
 
-    def __init__(self, gate_info1, gate_info2, times, rel_phases, amp, phase, rel_amp, sigma, 
+    def __init__(self, qubit_info, qubit_info2, qubit2_info, times, rel_phases, amp, phase, rel_amp, sigma, 
                  update=False, seq=None, r_axis=0, fix_phase=True, cancel_info=None,
                  fix_period=None, repeat_pulse=1, postseq=None, selective=False, control_pi=False, **kwargs):
-        self.gate_info1 = gate_info1
-        self.gate_info2 = gate_info2
+#        self.gate_info1 = gate_info1
+#        self.gate_info2 = gate_info2
+
+        self.qubit_info = qubit_info
+        self.qubit_info2 = qubit_info2
+        self.qubit2_info=qubit2_info
+
         self.cancel_info = cancel_info
         self.times = times
         self.rel_phases = rel_phases
@@ -65,9 +70,10 @@ class CRtuning_time_phase(Measurement2D):
         npoints = self.two_axes.size
         
         if cancel_info is not None:
-            super(CRtuning_time_phase, self).__init__(npoints, infos=(gate_info1, gate_info2, cancel_info), **kwargs)
+#            super(CRtuning_time_phase, self).__init__(npoints, infos=(gate_info1, gate_info2, cancel_info), **kwargs)
+            print(g)
         else:
-            super(CRtuning_time_phase, self).__init__(npoints, infos=(gate_info1, gate_info2), **kwargs)
+            super(CRtuning_time_phase, self).__init__(npoints, infos=(qubit_info, qubit_info2, qubit2_info), **kwargs)
         self.data.create_dataset('two_axes', data=self.two_axes, dtype=np.complex)
 
 
@@ -75,8 +81,8 @@ class CRtuning_time_phase(Measurement2D):
         s = Sequence()
         ampI = self.amp * np.cos(self.phase)
         ampQ = self.amp * np.sin(self.phase)
-        chs = self.gate_info1.sideband_channels
-        chs2 = self.gate_info1.sideband_channels2
+        chs = self.qubit_info.sideband_channels
+        chs2 = self.qubit_info2.sideband_channels
 #        chs3 = self.cancel_info.sideband_channels   #needs to be commented out if cancel info is used
 
         for rel_phase in self.rel_phases:
@@ -106,7 +112,7 @@ class CRtuning_time_phase(Measurement2D):
 
     
                 if self.control_pi==True:             
-                    s.append(self.gate_info2.rotate(np.pi,0))
+                    s.append(self.qubit2_info.rotate(np.pi,0))
                     s.append(g)
 #                    s.append(self.gate_info2.rotate(np.pi,0)) #Chen changed to always measure with control qubit in e
                 else:

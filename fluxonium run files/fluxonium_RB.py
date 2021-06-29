@@ -213,11 +213,11 @@ if 0: # Drag test
 
 
 
-if 0: 
+if 1: 
     from scripts.single_qubit import Pi_train
     seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)]) #gate_info1.rotate(np.pi,0)])
 #    postseq = gate_info1.rotate(np.pi,0) 
-    p = Pi_train.Pi_train(gate_info1, np.linspace(0.070, 0.08, 61), seq=seq_cool, postseq=None, repeat_pulse=5, proj_func='phase',
+    p = Pi_train.Pi_train(qubit_info, np.linspace(0.22, 0.38, 61), seq=None, postseq=None, repeat_pulse=5, proj_func='phase',
                           extra_info=gate_info1
                           )
     p.measure()
