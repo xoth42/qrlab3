@@ -85,23 +85,25 @@ for i, coolFreq in enumerate(coolFreqs):
             
             
 
-alz.set_naverages(5000)
-Nx = 71
-Xpts = np.linspace(-0.5e6, 1e6, Nx)+0.5e6
+alz.set_naverages(3000)
+#Nx = 71
+Xpts = np.linspace(1e6,3.5e6,81)
+Nx = Xpts.shape[0]
 fig, ax = plt.subplots(nrows=1, ncols=1)
-coolFreqs = np.linspace(3.5, 3.6, 100)*1e9
-coolFreqs = np.linspace(3.52, 3.53, 100)*1e9
-coolFreqs = np.linspace(3, 4, 2000)*1e9
-coolFreqs = np.linspace(3.3778, 3.3779, 20)*1e9+3e6
-coolFreqs = np.arange(3.38, 3.45, 0.001)*1e9
+coolFreqs = np.linspace(3.5, 3.55, 51)*1e9
+coolFreqs = np.linspace(3.507e9, 3.509e9,21)
+#coolFreqs = np.linspace(3.52, 3.53, 100)*1e9
+#coolFreqs = np.linspace(3, 4, 2000)*1e9
+#coolFreqs = np.linspace(3.3778, 3.3779, 20)*1e9+3e6
+#coolFreqs = np.arange(3.38, 3.45, 0.001)*1e9
 coolPow = 10
 
 ssbData = np.ones((coolFreqs.shape[0], Nx))*np.NaN
 xx, yy = np.meshgrid(Xpts, coolFreqs)
 for i, coolFreq in enumerate(coolFreqs):
     for _ in range(1):
-        cool.set_power(coolPow)
-        cool.set_frequency(coolFreq)
+        ZZ.set_power(coolPow)
+        ZZ.set_frequency(coolFreq)
         #time.sleep(5)
         
         coolcool = sequencer.Constant(int(10e3),1,chan='3m1')

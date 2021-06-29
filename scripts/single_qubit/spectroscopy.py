@@ -31,6 +31,7 @@ class Spectroscopy(Measurement1D):
         self.qubit_info = qubit_info
         self.ro_powers = ro_powers
         self.q_freqs = q_freqs
+        self.xs = q_freqs # LLG
         self.plen = plen
         self.amp = amp
         self.pow_delay = pow_delay
@@ -79,9 +80,9 @@ class Spectroscopy(Measurement1D):
 #            s.append(Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.readout_chan)) 
 #            s.append(Delay(5000))
                 
-        s.append(Constant(self.plen, self.amp, chan=chs[0]))
-        s.append(Constant(self.plen, self.amp, chan=chs[1]))
-#        s.append(Constant(self.plen,1, chan='3m1'))
+#        s.append(Constant(self.plen, self.amp, chan=chs[0]))
+#        s.append(Constant(self.plen, self.amp, chan=chs[1]))
+        s.append(Constant(self.plen,1, chan='3m1'))
         s.append(Delay(80))
         #till here, it is what it was
 
@@ -128,7 +129,8 @@ class Spectroscopy(Measurement1D):
 
             amps = []
             phases = []
-            for freq in self.q_freqs:
+#            for freq in self.q_freqs:
+            for kk, freq in enumerate(self.xs):
                 self.qubit_rfsource.set_frequency(freq)
                 time.sleep(self.freq_delay)
 
@@ -146,9 +148,16 @@ class Spectroscopy(Measurement1D):
                 amps.append(np.abs(IQ))
                 phases.append(np.angle(IQ, deg=True))
                 print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
+                
+                self.ampdata[ipower,kk] = np.abs(IQ) # LLG
+                self.phasedata[ipower,kk] = np.angle(IQ, deg=True) # LLG
+                
+                self.update(np.where(self.xs<=freq, self.phasedata[ipower,:], np.NaN)) # LLG
+                plt.pause(0.05) # LLG
 
             self.ampdata[ipower,:] = amps
             self.phasedata[ipower,:] = phases
+            
 
         self.analyze()
 

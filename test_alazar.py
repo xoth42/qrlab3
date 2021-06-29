@@ -74,7 +74,7 @@ if 0:
             plt.subplot(313)
             plt.plot(Q)
             
-if 1:        
+if 0:        
         alz.setup_shots(1)
         buf = alz.take_demod_shots()
 #        buf2 = moving_average(buf)
@@ -101,7 +101,7 @@ if 1:
         plt.show()
         
 
-if 0:
+if 1:
         alz.setup_avg_shot(10000)
         buf = alz.take_avg_shot(timeout=50000)
     
@@ -126,7 +126,7 @@ if 0:
 #        plt.plot(np.angle(buf, deg=True))
         
         
-if 1:
+if 0:
         N = 1000
         alz.setup_shots(N)
         nsamp = alz.get_nsamples()

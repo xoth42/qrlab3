@@ -82,11 +82,21 @@ def analysis(meas, data=None, fig=None):
 
 
     if 1: #For single Gaussian fit
+        ys2 = np.abs(ys - np.mean(ys))
+        ii = np.argmax(ys2)
+        
+        
         params = lmfit.Parameters()
-        params.add('background', value=min(ys), min=min(ys)-5) #+np.absolute(min(ys))*0.5)
-        params.add('amp1', value=-(np.min(ys)-np.max(ys))/1.2, min=0) #Chen reverted to positive peak 6/27
-        params.add('sigma', value=(xs[-1]-xs[0])/12, max=(xs[-1]-xs[0])/2)
-        params.add('center1', value=xs[np.argmax(ys)], min=xs[0], max=xs[-1])
+#        params.add('background', value=min(ys), min=min(ys)-5) #+np.absolute(min(ys))*0.5)
+#        params.add('amp1', value=-(np.min(ys)-np.max(ys))/1.2, min=0) #Chen reverted to positive peak 6/27
+#        params.add('sigma', value=(xs[-1]-xs[0])/12, max=(xs[-1]-xs[0])/2)
+#        params.add('center1', value=xs[np.argmax(ys)], min=xs[0], max=xs[-1])
+        
+        
+        params.add('background', value=np.mean(ys)) #+np.absolute(min(ys))*0.5)
+        params.add('amp1', value=ys[ii]) #Chen reverted to positive peak 6/27
+        params.add('sigma', value=np.abs(xs[-1]-xs[0])/5)
+        params.add('center1', value=xs[ii])
         
         result = lmfit.minimize(single_gaussian, params, args=(xs, ys))
         lmfit.report_fit(result.params)
