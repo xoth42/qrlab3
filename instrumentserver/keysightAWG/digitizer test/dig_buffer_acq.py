@@ -14,7 +14,7 @@ import mclient
 
 
 
-nsamples = 3000 #number of data points taken ever acquisition
+nsamples = 150 #number of data points taken ever acquisition
 
 npoints = 1 # number of different experimental points, each will be averaged
 naverages = 100 # total number of averages per point
@@ -33,7 +33,6 @@ data, ref = dig.test_dig(nsamples, npoints, naverages, ntransfers)
 
 #means /= np.max(means)
 
-pl.close('all')
 fig = pl.figure()
 for i in range(npoints):
     ax1 = fig.add_subplot(2, npoints, i+1)
@@ -44,6 +43,9 @@ for i in range(npoints):
     
     ax2 = fig.add_subplot(2, npoints, i+1+npoints)
     ax2.plot(ref[i])
+    
+    ax1.set_xlim(75, 100)
+    ax2.set_xlim(75, 100)
 
 
     

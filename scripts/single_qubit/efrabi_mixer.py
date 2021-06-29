@@ -26,7 +26,7 @@ def analysis(meas, data=None, fig=None, period=None):
     fig.axes[0].plot(xs, ys, 'ks', ms=3)
 
     amp0 = (np.min(ys) - np.max(ys)) / 2
-    if ys[int(np.where(xs)[0][0])]<np.average(ys):
+    if ys[int(np.where(xs)[0][0])]>np.average(ys):
         amp0 = -amp0
     fftys = np.abs(np.fft.fft(ys - np.average(ys)))
     fftfs = np.fft.fftfreq(len(ys), xs[1]-xs[0])

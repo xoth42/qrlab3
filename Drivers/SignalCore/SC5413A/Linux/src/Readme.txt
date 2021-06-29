@@ -1,0 +1,1 @@
+For source code, please contact support@signalcore.com

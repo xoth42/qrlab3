@@ -44,14 +44,14 @@ os.chdir(r'C:/qrlab/scripts')
 
 
 
-field = 0.03
+field = -0.05
 
 #time.sleep(300)
 dig = mclient.instruments['dig']
 #dig.do_set_naverages(10000)
 def gaussian(params, x, data):
     return data - params['amp'] * np.exp(-.5 * ((x - params['mean']) / params['std'])**2)
-if 0: #demag
+if 1: #demag
 #    avgs = [3000]
     fields = [-.04,0.03, -0.025, 0.02, -0.015, 0.01,-0.005, 0.0025, -0.001,0.0005,-0.00025, 0]
 #    fields = - np.asarray(fields)

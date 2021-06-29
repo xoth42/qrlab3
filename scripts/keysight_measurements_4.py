@@ -51,7 +51,8 @@ if 0: # test digitizer
     
 if 0: # test digitizer DEMODULATED
     dig = mclient.instruments['dig']
-    avgs = dig.test_dig_demod(4000, 10000)
+    # nsamples, naverages
+    avgs = dig.test_dig_demod(4000, 10000, captureDelay=150, take_ref = False)
     print(np.shape(avgs))
     plt.figure()
     plt.plot(np.real(avgs), label = 'real')
@@ -122,16 +123,16 @@ if 0: # cav transmission NEW IQ
 if 0: # cav transmission OLD
     from single_cavity import rocavspectroscopy_keysight
     
-    rofreq = 7274.8e6
-#    rofreq = 7320e6
-    freq_range = 5e6
-    freqs = np.linspace(rofreq-freq_range, rofreq+freq_range, 101)
+#    rofreq = 8263e6
+    rofreq = 7265.7e6+50e6
+    freq_range =5e6
+    freqs = np.linspace(rofreq-freq_range, rofreq+freq_range, 51)
     powers = np.linspace(-8,-6,1) # doesn't matter for readout_iq
-
+#    seq = sequencer.Sequence([sequencer.Trigger(400), qubit_info.rotate(np.pi, 0)])
 
     readout_IQ = mclient.instruments['readout_IQ']
 
-    for i in [.04]:
+    for i in [.5]:
         readout_IQ.set_amp(i)
         ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, powers, freqs,
                                                  qubit_pulse=False, seq=None, readout = readout,
@@ -263,10 +264,10 @@ if 0: # qubit SSB spec
 #    seq = sequencer.Sequence([sequencer.Trigger(400), s
 #                              sequencer.Delay(10e3)])
     spec = ssbspec.SSBSpec(qubit_info, np.concatenate((
-                                        np.linspace(-10e6, -7.5e6, 71),
+                                        np.linspace(-6.5e6, .5e6, 61),
 #                                        np.linspace(-100e6, -50e6, 111), 
 #                                       np.linspace(-5e6,1e6, 101),
-                                       np.linspace(-2.8e6, 1e6, 101),
+ #                                      np.linspace(-2.8e6, 1e6, 101),
 #                                            np.linspace(-1.2e6, 1.2e6, 101),
                                        )), 
                            seq=None, plot_seqs=False, readout='readout_IQ',
@@ -300,12 +301,11 @@ if 0: # Calibrate pi pulse
 #    dig.set_naverages(1000)
 #    dig.set_trigger_period(100)
     tr = rabi.Rabi(qubit_info, 
-#                   np.linspace(-.99, .99, 51), selective=False,
+#                   np.linspace(-.9, .9, 81), selective=False,
 #                   np.linspace(-.2, .2, 51), selective=.5,
-#                  np.linspace(-0.06, 0.06, 51), selective=True,
-#                   np.linspace(.38, .5, 51), selective=False,
-                   np.linspace(0, 0, 1), selective=False,
-                   plot_seqs=True, generate=True, repeat_pulse=1, update=False, 
+                  np.linspace(-0.05, 0.05, 81), selective=True,
+#                   np.linspace(.8, .99, 51), selective=False,
+                   plot_seqs=False, generate=True, repeat_pulse=1, update=False, 
                    seq=None, readout='readout_IQ')
     tr.measure()
     bla
@@ -320,9 +320,9 @@ if 0: # Time Rabi
 if 0: # T1
 #    dig.set_trigger_period(500)
     from single_qubit import T1measurement
-    t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0, 19e3, 20), 
-                                                                 np.linspace(20e3, 160e3, 31))), 
-#    t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0, 90e3, 101),)), 
+    t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0, 19e3, 30), 
+                                                                 np.linspace(20e3, 100e3, 21))), 
+#    t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0,30e3, 1),)), 
                                      double_exp=False, generate=True, plot_seqs=False, seq=None, 
                                      readout='readout_IQ')
     t1.measure()
@@ -332,7 +332,7 @@ if 0: # T2
     from single_qubit import T2measurement
     for i in range(1):
 #        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0e3, 15e3, 91), detune=2e6, 
-        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 55e3, 101), detune=.1e6, 
+        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 15e3, 101), detune=1e6, 
                                          double_freq=False, generate=True, seq=None,
                                          plot_seqs=False, readout='readout_IQ')
         t2.measure_keysight()
@@ -343,9 +343,9 @@ if 0: # T2
 if 0: # T2echo
     from single_qubit import T2measurement
 
-    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0.01e3,65e3, 101),
+    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0.01e3,30e3, 101),
 #                                     np.concatenate((np.linspace(0, 3.9e3, 14), np.linspace(8e3, 50e3, 81))), 
-                                     detune=0.1e6, double_freq=False,
+                                     detune=0.5e6, double_freq=False,
                                      echotype = T2measurement.ECHO_HAHN, necho=1, 
                                      plot_seqs = False, generate=True, readout=readout)
     t2.measure_keysight()
@@ -358,7 +358,7 @@ if 0: # EF SSBspec
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate_selective(np.pi, 0)])
     postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
 #    postseq = sequencer.Sequence(qubit_info.rotate_selective(np.pi, 0))
-    spec = ssbspec.SSBSpec(ef_info, np.linspace(-2e6, 2e6, 71), seq=seq, postseq = postseq, 
+    spec = ssbspec.SSBSpec(ef_info, np.linspace(-4e6, 4e6, 81), seq=seq, postseq = postseq, 
                            extra_info=qubit_info, 
                            plot_seqs=False, generate=True, readout='readout_IQ')
     spec.measure_keysight()
@@ -394,8 +394,8 @@ if 0: # EF rabi for calibration
 #    dig.set_naverages(200)
     dig.set_trigger_period(100)
     efr = efrabi.EFRabi(qubit_info, ef_info, 
-#                   np.linspace(-0.9, 0.9, 51), selective=False,
-                   np.linspace(-0.06, 0.06, 51), selective=True,
+                   np.linspace(-0.9, 0.9, 81), selective=False,
+#                   np.linspace(-0.06, 0.06, 51), selective=True,
 #                   np.linspace(0.4, .6, 51), selective=False,
 #                   np.linspace(0.45, 0.52, 51), selective=False,
                         repeat_pulse=1, generate=True, postseq = None, update=False, readout='readout_IQ')
@@ -439,8 +439,8 @@ if 0: # FT1
 if 0: # EFT2
     from single_qubit import EFT2measurement
 
-    eft2 = EFT2measurement.EFT2Measurement(qubit_info, ef_info, np.linspace(.1e3, 5e3, 121),
-                                           detune=2e6, 
+    eft2 = EFT2measurement.EFT2Measurement(qubit_info, ef_info, np.linspace(.1e3, 10e3, 121),
+                                           detune=1.5e6, 
                                            double_freq=True, generate=True, seq=None, readout=readout)
     eft2.measure_keysight()
     bla
@@ -734,7 +734,7 @@ if 0: # stark shift measurments
         pumpFG.set_rf_on(False)       
     
 
-if 1: # overnight coherence measurements
+if 0: # overnight coherence measurements
     from single_qubit import T1measurement
     from single_qubit import T2measurement
     from single_qubit import efrabi
@@ -744,20 +744,20 @@ if 1: # overnight coherence measurements
     dig.set_naverages(1000)
     for i in range(100000):
         
-        t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0, 19e3, 20), 
-                                                                     np.linspace(20e3, 160e3, 31))), 
+        t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0, 15e3, 20), 
+                                                                     np.linspace(16e3, 50e3, 10))), 
                                          double_exp=False, generate=True, plot_seqs=False, seq=None, 
                                          readout='readout_IQ')
         t1.measure()
         
         
-        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 55e3, 121), detune=.1e6, 
+        t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 20e3, 121), detune=.5e6, 
                                          double_freq=False, generate=True, seq=None,
                                          plot_seqs=False, readout='readout_IQ')
         t2.measure_keysight()
         
-        t2e = T2measurement.T2Measurement(qubit_info, np.linspace(0.01e3, 65e3, 121),
-                                         detune=0.1e6, double_freq=False,
+        t2e = T2measurement.T2Measurement(qubit_info, np.linspace(0.01e3, 30e3, 121),
+                                         detune=0.5e6, double_freq=False,
                                          echotype = T2measurement.ECHO_HAHN, necho=1, 
                                          plot_seqs = False, generate=True, readout=readout)
         t2e.measure_keysight()
@@ -775,14 +775,15 @@ if 1: # overnight coherence measurements
         dig.set_naverages(1000)
         
         
-        ft1 = FT1measurement.FT1Measurement(qubit_info, ef_info, np.linspace(0, 40e3, 101), 
+        ft1 = FT1measurement.FT1Measurement(qubit_info, ef_info, np.concatenate((np.linspace(0, 20e3, 20), 
+                                                                     np.linspace(21e3, 80e3, 10))), 
                                             readout=readout)
         ft1.measure_keysight()
     
 
         ft2 = EFT2measurement.EFT2Measurement(qubit_info, ef_info, np.linspace(.1e3, 10e3, 151),
-                                               detune=2e6, 
-                                               double_freq=True, generate=True, seq=None, readout=readout)
+                                               detune=1e6, 
+                                               double_freq=False, generate=True, seq=None, readout=readout)
         ft2.measure_keysight()
         
         plt.close(t1.get_figure())

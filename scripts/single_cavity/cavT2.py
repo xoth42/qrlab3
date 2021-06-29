@@ -121,7 +121,10 @@ def analysis(meas, data=None, fig=None):
     else:
         params.add('freq', value=f0, min=0)
         
-    params.add('phi0', value=-np.pi, min=-1.2*np.pi, max=1.2*np.pi)
+    if ys[0] < np.average(ys):
+        params.add('phi0', value=-np.pi/2, min=-1.2*np.pi, max=1.2*np.pi, vary=True)
+    else:
+        params.add('phi0', value=np.pi/2, min=-1.2*np.pi, max=1.2*np.pi, vary=True)
     result = lmfit.minimize(t2_fit, params, args=(xs, ys))
     lmfit.report_fit(result.params)
 
@@ -247,7 +250,7 @@ class CavT2(Measurement1D):
 #                        Constant(self.readout_info.pulse_len, 1, chan=self.readout_info.acq_chan),
 #                ])]
                 s.append(Join(temp_seq))
-                s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
+                s.append(self.readout_driver.do_get_sequence())
 
         s = self.get_sequencer(s)
         seqs = s.render(debug=False)
@@ -287,7 +290,7 @@ class CavT2(Measurement1D):
                 if self.postseq:
                     temp_seq += [self.postseq]
 
-                temp_seq += [self.readout_driver.do_get_sequence(self.readout_qubit_info)]
+                temp_seq += [self.readout_driver.do_get_sequence()]
                 temp_seq += [Delay(2000)]
                 s.append(Join(temp_seq))
     

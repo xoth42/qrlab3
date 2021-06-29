@@ -1,0 +1,8 @@
+Rev 1.1
+
+1)	Change Function Names:
+		SetReferenceClock	changed to 	SetClockReference
+		SetRfOut			changed to 	SetRfOutput
+		
+2)	Corrected the deviceStatus.ch2AlcOpen item of GetDeviceStatus function.
+	

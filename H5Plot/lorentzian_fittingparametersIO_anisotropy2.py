@@ -42,8 +42,9 @@ matplotlib.interactive(True)
 
 
 input_port = 0 #signifying what port we are driving on
-output_port = 3 #signifying what port the signal is coming out of
+output_port = 1 #signifying what port the signal is coming out of
 delta = np.concatenate((np.linspace(-.05,0,26),np.linspace(0,.05,26))) #specifying field range
+#delta = np.linspace(0,.05,11)
 
 def Sij_resid(params,x,y):
     param = params.valuesdict()
@@ -74,7 +75,7 @@ def Sij_resid(params,x,y):
     A = param['A']
     ani_diag = param['ani_diag']
     null_field = param['null_field']
-    
+    m = param['m']
 
     # phi = param['phi']
     gamma_list = [gamma1,gamma2,0,gamma4]
@@ -91,8 +92,8 @@ def Sij_resid(params,x,y):
     
     
     for i in range(len(delta)): #getting model data for each field delta
-        wpp = wp + ani_diag*((1/np.cosh(delta[i]/null_field)))
-        wnn = wn - ani_diag*((1/np.cosh(delta[i]/null_field))) - 1j*(wni_an/2)*((1/np.cosh(delta[i]/null_field)))
+        wpp = wp + ani_diag*((1/np.cosh(delta[i]/null_field)))+ m*np.abs(delta[i])**2
+        wnn = wn - ani_diag*((1/np.cosh(delta[i]/null_field)))+ m*np.abs(delta[i])**2 - 1j*(wni_an/2)*((1/np.cosh(delta[i]/null_field)))
         wpn = -1j*delta[i]*k+spl*((1/np.cosh(delta[i]/null_field)))
         wnp = 1j*delta[i]*k+spl*((1/np.cosh(delta[i]/null_field)))
         ga_tot = ga + ga_an*((1/np.cosh(delta[i]/null_field)))
@@ -318,27 +319,28 @@ fix_vary = False
 params = lmfit.Parameters()
 ani_diag = 0.07
 params.add('gamma1',value = .00015, min = 0, max = .001, vary = False)
-params.add('gamma2',value = .0006, min = 0, max = .005, vary = False)
-params.add('gamma3',value = 0.002, vary = False)
-params.add('gamma4',value = .58, min = 0, vary = False)
+params.add('gamma2',value = .001, min = 0, max = .005, vary = False)
+params.add('gamma3',value = 0, vary = False)
+params.add('gamma4',value = .73, min = 0, vary = False)
 params.add('wa',value = 10.8104, vary = False)
-params.add('wb',value = 10.804, vary = False)
+params.add('wb',value = 10.809, vary = False)
 params.add('ka', value = .0005, vary = False)
 params.add('kb', value = .001, vary = False)
-params.add('wp',value = 10.72, vary = False, max = 10.8)
-params.add('wn',value = 10.82, vary = False)
+params.add('wp',value = 10.707, vary = False, max = 10.8)
+params.add('wn',value = 10.813, vary = False)
 params.add('wni_an',value = 0, vary = False)
-params.add('ga',value = 0.011, vary = False)
-params.add('ga2',value = .005, vary = False)
-params.add('ga_an',value = 0.009, vary = False)
+params.add('ga',value = 0.009, vary = False)
+params.add('ga2',value = .0065, vary = False)
+params.add('ga_an',value = 0.0095, vary = False)
 params.add('ga2_an',value = .005, vary = False)
-params.add('gab_rat',value = 1, vary = False)
-params.add('gab2_rat',value = 1, vary = False)
-params.add('spl',value = 0.105, vary = False, min=-0.05, max=0.12)
-params.add('A',value = .40, vary = False)
-params.add('k',value =9, vary = False)
-params.add('ani_diag',value = 0.068, vary = False)
-params.add('null_field' ,value = 0.030, vary = False)
+params.add('gab_rat',value = 4, vary = False)
+params.add('gab2_rat',value = 4, vary = False)
+params.add('spl',value = 0.11, vary = False)
+params.add('A',value = .45, vary = False)
+params.add('k',value =7, vary = False)
+params.add('ani_diag',value = 0.085, vary = False)
+params.add('null_field' ,value = 0.0185, vary = False)
+params.add('m' ,value = 50, vary = False)
 
 
 # params.add('phi',value = 0, vary = fix_vary)
@@ -374,6 +376,7 @@ A=result.params['A'].value
 k = result.params['k'].value
 ani_diag = result.params['ani_diag'].value
 null_field = result.params['null_field'].value
+m = result.params['m'].value
 
 # phi = result.params['phi']
 #w = freqs
@@ -394,8 +397,8 @@ eig_3 = []
 kappa_prod_comp = []
 
 for i in range(len(delta)):
-    wpp = wp + ani_diag*((1/np.cosh(delta[i]/null_field)))
-    wnn = wn - ani_diag*((1/np.cosh(delta[i]/null_field))) - 1j*(wni_an/2)*((1/np.cosh(delta[i]/null_field)))
+    wpp = wp + ani_diag*((1/np.cosh(delta[i]/null_field))) + m*np.abs(delta[i])**2
+    wnn = wn - ani_diag*((1/np.cosh(delta[i]/null_field))) + m*np.abs(delta[i])**2 - 1j*(wni_an/2)*((1/np.cosh(delta[i]/null_field)))
     wpn = -1j*delta[i]*k+spl*((1/np.cosh(delta[i]/null_field)))
     wnp = 1j*delta[i]*k+spl*((1/np.cosh(delta[i]/null_field)))
     ga_tot = ga + ga_an*((1/np.cosh(delta[i]/null_field)))
@@ -620,6 +623,8 @@ fitting_data = [10.78,10.829,10.806]
 fitting_ktot = [2.31e7,2.118e7,9.906e5]
 fitting_kprod = [3.65e10,8.6e10,1.3447e9]
 
+plt_style = ['--','-.']
+
 fields = fields
 delta = delta
 plt.figure()
@@ -628,14 +633,14 @@ plt.title('Frequencies (  )')
 plt.xlabel('Fields(T)')
 plt.ylabel('Frequency(GHz)')
 for i in range(len(lorentz_freqs_2[0])):
-    plt.plot(delta,[pt[i] for pt in lorentz_freqs_2],label = 'model mode %s'%(i+1))
+    plt.plot(delta,[pt[i] for pt in lorentz_freqs_2],plt_style[i],label = 'model mode %s'%(i+1))
 #for j in range(len(lorentz_freqs[0])):
 #    plt.plot(delta,np.transpose(lorentz_freqs)[j],label = 'all modes index %s'%j )
-plt.errorbar(fields,np.asarray(freq2)/1e9,yerr = np.asarray(freq2_err)/1e9,fmt ='o', color = 'tab:orange',label = 'data mode 1')
-plt.errorbar(fields,np.asarray(freq1)/1e9,yerr = np.asarray(freq1_err)/1e9,fmt ='o',color = 'tab:blue',label = 'data mode 2')
+plt.errorbar(fields,np.asarray(freq2)/1e9,yerr = np.asarray(freq2_err)/1e9,fmt ='o', color = 'tab:orange',label = 'data mode 2')
+plt.errorbar(fields,np.asarray(freq1)/1e9,yerr = np.asarray(freq1_err)/1e9,fmt ='^',color = 'tab:blue',label = 'data mode 1')
 #for i in range(len(fitting_data)):
 #    plt.scatter([0],fitting_data[i], marker = 'o')
-plt.ylim(10.7,10.9)
+
 plt.legend()
 
 plt.figure()
@@ -644,11 +649,11 @@ plt.title('Linewidth (  )')
 plt.xlabel('Fields(T)')
 plt.ylabel('Linewidth(MHz)')
 for i in range(len(kappa_tot_2[0])):
-    plt.plot(delta,[pt[i]*1e3 for pt in kappa_tot_2],label = 'model mode %s'%(i+1))
+    plt.plot(delta,[pt[i]*1e3 for pt in kappa_tot_2],plt_style[i],label = 'model mode %s'%(i+1))
 #for j in range(len(lorentz_freqs[0])):
 #    plt.plot(delta,np.transpose(lorentz_freqs)[j],label = 'all modes index %s'%j 
-plt.errorbar(fields,np.asarray(kappa_tot2)/1e6,yerr = np.asarray(kappa_tot2_err)/1e6,fmt ='o', color = 'tab:orange',label = 'data mode 1')
-plt.errorbar(fields,np.asarray(kappa_tot1)/1e6,yerr = np.asarray(kappa_tot1_err)/1e6,fmt ='o',color = 'tab:blue',label = 'data mode 2')
+plt.errorbar(fields,np.asarray(kappa_tot2)/1e6,yerr = np.asarray(kappa_tot2_err)/1e6,fmt ='o', color = 'tab:orange',label = 'data mode 2')
+plt.errorbar(fields,np.asarray(kappa_tot1)/1e6,yerr = np.asarray(kappa_tot1_err)/1e6,fmt ='^',color = 'tab:blue',label = 'data mode 1')
 
 #for i in range(len(fitting_data)):
 #    plt.scatter([0],fitting_ktot[i]/1e9, marker = 'o')
@@ -661,17 +666,52 @@ plt.xlabel('Fields(T)')
 plt.ylabel('Amplitude(MHz)')
 for i in range(len(kappa_prod_2[0])):
     if i == 1:
-        plt.plot(delta,[(pt[i]) for pt in (3*np.asarray(kappa_prod_2)*1e3)],label = '3*model mode %s'%(i+1))
+        plt.plot(delta,[(pt[i]) for pt in (3*np.asarray(kappa_prod_2)*1e3)],plt_style[i],label = '3*model mode %s'%(i+1))
     else:
-        plt.plot(delta,[(pt[i]) for pt in (np.asarray(kappa_prod_2)*1e3)],label = 'model mode %s'%(i+1))
-plt.errorbar(fields,3*(np.asarray(kappa_prod2)/1e6),yerr = (np.asarray(kappa_prod2_err)/1e6),fmt ='o', color = 'tab:orange',label = '3*data mode 1')
-plt.errorbar(fields,(np.asarray(kappa_prod1)/1e6),yerr = (np.asarray(kappa_prod1_err)/1e6),fmt ='o',color = 'tab:blue',label = 'data mode 2')
+        plt.plot(delta,[(pt[i]) for pt in (np.asarray(kappa_prod_2)*1e3)],plt_style[i],label = 'model mode %s'%(i+1))
+plt.errorbar(fields,3*(np.asarray(kappa_prod2)/1e6),yerr = (np.asarray(kappa_prod2_err)/1e6),fmt ='o', color = 'tab:orange',label = '3*data mode 2')
+plt.errorbar(fields,(np.asarray(kappa_prod1)/1e6),yerr = (np.asarray(kappa_prod1_err)/1e6),fmt ='^',color = 'tab:blue',label = 'data mode 1')
 #plt.ylim((0,.8))
 #for i in range(len(fitting_data)):
 #    plt.scatter([0],fitting_kprod[i]**.5/1e9, marker = 'o')
 plt.legend()
 
+amp = np.transpose(np.asarray(kappa_prod_2))
 
+Amp_rat_1 = (amp[0][len(delta)/2:]/amp[0][0:len(delta)/2+1][::-1])
+Amp_rat_2 = (amp[1][len(delta)/2:]/amp[1][0:len(delta)/2+1][::-1])
+
+Amp_rat_ex1 = (np.asarray(kappa_prod1[26:])/np.asarray(kappa_prod1[0:26][::-1]))
+Amp_rat_ex2 = (np.asarray(kappa_prod2[26:])/np.asarray(kappa_prod2[0:26][::-1]))
+
+
+Amp_rat_err1 = np.zeros(len(Amp_rat_ex1))
+Amp_rat_err2 = np.zeros(len(Amp_rat_ex2))
+
+for i in range(len(Amp_rat_err1)):
+    Amp_rat_err1[i] = Amp_rat_ex1[i]*np.sqrt((kappa_prod1_err[26+i]/kappa_prod1[26+i])**2+(kappa_prod1_err[25-i]/kappa_prod1[25-i])**2)
+    Amp_rat_err2[i] = Amp_rat_ex2[i]*np.sqrt((kappa_prod2_err[26+i]/kappa_prod2[26+i])**2+(kappa_prod2_err[25-i]/kappa_prod2[25-i])**2)
+
+rat_fields = list(fields[26:])
+#rat_fields.reverse()
+rat_fields_t = list(delta[len(delta)/2:])
+#rat_fields_t.reverse()
+    
+
+plt.figure()
+
+plt.title('Amplitude ratio')
+plt.xlabel('Fields(T)')
+plt.ylabel('Amplitude ratio')
+
+plt.plot(rat_fields_t,Amp_rat_1, '--', label = 'model mode 1')
+plt.plot(rat_fields_t,Amp_rat_2, '-.', label = 'model mode 2')
+plt.errorbar(rat_fields,Amp_rat_ex2,yerr = Amp_rat_err2,fmt ='o', color = 'tab:orange',label = 'data mode 2')
+plt.errorbar(rat_fields,Amp_rat_ex1,yerr = Amp_rat_err1,fmt ='^',color = 'tab:blue',label = 'data mode 1')
+#plt.ylim((0,.8))
+#for i in range(len(fitting_data)):
+#    plt.scatter([0],fitting_kprod[i]**.5/1e9, marker = 'o')
+plt.legend()
 
 
 
