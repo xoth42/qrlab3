@@ -52,10 +52,11 @@ qubit2_info2 = mclient.get_qubit_info('qubit2ge_2')
 if 0: # RO Cavity spec
     from scripts.single_cavity import rocavspectroscopy
 #    rofreq = 7515.5e6
-    rofreq = 7.55e9#7570.6e6
-    freq_range = 20e6#20e6
+    alz.set_naverages(1000)
+    rofreq = 7.56e9#7570.6e6
+    freq_range = 15e6#20e6
     ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, [5],
-                                         np.linspace(rofreq - freq_range, rofreq + freq_range,41),
+                                         np.linspace(rofreq - freq_range, rofreq + freq_range,81),
                                          qubit_pulse=False)
     ro.measure()
     
@@ -147,17 +148,19 @@ if 0: # RO Cavity spec Signal optimization
     bla
     
 if 0:# Qubit spec
+    alz.set_naverages(3000)
+
     from scripts.single_qubit import spectroscopy
     cool = sequencer.Constant(int(6e3),1,chan='3m1')
     seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
     postseq = gate_info2.rotate(np.pi,0)
-    qubit_freq = 1000e6
-    freq_range = 60e6#e6
-    spec = spectroscopy.Spectroscopy(mclient.instruments['ZZ'], qubit_info,
+    qubit_freq = 3.520e9#+600e6
+    freq_range = 40e6#e6
+    spec = spectroscopy.Spectroscopy(mclient.instruments['cool'], qubit_info,
                                          np.linspace(qubit_freq-freq_range,
-                                                     qubit_freq+freq_range,121),
+                                                     qubit_freq+freq_range,81),
                                              [5],
-                                        plen=2000, amp=0.00000005, seq=None,  postseq=None, plot_seqs=False, extra_info=gate_info2) #1=1ns for plen
+                                        plen=20000, amp=0.00005, seq=None,  postseq=None, plot_seqs=False, extra_info=gate_info2) #1=1ns for plen
     spec.measure()
     bla    
 
@@ -166,8 +169,8 @@ if 0:# Qubit spec
     
 if 0: # Qubit spec with phase correction
     from scripts.single_qubit import spectroscopy_phasecorrection
-#    from scripts.single_qubit import spectroscopy_IQ
-    qubit_freq = 3.4875e9
+#    from scripts.single_qubit im6port spectroscopy_IQ
+    qubit_freq = 3.4875e9+600e6
     freq_range = 10e6
     spec = spectroscopy_phasecorrection.Spectroscopy_phasecorrection(mclient.instruments['gaius01'], qubit_info,
                                      np.linspace(qubit_freq-freq_range,
@@ -182,20 +185,32 @@ if 0:# Qubit SSBspec
     from scripts.single_qubit import ssbspec
 #    for freq in np.linspace(3.508e9,3.516e+09,21): # 4e3 before
 #        coolgen.set_frequency(freq)
-    for len in [10e3]:
+    for len in [5e3]:
         cool = sequencer.Constant(int(len),1,chan='3m1')
-        seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(2000)])
+        seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
         seq_coolRO = sequencer.Join([sequencer.Trigger(250), sequencer.Constant(int(20e3),1,chan='4m1'), sequencer.Delay(150)])
-
+        seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(2000), qubit2_info.rotate(np.pi,0)])
+        postseq = qubit2_info2.rotate(np.pi/2,0)
 #        coolgen.set_power(power)
 #    for freq in np.linspace(3.380e9,3.450e9,1):
-        alz.set_naverages(5000)
+        alz.set_naverages(2000)
     #            coolgen.set_frequency(freq)
     #            cool = sequencer.Constant(int(8e3),1,chan='3m1')
     #        seq = sequencer.Join([sequencer.Trigger(250),
     #                                  qubit_info2.rotate(np.pi, 0)])
-        spec = ssbspec.SSBSpec(qubit_info, np.linspace(-20e6,20e6,51), proj_func='phase', seq=None, extra_info=qubit_info2)
+    
+    
+       # fig, ax = plt.subplots(1,1)
+#        while True
+        spec = ssbspec.SSBSpec(qubit_info, np.linspace(-1.5e6,1.5e6,81), proj_func='phase', seq=seq_cool,
+                               postseq=None, extra_info=[qubit_info,qubit2_info2])
         spec.measure()
+        
+           # x, dx = spec.fit_params['center1'], spec.fit_params['sigma']
+            
+          #  ax.errorbar(time.time()-t0,x, yerr=dx, marker='o', fillstyle='none', color='k', capsize=3)
+          #  fig.canvas.draw()
+        
     #            plt.close()
     #    spec.measure_keysight()
     bla
@@ -207,7 +222,7 @@ if 0: # Calibrate pi pulse
     from scripts.single_qubit import rabi
 #    cool = sequencer.Constant(int(4e3),1,chan='3m1')
 #    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
-    alz.set_naverages(5000)
+    alz.set_naverages(4000)
    # for freq in np.linspace(3.35e9,3.39e+09,81): # 4e3 before
 #    for len in [10e3]:
    #     coolgen.set_frequency(freq)
@@ -237,10 +252,11 @@ if 0: # Calibrate pi pulse
 #    cool = sequencer.Constant(int(6e3),1,chan='3m1')
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(200)])
 #
-    cool = sequencer.Constant(int(10e3),1,chan='3m1')
+    cool = sequencer.Constant(int(5e3),1,chan='3m1')
     seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
     seq_coolRO = sequencer.Join([sequencer.Trigger(250), sequencer.Constant(int(10e3),1,chan='4m1'), sequencer.Delay(150)])
 #
+#    postseq = qubit2_info.rotate(np.pi/2,0)
 
 #    for i in range(1):
 #        cool = sequencer.Constant(int(4e3),1,chan='3m1')
@@ -255,16 +271,25 @@ if 0: # Calibrate pi pulse
 #        for wf_power in np.linspace(-5.35408,-5.45,1):
 #            WF_xxx.set_power(wf_power)
 #            for wf_freq in np.linspace(7.904615e9,7.90461e9,1):
-#                WF_xxx.set_frequency(wf_freq)
-    #powers = np.sort(np.hstack((-np.logspace(-3, 0, 30), [0],  np.logspace(-3, 0, 30)))) #np.linspace(-0.1,0.1, 61)
-    powers = np.linspace(-1,1,41)
-    tr = rabi.Rabi(qubit_info, powers, selective=False,
+#                WF_xxx.set_frequency(wf_fre6q)
+   # powers = np.sort(np.hstack((-np.logspace(-3, 0, 30), [0],  np.logspace(-3, 0, 30)))) #np.linspace(-0.1,0.1, 61)
+    powers = np.linspace(-0.05,0.05,41)/1#*15/100*1.3
+  #  powers = np.linspace(-10e-3,10e-3,41)
+ #   powers = [0.07,-0.07]*10#*15/100*1.3
+   # powers = [0.06,-0.06]*10#np.linspace(-0.06,0.06,41)/1#*15/100*1.3
+#    powers = np.linspace(-0.1,0.1,11)/1
+#    powers = np.array([1,0.99]*20)
+   # powers = np.array([0.06]*41)
+   # powers = np.ones(20)
+#    while True:
+    tr = rabi.Rabi(qubit_info2, powers, selective=False,
             #                   np.linspace(0.75, 0.95, 101), selective=False,
             #                           np.linspace(-0.2, 0.2, 61), selective=True,
                                plot_seqs=False, generate=True, repeat_pulse=1,  #n=3 has a bug
-                               update=True, seq=None,
-                               postseq=None, proj_func='phase', extra_info=[gate_info1, gate_info2])
+                               update=True, seq=seq_cool,
+                               postseq=None, proj_func='phase', extra_info=[gate_info1, gate_info2, qubit2_info])
     data=tr.measure()
+#    time.sleep(5)
 #                amp=tr.fit_params['amp'].value
 #                K=[]
 #                K.append(wf_power)
@@ -276,18 +301,37 @@ if 0: # Calibrate pi pulse
 #                plt.close('all')
     bla   
     
+if 0: # Rabi calib vs freq
+    from scripts.single_qubit import rabi
+#    cool = sequencer.Constant(int(4e3),1,chan='3m1')
+#    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
+    alz.set_naverages(10000)
+    freq_list = np.arange(973e6, 979e6, 0.25e6)
+    for freq in freq_list:
+        SCsource.set_frequency(freq)
+        powers = np.linspace(-1,1,11)
+       # powers = np.logspace(-4, 0, 21)
+        tr = rabi.Rabi(qubit_info, powers, selective=False,
+                #                   np.linspace(0.75, 0.95, 101), selective=False,
+                #                           np.linspace(-0.2, 0.2, 61), selective=True,
+                                   plot_seqs=False, generate=True, repeat_pulse=1,  #n=3 has a bug
+                                   update=True, seq=None,
+                                   postseq=None, proj_func='phase', extra_info=[gate_info1, gate_info2])
+        data=tr.measure()
+#    time.sleep(5)
+    
 
 
 if 0: # Time Rabi
     from scripts.single_qubit import timerabi
-    alz.set_naverages(10000)
-    cool = sequencer.Constant(int(4e3),1,chan='3m1')
-    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info2.rotate(np.pi,0), gate_info1.rotate(np.pi,0)])   
+    alz.set_naverages(3000)
+    cool = sequencer.Constant(int(5e3),1,chan='3m1')
+    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), qubit2_info2.rotate(np.pi,0)])   
 #    seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info2.rotate(np.pi,0)])    
-    postseq =  gate_info1.rotate(np.pi,0)
+#    postseq =  qubit_info2.rotate(np.pi,0)
 #    postseq =  sequencer.Combined([gate_info1.rotate(np.pi,0), gate_info2.rotate(np.pi,0)])
-    tr = timerabi.TimeRabi(qubit_info, np.linspace(0,100, 61), amp=1, 
-                           seq=None, postseq=None, proj_func='amp', plot_seqs=False) #extra_info=[gate_info1, gate_info2])
+    tr = timerabi.TimeRabi(qubit_info, np.linspace(1,400, 61), amp=0.29,#0.12, 
+                           seq=seq_cool, postseq=None, proj_func='phase', plot_seqs=False, extra_info=qubit2_info2) #extra_info=[gate_info1, gate_info2])
     data = tr.measure()
     bla
 
@@ -535,16 +579,18 @@ if 0: #Temporary: histogram - the set of 3 points looped together - super ineffi
     
 if 1: # T1
     from scripts.single_qubit import T1measurement
-    alz.set_naverages(10000)
+    alz.set_naverages(1500)
+   # alz.set_naverages(15000)
 #    t1times = np.zeros(len(range(1000)))
     
-   # fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True)
+    fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True)
     t0 = time.time()
+#    for i in range(100000000):
     for i in range(1):
-#    for i in range(1):
 #        #postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
-        cool = sequencer.Constant(int(10e3),1,chan='3m1')
+        cool = sequencer.Constant(int(5e3),1,chan='3m1')
         seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])#
+        postSeq = qubit2_info.rotate(np.pi/2, 0)
 #        seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info1.rotate(np.pi,0)])
       #  seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
       #  postseq = sequencer.Join([gate_info1.rotate(np.pi,0)])
@@ -554,15 +600,24 @@ if 1: # T1
 #        t1 = T1measurement.T1Measurement(qubit_info3, np.concatenate((np.linspace(0,5e3,51), np.linspace(5.1e3, 40e3, 51))), double_exp=True, generate=True, plot_seqs=False,
 #        times = np.linspace(0,175e3,41)
      # times = np.concatenate((np.linspace(0,15e3,31), np.linspace(15.1e3, 170e3, 31)))
-        times =  np.linspace(0e3,44e3,31)
+        times =  np.linspace(0e3,80e3,51)
+#        times =  np.linspace(0e3,0.1e3,11)
+        
+#        times =  np.linspace(0e3,35e3,71)
+#        times =  np.linspace(0e3,75e3,21)
+#        times =  np.linspace(0e3,700e3,31)
+#        times = np.linspace(0,1e3,11)
+        seq_train = sequencer.Join([qubit_info.rotate(-np.pi, 0), sequencer.Delay(100)]*500)
+        
         seq_coolRO = sequencer.Join([sequencer.Trigger(250), sequencer.Constant(int(10e3),1,chan='4m1'), sequencer.Delay(150)])
-        postseq = sequencer.Join([qubit_info.rotate(-np.pi, 0)])
 
      #   times = np.logspace(np.log10(0.1e3), np.log10(60e3), 61)
-        t1 = T1measurement.T1Measurement(qubit_info,times, double_exp=False, generate=True, plot_seqs=False,
-                                         proj_func='phase', seq=None, postseq=None)
+#        while True:
+        t1 = T1measurement.T1Measurement(qubit2_info2,times, double_exp=False, generate=True, plot_seqs=False,
+                                         proj_func='phase', seq=seq_cool, postseq=None,  extra_info=[qubit_info,qubit2_info])
         t1.measure()
-        
+#        plt.close(t1.fig)
+            
         tk = time.time()
         tau = t1.fit_params['tau']
         err = tau.stderr    
@@ -599,7 +654,7 @@ if 0: # T1 vs RO freq
     freq_list = np.linspace(7.56845e9, freq_list[-2], 300)
     
     
-    times = np.linspace(0, 60e3,61)
+    times = np.linspace(0, 40e3,61)
     alz.set_naverages(16000)
     
     for freq in freq_list:
@@ -631,35 +686,38 @@ if 0: # T1 vs RO freq
 
 if 0: # T2
     from scripts.single_qubit import T2measurement
-    cool = sequencer.Constant(int(8e3),1,chan='3m1')
+    cool = sequencer.Constant(int(5e3),1,chan='3m1')
     seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150), gate_info1.rotate(np.pi,0)])
 #    seq = sequencer.Join([sequencer.Trigger(250), qubit_info2.rotate(np.pi,0)])
 #    postseq = gate_info1.rotate(np.pi,0)
 #    postseq = sequencer.Join([gate_info1.rotate(np.pi,0), gate_info2.rotate(np.pi,0)])
    # postseq = sequencer.Join([sequencer.Delay(20000), qubit_info.rotate(np.pi/2, 0)])
-    alz.set_naverages(5000)
+    alz.set_naverages(3000)
 
     if 1:
 #        coolgen.set_rf_on(True)
 #    
         for i in range(1):
-            t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 6e3,61), detune=0.5e6, double_freq=False,
-                                             generate=True, postseq=None, extra_info =[qubit_info2],
-                                                 proj_func='phase', seq=None)
+            t2 = T2measurement.T2Measurement(qubit_info2, np.linspace(0, 6e3,51), detune=0.5e6, double_freq=False,
+                                             generate=True,seq=seq_cool, postseq=None, extra_info =[qubit_info2],
+                                                 proj_func='phase')
             t2.measure()
             
         bla
 
 if 0: # T2echo
     from scripts.single_qubit import T2measurement
-    cool = sequencer.Constant(int(20e3),1,chan='3m1')
+    cool = sequencer.Constant(int(5e3),1,chan='3m1')
     seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
    # postseq = sequencer.Join([Delay(10e3), qubit_info.rotate(np.pi/2, 0))
   #  postseq = gate_info1.rotate(np.pi,0)
-    alz.set_naverages(15000)
-    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(5, 15e3,61), detune=0.33e6, double_freq=False, echotype = T2measurement.ECHO_HAHN, necho=5, plot_seqs = False, generate=True,
-                                     seq=None, postseq=None, extra_info =[gate_info1, gate_info2], proj_func='phase',
+    alz.set_naverages(5000)
+    t2 = T2measurement.T2Measurement(qubit_info2, np.linspace(0,15e3,61), detune=0.33e6, 
+                                     double_freq=False, echotype = T2measurement.ECHO_HAHN, 
+                                     necho=3, plot_seqs = False, generate=True,
+                                     seq=seq, postseq=None, extra_info =[gate_info1, gate_info2], 
+                                     proj_func='phase',
                                      selective=False)
     t2.measure()
     bla
@@ -989,7 +1047,7 @@ if 0:
                 tr = timerabi_interleaved.TimeRabi_interleaved(
                     qubit_info, qubit_info2, qubit2_info, np.linspace(0, 100, 51), #Does not include Gaussian ramp time, sigma=4
                     amp=0.05, phase=0, rel_amp=rel_amp, rel_phase=rel_phase, 
-                    update=False, seq=seq_cool, postseq=postseq, proj_func='phase')
+                    update=False, seq=seq_cool, postseq=None, proj_func='phase')
                 data = tr.measure()
     bla
 
@@ -1052,12 +1110,12 @@ if 0: # Tune up for relative amp vs relative phase
 if 0: # cooling tone spec
     from scripts.fluxonium import cooling_tune_brickonoff
 #    from scripts.single_qubit import spectroscopy_IQ
-    cool_freq = 3.384e9
-    freq_range = 10e6
+    cool_freq = 3.520e9
+    freq_range = 50e6
 
     cool = cooling_tune_brickonoff.Cooling_tune_brickonoff(mclient.instruments['cool'], mclient.instruments['gaius01'], 
                                                            qubit2_info, np.linspace(cool_freq-freq_range, cool_freq+freq_range, 31),
-                                     [0], '3m1', seq=None, plot_seqs=False) #1=1ns for plen
+                                     [-1,2,5], '3m1', seq=None, plot_seqs=False) #1=1ns for plen
     cool.measure()
     bla
 
@@ -1180,4 +1238,262 @@ if 0: # Auto LO canceling
     
     
     
+if 0: # side band
+    import scipy.optimize as sciopt
+    from scripts.single_qubit import rabi
+
     
+   # spike.do_set_mode('RTSA')
+   # spike.do_set_center_frequency(freq)
+    
+    #spike.do_set_marker_X(freq)
+   # spike.do_set_marker_peaktracing(True)
+    
+
+    def minimizeLO(p):
+        qubit1ge.set_sideband_phase(p[0])
+        qubit_info = mclient.get_qubit_info('qubit1ge')
+
+        AWG2.set_ch1_amplitude(p[1])
+        AWG2.set_ch2_amplitude(p[2])
+
+        alz.set_naverages(100)
+        powers = np.hstack((np.ones(40), np.ones(1)*-1))*0.0139760888479
+        try:
+            tr = rabi.Rabi(qubit_info, powers, selective=False,
+                #                   np.linspace(0.75, 0.95, 101), selective=False,
+                #                           np.linspace(-0.2, 0.2, 61), selective=True,
+                                   plot_seqs=False, generate=True, repeat_pulse=100,  #n=3 has a bug
+                                   update=False, seq=None,
+                                   postseq=None, proj_func='phase', extra_info=[gate_info1, gate_info2])
+            data=tr.measure()
+            pyp.close(tr.fig)
+        except ValueError:
+            print('meh')
+        time.sleep(2)
+        freq, amp = spike.do_get_marker_XY()
+        print('\n\n\n\n' + str((p[0], amp)) + '\n\n\n\n\n\n')
+
+        return amp
+        
+        
+    popt, pcov = sciopt.minimize(minimizeLO, 
+                                 [0,0,0],
+                                # bounds=([-np.pi,0]))
+                                 method='Nelder-Mead',
+                                 options = dict(initial_simplex=np.array([[-0.3,1.5,1.5],[-0.35,1.48,1.48], [-0.25,1.4,1.5], [-0.3, 1.5, 1.47]])))
+    
+    
+
+if 0: # side band
+    import scipy.optimize as sciopt
+    from scripts.single_qubit import rabi
+
+    
+   # spike.do_set_mode('RTSA')
+   # spike.do_set_center_frequency(freq)
+    
+    #spike.do_set_marker_X(freq)
+   # spike.do_set_marker_peaktracing(True)
+    
+
+    def minimizeLO(p):
+        qubit1ge.set_sideband_phase(p[0])
+        qubit_info = mclient.get_qubit_info('qubit1ge')
+
+        alz.set_naverages(100)
+        powers = np.hstack((np.ones(40), np.ones(1)*-1))*0.0139760888479
+        try:
+            tr = rabi.Rabi(qubit_info, powers, selective=False,
+                #                   np.linspace(0.75, 0.95, 101), selective=False,
+                #                           np.linspace(-0.2, 0.2, 61), selective=True,
+                                   plot_seqs=False, generate=True, repeat_pulse=100,  #n=3 has a bug
+                                   update=False, seq=None,
+                                   postseq=None, proj_func='phase', extra_info=[gate_info1, gate_info2])
+            data=tr.measure()
+            pyp.close(tr.fig)
+        except ValueError:
+            print('meh')
+        time.sleep(2)
+        freq, amp = spike.do_get_marker_XY()
+        print('\n\n\n\n' + str((p[0], amp)) + '\n\n\n\n\n\n')
+
+        return -amp
+        
+        
+    popt, pcov = sciopt.minimize(minimizeLO, 
+                                 [0],
+                                # bounds=([-np.pi,0]))
+                                 method='Nelder-Mead',
+                                 options = dict(initial_simplex=np.array([[0],[np.pi/40]])))
+    
+    
+    
+if 0: # side band 2
+    import scipy.optimize as sciopt
+    from scripts.single_qubit import rabi
+    import pandas as pd
+
+    alz.set_naverages(3000)
+
+   # spike.do_set_mode('RTSA')
+   # spike.do_set_center_frequency(freq)
+    
+    #spike.do_set_marker_X(freq)
+   # spike.do_set_marker_peaktracing(True)
+    fig, axes = plt.subplots(1,1)
+    data = pd.DataFrame()
+    for phase in np.linspace(-0.4,-0.3, 21):
+        qubit1ge.set_sideband_phase(phase)
+        qubit_info = mclient.get_qubit_info('qubit1ge')
+
+        alz.set_naverages(100)
+        powers = np.hstack((np.ones(40), np.ones(1)*-1))*0.0139760888479
+        try:
+            tr = rabi.Rabi(qubit_info, powers, selective=False,
+                #                   np.linspace(0.75, 0.95, 101), selective=False,
+                #                           np.linspace(-0.2, 0.2, 61), selective=True,
+                                   plot_seqs=False, generate=True, repeat_pulse=10,  #n=3 has a bug
+                                   update=False, seq=None,
+                                   postseq=None, proj_func='phase', extra_info=[gate_info1, gate_info2])
+            data=tr.measure()
+        except ValueError:
+            print('meh')
+        time.sleep(2)
+        plt.close(tr.fig)
+
+        freq, amp = spike.do_get_marker_XY()
+        print('\n\n\n\n' + str((phase, amp)) + '\n\n\n\n\n\n')
+        data = data.append({'amp':amp, 'freq':freq, 'phase':phase}, ignore_index=True)
+        
+        axes.plot(phase, amp, marker='o', fillstyle='none', color='k')
+        
+        
+        if 0:#data.shape[0]>2:
+            def func(x, *p):
+                return p[0]*np.cos(x+p[1])
+            popt, pcov = sciopt.curve_fit(func, data['phase'], 10**(data['amp']/20), p0=(1,0))
+            axes.plot(data['phase'], func(data['phase'], *popt),color='k', ls='--')
+
+        
+        fig.canvas.draw()
+        
+        
+        
+        
+        
+        
+        
+    
+if 0:  # Remove LO AWG
+   print('lqlq')
+   import scipy.optimize as sciopt
+   def minimizeLO(p):
+       # qubit1ge.set_sideband_phase(p[0])
+       # qubit_info = mclient.get_qubit_info('qubit1ge')
+
+        AWG2.set_ch1_offset(p[0])
+        AWG2.set_ch2_offset(p[1])
+        
+        time.sleep(2)
+        freq, amp = spike.do_get_marker_XY()
+        print( str((p, amp)) )
+
+        return amp
+        
+        
+   popt, pcov = sciopt.minimize(minimizeLO, 
+                                 [0, 0],
+                                 method='Nelder-Mead',
+                                 options = dict(initial_simplex=np.array([[-0.01, 0.01],[0.01, 0.01], [0,0]])))
+    
+    
+    
+if 0:  # Remove LO SC
+   print('lqlq')
+   import scipy.optimize as sciopt
+   def minimizeLO(p):
+       # qubit1ge.set_sideband_phase(p[0])
+       # qubit_info = mclient.get_qubit_info('qubit1ge')
+
+        dacI, dacQ = p
+
+      #  if dacI<0 or dacQ<0 or dacI > 16383 or dacQ>16383:
+       #     return np.NaN
+        
+        dacI = int(0 if dacI<0 else 16383 if dacI > 16383 else dacI)
+        dacQ = int(0 if dacQ<0 else 16383 if dacQ > 16383 else dacQ)
+        
+        print(dacI, dacQ)
+        IQ_mod.do_set_linearityDAC('I', dacI)
+        IQ_mod.do_set_linearityDAC('Q', dacQ)
+        
+        time.sleep(2)
+        freq, amp = spike.do_get_marker_XY()
+        print( str((p, amp)) )
+
+        return amp
+        
+        
+   popt, pcov = sciopt.minimize(minimizeLO, 
+                                 [0, 0],
+                                 method='Nelder-Mead',
+                                 options = dict(initial_simplex=np.array([[5000, 11000],[5000, 8000], [10000,1000]])))
+    
+    
+   
+   
+   
+if 0:
+    from scripts.single_qubit import ssbspec
+    
+    
+    
+    
+    freqZZ_list = np.linspace(3940e6,3970e6, 11)
+    xs = np.linspace(-4e6,4e6,81)
+
+    fig, ax = plt.subplots(1,1)
+    
+    data = np.zeros((freqZZ_list.shape[0], xs.shape[0]))
+    X, Y = np.meshgrid(xs, freqZZ_list)
+    for k, freqZZ in enumerate(freqZZ_list):
+        
+        ZZ.do_set_frequency(freqZZ)
+        
+        cool = sequencer.Constant(int(10e3),1,chan='3m1')
+        seq_cool = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(150)])
+       
+        alz.set_naverages(1000)
+        
+        
+        spec = ssbspec.SSBSpec(qubit_info2, xs, proj_func='phase', seq=seq_cool,
+                               postseq=None, extra_info=[qubit_info,qubit2_info])
+        spec.measure()
+        
+        ys = spec.get_ys()
+        data[:, 2*k] = ys
+        
+        ax.pcolormesh(X, Y, data)
+        fig.canvas.draw()
+        
+        
+        
+        spec = ssbspec.SSBSpec(qubit_info2, xs, proj_func='phase', seq=seq_cool,
+                               postseq=qubit2_info.rotate(np.pi, 0), extra_info=[qubit_info,qubit2_info])
+        spec.measure()
+        
+        ys = spec.get_ys()
+        data[:, 2*k] = ys
+        
+        ax.pcolormesh(X, Y, data)
+        fig.canvas.draw()
+        
+           # x, dx = spec.fit_params['center1'], spec.fit_params['sigma']
+            
+          #  ax.errorbar(time.time()-t0,x, yerr=dx, marker='o', fillstyle='none', color='k', capsize=3)
+          #  fig.canvas.draw()
+        
+    #            plt.close()
+    #    spec.measure_keysight()
+    bla   

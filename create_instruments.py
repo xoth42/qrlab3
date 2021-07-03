@@ -14,13 +14,13 @@ from mclient import instruments
 
 #AWG1 = instruments.create('AWG1', 'Tektronix_AWG5014C', address='AWG1', clock=1e9, refsrc='EXT', reffreq=10e6)
 
-VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
-print 'VNA OK'
+#VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB0::17::INSTR')
+#print 'VNA OK'
 
 
 ##instruments.remove('Magnet')
-Magnet = instruments.create('Magnet','AMI_430')
-print 'Magnet OK'
+#Magnet = instruments.create('Magnet','AMI_430')
+#print 'Magnet OK'
 
 #SC_qubit = instruments.create('SC_qubit', 'SC5511A', devid= '10001C09')
 #VNA = instruments.create('VNA', 'Agilent_E5071C', address='TCPIP0::172.30.56.25::4000::SOCKET')

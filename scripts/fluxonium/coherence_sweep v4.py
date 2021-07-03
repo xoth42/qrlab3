@@ -3196,7 +3196,7 @@ gate_amp = [0.083423  ,  0.297726]
 start_freq = [6.64000E+08, 1.10488e9]
 start_freq = [7.859119e+08,  1.266692e+09]
 start_current = 3.865+0.015
-stop_current = 7
+stop_current = 6
 current_step= 0.015
 current_list = np.arange(start_current, stop_current, current_step)
 
@@ -3303,7 +3303,7 @@ if do_erase_data:
 
 freq = start_freq # LO frequency
 ge.set('w', w)
-ge.set('w_selective', 50)
+ge.set('w_selective', 30)
 
 def set_amp(pi_amp):
     ge.set('pi_amp', pi_amp)
@@ -3426,7 +3426,7 @@ for current in current_list:
     
     
         alz.set_naverages(NavgSSBcoarse)
-        spec = ssbspec_lorentzianfit.SSBSpec_lorentzianfit(qubit_info, SSB_Xpoints_coarse, seq=None, plot_seqs=False, proj_func='phase')
+        spec = ssbspec_lorentzianfit.SSBSpec_lorentzianfit(qubit_info, SSB_Xpoints_coarse/2, seq=None, plot_seqs=False, proj_func='phase')
         spec.measure()
         plt.close(spec.fig)
         

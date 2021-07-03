@@ -114,7 +114,9 @@ class TimeRabi(Measurement1D):
             chs = self.qubit_info.sideband_channels
             if plen > 0:
                 s.append(Repeat(Constant(int(plen), self.amp, chan=chs[0]),self.repeat_pulse))
-#            s.append(Combined([
+#                s.append(Repeat(Constant(int(plen), self.amp, chan='3m1'),self.repeat_pulse))
+
+                #            s.append(Combined([
 #                Constant(int(plen), self.amp, chan=chs[0]),
 #                Constant(int(plen), self.amp, chan=chs[1])
 #            ]))

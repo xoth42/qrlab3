@@ -14,14 +14,14 @@ if 1:
 
 from mclient import instruments
 IQ_mod = instruments.create('IQ_mod', 'SC5413A', devid='10001FA5')
-
-#SCtest = instruments.create('SCtest', 'SC5506A', devid='10001FA3')
+    
+#SCsource = instruments.create('SCsource', 'SC5506A', devid='10001FA3')
 
 instruments.remove('dig')
 dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period =50, 
                          trigger_only = True, awg_list = [7,8,9])
 
-yoko = instruments.create('yoko', 'Yokogawa_gs200_downgraded', address = 'GPIB0::9::INSTR')
+#yoko = instruments.create('yoko', 'Yokogawa_gs200_downgraded', address = 'GPIB0::9::INSTR')
 #yoko.do_set_source_type('current')
 #yoko.do_set_current_range(10)
 #yoko.do_set_voltage_limit(1)
@@ -30,19 +30,20 @@ yoko = instruments.create('yoko', 'Yokogawa_gs200_downgraded', address = 'GPIB0:
 
 #
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
-                              deltaf=-100e6,
-                              pi_amp=0.062, 
+                              deltaf=149.56e6,
+                              pi_amp=0.127, 
                               pi2_amp=0,
                               drag=0.00,
                               pi_amp_quasilective=0, #.0356,
-                              pi_amp_selective=0.006,
+                              pi_amp_selective=0.00381,
                               rotation='Gaussian',
-                              w=10,
+                              w=15,
                               w_quasilective=160, #120,
-                              w_selective=100,
+                              w_selective=500,
                               channels='5,6',
                               sideband_channels='I1,Q1',
-                              sideband_phase=0)
+                              sideband_phase=0.0)
+
 #qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 #                              deltaf=228524449.5,
 #                              pi_amp=0.078947, 
@@ -59,19 +60,19 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
 #                              sideband_phase=1)
 
 qubit1ge_2 = instruments.create('qubit1ge_2', 'Qubit_Info',
-                              deltaf=234220050.0,
-                              pi_amp=0.362732, 
+                              deltaf=149.56e6,
+                              pi_amp=0.0576110068241, 
                               pi2_amp=0,
-                              drag=0.08,
+                              drag=0.00,
                               pi_amp_quasilective=.0253, #.0356,
-                              pi_amp_selective=.0024,
+                              pi_amp_selective=0.00171,
                               rotation='Gaussian',
-                              w=6,
+                              w=15,
                               w_quasilective=160, #120,
-                              w_selective=400,
+                              w_selective=500,
                               channels='9,10',
                               sideband_channels='I2,Q2',
-                              sideband_phase=-0.22)
+                              sideband_phase=0)
 
 sq_gate1 = instruments.create('sq_gate1', 'Gate_Info',
                               deltaf=234220050.0,
@@ -165,30 +166,30 @@ sq_gate1 = instruments.create('sq_gate1', 'Gate_Info',
 #                              )
 #
 qubit2ge = instruments.create('qubit2ge', 'Qubit_Info',
-                              deltaf=-373754763.7,
-                              pi_amp=0.121872,
+                              deltaf=-288890000.0,
+                              pi_amp=0.04,
                               pi2_amp=0,
-                              drag=0.58,
+                              drag=0.0,
                               pi_amp_quasilective=.0253, #.0356,
                               pi_amp_selective=0.001624,
                               rotation='Gaussian',
-                              w=6,
+                              w=15,
                               w_quasilective=160, #120,
                               w_selective=400,
                               channels='5,6',
                               sideband_channels='I3,Q3',
-                              sideband_phase=-1.65)
+                              sideband_phase=0)
 
 
 qubit2ge_2 = instruments.create('qubit2ge_2', 'Qubit_Info',
-                              deltaf=-373754763.7,
+                              deltaf=-288890000.0,
                               pi_amp=0.337918,
                               pi2_amp=0.0,
-                              drag=0.6,
+                              drag=0.0,
                               pi_amp_quasilective=.0253, #.0356,
                               pi_amp_selective=.01374,
                               rotation='Gaussian',
-                              w=6,
+                              w=15,
                               w_quasilective=160, #120,
                               w_selective=400,
                               channels='9,10',
@@ -358,18 +359,18 @@ efinfo = instruments.create('efinfo', 'Qubit_Info',
 
 AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 0, slot = 8,
                               AWG_PRODUCT = "M3202A",
-                              amps = [1.5, 1.5, 1.5, 1], ofs = [0, 0, 0, 0])
+                              amps = [1.5, 1.5, 1.5, 1.5], ofs = [0, 0, 0, 0])
 
 AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 7,
                               AWG_PRODUCT = "M3202A",
-                              amps = [1.5,1.5,1,1], ofs = [0.007, -0.0186, 0.087, -0.048])
+                              amps = [1.5,1.5,1.5,1.5], ofs = [-0.0184, 0.0355, 0, 0])
 
 AWG3 = instruments.create('AWG3', 'Keysight_AWG', chassis = 0, slot = 9,
                               AWG_PRODUCT = "M3202A",
-                              amps = [1.36,1.5,1.5,1.5], ofs = [0.004, -0.026, 0, 0])
+                              amps = [1.5,1.5,1.5,1.5], ofs = [0.00,0, 0, 0])
 
 
-ZZ = instruments.create('ZZ', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270760::INSTR')
+cool = instruments.create('cool', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270760::INSTR')
 #gaius01_3 = instruments.create('gaius01_3', 'LabBrick_RFSource', serial=21514, use_extref=True)
 #gaius01 = instruments.create('gaius01', 'LabBrick_RFSource', serial=21513, use_extref=True)
 
@@ -381,10 +382,10 @@ RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=17912, use_e
 ##control_drive = instruments.create('control_drive', 'LabBrick_RFSource', serial=21513,  use_extref=True)
 #gaius01_2= instruments.create('gaius01_2', 'LabBrick_RFSource', serial=21515,  use_extref=True)
 ##instruments.remove('SCref')
-#SCref = instruments.create('SCref', 'SC5511A', devid='10001D31')
+gaius01 = instruments.create('gaius01', 'SC5511A', devid='10001D2F')
 #cool = instruments.create('cool', 'Agilent_Generator', address = 'USB0::0x0957::0x1F01::MY53270760::INSTR')
 # 
-#ZZ= instruments.create('ZZ', 'LabBrick_RFSource', serial = 21515, use_extref=True)
+ZZ= instruments.create('ZZ', 'LabBrick_RFSource', serial = 21515, use_extref=True)
 
 readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
                               IQe_radius= 1 , rfsource1='RObrick',
