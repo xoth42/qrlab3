@@ -877,7 +877,7 @@ def add_SWAP_like_twoQ_clifford(index, gate_seq_1, gate_seq_2, generator, **kwar
             gate_seq_2.append('Y2p')
                 
     
-generator = 'CZ'
+generator = 'ZX90'
 initial_state = np.matrix('1;0;0;0') # qubit starts in |gg>
 num_2Q_cliffords = 11520
 final_state_list = []
@@ -925,23 +925,23 @@ for i in range(num_2Q_cliffords):
             recovery_list_2.append(recovseq_2)
             recovery_index_list.append(m)
             break
-        
-        
-with open('CZ_clifford_matrix_list.pickle', 'wb') as filepath:
+    
+    
+with open('ZX90_clifford_matrix_list.pickle', 'wb') as filepath:
     pickle.dump(unique_clifford_matrix_list, filepath)
     
-with open('CZ_recovery_table.pickle', 'wb') as filepath:
+with open('ZX90_recovery_table.pickle', 'wb') as filepath:
     pickle.dump(recovery_index_list, filepath)
     
     
-cliff_mat_list_virtualZ = []
-for i in range(num_2Q_cliffords):
-    print('Calculating 2Q clifford(w/ virtualZ) #:', i+1)
-    gateseq_1 = []
-    gateseq_2 = []
-    add_twoQ_clifford(i, gateseq_1, gateseq_2, generator = generator)
-    clifford_matrix = evaluate_sequence(gateseq_1, gateseq_2, generator = generator)
-    cliff_mat_list_virtualZ.append(clifford_matrix)
+#cliff_mat_list_virtualZ = []
+#for i in range(num_2Q_cliffords):
+#    print('Calculating 2Q clifford(w/ virtualZ) #:', i+1)
+#    gateseq_1 = []
+#    gateseq_2 = []
+#    add_twoQ_clifford(i, gateseq_1, gateseq_2, generator = generator)
+#    clifford_matrix = evaluate_sequence(gateseq_1, gateseq_2, generator = generator)
+#    cliff_mat_list_virtualZ.append(clifford_matrix)
 ##
 '''
 iSWAP_CX_seq1 = ['X2m', 'Z2p', 'I', 'X2m', 'I', 'X2p', 'Y2m']
@@ -963,10 +963,11 @@ SWAP_CX_mat = evaluate_sequence(SWAP_CX_seq1, SWAP_CX_seq2, 'CX')
 SWAP_CNOT_mat = evaluate_sequence(SWAP_CNOT_seq1, SWAP_CNOT_seq2, 'CNOT')
 
 
-seq1 = ['X2p', 'I', 'Xp', 'I', 'I']
-seq2 = ['X2p', 'u', 'I', 'u', 'X2p']
+seq1 = ['Xp', 'Y2p', 'I', 'I', 'I']
+seq2 = ['I', 'I', 'I', 'I', 'I']
 mat = evaluate_sequence(seq1, seq2, 'u')
 '''
+
 #
 #seq1_to_simplify = ['Z2p', 'Y2p', 'Xp', 'Z2p']
 #seq2_to_simplify = ['I', 'I', 'I', 'I']
@@ -983,3 +984,16 @@ mat = evaluate_sequence(seq1, seq2, 'u')
 #    matrix_to_test = evaluate_sequence(seq1_to_test, seq2_to_test, 'CNOT')
 #    print(i, matrix_to_simplify == matrix_to_test)
 #    print(i, matrix_to_test)
+
+#'''Test a look-up table'''
+#for i in range(10):
+#    print('Checking lookup table #:', i+1)
+#    cliff_mat = unique_clifford_matrix_list[i]
+##    print('Clifford is:', cliff_mat)
+#    recovseq_1 = []
+#    recovseq_2 = []
+#    add_twoQ_clifford(recovery_index_list[i], recovseq_1, recovseq_2, generator = generator)
+#    recov_mat = evaluate_sequence(recovseq_1, recovseq_2, generator = generator)
+##    print('Recovery is:', recov_mat)
+#    mat_prod = np.matmul(recov_mat, cliff_mat)
+#    print('Product is:', mat_prod)

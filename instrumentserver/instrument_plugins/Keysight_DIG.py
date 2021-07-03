@@ -408,7 +408,7 @@ class Keysight_DIG(Instrument):
                                                    key.AIN_Impedance.AIN_IMPEDANCE_50, 
                                                    key.AIN_Coupling.AIN_COUPLING_DC)]
             errors += [self.dig.DAQconfig(channel, self._nsamples, naverages, 
-                                          self._main_delay, key.SD_TriggerModes.EXTTRIG)]
+                                          self._channel_delay, key.SD_TriggerModes.EXTTRIG)]
             errors += [self.dig.DAQbufferPoolConfig(channel, self._nsamples * naverages / ntransfers, 
                                                     self._timeout)]
 #            self.set_demod(self._nsamples * naverages / ntransfers, avg_periods=1) #TODO: change avg_periods?

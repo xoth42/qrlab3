@@ -12,14 +12,13 @@ from mclient import instruments
 
 #raspi = instruments.create('raspi', 'raspi_manager')
 
-WF_twpa = instruments.create('WF_twpa', 'WFT1153', serial='1153', COM_adrs='COM4')
+WF_qubit = instruments.create('WF_qubit', 'WFT1153', serial='1153', COM_adrs='COM4')
 #
 instruments.remove('dig')
 dig = instruments.create('dig', 'Keysight_DIG', chassis = 1, slot = 3, trigger_period = 100, 
                          trigger_only = False, naverages = 3000, nsamples = 1000, awg_list = [7, 8])
 
-#yoko = instruments.create('yoko', 'Yokogawa_7651_old', address = 'GPIB0::3::INSTR')
-yoko = instruments.create('yoko', 'Yokogawa_7651_new', address = 'GPIB0::3::INSTR')
+#yoko = instruments.create('yoko', 'Yokogawa_7651_new', address = 'GPIB0::3::INSTR')
 #signalhound = instruments.create('signalhound', 'SignalHoundSM200A', 'S/N 18104217')
 
 
@@ -83,14 +82,14 @@ readout = instruments.create('readout', 'Readout_Info', IQe=(17.3018176573+31.86
                            IQe_radius= 1 , rfsource1='RObrick', rfsource2='refbrick',
                          pulse_len=1000, readout_chan='6m1', acq_chan='1m1')
 
-Qbrick = instruments.create('Qbrick', 'LabBrick_RFSource', serial=18239,
+refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=18239,
                           use_extref=True)
 
 RObrick = instruments.create('RObrick', 'LabBrick_RFSource', serial=19151,
                             use_extref=True) 
 #SCref = instruments.create('SCref', 'SC5511A', devid='10001D2F')
 
-refbrick = instruments.create('refbrick', 'LabBrick_RFSource', serial=14511)
+TWPAbrick = instruments.create('TWPAbrick', 'LabBrick_RFSource', serial=14511)
 #ebru changed to 8
 AWG1 = instruments.create('AWG1', 'Keysight_AWG', chassis = 1, slot = 7,
                               AWG_PRODUCT = "M3202A",

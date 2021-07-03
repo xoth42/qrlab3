@@ -46,7 +46,7 @@ if 0: # RO Cavity spec
     rofreq = 6525e6
     freq_range = 15e6
     for pulse in [False]:
-        ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(10, 10, 1),
+        ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(2.5, -5, 4),
                                              np.linspace(rofreq - freq_range, rofreq + freq_range, 101), qubit_pulse=pulse)
         ro.measure()
 
@@ -73,13 +73,13 @@ if 0: # RO Cavity spec w/TWPA sweep
     
 if 0: # Qubit spec
     from scripts.single_qubit import spectroscopy_keysight
-    qubit_freq = 5500e6
-    freq_range = 500e6
-    spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['Qbrick'], qubit_info,
+    qubit_freq = 6625.1e6
+    freq_range = 0e6
+    spec = spectroscopy_keysight.Spectroscopy_Keysight(mclient.instruments['WF_qubit'], qubit_info,
                                      np.linspace(qubit_freq-freq_range,
-                                                 qubit_freq+freq_range, 1001),
+                                                 qubit_freq+freq_range, 11),
                                      [-15],
-                                     plen=20000, amp=0.05, plot_seqs=False,
+                                     plen=1000, amp=0.1, plot_seqs=False,
                                      freq_delay=.1) #1=1ns for plen
 
     spec.measure()
@@ -248,7 +248,7 @@ if 0: # Sweep Raspberry Pi parameter(s) and record currents
     filename = 'C:\qrlab\scripts\ROIC\currents_' + str(tstamp) + '.csv'
     np.savetxt(filename, currents)
 
-if 1: # Sweep chip param, get voltage
+if 0: # Sweep chip param, get voltage
     DMM = mclient.instruments['DMM']
     wait_time = 0.5
     indices_to_sweep = [38, 39]
@@ -300,6 +300,10 @@ if 1: # Sweep phase of RF pulse for ROIC RT test
     freq_range = 0e6
     phases = np.linspace(0, 2*np.pi, 5)
     dig = mclient.instruments['dig']
+    LNA23 = mclient.instruments['LNA23']
+    BBAC = mclient.instruments['BBAC']
+    LNA1 = mclient.instruments['LNA1']
+    IREF = mclient.instruments['IREF']
     threshold = 100
     count = 10
     PWR = np.linspace(0.001,0.01,1)
@@ -307,12 +311,13 @@ if 1: # Sweep phase of RF pulse for ROIC RT test
         roic_stats = []
         for phase in [0]:
             #raspi.send_data_(chip_data)
-            print("currents" + str([float(LNA23.do_get_current()), float(BBAC.do_get_current()), float(LNA1.do_get_current()), float(IREF.do_get_current())]))
-            roic_phase = ROIC_roomtemp_testing.roic_roomtemp_testing(mclient.instruments['Qbrick'], qubit_info, qubit2_info,
+#            print("currents" + str([float(LNA23.do_get_current()), float(BBAC.do_get_current()), float(LNA1.do_get_current()), float(IREF.do_get_current())]))
+#            print("currents" + str([float(BBAC.do_get_current()), float(IREF.do_get_current())]))
+            roic_phase = ROIC_roomtemp_testing.roic_roomtemp_testing(mclient.instruments['WF_qubit'], qubit_info, qubit2_info,
                                              np.linspace(qubit_freq-freq_range,
                                                          qubit_freq+freq_range, count),
                                              [-15],
-                                             plen_RF=1000, plen_LO=80000, amp_RF=0.1, amp_LO=0.6, phase=phase, plot_seqs=True,
+                                             plen_RF=2000, plen_LO=80000, amp_RF=0.1, amp_LO=0.2, phase=phase, plot_seqs=True,
                                              freq_delay=.1) #1=1ns for plen
         
             roic_phase.measure(threshold=threshold)

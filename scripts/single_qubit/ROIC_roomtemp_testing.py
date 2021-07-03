@@ -63,28 +63,29 @@ class roic_roomtemp_testing(Measurement1D):
     def generate(self):
         s = Sequence(self.seq)
         chs = self.qubit_info.sideband_channels
-        chs2 = self.qubit2_info.sideband_channels
+#        chs2 = self.qubit2_info.sideband_channels
 
-        pre_LO = Combined([
-                Constant(self.plen_LO, self.amp_LO, chan=chs2[0]),
-                Constant(self.plen_LO, self.amp_LO, chan=chs2[1])
-        ])
+#        pre_LO = Combined([
+#                Constant(self.plen_LO, self.amp_LO, chan=chs2[0]),
+#                Constant(self.plen_LO, self.amp_LO, chan=chs2[1])
+#        ])
         
         
         RF = Combined([
             Constant(self.plen_RF, self.amp_RF * np.cos(self.phase), chan=chs[0]),
             Constant(self.plen_RF, self.amp_RF * np.sin(self.phase), chan=chs[1]),
-            Constant(self.plen_RF, self.amp_LO, chan=chs2[0]),
-            Constant(self.plen_RF, self.amp_LO, chan=chs2[1]),
-            Constant(self.plen_RF, 1, chan=self.readout_info.acq_chan),
+#            Constant(self.plen_RF, self.amp_LO, chan=chs2[0]),
+#            Constant(self.plen_RF, self.amp_LO, chan=chs2[1]),
+            Constant(self.plen_RF, 1, chan='1m1'),
             Constant(self.plen_RF, 1, chan='5m1')
         ])
     
 #        LO = Constant(self.plen_LO/2, self.amp_LO, chan=chs2[0])
         
+        s.append(RF)
+#        s.append(self.readout_driver.do_get_sequence())
         
-        
-        s.append(Join([pre_LO, RF]))
+#        s.append(Join([pre_LO, RF]))
 
         if self.postseq:
             s.append(self.postseq)
@@ -170,10 +171,9 @@ class roic_roomtemp_testing(Measurement1D):
         roic_stats.append(temp)
         
         
-        
+        plt.figure()
         for i in range(len(self.q_freqs)):
-            plt.figure()
             plt.plot(self.I_data[i], label='I_data')
-#            plt.plot(self.Q_data[i], label='Q_data')
-#        plt.legend()
+            plt.plot(self.Q_data[i], label='Q_data')
+        plt.legend()
      

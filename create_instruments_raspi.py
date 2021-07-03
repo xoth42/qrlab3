@@ -20,4 +20,4 @@ LNA1 = instruments.create('LNA1', 'Agilent_B2901A', address='GPIB1::25::INSTR')
 IREF = instruments.create('IREF', 'Keithley2400', address='GPIB1::22::INSTR')
 
 
-DMM = instruments.create('DMM', 'Keithley2400', address='GPIB1::16::INSTR')
+#DMM = instruments.create('DMM', 'Keithley2400', address='GPIB1::16::INSTR')

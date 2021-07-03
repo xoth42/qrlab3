@@ -43,6 +43,7 @@ qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')
 ef_info = mclient.get_qubit_info('qubit1ef')
 qubit2_info = mclient.get_qubit_info('qubit2ge')
+gate_info = mclient.get_gate_info('sq_gate1')
 
 
 #Find read-out cavity and choose a power
@@ -81,7 +82,7 @@ if 0: # Qubit spec
     bla
 
 """Qubit SSBspec"""
-if 1: # Qubit SSBspec
+if 0: # Qubit SSBspec
     from scripts.single_qubit import ssbspec
     spec = ssbspec.SSBSpec(qubit_info, np.linspace(-10e6, 10e6, 151), plot_seqs=False, proj_func='amplitude')
     spec.measure_keysight()
@@ -113,7 +114,7 @@ if 0: # Flux-tuned SSBspec
     bla
 
 """Power Rabi -- Pi pulse calibration"""
-if 1: # Power Rabi
+if 0: # Power Rabi
     for i in range(1):
         from scripts.single_qubit import rabi
 #        qubitgen.set_frequency(4532.71e6)
@@ -954,20 +955,20 @@ if 0: # Coil Response test
     bla
     
     
-if 0: # Two-Qubit Randomized Benchmarking
+if 1: # Two-Qubit Randomized Benchmarking
     from scripts.fluxonium import TwoQ_RB
     for i in range(1):
     
-        TwoQ = TwoQ_RB.TwoQubit_RB(gate_info, gate2_info, gate3_info, gate3_info, num_cal_points=3, N_cliffords=10, 
+        TwoQ = TwoQ_RB.TwoQubit_RB(gate_info, gate_info, gate_info, gate_info, num_cal_points=3, N_cliffords=3, 
                                    plot_seqs=False, category='all',
                                    find_cheapest_recovery=False, use_virtual_Z=True, virtual_recovery=True, 
-                                   use_lookup_table=True, generator='CZ')
+                                   use_lookup_table=True, generator='CX')
         TwoQ.measure()
 #    (err_clif, err_gate) = TwoQ.analyze()
 #    print('error per Clifford:', err_clif)
 #    print('error per gate:', err_gate)
 
-if 1: # T1, T2 vs. flux
+if 0: # T1, T2 vs. flux
     #define instruments
     RObrick = mclient.instruments['RObrick']
     refbrick = mclient.instruments['refbrick']
