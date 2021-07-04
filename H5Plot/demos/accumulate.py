@@ -10,9 +10,9 @@ f.create_dataset('img', rank=2)
 
 for x, trace in zip(generate_rank1_data(), generate_rank2_data()):
     #time.sleep(.1)
-    print "Enter to step",
-    raw_input()
+    print("Enter to step", end=' ')
+    input()
     f['line'].append(np.random.normal())
     f['img'].append(np.random.normal(size=100))
 
-print 'Done'
+print('Done')

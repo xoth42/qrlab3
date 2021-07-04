@@ -2,7 +2,7 @@ import json
 import types
 
 def encode_complex(obj):
-    if type(obj) == types.ComplexType:
+    if type(obj) == complex:
         return dict(__complex__=True, re=obj.real, im=obj.imag)
     else:
         raise TypeError

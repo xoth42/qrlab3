@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import visa
 import types
 import logging
@@ -42,7 +42,7 @@ class SR_400(Instrument):
 
         self.add_parameter('mode',
             flags=Instrument.FLAG_GETSET,
-            type=types.IntType,
+            type=int,
             minval=0, maxval=3,
             format_map={
                 0: 'A, B for preset T',
@@ -54,7 +54,7 @@ class SR_400(Instrument):
 
         self.add_parameter('counter',
             flags=Instrument.FLAG_GET,
-            type=types.IntType,
+            type=int,
             channels=('A', 'B'))
 
         self.add_parameter('count',
@@ -67,7 +67,7 @@ class SR_400(Instrument):
 
         self.add_parameter('counter_input',
             flags=Instrument.FLAG_GETSET,
-            type=types.IntType,
+            type=int,
             channels=('A', 'B', 'T'),
             minval=0, maxval=3,
             format_map = {
@@ -80,7 +80,7 @@ class SR_400(Instrument):
 
         self.add_parameter('counter_preset',
             flags=Instrument.FLAG_GETSET,
-            type=types.IntType,
+            type=int,
             channels=('B', 'T'),
             minval=1, maxval=9e11,
             format = '%1.1e',
@@ -92,7 +92,7 @@ class SR_400(Instrument):
 
         self.add_parameter('periods',
             flags=Instrument.FLAG_GETSET,
-            type=types.IntType,
+            type=int,
             minval=1, maxval=2000,
             doc="""
             Get / set number of periods to measure.
@@ -100,14 +100,14 @@ class SR_400(Instrument):
 
         self.add_parameter('current_period',
             flags=Instrument.FLAG_GET,
-            type=types.IntType,
+            type=int,
             doc="""
             Get current period number.
             """)
 
         self.add_parameter('disc_slope',
             flags=Instrument.FLAG_GETSET,
-            type=types.IntType,
+            type=int,
             channels=('A', 'B', 'T'),
             format_map={
                 0: 'RISE',
@@ -118,7 +118,7 @@ class SR_400(Instrument):
 
         self.add_parameter('disc_level',
             flags=Instrument.FLAG_GETSET,
-            type=types.FloatType,
+            type=float,
             channels=('A', 'B', 'T'),
             minval=-0.3, maxval=0.3,
             units='V',
@@ -132,9 +132,9 @@ class SR_400(Instrument):
             self.get_all()
 
     def _counter_num(self, counter):
-        if type(counter) == types.IntType:
+        if type(counter) == int:
             return counter
-        elif type(counter) == types.StringType:
+        elif type(counter) == bytes:
             nummap = {'A': 0, 'B': 1, 'T': 2}
             return nummap.get(counter.upper(), None)
         else:

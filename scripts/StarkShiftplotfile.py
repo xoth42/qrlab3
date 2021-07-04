@@ -19,8 +19,8 @@ import lmfit
 import time
 import datetime
 
-filename2 = 'C:\Users\Wang_Lab\Documents\yingying\\08272019cooldown\\20191116\\213401_qubit2_StarkShift'
-filename2_0 = 'C:\Users\Wang_Lab\Documents\yingying\\08272019cooldown\\20191116\\213401_qubit2_StarkShift_off'
+filename2 = 'C:\\Users\Wang_Lab\Documents\yingying\\08272019cooldown\\20191116\\213401_qubit2_StarkShift'
+filename2_0 = 'C:\\Users\Wang_Lab\Documents\yingying\\08272019cooldown\\20191116\\213401_qubit2_StarkShift_off'
 #filename2 = 'C:\Users\Wang_Lab\Documents\yingying\\08272019cooldown\\20191116\\090432_StarkShift'
 #filename2_0 = 'C:\Users\Wang_Lab\Documents\yingying\\08272019cooldown\\20191116\\090432_StarkShift_off'
 

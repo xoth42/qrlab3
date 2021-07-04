@@ -9,9 +9,9 @@ import time
 import types
 
 
-from instrument import Instrument
-from windfreak import SynthHD
-import WFT1153 as ref    
+from .instrument import Instrument
+from .windfreak import SynthHD
+from . import WFT1153 as ref    
 
 
 class WFT1153_ch2(Instrument):
@@ -34,26 +34,26 @@ class WFT1153_ch2(Instrument):
         
 
 
-        print(self.channel_index)
+        print((self.channel_index))
         self._min_freq = 10.e6
         self._max_freq = 15000.e6
         self._min_power = -70.
         self._max_power = 20.
         
         
-        self.add_parameter('frequency', type=types.FloatType,
+        self.add_parameter('frequency', type=float,
             flags=Instrument.FLAG_GETSET, units='Hz',
             minval=self._min_freq, maxval=self._max_freq,
             display_scale=6, 
             value = self._min_freq)
         
-        self.add_parameter('power', type=types.FloatType,
+        self.add_parameter('power', type=float,
             flags=Instrument.FLAG_GETSET, units='dBm',
             minval=self._min_power, maxval=self._max_power,
             format='%.02f', 
             value = self._min_power)
         
-        self.add_parameter('rf_on', type=types.BooleanType,
+        self.add_parameter('rf_on', type=bool,
             flags=Instrument.FLAG_GETSET, 
             value = False)
         

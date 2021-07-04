@@ -107,7 +107,7 @@ class roic_roomtemp_testing(Measurement1D):
 
         for ipower, power in enumerate(self.ro_powers):
             self.readout_info.rfsource1.set_power(power)
-            print 'Power = %s' % (power, )
+            print('Power = %s' % (power, ))
             time.sleep(self.pow_delay)
 
             I_traces = []

@@ -16,7 +16,7 @@ import time
 from lib.dll_support import alazar
 AC = alazar.Constants
 from lib.math import demod
-from instrument import Instrument
+from .instrument import Instrument
 import logging
 import gc
 import os
@@ -34,11 +34,11 @@ class Alazar_DoubleDaemon(Alazar_Daemon):
 
     def __init__(self, name, **kwargs):
         super(Alazar_DoubleDaemon, self).__init__(name, **kwargs)
-        self.add_parameter('if_period1', type=types.IntType,
+        self.add_parameter('if_period1', type=int,
                            flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                            minval=2, maxval=1000, value=20,
                            help='Intermediate Frequency period')
-        self.add_parameter('weight_func1', type=types.StringType,
+        self.add_parameter('weight_func1', type=bytes,
                            flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                            help='''
                 Weight function file, either a .npy (numpy file) or a txt file.
@@ -46,7 +46,7 @@ class Alazar_DoubleDaemon(Alazar_Daemon):
                 function is applied to both I and Q quadratures, if complex valued the
                 real part is applied to I and the imaginary part to Q.
                 ''')
-        self.add_parameter('meas_select', type=types.IntType,
+        self.add_parameter('meas_select', type=int,
                            flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                            format_map={
                                AC2.MEAS_0: 'Demod/Weight 0',
@@ -129,7 +129,7 @@ class Alazar_DoubleDaemon(Alazar_Daemon):
         elif self.get_meas_select() == AC2.MEAS_1:
             return IQ_rel1
         elif self.get_meas_select() == AC2.MEAS_01:
-            return np.hstack(zip(IQ_rel, IQ_rel1))
+            return np.hstack(list(zip(IQ_rel, IQ_rel1)))
         else:
             raise Exception('get_IQ_rel does not understand <meas_select>')
 

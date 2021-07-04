@@ -66,7 +66,7 @@ pl.figure('fit')
 #    
 #    
 exp = expgroup[time + '_' + experiment]
-y_keys = exp.keys()
+y_keys = list(exp.keys())
 
     
 xs = exp[x_key].value
@@ -106,7 +106,7 @@ if one_mode:
     #    datas = realdata[0,:]+ 1j*imagdata[0,:]    
     result = lmfit.minimize(S21fit, params, args=(xs1,ys1))
     lmfit.report_fit(result.params)
-    print ('fit freq: %s +/- %s  '%(result.params['freq'].value/1e6,result.params['freq'].stderr/1e6))
+    print(('fit freq: %s +/- %s  '%(result.params['freq'].value/1e6,result.params['freq'].stderr/1e6)))
     freq1 = result.params['freq'].value
     
     fig.axes[0].plot(xs1/1e6, -S21fit(result.params, xs1, 0), label='fit freq: %s +/- %s MHz '%(result.params['freq'].value/1e6,result.params['freq'].stderr/1e6))

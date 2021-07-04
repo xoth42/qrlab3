@@ -2,7 +2,7 @@
 #
 # author: wolfgang pfaff <w dot pfaff at tudelft dot nl>
 
-from instrument import Instrument
+from .instrument import Instrument
 # from cyclopean_instrument import CyclopeanInstrument
 import types
 import time
@@ -24,7 +24,7 @@ class scan2d_demo(Instrument):
         self._counter_was_running = False
 
         # add the relevant parameters for a 2D PL scanner
-        self.add_parameter('pixel_time', type=types.FloatType,
+        self.add_parameter('pixel_time', type=float,
                            flags=Instrument.FLAG_GETSET,
                            units='ms',
                            minval=1.0, maxval=99.0,
@@ -33,37 +33,37 @@ class scan2d_demo(Instrument):
                            """)
 
         self.add_parameter('xstart',
-                           type=types.FloatType,
+                           type=float,
                            flags=Instrument.FLAG_GETSET,
                            units='um')
 
         self.add_parameter('xstop',
-                           type=types.FloatType,
+                           type=float,
                            flags=Instrument.FLAG_GETSET,
                            units='um')
 
         self.add_parameter('ystart',
-                           type=types.FloatType,
+                           type=float,
                            flags=Instrument.FLAG_GETSET,
                            units='um')
 
         self.add_parameter('ystop',
-                           type=types.FloatType,
+                           type=float,
                            flags=Instrument.FLAG_GETSET,
                            units='um')
 
         self.add_parameter('xsteps',
-                           type=types.IntType,
+                           type=int,
                            flags=Instrument.FLAG_GETSET,
                            units='')
 
         self.add_parameter('ysteps',
-                           type=types.IntType,
+                           type=int,
                            flags=Instrument.FLAG_GETSET,
                            units='')
 
         self.add_parameter('last_line_index',
-                           type=types.ObjectType,
+                           type=object,
                            flags=Instrument.FLAG_GET,
                            units='',
                            doc="""
@@ -72,7 +72,7 @@ class scan2d_demo(Instrument):
                            """)
 
         self.add_parameter('last_line',
-                           type=types.ObjectType,
+                           type=object,
                            flags=Instrument.FLAG_GET,
                            units='cps',
                            doc="""
@@ -80,19 +80,19 @@ class scan2d_demo(Instrument):
                            """)
 
         self.add_parameter('counter',
-                           type=types.IntType,
+                           type=int,
                            flags=Instrument.FLAG_GETSET)
 
         self.add_parameter('counter2',
-                           type=types.IntType,
+                           type=int,
                            flags=Instrument.FLAG_GETSET)
 
         self.add_parameter('counter3',
-                           type=types.IntType,
+                           type=int,
                            flags=Instrument.FLAG_GETSET)
 
         self.add_parameter('counter4',
-                           type=types.IntType,
+                           type=int,
                            flags=Instrument.FLAG_GETSET)
 
 
@@ -312,7 +312,7 @@ class scan2d_demo(Instrument):
         return self._is_recording
 
     def is_supported(self, s):
-        if self._supported.has_key(s):
+        if s in self._supported:
             return self._supported[s]
         else:
             return False

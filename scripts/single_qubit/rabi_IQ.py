@@ -103,6 +103,6 @@ class Rabi(Measurement1D):
         self.fit_params = analysis(self, data=data, fig=fig)
         pi_area = self.fit_params['period'].value / 2
         if self.update_ins:
-            print 'Setting qubit pi-rotation area to %.03f' % pi_area
+            print('Setting qubit pi-rotation area to %.03f' % pi_area)
             mclient.instruments[self.qubit_info.insname].set_pi_area(pi_area)
         return pi_area

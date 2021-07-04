@@ -1,6 +1,6 @@
-import mclient
+from . import mclient
 import numpy as np
-from pulseseq import sequencer, pulselib
+from .pulseseq import sequencer, pulselib
 import matplotlib as mpl
 
 #mpl.rc_params['figure.figsize']=[8,6]
@@ -19,7 +19,7 @@ alz = mclient.instruments['alazar']
 # Check histogramming on GE
 if 1:
     alz.set_naverages(50000)
-    from scripts.single_qubit import rabi
+    from .scripts.single_qubit import rabi
 #    for power in np.linspace(7, 10, 1):
 #        ag1.set_power(power)
 #    tr.data.set_attrs(readout_power=ag1.get_power())
@@ -38,7 +38,7 @@ if 1:
     bla
 
 if 0:
-    from scripts.single_qubit import efrabi
+    from .scripts.single_qubit import efrabi
     tr = efrabi.EFRabi(qubit_info, qubit_info, [qubit_info.pi_area,], second_pi=False, real_signals=False, histogram=True, title='|f>')
     tr.measure()
     bla
@@ -47,7 +47,7 @@ if 0:
 
 if 0:
     alz.set_naverages(20000)
-    from scripts.single_qubit import rabi_IQ
+    from .scripts.single_qubit import rabi_IQ
     tr = rabi_IQ.Rabi(qubit_info, [qubit_info.pi_area,], real_signals=True, histogram=True, title='|e>')
     tr.measure()
     tr = rabi_IQ.Rabi(qubit_info, [0.00,], real_signals=True, histogram=True, title='|g>')
@@ -55,7 +55,7 @@ if 0:
 
 
 if 0:
-    from scripts.single_qubit import rabi
+    from .scripts.single_qubit import rabi
     alz.set_naverages(50000)
     seq = sequencer.Sequence([sequencer.Trigger(250), cavity_info1A.rotate(0, 0), cavity_info1B.rotate(0, 0)])
     tr = rabi.Rabi(qubit_info, [0.00,], histogram=True, seq=seq, title='|g>', generate=True, extra_info=[cavity_info1A, cavity_info1B])

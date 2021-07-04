@@ -124,7 +124,7 @@ for i in range(len(times)):
     #x2_key = 'powers'
     exp = f[date[i]][title]
     #    exp = f['/' + date1 + '/' + time + '_' + experiment]
-    y_keys = exp.keys()
+    y_keys = list(exp.keys())
     #print(y_keys)
     
     #y_keys.remove(x_key)
@@ -223,7 +223,7 @@ for q in range(len(wa_lst)):
                                                                     total_fit = 0
                                                                     count += 1
                                                                     if count % 100 == 0:
-                                                                        print count
+                                                                        print(count)
                                                                     for j in range(len(times)):
                                                                         fit_resid = S31_resid(param_trial,freqs_all[j],datas[j],fields[j])
                                                                         total_fit += fit_resid
@@ -279,8 +279,8 @@ def S31_model(param,delta,freq_):
     out_3_ = out_3_ + r_off + 1j*i_off
     S31_mag = abs(np.array(out_3_))
     S31_phase = np.angle(np.array(out_3_))
-    print(out_3[0])
-    print(out_3_[0])
+    print((out_3[0]))
+    print((out_3_[0]))
     return [out_3_,S31_mag,S31_phase]
 
 
@@ -313,7 +313,7 @@ for i in range(len(fields)):
 str_params = 'wa,wb,ga,ga2,wp,k,spl,wn,gamma1,gamma2,gamma4,A,phi,i_off,r_off'
 str_params = str_params.split(',')
 for i in range(len(param)):
-    print(str_params[i] + ' = ' + str(param[i]))
+    print((str_params[i] + ' = ' + str(param[i])))
 
 
 

@@ -15,13 +15,13 @@ import lmfit
 
 def analysis(meas, data=None, fig=None, ofs=None, amplitude=None, f_ofs=None, f_amp=None):
     ys, fig = meas.get_ys_fig(data, fig)
-    xs = range(4)
+    xs = list(range(4))
     T1delay = meas.T1delay
     FT1delay = meas.FT1delay
 ##    
     fig.axes[0].plot(xs, ys, 'ks', ms=3)
 ##    
-    print data
+    print(data)
 #    print ys
 ##    print xs
 #    print T1delay

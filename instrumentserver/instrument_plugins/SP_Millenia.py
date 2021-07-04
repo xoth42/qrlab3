@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import visa
 import logging
@@ -36,12 +36,12 @@ class SP_Millenia(Instrument):
 
         self.add_parameter('id',
             flags=Instrument.FLAG_GET,
-            type=types.StringType)
+            type=bytes)
 
         self.add_parameter('power',
             flags=Instrument.FLAG_GETSET,
             format='%.02f',
-            type=types.FloatType)
+            type=float)
 
         # Add functions
         self.add_function('reset')

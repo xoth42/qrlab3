@@ -50,7 +50,7 @@ class Minimizer:
                                           sharex=False, sharey=False)
 
         for i_it in range(self.n_it):
-            for i_p, (pname, p) in enumerate(self.params.iteritems()):
+            for i_p, (pname, p) in enumerate(self.params.items()):
                 p_val0 = p.value
                 p_vals = np.linspace(p_val0-p.vrange/2, p_val0+p.vrange/2, self.n_eval)
 
@@ -67,8 +67,8 @@ class Minimizer:
                 imin = np.argmin(vs)
                 p.value = p_vals[imin]
                 if self.verbose:
-                    print 'It%d, p%s --> f(%.03f) = %.01f [delta: %.05f]' % \
-                        (i_it, pname, p.value, vs[imin], (p_vals[1]-p_vals[0]))
+                    print('It%d, p%s --> f(%.03f) = %.01f [delta: %.05f]' % \
+                        (i_it, pname, p.value, vs[imin], (p_vals[1]-p_vals[0])))
                 if self.plot:
                     axes_list[i_p].plot(p_vals, vs)
 

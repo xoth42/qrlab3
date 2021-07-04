@@ -22,7 +22,7 @@
 # it under SPIKE in the settings menu.
 # TODO: Fix the signal clamping issue; VBW and RBW seem to get clamped regardless of their value.
 # TODO: Return a faster numpy array as the end result of the whole computation.
-from instrument import Instrument
+from .instrument import Instrument
 import ctypes
 import types
 import numpy as np
@@ -103,44 +103,44 @@ class SignalHoundUSBSA124B(Instrument):
 
         ###~~~Parameters~~~###
 
-        self.add_parameter('center', type=types.FloatType, flags=
+        self.add_parameter('center', type=float, flags=
         Instrument.FLAG_GETSET, doc="", set_func=lambda x: True, value=
                            6e6, units='Hz')
-        self.add_parameter('span', type=types.FloatType, flags=
+        self.add_parameter('span', type=float, flags=
         Instrument.FLAG_GETSET, doc="", set_func=lambda x: True, value=2e6,
                            units='Hz')
-        self.add_parameter('ref', type=types.IntType, flags=
+        self.add_parameter('ref', type=int, flags=
         Instrument.FLAG_GETSET, doc="", set_func=lambda x: True, value=0,
                            units='dBm')
-        self.add_parameter('rbw', type=types.IntType, flags=
+        self.add_parameter('rbw', type=int, flags=
         Instrument.FLAG_GETSET, doc="resolution bandwidth", set_func=
                            lambda x: True, value=100000, units="Hz")
-        self.add_parameter('vbw', type=types.IntType, flags=
+        self.add_parameter('vbw', type=int, flags=
         Instrument.FLAG_GETSET, doc="video bandwidth", set_func=lambda x:
         True, value=100000, units="Hz")
 
-        print "Signal Hound diagnostic info:"
+        print("Signal Hound diagnostic info:")
         for key in self.return_codes:
-            print str(key) + ":  " + str(self.return_codes[key])
+            print(str(key) + ":  " + str(self.return_codes[key]))
 
         # Warnings and errors.
 
         if self.return_codes['initialize'] == 4:
-            print "ALERT: VBW and RBW bandwith has been clamped"
+            print("ALERT: VBW and RBW bandwith has been clamped")
 
     def do_set_center(self, center):
         self.return_codes['set center and span'] = DLL_LIB.saConfigCenterSpan(
             self.device_handle, center, self.span)
         self.center = center
-        print self.return_codes['set center and span']
-        print "foo"
+        print(self.return_codes['set center and span'])
+        print("foo")
 
     def do_set_span(self, span):
         self.return_codes['set center and span 2'] = DLL_LIB.saConfigCenterSpan(
             self.device_handle, self.center,
             span)
         self.span = span
-        print "bar"
+        print("bar")
 
     def do_set_ref(self, ref):
         self.return_codes['set ref'] = DLL_LIB.saConfigLevel(self.device_handle,
@@ -176,9 +176,9 @@ class SignalHoundUSBSA124B(Instrument):
 
     def perform_sweep(self, peak_find = True, plot = False, **kwargs):
 
-        print "Performing sweep for parameters: "
-        print "Center: " + str(self.center)
-        print "Span: " + str(self.span)
+        print("Performing sweep for parameters: ")
+        print("Center: " + str(self.center))
+        print("Span: " + str(self.span))
         self.sweep_length_ = ctypes.c_int()
         self.sweep_length_p = ctypes.pointer(self.sweep_length_)
         self.start_freq = ctypes.c_double()
@@ -195,7 +195,7 @@ class SignalHoundUSBSA124B(Instrument):
         self.max_array = (ctypes.c_float * self.array_length)()
         ctypes.cast(self.min_array, ctypes.POINTER(ctypes.c_float))
         ctypes.cast(self.max_array, ctypes.POINTER(ctypes.c_float))
-        print 'test'
+        print('test')
         DLL_LIB.saGetSweep_32f.argtypes = [ctypes.c_int,
                                            ctypes.POINTER(
                                                ctypes.c_float * self.array_length),
@@ -205,7 +205,7 @@ class SignalHoundUSBSA124B(Instrument):
         self.return_codes['GET SWEEP'] = DLL_LIB.saGetSweep_32f(
             self.device_handle, self.min_array, self.max_array)
         result = list()
-        print 'thing'
+        print('thing')
         freq = self.start_freq_p.contents.value
         # Only need to consider min_array since both arrays hold the same value.
         for i, value in enumerate(self.min_array, 1):

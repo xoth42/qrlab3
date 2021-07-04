@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import logging
 import numpy
@@ -51,11 +51,11 @@ class Newport_ESPx00(Instrument):
 
     # Add parameters
     self.add_parameter('position',tags=['sweep'],channels=(1,numaxes),channel_prefix='Axis%d_',
-      flags=Instrument.FLAG_GETSET, units='mm', minval=-300, maxval=300, type=types.FloatType)
+      flags=Instrument.FLAG_GETSET, units='mm', minval=-300, maxval=300, type=float)
     self.add_parameter('move_relative',tags=['sweep'],channels=(1,numaxes),channel_prefix='Axis%d_',
-      flags=Instrument.FLAG_SET, units='mm', minval=-300, maxval=300, type=types.FloatType)
+      flags=Instrument.FLAG_SET, units='mm', minval=-300, maxval=300, type=float)
     self.add_parameter('ismoving',channels=(1,numaxes),channel_prefix='Axis%d_',
-      flags=Instrument.FLAG_GET, type=types.StringType)
+      flags=Instrument.FLAG_GET, type=bytes)
 
     self.init_default()
 
@@ -63,19 +63,19 @@ class Newport_ESPx00(Instrument):
       self.init_default()
 
   def init_default(self):
-    print "Initializing ESP100 ..."
-    self._visainstrument.baud_rate=19200L
+    print("Initializing ESP100 ...")
+    self._visainstrument.baud_rate=19200
     self._visainstrument.clear()
 #    self._visainstrument.write('1MO;WS\r')
 #    self._visainstrument.write('1DH;WS\r')
 #    self._visainstrument.write('1MT-;WS\r')
 ###    self._visainstrument.write('1PA-300;WS\r')
-    print "Waiting for stage to have moved"
+    print("Waiting for stage to have moved")
     while self.do_get_ismoving():
-      print "  ... still moving ..."
+      print("  ... still moving ...")
       time.sleep(1)
 #    self._visainstrument.write('1DH;WS\r')
-    print "Finished initialization ESP100"
+    print("Finished initialization ESP100")
     self.get_position()
 
   def do_get_position(self, channel=1):

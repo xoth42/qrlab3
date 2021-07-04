@@ -8,7 +8,7 @@ Created on Sat May 29 18:42:12 2021
 
 import numpy as np
 from instrumentserver.visainstrument import VisaInstrument
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import logging
 class YokoException(Exception):
@@ -66,4 +66,4 @@ if __name__ == '__main__':
     
     spike.do_set_marker_X(1.1e9)
     
-    print(spike.do_get_marker_XY())
+    print((spike.do_get_marker_XY()))

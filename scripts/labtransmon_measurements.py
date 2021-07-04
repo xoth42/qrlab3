@@ -1,5 +1,6 @@
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib
 import matplotlib
@@ -208,7 +209,7 @@ if 0: # Single qubit tomography
 #        sqtomo.measure()
 #        tomo_result.append(sqtomo.get_ys())
 #        plt.close()
-    print tomo_result
+    print(tomo_result)
     plt.figure()
     old_ys = sqtomo.get_ys()
     new_ys = 2*(old_ys - np.abs(excited_state))/(np.abs(ground_state) - np.abs(excited_state)) - 1
@@ -217,14 +218,14 @@ if 0: # Single qubit tomography
     sigma_y = np.mean(new_ys[2:4])
     sigma_z = np.mean(new_ys[4:6])
     vec_cart = [sigma_x, sigma_y, sigma_z]
-    print ('cartestian coordinates:', vec_cart)
+    print(('cartestian coordinates:', vec_cart))
     r = np.sqrt(sigma_x**2 + sigma_y**2 + sigma_z**2)
     theta = np.arccos(sigma_z/r)
     phi = np.arctan(sigma_y/sigma_x)
     psi = [np.cos(theta/2), np.exp(1j*phi)*np.sin(theta/2)]
-    print('psi vector:', psi)
-    print('|g> probability', np.abs(psi[0])**2)
-    print('|e> probability', np.abs(psi[1])**2)
+    print(('psi vector:', psi))
+    print(('|g> probability', np.abs(psi[0])**2))
+    print(('|e> probability', np.abs(psi[1])**2))
     bla
 
 if 0: # Process_tomography
@@ -238,7 +239,7 @@ if 0: # Process_tomography
     ptomo_result.append(sqtomo.get_ys())
     plt.close()
 
-    print ptomo_result
+    print(ptomo_result)
     bla
 
 
@@ -269,7 +270,7 @@ if 0: # AllXY
         axy.measure()
         allxy_result.append(allxy.get_ys())
         plt.close()
-    print allxy_result
+    print(allxy_result)
     plt.figure()
     for i in range(10): plt.plot(allxy_result[i])
     bla
@@ -321,12 +322,12 @@ if 0: # Heralding test
         for i in range(len(pre_meas)):
             if np.abs(pre_meas[i]) < 150:
                 del_indices = np.append(del_indices, i)
-        print('measurements thrown out:', len(del_indices))
-        print('average IQ, amp of pre-measurement:', np.mean(pre_meas), np.abs(np.mean(pre_meas)))
-        print('average IQ, amp of normal measurement:', np.mean(normal_meas), np.abs(np.mean(normal_meas)))
+        print(('measurements thrown out:', len(del_indices)))
+        print(('average IQ, amp of pre-measurement:', np.mean(pre_meas), np.abs(np.mean(pre_meas))))
+        print(('average IQ, amp of normal measurement:', np.mean(normal_meas), np.abs(np.mean(normal_meas))))
         normal_meas_new = np.delete(normal_meas, del_indices)
-        print('average IQ, amp of normal measurements after pre-selection:', np.mean(normal_meas_new),
-              np.abs(np.mean(normal_meas_new)))
+        print(('average IQ, amp of normal measurements after pre-selection:', np.mean(normal_meas_new),
+              np.abs(np.mean(normal_meas_new))))
         
         plt.figure()
         g_hist, g_bins, patches = plt.hist(np.abs(normal_meas), bins=100, alpha=.4, color='b')
@@ -355,17 +356,17 @@ if 0: # RO fidelity measurement with heralding
                 del_indices = np.append(del_indices, i)
             elif np.abs(pre_meas_2[i]) < 150:
                 del_indices_2 = np.append(del_indices_2, i)
-        print('measurements thrown out:', len(del_indices) + len(del_indices_2))
-        print('%:', (len(del_indices)+len(del_indices_2))/500.)
+        print(('measurements thrown out:', len(del_indices) + len(del_indices_2)))
+        print(('%:', (len(del_indices)+len(del_indices_2))/500.))
     #        print('average IQ, amp of pre-measurement:', np.mean(pre_meas), np.abs(np.mean(pre_meas)))
-        print('average amps of normal measurement:',  np.abs(np.mean(normal_meas_g)), np.abs(np.mean(normal_meas_e)))
+        print(('average amps of normal measurement:',  np.abs(np.mean(normal_meas_g)), np.abs(np.mean(normal_meas_e))))
         normal_meas_g_new = np.delete(normal_meas_g, del_indices)
         normal_meas_e_new = np.delete(normal_meas_e, del_indices)
         
         normal_meas_g_newnew = np.delete(normal_meas_g_new, del_indices_2)
         normal_meas_e_newnew = np.delete(normal_meas_e_new, del_indices_2)
-        print('average amps of normal measurements after pre-selection:', np.abs(np.mean(normal_meas_g_newnew)),
-              np.abs(np.mean(normal_meas_e_newnew)))
+        print(('average amps of normal measurements after pre-selection:', np.abs(np.mean(normal_meas_g_newnew)),
+              np.abs(np.mean(normal_meas_e_newnew))))
         
         plt.figure()
         g_hist, g_bins, patches = plt.hist(np.abs(tr_1.shot_data[::2]), bins=100, alpha=.4, color='b')
@@ -406,16 +407,16 @@ if 0: # RO fidelity measurement with heralding
     #    eg_errors += [eg_error_prob]
         fidelity = 1 - (ge_error_prob + eg_error_prob)/2
     #    fidelities += [fidelity]
-        print('Fidelity = ', fidelity)
-        print('|g>-|e> error = ', ge_error_prob)
-        print('|e>-|g> error = ', eg_error_prob)
+        print(('Fidelity = ', fidelity))
+        print(('|g>-|e> error = ', ge_error_prob))
+        print(('|e>-|g> error = ', eg_error_prob))
         plt.figure()
         plt.plot(g_bins[:-1], lines[0])
         plt.plot(e_bins[:-1], lines[1])
         plt.axvline(threshold, color='g', linestyle='dashed')
         plt.title(fidelity)
         
-        print('SNR = ', np.abs(means[3] - means[0]) / (stds[3] + stds[0])/2)
+        print(('SNR = ', np.abs(means[3] - means[0]) / (stds[3] + stds[0])/2))
     #    SNRs += [np.abs(means[3] - means[0]) / (stds[3] + stds[0])/2]
         '''
         ax2.plot(np.linspace(-lim, lim, 100), gaussian(np.linspace(-lim, lim, 100), 
@@ -444,7 +445,7 @@ if 0: # RO fidelity measurement with heralding
     #            plt.axvline((means[princ1].value+means[princ2].value)/2, color='g', linestyle='dashed')
         overlap_error = np.sum(gaussian1[threshold_indices[0]:])/np.sum(gaussian1) + np.sum(gaussian2[:threshold_indices[1]])/np.sum(gaussian2)
     #    overlap_errors += [overlap_error]
-        print('overlap error = ', overlap_error)
+        print(('overlap error = ', overlap_error))
     #            plt.title(overlap_error)
     #            alz.set_naverages(1000)
     #    e_data = np.abs(e_data)
@@ -491,16 +492,16 @@ if 0: # RO fidelity measurement with heralding
     #    eg_errors += [eg_error_prob]
         fidelity = 1 - (ge_error_prob + eg_error_prob)/2
     #    fidelities += [fidelity]
-        print('Fidelity = ', fidelity)
-        print('|g>-|e> error = ', ge_error_prob)
-        print('|e>-|g> error = ', eg_error_prob)
+        print(('Fidelity = ', fidelity))
+        print(('|g>-|e> error = ', ge_error_prob))
+        print(('|e>-|g> error = ', eg_error_prob))
         plt.figure()
         plt.plot(g_bins[:-1], lines[0])
         plt.plot(e_bins[:-1], lines[1])
         plt.axvline(threshold, color='g', linestyle='dashed')
         plt.title(fidelity)
         
-        print('SNR = ', np.abs(means[3] - means[0]) / (stds[3] + stds[0])/2)
+        print(('SNR = ', np.abs(means[3] - means[0]) / (stds[3] + stds[0])/2))
     #    SNRs += [np.abs(means[3] - means[0]) / (stds[3] + stds[0])/2]
         '''
         ax2.plot(np.linspace(-lim, lim, 100), gaussian(np.linspace(-lim, lim, 100), 
@@ -529,7 +530,7 @@ if 0: # RO fidelity measurement with heralding
     #            plt.axvline((means[princ1].value+means[princ2].value)/2, color='g', linestyle='dashed')
         overlap_error = np.sum(gaussian1[threshold_indices[0]:])/np.sum(gaussian1) + np.sum(gaussian2[:threshold_indices[1]])/np.sum(gaussian2)
     #    overlap_errors += [overlap_error]
-        print('overlap error = ', overlap_error)
+        print(('overlap error = ', overlap_error))
     #            plt.title(overlap_error)
     #            alz.set_naverages(1000)
     #    e_data = np.abs(e_data)
@@ -576,16 +577,16 @@ if 0: # RO fidelity measurement with heralding
     #    eg_errors += [eg_error_prob]
         fidelity = 1 - (ge_error_prob + eg_error_prob)/2
     #    fidelities += [fidelity]
-        print('Fidelity = ', fidelity)
-        print('|g>-|e> error = ', ge_error_prob)
-        print('|e>-|g> error = ', eg_error_prob)
+        print(('Fidelity = ', fidelity))
+        print(('|g>-|e> error = ', ge_error_prob))
+        print(('|e>-|g> error = ', eg_error_prob))
         plt.figure()
         plt.plot(g_bins[:-1], lines[0])
         plt.plot(e_bins[:-1], lines[1])
         plt.axvline(threshold, color='g', linestyle='dashed')
         plt.title(fidelity)
         
-        print('SNR = ', np.abs(means[3] - means[0]) / (stds[3] + stds[0])/2)
+        print(('SNR = ', np.abs(means[3] - means[0]) / (stds[3] + stds[0])/2))
     #    SNRs += [np.abs(means[3] - means[0]) / (stds[3] + stds[0])/2]
         '''
         ax2.plot(np.linspace(-lim, lim, 100), gaussian(np.linspace(-lim, lim, 100), 
@@ -614,7 +615,7 @@ if 0: # RO fidelity measurement with heralding
     #            plt.axvline((means[princ1].value+means[princ2].value)/2, color='g', linestyle='dashed')
         overlap_error = np.sum(gaussian1[threshold_indices[0]:])/np.sum(gaussian1) + np.sum(gaussian2[:threshold_indices[1]])/np.sum(gaussian2)
     #    overlap_errors += [overlap_error]
-        print('overlap error = ', overlap_error)
+        print(('overlap error = ', overlap_error))
     #            plt.title(overlap_error)
     #            alz.set_naverages(1000)
     #    e_data = np.abs(e_data)
@@ -751,16 +752,16 @@ if 0: # Check histogramming
             eg_errors += [eg_error_prob]
             fidelity = 1 - (ge_error_prob + eg_error_prob)/2
             fidelities += [fidelity]
-            print('Fidelity = ', fidelity)
-            print('|g>-|e> error = ', ge_error_prob)
-            print('|e>-|g> error = ', eg_error_prob)
+            print(('Fidelity = ', fidelity))
+            print(('|g>-|e> error = ', ge_error_prob))
+            print(('|e>-|g> error = ', eg_error_prob))
             plt.figure()
             plt.plot(g_bins[:-1], lines[0])
             plt.plot(e_bins[:-1], lines[1])
             plt.axvline(threshold, color='g', linestyle='dashed')
             plt.title(fidelity)
             
-            print('SNR = ', np.abs(means[3] - means[0]) / (stds[3] + stds[0])/2)
+            print(('SNR = ', np.abs(means[3] - means[0]) / (stds[3] + stds[0])/2))
             SNRs += [np.abs(means[3] - means[0]) / (stds[3] + stds[0])/2]
             '''
             ax2.plot(np.linspace(-lim, lim, 100), gaussian(np.linspace(-lim, lim, 100), 
@@ -789,7 +790,7 @@ if 0: # Check histogramming
 #            plt.axvline((means[princ1].value+means[princ2].value)/2, color='g', linestyle='dashed')
             overlap_error = np.sum(gaussian1[threshold_indices[0]:])/np.sum(gaussian1) + np.sum(gaussian2[:threshold_indices[1]])/np.sum(gaussian2)
             overlap_errors += [overlap_error]
-            print('overlap error = ', overlap_error)
+            print(('overlap error = ', overlap_error))
 #            plt.title(overlap_error)
 #            alz.set_naverages(1000)
         #    e_data = np.abs(e_data)
@@ -814,13 +815,13 @@ if 0: # TWPA histogram sweep
             twpa.set_power(p)
             for f in freqs:
                 twpa.set_frequency(f)
-                print(r, p, f)
+                print((r, p, f))
                 tr = rabi.Rabi(qubit_info, [qubit_info.pi_amp, 0.000001], histogram=True, title='|e>')
                 tr.measure()
                 dat = tr.shot_data[::2]
                 dat2 = tr.shot_data[1::2]
                 SNR = np.abs(np.abs(np.mean(dat))-np.abs(np.mean(dat2)))/(np.std(dat)+np.std(dat2))
-                print('SNR:', SNR)
+                print(('SNR:', SNR))
                 SNRs.append(SNR)
                 plt.close()
     # plotting color map
@@ -863,8 +864,8 @@ if 0: # T1, T2e loop
     from scripts.single_qubit import T1measurement
     from scripts.single_qubit import T2measurement
 
-    t1times = np.zeros(len(range(10)))
-    echos = np.zeros(len(range(10)))
+    t1times = np.zeros(len(list(range(10))))
+    echos = np.zeros(len(list(range(10))))
     for i in range(10):
         t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 30e3, 101), double_exp=False, generate=True, plot_seqs=False, proj_func='amplitude')
         t1.measure()

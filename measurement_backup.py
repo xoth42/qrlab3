@@ -1,5 +1,5 @@
-import mclient
-import config
+from . import mclient
+from . import config
 import types
 import time
 import numpy as np
@@ -9,14 +9,14 @@ from matplotlib import gridspec
 import logging
 logging.getLogger().setLevel(logging.INFO)
 import signal
-import objectsharer as objsh
-from lib import jsonext
+from . import objectsharer as objsh
+from .lib import jsonext
 import os
-import pulseseq
-import awgloader
+from . import pulseseq
+from . import awgloader
 from PyQt4 import QtGui
-from pulseseq import sequencer
-from pulseseq import pulselib
+from .pulseseq import sequencer
+from .pulseseq import pulselib
 
 STYLE_IMAGE = 'IMAGE'
 STYLE_LINES = 'LINES'
@@ -101,12 +101,12 @@ class Measurement(object):
         # Build list of info objects
         if infos is None:
             infos = []
-        elif type(infos) is types.TupleType:
+        elif type(infos) is tuple:
             infos = list(infos)
-        elif type(infos) is not types.ListType:
+        elif type(infos) is not list:
             infos = [infos,]
         if extra_info is not None:
-            if type(extra_info) in (types.ListType, types.TupleType):
+            if type(extra_info) in (list, tuple):
                 infos.extend(extra_info)
             else:
                 infos.append(extra_info)
@@ -165,7 +165,7 @@ class Measurement(object):
             self.pp_data = ppdata
             self.shot_data = shotdata
 
-        except Exception, e:
+        except Exception as e:
             logging.warning('Unable to remove data: %s' % str(e))
 
     def set_parameters(self, **kwargs):
@@ -221,7 +221,7 @@ class Measurement(object):
             try:
                 l.load(seqs)
                 break
-            except Exception, e:
+            except Exception as e:
                 logging.warning('Loading failed (%s), retrying', str(e))
                 time.sleep(10)
         if run:
@@ -261,7 +261,7 @@ class Measurement(object):
 
     def _capture_progress_cb(self, navg):
         if self.print_progress:
-            print '%d averages done' % navg
+            print('%d averages done' % navg)
 
     def update(self, avg_data):
         '''
@@ -275,8 +275,8 @@ class Measurement(object):
         avg_data = self.avg_data[:]
         try:
             self.update(avg_data)
-        except Exception, e:
-            print 'Error: %s' % (str(e),)
+        except Exception as e:
+            print('Error: %s' % (str(e),))
 
     def _ctrlc_cb(self, *args):
         self._interrupted = True
@@ -336,7 +336,7 @@ class Measurement(object):
                 QtGui.QApplication.processEvents()
             if self._interrupted:
                 alz.set_interrupt(True)
-        except Exception, e:
+        except Exception as e:
             logging.info('CTRL-C Caught or error, stopping Alazar')
             alz.set_interrupt(True)
             logging.error(str(e))
@@ -619,7 +619,7 @@ class Measurement(object):
     def plot_histogram(self, data):
         fig = self.get_figure()
         avg = np.average(data)
-        print 'avgerage I,Q is:', avg, '\n'
+        print('avgerage I,Q is:', avg, '\n')
         if 0:
             fig.axes[0].scatter(np.real(data), np.imag(data), label='avg=%s'%(avg,))
         else:

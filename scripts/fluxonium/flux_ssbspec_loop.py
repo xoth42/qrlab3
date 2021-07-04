@@ -6,7 +6,8 @@ Created on Wed Jul 25 14:55:43 2018
 """
 
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib
 import matplotlib
@@ -92,12 +93,12 @@ for i in range(len(currents)):
         qbrick.set_frequency(w_q[i-1] + default_sideband)
     elif i==2:
         qbrick.set_frequency(w_q[i-1]*2-w_q[i-2] + default_sideband)
-        print(w_q[i-1]*2-w_q[i-2] + default_sideband)
+        print((w_q[i-1]*2-w_q[i-2] + default_sideband))
     elif i>2:
         fit_params, covariance = curve_fit(quadratic, np.arange(i), w_q[:i], p0 = [-1, 0, w_q[0]])
         function_parameters = [i] + list(fit_params)
         result = quadratic(*function_parameters)
-        print('Qubit Freq guess from fit: ', result)
+        print(('Qubit Freq guess from fit: ', result))
         qbrick.set_frequency(result + default_sideband)
     
              

@@ -1,5 +1,6 @@
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib
 import matplotlib
@@ -243,7 +244,7 @@ if 0: # Sweep Raspberry Pi parameter(s) and record currents
         raspi.send_data_(chip_data)
         time.sleep(wait_time)
         currents.append([float(Agilent1.do_get_current()), float(Agilent2.do_get_current()), float(Agilent3.do_get_current()), float(Keithley.do_get_current())])
-        print(i, currents[i])
+        print((i, currents[i]))
     tstamp = time.strftime("%Y%m%d%H%M")
     filename = 'C:\qrlab\scripts\ROIC\currents_' + str(tstamp) + '.csv'
     np.savetxt(filename, currents)
@@ -262,7 +263,7 @@ if 0: # Sweep chip param, get voltage
             raspi.send_data_(chipdata)
             time.sleep(wait_time)
             voltages.append(float(DMM.do_get_voltage()))
-            print(i, j, chipdata[indices_to_sweep[0]], chipdata[indices_to_sweep[1]])
+            print((i, j, chipdata[indices_to_sweep[0]], chipdata[indices_to_sweep[1]]))
     tstamp = time.strftime("%Y%m%d%H%M")
     filename = 'C:\qrlab\scripts\ROIC\DACvoltages_' + str(tstamp) + '.csv'
     np.savetxt(filename, voltages)        
@@ -346,7 +347,7 @@ if 0: # test digitizer ROIC 4 channels
     for i in range(count):
         print(i)
         data = dig.test_dig_ROIC(2000, 1, 1, 1)
-        print(np.shape(data))
+        print((np.shape(data)))
         if np.max(data[2][0][:]) > threshold:
             Itrig = 1
         else:
@@ -364,5 +365,5 @@ if 0: # test digitizer ROIC 4 channels
 #        plt.plot(data[3][0][:], label = '4')
 #        plt.legend() 
 #        plt.show()
-    print(np.sum(threshold_list, axis=0)/float(count))
+    print((np.sum(threshold_list, axis=0)/float(count)))
     bla   

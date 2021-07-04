@@ -69,7 +69,7 @@ class WignerFunction(Measurement2D):
                 period = 1e9 / abs(df)
             else:
                 period = 1e50
-            print 'Detuning %s, Period: %.03f' % (df, period)
+            print('Detuning %s, Period: %.03f' % (df, period))
             geven.add_gaussian(0, period, area=area)
         godd = DetunedGaussians(self.sigma, chans=self.qubit_info.channels)
         for df, area in zip(self.detunings[1::2], self.pi_areas[1::2]):
@@ -77,7 +77,7 @@ class WignerFunction(Measurement2D):
                 period = 1e9 / abs(df)
             else:
                 period = 1e50
-            print 'Detuning %s, Period: %.03f' % (df, period)
+            print('Detuning %s, Period: %.03f' % (df, period))
             godd.add_gaussian(0, period, area=area)
 
         c = self.cav_info.rotate

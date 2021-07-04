@@ -38,8 +38,8 @@ proj_data = np.zeros((trials,npts))
 for i,filename in enumerate(filelist):
 # Read the array from file
 #    if filename[95]!=filename[96]:
-    print '\n'
-    print filename
+    print('\n')
+    print(filename)
     num = [float(s) for s in re.findall(r'-?\d+\.?\d*', filename)]
     proj = np.loadtxt(filename,delimiter=",")
 #    ifield = np.argmin(np.abs(fields - num[-1]))
@@ -59,8 +59,8 @@ proj_base = np.zeros((trials,npts))
 for i,filename in enumerate(filelist_base):
 # Read the array from file
 #    if filename[95]!=filename[96]:
-    print '\n'
-    print filename
+    print('\n')
+    print(filename)
     num = [float(s) for s in re.findall(r'-?\d+\.?\d*', filename)]
     proj = np.loadtxt(filename,delimiter=",")
 #    ifield = np.argmin(np.abs(fields - num[-1]))

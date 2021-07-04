@@ -1,10 +1,10 @@
 # Josh started this driver on 8/1/18 since the old driver didn't work at all
 # really.
-from __future__ import division
+
 import time
 import pyvisa
 import numpy as np
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import re
 
@@ -96,15 +96,15 @@ class Yokogawa_7651_new(Instrument):
         self.status = VISACommand('OC', self.instrument) #OC is "Status Code Output" 8 bit number to tell behavior of Yoko
 #        self.voltage_limit = VISACommand('LV', self.instrument) Repeated
 
-        self.add_parameter('output_state', type=types.IntType,
+        self.add_parameter('output_state', type=int,
                            flags=Instrument.FLAG_GETSET,
                           )
-        self.add_parameter('source_type', type=types.StringType,
+        self.add_parameter('source_type', type=bytes,
                            flags=Instrument.FLAG_GETSET)
-        self.add_parameter('voltage_range', type=types.FloatType,
+        self.add_parameter('voltage_range', type=float,
                             flags=Instrument.FLAG_GETSET, units='V',
                             )
-        self.add_parameter('current_range', type=types.FloatType,
+        self.add_parameter('current_range', type=float,
                             flags=Instrument.FLAG_GETSET, units='V',
                             )
         # self.add_parameter('voltage_range', type=types.IntType,
@@ -125,16 +125,16 @@ class Yokogawa_7651_new(Instrument):
         # self.add_parameter('voltage_limit', type=types.IntType,
         #                    flags=Instrument.FLAG_GETSET, units='V',
         #                    minvalue=1, maxvalue=30)
-        self.add_parameter('current', type=types.FloatType,
+        self.add_parameter('current', type=float,
                            flags=Instrument.FLAG_GETSET, maxval=120,
                            minval=-120, units='mA')
-        self.add_parameter('ramp_current', type=types.FloatType,
+        self.add_parameter('ramp_current', type=float,
                            flags=Instrument.FLAG_GETSET, maxval=120,
                            minval=-120, units='mA')
-        self.add_parameter('voltage', type=types.FloatType,
+        self.add_parameter('voltage', type=float,
                    flags=Instrument.FLAG_GETSET, units='V',
                    minvalue=-30.0, maxvalue=30.0)
-        self.add_parameter('ramp_voltage', type=types.FloatType,
+        self.add_parameter('ramp_voltage', type=float,
                    flags=Instrument.FLAG_GETSET, units='V',
                    minvalue=-30.0, maxvalue=30.0)
 #        self.add_parameter('polarity', type=types.IntType,
@@ -356,7 +356,7 @@ class Yokogawa_7651_new(Instrument):
     
 
     def do_set_polarity(self, polarity):
-        if polarity not in range(0, 3):
+        if polarity not in list(range(0, 3)):
             raise PolarityError('Polarity not 0, 1, or 2')
         self.polarity.send(polarity)
 

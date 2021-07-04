@@ -1,5 +1,5 @@
 import numpy as np
-import common
+from . import common
 
 def func(xs, ys, x0, y0, x1, y1, ofs=0, area=10, sigma=2):
     '''

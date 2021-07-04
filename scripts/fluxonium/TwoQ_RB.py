@@ -76,7 +76,7 @@ def analysis(meas, data=None, fig=None):
     Y2 = np.mean(calibration_qubit2_excited)
     Y4 = np.mean(calibration_bothqubits_excited)
     Y1 = np.mean(calibration_ground)
-    print Y1, Y2, Y3, Y4
+    print(Y1, Y2, Y3, Y4)
 
 
     Igg = 0.891
@@ -380,7 +380,7 @@ class TwoQubit_RB(Measurement1D):
         self.cancel_info = cancel_info
         self.N_cliffords = N_cliffords
         self.num_cal_points = num_cal_points
-        XS = np.asarray(range(N_cliffords+4*self.num_cal_points)) - (4*self.num_cal_points-1)
+        XS = np.asarray(list(range(N_cliffords+4*self.num_cal_points))) - (4*self.num_cal_points-1)
         self.xs = np.array([XS,XS,XS,XS]).transpose().flatten() # for plotting purposes
         self.filepath_lookup_table = ""
         self.cnum=cnum
@@ -401,7 +401,7 @@ class TwoQubit_RB(Measurement1D):
         
             
         super(TwoQubit_RB, self).__init__(4*(N_cliffords+4*num_cal_points), infos=(qubit_info,qubit2_info,twoQ_info,cancel_info), **kwargs)
-        self.data.create_dataset('Cliffords', data=range(4*(N_cliffords+4*num_cal_points)))
+        self.data.create_dataset('Cliffords', data=list(range(4*(N_cliffords+4*num_cal_points))))
 #        self.data.set_attrs(
 #            cnum=cnum,
 #            interleave=interleave
@@ -454,11 +454,11 @@ class TwoQubit_RB(Measurement1D):
                rndnum = rnd.randint(0, 11519)
            if self.cnum is not None:
                rndnum = self.cnum
-           print(n, rndnum)
+           print((n, rndnum))
            temp_pulseSeq1 = []
            temp_pulseSeq2 = []
            self.add_twoQ_clifford(rndnum, cliffordSeq1, cliffordSeq2, temp_pulseSeq1, temp_pulseSeq2, len1, len2, phi1, phi2, virtualZ=self.use_virtual_Z, generator = self.generator)
-           print(phi1[0], phi2[0])
+           print((phi1[0], phi2[0]))
            if self.interleave == 'ZX90':
                print ('This code does not support ZX90 yet')
                
@@ -493,8 +493,8 @@ class TwoQubit_RB(Measurement1D):
                phi2[0] = phi2[0] + self.singleQ_phases[1]
  
            print ('computing recovery')
-           print('cliffordSeq1 is:', cliffordSeq1)
-           print('cliffordSeq2 is:', cliffordSeq2)
+           print(('cliffordSeq1 is:', cliffordSeq1))
+           print(('cliffordSeq2 is:', cliffordSeq2))
 #            # get recovery gate seq
            (recoverySeq1, recoverySeq2, recovery_pulseSeq1, recovery_pulseSeq2) = self.get_recovery_gate(cliffordSeq1, cliffordSeq2, phi1, phi2, generator = self.generator)
 #           print(phi1[0], phi2[0])
@@ -504,11 +504,11 @@ class TwoQubit_RB(Measurement1D):
            recov_pulseSeq2.append(recovery_pulseSeq2)
            pulseSeq1.append(temp_pulseSeq1)
            pulseSeq2.append(temp_pulseSeq2)
-        print('total # gates:', len(cliffordSeq1))
-        print('total # gates:', len(cliffordSeq2))
+        print(('total # gates:', len(cliffordSeq1)))
+        print(('total # gates:', len(cliffordSeq2)))
 
-        print('recov_cliffordSeq1 is:', recov_cliffordSeq1)
-        print('recov_cliffordSeq2 is:', recov_cliffordSeq2)
+        print(('recov_cliffordSeq1 is:', recov_cliffordSeq1))
+        print(('recov_cliffordSeq2 is:', recov_cliffordSeq2))
         
 #        print('pulseseq1 is:', pulseSeq1)
 
@@ -715,7 +715,7 @@ class TwoQubit_RB(Measurement1D):
 
         # Calculate the matrix of the clifford sequence
         matrix_cliffords = evaluate_sequence(gate_seq_1, gate_seq_2, generator = generator)
-        print('matrix_cliffords is:', matrix_cliffords)
+        print(('matrix_cliffords is:', matrix_cliffords))
 
         
         if (self.use_lookup_table == True):
@@ -731,7 +731,7 @@ class TwoQubit_RB(Measurement1D):
                               (1+1j)/np.sqrt(2), (-1+1j)/np.sqrt(2), (-1-1j)/np.sqrt(2), (1-1j)/np.sqrt(2)]:
                         diff = matrix_cliffords.flatten() - cliff_mat_list[i].flatten()*k
                         if np.all((np.abs(diff) < 1e-3)):
-                            print('found matrix in list at location', i)
+                            print(('found matrix in list at location', i))
                             recovery_index = recov_index_list[i]
                             break
                         
@@ -747,7 +747,7 @@ class TwoQubit_RB(Measurement1D):
                               (1+1j)/np.sqrt(2), (-1+1j)/np.sqrt(2), (-1-1j)/np.sqrt(2), (1-1j)/np.sqrt(2)]:
                         diff = matrix_cliffords.flatten() - cliff_mat_list[i].flatten()*k
                         if np.all((np.abs(diff) < 1e-3)):
-                            print('found matrix in list at location', i)
+                            print(('found matrix in list at location', i))
                             recovery_index = recov_index_list[i]
                             break
             
@@ -766,10 +766,10 @@ class TwoQubit_RB(Measurement1D):
             self.add_twoQ_clifford(recovery_index, recovery_seq_1, recovery_seq_2, temp_pulse_seq_1, temp_pulse_seq_2, temp_recov_len1, temp_recov_len2, temp_phi1, temp_phi2, virtualZ=self.virtual_recovery, generator = generator)
             matrix_recovery = evaluate_sequence(recovery_seq_1, recovery_seq_2, generator = generator)
 #            print('recovery index is:', recovery_index)
-            print('matrix_recovery is:', matrix_recovery)
+            print(('matrix_recovery is:', matrix_recovery))
             matrix_total = np.matmul(matrix_recovery,matrix_cliffords)
-            print('matrix_total is:', matrix_total)
-            print(CheckIdentity(matrix_total))
+            print(('matrix_total is:', matrix_total))
+            print((CheckIdentity(matrix_total)))
             return (recovery_seq_1, recovery_seq_2, temp_pulse_seq_1, temp_pulse_seq_2)
 
         if (self.use_lookup_table == False):
@@ -846,12 +846,12 @@ class TwoQubit_RB(Measurement1D):
     #                                log.info('the cheapest sequence update! [N_2QB_gate, N_1QB_gate, N_I_gate, seq. index] ' + str([min_N_2QB_gate, min_N_1QB_gate, max_N_I_gate, cheapest_index]))
     
                     else:
-                        print('recovery_index is:', i)
-                        print('matrix_recovery is:', matrix_recovery)
-                        print('matrix_total is:', matrix_total)
-                        print(CheckIdentity(matrix_total))
-                        print(phase1[0], phase2[0])
-                        print(temp_phi1[0], temp_phi2[0])
+                        print(('recovery_index is:', i))
+                        print(('matrix_recovery is:', matrix_recovery))
+                        print(('matrix_total is:', matrix_total))
+                        print((CheckIdentity(matrix_total)))
+                        print((phase1[0], phase2[0]))
+                        print((temp_phi1[0], temp_phi2[0]))
                         return(recovery_seq_1, recovery_seq_2, temp_pulse_seq_1, temp_pulse_seq_2)
     
             if (self.find_cheapest_recovery == True):
@@ -870,9 +870,9 @@ class TwoQubit_RB(Measurement1D):
                 recovery_seq_2 = [None]
                 raise Exception ("failed to find recovery gate")
             
-            print('cheapest_index is:', cheapest_index)
-            print('cheapest matrix_recovery is:', matrix_recovery)
-            print('matrix_total is:', matrix_total)
+            print(('cheapest_index is:', cheapest_index))
+            print(('cheapest matrix_recovery is:', matrix_recovery))
+            print(('matrix_total is:', matrix_total))
             return (recovery_seq_1, recovery_seq_2, temp_pulse_seq_1, temp_pulse_seq_2)
     
     

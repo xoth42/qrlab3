@@ -1,4 +1,4 @@
-from instrument import Instrument
+from .instrument import Instrument
 import types
 
 import time
@@ -13,7 +13,7 @@ class dummy_signal_generator(Instrument):
     def __init__(self, name, address=None):
         Instrument.__init__(self, name, tags=['measure', 'generate'])
 
-        self.add_parameter('wave_type', type=types.StringType,
+        self.add_parameter('wave_type', type=bytes,
                 flags=Instrument.FLAG_GETSET,
                 option_list=(
                     'SIN',
@@ -21,17 +21,17 @@ class dummy_signal_generator(Instrument):
                     'SAW'
                 ))
 
-        self.add_parameter('amplitude', type=types.FloatType,
+        self.add_parameter('amplitude', type=float,
                 flags=Instrument.FLAG_SET | Instrument.FLAG_SOFTGET,
                 minval=0, maxval=1000,
                 units='AU')
 
-        self.add_parameter('frequency', type=types.FloatType,
+        self.add_parameter('frequency', type=float,
                 flags=Instrument.FLAG_SET | Instrument.FLAG_SOFTGET,
                 minval=0, maxval=1000,
                 units='Hz')
 
-        self.add_parameter('wave', type=types.FloatType,
+        self.add_parameter('wave', type=float,
                 tags=['measure'],
                 flags=Instrument.FLAG_GET,
                 units='AU', doc="""
@@ -39,7 +39,7 @@ class dummy_signal_generator(Instrument):
                 Arbitrary units.
                 """)
 
-        self.add_parameter('slow_wave', type=types.FloatType,
+        self.add_parameter('slow_wave', type=float,
                 tags=['measure'],
                 flags=Instrument.FLAG_GET,
                 units='AU', doc="""
@@ -92,7 +92,7 @@ class dummy_signal_generator(Instrument):
 
     def reset(self, arg):
         '''Reset signal generator.'''
-        print 'Resetting: %s' % arg
+        print('Resetting: %s' % arg)
         self._start_time = time.time()
 
     def generate_numpy_array(self, arsize):
@@ -101,7 +101,7 @@ class dummy_signal_generator(Instrument):
         start = time.time()
         self._ar = np.random.rand(arsize)
         end = time.time()
-        print 'Generating took %.03f ms' % ((end - start)*1000,)
+        print('Generating took %.03f ms' % ((end - start)*1000,))
         return True
 
     def get_numpy_array(self):

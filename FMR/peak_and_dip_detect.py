@@ -107,7 +107,7 @@ Z = np.transpose(Z)
 Y = np.transpose(Y)
 
 for i in range (size):
-    print i
+    print(i)
     maxtab, mintab = peakdet(Z[i],Y[i],X[0][i],5)
     
     

@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import pyvisa.vpp43 as vpp43
 import time
@@ -32,7 +32,7 @@ class Coincidence(Instrument):
         # Add parameters
         self.add_parameter('measurement_time',
             flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-            type=types.IntType, minval=1, maxval=65535, units='dsec')
+            type=int, minval=1, maxval=65535, units='dsec')
 
         self._open_serial_connection()
 
@@ -89,6 +89,6 @@ class Coincidence(Instrument):
         ret = ''
         for c in data:
             ret += '%02x,' % c
-        print 'Read %d bytes' % (len(data), )
-        print 'Data: %s' % (ret, )
+        print('Read %d bytes' % (len(data), ))
+        print('Data: %s' % (ret, ))
 

@@ -23,7 +23,7 @@ class G_e_voltage(Measurement1D):
         self.postseq = postseq
 
         super(G_e_voltage, self).__init__(20, infos=(qubit_info,), **kwargs)
-        self.data.create_dataset('sequence', data=[range(0,20)])
+        self.data.create_dataset('sequence', data=[list(range(0,20))])
 #        self.data.set_attrs()
 
 

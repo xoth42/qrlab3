@@ -143,7 +143,7 @@ class Rabi_Keysight(Measurement1D):
             self.pi2_amp = 0
 
         if self.update_ins:
-            print 'Setting qubit pi-rotation ampltidue to %.06f, pi/2 to %.06f' % (self.pi_amp, self.pi2_amp)
+            print('Setting qubit pi-rotation ampltidue to %.06f, pi/2 to %.06f' % (self.pi_amp, self.pi2_amp))
             if self.selective==1:
                 if self.pi_amp:
                     mclient.instruments[self.qubit_info.insname].set_pi_amp_selective(self.pi_amp)

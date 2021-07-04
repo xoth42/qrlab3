@@ -55,8 +55,8 @@ for i, lamda in enumerate(lamdalist):
     vb_p.append(v[:,0])
            
     
-print e
-print v
+print(e)
+print(v)
 
 pl.figure()
 pl.subplot(211)   

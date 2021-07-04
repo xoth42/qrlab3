@@ -30,8 +30,8 @@ proj_data = np.zeros((len(fields),npts))
 for filename in filelist:
 # Read the array from file
 #    if filename[95]!=filename[96]:
-    print '\n'
-    print filename
+    print('\n')
+    print(filename)
     num = [float(s) for s in re.findall(r'-?\d+\.?\d*', filename)]
     proj = np.loadtxt(filename,delimiter=",")
     ifield = np.argmin(np.abs(fields - num[-1]))

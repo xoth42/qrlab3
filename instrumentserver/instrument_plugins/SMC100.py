@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import visa
 from visa import vpp43
 from lib import visafunc
@@ -61,16 +61,16 @@ class SMC100(Instrument):
 
         self.add_parameter('position',
             flags=Instrument.FLAG_GETSET,
-            type=types.FloatType,
+            type=float,
             units='mm')
 
         self.add_parameter('state',
             flags=Instrument.FLAG_GET,
-            type=types.StringType)
+            type=bytes)
 
         self.add_parameter('velocity',
             flags=Instrument.FLAG_GETSET,
-            type=types.FloatType,
+            type=float,
             units='mm/s')
 
         # Functions
@@ -94,7 +94,7 @@ class SMC100(Instrument):
         b = vpp43.create_string_buffer(BUFSIZE)
         try:
             test = vpp43.visa_library().viRead(self._visa.vi, b, navail, vpp43.byref(ret))
-        except Exception, e:
+        except Exception as e:
             pass   # This seems to happen almost always...
 #            print 'Error: %s' % (e, )
 
@@ -118,9 +118,9 @@ class SMC100(Instrument):
             self.get_state()
         except:
             try:
-                print self.get_error()
+                print(self.get_error())
             except:
-                print 'I/O error'
+                print('I/O error')
         self.go_home()
 
     def get_all(self):
@@ -141,8 +141,8 @@ class SMC100(Instrument):
                 return ret[len(command)+1:]
             else:
                 return ret
-        except Exception, e:
-            print 'Error: %s' % (e, )
+        except Exception as e:
+            print('Error: %s' % (e, ))
             return False
 
     def write(self, command):
@@ -174,7 +174,7 @@ class SMC100(Instrument):
             self.write('MM1')
         if(state == 'NOT REFERENCED'):
             self.write('OR') # Home search
-        print self.get_error()
+        print(self.get_error())
 
     def set_state_disabled(self):
         '''
@@ -186,7 +186,7 @@ class SMC100(Instrument):
         if(state == 'NOT REFERENCED'):
             self.write('OR') # Home search
             self.write('MM0')
-        print self.get_error()
+        print(self.get_error())
 
     def do_get_position(self):
         '''
@@ -253,5 +253,5 @@ class SMC100(Instrument):
         Move position relative to the left
         '''
         pos = self.get_position()
-        print str(pos)
+        print(str(pos))
         self.set_position(pos+value)

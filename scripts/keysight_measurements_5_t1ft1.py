@@ -6,7 +6,8 @@ Created on Thu Apr 26 14:53:09 2018
 """
 
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib
 import matplotlib
@@ -44,7 +45,7 @@ os.chdir(r'C:/qrlab/scripts')
 if 0: # test digitizer
     dig = mclient.instruments['dig']
     data = dig.test_dig(1000, 1, 1000, 1)
-    print(np.shape(data))
+    print((np.shape(data)))
     plt.figure()
     plt.plot(data[0][0][:], label = 'sig')
     plt.plot(data[1][0][:], label = 'ref')
@@ -55,7 +56,7 @@ if 0: # test digitizer
 if 0: # test digitizer DEMODULATED
     dig = mclient.instruments['dig']
     avgs = dig.test_dig_demod(1000, 1000)
-    print(np.shape(avgs))
+    print((np.shape(avgs)))
     plt.figure()
     plt.plot(np.real(avgs), label = 'real')
     plt.plot(np.imag(avgs), label = 'imag')
@@ -67,7 +68,7 @@ if 0: # test digitizer DEMODULATED
     plt.show()
     bla
 if 0: # cav transmission
-    from single_cavity import rocavspectroscopy_keysight
+    from .single_cavity import rocavspectroscopy_keysight
 #    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0), ef2_info.rotate(np.pi, 0)])
 #    Yoko.do_set_current(-0.00175)
@@ -80,7 +81,7 @@ if 0: # cav transmission
     
 
 if 0: # sweeping flux to find phase 
-    from single_cavity import flux_phase_sweep
+    from .single_cavity import flux_phase_sweep
 #    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])
 #    Yoko.do_set_current(-0.00175)
     Yoko = mclient.instruments['Yoko']
@@ -96,7 +97,7 @@ if 0: # sweeping flux to find phase
     
 if 0: # calibrate TWPA
     SC_TWPApump = mclient.instruments['SC_TWPApump']
-    from single_cavity import twpa_calibration_keysight
+    from .single_cavity import twpa_calibration_keysight
     target_freq = 7.915e9
     freq_range = .03e9
     twpa_powers = np.linspace(10, 12.25, 10)
@@ -107,7 +108,7 @@ if 0: # calibrate TWPA
         tc.measure()
         
 if 0:
-    from single_cavity import rocavspectroscopy_keysight_IQmod
+    from .single_cavity import rocavspectroscopy_keysight_IQmod
 #    rofreq = 8553.1e6
     rofreq = 8306.00e6
     freq_range = 15e6
@@ -119,7 +120,7 @@ if 0:
     
 
 if 0: #     qubit spectroscopy
-    from single_qubit import spectroscopy_keysight
+    from .single_qubit import spectroscopy_keysight
 #    from scripts.single_qubit import spectroscopy_IQ
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate(np.pi, 0), ef_info.rotate(np.pi, 0)])
 #    postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
@@ -139,7 +140,7 @@ if 0: #     qubit spectroscopy
     bla
 
 if 0: #     use qubit spectroscopy to find FWM freq
-    from single_qubit import spectroscopy_keysight
+    from .single_qubit import spectroscopy_keysight
 #    from scripts.single_qubit import spectroscopy_IQ
     seq = sequencer.Sequence([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0), ef2_info.rotate(np.pi, 0)])
     postseq = sequencer.Sequence(qubit2_info.rotate(np.pi/2, 0))
@@ -161,7 +162,7 @@ if 0: #     use qubit spectroscopy to find FWM freq
     bla
 
 if 0: # Qubit spec with phase correction
-    from single_qubit import spectroscopy_keysight_phasecorrection
+    from .single_qubit import spectroscopy_keysight_phasecorrection
 #    for i in [0,-3,-6,-9,-12]:
 #    from scripts.single_qubit import spectroscopy_IQ
     qubit_freq = 437.6e6
@@ -182,7 +183,7 @@ if 0: # Qubit spec with phase correction
     
 
 if 0: # SSB spec
-    from single_qubit import ssbspec
+    from .single_qubit import ssbspec
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
     for i in range(1):        
 #        RObrick.do_set_power(i)
@@ -194,7 +195,7 @@ if 0: # SSB spec
     bla
 
 if 0: # SSB spec with lorentzian fit
-    from single_qubit import ssbspec_lorentzianfit
+    from .single_qubit import ssbspec_lorentzianfit
     seq = sequencer.Trigger(600)
     spec = ssbspec_lorentzianfit.SSBSpec_lorentzianfit(qubit_info, np.linspace(-8e6, 2e6, 81), seq=seq, plot_seqs=False, proj_func='phase')
     spec.measure_keysight()
@@ -204,7 +205,7 @@ if 0: # SSB spec with lorentzian fit
     bla
 
 if 0: # Check histogramming  #THIS DOES NOT WORK, IT NEEDS TO BE IMPLEMENTED TO KEYSIGHT
-    from single_qubit import rabi
+    from .single_qubit import rabi
 #    dig.set_naverages(50000)
     tr = rabi.Rabi(qubit_info, [qubit_info.pi_amp,], histogram=True, title='|e>')
     tr.measure_keysight()
@@ -217,7 +218,7 @@ if 0: # Check histogramming  #THIS DOES NOT WORK, IT NEEDS TO BE IMPLEMENTED TO 
     
 
 if 0: #Multiple times SSB spec
-    from single_qubit import ssbspec
+    from .single_qubit import ssbspec
     seq = sequencer.Trigger(250)
     freq_array = np.linspace(-1.5e6, 0.3e6, 60)
     spec = ssbspec.SSBSpec(qubit_info, freq_array, seq=seq, plot_seqs=False)
@@ -243,7 +244,7 @@ if 0: # Power Rabi-Calibrate pi pulse
 #                                   sequencer.Constant(int(cool_time), 1, chan='3m1')])
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0), ef2_info.rotate(np.pi, 0)])
 #    postseq = sequencer.Sequence(ef2_info.rotate(np.pi/2, 0))
-    from single_qubit import rabi
+    from .single_qubit import rabi
     import time
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
     tr = rabi.Rabi(qubit_info, 
@@ -260,7 +261,7 @@ if 0: # Power Rabi-Calibrate pi pulse
     bla
 
 if 0: # Pi/2 pulse train
-    from single_qubit import Pi2_train
+    from .single_qubit import Pi2_train
     seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
     pi2tr = Pi2_train.Pi2_train(qubit_info, np.linspace(0.215, 0.221, 61), seq=seq, generate=True, 
                               repeat_pulse=16, proj_func='phase', extra_info=ef_info)
@@ -269,7 +270,7 @@ if 0: # Pi/2 pulse train
 #    pi2_result.append(pi2.get_ys())
 
 if 0: # Pi pulse train
-    from single_qubit import Pi_train
+    from .single_qubit import Pi_train
     seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
     pitr = Pi_train.Pi_train(qubit_info, np.linspace(0.435, 0.441, 61), seq=seq, generate=True, 
                               repeat_pulse=15, proj_func='phase', extra_info=ef_info)
@@ -286,7 +287,7 @@ if 0: # Pi Amp Tuning
 #        data=tr.measure()
 
     dig.do_set_naverages(10000)
-    from single_qubit import pi_amp_cal
+    from .single_qubit import pi_amp_cal
     seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
     pi_result = []
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate(-np.pi/2, 0)]) #this whole line was added
@@ -299,7 +300,7 @@ if 0: # Pi Amp Tuning
     
 if 0: # T1
 
-    from single_qubit import T1measurement
+    from .single_qubit import T1measurement
 
 #    t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 250e3, 121), 
 #    seq = sequencer.Join([sequencer.Trigger(250), sequencer.Constant(2000, 1, chan='3m1'), sequencer.Delay(250),
@@ -314,7 +315,7 @@ if 0: # T1
     bla
 
 if 0: # T1 - alternating pi-pulse and saturation T1
-    from single_qubit import T1_alternate_pi_saturation
+    from .single_qubit import T1_alternate_pi_saturation
 
     t1 = T1_alternate_pi_saturation.T1Measurement(qubit_info, #np.linspace(0, 0.8e3, 100),
                                      np.concatenate((np.linspace(0.1e3, 10e3, 21), np.linspace(11e3, 150e3, 26), np.linspace(155e3, 650e3, 30))),
@@ -330,7 +331,7 @@ if 0:
     frequencies = np.linspace(120, 180, 3)
 
 if 0: #T2
-    from single_qubit import T2measurement
+    from .single_qubit import T2measurement
 #    seq = sequencer.Join([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0)])
     for i in range(1):
         t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 3e3, 101), detune=2e6, double_freq=False, generate=True, 
@@ -343,7 +344,7 @@ if 0: #T2
     bla
 
 if 0: # Ramsey qubit 2 rabi sweep
-    from single_qubit import T2measurementforramsey
+    from .single_qubit import T2measurementforramsey
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
     amplitudes = np.linspace(-0.2, 0.2, 11)
     detunes = []
@@ -363,7 +364,7 @@ if 0: # Ramsey qubit 2 rabi sweep
 
     
 if 0: # Ramsey flux sweep
-    from single_qubit import T2measurement
+    from .single_qubit import T2measurement
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
     currents = np.linspace(-0.1, -0.3, 11)
     detunes = []
@@ -382,9 +383,9 @@ if 0: # Ramsey flux sweep
     bla
     
 if 0: 
-    from single_qubit import rabi
-    from single_qubit import T1measurement
-    from single_qubit import T2measurement
+    from .single_qubit import rabi
+    from .single_qubit import T1measurement
+    from .single_qubit import T2measurement
     SCpump = mclient.instruments['SCpump']
     postseq = sequencer.Delay(500)
     pi_amp = []
@@ -423,7 +424,7 @@ if 0:
     
     
 if 0: # T2echo
-    from single_qubit import T2measurement
+    from .single_qubit import T2measurement
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
 #    postseq = sequencer.Delay(500)
 #    for i in range (5):
@@ -446,7 +447,7 @@ if 0: # EF Qubit spec
     bla
     
 if 0: # EF SSBspec
-    from single_qubit import ssbspec
+    from .single_qubit import ssbspec
     seq = sequencer.Sequence([sequencer.Trigger(400), qubit_info.rotate(np.pi, 0)])
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate_selective(np.pi, 0)])
     postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
@@ -456,7 +457,7 @@ if 0: # EF SSBspec
     bla
     
 if 1: # EF rabi 
-    from single_qubit import efrabi
+    from .single_qubit import efrabi
 #    dig = mclient.instruments['dig']
 #    cool_time = 25e3
 #    cool_time_range = [0.5e3, 1e3, 5e3, 10e3, 100e3]
@@ -479,7 +480,7 @@ if 1: # EF rabi
     bla
 
 if 0: # FT1 
-    from single_qubit import FT1measurement
+    from .single_qubit import FT1measurement
     fwm = mclient.instruments['qubit2FWMbrick']
 
     for i in range(1):
@@ -493,7 +494,7 @@ if 0: # FT1
     bla
     
 if 0: # FT1 sweep
-    from single_qubit import FT1measurement
+    from .single_qubit import FT1measurement
     fwm = mclient.instruments['qubit2FWMbrick']
     freq = np.linspace(6.37e9,6.385e9,31)
     powers = np.linspace(-5,10,4)
@@ -518,7 +519,7 @@ if 0: # FT1 sweep
     bla
     
 if 0: # FT1 with fwm
-    from single_qubit import FT1withFwm
+    from .single_qubit import FT1withFwm
     fwm_gen = mclient.instruments['qubit2FWMbrick']
 #    postseq = sequencer.Sequence(sequencer.Delay(5))
     postseq = sequencer.Sequence(ef2_info.rotate(np.pi/2, 0))
@@ -607,7 +608,7 @@ if 0: # Process_tomography
     ptomo_result.append(sqtomo.get_ys())
 #    plt.close()
 
-    print ptomo_result
+    print(ptomo_result)
     bla
     
     
@@ -625,7 +626,7 @@ if 0: #
 
     cn_result.append(cn.get_ys())
 
-    print cn_result
+    print(cn_result)
     bla    
 
 if 0: # Drag test
@@ -697,7 +698,7 @@ if 0: # AllXY
 #        data=tr.measure()
 
 #    dig.do_set_naverages(10000)
-    from single_qubit import allxy
+    from .single_qubit import allxy
     seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
     allxy_result = []
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate(-np.pi/2, 0)]) #this whole line was added
@@ -721,7 +722,7 @@ if 0: # Detuning Error Test
 
 
     dig.do_set_naverages(10000)
-    from single_qubit import Detuning_error_test
+    from .single_qubit import Detuning_error_test
     det_result = []
     initialfreq = 946891000.0
     freq_step=1e6
@@ -872,7 +873,7 @@ if 0: # stark shift measurments
         dig.set_naverages(2000)
         for j in range(num_frequencies):
             print('#################################')
-            print('frequency set to ' + str(frequencies[j]))
+            print(('frequency set to ' + str(frequencies[j])))
             print('#################################')
             geFG.set_frequency(bare_ge + 100e6 - 20e6)
             ge_instrument.set_pi_amp_selective(pi_amp_selective_guess)
@@ -992,7 +993,7 @@ if 0: # f0 - g1 fwm test
     amps = [.5] 
     powers = [10]
     shift_freq = np.zeros((len(amps), len(powers)))
-    from FWM import FWM_f0g1
+    from .FWM import FWM_f0g1
     for i, amp in enumerate(amps):
         for j, power in enumerate(powers):
             f0g1 = FWM_f0g1.FWM_f0g1(qubit_info, ef_info, fwm_gen, 1e3, 
@@ -1001,23 +1002,23 @@ if 0: # f0 - g1 fwm test
             shift_freq[i, j] = f0g1.xs[np.argmax(f0g1.ampdata[:])]
             
 if 0: # Qubit population
-    from single_qubit import qubit_pop
+    from .single_qubit import qubit_pop
     dig.set_naverages(300000)
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
     qp = qubit_pop.Qubit_Pop(qubit_info, ef_info, generate=True, seq=None, proj_func='phase')
     qp.measure_keysight()
-    print(qp.get_ys())
+    print((qp.get_ys()))
     
     
 if 0: #f0 - g1 time domain
     fwm_gen = mclient.instruments['f0g1brick']
-    from FWM import FWM_f0g1_t1
+    from .FWM import FWM_f0g1_t1
     f0g1 = FWM_f0g1_t1.FWM_f0g1_t1(qubit_info, ef_info, fwm_gen, np.linspace(0, 10e3, 101), 0.000001, '3m1', proj_func='phase')
     f0g1.measure_keysight()
 
 
 if 0: # RO photon number measurement
-    from single_qubit import T2measurement
+    from .single_qubit import T2measurement
 
 #    seq = sequencer.Join([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0)])
 #    noise_powers = -2

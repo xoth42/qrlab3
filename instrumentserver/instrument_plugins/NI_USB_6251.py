@@ -9,7 +9,7 @@
 # Adapted by Martijn Schaafsma April 2011
 
 #### Import libraries ####
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import logging
 import ctypes
@@ -50,9 +50,9 @@ class NI_USB_6251(Instrument):
 
         # Add parameters
         self.add_parameter('max_num_samples',
-          flags=Instrument.FLAG_GETSET, units='', minval=0, maxval=16000, type=types.IntType)
+          flags=Instrument.FLAG_GETSET, units='', minval=0, maxval=16000, type=int)
         self.add_parameter('samplerate',
-          flags=Instrument.FLAG_GETSET, units='Hz', minval=0, maxval=16000, type=types.FloatType)
+          flags=Instrument.FLAG_GETSET, units='Hz', minval=0, maxval=16000, type=float)
 
         # Set properties
         self.set_max_num_samples(num_samples)
@@ -107,7 +107,7 @@ class NI_USB_6251(Instrument):
         for i in range(numpts):
           vals.append(self.FetchMean())
           qt.msleep(waittime)
-        plot(range(numpts),vals)
+        plot(list(range(numpts)),vals)
 
     def FetchMean(self):
         t = self.FetchAll()

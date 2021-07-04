@@ -3,7 +3,8 @@ BREAK EVEN OR BROKE
 """
 
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib, OCTlib
 import matplotlib.pyplot as plt
@@ -123,7 +124,7 @@ ge_comb5 = OCTlib.comb(qubit_info, [0, -chi2s, -chi2s*2, -chi2s*3], [y*1.0e-3 fo
 
 
 if 0: # poly ssbspec to find stark shift
-    from FWM import poly_fwm_ssbspec
+    from .FWM import poly_fwm_ssbspec
 #    ss = 2.776e6  # AQEC condition #MP established 11/29, kappa = 0.175+/-0.003 /us, phase matched within 0.04 radian
 #    fwm_comb = OCTlib.comb(fwm_info, [0, chi2s, chi2s*2, chi2s*3], [x*0.2 for x in [1.2, 1.02, 0.62, 0.47]], vary = [1]*4, stark_shift = ss,
 #                           phases = [np.pi, 0, 0, 0])
@@ -145,7 +146,7 @@ if 0: # poly ssbspec to find stark shift
     
     
 if 0: # 2d poly ssbspec to find stark shift
-    from FWM import poly_fwm_ssbspec2d
+    from .FWM import poly_fwm_ssbspec2d
     dig.set_trigger_period(2000)
     dig.set_naverages(1200)
     fwm_freqs = np.linspace(-0.6e6, 0.6e6, 13)
@@ -163,7 +164,7 @@ if 0: # 2d poly ssbspec to find stark shift
 
     
 if 0: # time domain
-    from FWM import poly_time_domain
+    from .FWM import poly_time_domain
     comb_list = [fwm_comb, ge_comb]
     qubit_list = [
 #                  qubit_info, 
@@ -189,8 +190,8 @@ if 0: # time domain
 
 
 if 0: # Measure all four e-o rates
-    from FWM import poly_fwm_ssbspec
-    from FWM import poly_time_domain
+    from .FWM import poly_fwm_ssbspec
+    from .FWM import poly_time_domain
     
 #for f3 in np.linspace(1.28, 1.32, 1):
     for g3 in np.linspace(1.17, 1.27, 1):
@@ -269,7 +270,7 @@ if 0: # Measure all four e-o rates
     
 
 if 1: # SSB after e-o dissipation
-    from single_qubit import ssbspec
+    from .single_qubit import ssbspec
     dig.set_trigger_period(2000)
     dig.set_naverages(6000)
     times = [1.7e6]#np.arange(20e3, 40e3, 1e3)
@@ -415,7 +416,7 @@ if 0: # W function after e-o dissipation on fock superposition
     bla
     
 if 0: # Calibrate selective pi pulse at different photon numbers
-    from single_qubit import rabi
+    from .single_qubit import rabi
     tr = rabi.Rabi(qubit_a4, 
                    np.linspace(-0.8, 0.8, 51), selective=False,    
 #                  np.linspace(-0.025, 0.025, 51), selective=True,
@@ -427,7 +428,7 @@ if 0: # Calibrate selective pi pulse at different photon numbers
     bla
 
 if 0: # Ramsey measurement with selective pulses at different photon numbers
-    from single_qubit import T2measurement
+    from .single_qubit import T2measurement
     t2 = T2measurement.T2Measurement(qubit_a2, np.linspace(0e3, 20e3, 101), detune=.4e6,
                                      double_freq=False, generate=True, seq=None, selective=True, extra_info=[cavity_infoA, qubit_info])
     t2.measure_keysight()
@@ -435,7 +436,7 @@ if 0: # Ramsey measurement with selective pulses at different photon numbers
     
     
 if 0: # Test qubit pop after fwm tone
-    from single_qubit import rabi
+    from .single_qubit import rabi
     tr = rabi.Rabi(fwm_info, 
 #                   np.linspace(-0.9, 0.9, 101), selective=False,
                   np.linspace(-0.4, 0.4, 51), selective=True,
@@ -449,7 +450,7 @@ if 0: # Test qubit pop after fwm tone
 if 0: # Q rotation test
     dig.set_trigger_period(2000)
     dig.set_naverages(2000)
-    from AQEC import husimiq_angle_test
+    from .AQEC import husimiq_angle_test
     infos = [fwm_comb.info, ge_comb.info]
         
 #    times = np.linspace(0e3, 150e3, 11)
@@ -496,7 +497,7 @@ if 0: # Q rotation test
     plt.plot(times/1e3, qphases, '.')
     pf = np.polyfit(times[2:]/1e3, qphases[2:], 1)
     plt.plot(times/1e3, pf[0]*times/1e3+pf[1], linestyle='-')
-    print pf[0], pf[1]
+    print(pf[0], pf[1])
         
     bla            
     
@@ -504,7 +505,7 @@ if 0: # Q rotation test
 if 0: # wigner rotation test
     dig.set_trigger_period(2500)
     dig.set_naverages(2500)
-    from AQEC import wigner_angle_test
+    from .AQEC import wigner_angle_test
     infos = [fwm_comb.info, ge_comb.info]
         
     times = np.linspace(0e3, 240e3, 7)
@@ -552,7 +553,7 @@ if 0: # wigner rotation test
     plt.plot(times/1e3, wphases, '.')
     pf = np.polyfit(times[1:]/1e3, wphases[1:], 1)
     plt.plot(times/1e3, pf[0]*times/1e3+pf[1], linestyle='-')
-    print 'slope=', pf[0], ', interception=', pf[1]
+    print('slope=', pf[0], ', interception=', pf[1])
 
 
     dig.set_naverages(3200)
@@ -595,7 +596,7 @@ if 0: # wigner rotation test
     plt.plot(times/1e3, phases, '.')
     pf = np.polyfit(times[:]/1e3, phases[:], 1)
     plt.plot(times/1e3, pf[0]*times/1e3+pf[1], linestyle='-')
-    print 'slope=', pf[0], ', interception=', pf[1]
+    print('slope=', pf[0], ', interception=', pf[1])
         
     bla
 
@@ -603,8 +604,8 @@ if 0: # wigner rotation test
         
 if 0: # bloch characterization
     dig.set_trigger_period(2500)
-    from AQEC import time_bloch
-    from single_cavity import cavT2
+    from .AQEC import time_bloch
+    from .single_cavity import cavT2
     
 #    times = np.arange(0, 400e3, 72.6e3/2)
 #    times = np.linspace(0, 300e3, 13)
@@ -722,8 +723,8 @@ if 0: # bloch characterization
 
 
 if 0: # Preekerr Optimization
-    from FWM import poly_fwm_ssbspec
-    from AQEC import prekerr_optimize, prekerr_calibrate
+    from .FWM import poly_fwm_ssbspec
+    from .AQEC import prekerr_optimize, prekerr_calibrate
 
     dig.set_naverages(1500)
     dig.set_trigger_period(2500)    
@@ -773,7 +774,7 @@ if 0: # Preekerr Optimization
     
         
 if 0: #T2 with AQEC on any pre-seq
-    from AQEC import CavT2_AQEC
+    from .AQEC import CavT2_AQEC
     dig.set_trigger_period(2500)
     dig.set_naverages(2500)
     detune = 15e3
@@ -814,7 +815,7 @@ if 0: # test Q function
 
 
 if 1: # bloch time tests for fig4
-    from AQEC import time_bloch
+    from .AQEC import time_bloch
     rep = 10
     bloch = [
             [sequencer.Trigger(200)],  
@@ -867,7 +868,7 @@ if 1: # bloch time tests for fig4
     
     
 if 0: # time bloch tester
-    from AQEC import time_bloch
+    from .AQEC import time_bloch
     dig.set_trigger_period(2500)
     dig.set_naverages(2500)
     for i, state in enumerate(['-x']):
@@ -888,7 +889,7 @@ if 0: # time bloch tester
         
         
 if 0: # Qubit t2 with AQEC
-    from AQEC import T2_AQEC
+    from .AQEC import T2_AQEC
     ss = 2.918e6
     comb_offset = 50e6
     fwm_comb_t2 = OCTlib.comb(fwm_info, [x+comb_offset for x in [0, chi2s, chi2s*2, chi2s*3]], [x*0.22 for x in [1.77, 0, 0, 0]],#[1.22, 1.00, 0.64, 0.49]], 

@@ -57,9 +57,9 @@ for i, title in enumerate(f[date].keys()):
 #    print int(title[0:6])
 #    print int(title[0:6]) <= 020617
     if title[7:14] == 'SSBSpec' and int(title[0:6]) <= int('144558') and int(title[0:6]) >= int('132401'):
-        print title
+        print(title)
         exp = f[date][title]
-        y_keys = exp.keys()
+        y_keys = list(exp.keys())
         xs = exp['detunings'].value
         data = exp['avg_pp'].value
         data_c = exp['avg'].value
@@ -93,7 +93,7 @@ for i, title in enumerate(f[date].keys()):
         #    datas = realdata[0,:]+ 1j*imagdata[0,:]    
         result = lmfit.minimize(Gaussfit, params, args=(xs,ys))
 #        lmfit.report_fit(result.params)
-        print ('fit freq: %s +/- %s  '%(result.params['freq'].value/1e6,result.params['freq'].stderr/1e6))
+        print(('fit freq: %s +/- %s  '%(result.params['freq'].value/1e6,result.params['freq'].stderr/1e6)))
         
         
         fig.axes[0].plot(xs/1e6, -Gaussfit(result.params, xs, 0), label='fit freq: %s +/- %s MHz '%(result.params['freq'].value/1e6,result.params['freq'].stderr/1e6))

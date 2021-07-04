@@ -10,7 +10,7 @@ import matplotlib.pyplot as pl
 import os
 
 filename = 'S11_V5'
-print filename
+print(filename)
 
 newpath = r'C:\Users\Wang_Lab\Documents\yingying\FMR\copper_cavity_input_coupling_test\%s.txt'%(filename)
 newpath2 = r'C:\Users\Wang_Lab\Documents\yingying\FMR\copper_cavity_input_coupling_test\%s_cal_sub.txt'%(filename)

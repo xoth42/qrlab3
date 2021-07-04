@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import visa
 import types
 import logging
@@ -50,7 +50,7 @@ class RS_Step_Attenuator(Instrument):
         self._visainstrument = visa.instrument(self._address)
 
         self.add_parameter('attenuation',
-            flags=Instrument.FLAG_SET, units='dB', minval=1, maxval=139, type=types.IntType)
+            flags=Instrument.FLAG_SET, units='dB', minval=1, maxval=139, type=int)
 
         self.set_attenuation(139)
 

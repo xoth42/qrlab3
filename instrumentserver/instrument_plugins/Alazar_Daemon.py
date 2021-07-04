@@ -21,7 +21,7 @@ import time
 from lib.dll_support import alazar
 AC = alazar.Constants
 from lib.math import demod
-from instrument import Instrument
+from .instrument import Instrument
 import logging
 import gc
 import os
@@ -46,11 +46,11 @@ class Alazar_Daemon(Instrument):
         self._capturing = False
         self._card = alazar.Alazar(systemid, boardid)
 
-        self.add_parameter('if_period', type=types.IntType,
+        self.add_parameter('if_period', type=int,
                            flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                            minval=2, maxval=1000, value=20,
                            help='Intermediate Frequency period')
-        self.add_parameter('weight_func', type=types.StringType,
+        self.add_parameter('weight_func', type=bytes,
                            flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                            help='''
 Weight function file, either a .npy (numpy file) or a txt file.
@@ -58,37 +58,37 @@ The data should have length #IF periods. If real valued the same weight
 function is applied to both I and Q quadratures, if complex valued the
 real part is applied to I and the imaginary part to Q.
 ''')
-        self.add_parameter('nbuffers', type=types.IntType,
+        self.add_parameter('nbuffers', type=int,
                            flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                            minval=1, maxval=512, value=4,
                            set_func=lambda x: True,
                            help='Number of acquisition buffers')
-        self.add_parameter('nrecperbuf', type=types.IntType,
+        self.add_parameter('nrecperbuf', type=int,
                            flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                            minval=1, maxval=1e4, value=1,
                            set_func=lambda x: True,
                            help='Number of records per buffer')
-        self.add_parameter('nsamples', type=types.IntType,
+        self.add_parameter('nsamples', type=int,
                            flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                            minval=64, maxval=1e9, value=5120,
                            help='Number of samples per record')
-        self.add_parameter('naverages', type=types.IntType,
+        self.add_parameter('naverages', type=int,
                            flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                            minval=1, maxval=1000000, value=500,
                            set_func=lambda x: True,
                            help='Number of averages to do')
-        self.add_parameter('ntotal_rec', type=types.IntType,
+        self.add_parameter('ntotal_rec', type=int,
                            flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                            value=0,
                            set_func=lambda x: True,
                            help='Total number of records that is to be acquired')
-        self.add_parameter('timeout', type=types.FloatType,
+        self.add_parameter('timeout', type=float,
                            flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                            minval=100, maxval=600000, value=30000, units='msec',
                            set_func=lambda x: True,
                            help='Timeout for acquisition, in msec')
 
-        self.add_parameter('channels', type=types.IntType,
+        self.add_parameter('channels', type=int,
                            flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                            format_map={
                                AC.CHANNEL_A: 'Chan A',
@@ -97,7 +97,7 @@ real part is applied to I and the imaginary part to Q.
                            }, value=AC.CHANNEL_AB,
                            set_func=lambda x: True)
         self.add_parameter('coupling', flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-                type=types.IntType, channels=(1,2), channel_prefix='ch%d_',
+                type=int, channels=(1,2), channel_prefix='ch%d_',
                 format_map={
                     AC.COUPLING_AC: 'AC',
                     AC.COUPLING_DC: 'DC'
@@ -105,7 +105,7 @@ real part is applied to I and the imaginary part to Q.
 #                gui_group='channels',
                 set_func=lambda x, **y: True)
         self.add_parameter('impedance', flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-                type=types.IntType, channels=(1,2), channel_prefix='ch%d_',
+                type=int, channels=(1,2), channel_prefix='ch%d_',
                 format_map={
                     AC.IMPEDANCE_1k: '1k',
                     AC.IMPEDANCE_50: '50',
@@ -116,11 +116,11 @@ real part is applied to I and the imaginary part to Q.
                 gui_group='channels',
                 set_func=lambda x, **y: True)
         self.add_parameter('bandwidth_limit', flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-                type=types.BooleanType, channels=(1,2), channel_prefix='ch%d_',
+                type=bool, channels=(1,2), channel_prefix='ch%d_',
                 value=False,
                 gui_group='channels')
         self.add_parameter('range', flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-                type=types.IntType, channels=(1,2), channel_prefix='ch%d_',
+                type=int, channels=(1,2), channel_prefix='ch%d_',
                 format_map={
                     AC.RANGE_0040: '40mV',
                     AC.RANGE_0100: '100mV',
@@ -136,7 +136,7 @@ real part is applied to I and the imaginary part to Q.
 
         # clock and sampling parameters
         self.add_parameter('clock_source', flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-                type=types.IntType, format_map={
+                type=int, format_map={
                     AC.CLKSRC_INT: 'INT',
                     AC.CLKSRC_FASTEXT: 'FASTEXT',
                     AC.CLKSRC_MEDEXT: 'MEDEXT',
@@ -144,7 +144,7 @@ real part is applied to I and the imaginary part to Q.
                     AC.CLKSRC_EXT_10M: 'EXT10M',
                 }, value=AC.CLKSRC_INT)
         self.add_parameter('sample_rate', flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-                units='Hz', type=types.IntType, format_map={
+                units='Hz', type=int, format_map={
                     AC.SR_1k: '1k',
                     AC.SR_2k: '2k',
                     AC.SR_5k: '5k',
@@ -165,14 +165,14 @@ real part is applied to I and the imaginary part to Q.
                     AC.SR_1G_FROM_EXT10: '1GEXT10',
                 }, value=AC.SR_1G)
         self.add_parameter('clock_edge', flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-                type=types.IntType, format_map={
+                type=int, format_map={
                     AC.CLKEDG_RISE: 'Rise',
                     AC.CLKEDG_FALL: 'Fall',
                 }, value=AC.CLKEDG_RISE)
 
         # add trigger parameters
         self.add_parameter('trig_op', flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-                type=types.IntType, format_map={
+                type=int, format_map={
                     AC.TRIG_ENGINE_OP_J: 'J',
                     AC.TRIG_ENGINE_OP_K: 'K',
                     AC.TRIG_ENGINE_OP_J_OR_K: 'J|K',
@@ -183,14 +183,14 @@ real part is applied to I and the imaginary part to Q.
                 }, value=AC.TRIG_ENGINE_OP_J,
                 gui_group='trigger')
         self.add_parameter('trig_slope', flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-                type=types.IntType, format_map={
+                type=int, format_map={
                     AC.TRIG_SLP_POS: 'POS',
                     AC.TRIG_SLP_NEG: 'NEG',
                 }, value=AC.TRIG_SLP_POS,
                 channels=('J','K'), channel_prefix='eng%s_',
                 gui_group='trigger')
         self.add_parameter('trig_src', flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-                type=types.IntType, format_map={
+                type=int, format_map={
                     AC.TRIG_CHAN_A: 'A',
                     AC.TRIG_CHAN_B: 'B',
                     AC.TRIG_EXTERNAL: 'EXT',
@@ -201,33 +201,33 @@ real part is applied to I and the imaginary part to Q.
                 channels=('J','K'), channel_prefix = 'eng%s_',
                 gui_group='trigger')
         self.add_parameter('trig_lvl', flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-                type=types.IntType, channels=('J','K'), channel_prefix='eng%s_',
+                type=int, channels=('J','K'), channel_prefix='eng%s_',
                 minval=0, maxval=255,
                 gui_group='trigger')
         self.add_parameter('ext_trig_delay', flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-                units='samples', type=types.IntType, value=0,
+                units='samples', type=int, value=0,
                 gui_group='trigger')
         self.add_parameter('ext_trig_timeout', flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-                units='sec', type=types.FloatType,
+                units='sec', type=float,
                 gui_group='trigger')
         self.add_parameter('ext_trig_coupling', flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-                type=types.IntType, format_map={
+                type=int, format_map={
                     AC.COUPLING_AC: 'AC',
                     AC.COUPLING_DC: 'DC'
                 }, value=AC.COUPLING_DC,
                 gui_group='trigger')
         self.add_parameter('ext_trig_range', flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-                type=types.IntType, unit='V', format_map={
+                type=int, unit='V', format_map={
                     AC.ETR_5V: 5,
                     AC.ETR_1V: 1,
                 }, value=AC.ETR_5V,
                 gui_group='trigger')
 
         self.add_parameter('real_signals', flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-                type=types.BooleanType, value=True,
+                type=bool, value=True,
                 help='Whether to convert complex voltages to real signals')
         self.add_parameter('signal_phase', flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-                type=types.FloatType, value=-1,
+                type=float, value=-1,
                 help='The signal phase to use for converting from complex to real signals')
 
         self.add_function("setup_channels")
@@ -396,7 +396,7 @@ real part is applied to I and the imaginary part to Q.
 #        self._bufs = [np.frombuffer(buf.get_obj(), dtype=np.dtype(np.uint8)) for buf in mpars]
 
     def prepare_capture(self):
-        print 'Prepare capture: samples: %s, recperbuf: %s, total rec:%s' % (self.get_nsamples(), self.get_nrecperbuf(), self.get_ntotal_rec(),)
+        print('Prepare capture: samples: %s, recperbuf: %s, total rec:%s' % (self.get_nsamples(), self.get_nrecperbuf(), self.get_ntotal_rec(),))
         self._card.prepare_capture(self.get_nsamples(), self.get_nrecperbuf(), self.get_ntotal_rec(), self.get_ext_trig_delay(), 0)
 
     def arm(self):
@@ -486,7 +486,7 @@ real part is applied to I and the imaginary part to Q.
         else:
             return buf
         ''' # We blanked all these off for the 1300 average crashing problem
-        print 'inside convert_signal'
+        print('inside convert_signal')
         return buf
 
     def take_raw_shots(self, buftimeout=10000):
@@ -622,7 +622,7 @@ real part is applied to I and the imaginary part to Q.
             buf = self.get_next_buffer(acqtimeout)
 
 
-            print(i, np.shape(buf), Nperbuf)
+            print((i, np.shape(buf), Nperbuf))
             self._demodA.demodulate(buf[:Nperbuf*nsamples])
             IQA = self._demodA.IQ.reshape([Nperbuf, periods])
 
@@ -693,7 +693,7 @@ real part is applied to I and the imaginary part to Q.
         try:
             avg_buf[:] = IQ_sum / float(n)
             avg_buf.set_attrs(averages=n)
-        except Exception, e:
+        except Exception as e:
             self._card.end_capture()
             msg = 'Unable to store averages: %s' % str(e)
             logging.warning(msg)
@@ -703,10 +703,10 @@ real part is applied to I and the imaginary part to Q.
         try:
             cov_buf[:] = cov
             cov_buf.set_attrs(averages=n)
-        except Exception, e:
+        except Exception as e:
             self._card.end_capture()
-            print(cov.shape, n, cov.shape)
-            print(cov_buf[:].shape)
+            print((cov.shape, n, cov.shape))
+            print((cov_buf[:].shape))
             msg = 'Unable to store standard errors: %s' % str(e)
             logging.warning(msg)
             raise Exception(msg)
@@ -812,7 +812,7 @@ real part is applied to I and the imaginary part to Q.
             if shot_buf: #Dario
                 if len(tmp_buf) != 0:
                     shot_buf[buf_index:buf_index+len(tmp_buf)] = tmp_buf
-                    print tmp_buf, i
+                    print(tmp_buf, i)
                     buf_index += len(tmp_buf)
                     tmp_buf = []
                 tmp_buf.extend(IQ)
@@ -829,7 +829,7 @@ real part is applied to I and the imaginary part to Q.
         if avg_buf:
             self.update_averages(avg_buf, data_sum, navg)
         
-        print 'after update_averages'
+        print('after update_averages')
 
         if singleshotbin:
             return data_sum * 1.0 / navg
@@ -844,7 +844,7 @@ real part is applied to I and the imaginary part to Q.
 ##        print('avg check', np.mean(temp_ste, axis=1))
 #        if ste_buf:
 #            self.update_stes(ste_buf, stes, navg)
-        print(len(temp_ste))
+        print((len(temp_ste)))
         re = np.real(temp_ste)
         im = np.imag(temp_ste)
         cov = np.zeros((len(temp_ste), 3), dtype=float)
@@ -865,7 +865,7 @@ real part is applied to I and the imaginary part to Q.
         nbufs, N = self.break_records(N, nsamples=self.get_nsamples())
         self.set_nrecperbuf(N)
         logging.info('%s, %s' % (nbufs, N))
-        print('nbufs, N:', nbufs, N)
+        print(('nbufs, N:', nbufs, N))
         if nbufs != 1:
             self.set_nbuffers(min(4, nbufs))
         else:
@@ -882,7 +882,7 @@ real part is applied to I and the imaginary part to Q.
             hist_buf = np.ones((nbufs*N*num_demods,), dtype=np.complex) * np.nan
 #            logging.info('setup_hist: histogram shots buffer size (with demod/weighting): %s' % (hist_buf.shape))
         self._hist_buf = hist_buf
-        print('hist_buf shape:', np.shape(hist_buf))
+        print(('hist_buf shape:', np.shape(hist_buf)))
 
 
         ####### WRITING TO FILE
@@ -912,7 +912,7 @@ real part is applied to I and the imaginary part to Q.
         ntot = self.get_ntotal_rec()
         nbufs = ntot / cycles
         tmp_buf = []
-        print('cycles, ntot, nbufs:', cycles, ntot, nbufs)
+        print(('cycles, ntot, nbufs:', cycles, ntot, nbufs))
         while i < nbufs:
             if (i % 10) == 0:
                 logging.info('Acquiring %d', i*cycles)
@@ -927,14 +927,14 @@ real part is applied to I and the imaginary part to Q.
 
             buf = self.get_next_buffer(acqtimeout)
             IQ_buf = self.get_IQ_rel(buf, cycles, take_ref)
-            print('shape IQ_buf:', np.shape(IQ_buf))
+            print(('shape IQ_buf:', np.shape(IQ_buf)))
 #            self._hist_buf[i*cycles*num_demod:(i+1)*cycles*num_demod] = IQ_buf
             tmp_buf.extend(IQ_buf)
             self._card.post_buffers(buf)
             i += 1
 
         self._hist_buf[buf_index:buf_index+len(tmp_buf)] = tmp_buf
-        print('shape tmp_buf:', np.shape(tmp_buf))
+        print(('shape tmp_buf:', np.shape(tmp_buf)))
 
         self.end_capture()
 

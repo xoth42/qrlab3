@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import visa
 import types
 import logging
@@ -39,47 +39,47 @@ class Cryomagnetics_CS4(Instrument):
 
         self.add_parameter('units',
             flags=Instrument.FLAG_GETSET,
-            type=types.StringType)
+            type=bytes)
 
         self.add_parameter('rate',
             flags=Instrument.FLAG_GETSET,
-            type=types.FloatType,
+            type=float,
             minval=0,
             units='A/s')
 
         self.add_parameter('heater',
             flags=Instrument.FLAG_GETSET,
-            type=types.BooleanType)
+            type=bool)
 
         self.add_parameter('magnetout',
             flags=Instrument.FLAG_GET,
-            type=types.FloatType,
+            type=float,
             units='T', format='%.05f')
 
         self.add_parameter('supplyout',
             flags=Instrument.FLAG_GET,
-            type=types.FloatType,
+            type=float,
             units='T', format='%.05f')
 
         self.add_parameter('sweep',
             flags=Instrument.FLAG_GETSET,
-            type=types.StringType)
+            type=bytes)
 
         self.add_parameter('lowlim',
             flags=Instrument.FLAG_GETSET,
-            type=types.FloatType,
+            type=float,
             minval=-9.0, maxval=9.0,
             units='T', format='%.05f')
 
         self.add_parameter('uplim',
             flags=Instrument.FLAG_GETSET,
-            type=types.FloatType,
+            type=float,
             minval=-9.0, maxval=9.0,
             units='T', format='%.05f')
 
         self.add_parameter('field',
             flags=Instrument.FLAG_GETSET,
-            type=types.FloatType,
+            type=float,
             minval=-9000.0, maxval=9000.0,
             units='mT', format='%.02f',
             tags=['sweep'])

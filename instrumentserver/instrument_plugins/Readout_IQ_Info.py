@@ -1,8 +1,8 @@
-from instrument import Instrument
+from .instrument import Instrument
 import types
 from pulseseq.sequencer import *
 from pulseseq.pulselib import *
-from Pulse_Info import Pulse_Info
+from .Pulse_Info import Pulse_Info
 import numpy as np
 
 
@@ -25,42 +25,42 @@ class Readout_IQ_Info(Pulse_Info):
     def __init__(self, name, **kwargs):
         super(Readout_IQ_Info, self).__init__(name, **kwargs)
 
-        self.add_parameter('IQg', type=types.ComplexType,
+        self.add_parameter('IQg', type=complex,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 help='IQ point of g')
-        self.add_parameter('IQe', type=types.ComplexType,
+        self.add_parameter('IQe', type=complex,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 help='IQ point of e')
-        self.add_parameter('IQe_radius', type=types.FloatType,
+        self.add_parameter('IQe_radius', type=float,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 help='IQ radius threshold for e state')
-        self.add_parameter('threshold_pt', type=types.FloatType,
+        self.add_parameter('threshold_pt', type=float,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 help='projected threshold for g/e discrimination')
-        self.add_parameter('acq_chan', type=types.StringType,
+        self.add_parameter('acq_chan', type=bytes,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 set_func=lambda x: True)
-        self.add_parameter('pulse_width', type=types.IntType,
+        self.add_parameter('pulse_width', type=int,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 help='width of Gaussian Square wave',
                 set_func=lambda x: True, value=3000)
-        self.add_parameter('sigma', type=types.IntType,
+        self.add_parameter('sigma', type=int,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 help='sigma of Gaussian Square wave rise and fall',
                 set_func=lambda x: True, value=10)        
-        self.add_parameter('amp', type=types.FloatType,
+        self.add_parameter('amp', type=float,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 help='amplitude of readout pulse',
                 set_func=lambda x: True, value=0)        
-        self.add_parameter('amp_secondary', type=types.FloatType,
+        self.add_parameter('amp_secondary', type=float,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 help='amplitude of readout pulse',
                 set_func=lambda x: True, value=0)
-        self.add_parameter('fixed_phase', type=types.FloatType,
+        self.add_parameter('fixed_phase', type=float,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 help='lab phase of readout signal',
                 set_func=lambda x: True, value=0)
-        self.add_parameter('rfsource', type=types.StringType,
+        self.add_parameter('rfsource', type=bytes,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 help='RF-source for read-out pulse')
         

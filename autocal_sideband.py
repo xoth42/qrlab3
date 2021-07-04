@@ -1,6 +1,6 @@
 import time
 import matplotlib.pyplot as plt
-import calibrator
+from . import calibrator
 import numpy as np
 
 # This script assumes some instruments have already been created:
@@ -45,7 +45,7 @@ phases = []
 periods = (20,)
 for period in periods:
     f = 1e9 / period
-    print 'Balancing IQ for single sideband at -%.03f MHz...' % (f / 1e6, )
+    print('Balancing IQ for single sideband at -%.03f MHz...' % (f / 1e6, ))
     fs.append(f)
     amp, phase = cawg.calibrate_sideband_phase(chans, F0 - f, F0 + f, period, plot=True)
     amps.append(amp)

@@ -13,7 +13,8 @@ Created on Wed Oct 30 16:41:20 2019
 """
 
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib
 import matplotlib
@@ -59,7 +60,7 @@ for ifield, field in enumerate(fields):
 #        time.sleep(600)
         
         Magnet.do_set_field(field)
-        print('set Magnet field to %s'%(field))
+        print(('set Magnet field to %s'%(field)))
         time.sleep(900)
         Magnet.do_set_PSwitch(0)
         print('set PSwitch heater off')
@@ -70,7 +71,7 @@ for ifield, field in enumerate(fields):
 #        amp = np.zeros((len(freqs),51))
         
     if do_cav_spec:
-        from single_cavity import rocavspectroscopy_keysight
+        from .single_cavity import rocavspectroscopy_keysight
         rofreq = 10.715e9
         freq_r = 10e6
         ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(-3, 10, 1),
@@ -79,7 +80,7 @@ for ifield, field in enumerate(fields):
         ro.measure()
         max_freq = 10.7174e9
 #        max_freq = ro.freqs[np.argmax(ro.ampdata[0])]
-        print max_freq
+        print(max_freq)
         readout_info.rfsource1.set_frequency(max_freq)
         readout_info.rfsource2.set_frequency(max_freq+50e6)
 
@@ -153,7 +154,7 @@ for ifield, field in enumerate(fields):
     
             dig.set_naverages(40000)    
                 
-            from single_qubit import ssbspec_gaussianfit
+            from .single_qubit import ssbspec_gaussianfit
     
             seq = sequencer.Trigger(600)
             
@@ -186,7 +187,7 @@ for ifield, field in enumerate(fields):
             dig.set_naverages(20000)
     
     
-            from single_qubit import ssbspec_gaussianfit
+            from .single_qubit import ssbspec_gaussianfit
     
             seq = sequencer.Trigger(600)
             
@@ -270,7 +271,7 @@ for ifield, field in enumerate(fields):
         kwargs = dict()
         pl.savefig(fn, **kwargs)
     if do_cav_spec:
-        from single_cavity import rocavspectroscopy_keysight
+        from .single_cavity import rocavspectroscopy_keysight
         rofreq = 10.715e9
         freq_r = 10e6
         ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(-3, 10, 1),

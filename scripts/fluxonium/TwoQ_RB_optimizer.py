@@ -74,7 +74,7 @@ def analysis(meas, data=None, fig=None):
     Vge = np.mean(calibration_qubit2_excited)
     Vee = np.mean(calibration_bothqubits_excited)
     Vgg = np.mean(calibration_ground)
-    print Veg, Vge, Vee, Vgg
+    print(Veg, Vge, Vee, Vgg)
 
     rd = y1s[12:]
     bl = y2s[12:]
@@ -327,7 +327,7 @@ class TwoQubit_RB(Measurement1D):
         self.rndnum=rndnum
         self.recov_index=recov_index
         self.num_cal_points = num_cal_points
-        XS = np.asarray(range(self.sweep_length*N_sequences+4*self.num_cal_points)) - (4*self.num_cal_points-1)
+        XS = np.asarray(list(range(self.sweep_length*N_sequences+4*self.num_cal_points))) - (4*self.num_cal_points-1)
         self.xs = np.array([XS,XS,XS,XS]).transpose().flatten() # for plotting purposes
         self.filepath_lookup_table = ""
         self.cnum=cnum
@@ -348,7 +348,7 @@ class TwoQubit_RB(Measurement1D):
         
             
         super(TwoQubit_RB, self).__init__(4*(self.sweep_length*N_sequences+4*num_cal_points), infos=(qubit_info,qubit2_info,twoQ_info,cancel_info), **kwargs)
-        self.data.create_dataset('Cliffords', data=range(4*(self.sweep_length*N_sequences+4*num_cal_points)))
+        self.data.create_dataset('Cliffords', data=list(range(4*(self.sweep_length*N_sequences+4*num_cal_points))))
 #        self.data.set_attrs(
 #            cnum=cnum,
 #            interleave=interleave
@@ -470,7 +470,7 @@ class TwoQubit_RB(Measurement1D):
                temp_pulseSeq2 = []
                for k in range(self.N_cliffords):
                    self.add_twoQ_clifford(self.rndnum[k], cliffordSeq1, cliffordSeq2, temp_pulseSeq1, temp_pulseSeq2, len1, len2, phi1, phi2, amp, drag, virtualZ=self.use_virtual_Z,  generator = self.generator)
-                   print(phi1[0], phi2[0])
+                   print((phi1[0], phi2[0]))
                    if self.interleave == 'ZX90':
                        print ('This code does not support ZX90 yet')
                        
@@ -506,8 +506,8 @@ class TwoQubit_RB(Measurement1D):
                        phi2[0] = phi2[0] + self.singleQ_phases[1]
          
                print ('computing recovery')
-               print('cliffordSeq1 is:', cliffordSeq1)
-               print('cliffordSeq2 is:', cliffordSeq2)
+               print(('cliffordSeq1 is:', cliffordSeq1))
+               print(('cliffordSeq2 is:', cliffordSeq2))
     #            # get recovery gate seq
                (recoverySeq1, recoverySeq2, recovery_pulseSeq1, recovery_pulseSeq2) = self.get_recovery_gate(self.recov_index, cliffordSeq1, cliffordSeq2, phi1, phi2, amp, drag, generator = self.generator)
     #           print(phi1[0], phi2[0])
@@ -518,11 +518,11 @@ class TwoQubit_RB(Measurement1D):
                pulseSeq1.append(temp_pulseSeq1)
                pulseSeq2.append(temp_pulseSeq2)
     
-            print('total # gates:', len(cliffordSeq1))
-            print('total # gates:', len(cliffordSeq2))
+            print(('total # gates:', len(cliffordSeq1)))
+            print(('total # gates:', len(cliffordSeq2)))
     
-            print('recov_cliffordSeq1 is:', recov_cliffordSeq1)
-            print('recov_cliffordSeq2 is:', recov_cliffordSeq2)
+            print(('recov_cliffordSeq1 is:', recov_cliffordSeq1))
+            print(('recov_cliffordSeq2 is:', recov_cliffordSeq2))
             
 #            print('pulseseq1 is:', pulseSeq1)
 

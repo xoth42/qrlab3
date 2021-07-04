@@ -5,7 +5,8 @@ Created on Tue Oct 22 12:24:45 2019
 @author: Wang_Lab
 """
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib
 import matplotlib
@@ -20,7 +21,7 @@ import lmfit
 import time
 import datetime
 Magnet = mclient.instruments['Magnet']
-f= open("C:\Users\Wang_Lab\Documents\yingying\%s.txt"%(time.strftime('%Y%m%d_%H%M%S', time.localtime())),"w+")
+f= open("C:\\Users\Wang_Lab\Documents\yingying\%s.txt"%(time.strftime('%Y%m%d_%H%M%S', time.localtime())),"w+")
 fields = np.linspace(0.049,-0.05,100)
 for field in fields:
     f.write('\nfield : %s---------------------%s---------'%(field, time.strftime('%Y%m%d_%H%M%S', time.localtime())))
@@ -34,7 +35,7 @@ for field in fields:
     
     qubit_info = mclient.get_qubit_info('qubit1ge')
     qubit2_info = mclient.get_qubit_info('qubit2ge')
-    from single_cavity import rocavspec_qubitge
+    from .single_cavity import rocavspec_qubitge
     freq_ranges = [10e6]
     n=len(freq_ranges)
     diff_c_e1 = np.zeros(n)
@@ -206,43 +207,43 @@ for field in fields:
         f.write('diff_c_sub  = %s / %s = %s\n'%(np.sum(np.abs((e_on-e_off)-(g_on-g_off))),np.sum(np.abs(g_off)), diff_c_sub1[i]))
         f.write('diff_a_sub  = %s / %s = %s\n'%(np.sum((ea_on-ea_off) - (ga_on-ga_off)), np.sum(ga_off),diff_a_sub1[i]))
         
-    print('field : %s------------------------------'%(field))
+    print(('field : %s------------------------------'%(field)))
     
     for i , freq_range in enumerate(freq_ranges):
         print('\nQubit 2\n')
-        print('freq_range %sMHz'%(freq_range/1e6))
-        print('diff_c_e  = %s'%( diff_c_e2[i]))
-        print('diff_a_e  = %s'%( diff_a_e2[i]))    
+        print(('freq_range %sMHz'%(freq_range/1e6)))
+        print(('diff_c_e  = %s'%( diff_c_e2[i])))
+        print(('diff_a_e  = %s'%( diff_a_e2[i])))    
         
     
-        print('diff_c_g = %s'%( diff_c_g2[i]))
-        print('diff_a_g = %s'%( diff_a_g2[i]))    
+        print(('diff_c_g = %s'%( diff_c_g2[i])))
+        print(('diff_a_g = %s'%( diff_a_g2[i])))    
         
     
-        print('diff_c_off = %s'%( diff_c_off2[i]))
-        print('diff_a_off = %s'%( diff_a_off2[i]))
+        print(('diff_c_off = %s'%( diff_c_off2[i])))
+        print(('diff_a_off = %s'%( diff_a_off2[i])))
         
     
-        print('diff_c_sub  %s'%(diff_c_sub2[i]))
-        print('diff_a_sub %s'%(diff_a_sub2[i]))
+        print(('diff_c_sub  %s'%(diff_c_sub2[i])))
+        print(('diff_a_sub %s'%(diff_a_sub2[i])))
         
     for i , freq_range in enumerate(freq_ranges):
         print('\nQubit 1\n')
-        print('freq_range %sMHz'%(freq_range/1e6))
-        print('diff_c_e  = %s'%( diff_c_e1[i]))
-        print('diff_a_e  = %s'%( diff_a_e1[i]))    
+        print(('freq_range %sMHz'%(freq_range/1e6)))
+        print(('diff_c_e  = %s'%( diff_c_e1[i])))
+        print(('diff_a_e  = %s'%( diff_a_e1[i])))    
         
     
-        print('diff_c_g = %s'%( diff_c_g1[i]))
-        print('diff_a_g = %s'%( diff_a_g1[i]))    
+        print(('diff_c_g = %s'%( diff_c_g1[i])))
+        print(('diff_a_g = %s'%( diff_a_g1[i])))    
         
     
-        print('diff_c_off = %s'%( diff_c_off1[i]))
-        print('diff_a_off = %s'%( diff_a_off1[i]))
+        print(('diff_c_off = %s'%( diff_c_off1[i])))
+        print(('diff_a_off = %s'%( diff_a_off1[i])))
         
     
-        print('diff_c_sub  %s'%(diff_c_sub1[i]))
-        print('diff_a_sub %s'%(diff_a_sub1[i]))
+        print(('diff_c_sub  %s'%(diff_c_sub1[i])))
+        print(('diff_a_sub %s'%(diff_a_sub1[i])))
         
     Magnet.do_set_PSwitch(1)
     time.sleep(60)

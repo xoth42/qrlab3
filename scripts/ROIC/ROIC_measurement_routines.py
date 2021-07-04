@@ -1,5 +1,6 @@
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 import matplotlib
 matplotlib.rcParams['backend'] = 'Qt4Agg'
@@ -46,7 +47,7 @@ def raspi_param_sweep(raspi_instr, bias_instr, analogpwr_instr, vcc1_instr, vcc2
             raspi_instr.send_data_(chip_data)
             time.sleep(wait_time)
             currents.append([float(bias_instr.do_get_current()), float(analogpwr_instr.do_get_current()), float(vcc1_instr.do_get_current()), float(vcc23_instr.do_get_current())])
-            print(i, currents[i])
+            print((i, currents[i]))
 #        tstamp = time.strftime("%D%T")
 #        filename = 'C:\qrlab\scripts\ROIC\currents_sweep_' + param + str(tstamp) + '.csv'
 #        np.savetxt(filename, currents)

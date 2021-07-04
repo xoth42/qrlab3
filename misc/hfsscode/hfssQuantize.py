@@ -50,8 +50,8 @@ Xqq /= h_bar * 1e6
 Xcc /= h_bar * 1e6
 Xqc /= h_bar * 1e6
 
-print('w_q = ' + str(w[qubit]) + 'GHz, w_c = ' + str(w[cavity]) + 'GHz')
-print('X_qq = ' + str(Xqq) + 'MHz, X_qc = ' + str(Xqc) + 'MHz')
+print(('w_q = ' + str(w[qubit]) + 'GHz, w_c = ' + str(w[cavity]) + 'GHz'))
+print(('X_qq = ' + str(Xqq) + 'MHz, X_qc = ' + str(Xqc) + 'MHz'))
 
 
 

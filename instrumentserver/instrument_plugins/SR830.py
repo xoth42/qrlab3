@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import visa
 import types
 import logging
@@ -50,26 +50,26 @@ class SR830(Instrument):
 
         self.add_parameter('mode',
            flags=Instrument.FLAG_SET,
-           type=types.BooleanType)
-        self.add_parameter('frequency', type=types.FloatType,
+           type=bool)
+        self.add_parameter('frequency', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             minval=1e-3, maxval=102e3,
             units='Hz', format='%.04e')
-        self.add_parameter('phase', type=types.FloatType,
+        self.add_parameter('phase', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             minval=-360, maxval=729.99, units='deg')
-        self.add_parameter('harmonic',type=types.IntType,
+        self.add_parameter('harmonic',type=int,
                            flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
                            minval=1, maxval=19999)
-        self.add_parameter('amplitude', type=types.FloatType,
+        self.add_parameter('amplitude', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             minval=0.004, maxval=5.0,
             units='V', format='%.04e')
-        self.add_parameter('X', flags=Instrument.FLAG_GET, units='V', type=types.FloatType)
-        self.add_parameter('Y', flags=Instrument.FLAG_GET, units='V', type=types.FloatType)
-        self.add_parameter('R', flags=Instrument.FLAG_GET, units='V', type=types.FloatType)
-        self.add_parameter('P', flags=Instrument.FLAG_GET, units='deg', type=types.FloatType)
-        self.add_parameter('tau', type=types.IntType,
+        self.add_parameter('X', flags=Instrument.FLAG_GET, units='V', type=float)
+        self.add_parameter('Y', flags=Instrument.FLAG_GET, units='V', type=float)
+        self.add_parameter('R', flags=Instrument.FLAG_GET, units='V', type=float)
+        self.add_parameter('P', flags=Instrument.FLAG_GET, units='deg', type=float)
+        self.add_parameter('tau', type=int,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             format_map={
                 0 : "10mus",
@@ -93,13 +93,13 @@ class SR830(Instrument):
                 18 : "10ks",
                 19 : "30ks"
             })
-        self.add_parameter('out', type=types.FloatType, channels=(1,2,3,4),
+        self.add_parameter('out', type=float, channels=(1,2,3,4),
             flags=Instrument.FLAG_GETSET,
             minval=-10.5, maxval=10.5, units='V', format='%.3f')
-        self.add_parameter('in', type=types.FloatType, channels=(1,2,3,4),
+        self.add_parameter('in', type=float, channels=(1,2,3,4),
             flags=Instrument.FLAG_GET,
             minval=-10.5, maxval=10.5, units='V', format='%.3f')
-        self.add_parameter('sensitivity', type=types.IntType,
+        self.add_parameter('sensitivity', type=int,
             flags=Instrument.FLAG_GETSET,
             format_map={
                 0 : "2nV",
@@ -130,43 +130,43 @@ class SR830(Instrument):
                 25 : "500mV",
                 26 : "1V"
             })
-        self.add_parameter('reserve', type=types.IntType,
+        self.add_parameter('reserve', type=int,
                            flags=Instrument.FLAG_GETSET,
                            format_map={0:'High reserve', 1:'Normal', 2:'Low noise'})
-        self.add_parameter('input_config', type=types.IntType,
+        self.add_parameter('input_config', type=int,
                            flags=Instrument.FLAG_GETSET,
                            format_map={0:'A', 1:'A-B', 2:'CVC 1MOhm', 3:'CVC 100MOhm'})
-        self.add_parameter('input_shield', type=types.BooleanType,
+        self.add_parameter('input_shield', type=bool,
                            flags=Instrument.FLAG_GETSET,
                            format_map={False:'Float', True:'GND'})
-        self.add_parameter('input_coupling', type=types.BooleanType,
+        self.add_parameter('input_coupling', type=bool,
                            flags=Instrument.FLAG_GETSET,
                            format_map={False:'AC', True:'DC'})
-        self.add_parameter('notch_filter', type=types.IntType,
+        self.add_parameter('notch_filter', type=int,
                            flags=Instrument.FLAG_GETSET,
                            format_map={0:'off', 1:'1xline', 2:'2xline', 3:'both'})
-        self.add_parameter('ref_input', type=types.BooleanType,
+        self.add_parameter('ref_input', type=bool,
                            flags=Instrument.FLAG_GETSET,
                            format_map={False:'external', True:'internal'})
-        self.add_parameter('ext_trigger', type=types.IntType,
+        self.add_parameter('ext_trigger', type=int,
                            flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
                            format_map={0:'Sine', 1:'TTL rising edge', 2:'TTL falling edge'})
-        self.add_parameter('sync_filter', type=types.BooleanType,
+        self.add_parameter('sync_filter', type=bool,
                            flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
                            format_map={False:'off', True:'on'})
-        self.add_parameter('filter_slope', type=types.IntType,
+        self.add_parameter('filter_slope', type=int,
                            flags=Instrument.FLAG_GETSET,
                            format_map={0:'6dB/oct.', 1:'12dB/oct.', 2:'18dB/oct.', 3:'24dB/oct.'})
-        self.add_parameter('unlocked', type=types.BooleanType,
+        self.add_parameter('unlocked', type=bool,
                            flags=Instrument.FLAG_GET,
                            format_map={False:'locked', True:'unlocked'})
-        self.add_parameter('input_overload', type=types.BooleanType,
+        self.add_parameter('input_overload', type=bool,
                            flags=Instrument.FLAG_GET,
                            format_map={False:'normal', True:'overload'})
-        self.add_parameter('time_constant_overload', type=types.BooleanType,
+        self.add_parameter('time_constant_overload', type=bool,
                            flags=Instrument.FLAG_GET,
                            format_map={False:'normal', True:'overload'})
-        self.add_parameter('output_overload', type=types.BooleanType,
+        self.add_parameter('output_overload', type=bool,
                            flags=Instrument.FLAG_GET,
                            format_map={False:'normal', True:'overload'})
 
@@ -283,7 +283,7 @@ class SR830(Instrument):
                 self.get_output_overload()
             readvalue = float(self._visainstrument.ask('OUTP?%s' %output))
         else:
-            print 'Wrong output requested.'
+            print('Wrong output requested.')
         return readvalue
 
     def do_get_X(self, ovl=False):

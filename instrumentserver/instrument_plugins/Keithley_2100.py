@@ -20,7 +20,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import visa
 import types
 import logging
@@ -83,46 +83,46 @@ class Keithley_2100(Instrument):
         # Add parameters to wrapper
         self.add_parameter('range',
             flags=Instrument.FLAG_GETSET,
-            units='', minval=0.1, maxval=1000, type=types.FloatType)
+            units='', minval=0.1, maxval=1000, type=float)
         self.add_parameter('trigger_count',
             flags=Instrument.FLAG_GETSET,
-            units='#', type=types.IntType)
+            units='#', type=int)
         self.add_parameter('trigger_delay',
             flags=Instrument.FLAG_GETSET,
-            units='s', minval=-1, maxval=999999.999, type=types.FloatType)
+            units='s', minval=-1, maxval=999999.999, type=float)
         self.add_parameter('trigger_source',
             flags=Instrument.FLAG_GETSET,
             units='')
         self.add_parameter('mode',
             flags=Instrument.FLAG_GETSET,
-            type=types.StringType, units='',
+            type=bytes, units='',
             option_list=self._modes)
         self.add_parameter('resolution',
             flags=Instrument.FLAG_GETSET,
-            units='#', type=types.StringType)
+            units='#', type=bytes)
         self.add_parameter('readval', flags=Instrument.FLAG_GET,
             units='AU',
-            type=types.FloatType,
+            type=float,
             tags=['measure'])
         self.add_parameter('nplc',
             flags=Instrument.FLAG_GETSET,
-            units='#', type=types.FloatType, minval=0.01, maxval=50)
+            units='#', type=float, minval=0.01, maxval=50)
         self.add_parameter('display', flags=Instrument.FLAG_GETSET,
-            type=types.BooleanType)
+            type=bool)
         self.add_parameter('autozero', flags=Instrument.FLAG_GETSET,
-            type=types.BooleanType)
+            type=bool)
         self.add_parameter('averaging', flags=Instrument.FLAG_GETSET,
-            type=types.BooleanType)
+            type=bool)
         self.add_parameter('averaging_count',
             flags=Instrument.FLAG_GETSET,
-            units='#', type=types.IntType, minval=1, maxval=100)
+            units='#', type=int, minval=1, maxval=100)
         self.add_parameter('averaging_type',
             flags=Instrument.FLAG_GETSET,
-            type=types.StringType, units='')
+            type=bytes, units='')
         self.add_parameter('autorange',
             flags=Instrument.FLAG_GETSET,
             units='',
-            type=types.BooleanType)
+            type=bool)
 
         # Add functions to wrapper
         self.add_function('set_mode_volt_ac')

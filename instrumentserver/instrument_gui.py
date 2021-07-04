@@ -1,11 +1,11 @@
 from PyQt4 import QtCore, QtGui
-import config
+from . import config
 import objectsharer as objsh
 import logging
 logging.getLogger().setLevel(logging.INFO)
 import sys
 import types
-import instrument
+from . import instrument
 import math
 from collections import defaultdict
 import json
@@ -21,7 +21,7 @@ def dict_to_ordered_tuples(dic):
     '''Convert a dictionary to a list of tuples, sorted by key.'''
     if dic is None:
         return []
-    keys = dic.keys()
+    keys = list(dic.keys())
     keys.sort()
     ret = [(key, dic[key]) for key in keys]
     return ret
@@ -248,13 +248,13 @@ class DropdownWidget(QtGui.QComboBox):
             self._map = self._opts['option_list']
             for i, k in enumerate(self._map):
                 self.addItem(str(k))
-                if type(k) is types.StringType:
+                if type(k) is bytes:
                     k = k.upper()
                 self._idx_to_val[i] = k
                 self._val_to_idx[k] = i
 
     def update(self, val, cb=None):
-        if type(val) is types.StringType:
+        if type(val) is bytes:
             val = val.upper()
         if val in self._val_to_idx:
             self.setCurrentIndex(self._val_to_idx[val])
@@ -320,7 +320,7 @@ class JSONModel(QtGui.QStandardItemModel):
         self.add_data(json.load(open(fn, 'r')), self)
 
     def add_data(self, data, parent):
-        for name, val in data.items():
+        for name, val in list(data.items()):
             name_item = QtGui.QStandardItem(name)
             if isinstance(val, dict):
                 name_item.setCheckable(True)
@@ -520,7 +520,7 @@ class FunctionButton(QtGui.QPushButton):
         f(callback=self._func_callback)
 
     def _func_callback(self, val):
-        print ('Function executed: ' + str(val))
+        print(('Function executed: ' + str(val)))
 
 class InstrumentTab(QtGui.QWidget):
 
@@ -547,16 +547,16 @@ class InstrumentTab(QtGui.QWidget):
 
         elif 'format_map' in opts or 'option_list' in opts:
             entry = DropdownWidget(self._ins, param, opts)
-        elif opts['type'] in (types.IntType, ):
+        elif opts['type'] in (int, ):
             entry = SciWidget(self._ins, param, opts)
-        elif opts['type'] in (types.FloatType,):
+        elif opts['type'] in (float,):
 #            if abs(opts.get('minval', 0)) > 1e4 or abs(opts.get('maxval', 0)) > 1e4:
             entry = SciWidget(self._ins, param, opts)
 #            else:
 #                entry = FloatWidget(self._ins, param, opts)
-        elif opts['type'] in (types.ComplexType,):
+        elif opts['type'] in (complex,):
             entry = ComplexWidget(self._ins, param, opts)
-        elif opts['type'] is types.BooleanType:
+        elif opts['type'] is bool:
             opts['format_map'] = {False: 'False', True: 'True'}
             entry = DropdownWidget(self._ins, param, opts)
         elif opts['type'] == instrument.TYPE_INSTRUMENT:
@@ -571,7 +571,7 @@ class InstrumentTab(QtGui.QWidget):
     def setup_widgets(self):
         self._entry_widgets = {}
         params = self._ins.get_shared_parameters()
-        names = params.keys()
+        names = list(params.keys())
         names.sort()
         groups = defaultdict(lambda: [])
 
@@ -579,7 +579,7 @@ class InstrumentTab(QtGui.QWidget):
             groups[params[name].get('gui_group', 'default')].append(name)
 
         group_widgets = {}
-        for gui_group_name, child_names in groups.items():
+        for gui_group_name, child_names in list(groups.items()):
             if gui_group_name == 'default':
                 group_form = self.form
             else:
@@ -611,7 +611,7 @@ class InstrumentTab(QtGui.QWidget):
         if group_widgets:
             groups_tab_widget = QtGui.QTabWidget()
             self.form.addRow(groups_tab_widget)
-            for group_name, group_widget in group_widgets.items():
+            for group_name, group_widget in list(group_widgets.items()):
                 groups_tab_widget.addTab(group_widget, group_name)
 
         hbox = QtGui.QHBoxLayout()
@@ -621,7 +621,7 @@ class InstrumentTab(QtGui.QWidget):
         self.form.addRow(hbox)
 
     def _ins_changed_cb(self, changes):
-        for key, val in changes.iteritems():
+        for key, val in changes.items():
             entry = self._entry_widgets.get(key, None)
             if entry:
                 entry.update(val)
@@ -675,7 +675,7 @@ class ListInstrumentsContainer(QtGui.QSplitter):
 
     def change_current(self, idx):
         name = str(self.inst_list.itemFromIndex(idx).text())
-        print ('change to' + str( name))
+        print(('change to' + str( name)))
         if self.current is not None:
             self.current.hide()
         self.current = self._ins_widgets[name]

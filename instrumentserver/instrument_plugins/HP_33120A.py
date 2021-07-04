@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import visa
 import types
 import logging
@@ -57,27 +57,27 @@ class HP_33120A(Instrument):
         self._visainstrument = visa.instrument(self._address)
 
         self.add_parameter('frequency',
-                type=types.FloatType,
+                type=float,
                 flags=Instrument.FLAG_GETSET,
                 minval=10e-3, maxval=1e6,
                 units='Hz')
         self.add_parameter('amplitude',
-                type=types.FloatType,
+                type=float,
                 flags=Instrument.FLAG_GETSET,
                 minval=-10, maxval=10,
                 units='V')
         self.add_parameter('offset',
-                type=types.FloatType,
+                type=float,
                 flags=Instrument.FLAG_GETSET,
                 minval=-10, maxval=10,
                 units='V')
         self.add_parameter('burst_count',
-                type=types.IntType,
+                type=int,
                 flags=Instrument.FLAG_GETSET,
                 minval=1, maxval=10000,
                 units='#')
         self.add_parameter('burst_status',
-                type=types.StringType,
+                type=bytes,
                 flags=Instrument.FLAG_GETSET,
                 option_list=(
                     'on',

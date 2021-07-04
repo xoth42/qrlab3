@@ -21,8 +21,8 @@ params.add('c', value=x_data[-1])
 
 result = lmfit.minimize(fit_exp, params, args=(x_data, ave))
 
-print(result.params['a'].value)
-print(result.params['c'].value)
+print((result.params['a'].value))
+print((result.params['c'].value))
 a = result.params['a'].value
 
 ave -= a
@@ -31,8 +31,8 @@ ave /= np.max(ave)
 
 fit = np.polyfit(x_data, np.log(ave), 1, w=1/std)
 fit_fn = np.poly1d(fit)
-print fit_fn
-print fit_fn[1]
+print(fit_fn)
+print(fit_fn[1])
 # fit_fn is now a function which takes in x and returns an estimate for y
 
 text = 'Error per gate = %.03f '%(fit_fn[1]*(-1))

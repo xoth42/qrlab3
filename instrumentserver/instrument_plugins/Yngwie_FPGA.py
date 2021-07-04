@@ -8,7 +8,7 @@ import time
 import ctypes
 import types
 import numpy as np
-from instrument import Instrument
+from .instrument import Instrument
 import logging
 
 # Add paths for dependencies.
@@ -63,73 +63,73 @@ class Yngwie_FPGA(Instrument):
         self._noutputs = kwargs.pop('noutputs', 4)
         self._nmodes = kwargs.pop('nmodes', 2)
 
-        self.add_parameter('noutputs', type=types.IntType,
+        self.add_parameter('noutputs', type=int,
             option_list=(2,4), value=self._noutputs,
             flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET)
-        self.add_parameter('nmodes', type=types.IntType,
+        self.add_parameter('nmodes', type=int,
             options_list=(1,2,4), value=self._nmodes,
             flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET)
-        self.add_parameter('reshape_mode', type=types.StringType,
+        self.add_parameter('reshape_mode', type=bytes,
             option_list=('full', 'none', 'mixer'),
             flags=Instrument.FLAG_GETSET)
-        self.add_parameter('dot_product_mode', type=types.StringType,
+        self.add_parameter('dot_product_mode', type=bytes,
             option_list=('dot product', "pass both", "dup ch0", "dup ch1"),
             flags=Instrument.FLAG_GETSET)
 
         modes = [i for i in range(self._nmodes)]
-        self.add_parameter('ssbfreq', type=types.FloatType, channels=modes,
+        self.add_parameter('ssbfreq', type=float, channels=modes,
             value=0, gui_group='ssb',
             flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET)
-        self.add_parameter('ssbtheta', type=types.FloatType, channels=modes,
+        self.add_parameter('ssbtheta', type=float, channels=modes,
             min=-180, max=180, units='deg', format='%.03f',
             value=0, gui_group='ssb',
             flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET)
-        self.add_parameter('ssbratio', type=types.FloatType, channels=modes,
+        self.add_parameter('ssbratio', type=float, channels=modes,
             min=0, max=1.99, format='%.06f',
             value=1, gui_group='ssb',
             flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET)
-        self.add_parameter('offset', type=types.TupleType, channels=modes,
+        self.add_parameter('offset', type=tuple, channels=modes,
             gui_group='ssb',
             flags=Instrument.FLAG_GETSET)
 
-        self.add_parameter('fillup_thresh', type=types.IntType,
+        self.add_parameter('fillup_thresh', type=int,
             min=0, max=255, gui_group='internal',
             flags=Instrument.FLAG_GET)
-        self.add_parameter('regulation_thresh', type=types.IntType,
+        self.add_parameter('regulation_thresh', type=int,
             min=0, max=255, gui_group='internal',
             flags=Instrument.FLAG_GET)
 
-        self.add_parameter('regulation_enabled', type=types.BooleanType,
+        self.add_parameter('regulation_enabled', type=bool,
             gui_group='internal', flags=Instrument.FLAG_GETSET)
-        self.add_parameter('awg_enabled', type=types.BooleanType,
+        self.add_parameter('awg_enabled', type=bool,
             gui_group='internal', flags=Instrument.FLAG_GETSET)
-        self.add_parameter('external_trigger_enabled', type=types.BooleanType,
+        self.add_parameter('external_trigger_enabled', type=bool,
             gui_group='internal', flags=Instrument.FLAG_GETSET)
 
-        self.add_parameter('dump_path', type=types.StringType,
+        self.add_parameter('dump_path', type=bytes,
             flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
             value=r'd:\data\fpga\exp_')
-        self.add_parameter('run_status', type=types.IntType,
+        self.add_parameter('run_status', type=int,
             flags=Instrument.FLAG_GET)
-        self.add_parameter('unlimited', type=types.BooleanType,
+        self.add_parameter('unlimited', type=bool,
             flags=Instrument.FLAG_GETSET)
 
-        self.add_parameter('buffer_gen_width', type=types.IntType,
+        self.add_parameter('buffer_gen_width', type=int,
             flags=Instrument.FLAG_GETSET)
-        self.add_parameter('buffer_gen_delay', type=types.IntType,
+        self.add_parameter('buffer_gen_delay', type=int,
             flags=Instrument.FLAG_GETSET)
 
-        self.add_parameter('delay_analog', type=types.IntType,
+        self.add_parameter('delay_analog', type=int,
             gui_group='delays', flags=Instrument.FLAG_GETSET)
-        self.add_parameter('delay_marker', type=types.IntType, channels=(0,1,2,3),
+        self.add_parameter('delay_marker', type=int, channels=(0,1,2,3),
             gui_group='delays', flags=Instrument.FLAG_GETSET)
-        self.add_parameter('rrec_generate', type=types.IntType,
+        self.add_parameter('rrec_generate', type=int,
             flags=Instrument.FLAG_GETSET,
             help='Get/set result record generation mask')
-        self.add_parameter('demod_scale_sig', type=types.FloatType,
+        self.add_parameter('demod_scale_sig', type=float,
             minval=0, maxval=8.0, value=1.0,
             flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET)
-        self.add_parameter('demod_scale_ref', type=types.FloatType,
+        self.add_parameter('demod_scale_ref', type=float,
             minval=0, maxval=8.0, value=1.0,
             flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET)
 
@@ -166,7 +166,7 @@ class Yngwie_FPGA(Instrument):
         fn = os.path.join(srcdir, 'yngwie_instrument.ini')
         self.write_ini_file(fn)
         self.yng = YngwieInterface.YngwieInterface(self._target, fn)
-        print 'Setting dump path to %s' % (self.get_dump_path(),)
+        print('Setting dump path to %s' % (self.get_dump_path(),))
         self.yng.dump_path = self.get_dump_path()
 
         self.update_modes()
@@ -254,7 +254,7 @@ class Yngwie_FPGA(Instrument):
         return self.yng.m_yng.WriteLogic(address, val, bitrange)
 
     def accept_stream(self, streamID, bytes_needed, file_size=None, first_file_size=None, stream_pattern=0xffffffff):
-        print 'Accepting %s,%s,%s' % (streamID, bytes_needed, file_size)
+        print('Accepting %s,%s,%s' % (streamID, bytes_needed, file_size))
         return self.yng.StreamRouter.accept(streamID, bytes_needed, file_size, first_file_size, stream_pattern)
 
     def do_set_buffer_gen_width(self, val):
@@ -311,7 +311,7 @@ class Yngwie_FPGA(Instrument):
         return getattr(self.yng.Delays, 'marker%d'%channel)
 
     def load_tables(self, file_prefix):
-        print 'Yngwie: Loading tables from %s' % (file_prefix,)
+        print('Yngwie: Loading tables from %s' % (file_prefix,))
         self.yng.regulation_enabled = True
         return self.yng.load_tables(file_prefix)
 
@@ -319,7 +319,7 @@ class Yngwie_FPGA(Instrument):
         self.yng.m_yng.DumpSettings()
         self.yng.StreamRouter.dump()
 
-        print 'Yngwie: Starting...'
+        print('Yngwie: Starting...')
         self.yng.start()
         time.sleep(0.75)
         self.set_awg_enabled(True)
@@ -328,7 +328,7 @@ class Yngwie_FPGA(Instrument):
         time.sleep(0.1)
 
     def stop(self):
-        print 'Yngwie: Stopping...'
+        print('Yngwie: Stopping...')
         self.yng.StreamRouter.dump()
         self.yng.stop()
         self.set_external_trigger_enabled(False)

@@ -3,11 +3,11 @@ import time
 import types
 import ctypes
 import numpy as np
-import keysightSD1 as key
-from instrument import Instrument
+from . import keysightSD1 as key
+from .instrument import Instrument
 import logging
 
-NO_ERROR = u'0,"No error"'
+NO_ERROR = '0,"No error"'
 
 
 DEFAULT_TIMEOUT = 2000
@@ -43,31 +43,31 @@ class Keysight_AWG_Copy(Instrument):
         self.clear_sequence()
         if awgID < 0:
             print("ERROR")
-            print("awgID:", awgID)
+            print(("awgID:", awgID))
             self.awg.close()
             raise Exception("Shit don't work. Check the chassis and slot")
 
 
         
-        self.add_parameter('serial', type=types.StringType,
+        self.add_parameter('serial', type=bytes,
             flags=Instrument.FLAG_GET, 
             value = self.awg.getSerialNumberBySlot(self.chassis, self.slot))
-        self.add_parameter('part', type=types.StringType,
+        self.add_parameter('part', type=bytes,
             flags=Instrument.FLAG_GET,
             value = self.awg.getProductNameBySlot(self.chassis, self.slot))
-        self.add_parameter('num_modules', type=types.StringType,
+        self.add_parameter('num_modules', type=bytes,
             flags=Instrument.FLAG_GET,
             value = self.awg.moduleCount())
-        self.add_parameter('status', type=types.StringType,
+        self.add_parameter('status', type=bytes,
             flags=Instrument.FLAG_GET,
             value = self.awg.getStatus())
-        self.add_parameter('clock_freq', type=types.StringType,
+        self.add_parameter('clock_freq', type=bytes,
             flags=Instrument.FLAG_GETSET,
             value = self.awg.clockGetFrequency())
-        self.add_parameter('clock_sync_freq', type=types.StringType,
+        self.add_parameter('clock_sync_freq', type=bytes,
             flags=Instrument.FLAG_GET,
             value = self.awg.clockGetSyncFrequency())
-        self.add_parameter('waveform_delay', type=types.IntType,
+        self.add_parameter('waveform_delay', type=int,
             flags=Instrument.FLAG_GETSET, value = self.waveform_delay)
 #        self.add_parameter('clock',
 #            type=types.FloatType,
@@ -96,11 +96,11 @@ class Keysight_AWG_Copy(Instrument):
 #            option_list=('POS', 'NEG'))
 
         # Channel options
-        self.add_parameter('amplitude', type=types.FloatType,
+        self.add_parameter('amplitude', type=float,
             flags=Instrument.FLAG_GETSET,
             channels=(1, 4), channel_prefix='ch%d_',
             minval=0, maxval=4.5, units='V')
-        self.add_parameter('offset', type=types.FloatType,
+        self.add_parameter('offset', type=float,
             flags=Instrument.FLAG_GETSET,
             channels=(1, 4), channel_prefix='ch%d_',
             minval=-2, maxval=2, units='V')
@@ -109,14 +109,14 @@ class Keysight_AWG_Copy(Instrument):
 #            channels=(1, 4), channel_prefix='ch%d_',
 #            minval=-5000, maxval=5000, units='ps',
 #            gui_group='channels')
-        self.add_parameter('output', type=types.BooleanType,
+        self.add_parameter('output', type=bool,
             flags=Instrument.FLAG_GETSET,
             channels=(1, 4), channel_prefix='ch%d_',
             gui_group='channels')
 #        self.add_parameter('error',
 #            type=types.StringType,
 #            flags=Instrument.FLAG_GET)
-        self.add_parameter('timeout', type=types.IntType, value=DEFAULT_TIMEOUT,
+        self.add_parameter('timeout', type=int, value=DEFAULT_TIMEOUT,
            units='ms', help='Instrument read timeout')
 
         self._loaded_waveforms = []
@@ -175,7 +175,7 @@ class Keysight_AWG_Copy(Instrument):
         self.waveform_delay = delay
         
     def get_runstate(self):
-        print('keysight get_runstate', self.awg.getStatus())
+        print(('keysight get_runstate', self.awg.getStatus()))
         return self.awg.getStatus() == 0
         
     def wait_done(self, delay=60000):
@@ -222,7 +222,7 @@ class Keysight_AWG_Copy(Instrument):
                 
         for n in range(4):
             waveform_data = np.array(data[n])
-            print('waveform length', 1, len(waveform_data))
+            print(('waveform length', 1, len(waveform_data)))
             
             wave = key.SD_Wave()
             wave.newFromArrayDouble(key.SD_WaveformTypes.WAVE_ANALOG, waveform_data)
@@ -332,12 +332,12 @@ class Keysight_AWG_Copy(Instrument):
         '''
         print('keysight get_all')
         keys = []
-        for k, v in self._parameters.iteritems():
+        for k, v in self._parameters.items():
             if v['flags'] & Instrument.FLAG_GET:
                 keys.append(k)
             if v['flags'] & Instrument.FLAG_GETSET:
                 keys.append(k)
-        print('keys', keys)
+        print(('keys', keys))
         return self.get(keys)
 
 
@@ -362,7 +362,7 @@ class Keysight_AWG_Copy(Instrument):
         if m1 is not None:
             if len(data) != len(m1):
                 raise ValueError('Data and marker1 should have same length')
-            print m1
+            print(m1)
             bytemem |= 1<<14 * m1.astype(np.uint16)
         if m2 is not None:
             if len(data) != len(m2):
@@ -412,7 +412,7 @@ class Keysight_AWG_Copy(Instrument):
     def setup_sequence(self, n_el, reset=True, loop=True):
         self.n_el = n_el
         self.waveform_queue = np.zeros((4, n_el), dtype = int)
-        print('n_el', n_el, loop)
+        print(('n_el', n_el, loop))
         0==0
         #TODO
         ''' maybe this should be adding to a queue. Need to figure out what n_el is. loop might be cyclic mode '''

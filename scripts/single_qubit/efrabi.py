@@ -117,6 +117,6 @@ class EFRabi(Measurement1D):
         self.fit_params = analysis(self, data=data, fig=fig, period=self.force_period)
         pi_amp = self.fit_params['period'].value / 2
         if self.update_ins:
-            print 'Setting qubit pi-rotation area to %.03f' % pi_amp
+            print('Setting qubit pi-rotation area to %.03f' % pi_amp)
             mclient.instruments[self.ef_info.insname].set_pi_amp(pi_amp)
         return pi_amp

@@ -1,10 +1,11 @@
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 import matplotlib as mpl
-from t1t2_plotting import do_T1_plot, do_T2_plot, do_T2echo_plot
-from t1t2_plotting import do_FT1_plot, do_GFT2_plot, do_EFT2_plot, do_EFT2echo_plot, do_GFT2echo_plot, do_FT2echo_plot
-from t1t2_plotting import do_QPdecay_plot, do_population_plot, smart_T1_delays, calibrate_IQ
+from .t1t2_plotting import do_T1_plot, do_T2_plot, do_T2echo_plot
+from .t1t2_plotting import do_FT1_plot, do_GFT2_plot, do_EFT2_plot, do_EFT2echo_plot, do_GFT2echo_plot, do_FT2echo_plot
+from .t1t2_plotting import do_QPdecay_plot, do_population_plot, smart_T1_delays, calibrate_IQ
 #from automation_helper import auto_set_fg_freq, estimate_T1
 
 ################################################################################################################################################
@@ -59,7 +60,7 @@ def auto_set_fg_freq(seq_len, max_freq=10000):
         if (freq <= max_freq) and (seq_len < 1.0e9/freq):
             fg.set_frequency(freq)
             return freq
-    print "Warning: auto_set_fg_frequency failed!"
+    print("Warning: auto_set_fg_frequency failed!")
     return
 
 def estimate_T1(QP_delay, T1_int=90e3, tau_QP=1.5e6, half_decay_point=1e6, eff_T1_delay=500.0):

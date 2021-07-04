@@ -61,14 +61,14 @@ for i, title in enumerate(f[date].keys()):
 #    print int(title[0:6])
 #    print int(title[0:6]) <= 020617
     if int(title[0:6]) <= int('122500') and int(title[0:6]) > int('121845') and title[7:13] == exp_t:# and title[7:12] =='ROCav':
-        print title
+        print(title)
 
 
 
         x_key = 'freqs'
         #x2_key = 'powers'
         exp = f[date][title]
-        y_keys = exp.keys()
+        y_keys = list(exp.keys())
         
             
         freqs = exp[x_key].value

@@ -1,4 +1,4 @@
-from Agilent_Generator import Agilent_Generator
+from .Agilent_Generator import Agilent_Generator
 
 class Agilent_E8257D(Agilent_Generator):
     """

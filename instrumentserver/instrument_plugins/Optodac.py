@@ -18,7 +18,7 @@ import pyvisa.vpp43 as vpp43
 from time import sleep
 import types
 import logging
-from instrument import Instrument
+from .instrument import Instrument
 
 
 class OPTO(Instrument):
@@ -29,7 +29,7 @@ class OPTO(Instrument):
         self._address=address
         self._numdacs=8
         self._sleeptime=0.0
-        self.add_parameter('dac', type=types.FloatType,
+        self.add_parameter('dac', type=float,
                         flags=Instrument.FLAG_SET, channels=(1, self._numdacs),
                            minval=-5000.00, maxval=5000, units='mV',
                            format='%.02f', tags=['sweep'])

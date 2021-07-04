@@ -312,7 +312,7 @@ for wb in wbs:
     plt.title('chi')
     for i in range(len(lorentz_freqs_2[0])):
         plt.plot(delta,[pt[i] for pt in chi],label = 'model index %s'%i)    
-    print 'chi min is %sMHz'%(np.min(chi)*1000)
+    print('chi min is %sMHz'%(np.min(chi)*1000))
     chis.append(np.min(chi)*1000)
     
 plt.figure()

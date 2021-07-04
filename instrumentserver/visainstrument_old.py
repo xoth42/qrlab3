@@ -1,4 +1,4 @@
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import visa
 from lib import visafunc
@@ -19,8 +19,8 @@ class VisaInstrument(Instrument):
         self._interrupted = False
         self._term_chars = term_chars
 
-        self.add_parameter('address', type=types.StringType)
-        self.add_parameter('timeout', type=types.IntType, value=DEFAULT_TIMEOUT,
+        self.add_parameter('address', type=bytes)
+        self.add_parameter('timeout', type=int, value=DEFAULT_TIMEOUT,
                            units='ms',
                            help='Instrument read timeout')
 
@@ -66,7 +66,7 @@ class VisaInstrument(Instrument):
         logging.debug('Opening visa instrument at address %s, term_chars=%r', self._address, self._term_chars)
         try:
             self._ins = visa.instrument(self._address, term_chars=self._term_chars, timeout=self._timeout)
-        except Exception, e:
+        except Exception as e:
             msg = 'Unable to open instrument %s' % (self._address,)
             logging.error(msg)
 

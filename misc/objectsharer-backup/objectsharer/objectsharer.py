@@ -17,7 +17,7 @@
 
 import logging
 import random
-import cPickle as pickle
+import pickle as pickle
 import time
 import numpy as np
 import inspect
@@ -129,11 +129,11 @@ class AsyncHelloReply(object):
 #########################################
 
 def _walk_objects(obj, func, *args):
-    if type(obj) in (types.ListType, types.TupleType):
+    if type(obj) in (list, tuple):
         obj = list(obj)
         for i, v in enumerate(obj):
             obj[i] = _walk_objects(v, func, *args)
-    if type(obj) is types.DictType:
+    if type(obj) is dict:
         for k in sorted(obj):
             obj[k] = _walk_objects(obj[k], func, *args)
     return func(obj, *args)
@@ -178,7 +178,7 @@ def _unwrap_ars_sobjs(obj, bufs, client=None):
     '''
 
     def replace(o):
-        if type(o) is types.DictType:
+        if type(o) is dict:
             if 'OS_AR' in o:
                 if len(bufs) == 0:
                     raise ValueError('No buffer!')
@@ -284,7 +284,7 @@ class ObjectSharer(object):
         and the aliases.
         '''
         ret = list(self.objects.keys())
-        ret.extend(self.name_map.keys())
+        ret.extend(list(self.name_map.keys()))
         return ret
 
     def get_object(self, objname):
@@ -402,13 +402,13 @@ class ObjectSharer(object):
                 return self._proxy_cache[objname]
 
             # See if we already know which client has this object
-            for client_id, names in self._client_object_list_cache.iteritems():
+            for client_id, names in self._client_object_list_cache.items():
                 if objname in names:
                     return self.get_object_from(objname, client_id)
 
         # Query all clients
         # TODO: asynchronously
-        for client_id in self.clients.keys():
+        for client_id in list(self.clients.keys()):
             obj = self.get_object_from(objname, client_id, no_cache=no_cache)
             if obj is not None:
                 return obj
@@ -451,7 +451,7 @@ class ObjectSharer(object):
             del self.objects[obj._OS_UID]
             root.emit('object-removed', obj._OS_UID)
 
-        for name, id in self.name_map.items():
+        for name, id in list(self.name_map.items()):
             if obj._OS_UID == id:
                 del self.name_map[name]
 
@@ -486,7 +486,7 @@ class ObjectSharer(object):
         if hid in self._callbacks_hid:
             del self._callbacks_hid[hid]
 
-        for name, info_list in self._callbacks_name.iteritems():
+        for name, info_list in self._callbacks_name.items():
             for index, info in enumerate(info_list):
                 if info['hid'] == hid:
                     del self._callbacks_name[name][index]
@@ -497,7 +497,7 @@ class ObjectSharer(object):
                 signame, args, kwargs, uid, len(self.clients))
 
         kwargs[OS_SIGNAL] = True
-        for client_id, client in self.clients.iteritems():
+        for client_id, client in self.clients.items():
 #            print 'Calling receive sig, uid=%s, signame %s, args %s, kwargs %s' % (uid, signame, args, kwargs)
             client.receive_signal(uid, signame, *args, **kwargs)
         self.receive_signal(uid, signame, *args, **kwargs)
@@ -520,7 +520,7 @@ class ObjectSharer(object):
                     fkwargs = kwargs.copy()
                     fkwargs.update(info['kwargs'])
                     info['callback'](*fargs, **fkwargs)
-                except Exception, e:
+                except Exception as e:
                     logger.warning('Callback to %s failed for %s.%s: %s\n%s',
                             info.get('callback', None), uid, signame, str(e), traceback.format_exc())
 
@@ -602,7 +602,7 @@ class ObjectSharer(object):
                 logger.debug('  Returning for call %s: %s', callid, lambda:ellipsize(str(ret)))
 
             # Handle errors
-            except Exception, e:
+            except Exception as e:
                 if len(info) < 6:
                     logger.error('Invalid call msg: %s', info)
                     ret = RemoteException('Invalid call msg')
@@ -914,7 +914,7 @@ class ZMQBackend(object):
         return self.addr_to_uid_map.get(addr, None)
 
     def get_addr_for_uid(self, uid):
-        for k, v in self.addr_to_uid_map.iteritems():
+        for k, v in self.addr_to_uid_map.items():
             if v == uid:
                 return k
         return None
@@ -970,7 +970,7 @@ class ZMQBackend(object):
             logger.warning('Already connected to %s' % addr)
             return
         if uid is not None:
-            if uid in self.addr_to_uid_map.values():
+            if uid in list(self.addr_to_uid_map.values()):
                 logger.warning('Client %s already present at different address')
                 return
             self.addr_to_uid_map[addr] = uid
@@ -1071,7 +1071,7 @@ class ZMQBackend(object):
                 t_new = now2 + info['delay'] - delta
                 logger.debug('Rescheduling timeout %d for %s', t_id, t_new - now2)
                 bisect.insort(self._scheduled_timeouts, (t_new, t_id))
-            except Exception, e:
+            except Exception as e:
                 logger.error('Timeout call %d failed: %s', t_id, str(e))
                 self.timeout_remove(t_id)
 
@@ -1097,7 +1097,7 @@ class ZMQBackend(object):
             
         # Convert wait_for to a list
         if wait_for is not None:
-            if type(wait_for) in (types.TupleType, types.ListType):
+            if type(wait_for) in (tuple, list):
                 wait_for = list(wait_for)
             else:
                 wait_for = [wait_for,]
@@ -1139,7 +1139,7 @@ class ZMQBackend(object):
             # Decode message
             try:
                 info = pickle.loads(msgs[1])
-            except Exception, e:
+            except Exception as e:
                 logger.warning('Unable to decode object: %s [%r]', str(e), msgs[1])
                 return
 
@@ -1148,7 +1148,7 @@ class ZMQBackend(object):
                 logger.debug('Starting Message processing %s', str(info))
                 waiting = (wait_for is not None)
                 helper.process_message(client, info, msgs[2:], waiting=waiting)
-            except Exception, e:
+            except Exception as e:
                 logger.warning('Failed to process message: %s\n%s', str(e), traceback.format_exc())
             finally:
                 logger.debug('Message processed %s', str(info))
@@ -1193,7 +1193,7 @@ class ZMQBackend(object):
             
         # Convert wait_for to a list
         if wait_for is not None:
-            if type(wait_for) in (types.TupleType, types.ListType):
+            if type(wait_for) in (tuple, list):
                 wait_for = list(wait_for)
             else:
                 wait_for = [wait_for,]
@@ -1242,7 +1242,7 @@ class ZMQBackend(object):
             # Decode message
             try:
                 info = pickle.loads(msgs[1])
-            except Exception, e:
+            except Exception as e:
                 logger.warning('Unable to decode object: %s [%r]', str(e), msgs[1])
                 return
 
@@ -1251,7 +1251,7 @@ class ZMQBackend(object):
                 logger.debug('Starting Message processing %s', str(info))
                 waiting = (wait_for is not None)
                 helper.process_message(client, info, msgs[2:], waiting=waiting)
-            except Exception, e:
+            except Exception as e:
                 logger.warning('Failed to process message: %s\n%s', str(e), traceback.format_exc())
             finally:
                 logger.debug('Message processed %s', str(info))

@@ -9,11 +9,11 @@ Created on Thu Feb 07 13:19:05 2019
 
 # Josh started this driver on 8/1/18 since the old driver didn't work at all
 # really.
-from __future__ import division
+
 import time
 import pyvisa
 import numpy as np
-from instrument import Instrument
+from .instrument import Instrument
 import types
 
 currSource = 'none'
@@ -71,7 +71,7 @@ class VISACommand(object):
                 #symbols, but they are included in the query_string, as '?' - too many?
                 if result == result_list[-1]:
                     break
-                if (result != 'END' + self.term_chars) and (result != u''):
+                if (result != 'END' + self.term_chars) and (result != ''):
                     result_list.append(result)
                 else:
                     break
@@ -104,7 +104,7 @@ class Yokogawa_7651_new(Instrument):
         self.status = VISACommand('OC', self.instrument)
         self.voltage_limit = VISACommand('LV', self.instrument)
 
-        self.add_parameter('output_state', type=types.IntType,
+        self.add_parameter('output_state', type=int,
                            flags=Instrument.FLAG_GETSET,
                            format_map={1: 'on', 0: 'off'})
         self.add_parameter('source_type',
@@ -127,18 +127,18 @@ class Yokogawa_7651_new(Instrument):
         # self.add_parameter('voltage_limit', type=types.IntType,
         #                    flags=Instrument.FLAG_GETSET, units='V',
         #                    minvalue=1, maxvalue=30)
-        self.add_parameter('voltage', type=types.FloatType,
+        self.add_parameter('voltage', type=float,
                            flags=Instrument.FLAG_GETSET, units='V',
                            minvalue=-30.0, maxvalue=30.0)
-        self.add_parameter('current', type=types.FloatType,
+        self.add_parameter('current', type=float,
                            flags=Instrument.FLAG_GETSET, maxval=120,
                            minval=-120, units='mA')
-        self.add_parameter('polarity', type=types.IntType,
+        self.add_parameter('polarity', type=int,
                            flags=Instrument.FLAG_GETSET,
                            format_map={0: 'positive',
                                        1: 'negative',
                                        2: 'invert'})
-        self.add_parameter('output_data_value', type=types.StringType,
+        self.add_parameter('output_data_value', type=bytes,
                            flags=Instrument.FLAG_GET)
 
     def do_get_output_state(self):
@@ -180,7 +180,7 @@ class Yokogawa_7651_new(Instrument):
         if self.do_get_source_type()==1:
             return self.get_data_value()
         else:
-            print "Can only get voltage when source_type is VOLTAGE."
+            print("Can only get voltage when source_type is VOLTAGE.")
             return None
 
     def do_set_current(self, current):
@@ -197,7 +197,7 @@ class Yokogawa_7651_new(Instrument):
         return None
 
     def do_set_polarity(self, polarity):
-        if polarity not in range(0, 3):
+        if polarity not in list(range(0, 3)):
             raise PolarityError('Polarity not 0, 1, or 2')
         self.polarity.send(polarity)
 

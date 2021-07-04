@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import visa
 import types
 import logging
@@ -53,21 +53,21 @@ class HP_81110A(Instrument):
         self._visainstrument = visa.instrument(self._address)
         self._channels = self._get_number_of_channels()
 
-        self.add_parameter('delay', type=types.FloatType,
+        self.add_parameter('delay', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             channels=(1, self._channels), minval=0.0, maxval=999, units='sec',channel_prefix='ch%d_')
-        self.add_parameter('width', type=types.FloatType,
+        self.add_parameter('width', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             channels=(1, self._channels), minval=-6.25e-9, maxval=999.5, units='sec',channel_prefix='ch%d_')
-        self.add_parameter('high', type=types.FloatType,
+        self.add_parameter('high', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             channels=(1, self._channels), minval=-9.90, maxval=10.0, units='Volts',channel_prefix='ch%d_')
-        self.add_parameter('low', type=types.FloatType,
+        self.add_parameter('low', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             channels=(1, self._channels), minval=-10.0, maxval=9.90, units='Volts',channel_prefix='ch%d_')
-        self.add_parameter('status', type=types.StringType, channels=(1, self._channels),
+        self.add_parameter('status', type=bytes, channels=(1, self._channels),
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,channel_prefix='ch%d_')
-        self.add_parameter('display', type=types.StringType,
+        self.add_parameter('display', type=bytes,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET)
 
         self.add_function('reset')

@@ -18,15 +18,15 @@ aouID = awg.openWithSlot(AWG_PRODUCT, CHASSIS, AWG_SLOT)
 AWGPart = awg.getProductNameBySlot(CHASSIS, AWG_SLOT)
 AWGNumber = awg.getSerialNumberBySlot(CHASSIS, AWG_SLOT)
 AWGNumModules = awg.moduleCount()
-print("Part =", AWGPart)
-print("S/N =", AWGNumber)
-print("Number of Modules = ", AWGNumModules)
+print(("Part =", AWGPart))
+print(("S/N =", AWGNumber))
+print(("Number of Modules = ", AWGNumModules))
 
 
 # Check AWG Connection
 if aouID < 0:
     print("ERROR")
-    print("aouID:", aouID)
+    print(("aouID:", aouID))
     awg.close()
     print()
     print("AOU closed")
@@ -89,7 +89,7 @@ awg.modulationAmplitudeConfig(2, key.SD_ModulationTypes.AOU_MOD_AM, 1.5)
 awg.AWGqueueConfig(2,1)
 awg.AWGqueueConfig(3,1)
 
-print('cyclic modes', awg.AWGqueueConfigRead(1), awg.AWGqueueConfigRead(1))
+print(('cyclic modes', awg.AWGqueueConfigRead(1), awg.AWGqueueConfigRead(1)))
 
 #pause at start
 awg.AWGqueueWaveform(2, 1, key.SD_TriggerModes.SWHVITRIG, 0, 1, 0)

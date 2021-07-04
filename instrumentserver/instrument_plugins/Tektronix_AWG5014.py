@@ -18,7 +18,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import visa
 import types
 import logging
@@ -69,50 +69,50 @@ class Tektronix_AWG5014(Instrument):
         self._numpoints = numpoints
 
         # Add parameters
-        self.add_parameter('waveform', type=types.StringType,
+        self.add_parameter('waveform', type=bytes,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             channels=(1, 4), channel_prefix='ch%d_')
-        self.add_parameter('output', type=types.FloatType,
+        self.add_parameter('output', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             channels=(1, 4), channel_prefix='ch%d_')
-        self.add_parameter('wlist', type=types.StringType,
+        self.add_parameter('wlist', type=bytes,
             flags=Instrument.FLAG_GET)
-        self.add_parameter('trigger_mode', type=types.StringType,
+        self.add_parameter('trigger_mode', type=bytes,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET)
-        self.add_parameter('trigger_impedance', type=types.FloatType,
+        self.add_parameter('trigger_impedance', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             minval=49, maxval=2e3, units='Ohm')
-        self.add_parameter('trigger_level', type=types.FloatType,
+        self.add_parameter('trigger_level', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             minval=-5, maxval=5, units='Volts')
-        self.add_parameter('clock', type=types.FloatType,
+        self.add_parameter('clock', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             minval=1e6, maxval=1e9, units='Hz')
-        self.add_parameter('numpoints', type=types.IntType,
+        self.add_parameter('numpoints', type=int,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             minval=100, maxval=1e9, units='Int')
-        self.add_parameter('filename', type=types.StringType,
+        self.add_parameter('filename', type=bytes,
             flags=Instrument.FLAG_SET, channels=(1, 4),
             channel_prefix='ch%d_')
-        self.add_parameter('amplitude', type=types.FloatType,
+        self.add_parameter('amplitude', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             channels=(1, 4), minval=0, maxval=2, units='Volts', channel_prefix='ch%d_')
-        self.add_parameter('offset', type=types.FloatType,
+        self.add_parameter('offset', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             channels=(1, 4), minval=-2, maxval=2, units='Volts', channel_prefix='ch%d_')
-        self.add_parameter('marker1_low', type=types.FloatType,
+        self.add_parameter('marker1_low', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             channels=(1, 4), minval=-2, maxval=2, units='Volts', channel_prefix='ch%d_')
-        self.add_parameter('marker1_high', type=types.FloatType,
+        self.add_parameter('marker1_high', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             channels=(1, 4), minval=-2, maxval=2, units='Volts', channel_prefix='ch%d_')
-        self.add_parameter('marker2_low', type=types.FloatType,
+        self.add_parameter('marker2_low', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             channels=(1, 4), minval=-2, maxval=2, units='Volts', channel_prefix='ch%d_')
-        self.add_parameter('marker2_high', type=types.FloatType,
+        self.add_parameter('marker2_high', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             channels=(1, 4), minval=-2, maxval=2, units='Volts', channel_prefix='ch%d_')
-        self.add_parameter('status', type=types.StringType,
+        self.add_parameter('status', type=bytes,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             channels=(1, 4),channel_prefix='ch%d_')
 
@@ -588,13 +588,13 @@ class Tektronix_AWG5014(Instrument):
         if numpts != self._numpoints:
             logging.warning(__name__ + ' : changing numpoints. This will clear all waveforms!')
 
-        response = raw_input('type "yes" to continue')
+        response = input('type "yes" to continue')
         if response is 'yes':
             logging.debug(__name__ + ' : Setting numpoints to %s' % numpts)
             self._numpoints = numpts
             self.clear_waveforms()
         else:
-            print 'aborted'
+            print('aborted')
 
     def do_get_clock(self):
         '''
@@ -915,7 +915,7 @@ class Tektronix_AWG5014(Instrument):
             self._visainstrument.write('OUTP%s OFF' % channel)
         else:
             logging.debug(__name__ + ' : Try to set status to invalid value %s' % status)
-            print 'Tried to set status to invalid value %s' % status
+            print('Tried to set status to invalid value %s' % status)
 
     #  Ask for string with filenames
     def get_filenames(self):

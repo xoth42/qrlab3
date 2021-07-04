@@ -31,14 +31,14 @@ def digitizer_capture(args):
     error = dig.openWithSlotCompatibility(digName, chassis, digSlot, key.SD_Compatibility.KEYSIGHT)
     if error < 0:
         error_check(error)
-        print("Digitizer open error: {}".format(error))
+        print(("Digitizer open error: {}".format(error)))
         dig.close()
         exit()
     
     error = dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)
     if error < 0:
         error_check(error)
-        print('Error triggerIOconfig {}'.format(key.SD_Error.getErrorMessage(error)))
+        print(('Error triggerIOconfig {}'.format(key.SD_Error.getErrorMessage(error))))
     
     for i in range(len(digChannels)):   
     
@@ -46,40 +46,40 @@ def digitizer_capture(args):
                                             key.SD_TriggerBehaviors.TRIGGER_RISE, key.SD_SyncModes.SYNC_NONE)
        error_check(error)
        if error < 0:
-          print('Error DAQtriggerExternalConfig - {}'.format( key.SD_Error.getErrorMessage(error)))
+          print(('Error DAQtriggerExternalConfig - {}'.format( key.SD_Error.getErrorMessage(error))))
     
        error = dig.DAQflush(digChannels[i])
        error_check(error)
        if error < 0:
           error_check(error)
-          print('Error DAQflush {}'.format(error))
+          print(('Error DAQflush {}'.format(error)))
     
        error = dig.channelInputConfig(digChannels[i], digScale, key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)
        error_check(error)
 
        if error < 0:
-          print('Error channelInputConfig {}'.format(error))
+          print(('Error channelInputConfig {}'.format(error)))
     
        error = dig.DAQconfig(digChannels[i], pointsPerCycle, captureCycles, captureDelay, key.SD_TriggerModes.EXTTRIG)
        error_check(error)
 
        if error < 0:
           error_check(error)
-          print('Error DAQconfig {}'.format(error))
+          print(('Error DAQconfig {}'.format(error)))
     
        error = dig.DAQbufferPoolConfig(digChannels[i], int(pointsPerCycle * captureCycles / transfers))
        error_check(error)
 
        if error < 0:
           error_check(error)
-          print('Error DAQbufferPoolConfig {}'.format(error))
+          print(('Error DAQbufferPoolConfig {}'.format(error)))
     
        error = dig.DAQstart(digChannels[i])
        error_check(error)
 
        if error < 0:
            error_check(error)
-           print('Error DAQstart {}'.format(error))   
+           print(('Error DAQstart {}'.format(error)))   
     
     
     # Add code to either trigger digitizer or wait for first few cycles
@@ -90,7 +90,7 @@ def digitizer_capture(args):
     
     for i in range(len(digChannels)):
        data.append(dig.DAQbufferGet(digChannels[i]))
-       print(data[0][0])
+       print((data[0][0]))
     
     for j in range(1, transfers):
        for i in range(len(digChannels)):
@@ -109,7 +109,7 @@ def digitizer_capture(args):
         error = dig.DAQbufferPoolRelease(digChannels[i])
         error_check(error)
         if error < 0:
-            print('Error DAQbufferPoolRelease {}'.format(error))
+            print(('Error DAQbufferPoolRelease {}'.format(error)))
     
     
     dig.close()

@@ -13,7 +13,7 @@ import time
 import ctypes
 import types
 import numpy as np
-from instrument import Instrument
+from .instrument import Instrument
 import logging
 
 SUCCESS = 0
@@ -25,7 +25,7 @@ try:
     lb_dll = ctypes.windll.LoadLibrary(LB_DLL)
     #lb_dll = ctypes.cdll.LoadLibrary(LB_DLL)
     
-except Exception, e:
+except Exception as e:
     s = 'Unable to load SignalCore DLL, please put sc5511a.dll in instrumentserver directory ' + str(e)
     raise ValueError(s)
 
@@ -41,7 +41,7 @@ class device_rf_params_t(ctypes.Structure):
                      ('rf2_freq', ctypes.c_ushort)]
     
     def print_params(self):
-        print('\ndevice rf params:\n'
+        print(('\ndevice rf params:\n'
               + 'rf1_freq = ' + str(self.rf1_freq) + '\n'
               + 'start_freq = ' + str(self.start_freq) + '\n'
               + 'stop_freq = ' + str(self.stop_freq) + '\n'
@@ -50,7 +50,7 @@ class device_rf_params_t(ctypes.Structure):
               + 'sweep_cycles = ' + str(self.sweep_cycles) + '\n'
               + 'buffer_points = ' + str(self.buffer_points) + '\n'
               + 'rf_level = ' + str(self.rf_level) + '\n'
-              + 'rf2_freq = ' + str(self.rf2_freq))
+              + 'rf2_freq = ' + str(self.rf2_freq)))
     
     
     
@@ -65,7 +65,7 @@ class list_mode_t(ctypes.Structure):
                      ('trig_out_on_cycle', ctypes.c_ubyte)]
     
     def print_params(self):
-        print('\nlist mode params:\n'
+        print(('\nlist mode params:\n'
               + 'sss_mode = ' + str(self.sss_mode) + '\n'
               + 'sweep_dir = ' + str(self.sweep_dir) + '\n'
               + 'tri_waveform = ' + str(self.tri_waveform) + '\n'
@@ -73,7 +73,7 @@ class list_mode_t(ctypes.Structure):
               + 'step_on_hw_trig = ' + str(self.step_on_hw_trig) + '\n'
               + 'return_to_start = ' + str(self.return_to_start) + '\n'
               + 'trig_out_enable = ' + str(self.trig_out_enable) + '\n'
-              + 'trig_out_on_cycle = ' + str(self.trig_out_on_cycle))
+              + 'trig_out_on_cycle = ' + str(self.trig_out_on_cycle)))
         
 class pll_status_t(ctypes.Structure):
     _fields_ =  [('sum_pll_ld', ctypes.c_ubyte),
@@ -86,7 +86,7 @@ class pll_status_t(ctypes.Structure):
                      ('rf2_pll_ld', ctypes.c_ubyte)]
     
     def print_params(self):
-        print('\npll status params:\n'
+        print(('\npll status params:\n'
               + 'sum_pll_ld = ' + str(self.sum_pll_ld) + '\n'
               + 'crs_pll_ld = ' + str(self.crs_pll_ld) + '\n'
               + 'fine_pll_ld = ' + str(self.fine_pll_ld) + '\n'
@@ -94,7 +94,7 @@ class pll_status_t(ctypes.Structure):
               + 'crs_aux_pll_ld = ' + str(self.crs_aux_pll_ld) + '\n'
               + 'ref_100_pll_ld = ' + str(self.ref_100_pll_ld) + '\n'
               + 'ref_10_pll_ld = ' + str(self.ref_10_pll_ld) + '\n'
-              + 'rf2_pll_ld = ' + str(self.rf2_pll_ld))
+              + 'rf2_pll_ld = ' + str(self.rf2_pll_ld)))
 
 
 class operate_status_t(ctypes.Structure):
@@ -115,7 +115,7 @@ class operate_status_t(ctypes.Structure):
                      ('harmonic_ss', ctypes.c_ubyte)]
     
     def print_params(self):
-        print('\noperate mode status: \n'
+        print(('\noperate mode status: \n'
               + 'rf1_lock_mode = ' + str(self.rf1_lock_mode) + '\n'
               + 'rf1_loop_gain = ' + str(self.rf1_loop_gain) + '\n'
               + 'device_access = ' + str(self.device_access) + '\n'
@@ -130,7 +130,7 @@ class operate_status_t(ctypes.Structure):
               + 'list_mode_running = ' + str(self.list_mode_running) + '\n'
               + 'rf1_mode = ' + str(self.rf1_mode) + '\n'
               + 'over_temp = ' + str(self.over_temp) + '\n'
-              + 'harmonic_ss = ' + str(self.harmonic_ss))
+              + 'harmonic_ss = ' + str(self.harmonic_ss)))
 
 
 class device_status_t(ctypes.Structure):
@@ -177,7 +177,7 @@ class SC5511A(Instrument):
         
         # This is the code Josh wrote
         string_buffers = [ctypes.create_string_buffer(ID_BUFFER_SIZE) for i in range(NUM_MAX_DEVICES)]
-        pointers = (ctypes.c_char_p*NUM_MAX_DEVICES)(*map(ctypes.addressof, string_buffers))
+        pointers = (ctypes.c_char_p*NUM_MAX_DEVICES)(*list(map(ctypes.addressof, string_buffers)))
         results = [s.value for s in string_buffers]
         self.dev_num = ctypes.c_char_p(devid)
         lb_dll.sc5511a_open_device.restype = ctypes.POINTER(ctypes.c_int)
@@ -224,7 +224,7 @@ class SC5511A(Instrument):
 #            flags=Instrument.FLAG_GET, value=self._serialno)
 #        self.add_parameter('handle', type=types.IntType,
 #            flags=Instrument.FLAG_GET, value=self._handle)
-        self.add_parameter('frequency', type=types.FloatType,
+        self.add_parameter('frequency', type=float,
             flags=Instrument.FLAG_GETSET, units='Hz',
             minval=self._min_freq, maxval=self._max_freq,
             display_scale=6, value = device_rf_params.rf1_freq)
@@ -232,7 +232,7 @@ class SC5511A(Instrument):
 #            flags=Instrument.FLAG_GETSET, units='MHz',
 #            minval=self._min_freq, maxval=3000,
 #            display_scale=6, value = device_rf_params.rf2_freq)
-        self.add_parameter('power', type=types.FloatType,
+        self.add_parameter('power', type=float,
             flags=Instrument.FLAG_GETSET, units='dBm',
             minval=self._min_power, maxval=self._max_power,
             format='%.02f', value = device_rf_params.rf_level)
@@ -241,7 +241,7 @@ class SC5511A(Instrument):
 #            help='sweep mode does not work')
 #        self.add_parameter('rf_mode', type=types.StringType,
 #            flags=Instrument.FLAG_GETSET, value = 'fixed')
-        self.add_parameter('rf_on', type=types.BooleanType,
+        self.add_parameter('rf_on', type=bool,
             flags=Instrument.FLAG_GETSET, value = True)
 #        self.add_parameter('ext_locked', type=types.BooleanType,
 #            flags=Instrument.FLAG_GET, value = True)

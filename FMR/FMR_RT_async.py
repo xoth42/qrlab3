@@ -1,9 +1,10 @@
 import matplotlib
+import importlib
 matplotlib.interactive(True)
 
 #
 import mclient
-reload(mclient)
+importlib.reload(mclient)
 from mclient import instruments
 
 VNA = instruments['VNA']
@@ -67,7 +68,7 @@ datagroup.create_dataset('currents', data=currents)
 datagroup.create_dataset('freqs', data = freqs)
 #        self.ampdata = self.data.create_dataset('amplitudes', shape=[len(self.currents),len(freqs)])
 #        self.phasedata = self.data.create_dataset('phases', shape=[len(self.currents),len(freqs)])
-print datagroup.get_fullname()
+print(datagroup.get_fullname())
 realdata = [0,0,0,0]
 imagdata = [0,0,0,0]
 for i, sij in enumerate(Sij):
@@ -130,7 +131,7 @@ for icurrent, current in enumerate(currents):
                 objsh.helper.backend.main_loop(main_loop_time)
                 VNA.set_format('MLOG')
         except:
-            print 'error with async'
+            print('error with async')
 #        '''
 
 #            print 'ok8'
@@ -171,9 +172,9 @@ for icurrent, current in enumerate(currents):
 
         VNA.set_trigger_source('internal')
         count = count + ave
-        print '%s averages done' %(count)
+        print('%s averages done' %(count))
     
-    print 'current = %.04fmA done ' % (current)
+    print('current = %.04fmA done ' % (current))
     
 
     if icurrent == 0:
@@ -205,13 +206,13 @@ for icurrent, current in enumerate(currents):
         y[0] = y[1] = freqs
         y = np.transpose(y)
         fig.axes[i].pcolormesh(x, y, z)#, vmin=-80, vmax=0)
-        print np.min(z)
+        print(np.min(z))
 #        fig.axes[i].set_xlim(xs.min(), xs.max())
 #        fig.axes[i].set_ylim(ys.min(), ys.max())
         fig.canvas.draw()
 
     
-print datagroup.get_fullname()
+print(datagroup.get_fullname())
 
 
 fig = pl.figure()

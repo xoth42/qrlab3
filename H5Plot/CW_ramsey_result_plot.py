@@ -39,8 +39,8 @@ pl.figure()
 for filename in filelist:
 # Read the array from file
 #    if filename[95]!=filename[96]:
-    print '\n'
-    print filename
+    print('\n')
+    print(filename)
     num = [float(s) for s in re.findall(r'-?\d+\.?\d*', filename)]
 
     ifield = np.argmin(np.abs(fields - num[-1]))

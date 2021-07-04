@@ -1,4 +1,4 @@
-from instrument import Instrument
+from .instrument import Instrument
 import types
 
 class dummy_mw_src(Instrument):
@@ -8,24 +8,24 @@ class dummy_mw_src(Instrument):
         Instrument.__init__(self,name)
 
         self.add_parameter('frequency',
-                type=types.FloatType,
+                type=float,
                 flags=Instrument.FLAG_GETSET | \
                 Instrument.FLAG_GET_AFTER_SET,
                 minval=0, maxval=20e9,
                 units='Hz')
         self.add_parameter('power',
-                type=types.FloatType,
+                type=float,
                 flags=Instrument.FLAG_GETSET | \
                 Instrument.FLAG_GET_AFTER_SET,
                 minval=-120, maxval=25,
                 units='dBm')
         self.add_parameter('phase',
-                type=types.FloatType,
+                type=float,
                 flags=Instrument.FLAG_GETSET | \
                 Instrument.FLAG_GET_AFTER_SET,
                 minval=-180, maxval=180)
         self.add_parameter('status',
-                type=types.StringType,
+                type=bytes,
                 option_list=('on', 'off'),
                 flags=Instrument.FLAG_GETSET | \
                 Instrument.FLAG_GET_AFTER_SET)
@@ -45,14 +45,14 @@ class dummy_mw_src(Instrument):
 #### initialization related
 
     def reset(self):
-        print __name__ + ' : resetting instrument'
+        print(__name__ + ' : resetting instrument')
         self.set_frequency(20e9)
         self.set_power(-120)
         self.set_phase(0)
         self.set_status('off')
 
     def get_all(self):
-        print __name__ + ' : reading all settings from instrument'
+        print(__name__ + ' : reading all settings from instrument')
         self.get_frequency()
         self.get_power()
         self.get_phase()

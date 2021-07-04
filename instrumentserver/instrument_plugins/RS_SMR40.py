@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import visa
 import types
 import logging
@@ -50,16 +50,16 @@ class RS_SMR40(Instrument):
         self._address = address
         self._visainstrument = visa.instrument(self._address)
 
-        self.add_parameter('frequency', type=types.FloatType,
+        self.add_parameter('frequency', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             minval=1e9, maxval=40e9,
             units='Hz', format='%.04e',
             tags=['sweep'])
-        self.add_parameter('power', type=types.FloatType,
+        self.add_parameter('power', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             minval=-30, maxval=25, units='dBm',
             tags=['sweep'])
-        self.add_parameter('status', type=types.StringType,
+        self.add_parameter('status', type=bytes,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET)
 
         self.add_function('reset')

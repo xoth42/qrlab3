@@ -11,7 +11,7 @@ import matplotlib.pyplot as pl
 
 # Read the array from file
 new_data = np.loadtxt(r'C:\\qrlab\FMR\text_0.75mm_parall_280-305-0.2.txt')
-print new_data.shape
+print(new_data.shape)
 # Note that this returned a 2D array!
 # However, going back to 3D is easy if we know the 
 # original shape of the array
@@ -122,7 +122,7 @@ while m <= M:
     params.add('g',value= 24.75e6)
     params.add('omega_FMR',value = 8.5e9)
     params.add('gamma_m', value = 3e6, min=0)
-    print X[0][i]
+    print(X[0][i])
     result = lmfit.minimize(S21, params, args=(x, y))
     lmfit.report_fit(result.params)
     y=y-S21(result.params, x, y)

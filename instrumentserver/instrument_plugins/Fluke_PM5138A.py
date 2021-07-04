@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import logging
 import visa
@@ -41,13 +41,13 @@ class Fluke_PM5138A(Instrument):
 
     # Add parameters
     self.add_parameter('frequency',
-      flags=Instrument.FLAG_GETSET, units='Hz', minval=0, maxval=16000, type=types.FloatType)
+      flags=Instrument.FLAG_GETSET, units='Hz', minval=0, maxval=16000, type=float)
     self.add_parameter('ac_amplitude',
-      flags=Instrument.FLAG_GETSET, units='V', minval=-15, maxval=25, type=types.FloatType)
+      flags=Instrument.FLAG_GETSET, units='V', minval=-15, maxval=25, type=float)
     self.add_parameter('dc_amplitude',
-      flags=Instrument.FLAG_GETSET, units='V', minval=-15, maxval=25, type=types.FloatType)
+      flags=Instrument.FLAG_GETSET, units='V', minval=-15, maxval=25, type=float)
     self.add_parameter('dutycycle',
-      flags=Instrument.FLAG_GETSET, units='pct', minval=0, maxval=100, type=types.FloatType)
+      flags=Instrument.FLAG_GETSET, units='pct', minval=0, maxval=100, type=float)
 
     if reset:
       self.init_default()

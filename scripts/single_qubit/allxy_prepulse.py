@@ -17,7 +17,7 @@ class All_XY(Measurement1D):
         self.postseq = postseq
 
         super(All_XY, self).__init__(42, infos=(qubit_info,qubit_info2), **kwargs)
-        self.data.create_dataset('sequence', data=[range(0,42)])
+        self.data.create_dataset('sequence', data=[list(range(0,42))])
 #        self.data.set_attrs()
 
 

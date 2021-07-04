@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import visa
 
@@ -27,7 +27,7 @@ class Keithley_199(Instrument):
         self._address = address
         self._visains = visa.instrument(address)
 
-        self.add_parameter('function', type=types.IntType,
+        self.add_parameter('function', type=int,
                 flags=Instrument.FLAG_SET | Instrument.FLAG_SOFTGET,
                 option_map={
                     0: 'DCV',
@@ -39,12 +39,12 @@ class Keithley_199(Instrument):
                     6: 'ACIdB',
                 })
 
-        self.add_parameter('range', type=types.FloatType,
+        self.add_parameter('range', type=float,
                 flags=Instrument.FLAG_SET | Instrument.FLAG_SOFTGET,
                 minval=0, maxval=7,
                 )
 
-        self.add_parameter('zero', type=types.IntType,
+        self.add_parameter('zero', type=int,
                 flags=Instrument.FLAG_SET | Instrument.FLAG_SOFTGET,
                 option_map={
                     0: 'Disabled',
@@ -52,21 +52,21 @@ class Keithley_199(Instrument):
                     2: 'Value',
                 })
 
-        self.add_parameter('zero_value', type=types.FloatType,
+        self.add_parameter('zero_value', type=float,
                 flags=Instrument.FLAG_GETSET)
 
-        self.add_parameter('rate', type=types.IntType,
+        self.add_parameter('rate', type=int,
                 flags=Instrument.FLAG_SET | Instrument.FLAG_SOFTGET,
                 option_map={
                     0: '4.5 digit',
                     1: '5.5 digit',
                 })
 
-        self.add_parameter('filter', type=types.IntType,
+        self.add_parameter('filter', type=int,
                 flags=Instrument.FLAG_SET | Instrument.FLAG_SOFTGET,
                 )
 
-        self.add_parameter('trigger', type=types.IntType,
+        self.add_parameter('trigger', type=int,
                 flags=Instrument.FLAG_SET | Instrument.FLAG_SOFTGET,
                 option_map={
                     0: 'Cont (talk)',
@@ -79,18 +79,18 @@ class Keithley_199(Instrument):
                     7: 'One-shot (ext)',
                 })
 
-        self.add_parameter('delay', type=types.IntType,
+        self.add_parameter('delay', type=int,
                 flags=Instrument.FLAG_SET | Instrument.FLAG_SOFTGET,
                 minval=0, maxval=999999, units='msec')
 
-        self.add_parameter('interval', type=types.IntType,
+        self.add_parameter('interval', type=int,
                 flags=Instrument.FLAG_SET | Instrument.FLAG_SOFTGET,
                 minval=15, maxval=999999, units='msec')
 
-        self.add_parameter('error', type=types.IntType,
+        self.add_parameter('error', type=int,
                 flags=Instrument.FLAG_GET)
 
-        self.add_parameter('value', type=types.FloatType,
+        self.add_parameter('value', type=float,
                 flags=Instrument.FLAG_GET,
                 tags=['measure'])
 

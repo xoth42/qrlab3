@@ -69,7 +69,7 @@ def analysis(meas, data=None, fig=None):
 
 #    lmfit.report_fit(params)
     lmfit.report_fit(result.params)
-    print (9*np.pi - result.params['phase'].value ) * result.params['period'].value/2/np.pi # Chen 4/3
+    print((9*np.pi - result.params['phase'].value ) * result.params['period'].value/2/np.pi) # Chen 4/3
 
     fig.axes[0].set_ylabel('Intensity [AU]')
     fig.axes[0].set_xlabel('Pulse amplitude')
@@ -145,7 +145,7 @@ class Rabi(Measurement1D):
             self.pi2_amp = 0
 
         if self.update_ins:
-            print 'Setting qubit pi-rotation ampltidue to %.06f, pi/2 to %.06f' % (self.pi_amp, self.pi2_amp)
+            print('Setting qubit pi-rotation ampltidue to %.06f, pi/2 to %.06f' % (self.pi_amp, self.pi2_amp))
             if self.selective==1:
                 if self.pi_amp:
                     mclient.instruments[self.qubit_info.insname].set_pi_amp_selective(self.pi_amp)

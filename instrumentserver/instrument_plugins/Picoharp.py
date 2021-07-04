@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from lib.dll_support import picoquant_ph
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import logging
 
@@ -32,24 +32,24 @@ class Picoharp(Instrument):
         self._devid = devid
         self._create_dev()
 
-        self.add_parameter('resolution', type=types.IntType,
+        self.add_parameter('resolution', type=int,
             flags=Instrument.FLAG_GET,
             units='ps',
             doc='''Bin size''')
 
-        self.add_parameter('range', type=types.IntType,
+        self.add_parameter('range', type=int,
             flags=Instrument.FLAG_SET | Instrument.FLAG_SOFTGET,
             doc='''Range, 0 = 1xbase, 1 = 2xbase, 2 = 4xbase, up to 7''')
 
-        self.add_parameter('counts', type=types.IntType,
+        self.add_parameter('counts', type=int,
             channels=(0, 1),
             flags=Instrument.FLAG_GET)
 
-        self.add_parameter('inttime', type=types.FloatType,
+        self.add_parameter('inttime', type=float,
             units='sec',
             flags=Instrument.FLAG_SET | Instrument.FLAG_SOFTGET)
 
-        self.add_parameter('divider', type=types.IntType,
+        self.add_parameter('divider', type=int,
             flags=Instrument.FLAG_SET | Instrument.FLAG_SOFTGET)
 
         self.add_function('reset')

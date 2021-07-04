@@ -136,7 +136,7 @@ class consoleThread(QThread):
         self.read_pos = self.manager.log_prev_position
         self.fd.seek(self.read_pos)
         self.lastline = self.fd.read()
-        print(self.lastline)
+        print((self.lastline))
         self.console.moveCursor(QTextCursor.End)
         self.console.insertPlainText(str(self.lastline))
         self.write_pos = self.manager.log_cur_position

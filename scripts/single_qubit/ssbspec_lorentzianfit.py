@@ -34,9 +34,9 @@ def analysis(meas, data=None, fig=None):
     p=f.fit(p0)
     txt = 'Center = %.03f MHz' % (-p[2]/1e6,)
     meas.height=f.get_height()
-    print(meas.height)
+    print((meas.height))
     meas.center = -p[2]/1e6
-    print(meas.center)
+    print((meas.center))
     meas.width = f.get_fwhm
 #    print 'Fit gave: %s' % (txt,)
     fig.axes[0].plot(-xs/1e6, f.func(p,xs), label=txt)

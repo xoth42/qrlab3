@@ -1,5 +1,6 @@
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib, OCTlib
 #import matplotlib.pyplot as plt
@@ -123,7 +124,7 @@ def get_reset(dt = 25e3):
 
 
 if 0: # Cavity disp calibration
-    from single_cavity import cavdisp
+    from .single_cavity import cavdisp
 
 #for i in range(5):
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
@@ -139,7 +140,7 @@ if 0: # Cavity disp calibration
 
 
 if 0: # Cavity T1
-    from single_cavity import cavT1
+    from .single_cavity import cavT1
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
 #    xs = np.concatenate((np.linspace(0e3, 50e3, 26), np.linspace(60e3, 1250e3, 55)))
 
@@ -154,7 +155,7 @@ if 0: # Cavity T1
     bla
 
 if 0: # Cavity T2
-    from single_cavity import cavT2
+    from .single_cavity import cavT2
     detune = 10e3
     ct2 = cavT2.CavT2(qubit_info, cavity_infoA, .7, np.linspace(.1e3, 1000e3, 101), detune=detune, seq=None,
                        postseq=None, bgcor=False, double_freq=False, readout=readout)
@@ -163,7 +164,7 @@ if 0: # Cavity T2
     bla
 
 if 0: # Cavity T2E
-    from single_cavity import cavT2
+    from .single_cavity import cavT2
     detune = 5e3
     ct2 = cavT2.CavT2(qubit_info, cavity_infoB, .7, np.linspace(0, 500e3, 41), detune=detune, echo=True, seq=None,
                        postseq=None, bgcor=False)
@@ -175,7 +176,7 @@ if 0: # Cavity T2E
     
 if 0: # Cavity speco
 
-    from single_cavity import cavspectroscopy
+    from .single_cavity import cavspectroscopy
     cav_freq = 6086.78e6
     freq_range = .2e6
     cspec = cavspectroscopy.CavSpectroscopy(mclient.instruments['MXG'], qubit_info, cavity_infoB, [np.pi], 
@@ -187,7 +188,7 @@ if 0: # Cavity speco
 
 
 if 0: #SSB cavspec
-    from single_cavity import ssbcavspec 
+    from .single_cavity import ssbcavspec 
     cspec = ssbcavspec.SSBCavSpec(qubit_info, cavity_infoA, np.linspace(-2e6, 2e6, 91), 
                                   readout='readout_IQ'
 #                                  postseq=efpi, extra_info=[ef_info,]
@@ -196,7 +197,7 @@ if 0: #SSB cavspec
     bla
     
 if 0: #cavity stark shift
-    from single_cavity import ssbcavspec
+    from .single_cavity import ssbcavspec
     s = sequencer.Trigger(250)
     delay = 400e3
     s.append(sequencer.Combined([
@@ -213,7 +214,7 @@ if 0: #cavity stark shift
 
 
 if 0: # number splitting:
-    from single_qubit import ssbspec
+    from .single_qubit import ssbspec
 #    dig.set_naverages(1000)
 #    dig.set_trigger_period(5000)
     
@@ -289,7 +290,7 @@ if 0: # number splitting:
 
 
 if 0: # Measure readout contrast
-    from single_qubit import rabi
+    from .single_qubit import rabi
     tr = rabi.Rabi(cavity_infoA, 
                    np.linspace(-1.1/np.pi, 1.1/np.pi, 51), selective=False,
 #                   np.linspace(-.12, .12, 51), selective=.5,
@@ -303,7 +304,7 @@ if 0: # Measure readout contrast
 
 
 if 0: # Calibrate pi pulse
-    from single_qubit import rabi
+    from .single_qubit import rabi
     seq = sequencer.Join([sequencer.Trigger(250),cB(1.14, 0), geqs(2*np.pi, 0), cB(-.56, 0),
                           cA(1.14, 0), ges_b1(2*np.pi, 0), cA(-.56, 0)]) # |1>|1> state prep
     tr = rabi.Rabi(qubit_a1b1, 
@@ -316,7 +317,7 @@ if 0: # Calibrate pi pulse
     bla
 
 if 0: # RO cavity shift 
-    from single_cavity import rocavspectroscopy_keysight
+    from .single_cavity import rocavspectroscopy_keysight
     seq = sequencer.Join([sequencer.Trigger(250),cA(1, 0)])
 
     rofreq = 7317.63e6#+50e6
@@ -338,7 +339,7 @@ if 0: # RO cavity shift
     bla
     
 if 0: #GE Sideband modulated number splitting:
-    from single_qubit import ssbspec
+    from .single_qubit import ssbspec
     seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate(1.5, 0)])
 #    postseq = qubit_info.rotate(np.pi/2,0)
 #    postseq = sequencer.Sequence(qubit_info.rotate(np.pi/2, 0))
@@ -354,7 +355,7 @@ if 0: #GE Sideband modulated number splitting:
 
 
 if 0: #EF Sideband modulated number splitting:
-    from single_qubit import ssbspec
+    from .single_qubit import ssbspec
     seq = sequencer.Join([sequencer.Trigger(250), qubit_info.rotate(np.pi,0), cavity_infoA.rotate(1, 0)])
 #    postseq = qubit_info.rotate(np.pi/2,0)
     dig.set_trigger_period(3000)
@@ -652,7 +653,7 @@ if 0: # Cavity cooling test
     
     
 if 0: # 2d poly ssbspec
-    from FWM import poly_fwm_ssbspec2d
+    from .FWM import poly_fwm_ssbspec2d
     dig.set_trigger_period(2500)
     dig.set_naverages(1000)
     fwm_freqs =  np.linspace(-100e3, 100e3, 19)
@@ -688,7 +689,7 @@ if 0: # 2d poly ssbspec
     
     
 if 1: # poly ssbspec to find transition
-    from FWM import poly_fwm_ssbspec
+    from .FWM import poly_fwm_ssbspec
     dig.set_trigger_period(2500)
     dig.set_naverages(600)
 #    alice_comb = OCTlib.comb(cavity_infoA, [0], [.1], vary = [1], phases = [0])
@@ -723,7 +724,7 @@ if 1: # poly ssbspec to find transition
     
     
 if 0: # t2 under drive for stark shift
-    from AQEC import T2_AQEC
+    from .AQEC import T2_AQEC
     period = dig.get_trigger_period()
     naverages = dig.get_naverages()
     dig.set_trigger_period(3000)   
@@ -738,7 +739,7 @@ if 0: # t2 under drive for stark shift
         
         
 if 0: # time domain
-    from FWM import poly_time_domain
+    from .FWM import poly_time_domain
     
     dig.set_trigger_period(7500)
     dig.set_naverages(3000)
@@ -810,7 +811,7 @@ if 0: # time domain
     
     
 if 0: # SSB after fwm
-    from single_qubit import ssbspec
+    from .single_qubit import ssbspec
     dig.set_trigger_period(500)
     dig.set_naverages(500)
     times = [200e3]#np.arange(20e3, 40e3, 1e3)
@@ -849,7 +850,7 @@ if 0: #ab time domain
     
 #    MXG = mclient.instruments['MXG']
         
-    from FWM import ab_time_domain
+    from .FWM import ab_time_domain
 
 #    FWM_settings = {6: 2804.98e6}#{4.5:2805.05e6, 10.7:2804.62e6, 2:2805.13e6, 9.5: 2804.69e6}
     drive_amps = np.linspace(0.008, 0.016, 5)   # 0.0001 to mimic zero for pump without drive, probably easier to just turn SCres off
@@ -877,10 +878,10 @@ if 0: #ab time domain
     
     
 if 0: # check ro-storage crosstalk
-    from single_cavity import rocavspectroscopy_keysight
-    from single_cavity import cavdisp
-    from single_qubit import rabi
-    from single_qubit import T2measurement
+    from .single_cavity import rocavspectroscopy_keysight
+    from .single_cavity import cavdisp
+    from .single_qubit import rabi
+    from .single_qubit import T2measurement
 
     rofreq = 7318e6+50e6
 #    rofreq = 7320e6
@@ -927,7 +928,7 @@ if 0: # check ro-storage crosstalk
     bla
     
 if 0: # RO with FWM
-    from single_cavity import ROCavSpec_IQ
+    from .single_cavity import ROCavSpec_IQ
     freq_range = .1e6
     df = np.linspace(-freq_range, freq_range, 101)
     amps = np.linspace(.005,.3, 1)
@@ -954,7 +955,7 @@ if 0: # RO with FWM
     
     
 if 0: # Joint wigner t2
-    from FWM import CavT2_Joint
+    from .FWM import CavT2_Joint
     
 #    delay_t = 10e3
 #    post_delay = 10e3

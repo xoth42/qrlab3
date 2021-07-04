@@ -8,7 +8,8 @@ Created on Fri Jan 25 14:11:42 2019
 #Ebru: This piece of code is used in automated T1 - T2 flux sweep 
 
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib
 import matplotlib

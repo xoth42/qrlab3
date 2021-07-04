@@ -58,11 +58,11 @@ f = h5.File(filepath + hdf5_name, 'r')
 expgroup = f['/' + date]
 
 pl.figure('fit')
-for i, filename in enumerate(expgroup.keys()[40:]):
+for i, filename in enumerate(list(expgroup.keys())[40:]):
     
     
     exp = expgroup[filename]
-    y_keys = exp.keys()
+    y_keys = list(exp.keys())
     
         
     xs = exp[x_key].value
@@ -90,7 +90,7 @@ for i, filename in enumerate(expgroup.keys()[40:]):
     #    datas = realdata[0,:]+ 1j*imagdata[0,:]    
     result = lmfit.minimize(S21fit, params, args=(xs,ys))
     lmfit.report_fit(result.params)
-    print ('fit freq: %s +/- %s  '%(result.params['freq'].value/1e6,result.params['freq'].stderr/1e6))
+    print(('fit freq: %s +/- %s  '%(result.params['freq'].value/1e6,result.params['freq'].stderr/1e6)))
     freq1 = result.params['freq'].value
     
     fig.axes[0].plot(xs/1e6, -S21fit(result.params, xs, 0), label='fit freq: %s +/- %s MHz '%(result.params['freq'].value/1e6,result.params['freq'].stderr/1e6))

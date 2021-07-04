@@ -49,7 +49,7 @@ if 1:
     x = VNA.do_get_xaxis()
     traces = np.zeros((len(pump_powers), len(x)))
     for i in range(len(pump_powers)):
-        print(i+1, len(pump_powers))
+        print((i+1, len(pump_powers)))
         SCpump.do_set_power(pump_powers[i])
         time.sleep(1.5)
         traces[i] = take_vna()[1]
@@ -74,7 +74,7 @@ if 0:
     traces = np.zeros((len(pump_freqs), len(x)))
     pl.clf()
     for i in range(len(pump_freqs)):
-        print(i+1, len(pump_freqs))
+        print((i+1, len(pump_freqs)))
         SCpump.do_set_frequency(pump_freqs[i])
         time.sleep(1.5)
         traces[i] = take_vna()[1]
@@ -102,7 +102,7 @@ if 0:
     x = VNA.do_get_xaxis()
     power_traces = np.zeros((len(pump_powers), len(x)))
     for i in range(len(pump_powers)):
-        print(i+1, len(pump_powers))
+        print((i+1, len(pump_powers)))
         SCpump.do_set_power(pump_powers[i])
         time.sleep(1)
         power_traces[i] = take_vna()[1]

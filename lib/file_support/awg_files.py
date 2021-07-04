@@ -32,7 +32,7 @@ def clear_dot_awgs(path=None, delete='all'):#r'Z:\_AWG\Stabilizer'):
 
         if marked_for_death:
             os.remove(item)
-            print 'Deleting (%d/%d): %s' % (idx+1,len(dalist),item)
+            print('Deleting (%d/%d): %s' % (idx+1,len(dalist),item))
     pass
 
 NULL = chr(0)
@@ -60,19 +60,19 @@ class Dot_AWG_Load():
         self.parse_seqs()
 
         for load_attempt_no in range(MAX_ATTEMPTS):
-            print 'beginning attempt'
+            print('beginning attempt')
             try:
                 self.pull_stubborn_params()
-                print 'params pulled'
+                print('params pulled')
                 self.clear_awg_and_pull_data(delay_override)
-                print 'cleared awg and pulled data'
+                print('cleared awg and pulled data')
 
                 self.write_attempt_no = 0
                 self.write_wrapper()
-                print 'finished write wrapper'
+                print('finished write wrapper')
 
                 self.awg.load_dot_awg(self.path)
-                print 'loaded dog awg'
+                print('loaded dog awg')
                 if delay_override:
                     self.awg.wait_getID(delay=delay_override, timeout=delay_override)
                 self.restore_stubborn_params()
@@ -83,10 +83,10 @@ class Dot_AWG_Load():
             except Exception as e:
                 if load_attempt_no != MAX_ATTEMPTS - 1:
                     msg =  'Failed AWG load (%s), big loop, retrying. (%d/%d) ' % (e, load_attempt_no, MAX_ATTEMPTS)
-                    print msg
+                    print(msg)
                 else:
-                    print 'ABORTING, LOAD FAILURE'
-                    print e
+                    print('ABORTING, LOAD FAILURE')
+                    print(e)
                     raise Exception('AWG load failed')
 
     def clear_awg_and_pull_data(self, delay):
@@ -127,7 +127,7 @@ class Dot_AWG_Load():
     def add_waveform(self, idx, chan):
         '''Converts a sequence object into a set of .awg records or
         instructions.  Adds both waveform data and sequence data.'''
-        if not self.seqs.has_key(chan):
+        if chan not in self.seqs:
             return
 
         pulse = self.seqs[chan][idx]
@@ -138,7 +138,7 @@ class Dot_AWG_Load():
         pulse_trigger = pulse.get_trigger()
 
         m1_chan = '%dm1' % chan
-        if self.seqs.has_key(m1_chan) and self.seqs[m1_chan] != None:
+        if m1_chan in self.seqs and self.seqs[m1_chan] != None:
             m1 = self.seqs[m1_chan][idx]
             m1_name = m1.get_name()
             m1_data = m1.get_data()
@@ -147,7 +147,7 @@ class Dot_AWG_Load():
             m1_data = np.zeros(pulse_len)
 
         m2_chan = '%dm2' % chan
-        if self.seqs.has_key(m2_chan) and self.seqs[m2_chan] != None:
+        if m2_chan in self.seqs and self.seqs[m2_chan] != None:
             m2 = self.seqs[m2_chan][idx]
             m2_name = m2.get_name()
             m2_data = m2.get_data()
@@ -215,7 +215,7 @@ class Dot_AWG_Load():
         name += NULL #The Record_Name ends in NULL
         name_len = len(name)
 
-        if type(data) is types.StringType:
+        if type(data) is bytes:
             data = np.fromstring(data, dtype=np.uint8)
             data = np.concatenate([data,np.array([0,], dtype=np.uint8)])
         data_bytes = data.tostring()
@@ -231,7 +231,7 @@ class Dot_AWG_Load():
 
         try:
             initial_file_size = os.path.getsize(self.path)
-            print '.AWG file init: %d bytes' % initial_file_size
+            print('.AWG file init: %d bytes' % initial_file_size)
         except:
             raise Exception('Failed at reading init filezise')
 
@@ -242,7 +242,7 @@ class Dot_AWG_Load():
 
         try:
             final_file_size = os.path.getsize(self.path)
-            print '.AWG file final: %d bytes' % final_file_size
+            print('.AWG file final: %d bytes' % final_file_size)
         except:
             raise Exception('Failed at reading final filezise')
 
@@ -260,7 +260,7 @@ class Dot_AWG_Load():
 #                raise Exception('AWG writing failed twice.')
         except:
             if self.write_attempt_no < MAX_ATTEMPTS:
-                print 'Failed AWG write wrapper, retrying. (%d/%d) ' % (self.write_attempt_no, MAX_ATTEMPTS)
+                print('Failed AWG write wrapper, retrying. (%d/%d) ' % (self.write_attempt_no, MAX_ATTEMPTS))
                 self.write_wrapper()
             else:
                 self.write_attempt_no = 0
@@ -273,7 +273,7 @@ class Dot_AWG_Load():
 
     def check_seq_length(self):
         val = int(self.awg.ask('SEQ:LENG?'))
-        print 'NUM LOADED SEQS: %s' % (val,)
+        print('NUM LOADED SEQS: %s' % (val,))
         if val == 0:
             raise Exception('AWG is reporting seq len = 0')
 

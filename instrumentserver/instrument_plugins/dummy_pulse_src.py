@@ -1,4 +1,4 @@
-from instrument import Instrument
+from .instrument import Instrument
 import types
 
 class dummy_pulse_src(Instrument):
@@ -8,25 +8,25 @@ class dummy_pulse_src(Instrument):
         Instrument.__init__(self, name, tags=['dummy'])
 
         self.add_parameter('start',
-                type=types.FloatType,
+                type=float,
                 flags=Instrument.FLAG_GETSET | \
                 Instrument.FLAG_GET_AFTER_SET,
                 minval=0, maxval=1,
                 units='sec')
         self.add_parameter('length',
-                type=types.FloatType,
+                type=float,
                 flags=Instrument.FLAG_GETSET | \
                 Instrument.FLAG_GET_AFTER_SET,
                 minval=0, maxval=1,
                 units='sec')
         self.add_parameter('amplitude',
-                type=types.FloatType,
+                type=float,
                 flags=Instrument.FLAG_GETSET | \
                 Instrument.FLAG_GET_AFTER_SET,
                 minval=-3.8, maxval=3.8,
                 units='Volts')
         self.add_parameter('status',
-                type=types.StringType,
+                type=bytes,
                 option_list=('on', 'off'),
                 flags=Instrument.FLAG_GETSET | \
                 Instrument.FLAG_GET_AFTER_SET)
@@ -49,14 +49,14 @@ class dummy_pulse_src(Instrument):
 #### initialization related
 
     def reset(self):
-        print __name__, ': resetting instrument'
+        print(__name__, ': resetting instrument')
         self.set_start(2e-9)
         self.set_length(2e-9)
         self.set_amplitude(2)
         self.set_status('off')
 
     def get_all(self):
-        print __name__, ': reading all settings from instrument'
+        print(__name__, ': reading all settings from instrument')
         self.get_start()
         self.get_length()
         self.get_amplitude()

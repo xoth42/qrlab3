@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 from time import time, sleep
 import visa
 import types
@@ -62,9 +62,9 @@ class OxfordInstruments_Kelvinox_IGH(Instrument):
         self._visainstrument.stop_bits = 2
 
         #Add parameters
-        self.add_parameter('1K_pot_temp', type=types.FloatType,
+        self.add_parameter('1K_pot_temp', type=float,
             flags=Instrument.FLAG_GET)
-        self.add_parameter('mix_chamber_temp', type=types.FloatType,
+        self.add_parameter('mix_chamber_temp', type=float,
             flags=Instrument.FLAG_GET)
 
         # Add functions
@@ -102,7 +102,7 @@ class OxfordInstruments_Kelvinox_IGH(Instrument):
         sleep(20e-3) # wait for the device to be able to respond
         result = self._visainstrument.read()
         if result.find('?') >= 0:
-            print "Error: Command %s not recognized" % message
+            print("Error: Command %s not recognized" % message)
         else:
             return result
 

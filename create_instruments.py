@@ -5,7 +5,7 @@ if 1:
     os.system(r'C:\qrlab\start.bat')
     time.sleep(3)
 
-from mclient import instruments
+from .mclient import instruments
 
 #SC = instruments.create('SC', 'SC5511A', devid='100016B5')
 

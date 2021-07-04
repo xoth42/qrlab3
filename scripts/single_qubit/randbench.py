@@ -171,7 +171,7 @@ class rndm(Measurement1D):
         
         if seq is None:
             seq = Trigger(250)
-        self.xs = np.append(np.array(range(1,2*num_cal_points+1,1)),np.array(range(n_gates_start + 2*num_cal_points, n_gates_stop+2*num_cal_points +1, n_gates_step)))                                  
+        self.xs = np.append(np.array(list(range(1,2*num_cal_points+1,1))),np.array(list(range(n_gates_start + 2*num_cal_points, n_gates_stop+2*num_cal_points +1, n_gates_step))))                                  
         self.start = n_gates_start
         self.stop = n_gates_stop
         self.step = n_gates_step
@@ -190,8 +190,8 @@ class rndm(Measurement1D):
         
         rotation_list = rdm_rotations(self.stop)
         correction_list = correct_rdm_rot(rotation_list)
-        print rotation_list
-        print correction_list
+        print(rotation_list)
+        print(correction_list)
          
 #        for j in range(self.num_cal_points):
 #            s.append(self.seq)
@@ -286,9 +286,9 @@ class rndm(Measurement1D):
             
         s = self.get_sequencer(s)
         time_before_render = time.time()
-        print('before render', time_before_render)
+        print(('before render', time_before_render))
         seqs = s.render()
-        print('after render', time.time() - time_before_render)
+        print(('after render', time.time() - time_before_render))
 
         return seqs
 

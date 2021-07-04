@@ -145,7 +145,7 @@ amp_low = -np.min(ys) + np.average(ys[-11:-1])
 fftys = np.abs(np.fft.fft(ys - np.average(ys)))
 fftfs = np.fft.fftfreq(len(ys), xs[1]-xs[0])
 f0 = np.abs(fftfs[np.argmax(fftys)])
-print 'Delta f estimate: %.03f kHz' % (f0 * 1e6)
+print('Delta f estimate: %.03f kHz' % (f0 * 1e6))
 
 params = lmfit.Parameters()
 params.add('ofs', value=np.average(ys))

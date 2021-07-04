@@ -17,7 +17,7 @@
 
 import types
 from lib.dll_support import nidaq
-from instrument import Instrument
+from .instrument import Instrument
 import qt
 
 def _get_channel(devchan):
@@ -39,7 +39,7 @@ class NI_DAQ(Instrument):
             ch_in = _get_channel(ch_in)
             self.add_parameter(ch_in,
                 flags=Instrument.FLAG_GET,
-                type=types.FloatType,
+                type=float,
                 units='V',
                 tags=['measure'],
                 get_func=self.do_get_input,
@@ -49,7 +49,7 @@ class NI_DAQ(Instrument):
             ch_out = _get_channel(ch_out)
             self.add_parameter(ch_out,
                 flags=Instrument.FLAG_SET,
-                type=types.FloatType,
+                type=float,
                 units='V',
                 tags=['sweep'],
                 set_func=self.do_set_output,
@@ -59,25 +59,25 @@ class NI_DAQ(Instrument):
             ch_ctr = _get_channel(ch_ctr)
             self.add_parameter(ch_ctr,
                 flags=Instrument.FLAG_GET,
-                type=types.IntType,
+                type=int,
                 units='#',
                 tags=['measure'],
                 get_func=self.do_get_counter,
                 channel=ch_ctr)
             self.add_parameter(ch_ctr + "_src",
                 flags=Instrument.FLAG_SET | Instrument.FLAG_SOFTGET,
-                type=types.StringType,
+                type=bytes,
                 set_func=self.do_set_counter_src,
                 channel=ch_ctr)
 
         self.add_parameter('chan_config',
             flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-            type=types.StringType,
+            type=bytes,
             option_list=('Default', 'RSE', 'NRSE', 'Diff', 'PseudoDiff'))
 
         self.add_parameter('count_time',
             flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-            type=types.FloatType,
+            type=float,
             units='s')
 
         self.add_function('reset')

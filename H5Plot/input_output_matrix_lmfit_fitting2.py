@@ -151,7 +151,7 @@ if 1: # anisotropy model
         #x2_key = 'powers'
         exp = f[date[i]][title]
         #    exp = f['/' + date1 + '/' + time + '_' + experiment]
-        y_keys = exp.keys()
+        y_keys = list(exp.keys())
         #print(y_keys)
         
         #y_keys.remove(x_key)
@@ -286,8 +286,8 @@ if 1: # anisotropy model
         out_3_ = out_3_ + r_off + 1j*i_off
         S31_mag = abs(np.array(out_3_))
         S31_phase = np.angle(np.array(out_3_))
-        print(out_3[0])
-        print(out_3_[0])
+        print((out_3[0]))
+        print((out_3_[0]))
         return [out_3_,S31_mag,S31_phase]
     
     
@@ -320,7 +320,7 @@ if 1: # anisotropy model
     str_params = 'wa,wb,ga,ga2,wp,k,spl,wn,gamma1,gamma2,gamma4,A,phi,i_off,r_off,ani_diag,null_field,gab_scl,gab2_scl,ka,kb,ga_an,ga2_an'
     str_params = str_params.split(',')
     for i in range(len(param)):
-        print(str_params[i] + ' = ' + str(param[i]))
+        print((str_params[i] + ' = ' + str(param[i])))
     
 if 0: #isotropic YIG model
     
@@ -431,7 +431,7 @@ if 0: #isotropic YIG model
         #x2_key = 'powers'
         exp = f[date[i]][title]
         #    exp = f['/' + date1 + '/' + time + '_' + experiment]
-        y_keys = exp.keys()
+        y_keys = list(exp.keys())
         #print(y_keys)
         
         #y_keys.remove(x_key)
@@ -542,8 +542,8 @@ if 0: #isotropic YIG model
         out_3_ = out_3_ + r_off + 1j*i_off
         S31_mag = abs(np.array(out_3_))
         S31_phase = np.angle(np.array(out_3_))
-        print(out_3[0])
-        print(out_3_[0])
+        print((out_3[0]))
+        print((out_3_[0]))
         return [out_3_,S31_mag,S31_phase]
     
     
@@ -576,7 +576,7 @@ if 0: #isotropic YIG model
     str_params = 'wa,wb,ga,ga2,wp,k,spl,wn,gamma1,gamma2,gamma4,A,phi,i_off,r_off,gab_scl'
     str_params = str_params.split(',')
     for i in range(len(param)):
-        print(str_params[i] + ' = ' + str(param[i]))
+        print((str_params[i] + ' = ' + str(param[i])))
     
     
     

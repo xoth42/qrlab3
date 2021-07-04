@@ -6,7 +6,8 @@ Created on Wed Jul 31 23:42:09 2019
 """
 
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib
 import matplotlib.pyplot as plt
@@ -14,8 +15,8 @@ import matplotlib.pyplot as plt
 fxa01 = mclient.get_qubit_info('fxa01')
 fxb01 = mclient.get_qubit_info('fxb01')
 
-from single_qubit import T1measurement
-from single_qubit import T2measurement
+from .single_qubit import T1measurement
+from .single_qubit import T2measurement
 
 for i in range(5):
     t1a = T1measurement.T1Measurement(fxa01, np.concatenate((np.linspace(0, 96e3, 25), np.linspace(100e3, 450e3, 36))), 

@@ -15,9 +15,9 @@ if 1:
     err1 = std1/np.sqrt(len(qubit1))
     err2 = std2/np.sqrt(len(qubit2))
 
-    print(np.mean(qubit1)*(6.0/7.0))
+    print((np.mean(qubit1)*(6.0/7.0)))
     print(err1)
-    print(np.mean(qubit2)*(6.0/7.0))
+    print((np.mean(qubit2)*(6.0/7.0)))
     print(err2)
 
 

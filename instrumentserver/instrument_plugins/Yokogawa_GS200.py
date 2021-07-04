@@ -7,7 +7,7 @@ import time
 import visa
 import numpy as np
 from visainstrument import VisaInstrument
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import logging
 class YokoException(Exception):
@@ -18,11 +18,11 @@ class Yokogawa_GS200(VisaInstrument):
         super(Yokogawa_GS200, self).__init__(name, address=address, term_chars='\n', **kwargs)
 
         self.add_visa_parameter('output_state', ':OUTP?', ':OUTP %d',
-            type=types.BooleanType, flags=Instrument.FLAG_GETSET)
+            type=bool, flags=Instrument.FLAG_GETSET)
         self.add_visa_parameter('source_type', ':SOUR:FUNC?', ':SOUR:FUNC %s',
-            type=types.StringType, flags=Instrument.FLAG_GETSET,
+            type=bytes, flags=Instrument.FLAG_GETSET,
             option_list=('VOLT', 'CURR'))
-        self.add_parameter('current_range', type=types.StringType,
+        self.add_parameter('current_range', type=bytes,
                            flags=Instrument.FLAG_SET,
                            option_list=('MIN', 'MAX', 'UP', 'DOWN', '1E-3',
                                         '10E-3', '100E-3', '200E-3'),
@@ -32,27 +32,27 @@ class Yokogawa_GS200(VisaInstrument):
 #                           option_list=('MIN', 'MAX', 'UP', 'DOWN', '1E-3',
 #                                        '10E-3', '100E-3', '1E+0', '10E+0', '30E+0'),
 #                           )
-        self.add_parameter('source_range', type=types.StringType,
+        self.add_parameter('source_range', type=bytes,
                            flags=Instrument.FLAG_GET)
 
         self.add_visa_parameter('slope', ':PROG:SLOP?', ':PROG:SLOP %s',
-            type=types.FloatType, flags=Instrument.FLAG_GETSET,
+            type=float, flags=Instrument.FLAG_GETSET,
             minval=0, maxval=3600)
         self.add_visa_parameter('repeat', ':PROG:REP?', ':PROG:REP %s',
-            type=types.IntType, flags=Instrument.FLAG_GETSET)
+            type=int, flags=Instrument.FLAG_GETSET)
         self.add_visa_parameter('voltage_limit', 'SOUR:PROT:VOLT?', 'SOUR:PROT:VOLT %s',
-            type=types.FloatType, flags=Instrument.FLAG_GETSET,
+            type=float, flags=Instrument.FLAG_GETSET,
             units='V')
         self.add_visa_parameter('current_limit', 'SOUR:PROT:CURR?', 'SOUR:PROT:CURR %s',
-            type=types.FloatType, flags=Instrument.FLAG_GETSET,
+            type=float, flags=Instrument.FLAG_GETSET,
             units='A', minval=-10e-3, maxval=10e-3)
-        self.add_parameter('voltage', type=types.FloatType,
+        self.add_parameter('voltage', type=float,
                            flags=Instrument.FLAG_GETSET,
                            units='V')
-        self.add_parameter('current', type=types.FloatType,
+        self.add_parameter('current', type=float,
                            flags=Instrument.FLAG_GETSET,
                            units='A')
-        self.add_parameter('source_level', type=types.FloatType,
+        self.add_parameter('source_level', type=float,
                            flags=Instrument.FLAG_GET)
 
         #self.get_all()
@@ -76,7 +76,7 @@ class Yokogawa_GS200(VisaInstrument):
         return self.do_get_source_level()
 
     def do_set_current(self, level, range='AUTO'):
-        print level, self.get_current_limit()
+        print(level, self.get_current_limit())
         if np.abs(level) > np.abs(self.get_current_limit()):
             raise YokoException('%0.6f is out of current limit!')
         self.set_source_type('CURR')
@@ -146,7 +146,7 @@ class Yokogawa_GS200(VisaInstrument):
 
         else:
             # voltage is out of range
-            print 'voltage is out of range'
+            print('voltage is out of range')
             range = -1
         return range
 

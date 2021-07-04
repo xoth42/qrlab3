@@ -132,7 +132,7 @@ x_key = 'freqs'
 #x2_key = 'powers'
 exp = f[date][title]
 #    exp = f['/' + date1 + '/' + time + '_' + experiment]
-y_keys = exp.keys()
+y_keys = list(exp.keys())
 #print(y_keys)
 
 #y_keys.remove(x_key)
@@ -175,7 +175,7 @@ params.add('null_field', value = .05, vary = False)
 params.add('k',value = 8, vary = False)
 params.add('phi',value = 2, vary = True)
 #freqs = freq/1e9
-print 'data seze %s'%(len(datas))
+print('data seze %s'%(len(datas)))
 result = lmfit.minimize(S31_resid, params, args=(freq, datas))
 lmfit.report_fit(result.params)
 
@@ -224,8 +224,8 @@ def S31_model(gamma1,gamma2,gamma3,gamma4,wa,wb,wp,wn,ga,ga2,gb,gb2,spl,delta,A,
     out_3_ = np.conj(out_3)
     S31_mag = abs(np.array(out_3_))
     S31_phase = np.angle(np.array(out_3_))
-    print(out_3[0])
-    print(out_3_[0])
+    print((out_3[0]))
+    print((out_3_[0]))
     return [out_3_,S31_mag,S31_phase]
 
 

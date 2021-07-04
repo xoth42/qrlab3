@@ -6,7 +6,8 @@ Created on Wed Dec 16 11:28:59 2020
 """
 
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib
 import matplotlib
@@ -68,7 +69,7 @@ mixer_info1 = mclient.get_qubit_info('mixer_info1')
 mixer_info2 = mclient.get_qubit_info('mixer_info2')
 
 
-from single_qubit import ssbspec_mixer
+from .single_qubit import ssbspec_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
 for i in range(1):        
 #        RObrick.do_set_power(i)
@@ -82,7 +83,7 @@ for i in range(1):
     
     
     
-from single_qubit import rabi_mixer
+from .single_qubit import rabi_mixer
 import time
 update_proj =False
 seq = sequencer.Sequence([sequencer.Trigger(400),sequencer.Delay(10)])
@@ -103,7 +104,7 @@ for i in range(1):
 
 
     
-from single_qubit import T1measurement_mixer
+from .single_qubit import T1measurement_mixer
 
 #    t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 250e3, 121), 
 #    seq = sequencer.Join([sequencer.Trigger(250), sequencer.Constant(2000, 1, chan='3m1'), sequencer.Delay(250),
@@ -118,7 +119,7 @@ t1.measure_keysight()
 
 
 
-from single_qubit import T2measurement_mixer
+from .single_qubit import T2measurement_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0)])
 for i in range(1):
     t2 = T2measurement_mixer.T2Measurement_mixer(qubit2_info, mixer_info1, mixer_info2, np.linspace(0, 5e3, 101), 
@@ -131,7 +132,7 @@ for i in range(1):
     t2.measure_keysight()
     
     
-from single_qubit import T2measurement_mixer
+from .single_qubit import T2measurement_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0)])
 for i in range(1):
     t2 = T2measurement_mixer.T2Measurement_mixer(qubit2_info, mixer_info1, mixer_info2, np.linspace(0, 5e3, 101), 
@@ -157,7 +158,7 @@ mixer_info2_set.set_pi_amp(.12)
 mixer_info1 = mclient.get_qubit_info('mixer_info1')
 mixer_info2 = mclient.get_qubit_info('mixer_info2')
    
-from single_qubit import ssbspec_mixer
+from .single_qubit import ssbspec_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
 for i in range(1):        
 #        RObrick.do_set_power(i)
@@ -171,7 +172,7 @@ for i in range(1):
     
     
     
-from single_qubit import rabi_mixer
+from .single_qubit import rabi_mixer
 import time
 update_proj =False
 seq = sequencer.Sequence([sequencer.Trigger(400),sequencer.Delay(10)])
@@ -192,7 +193,7 @@ for i in range(1):
 
 
     
-from single_qubit import T1measurement_mixer
+from .single_qubit import T1measurement_mixer
 
 #    t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 250e3, 121), 
 #    seq = sequencer.Join([sequencer.Trigger(250), sequencer.Constant(2000, 1, chan='3m1'), sequencer.Delay(250),
@@ -207,7 +208,7 @@ t1.measure_keysight()
 
 
 
-from single_qubit import T2measurement_mixer
+from .single_qubit import T2measurement_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0)])
 for i in range(1):
     t2 = T2measurement_mixer.T2Measurement_mixer(qubit_info, mixer_info1, mixer_info2, np.linspace(0, 0.5e3, 101), 
@@ -220,7 +221,7 @@ for i in range(1):
     t2.measure_keysight()
     
     
-from single_qubit import T2measurement_mixer
+from .single_qubit import T2measurement_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0)])
 for i in range(1):
     t2 = T2measurement_mixer.T2Measurement_mixer(qubit_info, mixer_info1, mixer_info2, np.linspace(0, 0.5e3, 101), 

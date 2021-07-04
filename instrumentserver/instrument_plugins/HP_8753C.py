@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import visa
 import types
 import logging
@@ -68,11 +68,11 @@ class HP_8753C(Instrument):
         self._visainstrument.term_chars = ''
         # BEWARE! need to end strings with ';' yourself!
 
-        self.add_parameter('IF_Bandwidth', flags=Instrument.FLAG_GETSET, type=types.IntType)
-        self.add_parameter('numpoints', flags=Instrument.FLAG_GETSET, type=types.IntType)
-        self.add_parameter('start_freq', flags=Instrument.FLAG_GETSET, type=types.FloatType)
-        self.add_parameter('stop_freq', flags=Instrument.FLAG_GETSET, type=types.FloatType)
-        self.add_parameter('power', flags=Instrument.FLAG_GETSET, type=types.FloatType)
+        self.add_parameter('IF_Bandwidth', flags=Instrument.FLAG_GETSET, type=int)
+        self.add_parameter('numpoints', flags=Instrument.FLAG_GETSET, type=int)
+        self.add_parameter('start_freq', flags=Instrument.FLAG_GETSET, type=float)
+        self.add_parameter('stop_freq', flags=Instrument.FLAG_GETSET, type=float)
+        self.add_parameter('power', flags=Instrument.FLAG_GETSET, type=float)
 
         self.add_function('set_freq_3GHz')
         self.add_function('set_freq_6GHz')
@@ -119,34 +119,34 @@ class HP_8753C(Instrument):
 
         sl = 1
 
-        print 'resetting'
+        print('resetting')
         self.reset()
         sleep(sl)
 
-        print 'set trigger hold'
+        print('set trigger hold')
         self.set_trigger_hold()
         sleep(sl)
 
-        print 'set format logm'
+        print('set format logm')
         self.set_format_logm()
         sleep(sl)
-        print 'set measurement S21'
+        print('set measurement S21')
         self.set_measurement_S21()
         sleep(sl)
 
-        print 'set start freq'
+        print('set start freq')
         self.set_start_freq(10e6)
         sleep(sl)
-        print 'set stop freq'
+        print('set stop freq')
         self.set_stop_freq(3e9)
         sleep(sl)
-        print 'set IF bandwidth'
+        print('set IF bandwidth')
         self.set_IF_Bandwidth(3000)
         sleep(sl)
-        print 'set numpoints'
+        print('set numpoints')
         self.set_numpoints(401)
         sleep(sl)
-        print 'set power'
+        print('set power')
         self.set_power(0.0)
         sleep(sl)
 
@@ -236,12 +236,12 @@ class HP_8753C(Instrument):
         freqs = numpy.linspace(startfreq,stopfreq,numpoints)
         sweep_time = numpoints / IF_Bandwidth
 
-        print 'sending trigger to network analyzer, and wait to finish'
-        print 'estimated waiting time: %.2f s' % sweep_time
+        print('sending trigger to network analyzer, and wait to finish')
+        print('estimated waiting time: %.2f s' % sweep_time)
         self.send_trigger()
         qt.msleep(sweep_time)
 
-        print 'reading out network analyzer'
+        print('reading out network analyzer')
         reply = self.read()
         reply = numpy.array(reply)
 
@@ -265,7 +265,7 @@ class HP_8753C(Instrument):
         d.add_coordinate('freq [Hz]')
         d.add_value('S_ij [dB]')
         d.create_file(filepath=filepath)
-        d.add_data_point(zip(freqs, reply))
+        d.add_data_point(list(zip(freqs, reply)))
         d.close_file()
         if plot:
             p = qt.plot(d, name='netan', clear=True)

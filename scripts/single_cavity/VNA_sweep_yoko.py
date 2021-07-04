@@ -84,7 +84,7 @@ class Sweep_YOKO(Measurement1D):
         VNA.set_points(len(self.freqs))
         Freqs = VNA.do_get_xaxis()
         if not (Freqs == self.freqs).all():
-            print 'error in setting frequency'
+            print('error in setting frequency')
 #            break
         self.freqdata[0,:] = Freqs
         self.voltdata[0,:] = self.volts
@@ -131,13 +131,13 @@ class Sweep_YOKO(Measurement1D):
                 try:
                     while not wait.is_valid():
                         if a % 10 == 0:
-                            print 'async', a 
+                            print('async', a) 
                         a= a + 1
                         
     #                    time.sleep(0.1)
                         objsh.helper.backend.main_loop(100)
                 except:
-                    print 'error with async'
+                    print('error with async')
     #                VNA.set_interrupt(True)
     #        '''
         
@@ -176,9 +176,9 @@ class Sweep_YOKO(Measurement1D):
     
                 
                 count = count + ave
-                print '%s averages done' %(count)
+                print('%s averages done' %(count))
             
-            print 'volt = %.03fV done ' % (volt)
+            print('volt = %.03fV done ' % (volt))
 
 
 #        print 'self.ampdata\n', self.ampdata

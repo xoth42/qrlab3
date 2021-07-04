@@ -3,7 +3,7 @@ from ctypes import *
 from math import pow, log, ceil
 
 class SD_Object :
-	print(os.name)
+	print((os.name))
 	__signadyne_dll = cdll.LoadLibrary("SD_DLL_009600" if os.name == 'nt' else "libSD_DLL.so")
 
 	def __init__(self) :

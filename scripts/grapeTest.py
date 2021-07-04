@@ -13,7 +13,8 @@ Created on Thu Apr 26 14:53:09 2018
 """
 
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib, OCTlib
 #import matplotlib.pyplot as plt
@@ -74,7 +75,7 @@ if 0: # W function of OCT prepared states
     bla
 
 if 0: # GRAPE ge test
-    from GRAPE import GRAPE_Rabi
+    from .GRAPE import GRAPE_Rabi
 
     tr = GRAPE_Rabi.GRAPE_Rabi(qubit_info, np.linspace(-1e2, 1e2, 51), 
                    r'C:\qrlab\pulseseq\CSVPulses\gaussian_envelope_t_g_to_e_400ns.csv',
@@ -85,7 +86,7 @@ if 0: # GRAPE ge test
     bla
     
 if 0: # GRAPE displacement test
-    from GRAPE import GRAPE_CavDisp
+    from .GRAPE import GRAPE_CavDisp
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
     seq = sequencer.Trigger(250)
 
@@ -100,7 +101,7 @@ if 0: # GRAPE displacement test
         
     
 if 0: # GRAPE test number splitting    
-    from single_qubit import ssbspec
+    from .single_qubit import ssbspec
     seq = sequencer.Join([sequencer.Trigger(200), lib.mod4_prep('-z')])
 
     spec = ssbspec.SSBSpec(qubit_info, np.concatenate((
@@ -115,7 +116,7 @@ if 0: # GRAPE test number splitting
     bla
 
 if 0: # grape optimize
-    from GRAPE import GRAPE_optimize
+    from .GRAPE import GRAPE_optimize
 
     logic_1 = sequencer.Join([sequencer.Trigger(200), ge(np.pi, 0)]) # Fock 3+7
     logic_plus = sequencer.Join([sequencer.Trigger(200), ge(np.pi/2, np.pi/2)]) #vertical cat
@@ -132,7 +133,7 @@ if 0: # grape optimize
     bla
 
 if 0: # grape optimize time shift
-    from GRAPE import grape_timeshift
+    from .GRAPE import grape_timeshift
 
     seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi/2, np.pi/2)])
     ts = grape_timeshift.grape_timeshift(qubit_info, qubit_a2, cavity_infoA, np.arange(1, 28),
@@ -141,7 +142,7 @@ if 0: # grape optimize time shift
     bla
     
 if 1: # encode-decode optimize
-    from GRAPE import encode_decode
+    from .GRAPE import encode_decode
     dig.set_trigger_period(2500)
     dig.set_naverages(3000)
     for state in ['+z', '-z', '-x']:
@@ -210,7 +211,7 @@ if 0: # Wigner line cut
                                                fit = True
                                                )
         chi += [wp.measure_keysight()]
-    print chi
+    print(chi)
 
 
     bla
@@ -218,7 +219,7 @@ if 0: # Wigner line cut
     
     
 if 0: # bloch characterization
-    from AQEC import time_bloch
+    from .AQEC import time_bloch
     qubit_bloch = [sequencer.Trigger(200),
                    sequencer.Join([sequencer.Trigger(200), ge(np.pi/2, 0)]),
                    sequencer.Join([sequencer.Trigger(200), ge(np.pi/2, np.pi/2)]),

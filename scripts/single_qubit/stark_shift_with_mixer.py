@@ -52,7 +52,7 @@ def analysis(meas, data=None, fig=None):
 #    datas = realdata[0,:]+ 1j*imagdata[0,:]    
     result = lmfit.minimize(Gaussfit, params, args=(-xs,ys))
     lmfit.report_fit(result.params)
-    print ('fit freq: %s +/- %s  '%(result.params['freq'].value/1e6,result.params['freq'].stderr/1e6))
+    print(('fit freq: %s +/- %s  '%(result.params['freq'].value/1e6,result.params['freq'].stderr/1e6)))
 
 
     fig.axes[0].plot(-xs/1e6, -Gaussfit(result.params, -xs, 0), label='fit freq: %.03f +/- %.03f MHz \n FWHM = %.03f +/- %.03f MHz'%(result.params['freq'].value/1e6,result.params['freq'].stderr/1e6,result.params['kappa'].value/1e6,result.params['kappa'].stderr/1e6))

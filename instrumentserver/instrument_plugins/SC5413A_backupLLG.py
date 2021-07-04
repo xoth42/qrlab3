@@ -14,7 +14,7 @@ import ctypes
 import ctypes.wintypes as win
 import types
 import numpy as np
-from instrument import Instrument
+from .instrument import Instrument
 import logging
 
 SUCCESS = 0
@@ -26,7 +26,7 @@ try:
     lb_dll = ctypes.windll.LoadLibrary(LB_DLL)
     #lb_dll = ctypes.cdll.LoadLibrary(LB_DLL)
     
-except Exception, e:
+except Exception as e:
     s = 'Unable to load SignalCore DLL, please put sc5413a.dll in instrumentserver directory ' + str(e)
     raise ValueError(s)
     
@@ -39,13 +39,13 @@ class deviceInfo_t(ctypes.Structure):
                 ('manDate', ctypes.c_uint)]
     
     def print_params(self):
-        print('\ndevice info params:\n'
+        print(('\ndevice info params:\n'
               + 'productSerialNumber = ' + str(self.productSerialNumber) + '\n'
               + 'rfModuleSerialNumber = ' + str(self.rfModuleSerialNumber) + '\n'
               + 'firmwareRevision = ' + str(self.firmwareRevision) + '\n'
               + 'hardwareRevision = ' + str(self.hardwareRevision) + '\n'
               + 'calDate = ' + str(self.calDate) + '\n'
-              + 'manDate = ' + str(self.manDate))
+              + 'manDate = ' + str(self.manDate)))
               
         
 class deviceStatus_t(ctypes.Structure):
@@ -55,11 +55,11 @@ class deviceStatus_t(ctypes.Structure):
                      ('deviceAccess', ctypes.c_ubyte)]
     
     def print_params(self):
-        print('\ndevice status params:\n'
+        print(('\ndevice status params:\n'
               + 'rfAmpEnable = ' + str(self.rfAmpEnable) + '\n'
               + 'rfPath = ' + str(self.rfPath) + '\n'
               + 'loEnable = ' + str(self.loEnable) + '\n'
-              + 'deviceAccess = ' + str(self.deviceAccess))        
+              + 'deviceAccess = ' + str(self.deviceAccess)))        
 
 NUM_MAX_DEVICES = 5
 ID_BUFFER_SIZE = 8
@@ -78,7 +78,7 @@ class SC5413A(Instrument):
         
         # This is the code Josh wrote
         string_buffers = [ctypes.create_string_buffer(ID_BUFFER_SIZE) for i in range(NUM_MAX_DEVICES)]
-        pointers = (ctypes.c_char_p*NUM_MAX_DEVICES)(*map(ctypes.addressof, string_buffers))
+        pointers = (ctypes.c_char_p*NUM_MAX_DEVICES)(*list(map(ctypes.addressof, string_buffers)))
         results = [s.value for s in string_buffers]
         self.dev_num = ctypes.c_char_p(devid)
         lb_dll.sc5413a_OpenDevice.restype = ctypes.POINTER(ctypes.c_int)
@@ -126,19 +126,19 @@ class SC5413A(Instrument):
 #            flags=Instrument.FLAG_GET, value=self._serialno)
 #        self.add_parameter('handle', type=types.IntType,
 #            flags=Instrument.FLAG_GET, value=self._handle)
-        self.add_parameter('frequency', type=types.FloatType,
+        self.add_parameter('frequency', type=float,
             flags=Instrument.FLAG_SET, units='Hz',
             minval=self._min_freq, maxval=self._max_freq,
             display_scale=6, value = deviceParams.ch1Frequency)
-        self.add_parameter('gain', type=types.FloatType,
+        self.add_parameter('gain', type=float,
             flags=Instrument.FLAG_SET, units='dBm',
             minval=self._min_gain, maxval=self._max_gain,
             display_scale=6, value = deviceParams.ch2Frequency)
-        self.add_parameter('amplifier', type=types.BooleanType,
+        self.add_parameter('amplifier', type=bool,
             flags=Instrument.FLAG_SET, value = True)
-        self.add_parameter('path', type=types.BooleanType,
+        self.add_parameter('path', type=bool,
             flags=Instrument.FLAG_SET, value = True)
-        self.add_parameter('lo_output', type=types.BooleanType,
+        self.add_parameter('lo_output', type=bool,
             flags=Instrument.FLAG_SET, value = True)
 
         

@@ -20,7 +20,7 @@
 ## by: Randy
 ## Added 04/27/2021
 
-from instrument import Instrument
+from .instrument import Instrument
 import pyvisa
 import types
 import logging
@@ -60,21 +60,21 @@ class Keithley2400(Instrument):
         self.rm = pyvisa.ResourceManager()
         self._visainstrument = self.rm.open_resource(address)
         self._address = address
-        print ' Keithley timeout set to: %s s'%self._visainstrument.timeout
+        print(' Keithley timeout set to: %s s'%self._visainstrument.timeout)
 
     # add parameters
 
 
-        self.add_parameter('status', type=types.StringType,
+        self.add_parameter('status', type=bytes,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET)
 
-        self.add_parameter('current', type=types.FloatType,
+        self.add_parameter('current', type=float,
                 flags=Instrument.FLAG_GETSET, units = 'Amps')
         
-        self.add_parameter('curr_limit', type=types.FloatType,
+        self.add_parameter('curr_limit', type=float,
                            flags=Instrument.FLAG_GETSET, units = 'Amps')
 
-        self.add_parameter('voltage', type=types.FloatType,
+        self.add_parameter('voltage', type=float,
                 flags=Instrument.FLAG_GETSET, units = 'Volts')
 
 
@@ -196,7 +196,7 @@ class Keithley2400(Instrument):
             self._visainstrument.write(':SOUR:CURR:LEV %s A' % (1.*k)/n_steps*dI+cur_val)
             qt.msleep(Ires/ramp_speed)
             if(int(self._visainstrument.query(':SENS:VOLT:PROT:TRIP?')) == 0):
-                print 'Compliance limit of %s reached, stopping ramp \n' % self._visainstrument.query(':SENS:VOLT:PROT:TRIP?')
+                print('Compliance limit of %s reached, stopping ramp \n' % self._visainstrument.query(':SENS:VOLT:PROT:TRIP?'))
                 self._visainstrument.write(':SOUR:CURR:LEV %s A' % 0.0)
                 break
 
@@ -246,7 +246,7 @@ class Keithley2400(Instrument):
             self._visainstrument.write(':SOUR:VOLT:LEV %s V' % (1.*k)/n_steps*dV+cur_val)
             qt.msleep(Vres/ramp_speed)
             if(int(self._visainstrument.query(':SENS:CURR:PROT:TRIP?')) == 0):
-                print 'Compliance limit of %s reached, stopping ramp \n' % self._visainstrument.query(':SENS:CURR:PROT:TRIP?')
+                print('Compliance limit of %s reached, stopping ramp \n' % self._visainstrument.query(':SENS:CURR:PROT:TRIP?'))
                 self._visainstrument.write(':SOUR:VOLT:LEV %s V' % 0.0)
                 break
 

@@ -16,7 +16,7 @@ import time
 import ctypes
 import types
 import numpy as np
-from instrument import Instrument
+from .instrument import Instrument
 import logging
 
 SUCCESS = 0
@@ -28,7 +28,7 @@ try:
     lb_dll = ctypes.windll.LoadLibrary(LB_DLL)
     # lb_dll = ctypes.cdll.LoadLibrary(LB_DLL)
 
-except Exception, e:
+except Exception as e:
     s = 'Unable to load LabBrick DLL, please put vnx_fmsynth.dll in instrumentserver directory ' + str(
         e)
     raise ValueError(s)
@@ -145,9 +145,9 @@ class LabBrick_RFSource(Instrument):
 
         if serial is not None:
             serial = int(serial)
-            print find_labbricks()
-            for did, props in find_labbricks().iteritems():
-                print "Device ID and serial numbers are:", did, props[0], "\n"
+            print(find_labbricks())
+            for did, props in find_labbricks().items():
+                print("Device ID and serial numbers are:", did, props[0], "\n")
                 if props[0] == serial:
                     devid = did
                     break
@@ -162,8 +162,8 @@ class LabBrick_RFSource(Instrument):
 
         val = self._init()
         if val is not SUCCESS:
-            print 'labbrick (sn: %d) device already opened, reopening' % \
-                  (self._serialno)
+            print('labbrick (sn: %d) device already opened, reopening' % \
+                  (self._serialno))
             self._close()
             time.sleep(0.01)
             self._init()
@@ -175,26 +175,26 @@ class LabBrick_RFSource(Instrument):
             self._min_freq / 1e6, self._max_freq / 1e6))
         logging.debug('Power range: %.01f - %.01f dBm' % (
             self._min_power, self._max_power))
-        self.add_parameter('serial', type=types.IntType,
+        self.add_parameter('serial', type=int,
                            flags=Instrument.FLAG_GET, value=self._serialno)
-        self.add_parameter('model', type=types.StringType,
+        self.add_parameter('model', type=bytes,
                            flags=Instrument.FLAG_GET, value=self._modelname)
 
-        self.add_parameter('rf_on', type=types.BooleanType,
+        self.add_parameter('rf_on', type=bool,
                            flags=Instrument.FLAG_GETSET)
 #        self.add_parameter('ext_locked', type=types.BooleanType,
 #                           flags=Instrument.FLAG_GET)
-        self.add_parameter('fast_pulse_option', type=types.BooleanType,
+        self.add_parameter('fast_pulse_option', type=bool,
                            flags=Instrument.FLAG_GET)
-        self.add_parameter('power', type=types.FloatType,
+        self.add_parameter('power', type=float,
                            flags=Instrument.FLAG_GETSET, units='dBm',
                            minval=self._min_power, maxval=self._max_power,
                            format='%.02f')
-        self.add_parameter('frequency', type=types.FloatType,
+        self.add_parameter('frequency', type=float,
                            flags=Instrument.FLAG_GETSET, units='Hz',
                            minval=self._min_freq, maxval=self._max_freq,
                            display_scale=6)
-        self.add_parameter('use_extref', type=types.BooleanType,
+        self.add_parameter('use_extref', type=bool,
                            flags=Instrument.FLAG_GETSET)
         
 #        self.add_parameter('pulse_on', type=types.BooleanType,
@@ -202,7 +202,7 @@ class LabBrick_RFSource(Instrument):
 
 #        self.add_parameter('internal_pulse_stat', type=types.BooleanType,
 #                           flags=Instrument.FLAG_GETSET)
-        self.add_parameter('external_pulse_stat', type=types.BooleanType,
+        self.add_parameter('external_pulse_stat', type=bool,
                            flags=Instrument.FLAG_GETSET)
         self.external_mod_status = False
         if kwargs.pop('reset', False):

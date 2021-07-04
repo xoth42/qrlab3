@@ -1,5 +1,5 @@
 import numpy as np
-import common
+from . import common
 from scipy.special import wofz as fad
 
 def func(xs, x0=10, sigma=0, gamma=0, amp=1, ofs=0):

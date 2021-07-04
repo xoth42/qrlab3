@@ -115,9 +115,9 @@ class FWM_f0g1(Measurement1D):
                 while not ret.is_valid():
                     objsh.helper.backend.main_loop(100)
                     dig.get_naverages()
-            except Exception, e:
+            except Exception as e:
                 dig.set_interrupt(True)
-                print 'Error: %s' % (str(e), )
+                print('Error: %s' % (str(e), ))
                 return
             dig.release_buf()
             IQ = np.average(ret.get())
@@ -125,8 +125,8 @@ class FWM_f0g1(Measurement1D):
             
             amps.append(np.abs(IQ))
             phases.append(np.angle(IQ, deg=True))
-            print 'F = %.03f MHz --> amp = %.1f, angle = %.01f' % (freq / 1e6, np.abs(IQ), 
-                                                                   np.angle(IQ, deg=True))
+            print('F = %.03f MHz --> amp = %.1f, angle = %.01f' % (freq / 1e6, np.abs(IQ), 
+                                                                   np.angle(IQ, deg=True)))
         
         if self.bgcor:
             self.fwm_gen.set_rf_on(False)
@@ -144,17 +144,17 @@ class FWM_f0g1(Measurement1D):
             try:
                 while not ret.is_valid():
                     objsh.helper.backend.main_loop(100)
-            except Exception, e:
+            except Exception as e:
                 dig.set_interrupt(True)
-                print 'Error: %s' % (str(e), )
+                print('Error: %s' % (str(e), ))
                 return
             dig.release_buf()
             
             self.fwm_gen.set_rf_on(True)
             
             IQ_bg = np.average(ret.get())
-            print('background amp', np.abs(IQ_bg))
-            print('background phase', np.angle(IQ_bg, deg=True))
+            print(('background amp', np.abs(IQ_bg)))
+            print(('background phase', np.angle(IQ_bg, deg=True)))
 
             self.ampdata[:] = amps - np.abs(IQ_bg)
             self.phasedata[:] = phases - np.angle(IQ_bg, deg=True)

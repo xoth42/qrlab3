@@ -90,7 +90,7 @@ axis = VNA.do_get_xaxis()
 I = I + step
 #axis = axis[:,None].T
 while np.abs(I) <= np.abs(I_f): #current field
-    print I
+    print(I)
     
 #    Yoko.do_set_source_range('10E+0') # fixes range problem
 #    Yoko.set_voltage_ramp(level, slew = 10) # slew is rate of change of voltage
@@ -154,7 +154,7 @@ pl.show()
 
 vlist = np.arange(I,I_i,-step) 
 for i in vlist[1:]:
-    print i
+    print(i)
     Yoko.do_set_current(i)
     time.sleep(0.1)
 
@@ -214,7 +214,7 @@ axis = VNA.do_get_xaxis()
 I = I + step
 #axis = axis[:,None].T
 while np.abs(I) <= np.abs(I_f): #current field
-    print I
+    print(I)
     
 #    Yoko.do_set_source_range('10E+0') # fixes range problem
 #    Yoko.set_voltage_ramp(level, slew = 10) # slew is rate of change of voltage
@@ -278,7 +278,7 @@ pl.show()
 
 vlist = np.arange(I,I_i,-step) 
 for i in vlist[1:]:
-    print i
+    print(i)
     Yoko.do_set_current(i)
     time.sleep(0.1)
 
@@ -337,7 +337,7 @@ axis = VNA.do_get_xaxis()
 I = I + step
 #axis = axis[:,None].T
 while np.abs(I) <= np.abs(I_f): #current field
-    print I
+    print(I)
     
 #    Yoko.do_set_source_range('10E+0') # fixes range problem
 #    Yoko.set_voltage_ramp(level, slew = 10) # slew is rate of change of voltage
@@ -401,7 +401,7 @@ pl.show()
 
 vlist = np.arange(I,I_i,-step) 
 for i in vlist[1:]:
-    print i
+    print(i)
     Yoko.do_set_current(i)
     time.sleep(0.1)
 
@@ -460,7 +460,7 @@ axis = VNA.do_get_xaxis()
 I = I + step
 #axis = axis[:,None].T
 while np.abs(I) <= np.abs(I_f): #current field
-    print I
+    print(I)
     
 #    Yoko.do_set_source_range('10E+0') # fixes range problem
 #    Yoko.set_voltage_ramp(level, slew = 10) # slew is rate of change of voltage
@@ -524,6 +524,6 @@ pl.show()
 
 vlist = np.arange(I,I_i,-step) 
 for i in vlist[1:]:
-    print i
+    print(i)
     Yoko.do_set_current(i)
     time.sleep(0.1)

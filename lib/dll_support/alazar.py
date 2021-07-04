@@ -208,7 +208,7 @@ class Alazar:
     def post_buffers(self, bufs):
         if bufs is None:
             return
-        if type(bufs) not in (types.ListType, types.TupleType):
+        if type(bufs) not in (list, tuple):
             bufs = (bufs, )
         else:
             if len(bufs) == 0:
@@ -219,7 +219,7 @@ class Alazar:
             if ret == 512:
                 self._posted_buffers.append(buf)
             elif ret == 518:
-                print 'Error, unable to post buffer!'
+                print('Error, unable to post buffer!')
             else:
                 CHK(ret)
         return True
@@ -310,7 +310,7 @@ class Alazar:
             j += 1
             buf = self.get_next_buffer()
             if buf is not None:
-                print 'Buf: %s' % (buf, )
+                print('Buf: %s' % (buf, ))
                 plt.figure()
                 plt.plot(buf)
                 plt.savefig('samples.png')

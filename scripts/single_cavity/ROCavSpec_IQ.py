@@ -38,7 +38,7 @@ def analysis(meas, data=None, fig=None):
         p0 = [np.min(amps), w0*h0, pos, w0]
         p = f.fit(p0)
         txt = 'Center = %.03f MHz' % (p[2]/1e6,)
-        print 'Fit gave: %s' % (txt,)
+        print('Fit gave: %s' % (txt,))
 #        plt.plot(fs/1e6, f.func(p, fs), label=txt)
 
         fig.axes[0].legend()

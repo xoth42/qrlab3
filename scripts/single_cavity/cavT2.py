@@ -71,7 +71,7 @@ def analysis_2tau(meas, data=None, fig=None):  #Temporary analysis for double ex
     fftys = np.abs(np.fft.fft(ys - np.average(ys)))
     fftfs = np.fft.fftfreq(len(ys), xs[1]-xs[0])
     f0 = np.abs(fftfs[np.argmax(fftys)])
-    print 'Delta f estimate: %.03f kHz' % (f0 * 1e6)
+    print('Delta f estimate: %.03f kHz' % (f0 * 1e6))
 
     params = lmfit.Parameters()
     params.add('ofs', value=off0)
@@ -110,7 +110,7 @@ def analysis(meas, data=None, fig=None):
     fftys = np.abs(np.fft.fft(ys - np.average(ys)))
     fftfs = np.fft.fftfreq(len(ys), xs[1]-xs[0])
     f0 = np.abs(fftfs[np.argmax(fftys)])
-    print 'Delta f estimate: %.03f kHz' % (f0 * 1e6)
+    print('Delta f estimate: %.03f kHz' % (f0 * 1e6))
 
     params = lmfit.Parameters()
     params.add('ofs', value=off0)
@@ -142,7 +142,7 @@ def analysis(meas, data=None, fig=None):
         fftys = np.abs(np.fft.fft(residues - np.average(residues)))
         fftfs = np.fft.fftfreq(len(residues), xs[1]-xs[0])
         f0 = np.abs(fftfs[np.argmax(fftys)])
-        print 'Delta f estimate: %.03f kHz' % (f0 * 1e6)
+        print('Delta f estimate: %.03f kHz' % (f0 * 1e6))
 
         params2 = lmfit.Parameters()
         params2.add('ofs', value=amp0)

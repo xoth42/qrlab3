@@ -26,8 +26,8 @@ for delta in deltalist:
 #    print v
     wp_p.append(e[0])
     wn_p.append(e[1])
-print e
-print v
+print(e)
+print(v)
 pl.figure()
 pl.subplot(211)   
 pl.plot(deltalist,np.real(wp_p),label = 'real')

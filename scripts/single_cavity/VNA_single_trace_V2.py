@@ -80,7 +80,7 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, title = ''
     #    datas = realdata[0,:]+ 1j*imagdata[0,:]    
         result = lmfit.minimize(S21, params, args=(freqs, datas))
         lmfit.report_fit(result.params)
-        print ('total Q: ',result.params['omega_c'].value/result.params['kappa_a'].value)
+        print(('total Q: ',result.params['omega_c'].value/result.params['kappa_a'].value))
 
         fitdata = np.sqrt(result.params['kappa_prod'].value)/(-1j*(freqs-result.params['omega_c'].value)-(result.params['kappa_a'].value)/2.0 )
 
@@ -104,8 +104,8 @@ def analysis(freqdata, realdata, imagdata, fit_S12, fit_S11, figname, title = ''
     #    datas = realdata[0,:]+ 1j*imagdata[0,:]    
         result = lmfit.minimize(S11, params, args=(freqs, abs(datas)))
         lmfit.report_fit(result.params)
-        print ('total Q: ',result.params['omega_c'].value/result.params['kappa_a'].value)
-        print ('coupling Q: ',result.params['omega_c'].value/result.params['kappa_1'].value)
+        print(('total Q: ',result.params['omega_c'].value/result.params['kappa_a'].value))
+        print(('coupling Q: ',result.params['omega_c'].value/result.params['kappa_1'].value))
         fitdata = (-1 - result.params['kappa_1'].value / (-1j*(freqs-result.params['omega_c'].value)-result.params['kappa_a'].value/2))*result.params['A'].value
 # * np.exp(1j*result.params['phi'].value)
 
@@ -235,7 +235,7 @@ class SingleTrace(Measurement1D):
                     objsh.helper.backend.main_loop(100)
                     VNA.set_format('MLOG')
             except:
-                print 'error with async'
+                print('error with async')
 #                VNA.set_interrupt(True)
 #        '''
     
@@ -308,7 +308,7 @@ class SingleTrace(Measurement1D):
 
             
             count = count + ave
-            print '%s averages done' %(count)
+            print('%s averages done' %(count))
         self.analyze()
 
         

@@ -59,7 +59,7 @@ if Mi<Mf:
 else:
     step = -abs(step)
 m = Mi
-print m  
+print(m)  
 #Yoko.do_set_voltage(m/float(40))
 magnet.do_set_field(m)
 time.sleep(sleeptime)
@@ -80,7 +80,7 @@ m = m + step
 axis = axis[:,None].T
 while np.abs(m) <= np.abs(Mf): #current field
 
-    print m
+    print(m)
     magnet.do_set_field(m)
     time.sleep(sleeptime)
     
@@ -141,7 +141,7 @@ pl.show()
 
 mlist = np.linspace(m,0,301) 
 for i in mlist[2:]:
-    print i
+    print(i)
     magnet.do_set_field(i)
     time.sleep(sleeptime)
 

@@ -7,4 +7,4 @@ f = f.get_numbered_child()
 f['lines'] = generate_rank1_data()
 f['image'] = generate_rank2_data()
 
-print 'Done'
+print('Done')

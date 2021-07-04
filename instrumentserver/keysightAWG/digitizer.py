@@ -21,23 +21,23 @@ digID = dig.openWithSlot(DIG_PRODUCT, CHASSIS, DIG_SLOT)
 AWGPart = awg.getProductNameBySlot(CHASSIS, AWG_SLOT)
 AWGNumber = awg.getSerialNumberBySlot(CHASSIS, AWG_SLOT)
 AWGNumModules = awg.moduleCount()
-print("Part =", AWGPart)
-print("S/N =", AWGNumber)
-print("Number of Modules = ", AWGNumModules)
+print(("Part =", AWGPart))
+print(("S/N =", AWGNumber))
+print(("Number of Modules = ", AWGNumModules))
 
 DigPart = dig.getProductNameBySlot(CHASSIS, DIG_SLOT)
 DigNumber = dig.getSerialNumberBySlot(CHASSIS, DIG_SLOT)
 DIGNumModules = dig.moduleCount()
-print("Part =", DigPart)
-print("S/N =", DigNumber)
-print("Number of Modules = ", DIGNumModules)
+print(("Part =", DigPart))
+print(("S/N =", DigNumber))
+print(("Number of Modules = ", DIGNumModules))
 
 
 # Check AWG Connection
 if aouID < 0 or digID < 0:
     print("ERROR")
-    print("aouID:", aouID)
-    print("digID:", digID)
+    print(("aouID:", aouID))
+    print(("digID:", digID))
     awg.close()
     dig.close()
 

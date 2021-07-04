@@ -26,7 +26,7 @@ def get_file(filename, groupname="", timestamp_group=False, **kwargs):
     return f
 
 def run_dataserver(qt=False):
-    from dataserver.dataserver import start
+    from .dataserver.dataserver import start
     import os
     os.chdir(DATA_DIRECTORY)
     start(qt)

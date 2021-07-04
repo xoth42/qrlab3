@@ -98,7 +98,7 @@ class Sequencer:
         self._slave_triggers = []
 
         self.slist = []
-        if type(s) in (types.ListType, types.TupleType):
+        if type(s) in (list, tuple):
             for el in s:
                 self.add_sequence(el)
         elif s is not None:
@@ -159,7 +159,7 @@ class Sequencer:
         channels, i.e. add a delay at the start of each channel that allows
         to trigger 'slave' channels on another AWG.
         '''
-        if type(chan) in (types.ListType, types.TupleType):
+        if type(chan) in (list, tuple):
             self._master_chans.extend(chan)
         else:
             self._master_chans.append(chan)
@@ -174,8 +174,8 @@ class Sequencer:
     def debug_seqs(self, seqs, msg, debug):
         if not debug:
             return
-        print 'Sequence %s' % (msg,)
-        for seq in seqs.values():
+        print('Sequence %s' % (msg,))
+        for seq in list(seqs.values()):
             seq.print_seq()
 
     def get_channels(self):
@@ -223,7 +223,7 @@ class Sequencer:
         if len(self._master_chans) != 0:
             refchan = self._master_chans[0]
         else:
-            refchan = seqs.keys()[0]
+            refchan = list(seqs.keys())[0]
 
         # Add triggers on requested channels
         for chan, delay in self._slave_triggers:
@@ -236,7 +236,7 @@ class Sequencer:
             seqs[chan].prepend(p)
 
         # Add delay on master channels
-        for chan, seq in seqs.iteritems():
+        for chan, seq in seqs.items():
             if chan in self._master_chans and chan not in trigchans:
                 seqs[chan].seq[0].trigger = False
                 seq.prepend(Delay(maxdelay, fixed=True, unroll=False, trigger=True))
@@ -247,7 +247,7 @@ class Sequencer:
         '''
 
         if debug:
-            print 'Rendering: %s' % (ss, )
+            print('Rendering: %s' % (ss, ))
 
         seqs = {}
         for ch in ss.get_channels():
@@ -260,12 +260,12 @@ class Sequencer:
         self.debug_seqs(seqs, 'after generate()', debug)
 
         # Sanitize delays
-        for seq in seqs.values():
+        for seq in list(seqs.values()):
             seq.sanitize_delays(self.minlen)
         self.debug_seqs(seqs, 'after sanitizing delays', debug)
 
         # Make sure each pulse is at least <minlen> long
-        for chan, seq in seqs.iteritems():
+        for chan, seq in seqs.items():
             seq.join_small_elements(self.minlen)
         self.debug_seqs(seqs, 'after join_small_elements', debug)
 
@@ -274,7 +274,7 @@ class Sequencer:
             ssb.modulate(seqs)
 
         # Generate marker channels
-        for mchan, info in self._marker_chans.iteritems():
+        for mchan, info in self._marker_chans.items():
             seqs[mchan] = self.generate_marker(mchan, seqs, info)
         self.debug_seqs(seqs, 'after generate_marker', debug)
 
@@ -296,13 +296,13 @@ class Sequencer:
         seqs = {}
         for el in ss:
             new_seqs = self.render_subseq(el, chs, debug)
-            for ch, seq in new_seqs.iteritems():
+            for ch, seq in new_seqs.items():
                 if ch not in seqs:
                     seqs[ch] = seq
                 else:
                     seqs[ch].append(seq)
 
-        for ch in seqs.keys():
+        for ch in list(seqs.keys()):
             seqs[ch].join_sequences()
 
         return seqs
@@ -311,14 +311,14 @@ class Sequencer:
         '''
         Check whether the sequences in dictionary <seqs> are compatible.
         '''
-        chs = seqs.keys()
+        chs = list(seqs.keys())
         for ch in chs[1:]:
             if not seqs[chs[0]].is_aligned(seqs[ch]):
                 return False
         return True
 
     def get_sorted_chans(self, seqs):
-        chans = seqs.keys()
+        chans = list(seqs.keys())
         chans.sort(key=str)
         return chans
 
@@ -340,7 +340,7 @@ class Sequencer:
         Extract an element from a repeated Pulse in all channels in <seqs>.
         Place it to the left when <side> is left, otherwise to the right.
         '''
-        for seq in seqs.values():
+        for seq in list(seqs.values()):
             seq.extract_repeat(i_el, side, N=N)
 
     def add_to_marker(self, outseq, i_el, i_pulse, activity, side=None):
@@ -549,7 +549,7 @@ class Sequence(Instruction):
             join = seq.join
         elif seq is None:
             self.seq = []
-        elif type(seq) not in (types.ListType, types.TupleType):
+        elif type(seq) not in (list, tuple):
             self.seq = [seq,]
         else:
             self.seq = seq
@@ -581,13 +581,13 @@ class Sequence(Instruction):
         self.merge_delays()
 
     def check_elements(self, seq):
-        if type(seq) not in (types.ListType, types.TupleType):
+        if type(seq) not in (list, tuple):
             raise Exception('Sequence should be a tuple or list')
         i = 0
         while i < len(seq):
             if seq[i] == None:
                 del seq[i]
-                print 'Warning: removing None element from sequence'
+                print('Warning: removing None element from sequence')
             else:
                 i += 1
 
@@ -657,14 +657,14 @@ class Sequence(Instruction):
     def append(self, ins):
         if ins is None:
             return
-        if type(ins) in (types.ListType, types.TupleType):
+        if type(ins) in (list, tuple):
             ins = Sequence(ins)
         self.seq.append(ins)
 
     def prepend(self, ins):
         if ins is None:
             return
-        if type(ins) in (types.ListType, types.TupleType):
+        if type(ins) in (list, tuple):
             ins = Sequence(ins)
         self.trigger |= ins.get_trigger()
         self.seq.insert(0, ins)
@@ -836,9 +836,9 @@ class Sequence(Instruction):
         return ret
 
     def print_seq(self):
-        print 'Channel %s' % (self.chan,)
+        print('Channel %s' % (self.chan,))
         layout = '%1s%6s%2s    %6s  %4s   %4s   %s'
-        print layout % ('', 'start', '', 'end', 'n', 'len', 'name')
+        print(layout % ('', 'start', '', 'end', 'n', 'len', 'name'))
         t = 0
         for i_el, el in enumerate(self.seq):
             mark = ''
@@ -850,17 +850,17 @@ class Sequence(Instruction):
             if hasattr(el, 'unroll') and not el.unroll:
                 flags += 'U'
             if not hasattr(el, 'name'):
-                print layout % (mark, t, flags, t, 1, 0, '?: %s' % el)
+                print(layout % (mark, t, flags, t, 1, 0, '?: %s' % el))
                 continue
             if el.name in Pulse.pulse_data:
                 plen = len(Pulse.pulse_data[el.name])
             else:
                 plen = 0
 
-            print layout % (mark, t, flags, t+el.repeat*plen-1, el.repeat, plen, el.name)
+            print(layout % (mark, t, flags, t+el.repeat*plen-1, el.repeat, plen, el.name))
             t += el.repeat * len(Pulse.pulse_data[el.name])
 
-        print layout % ('', '', '', '', '', '', 'done.')
+        print(layout % ('', '', '', '', '', '', 'done.'))
 
     def plot_seq(self, style='ks', fig=None, subplot=(1,1,1)):
         if fig is None:
@@ -874,7 +874,7 @@ class Sequence(Instruction):
             if el.name in Pulse.pulse_data:
                 dt = len(Pulse.pulse_data[el.name])
             else:
-                print 'Warning: unknown sequence element to plot'
+                print('Warning: unknown sequence element to plot')
                 dt = 100
             if not el.name.startswith('delay'):
                 for i in range(el.repeat):
@@ -1047,7 +1047,7 @@ class Sequence(Instruction):
 
             # This is a problem
             if curlen < minlen:
-                print(self.seq)
+                print((self.seq))
                 raise Exception("Unable to make each element longer than %d. %d available from index %d - %d" % (minlen, curlen, i, j))
 
             # Perform the actual join
@@ -1126,7 +1126,7 @@ class Pulse(Instruction):
             val = data[np.argmax(np.abs(data))]
             msg = 'Pulse ' + self.name + ' contains value larger than +-1: ' + str(val)
             if Pulse.RANGE_ACTION == WARN:
-                print msg
+                print(msg)
             elif Pulse.RANGE_ACTION == RAISE:
                 raise Exception(msg)
 
@@ -1240,7 +1240,7 @@ class Label(Instruction):
 
     def generate(self, now, chan):
         if Label.LABELS[self.name] != now:
-            print 'Setting label %s to %s' % (self.name, now)
+            print('Setting label %s to %s' % (self.name, now))
             Label.LABELS[self.name] = now
             Label.UPDATED = True
         return Sequence(chan=chan)
@@ -1258,11 +1258,11 @@ class DelayTo(Instruction):
         return 'DelayTo(%s)' % self.t
 
     def get_tgt_time(self, now):
-        if type(self.t) is types.StringType:
+        if type(self.t) is bytes:
             if self.t not in Label.LABELS:
                 raise ValueError('Label not defined')
             elif Label.LABELS[self.t] is None:
-                print 'Warning: Label %s has not been resolved yet.' % self.t
+                print('Warning: Label %s has not been resolved yet.' % self.t)
                 return now
             return Label.LABELS[self.t]
         else:
@@ -1273,7 +1273,7 @@ class DelayTo(Instruction):
             return 0
         dt = self.get_tgt_time(now) - now
         if dt < 0:
-            print 'Warning: DelayTo does not fit'
+            print('Warning: DelayTo does not fit')
             dt = 0
 #            raise ValueError('Unable to resolve DelayTo; does not fit')
         return dt
@@ -1313,9 +1313,9 @@ class Combined(Instruction):
         self.align = align
         self.ch_align = ch_align
         self.ch_delays = ch_delays
-        if type(items) is types.DictType:
-            self.items = items.values()
-        elif type(items) in (types.ListType, types.TupleType):
+        if type(items) is dict:
+            self.items = list(items.values())
+        elif type(items) in (list, tuple):
             self.items = items
         elif isinstance(items, Instruction):
             self.items = [items]
@@ -1365,7 +1365,7 @@ class Combined(Instruction):
         Add channel delays to change relative timing of channels.
         '''
 
-        all_delays = np.array(self.ch_delays.values())
+        all_delays = np.array(list(self.ch_delays.values()))
         if len(all_delays) == 0:
             return
 
@@ -1377,7 +1377,7 @@ class Combined(Instruction):
         if len(all_delays[all_delays<0]) > 0:
             maxneg = -np.min(all_delays)
 
-        for ch in self.seqs.keys():
+        for ch in list(self.seqs.keys()):
             # Determine delays to add
             d = self.ch_delays.get(ch, 0)
             post = maxpos - d
@@ -1396,28 +1396,28 @@ class Combined(Instruction):
         Merge channels into aligned pieces.
         '''
 
-        chans = self.seqs.keys()
+        chans = list(self.seqs.keys())
         if len(chans) == 0:
             return
 
         chinfo = {}
         for chan in chans:
             chinfo[chan] = CombineChanInfo(self.seqs[chan])
-        l_chinfo = chinfo.values()
+        l_chinfo = list(chinfo.values())
 
         # At the start of this loop we can always assume that the sequences
         # are synchronized, i.e. start at this point. That makes future time
         # calculations using time_action_at easy
         while len(l_chinfo[0].seq):
             if DEBUG:
-                for ch, info in chinfo.iteritems():
-                    print '  ch%s: idx=%d (len %d, trig %s) --> %s' % (ch, info.idx, info.seq.get_length(), info.seq.seq[0].get_trigger(), info.seq)
+                for ch, info in chinfo.items():
+                    print('  ch%s: idx=%d (len %d, trig %s) --> %s' % (ch, info.idx, info.seq.get_length(), info.seq.seq[0].get_trigger(), info.seq))
 
             # Get some information about the channels
             max_nondelay = 0
             min_delay = 1000000000
             ndel_ch = 0
-            for ch, info in chinfo.iteritems():
+            for ch, info in chinfo.items():
                 info.dt = info.seq[0].get_length()
                 info.is_delay = (info.seq[0].get_name() == 'delay1')
                 if info.is_delay:
@@ -1427,17 +1427,17 @@ class Combined(Instruction):
                     max_nondelay = info.dt
 
             if DEBUG:
-                print '    max_nondelay: %s, mindelay %s, ndel_ch %s' % (max_nondelay, min_delay, ndel_ch)
+                print('    max_nondelay: %s, mindelay %s, ndel_ch %s' % (max_nondelay, min_delay, ndel_ch))
             if min_delay < 0:
                 raise ValueError('Negative delay!')
 
             # all channels contain a delay, add shortest one as an item
             # to the output and subtract time from others.
             if ndel_ch == len(l_chinfo):
-                for ch, info in chinfo.iteritems():
+                for ch, info in chinfo.items():
                     add = info.seq.consume_up_to(min_delay, unroll=True)
                     if DEBUG:
-                        print '      All delays, adding %s' % (add,)
+                        print('      All delays, adding %s' % (add,))
                     info.seq_out.append(add)
 
             # At least one channel is active.
@@ -1448,22 +1448,22 @@ class Combined(Instruction):
                 dt = 1
                 while dt > 0:
                     dt = 0
-                    for ch, info in chinfo.iteritems():
+                    for ch, info in chinfo.items():
                         dt = max(dt, info.seq.time_action_at(to_time))
                     to_time += dt
 
                 # Consume sequences up to merge point
                 # TODO: we might have to be smarter about repeated elements
-                for ch, info in chinfo.iteritems():
+                for ch, info in chinfo.items():
                     add = info.seq.consume_up_to(to_time)
                     if DEBUG:
-                        print '      Activity, adding to ch %s: %s' % (ch, add,)
+                        print('      Activity, adding to ch %s: %s' % (ch, add,))
                     info.seq_out.append(add)
 
-        for ch, info in chinfo.iteritems():
+        for ch, info in chinfo.items():
             self.seqs[ch] = info.seq_out
             if DEBUG:
-                print 'Merged channel %s into %s' % (ch, info.seq_out)
+                print('Merged channel %s into %s' % (ch, info.seq_out))
 
     def get_chan_seq(self, chan):
         if chan in self.seqs:
@@ -1498,15 +1498,15 @@ class Combined(Instruction):
             self.seqs[ch] = planadd
 
         self.maxlen = 0
-        for ch in self.seqs.keys():
+        for ch in list(self.seqs.keys()):
             self.seqs[ch].join_sequences()
             self.maxlen = max(self.maxlen, self.seqs[ch].get_length())
 
         # If the channels are already aligned there is no need to run through
         # the alignement code.
         aligned = True
-        for ch in self.seqs.keys()[1:]:
-            if not self.seqs[self.seqs.keys()[0]].is_aligned(self.seqs[ch]):
+        for ch in list(self.seqs.keys())[1:]:
+            if not self.seqs[list(self.seqs.keys())[0]].is_aligned(self.seqs[ch]):
                 aligned = False
         if aligned:
             if chan in self.seqs:
@@ -1515,7 +1515,7 @@ class Combined(Instruction):
                 return self.aligned_empty_sequence(chan)
 
         # Only need to do the rest for channels having content
-        chs = self.seqs.keys()
+        chs = list(self.seqs.keys())
 
         # Find maximum length and pad sequences appropriately.
         for ch in chs:
@@ -1551,7 +1551,7 @@ class Combined(Instruction):
             s.append(Delay(self.get_length(), trigger=self.get_trigger()))
             return s
 
-        refseq = self.seqs[self.seqs.keys()[0]]
+        refseq = self.seqs[list(self.seqs.keys())[0]]
         for i_el, el in enumerate(refseq.seq):
             repeat = getattr(el, 'repeat', 1)
             trig = el.get_trigger()
@@ -1563,7 +1563,7 @@ class Combined(Instruction):
             s.append(new_el)
 
         if DEBUG:
-            print 'Aligned seq ch%s: %s' % (chan, s)
+            print('Aligned seq ch%s: %s' % (chan, s))
 
         return s
 
@@ -1581,9 +1581,9 @@ def AlignRight(seqs, t=None, tabs=None):
     Align an instruction or sequence to the right (i.e. end), either
     up to time <tabs> (can be a label) or making this block total length <t>.
     '''
-    if type(seqs) is types.TupleType:
+    if type(seqs) is tuple:
         seqs = list(seqs)
-    if type(seqs) is not types.ListType:
+    if type(seqs) is not list:
         seqs = [seqs,]
 
     m = Combined(seqs, align=ALIGN_RIGHT)
@@ -1626,7 +1626,7 @@ def Pad(ins, rlen, pad=PAD_BOTH, err=IGNORE):
     if l > rlen:
         msg = 'Unable to pad, instruction %s too long' % ins
         if err == WARN:
-            print msg
+            print(msg)
         elif err == RAISE:
             raise Exception(msg)
         return ins
@@ -1784,7 +1784,7 @@ class CleanSeqNames(SequenceOperation):
 def clean_names(seqs):
     cleaner = CleanSeqNames()
     seqs_out = {}
-    for name, seq in seqs.iteritems():
+    for name, seq in seqs.items():
         seqs_out[name] = cleaner.apply(seq)
     return seqs_out
 
@@ -2011,5 +2011,5 @@ def map_pulse_names(names):
     return ret
 
 if __name__ == '__main__':
-    print 'Please use testsequencer.py to test'
+    print('Please use testsequencer.py to test')
 

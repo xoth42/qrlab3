@@ -7,7 +7,7 @@ Created on Thu Oct 05 12:14:26 2017
 
 import types
 
-from instrument import Instrument
+from .instrument import Instrument
 
 from PyMata.pymata import PyMata
 
@@ -20,7 +20,7 @@ class Magnet_power_supply(Instrument):
         self._min_field = 0
         self.field= 0
         
-        self.add_parameter('field', type=types.FloatType,
+        self.add_parameter('field', type=float,
             flags=Instrument.FLAG_GETSET, units='mT',
             minval=self._min_field, maxval=self._max_field,
             format='%.01f')

@@ -21,7 +21,7 @@ except:
 handle = ats.AlazarGetBoardBySystemID(1, 1)
 
 return_code = ats.AlazarSleepDevice(handle, 0x0)
-print return_code
+print(return_code)
 power_code = ats.AlazarSleepDevice(handle, 0x1)
-print power_code
+print(power_code)
 

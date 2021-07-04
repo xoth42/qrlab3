@@ -222,7 +222,7 @@ kappa_tot_scale = 1
 kappa_prod_scale = 1e2
 
 #data_txt_neg = np.loadtxt('C:\\Users\\WangLab\\Documents\\circulator results\\20210109_232841\\results.txt')
-data_txt_neg = np.loadtxt('C:\Users\WangLab\Documents\circulator results\\2021-03-11 16-09-18\\0to-0.05results.txt')
+data_txt_neg = np.loadtxt('C:\\Users\WangLab\Documents\circulator results\\2021-03-11 16-09-18\\0to-0.05results.txt')
 
 data_txt = np.loadtxt('C:\\Users\\WangLab\\Documents\\circulator results\\20210110_083300\\results.txt')
 data_txt = np.transpose(data_txt)
@@ -353,7 +353,7 @@ params.add('null_field' ,value = 0.0185, vary = False)
 
 # params.add('phi',value = 0, vary = fix_vary)
 #freqs = freq/1e9
-print 'data seze %s'%(len(datas))
+print('data seze %s'%(len(datas)))
 result = lmfit.minimize(Sij_resid, params, args=(fields, datas))
 lmfit.report_fit(result.params)
 

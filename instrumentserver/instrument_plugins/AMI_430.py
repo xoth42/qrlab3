@@ -8,7 +8,7 @@ Created on Thu Mar 29 11:11:02 2018
 import types
 import objectsharer as objsh
 
-from instrument import Instrument
+from .instrument import Instrument
 
 import serial
 
@@ -32,12 +32,12 @@ class AMI_430(Instrument):
         self.field = 0
         self.current = 0
     
-        self.add_parameter('field', type=types.FloatType,
+        self.add_parameter('field', type=float,
             flags=Instrument.FLAG_GETSET, units='Tesla',
             minval=self._min_field, maxval=self._max_field,
             format='%.04f') #format may need to be adjusted based on units
         
-        self.add_parameter('Current', type=types.FloatType,
+        self.add_parameter('Current', type=float,
             flags=Instrument.FLAG_GETSET, units='Amps',
             minval=self._min_current, maxval=self._max_current,
             format='%.04f') #format may need to be adjusted 

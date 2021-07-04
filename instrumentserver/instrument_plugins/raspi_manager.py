@@ -17,7 +17,7 @@ from PyQt5.QtGui import * #DARIO 2/12/21
 import pandas as pd
 import numpy as np
 import types
-from instrument import Instrument
+from .instrument import Instrument
 
 
 sip.setapi('QString', 2)
@@ -36,7 +36,7 @@ class raspi_manager(Instrument):
 
         try:
 #            os.chdir("/Users/chik")
-            print("Current Directory: " + os.getcwd())
+            print(("Current Directory: " + os.getcwd()))
             # Start new log file (non-blocking to allow console display access)
             raspi_manager.log = open("debug.log","r+") #os.O_NONBLOCK)
             raspi_manager.log.seek(0)
@@ -55,13 +55,13 @@ class raspi_manager(Instrument):
         self.domain = '127.0.0.1'
         self.password = 'N/A'
             
-        self.add_parameter('domain', type=types.StringType,
+        self.add_parameter('domain', type=bytes,
                            flags=Instrument.FLAG_GETSET)
-        self.add_parameter('password', type=types.StringType,
+        self.add_parameter('password', type=bytes,
                            flags=Instrument.FLAG_GETSET)
 #        self.add_parameter('csv_filepath', type=types.StringType,
 #                           flags=Instrument.FLAG_SET)
-        self.add_parameter('hostname', type=types.StringType, 
+        self.add_parameter('hostname', type=bytes, 
                            flags=Instrument.FLAG_GET)
 
     def do_set_domain(self, domain):
@@ -285,7 +285,7 @@ class raspi_manager(Instrument):
             self.debug_log(str(e))
 
     def debug_log(self,message):
-        print(message + "\n")
+        print((message + "\n"))
         try:
             raspi_manager.log.seek(0,os.SEEK_END)
             raspi_manager.log.write(message + "\n")

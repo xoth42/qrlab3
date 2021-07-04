@@ -10,7 +10,7 @@ from serial import Serial
 
 #ser = Serial('COM3')
 
-print(ser.name)
+print((ser.name))
 
 ch = ser.write('+')
 #print(ser.read(2))

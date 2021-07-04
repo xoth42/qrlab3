@@ -1,4 +1,4 @@
-from instrument import Instrument
+from .instrument import Instrument
 import time
 import visa
 import types
@@ -12,21 +12,21 @@ class BNC_RFsource(Instrument):
         self._address = address
         self.open()
 
-        self.add_parameter('rf_on', type=types.BooleanType,
+        self.add_parameter('rf_on', type=bool,
             flags=Instrument.FLAG_GETSET)
-        self.add_parameter('lock_src', type=types.StringType,
+        self.add_parameter('lock_src', type=bytes,
             flags=Instrument.FLAG_GETSET,
             option_list=('INT', 'EXT'))
-        self.add_parameter('extref_freq', type=types.FloatType,
+        self.add_parameter('extref_freq', type=float,
             flags=Instrument.FLAG_GETSET,
             minval=1e6, maxval=100e6)
-        self.add_parameter('locked', type=types.BooleanType,
+        self.add_parameter('locked', type=bool,
             flags=Instrument.FLAG_GET)
-        self.add_parameter('power', type=types.FloatType,
+        self.add_parameter('power', type=float,
             flags=Instrument.FLAG_GETSET, units='dBm', minval=-135, maxval=16)
-        self.add_parameter('phase', type=types.FloatType,
+        self.add_parameter('phase', type=float,
             flags=Instrument.FLAG_GETSET, units='rad', minval=-math.pi, maxval=math.pi)
-        self.add_parameter('frequency', type=types.FloatType,
+        self.add_parameter('frequency', type=float,
             flags=Instrument.FLAG_GETSET, units='Hz',
             minval=1e5, maxval=20e9, display_scale=6)
 

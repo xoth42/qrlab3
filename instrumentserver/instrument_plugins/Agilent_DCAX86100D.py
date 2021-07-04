@@ -69,7 +69,7 @@ class FastScope:
 
     def report_error(self,error):
         if error != NO_ERROR:
-            print '\tERROR: %s' % error
+            print('\tERROR: %s' % error)
 
     def error_check(self):
         ret = self.error_query()
@@ -151,7 +151,7 @@ class FastScope:
         done = False
         while not done:
             ret = self.ask('*OPC')
-            print ret
+            print(ret)
             if ret == '1':
                 done = True
             time.sleep(1)

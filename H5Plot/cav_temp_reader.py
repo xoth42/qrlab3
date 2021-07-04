@@ -53,7 +53,7 @@ x_key = 'detunings'
 
 f = h5.File(filepath + hdf5_name, 'r')
 exp = f['/' + date + '/' + time + '_' + experiment]
-y_keys = exp.keys()
+y_keys = list(exp.keys())
 print(y_keys)
 
 y_keys.remove(x_key)
@@ -124,7 +124,7 @@ lmfit.report_fit(result.params)
     
 pl.plot(xs, -lorentzian(result.params, xs, np.zeros(len(xs))))
 
-print('real amp', result.params['amplitude']/(result.params['sigma'] * np.pi))
+print(('real amp', result.params['amplitude']/(result.params['sigma'] * np.pi)))
 
 pl.show()
 

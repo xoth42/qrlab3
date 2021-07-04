@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import visa
 import types
 import logging
@@ -87,16 +87,16 @@ class HP_8657(Instrument):
         sleep(1)
 
         # Implement parameters
-        self.add_parameter('frequency', type=types.FloatType,
+        self.add_parameter('frequency', type=float,
             flags=Instrument.FLAG_SET,
             minval=lim['minfreq'], maxval=lim['maxfreq'],
             units='Hz', format='%.04e',
             tags=['sweep'])
-        self.add_parameter('power', type=types.FloatType,
+        self.add_parameter('power', type=float,
             flags=Instrument.FLAG_SET,
             minval=lim['minpow'], maxval=lim['maxpow'],
             units='dBm', tags=['sweep'])
-        self.add_parameter('status', type=types.StringType,
+        self.add_parameter('status', type=bytes,
             flags=Instrument.FLAG_SET)
 
         # Implement functions

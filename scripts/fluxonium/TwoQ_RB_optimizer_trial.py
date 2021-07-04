@@ -70,7 +70,7 @@ def analysis(meas, data=None, fig=None):
     Vge = np.mean(calibration_qubit2_excited)
     Vee = np.mean(calibration_bothqubits_excited)
     Vgg = np.mean(calibration_ground)
-    print Veg, Vge, Vee, Vgg
+    print(Veg, Vge, Vee, Vgg)
 
     rd = y1s[12:]
     bl = y2s[12:]
@@ -154,7 +154,7 @@ class TwoQubit_RB(Measurement1D):
         self.cancel_info = cancel_info
         self.N_cliffords = N_cliffords
         self.num_cal_points = num_cal_points
-        XS = np.asarray(range(N_cliffords+4*self.num_cal_points)) - (4*self.num_cal_points-1)
+        XS = np.asarray(list(range(N_cliffords+4*self.num_cal_points))) - (4*self.num_cal_points-1)
         self.xs = np.array([XS,XS,XS,XS]).transpose().flatten() # for plotting purposes
         self.filepath_lookup_table = ""
         self.cnum=cnum
@@ -175,7 +175,7 @@ class TwoQubit_RB(Measurement1D):
         
             
         super(TwoQubit_RB, self).__init__(4*(N_cliffords+4*num_cal_points), infos=(qubit_info,qubit2_info,twoQ_info,cancel_info), **kwargs)
-        self.data.create_dataset('Cliffords', data=range(4*(N_cliffords+4*num_cal_points)))
+        self.data.create_dataset('Cliffords', data=list(range(4*(N_cliffords+4*num_cal_points))))
 #        self.data.set_attrs(
 #            cnum=cnum,
 #            interleave=interleave

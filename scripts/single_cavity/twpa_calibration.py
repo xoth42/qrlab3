@@ -32,8 +32,8 @@ def analysis(twpa_powers, twpa_freqs, ampdata, ax=None):
     ax.set_xlabel('twpa powers')
     ax.set_ylabel('twpa frequencies')
     
-    print('max power', twpa_powers[np.unravel_index(data.argmax(), data.shape)[0]],
-          'max_freq',  twpa_freqs[np.unravel_index(data.argmax(), data.shape)[1]])
+    print(('max power', twpa_powers[np.unravel_index(data.argmax(), data.shape)[0]],
+          'max_freq',  twpa_freqs[np.unravel_index(data.argmax(), data.shape)[1]]))
     
     
 
@@ -113,7 +113,7 @@ class twpa_calibration(Measurement1D):
 
         for i_twpa_power, twpa_power in enumerate(self.twpa_powers):
             self.twpa_pump.set_power(twpa_power)
-            print 'twpa_power = %s' % (twpa_power, )
+            print('twpa_power = %s' % (twpa_power, ))
             time.sleep(2)
             for i_twpa_freq, twpa_freq in enumerate(self.twpa_freqs):
                 self.twpa_pump.set_frequency(twpa_freq)
@@ -124,14 +124,14 @@ class twpa_calibration(Measurement1D):
                 try:
                     while not ret.is_valid():
                         objsh.helper.backend.main_loop(100)
-                except Exception, e:
+                except Exception as e:
                     alz.set_interrupt(True)
-                    print 'Error: %s' % (str(e), )
+                    print('Error: %s' % (str(e), ))
                     return
 
                 IQ = np.average(ret.get())
-                print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (twpa_freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
-                print 'I,Q = %.03f, %.03f' % (np.real(IQ), np.imag(IQ))
+                print('F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (twpa_freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True)))
+                print('I,Q = %.03f, %.03f' % (np.real(IQ), np.imag(IQ)))
 
  
                 self.ampdata[i_twpa_power,i_twpa_freq] = np.abs(IQ)

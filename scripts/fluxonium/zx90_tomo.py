@@ -25,7 +25,7 @@ def analysis(meas, data=None, fig=None):
     Vge = np.mean(calibration_qubit2_excited)
     Vee = np.mean(calibration_bothqubits_excited)
     Vgg = np.mean(calibration_ground)
-    print Veg, Vge, Vee, Vgg
+    print(Veg, Vge, Vee, Vgg)
 
     plt.figure()   
     plt.plot(xs, y1s, 'bs', ms=3, color='r', linestyle = '-', label='none')
@@ -97,7 +97,7 @@ class zx90_tomo(Measurement1D):
         self.seq=seq
         self.postseq=postseq
         super(zx90_tomo, self).__init__(20, infos=(control_info, target_info, zx90_info,), **kwargs)
-        self.data.create_dataset('sequence', data=[range(0,20)])
+        self.data.create_dataset('sequence', data=[list(range(0,20))])
 
 
     def generate(self):

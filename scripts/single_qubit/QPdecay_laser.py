@@ -48,7 +48,7 @@ def analysis(meas, data=None, fig=None, fit_start='auto', fit_end='auto', vg=-0.
         dictionary[xs_temp[i]]=ys_temp[i]
     xs=[]
     ys=[]
-    keys = dictionary.keys()
+    keys = list(dictionary.keys())
     keys.sort()
     for k in keys:
         xs.append(k)
@@ -229,7 +229,7 @@ class QPdecay_laser(Measurement1D):
                 inj_len = inj_len-rep_time+5000
                 self.n_sat_inj +=1
             if inj_len < 250:
-                print "Injection pulse length happens to be at a bad value!!"
+                print("Injection pulse length happens to be at a bad value!!")
 
         n_points = meas_per_reptime*meas_per_QPinj
         QP_delay_step = rep_time / meas_per_reptime

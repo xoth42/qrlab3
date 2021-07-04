@@ -52,7 +52,7 @@ def analysis(meas, data=None, fig=None):
     Vge = np.mean(calibration_qubit2_excited)
     Vee = np.mean(calibration_bothqubits_excited)
     Vgg = np.mean(calibration_ground)
-    print Veg, Vge, Vee, Vgg
+    print(Veg, Vge, Vee, Vgg)
 #    
 #    q1_epop_cplx = ((y1s[13:] + y3s[13:]) - (Vge + Vgg))/ (Veg-Vgg+Vee-Vge)
 #    
@@ -231,7 +231,7 @@ class Simultaneous_1QRB(Measurement1D):
         
         if seq is None:
             seq = Trigger(250)
-        XS= np.append(np.array(range(-4*num_cal_points,0)), np.array(range(n_gates_start, n_gates_stop+1, n_gates_step)))                                  
+        XS= np.append(np.array(list(range(-4*num_cal_points,0))), np.array(list(range(n_gates_start, n_gates_stop+1, n_gates_step))))                                  
         self.xs = np.array([XS,XS,XS,XS]).transpose().flatten()    # For plotting purposes
 
         self.start = n_gates_start
@@ -254,14 +254,14 @@ class Simultaneous_1QRB(Measurement1D):
         r2 = self.qubit2_info.rotate        
         rotation_list = rdm_rotations(self.stop)
         correction_list = correct_rdm_rot(rotation_list)
-        print rotation_list
-        print correction_list
+        print(rotation_list)
+        print(correction_list)
         
         rotation2_list = rdm_rotations(self.stop)
         correction2_list = correct_rdm_rot(rotation2_list)
         
-        print rotation2_list
-        print correction2_list
+        print(rotation2_list)
+        print(correction2_list)
          
        
                     
@@ -390,9 +390,9 @@ class Simultaneous_1QRB(Measurement1D):
 
         s = self.get_sequencer(s)
         time_before_render = time.time()
-        print('before render', time_before_render)
+        print(('before render', time_before_render))
         seqs = s.render()
-        print('after render', time.time() - time_before_render)
+        print(('after render', time.time() - time_before_render))
 
         return seqs
 

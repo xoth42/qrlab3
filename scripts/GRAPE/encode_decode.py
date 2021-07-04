@@ -93,13 +93,13 @@ def analysis(meas, data=None, fig=None):
     mZSv = ys[5*num_values : 6*num_values]    
     
     equators = (XSv+YSv+ZSv+mXSv+mYSv+mZSv) / 6.0
-    print equators
+    print(equators)
     
     pf = np.polyfit(xs, equators, 1)
     eq_values = pf[0]*xs + pf[1]
     e_values = meas.e_value * np.ones(num_values)
     g_values = eq_values*2 - meas.e_value
-    print g_values
+    print(g_values)
     
     XS = (g_values - XSv) / (g_values - e_values) * 2 - 1
     YS = (g_values - YSv) / (g_values - e_values) * 2 - 1

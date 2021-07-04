@@ -77,8 +77,8 @@ class SynthHDBaseTestCase:
             read = self._dut.reference_frequency
             self.assertIsInstance(read, float)
             error = abs(freq - read)
-            print('Set reference frequency to {} Hz (error = {})'
-                  .format(freq, error))
+            print(('Set reference frequency to {} Hz (error = {})'
+                  .format(freq, error)))
             self.assertLess(error, 0.1)
             freq = floor((freq + coarse_step - f_start) / f_step) * f_step + f_start
 
@@ -105,8 +105,8 @@ class SynthHDBaseTestCase:
                 self.assertEqual(before, after)
                 self.assertIsInstance(read, float)
                 error = abs(freq - read)
-                print('Set channel {} frequency to {} Hz (error = {})'
-                      .format(index, freq, error))
+                print(('Set channel {} frequency to {} Hz (error = {})'
+                      .format(index, freq, error)))
                 self.assertLess(error, 1.e-5)
                 freq = floor((freq + coarse_step - f_start) / f_step) * f_step + f_start
 
@@ -132,8 +132,8 @@ class SynthHDBaseTestCase:
                 self.assertEqual(before, after)
                 self.assertIsInstance(read, float)
                 error = abs(power - read)
-                print('Set channel {} power to {} dBm (error = {})'
-                      .format(index, power, error))
+                print(('Set channel {} power to {} dBm (error = {})'
+                      .format(index, power, error)))
                 self.assertLess(error, 1.e-14)
                 power = floor((power + coarse_step - start) / step) * step + start
 
@@ -184,8 +184,8 @@ class SynthHDBaseTestCase:
                 after = [ch.vga_dac for ch in others]
                 self.assertEqual(before, after)
                 self.assertIsInstance(read, int)
-                print('Set channel {} VGA DAC to {} (read = {})'
-                      .format(index, value, read))
+                print(('Set channel {} VGA DAC to {} (read = {})'
+                      .format(index, value, read)))
                 self.assertEqual(value, read)
                 value = floor((value + coarse_step - start) / step) * step + start
 
@@ -210,8 +210,8 @@ class SynthHDBaseTestCase:
                 self.assertEqual(before, after)
                 self.assertIsInstance(read, float)
                 error = abs(phase - read)
-                print('Set channel {} phase to {} degrees (error = {})'
-                      .format(index, phase, error))
+                print(('Set channel {} phase to {} degrees (error = {})'
+                      .format(index, phase, error)))
                 self.assertLess(error, .006)
                 phase = floor((phase + coarse_step - start) / step) * step + start
 

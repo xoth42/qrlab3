@@ -35,7 +35,7 @@ def moving_window(x, window_length):
     return x
 for k in range(0, size):
     
-    print 'SIGNAL OFF'
+    print('SIGNAL OFF')
     AWG1.all_off()
     time.sleep(2)       
     avg_power = []
@@ -45,15 +45,15 @@ for k in range(0, size):
         avg_power.append(log_powers)
     avg_power = numpy.asarray(avg_power)
     avg_waveform = avg_power.mean(axis = 0)
-    baseline_in_W = map(dB_to_power, avg_waveform)
+    baseline_in_W = list(map(dB_to_power, avg_waveform))
     integrated_averaged_baseline = simps(baseline_in_W)
-    print 'ON SIGNAL ' + str(k)
+    print('ON SIGNAL ' + str(k))
     wait_time = random.choice(time_choice)
     time.sleep(wait_time)
     choices.append(wait_time)
     AWG1.all_on()
     
-    print "BEGINNING"
+    print("BEGINNING")
     
     fig_prefix = "C:\\Users\\wanglab\\Desktop\\AWG_tests\\"
     new_direc = fig_prefix + 'run_' + str(k)
@@ -65,7 +65,7 @@ for k in range(0, size):
             sweep_waveforms.append(b)
         waveform = numpy.mean(sweep_waveforms, axis = 0)
       #  raised_b = [b[i] + abs(min(b)) for i in b]
-        actual_power = map(dB_to_power, waveform)      
+        actual_power = list(map(dB_to_power, waveform))      
         integrated_power = simps(actual_power)
         plt.plot(a, waveform)
         plt.grid()
@@ -84,7 +84,7 @@ with open(fig_prefix + 'data.csv', 'wb') as myfile:
 def nice_plot(data, wave, chan):
     for i in range(0, len(data)):
         plt.figure()
-        plt.scatter(range(0, len(data[i])), data[i])
+        plt.scatter(list(range(0, len(data[i]))), data[i])
         plt.xlabel('t (~s)')
         plt.ylabel('dBm')
         plt.grid()

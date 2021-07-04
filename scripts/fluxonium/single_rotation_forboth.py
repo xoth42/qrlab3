@@ -19,7 +19,7 @@ class Single_Rotation_forboth(Measurement1D):
         self.postseq = postseq
 
         super(Single_Rotation_forboth, self).__init__(35, infos=(qubit_info,qubit_info2, qubit2_info, qubit2_info2), **kwargs)
-        self.data.create_dataset('sequence', data=[range(0,35)])
+        self.data.create_dataset('sequence', data=[list(range(0,35))])
 #        self.data.set_attrs()
 
 

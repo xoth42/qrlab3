@@ -120,7 +120,7 @@ class Spectroscopy_Keysight(Measurement1D):
 
         for ipower, power in enumerate(self.ro_powers):
 #            self.readout_info.rfsource.set_power(power)
-            print 'Power = %s' % (power, )
+            print('Power = %s' % (power, ))
             time.sleep(self.pow_delay)
 
             amps = []
@@ -147,7 +147,7 @@ class Spectroscopy_Keysight(Measurement1D):
                 IQ = np.average(ret)
                 amps.append(np.abs(IQ))
                 phases.append(np.angle(IQ, deg=True))
-                print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
+                print('F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True)))
 
             self.ampdata[ipower,:] = amps
 
@@ -175,7 +175,7 @@ class Spectroscopy_Keysight(Measurement1D):
             p0 = [np.max(amps), w0*h0, pos, w0]
             p = f.fit(p0)
             txt = 'Center = %.03f MHz' % (p[2]/1e6,)
-            print 'Fit gave: %s' % (txt,)
+            print('Fit gave: %s' % (txt,))
             ax1.plot(fs/1e6, f.func(p, fs), label=txt)
 
             ax1.legend()

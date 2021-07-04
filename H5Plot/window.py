@@ -1,7 +1,7 @@
 import time
 import os
 from PyQt4 import Qt
-from widgets import *
+from .widgets import *
 import objectsharer as objsh
 import pickle
 import sys
@@ -74,7 +74,7 @@ class WindowItem(object):
             self.tree_item.setText(2, str(visible))
 
     def check_expand_state(self):
-        for c in self.children.values():
+        for c in list(self.children.values()):
             if isinstance(c, WindowPlot):
                 if c.plot and c.plot.is_visible():
                     self.tree_item.setExpanded(False)
@@ -139,7 +139,7 @@ class WindowDataGroup(WindowItem):
 
         if not self.is_dataset():
             self.children = {}
-            for name in self.proxy.keys():
+            for name in list(self.proxy.keys()):
                 self.update_child(name)
 
             self.proxy.connect('changed', self.update_child)
@@ -169,7 +169,7 @@ class WindowDataGroup(WindowItem):
             return
 
         g = WindowDataGroup(key, self)
-        for key in g.proxy.keys():
+        for key in list(g.proxy.keys()):
             g.update_child(key)
 
     def add_dataset(self, key):
@@ -177,7 +177,7 @@ class WindowDataGroup(WindowItem):
 
     def remove(self):
         if not self.is_dataset():
-            for c in self.children.values():
+            for c in list(self.children.values()):
                 c.remove()
         super(WindowDataGroup, self).remove()
 
@@ -211,7 +211,7 @@ class WindowPlot(WindowItem):
             })
         # Update, but don't overwrite
         self.update_attrs(
-            {k: v for k, v in default_attrs.items() if k not in self.attrs}
+            {k: v for k, v in list(default_attrs.items()) if k not in self.attrs}
         )
 
         if self.plot is None:
@@ -298,7 +298,7 @@ class WindowDataSet(WindowDataGroup, WindowPlot):
     def update_data(self, slice=None):
         if self.load: # This is disabled on startup
             logger.debug('Updating data at %s' % self.strpath)
-            print 'update', self.strpath
+            print('update', self.strpath)
             if self.data is None or slice is None:
                 self.data = self.proxy[:]
             else:
@@ -322,7 +322,7 @@ class WindowDataSet(WindowDataGroup, WindowPlot):
 
     def update_attrs(self, attrs):
         super(WindowDataSet, self).update_attrs(attrs)
-        if self.plot and any(key in self.plot.plot_attrs for key in attrs.keys()):
+        if self.plot and any(key in self.plot.plot_attrs for key in list(attrs.keys())):
             self.plot.update_plot(self.data, self.attrs)
 
 
@@ -335,7 +335,7 @@ class WindowInterface:
         objsh.register(self, 'plotwin')
 
     def get_all_plots(self):
-        return { k: v for k, v in WindowItem.registry.items() if isinstance(v, WindowPlot) }
+        return { k: v for k, v in list(WindowItem.registry.items()) if isinstance(v, WindowPlot) }
 
     def add_plot(self, name):
         if (name,) in WindowItem.registry:
@@ -476,7 +476,7 @@ class PlotWindow(Qt.QMainWindow):
         self.dataserver = objsh.helper.find_object('dataserver', no_cache=True)
         self.dataserver.connect('file-added', self.add_file)
         WindowDataSet.load = False
-        for filename, proxy in self.dataserver.list_files(names_only=False).items():
+        for filename, proxy in list(self.dataserver.list_files(names_only=False).items()):
             self.add_file(filename, proxy)
         WindowDataSet.load = True
         self.connected_status.setText('Connected to tcp://%s:%d' % (addr, port))
@@ -559,7 +559,7 @@ class PlotWindow(Qt.QMainWindow):
     def save_view(self): # TODO
         filename = str(Qt.QFileDialog().getSaveFileName(self, 'Save View file'))
         open_plots = []
-        for group in self.data_groups.values():
+        for group in list(self.data_groups.values()):
             if group.plot.parent() is not None:
                 open_plots.append(group.path)
         dock_state = self.dock_area.saveState()

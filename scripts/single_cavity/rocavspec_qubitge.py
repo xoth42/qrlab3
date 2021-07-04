@@ -35,7 +35,7 @@ def analysis(powers, freqs, ampgdata, phasegdata,ampedata, phaseedata, plot_type
         p0 = [np.min(amps), w0*h0, pos, w0]
         p = f.fit(p0)
         txt = 'Center = %.03f MHz, FWHM = %.03f MHz' % (p[2]/1e6, p[3]/1e6)
-        print 'Fit gave: %s' % (txt,)
+        print('Fit gave: %s' % (txt,))
 #        plt.plot(fs/1e6, f.func(p, fs), label=txt)
         ax.plot(fs/1e6, p[0] + p[1]/np.pi *(p[3]/2/((fs-p[2])**2 + (p[3]/2)**2)), '--',label = 'freq = %s MHz\n kappa = %s MHz'%(p[2]/1e6,p[3]/1e6))
         ax2.plot(fs/1e6, p[0] + p[1]/np.pi *(p[3]/2/((fs-p[2])**2 + (p[3]/2)**2)), '--',label = 'freq = %s MHz\n kappa = %s MHz'%(p[2]/1e6,p[3]/1e6))
@@ -65,8 +65,8 @@ def analysis(powers, freqs, ampgdata, phasegdata,ampedata, phaseedata, plot_type
         
         diff_c = np.sum(np.abs(e-g))/np.sum(np.abs(g))
         diff_a = np.sum(ea - ga)/np.sum(ga)
-        print('diff_c  = %s / %s = %s'%(np.sum(np.abs(e-g)),np.sum(np.abs(g)), diff_c))
-        print('diff_a  = %s / %s = %s'%(np.sum(ea - ga),np.sum(ga), diff_a))
+        print(('diff_c  = %s / %s = %s'%(np.sum(np.abs(e-g)),np.sum(np.abs(g)), diff_c)))
+        print(('diff_a  = %s / %s = %s'%(np.sum(ea - ga),np.sum(ga), diff_a)))
         ## Yingying add it to save the figure 
         fn = os.path.join(config.datadir, 'images/%s_cavspecphase.png'%(time.strftime('%Y%m%d/%H%M%S', time.localtime())))
         fdir = os.path.split(fn)[0]
@@ -180,7 +180,7 @@ class ROCavSpec_Qubitge(Measurement1D):
 
         for ipower, power in enumerate(self.powers):
             self.readout_info.rfsource1.set_power(power)
-            print 'Power = %s' % (power, )
+            print('Power = %s' % (power, ))
             time.sleep(2)
 
             ampsg = []
@@ -222,14 +222,14 @@ class ROCavSpec_Qubitge(Measurement1D):
                         IQ = np.average(ret)
                         ampsg.append(np.abs(IQ))
                         phasesg.append(np.angle(IQ, deg=True))
-                        print 'g satte: F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
-                        print 'I,Q = %.03f, %.03f' % (np.real(IQ), np.imag(IQ)) #DARIO 9/5
+                        print('g satte: F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True)))
+                        print('I,Q = %.03f, %.03f' % (np.real(IQ), np.imag(IQ))) #DARIO 9/5
                     else:
                         IQ = np.average(ret)
                         ampse.append(np.abs(IQ))
                         phasese.append(np.angle(IQ, deg=True))
-                        print 'e satte: F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
-                        print 'I,Q = %.03f, %.03f' % (np.real(IQ), np.imag(IQ)) #DARIO 9/5
+                        print('e satte: F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True)))
+                        print('I,Q = %.03f, %.03f' % (np.real(IQ), np.imag(IQ))) #DARIO 9/5
 
             self.ampgdata[ipower,:] = ampsg
             self.phasegdata[ipower,:] = phasesg

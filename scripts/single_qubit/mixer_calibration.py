@@ -28,8 +28,8 @@ def lo_leakage_func(params, awg, chans, spec, n_avg=1,delay=0.1, verbose=False):
     time.sleep(delay)
     val = np.average([spec.get_power() for _ in range(n_avg)])
     if verbose:
-        print 'Measuring at (%.06f, %.06f): %.01f' % \
-                (params['vI'].value, params['vQ'].value, val)
+        print('Measuring at (%.06f, %.06f): %.01f' % \
+                (params['vI'].value, params['vQ'].value, val))
     return val
 
 def osb_min_func(params, awg, chans, spec, n_avg=1, delay=0.1, chan_select='q', verbose=False):
@@ -45,8 +45,8 @@ def osb_min_func(params, awg, chans, spec, n_avg=1, delay=0.1, chan_select='q', 
     time.sleep(delay)
     val = np.average([spec.get_power() for _ in range(n_avg)])
     if verbose:
-        print 'Measuring at (%.06f, %.06f): %.01f' % \
-                (params['skew'].value, params['amplitude'].value, val)
+        print('Measuring at (%.06f, %.06f): %.01f' % \
+                (params['skew'].value, params['amplitude'].value, val))
 
     return val
 
@@ -111,7 +111,7 @@ class Mixer_Calibration(object):
             3. Prepares IQ LO and vspec settings.
                 Does NOT set the frequency for the VALO
         '''
-        print "prepping instruments"
+        print("prepping instruments")
 
         self.awg.delete_all_waveforms()
         self.awg.get_id() #Sometimes AWGs are slow.  If it responds it's ready.
@@ -135,7 +135,7 @@ class Mixer_Calibration(object):
         self.old_valo = self.spec.get_rfsource()
         if self.va_lo is not None:
             self.spec.set_rfsource(self.va_lo)
-            print 'setting VALO: %s'% (self.va_lo)
+            print('setting VALO: %s'% (self.va_lo))
 
         valo_inst = instruments[self.va_lo]
         valo_inst.set_power(13)
@@ -185,13 +185,13 @@ class Mixer_Calibration(object):
             self.awg.set({'ch%s_skew'%self.chans[1]: self.opt_skew_ps})
 
     def print_tuning_parameters(self):
-        print '-------- SSB Tuning parameters: %s -------' % (self.qubit_info.get_name())
-        print 'I, Q offsets = (%0.3f, %0.3f)' % (self.opt_offset_I, self.opt_offset_Q)
-        print 'Amplitude imbalance (Q / I) = %0.3f (base amplitude = %0.3f)' % (self.opt_amp_factor, self.base_amplitude)
-        print 'Total skew imbalance (rad) = %0.4f' % (self.calculate_sideband_phase(self.opt_skew_ps, total_phase=True))
+        print('-------- SSB Tuning parameters: %s -------' % (self.qubit_info.get_name()))
+        print('I, Q offsets = (%0.3f, %0.3f)' % (self.opt_offset_I, self.opt_offset_Q))
+        print('Amplitude imbalance (Q / I) = %0.3f (base amplitude = %0.3f)' % (self.opt_amp_factor, self.base_amplitude))
+        print('Total skew imbalance (rad) = %0.4f' % (self.calculate_sideband_phase(self.opt_skew_ps, total_phase=True)))
 
     def tune_lo(self, verbose=None, plot=True, mode='coarse'):
-        print 'tuning LO leakage'
+        print('tuning LO leakage')
 
         self.spec.set_frequency(self.lo_frequency)
         self.spec.set_rf_on(1)
@@ -226,7 +226,7 @@ class Mixer_Calibration(object):
 
         self.opt_offset_I = m.params['vI'].value
         self.opt_offset_Q = m.params['vQ'].value
-        print 'Optimal offsets: %0.03f,%0.03f' % (m.params['vI'].value,m.params['vQ'].value)
+        print('Optimal offsets: %0.03f,%0.03f' % (m.params['vI'].value,m.params['vQ'].value))
 
         #The minimizer command automatically leaves it in its best values.
 
@@ -237,7 +237,7 @@ class Mixer_Calibration(object):
             does not adjust sideband phase to account for awg skew, user must ADD
         '''
 
-        print 'tuning OSB leakage..' # Should be more informative.
+        print('tuning OSB leakage..') # Should be more informative.
         self.spec.set_frequency(self.osb_freq)
         self.spec.set_rf_on(1)
 
@@ -265,11 +265,11 @@ class Mixer_Calibration(object):
 
         skew_phase = self.calculate_sideband_phase(self.opt_skew_ps)
         total_skew_rad = self.calculate_sideband_phase(self.opt_skew_ps, total_phase=True)
-        print 'Amplitude imbalance: %0.4f' % params['amplitude'].value
-        print 'Skew imbalance (ps) and (rad): %0.4f, %0.4f' % \
-                (params['skew'].value, skew_phase)
-        print 'sideband phase: %0.4f + %0.4f = %0.4f' % \
-            (self.sideband_phase, skew_phase, total_skew_rad)
+        print('Amplitude imbalance: %0.4f' % params['amplitude'].value)
+        print('Skew imbalance (ps) and (rad): %0.4f, %0.4f' % \
+                (params['skew'].value, skew_phase))
+        print('sideband phase: %0.4f + %0.4f = %0.4f' % \
+            (self.sideband_phase, skew_phase, total_skew_rad))
 
     def calculate_sideband_phase(self, skew_ps, total_phase=False):
         skew_phase = -(2 * np.pi * self.if_freq * skew_ps * 1e-12)

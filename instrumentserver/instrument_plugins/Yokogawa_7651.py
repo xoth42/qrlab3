@@ -7,7 +7,7 @@ import visa
 import re
 import numpy as np
 from visainstrument import VisaInstrument
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import logging
 from time import sleep
@@ -17,44 +17,44 @@ class Yokogawa_7651(VisaInstrument):
     def __init__(self, name, address, **kwargs):
         super(Yokogawa_7651, self).__init__(name, address=address, term_chars='\r\n', **kwargs)
 
-        self.add_parameter('output_state', type=types.IntType,
+        self.add_parameter('output_state', type=int,
                            flags=Instrument.FLAG_GETSET,
                            format_map={1: 'on', 0: 'off'})
-        self.add_parameter('source_type', type=types.IntType,
+        self.add_parameter('source_type', type=int,
                            flags=Instrument.FLAG_GETSET,
                            format_map={1: 'voltage', 5: 'current'})
-        self.add_parameter('voltage_range', type=types.IntType,
+        self.add_parameter('voltage_range', type=int,
                            flags=Instrument.FLAG_GETSET, units='V',
                            format_map={2: '10 mV',
                                        3: '100 mV',
                                        4: '1 V',
                                        5: '10 V',
                                        6: '30 V'})
-        self.add_parameter('current_range', type=types.IntType,
+        self.add_parameter('current_range', type=int,
                            flags=Instrument.FLAG_GETSET, units='mA',
                            format_map={4: '1 mA',
                                        5: '10 mA',
                                        6: '100 mA'})
-        self.add_parameter('current_limit', type=types.IntType,
+        self.add_parameter('current_limit', type=int,
                            flags=Instrument.FLAG_GETSET, units='mA',
                            minvalue=5, maxvalue=120)
-        self.add_parameter('voltage_limit', type=types.IntType,
+        self.add_parameter('voltage_limit', type=int,
                            flags=Instrument.FLAG_GETSET, units='V',
                            minvalue=1, maxvalue=30)
-        self.add_parameter('voltage', type=types.FloatType,
+        self.add_parameter('voltage', type=float,
                            flags=Instrument.FLAG_GETSET, units='V',
                            minvalue=-30.0, maxvalue=30.0)
-        self.add_parameter('current', type=types.FloatType,
+        self.add_parameter('current', type=float,
                            flags=Instrument.FLAG_GETSET, units='A',
                            minvalue=-0.1, maxvalue=0.1)
-        self.add_parameter('polarity', type=types.IntType,
+        self.add_parameter('polarity', type=int,
                            flags=Instrument.FLAG_GETSET,
                            format_map={0: 'positive',
                                        1: 'negative',
                                        2: 'invert'})
-        self.add_parameter('output_data_value', type=types.StringType,
+        self.add_parameter('output_data_value', type=bytes,
                            flags=Instrument.FLAG_GET)
-        self.add_parameter('overload', type=types.BooleanType,
+        self.add_parameter('overload', type=bool,
                            format_map={True: 'overload',
                                        False: 'normal'},
                             flags=Instrument.FLAG_GET)
@@ -93,7 +93,7 @@ class Yokogawa_7651(VisaInstrument):
                 yokoRange = 6
             else:
                 yokoRange = 6
-                print 'Highest voltage range is 30V.'
+                print('Highest voltage range is 30V.')
         else:
             yokoRange = voltage
 
@@ -120,7 +120,7 @@ class Yokogawa_7651(VisaInstrument):
                 yokoRange = 6
             else:
                 yokoRange = 6
-                print 'Highest current range is 100mA.'
+                print('Highest current range is 100mA.')
         else:
             yokoRange = current
 
@@ -250,7 +250,7 @@ class Yokogawa_7651(VisaInstrument):
         if int(function[1])==5:
             rg = int(function[3])
         else:
-            print "Can only get current range when source_type is CURRENT."
+            print("Can only get current range when source_type is CURRENT.")
             rg = None
         return rg
 
@@ -260,7 +260,7 @@ class Yokogawa_7651(VisaInstrument):
         if int(function[1])==1:
             rg = int(function[3])
         else:
-            print "Can only get voltage range when source_type is VOLTAGE."
+            print("Can only get voltage range when source_type is VOLTAGE.")
             rg = None
         return rg
         
@@ -304,14 +304,14 @@ class Yokogawa_7651(VisaInstrument):
         if self.do_get_source_type()==1:
             return self.get_data_value()
         else:
-            print "Can only get voltage when source_type is VOLTAGE."
+            print("Can only get voltage when source_type is VOLTAGE.")
             return None
         
     def do_get_current(self):
         if self.do_get_source_type()==5:
             return self.get_data_value()
         else:
-            print "Can only get current when source_type is CURRENT."
+            print("Can only get current when source_type is CURRENT.")
             return None
         
     def get_data_value(self):

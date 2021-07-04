@@ -237,7 +237,7 @@ def blind_fidelity(IQ1, IQ2, plot=True, verbose=False, num_steps=26):
 
     fid, diff_counts = calculate_bf(counts)
     if verbose:
-        print 'blind fidelity: %0.3f' % fid
+        print('blind fidelity: %0.3f' % fid)
 
     if plot:
         import matplotlib.gridspec as gridspec
@@ -314,7 +314,7 @@ class Histogram_Readout(Measurement):
         '''acquisitions, not averages'''
         reps = []
         for i in np.arange(self.shots / self.shots_per_alz_call):
-            print 'soft average: %d' % (i * self.shots_per_alz_call)
+            print('soft average: %d' % (i * self.shots_per_alz_call))
             self.alz.setup_avg_shot(self.shots_per_alz_call)
             reps.append(self.alz.take_raw_demod_shots(acqtimeout=50000))
         return np.concatenate(reps)
@@ -376,7 +376,7 @@ def process_blind_fidelities(blind_fids, powers, ax=None):
     best_length = 20*(best_idx[1]+1)
     txt = 'Best power: %0.02f dBms, best integration length %d ns, fidelity: %.03f' %(best_power,best_length,smoothed_bfs[best_idx])
 
-    print txt
+    print(txt)
     if np.shape(bfs)[0] > 1:
         # weird thing going on:
         # even though I call a new figure, the imshow() insists on plotting in

@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 from time import time, sleep
 import visa
 import types
@@ -61,7 +61,7 @@ class OxfordInstruments_IPS120(Instrument):
         self._visainstrument.stop_bits = 2
 
         #Add parameters
-        self.add_parameter('mode', type=types.IntType,
+        self.add_parameter('mode', type=int,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             format_map = {
             0 : "Amps, Magnet sweep: fast",
@@ -70,21 +70,21 @@ class OxfordInstruments_IPS120(Instrument):
             5 : "Tesla, Magnet sweep: slow",
             8 : "Amps, (Magnet sweep: unaffected)",
             9 : "Tesla, (Magnet sweep: unaffected)"})
-        self.add_parameter('mode2', type=types.IntType,
+        self.add_parameter('mode2', type=int,
             flags=Instrument.FLAG_GET,
             format_map = {
             0 : "At rest",
             1 : "Sweeping",
             2 : "Sweep limiting",
             3 : "Sweeping & sweep limiting"})
-        self.add_parameter('activity', type=types.IntType,
+        self.add_parameter('activity', type=int,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             format_map = {
             0 : "Hold",
             1 : "To set point",
             2 : "To zero",
             4 : "Clamped"})
-        self.add_parameter('switch_heater', type=types.IntType,
+        self.add_parameter('switch_heater', type=int,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             format_map = {
             0 : "Off magnet at zero (switch closed)",
@@ -92,21 +92,21 @@ class OxfordInstruments_IPS120(Instrument):
             2 : "Off magnet at field (switch closed)",
             5 : "Heater fault (heater is on but current is low)",
             8 : "No switch fitted"})
-        self.add_parameter('polarity', type=types.StringType,
+        self.add_parameter('polarity', type=bytes,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET)
-        self.add_parameter('field_setpoint', type=types.FloatType,
+        self.add_parameter('field_setpoint', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             minval=0, maxval=11)
-        self.add_parameter('sweeprate_field', type=types.FloatType,
+        self.add_parameter('sweeprate_field', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             minval=0, maxval=14)
-        self.add_parameter('current_setpoint', type=types.FloatType,
+        self.add_parameter('current_setpoint', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             minval=-90.93, maxval=90.93)
-        self.add_parameter('sweeprate_current', type=types.FloatType,
+        self.add_parameter('sweeprate_current', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             minval=0, maxval=240)
-        self.add_parameter('remote_status', type=types.IntType,
+        self.add_parameter('remote_status', type=int,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
             format_map = {
             0 : "Local and locked",
@@ -117,7 +117,7 @@ class OxfordInstruments_IPS120(Instrument):
             5 : "Auto-run-down",
             6 : "Auto-run-down",
             7 : "Auto-run-down"})
-        self.add_parameter('system_status', type=types.IntType,
+        self.add_parameter('system_status', type=int,
             flags=Instrument.FLAG_GET,
             format_map = {
             0 : "Normal",
@@ -125,7 +125,7 @@ class OxfordInstruments_IPS120(Instrument):
             2 : "Over Heated",
             4 : "Warming Up",
             8 : "Fault"})
-        self.add_parameter('system_status2', type=types.IntType,
+        self.add_parameter('system_status2', type=int,
             flags=Instrument.FLAG_GET,
             format_map = {
             0 : "Normal",
@@ -134,33 +134,33 @@ class OxfordInstruments_IPS120(Instrument):
             4 : "Outside negative current limit",
             8 : "Outside positive current limit"
             })
-        self.add_parameter('current', type=types.FloatType,
+        self.add_parameter('current', type=float,
             flags=Instrument.FLAG_GET)
-        self.add_parameter('voltage', type=types.FloatType,
+        self.add_parameter('voltage', type=float,
             flags=Instrument.FLAG_GET)
-        self.add_parameter('magnet_current', type=types.FloatType,
+        self.add_parameter('magnet_current', type=float,
             flags=Instrument.FLAG_GET)
-        self.add_parameter('field', type=types.FloatType,
+        self.add_parameter('field', type=float,
             flags=Instrument.FLAG_GET)
-        self.add_parameter('voltage_limit', type=types.FloatType,
+        self.add_parameter('voltage_limit', type=float,
             flags=Instrument.FLAG_GET)
-        self.add_parameter('persistent_current', type=types.FloatType,
+        self.add_parameter('persistent_current', type=float,
             flags=Instrument.FLAG_GET)
-        self.add_parameter('trip_current', type=types.FloatType,
+        self.add_parameter('trip_current', type=float,
             flags=Instrument.FLAG_GET)
-        self.add_parameter('persistent_field', type=types.FloatType,
+        self.add_parameter('persistent_field', type=float,
             flags=Instrument.FLAG_GET)
-        self.add_parameter('trip_field', type=types.FloatType,
+        self.add_parameter('trip_field', type=float,
             flags=Instrument.FLAG_GET)
-        self.add_parameter('heater_current', type=types.FloatType,
+        self.add_parameter('heater_current', type=float,
             flags=Instrument.FLAG_GET)
-        self.add_parameter('current_limit_upper', type=types.FloatType,
+        self.add_parameter('current_limit_upper', type=float,
             flags=Instrument.FLAG_GET)
-        self.add_parameter('current_limit_lower', type=types.FloatType,
+        self.add_parameter('current_limit_lower', type=float,
             flags=Instrument.FLAG_GET)
-        self.add_parameter('lead_resistance', type=types.FloatType,
+        self.add_parameter('lead_resistance', type=float,
             flags=Instrument.FLAG_GET)
-        self.add_parameter('magnet_inductance', type=types.FloatType,
+        self.add_parameter('magnet_inductance', type=float,
             flags=Instrument.FLAG_GET)
 
         # Add functions
@@ -221,7 +221,7 @@ class OxfordInstruments_IPS120(Instrument):
         sleep(20e-3) # wait for the device to be able to respond
         result = self._visainstrument.read()
         if result.find('?') >= 0:
-            print "Error: Command %s not recognized" % message
+            print("Error: Command %s not recognized" % message)
         else:
             return result
 
@@ -250,23 +250,23 @@ class OxfordInstruments_IPS120(Instrument):
         '''
         logging.info(__name__ + ' : Examine status')
 
-        print 'System Status: '
-        print self.get_system_status()
+        print('System Status: ')
+        print(self.get_system_status())
 
-        print 'Activity: '
-        print self.get_activity()
+        print('Activity: ')
+        print(self.get_activity())
 
-        print 'Local/Remote status: '
-        print self.get_remote_status()
+        print('Local/Remote status: ')
+        print(self.get_remote_status())
 
-        print 'Switch heater: '
-        print self.get_switch_heater()
+        print('Switch heater: ')
+        print(self.get_switch_heater())
 
-        print 'Mode: '
-        print self.get_mode()
+        print('Mode: ')
+        print(self.get_mode())
 
-        print 'Polarity: '
-        print self.get_polarity()
+        print('Polarity: ')
+        print(self.get_polarity())
 
     def remote(self):
         '''
@@ -340,7 +340,7 @@ class OxfordInstruments_IPS120(Instrument):
             logging.info(__name__ + ' : Setting remote control status to %s' % status.get(mode,"Unknown"))
             self._execute('C%s' % mode)
         else:
-            print 'Invalid mode inserted: %s' % mode
+            print('Invalid mode inserted: %s' % mode)
 
     def do_get_system_status(self):
         '''
@@ -725,7 +725,7 @@ class OxfordInstruments_IPS120(Instrument):
             logging.info(__name__ + ' : Setting magnet activity to %s' % status.get(mode, "Unknown"))
             self._execute('A%s' % mode)
         else:
-            print 'Invalid mode inserted.'
+            print('Invalid mode inserted.')
 
     def hold(self):
         '''
@@ -795,10 +795,10 @@ class OxfordInstruments_IPS120(Instrument):
         if status.__contains__(mode):
             logging.info(__name__ + ' : Setting switch heater to %s' % status.get(mode, "Unknown"))
             self._execute('H%s' % mode)
-            print "Setting switch heater... (wait 20s)"
+            print("Setting switch heater... (wait 20s)")
             sleep(20)
         else:
-            print 'Invalid mode inserted.'
+            print('Invalid mode inserted.')
 
     def heater_on(self):
         '''
@@ -880,7 +880,7 @@ class OxfordInstruments_IPS120(Instrument):
             logging.info(__name__ + ' : Setting device mode to %s' % status.get(mode, "Unknown"))
             self._execute('M%s' % mode)
         else:
-            print 'Invalid mode inserted.'
+            print('Invalid mode inserted.')
 
     def do_get_polarity(self):
         '''
@@ -920,13 +920,13 @@ class OxfordInstruments_IPS120(Instrument):
         return status1.get(int(result[13]), "Unknown") + ", " + status2.get(int(result[14]), "Unknown")
 
     def get_changed(self):
-        print "Current: "
-        print self.get_current()
-        print "Field: "
-        print self.get_field()
-        print "Magnet current: "
-        print self.get_magnet_current()
-        print "Heater current: "
-        print self.get_heater_current()
-        print "Mode: "
-        print self.get_mode()
+        print("Current: ")
+        print(self.get_current())
+        print("Field: ")
+        print(self.get_field())
+        print("Magnet current: ")
+        print(self.get_magnet_current())
+        print("Heater current: ")
+        print(self.get_heater_current())
+        print("Mode: ")
+        print(self.get_mode())

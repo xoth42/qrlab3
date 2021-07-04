@@ -156,7 +156,7 @@ class QFunctionTomo(Measurement2D):
             self.qubit_info.ssb.modulate(seqs)
         if self.cav_info.ssb:
             self.cav_info.ssb.modulate(seqs)
-        if type(self.extra_info) in (types.TupleType, types.ListType):
+        if type(self.extra_info) in (tuple, list):
             for info in self.extra_info:
                 if info.ssb:
                     info.ssb.modulate(seqs)

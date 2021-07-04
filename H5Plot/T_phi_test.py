@@ -131,7 +131,7 @@ for i, name in enumerate(t2_list):
         delays = exp['delays'].value
         data = exp['avg_pp'].value
     except KeyError:
-        print('bad name or key', name)
+        print(('bad name or key', name))
         values_t2[i] = 0
         continue
         
@@ -151,7 +151,7 @@ for i, name in enumerate(t202_list):
         delays = exp['delays'].value
         data = exp['avg_pp'].value
     except KeyError:
-        print('bad name or key', name)
+        print(('bad name or key', name))
         values_t202[i] = 0
         continue
         

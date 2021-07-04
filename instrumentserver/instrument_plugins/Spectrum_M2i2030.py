@@ -19,7 +19,7 @@
 from ctypes import *
 from _Spectrum_M2i2030.errors import errors as _spcm_errors
 from _Spectrum_M2i2030.regs import regs as _spcm_regs
-from instrument import Instrument
+from .instrument import Instrument
 import pickle
 from time import sleep, time
 import types
@@ -72,17 +72,17 @@ class Spectrum_M2i2030(Instrument):
         self._open()
 
         # add parameters
-        self.add_parameter('timeout', flags=Instrument.FLAG_GETSET, type=types.IntType)
-        self.add_parameter('trigger_delay', flags=Instrument.FLAG_GETSET, type=types.IntType)
-        self.add_parameter('memsize', flags=Instrument.FLAG_GETSET, type=types.IntType)
-        self.add_parameter('post_trigger', flags=Instrument.FLAG_GETSET, type=types.IntType)
-        self.add_parameter('input_offset_ch0', flags=Instrument.FLAG_GETSET, type=types.IntType)
-        self.add_parameter('input_offset_ch1', flags=Instrument.FLAG_GETSET, type=types.IntType)
-        self.add_parameter('input_amp_ch0', flags=Instrument.FLAG_GETSET, type=types.IntType)
-        self.add_parameter('input_amp_ch1', flags=Instrument.FLAG_GETSET, type=types.IntType)
-        self.add_parameter('spc_samplerate', flags=Instrument.FLAG_GETSET, type=types.IntType)
-        self.add_parameter('reference_clock', flags=Instrument.FLAG_GETSET, type=types.IntType)
-        self.add_parameter('segmentsize', flags=Instrument.FLAG_GETSET, type=types.IntType)
+        self.add_parameter('timeout', flags=Instrument.FLAG_GETSET, type=int)
+        self.add_parameter('trigger_delay', flags=Instrument.FLAG_GETSET, type=int)
+        self.add_parameter('memsize', flags=Instrument.FLAG_GETSET, type=int)
+        self.add_parameter('post_trigger', flags=Instrument.FLAG_GETSET, type=int)
+        self.add_parameter('input_offset_ch0', flags=Instrument.FLAG_GETSET, type=int)
+        self.add_parameter('input_offset_ch1', flags=Instrument.FLAG_GETSET, type=int)
+        self.add_parameter('input_amp_ch0', flags=Instrument.FLAG_GETSET, type=int)
+        self.add_parameter('input_amp_ch1', flags=Instrument.FLAG_GETSET, type=int)
+        self.add_parameter('spc_samplerate', flags=Instrument.FLAG_GETSET, type=int)
+        self.add_parameter('reference_clock', flags=Instrument.FLAG_GETSET, type=int)
+        self.add_parameter('segmentsize', flags=Instrument.FLAG_GETSET, type=int)
 
         self.add_parameter('serial', flags=Instrument.FLAG_GET)
         self.add_parameter('ramsize', flags=Instrument.FLAG_GET)
@@ -1281,9 +1281,9 @@ class Spectrum_M2i2030(Instrument):
             data (int[memsize]): Measurement data
         '''
         self.init_default(memsize=memsize, posttrigger=posttrigger, amp=amp)
-        print 'starting card and waiting for trigger'
+        print('starting card and waiting for trigger')
         self.start_with_trigger_and_waitready()
-        print "received trigger"
+        print("received trigger")
         self.data = self.readout_singlemode_float()
         return self.data
 

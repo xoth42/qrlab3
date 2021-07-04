@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import logging
 import qt
@@ -31,14 +31,14 @@ class Attocube_Positioner(Instrument):
 
         # Instrument parameters
         self.add_parameter('position',
-            type=types.TupleType,
+            type=tuple,
             flags=Instrument.FLAG_GET,
             format='%.03f, %.03f, %.03f')
         self.add_parameter('speed',
-            type=types.TupleType,
+            type=tuple,
             flags=Instrument.FLAG_GETSET)
         self.add_parameter('channels',
-            type=types.IntType,
+            type=int,
             flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET)
 
         self.set_channels(channels)

@@ -19,7 +19,7 @@ import types
 import ctypes
 import logging
 from lib.dll_support import standa_usmc as standa
-from instrument import Instrument
+from .instrument import Instrument
 import qt
 
 class Standa_USMC(Instrument):
@@ -33,24 +33,24 @@ class Standa_USMC(Instrument):
 
         self.add_parameter('serial',
             flags=Instrument.FLAG_GET,
-            type=types.StringType)
+            type=bytes)
 
         self.add_parameter('version',
             flags=Instrument.FLAG_GET,
-            type=types.StringType)
+            type=bytes)
 
         self.add_parameter('position',
             flags=Instrument.FLAG_GETSET,
-            type=types.IntType,
+            type=int,
             units='#')
 
         self.add_parameter('power',
             flags=Instrument.FLAG_GETSET,
-            type=types.BooleanType)
+            type=bool)
 
         self.add_parameter('speed',
             flags=Instrument.FLAG_GETSET,
-            type=types.FloatType,
+            type=float,
             doc="Speed, in (partial) steps per second")
 
         self.add_parameter('limits',

@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import visa
 import types
 import logging
@@ -46,18 +46,18 @@ class Cryomagnetics_4G(Instrument):
             flags=Instrument.FLAG_GETSET,
             channels=axes,
             option_list=self.UNITS,
-            type=types.StringType)
+            type=bytes)
 
         self.add_parameter('rate0',
             flags=Instrument.FLAG_GETSET,
-            type=types.FloatType,
+            type=float,
             channels=axes,
             minval=0,
             units='A/s')
 
         self.add_parameter('rate1',
             flags=Instrument.FLAG_GETSET,
-            type=types.FloatType,
+            type=float,
             channels=axes,
             minval=0,
             units='A/s')
@@ -65,20 +65,20 @@ class Cryomagnetics_4G(Instrument):
         self.add_parameter('heater',
             flags=Instrument.FLAG_GETSET,
             channels=axes,
-            type=types.BooleanType,
+            type=bool,
             doc='''Persistent switch heater on?''')
 
         self.add_parameter('magnetout',
             flags=Instrument.FLAG_GET | Instrument.FLAG_SET,
             channels=axes,
-            type=types.FloatType,
+            type=float,
             units='kG', format='%.05f',
             doc='''Magnet current (or field in kG)''')
 
         self.add_parameter('supplyout',
             flags=Instrument.FLAG_GET,
             channels=axes,
-            type=types.FloatType,
+            type=float,
             units='kG', format='%.05f',
             doc='''Power supply current (or field in kG)''')
 
@@ -86,26 +86,26 @@ class Cryomagnetics_4G(Instrument):
             flags=Instrument.FLAG_GETSET,
             channels=axes,
             option_list=['UP', 'UP FAST', 'DOWN', 'DOWN FAST', 'PAUSE', 'ZERO'],
-            type=types.StringType)
+            type=bytes)
 
         self.add_parameter('lowlim',
             flags=Instrument.FLAG_GETSET,
             channels=axes,
-            type=types.FloatType,
+            type=float,
             minval=-90.0, maxval=90.0,
             units='kG', format='%.05f')
 
         self.add_parameter('uplim',
             flags=Instrument.FLAG_GETSET,
             channels=axes,
-            type=types.FloatType,
+            type=float,
             minval=-90.0, maxval=90.0,
             units='kG', format='%.05f')
 
         self.add_parameter('field',
             flags=Instrument.FLAG_GETSET,
             channels=axes,
-            type=types.FloatType,
+            type=float,
             minval=-90, maxval=90.0,
             units='kG', format='%.02f',
             tags=['sweep'],
@@ -128,7 +128,7 @@ class Cryomagnetics_4G(Instrument):
 
     def get_all(self):
         self.get_identification()
-        for ax in self._axes.values():
+        for ax in list(self._axes.values()):
             self.get('units%s' % ax)
             self.get('rate0%s' % ax)
             self.get('rate1%s' % ax)
@@ -159,7 +159,7 @@ class Cryomagnetics_4G(Instrument):
             return 1
 
     def _select_channel(self, channel):
-        for i, v in self._axes.iteritems():
+        for i, v in self._axes.items():
             if v == channel:
                 self._visa.write('CHAN %d' % i)
                 return True
@@ -341,10 +341,10 @@ class Cryomagnetics_4G(Instrument):
         return magnet_field
 
     def pause(self):
-        for ax in self._axes.values():
+        for ax in list(self._axes.values()):
             self.set('sweep%s' % ax, 'PAUSE')
 
     def zero(self):
-        for ax in self._axes.values():
+        for ax in list(self._axes.values()):
             self.set('sweep%s' % ax, 'ZERO')
 

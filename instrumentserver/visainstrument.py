@@ -1,5 +1,5 @@
 import time
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import pyvisa
 import objectsharer as objsh
@@ -12,8 +12,8 @@ if hasattr(pyvisa, '__version__'):
         OLD_VISA = False
 
 if OLD_VISA:
-    print "Using deprecated version of pyvisa"
-    print "Please upgrade to pyvisa >= 1.6 at your nearest convenience"
+    print("Using deprecated version of pyvisa")
+    print("Please upgrade to pyvisa >= 1.6 at your nearest convenience")
     import pyvisa.visa
     from pyvisa.visa_exceptions import VisaIOError
     from pyvisa.visa_messages import VI_ERROR_TMO
@@ -34,8 +34,8 @@ class VisaInstrument(Instrument):
         self._term_chars = term_chars
         self._timeout = DEFAULT_TIMEOUT
 
-        self.add_parameter('address', type=types.StringType)
-        self.add_parameter('timeout', type=types.IntType, value=DEFAULT_TIMEOUT,
+        self.add_parameter('address', type=bytes)
+        self.add_parameter('timeout', type=int, value=DEFAULT_TIMEOUT,
                            units='ms',
                            help='Instrument read timeout')
 
@@ -89,7 +89,7 @@ class VisaInstrument(Instrument):
                 self._ins.read_termination = self._term_chars
                 self._ins.timeout = self._timeout
 
-        except Exception, e:
+        except Exception as e:
             msg = 'Unable to open instrument %s' % (self._address,)
             logging.error(msg)
             raise
@@ -119,7 +119,7 @@ class VisaInstrument(Instrument):
                     break
                 except VisaIOError as e:
                     if OLD_VISA:
-                        print e
+                        print(e)
                         if e.error_code != VI_ERROR_TMO:
                             raise e
                     else:
@@ -171,7 +171,7 @@ class VisaInstrument(Instrument):
         p = self.get_parameter_options(channel)
         ret = self.write(p['setfmt']%val)
         for name in p.get('updates', []):
-            print 'updating', name
+            print('updating', name)
             self.get(name)
 
     def add_visa_parameter(self, name, getfmt, setfmt, **kwargs):

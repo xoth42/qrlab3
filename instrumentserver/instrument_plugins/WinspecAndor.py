@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import logging
 
@@ -29,18 +29,18 @@ class WinspecAndor(Instrument):
     def __init__(self, name, address=None, reset=False):
         Instrument.__init__(self, name, tags=['measure'])
 
-        self.add_parameter('cooler_on', type=types.BooleanType,
+        self.add_parameter('cooler_on', type=bool,
                 flags=Instrument.FLAG_GETSET)
 
-        self.add_parameter('target_temperature', type=types.IntType,
+        self.add_parameter('target_temperature', type=int,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 units='C')
 
-        self.add_parameter('temperature', type=types.IntType,
+        self.add_parameter('temperature', type=int,
                 flags=Instrument.FLAG_GET,
                 units='C')
 
-        self.add_parameter('exposure_time', type=types.FloatType,
+        self.add_parameter('exposure_time', type=float,
                 flags=Instrument.FLAG_SET,
                 units='s')
 
@@ -51,11 +51,11 @@ class WinspecAndor(Instrument):
             name = winspec.get_grating_name(grbase + i + 1)
             gratings[i+1] = '%s (%s)' % (gr, name)
 
-        self.add_parameter('grating', type=types.IntType,
+        self.add_parameter('grating', type=int,
                 flags=Instrument.FLAG_GETSET,
                 format_map=gratings)
 
-        self.add_parameter('wavelength', type=types.FloatType,
+        self.add_parameter('wavelength', type=float,
                 flags=Instrument.FLAG_GETSET,
                 units='nm')
 

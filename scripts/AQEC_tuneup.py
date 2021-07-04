@@ -4,7 +4,8 @@ Tuneup file for AQEC. Hopefully running this file will gather all the relevant i
 """
 
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib, OCTlib
 #import matplotlib.pyplot as plt
@@ -51,13 +52,13 @@ ge_comb = OCTlib.comb(qubit_info, [0, -chi2, -chi2*2, -chi2*3], [y*1.0e-3 for y 
 
 
 if 0: # T1
-    from single_qubit import T1measurement
+    from .single_qubit import T1measurement
     t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0, 19e3, 20), np.linspace(20e3, 160e3, 20))), 
                                      double_exp=False, generate=True, plot_seqs=False, seq=None)
     t1_data = t1.measure_keysight()
 
 if 0: # T2
-    from single_qubit import T2measurement
+    from .single_qubit import T2measurement
     t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0e3, 30e3, 101), detune=0.3e6, 
 #    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 3.9e3, 81), detune=2e6, 
                                      double_freq=False, generate=True, seq=None,
@@ -66,7 +67,7 @@ if 0: # T2
 
 
 if 0: # Cavity T2
-    from single_cavity import cavT2
+    from .single_cavity import cavT2
     detune = 10e3
     ct2 = cavT2.CavT2(qubit_info, cavity_infoA, .7, np.linspace(0, 400e3, 41), detune=detune, seq=None,
 #    ct2 = cavT2.CavT2(qubit_info, cavity_infoA, .7, np.linspace(0, 3.99e3, 51), detune=2e6, seq=None,
@@ -75,7 +76,7 @@ if 0: # Cavity T2
 
 
 if 0: # Measure AQEC Rates
-    from FWM import poly_time_domain
+    from .FWM import poly_time_domain
     delays = np.concatenate((np.linspace(0e3, 20e3, 21), np.linspace(21e3, 70e3, 15)))
     
     td0 = poly_time_domain.poly_time_domain([fwm_comb, ge_comb], [qubit_a1], delays, bgcor=True, seq=None, 
@@ -99,16 +100,16 @@ if 0: # Measure AQEC Rates
     rate_67 = td6.measure_keysight()
 
 if 0:
-    print('qubit t1 ', t1_data)
-    print('qubit t2 ', t2_data)
-    print('cavity t2 ', ct2_data)
-    print('rates ', rate_01['tau'].value, rate_23['tau'].value, rate_45['tau'].value, rate_67['tau'].value)
+    print(('qubit t1 ', t1_data))
+    print(('qubit t2 ', t2_data))
+    print(('cavity t2 ', ct2_data))
+    print(('rates ', rate_01['tau'].value, rate_23['tau'].value, rate_45['tau'].value, rate_67['tau'].value))
 
 
 if 1: # bloch characterization
 #    dig.set_trigger_period(4000)
 #    dig.set_naverages(1000)
-    from AQEC import time_bloch
+    from .AQEC import time_bloch
 
 #    times = np.arange(0e3, 290e3, 70e3)
     times = np.linspace(0, 400e3, 7)
@@ -145,7 +146,7 @@ if 1: # bloch characterization
 
 
 if 0: # GRAPE ge test
-    from GRAPE import GRAPE_Rabi
+    from .GRAPE import GRAPE_Rabi
 
     tr = GRAPE_Rabi.GRAPE_Rabi(qubit_info, np.linspace(-1e2, 1e2, 51), 
                    r'C:\qrlab\pulseseq\CSVPulses\gaussian_envelope_t_g_to_e_400ns.csv',
@@ -156,7 +157,7 @@ if 0: # GRAPE ge test
     bla
     
 if 0: # GRAPE displacement test
-    from GRAPE import GRAPE_CavDisp
+    from .GRAPE import GRAPE_CavDisp
 #    seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi, 0)])
     seq = sequencer.Trigger(250)
 
@@ -173,7 +174,7 @@ if 0: # GRAPE displacement test
 
 
 if 0: # grape optimize
-    from GRAPE import GRAPE_optimize
+    from .GRAPE import GRAPE_optimize
 
     logic_1 = sequencer.Join([sequencer.Trigger(200), ge(np.pi, 0)]) # Fock 3+7
     logic_plus = sequencer.Join([sequencer.Trigger(200), ge(np.pi/2, np.pi/2)]) #vertical cat
@@ -190,7 +191,7 @@ if 0: # grape optimize
     bla
 
 if 0: # grape optimize time shift
-    from GRAPE import grape_timeshift
+    from .GRAPE import grape_timeshift
 
     seq = sequencer.Join([sequencer.Trigger(250), ge(np.pi/2, np.pi/2)])
     ts = grape_timeshift.grape_timeshift(qubit_info, qubit_a2, cavity_infoA, np.arange(1, 28),
@@ -199,7 +200,7 @@ if 0: # grape optimize time shift
     bla
     
 if 0: # encode-decode optimize
-    from GRAPE import encode_decode
+    from .GRAPE import encode_decode
     cavityAs = mclient.instruments['cavityAs']
 
     seq = sequencer.Join([sequencer.Trigger(250)])

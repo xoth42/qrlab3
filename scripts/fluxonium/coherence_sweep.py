@@ -11,7 +11,8 @@ Created on Thu Jan 24 11:20:37 2019
 
 
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib
 import matplotlib
@@ -203,7 +204,7 @@ while QK_freq < stop_freq and current < stop_current:
     
     #setting RO power to some other
         RObrick.do_set_power(ROpower_initial + sweep_pow[i])
-        print(ROpower_initial + sweep_pow[i])
+        print((ROpower_initial + sweep_pow[i]))
 #
 #        tr = rabi.Rabi(qubit_info, np.linspace(-0.1, 0.1, 51), plot_seqs=False, generate=True, selective=False, repeat_pulse=1,
 #                   update=False, seq=None, proj_func='phase')

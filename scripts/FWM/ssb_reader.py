@@ -39,7 +39,7 @@ from scripts.single_qubit import ssbspec
 
 
 ''' Path to the .hdf5 file '''
-filepath = 'C:\Users\wanglab\Desktop\hdf_tomo_copy'
+filepath = 'C:\\Users\wanglab\Desktop\hdf_tomo_copy'
 hdf5_name = '\June19PumpCat.hdf5'
 
 if 0:        #06/21

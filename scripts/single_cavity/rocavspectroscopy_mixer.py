@@ -70,7 +70,7 @@ def analysis(powers, freqs, ampdata, phasedata=None, full_fig_name = None, plot_
     #    datas = realdata[0,:]+ 1j*imagdata[0,:]    
         result = lmfit.minimize(S21, params, args=(freqs, amps))
         lmfit.report_fit(result.params)
-        print ('total Q: ',result.params['omega_c'].value/result.params['kappa_a'].value)
+        print(('total Q: ',result.params['omega_c'].value/result.params['kappa_a'].value))
 
         fitdata = np.sqrt(result.params['kappa_prod'].value)/(-1j*(freqs-result.params['omega_c'].value)-(result.params['kappa_a'].value)/2.0 )
         fitdata = fitdata + result.params['roff'].value + 1j*result.params['ioff'].value
@@ -271,7 +271,7 @@ class ROCavSpectroscopy_Mixer(Measurement1D):
                 self.readout_info.rfsource1.set_power(power)
             else:
                 self.readout_info.rfsource.set_power(power)
-            print 'Power = %s' % (power, )
+            print('Power = %s' % (power, ))
             time.sleep(1)
 
             amps = []
@@ -291,16 +291,16 @@ class ROCavSpectroscopy_Mixer(Measurement1D):
                 try:
                     while not ret.is_valid():
                         objsh.helper.backend.main_loop(100)
-                except Exception, e:
+                except Exception as e:
                     alz.set_interrupt(True)
-                    print 'Error: %s' % (str(e), )
+                    print('Error: %s' % (str(e), ))
                     return
 
                 IQ = np.average(ret.get())
                 amps.append(np.abs(IQ))
                 phases.append(np.angle(IQ, deg=True))
-                print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
-                print 'I,Q = %.03f, %.03f' % (np.real(IQ), np.imag(IQ))
+                print('F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True)))
+                print('I,Q = %.03f, %.03f' % (np.real(IQ), np.imag(IQ)))
 
             self.ampdata[ipower,:] = amps
             self.phasedata[ipower,:] = phases

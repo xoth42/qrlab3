@@ -3,15 +3,15 @@ import time
 import types
 import ctypes
 import numpy as np
-import keysightSD1 as key
-from instrument import Instrument
+from . import keysightSD1 as key
+from .instrument import Instrument
 import logging
 from lib.math import demod
 import gc
-from CompiledHVI import CompiledHVI
+from .CompiledHVI import CompiledHVI
 
 
-NO_ERROR = u'0,"No error"'
+NO_ERROR = '0,"No error"'
 
 
 DEFAULT_TIMEOUT = 2000

@@ -55,7 +55,7 @@ class Qubit_Pop(Measurement1D):
         self.postseq = postseq
 
         super(Qubit_Pop, self).__init__(14, infos=(qubit_info, ef_info), **kwargs)
-        self.data.create_dataset('sequence', data=[range(0,14)])
+        self.data.create_dataset('sequence', data=[list(range(0,14))])
 #        self.data.set_attrs()
 
 

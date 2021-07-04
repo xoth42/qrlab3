@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import visa
 import types
 import logging
@@ -48,12 +48,12 @@ class Attocube_ANC150(Instrument):
 
         self.add_parameter('version',
             flags=Instrument.FLAG_GET,
-            type=types.StringType)
+            type=bytes)
 
         self.add_parameter('mode',
             flags=Instrument.FLAG_GETSET,
             channels=(1, 3),
-            type=types.StringType,
+            type=bytes,
             format_map={
                 'e': 'ext',
                 's': 'stp',
@@ -65,23 +65,23 @@ class Attocube_ANC150(Instrument):
         self.add_parameter('frequency',
             flags=Instrument.FLAG_GETSET,
             channels=(1, 3),
-            type=types.IntType,
+            type=int,
             minval=0, maxval=8000)
 
         self.add_parameter('voltage',
             flags=Instrument.FLAG_GETSET,
             channels=(1, 3),
-            type=types.IntType,
+            type=int,
             minval=0, maxval=70)
 
         self.add_parameter('capacitance',
             flags=Instrument.FLAG_GET,
             channels=(1, 3),
-            type=types.IntType)
+            type=int)
 
         self._speed = [0, 0, 0]
         self.add_parameter('speed',
-            type=types.TupleType,
+            type=tuple,
             flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
             doc="""
             Set speed for continuous motion mode.
@@ -89,10 +89,10 @@ class Attocube_ANC150(Instrument):
 
         self.add_function('step', parameters=[{
                 'name': 'channel',
-                'type': types.IntType,
+                'type': int,
             }, {
                 'name': 'steps',
-                'type': types.IntType,
+                'type': int,
             }])
 
         self.add_function('start')
@@ -208,7 +208,7 @@ class Attocube_ANC150(Instrument):
         in continuous motion. Use stop() to stop this motion.
         '''
 
-        if type(steps) is not types.IntType:
+        if type(steps) is not int:
             logging.warning('Integer number of steps required')
             return False
         if steps == 0:

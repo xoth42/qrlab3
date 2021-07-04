@@ -25,7 +25,7 @@ class Pi_Amp_Cal(Measurement1D):
         self.postseq = postseq
 
         super(Pi_Amp_Cal, self).__init__(64, infos=(qubit_info,), **kwargs)
-        self.data.create_dataset('sequence', data=[range(0,64)])
+        self.data.create_dataset('sequence', data=[list(range(0,64))])
 #        self.data.set_attrs()
 
 

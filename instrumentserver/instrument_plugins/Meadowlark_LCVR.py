@@ -21,7 +21,7 @@
 import ctypes
 import numpy as np
 import time
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import logging
 import qt
@@ -42,7 +42,7 @@ def open_device(devid):
     '''Open device and return device handle.'''
     ret = _drv.USBDRVD_OpenDevice(devid, _flags, _guid.ctypes.data)
     if ret == -1:
-        print 'Unable to open device'
+        print('Unable to open device')
     return ret
 
 def close_device(devhandle):
@@ -52,7 +52,7 @@ def open_pipe(devid, pipeid):
     '''Open a pipe and return the pipe handle.'''
     ret = _drv.USBDRVD_PipeOpen(devid, pipeid, _flags, _guid.ctypes.data)
     if ret == -1:
-        print 'Unable to open pipe'
+        print('Unable to open pipe')
     return ret
 
 def close_pipe(devid, pipehandle):
@@ -62,7 +62,7 @@ def bulk_write(devhandle, cmd):
     buf = ctypes.create_string_buffer(cmd)
     ret = _drv.USBDRVD_BulkWrite(devhandle, 1, buf, len(cmd))
     if ret == -1:
-        print 'Write failed'
+        print('Write failed')
     return ret
 
 def bulk_read(devhandle):
@@ -83,12 +83,12 @@ class Meadowlark_LCVR(Instrument):
 
         self.add_parameter('version',
             flags=Instrument.FLAG_GET,
-            type=types.StringType)
+            type=bytes)
 
         self.add_parameter('voltage',
             flags=Instrument.FLAG_GETSET,
             channels=(1, 4),
-            type=types.FloatType)
+            type=float)
 
     def write(self, cmd):
         ret = bulk_write(self._devhandle, cmd)
@@ -145,9 +145,9 @@ class Meadowlark_LCVR(Instrument):
 
         self.add_parameter(name,
             flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-            option_list=channel_info.keys(),
+            option_list=list(channel_info.keys()),
             set_func=lambda val: self.do_set_alias(name, val),
-            type=types.StringType,
+            type=bytes,
             )
 
 def detect_instruments():

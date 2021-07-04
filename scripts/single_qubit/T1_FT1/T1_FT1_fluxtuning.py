@@ -6,7 +6,8 @@ Created on Mon Jul 30 12:26:27 2018
 """
 
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 import matplotlib.pyplot as plt
 from pulseseq import sequencer, pulselib
@@ -57,9 +58,9 @@ if 1: # T1_FT1
     for i in range(15000):
         
         
-        print '###############'
-        print i
-        print '##############'
+        print('###############')
+        print(i)
+        print('##############')
         t1_ft1_justT1 = T1_FT1measurement_justT1andeq.T1_FT1_fluxmeasurementI(qubit_info, ef_info, 16e3, 7.5e3, generate=True)
         t1_ft1_justT1.measure_keysight()
         

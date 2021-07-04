@@ -45,7 +45,7 @@ def analysis(meas, data=None, fig=None):
     Vge = np.mean(calibration_qubit2_excited)
     Vee = np.mean(calibration_bothqubits_excited)
     Vgg = np.mean(calibration_ground)
-    print Veg, Vge, Vee, Vgg
+    print(Veg, Vge, Vee, Vgg)
 
     rd = y1s[12:]
     bl = y2s[12:]
@@ -216,13 +216,13 @@ def analysis(meas, data=None, fig=None):
     
             temporaryy = -fit_amprabi(result.params, xs, 0)
     #        print(-fit_amprabi(result.params, xs, 0))
-            print(xs[np.argmin(temporaryy)], 'min of the fit')
+            print((xs[np.argmin(temporaryy)], 'min of the fit'))
             center_amp_list.append(xs[np.argmin(temporaryy)])
     #        print(min_x, 'This is the value')
             
     #    lmfit.report_fit(params)
         lmfit.report_fit(result.params)
-        print ((11*np.pi - result.params['phase'].value ) * result.params['period'].value/(2*np.pi))# Chen 4/3
+        print(((11*np.pi - result.params['phase'].value ) * result.params['period'].value/(2*np.pi)))# Chen 4/3
         
         fig.axes[0].set_ylabel('Intensity [AU]')
         fig.axes[0].set_xlabel('Pulse amplitude')
@@ -242,7 +242,7 @@ class Rabi(Measurement1D):
         self.qubit2_info  =qubit2_info
         self.cancel_info = cancel_info
         self.amps = amps
-        XS = np.asarray(range(len(amps)+4*3)) - (4*3-1)
+        XS = np.asarray(list(range(len(amps)+4*3))) - (4*3-1)
         self.xs = np.array([XS,XS,XS,XS]).transpose().flatten() / 1e3      # For plotting purposes
         self.update_ins = update
         if seq is None:
@@ -499,7 +499,7 @@ class Rabi(Measurement1D):
             self.pi2_amp = 0
 
         if self.update_ins:
-            print 'Setting qubit pi-rotation ampltidue to %.06f, pi/2 to %.06f' % (self.pi_amp, self.pi2_amp)
+            print('Setting qubit pi-rotation ampltidue to %.06f, pi/2 to %.06f' % (self.pi_amp, self.pi2_amp))
             if self.selective==1:
                 if self.pi_amp:
                     mclient.instruments[self.qubit_info.insname].set_pi_amp_selective(self.pi_amp)

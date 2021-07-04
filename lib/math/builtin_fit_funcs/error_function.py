@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.special as special
 import matplotlib.pyplot as plt
-import common
+from . import common
 
 # The fitting function, should have "xs" as first parameter.
 # Each further parameter is interpreted as a fitting parameters. A default

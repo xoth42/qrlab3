@@ -10,11 +10,11 @@ class BNC_FuncGen645(VisaInstrument):
 
         self.add_visa_parameter('output_on',
             'OUTP?', 'OUTP %s',
-            type=types.BooleanType,
+            type=bool,
             flags=Instrument.FLAG_GETSET)
         self.add_visa_parameter('function',
             'FUNC?', 'FUNC %s',
-            type=types.StringType,
+            type=bytes,
             flags=Instrument.FLAG_GETSET,
             format_map={
                 'SIN': 'SIN',
@@ -28,22 +28,22 @@ class BNC_FuncGen645(VisaInstrument):
 
         self.add_visa_parameter('frequency',
             'FREQ?', 'FREQ %.06f',
-            type=types.FloatType,
+            type=float,
             flags=Instrument.FLAG_GETSET, units='Hz')
 
-        self.add_parameter('amplitude', type=types.FloatType,
+        self.add_parameter('amplitude', type=float,
             flags=Instrument.FLAG_GETSET, units='V')
-        self.add_parameter('offset', type=types.FloatType,
+        self.add_parameter('offset', type=float,
             flags=Instrument.FLAG_GETSET, units='V')
 
-        self.add_parameter('Vlow', type=types.FloatType,
+        self.add_parameter('Vlow', type=float,
             flags=Instrument.FLAG_GETSET, units='V')
-        self.add_parameter('Vhigh', type=types.FloatType,
+        self.add_parameter('Vhigh', type=float,
             flags=Instrument.FLAG_GETSET, units='V')
 
         self.add_visa_parameter('sync_on',
             'OUTP:SYNC?', 'OUTP:SYNC %d',
-            type=types.BooleanType,
+            type=bool,
             flags=Instrument.FLAG_GETSET,
             help='Whether sync output is enabled')
 

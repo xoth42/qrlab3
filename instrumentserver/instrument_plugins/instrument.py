@@ -155,7 +155,7 @@ class Instrument(object):
 
     def has_tag(self, tags):
         '''Return whether instrument has any tag in 'tags'.'''
-        if type(tags) not in (types.ListType, types.TupleType):
+        if type(tags) not in (list, tuple):
             tags = (tags,)
         for tag in tags:
             if tag in self._options['tags']:
@@ -171,7 +171,7 @@ class Instrument(object):
                 doc += '    %s\n' % str(fmtval)
         if 'format_map' in options:
             doc += '\n\nAllowed parameters:\n'
-            for fmtkey, fmtval in options['format_map'].iteritems():
+            for fmtkey, fmtval in options['format_map'].items():
                 doc += '    %s or %s\n' % (fmtkey, fmtval)
 
         if doc != '':
@@ -226,15 +226,15 @@ class Instrument(object):
         if 'flags' not in options:
             options['flags'] = Instrument.FLAG_GETSET
         if 'type' not in options:
-            options['type'] = types.NoneType
+            options['type'] = type(None)
         if 'tags' not in options:
             options['tags'] = []
 
         # If defining channels call add_parameter for each channel
         if 'channels' in options:
-            if len(options['channels']) == 2 and type(options['channels'][0]) is types.IntType:
+            if len(options['channels']) == 2 and type(options['channels'][0]) is int:
                 minch, maxch = options['channels']
-                channels = xrange(minch, maxch + 1)
+                channels = range(minch, maxch + 1)
             else:
                 channels = options['channels']
 
@@ -384,7 +384,7 @@ class Instrument(object):
         Input: name (string)
         Output: dictionary of options
         '''
-        if self._parameters.has_key(name):
+        if name in self._parameters:
             return self._parameters[name]
         else:
             return None
@@ -396,12 +396,12 @@ class Instrument(object):
         Input: name (string)
         Output: dictionary of options
         '''
-        if self._parameters.has_key(name):
+        if name in self._parameters:
             options = dict(self._parameters[name])
             for i in ('get_func', 'set_func'):
                 if i in options:
                     del options[i]
-            if 'type' in options and options['type'] is types.NoneType:
+            if 'type' in options and options['type'] is type(None):
                 options['type'] = None
             return options
         else:
@@ -415,10 +415,10 @@ class Instrument(object):
         Ouput:  None
         '''
         if name not in self._parameters:
-            print 'Parameter %s not defined' % name
+            print('Parameter %s not defined' % name)
             return None
 
-        for key, val in kwargs.iteritems():
+        for key, val in kwargs.items():
             self._parameters[name][key] = val
 
         self.emit('parameter-changed', name)
@@ -499,7 +499,7 @@ class Instrument(object):
         Input: None
         Output: all the paramter names (list of strings)
         '''
-        return self._parameters.keys()
+        return list(self._parameters.keys())
 
     def get_parameters(self):
         '''
@@ -514,7 +514,7 @@ class Instrument(object):
         '''
         Return a dictionary of parameter -> value
         '''
-        ret = {p: self.get(p, query=query) for p in self._parameters.keys()}
+        ret = {p: self.get(p, query=query) for p in list(self._parameters.keys())}
         return ret
 
     def get_shared_parameters(self):
@@ -564,13 +564,13 @@ class Instrument(object):
                 else:
                     format = '%s'
 
-                if type(val) in (types.ListType, types.TupleType):
+                if type(val) in (list, tuple):
                     val = tuple(val)
 
-                elif type(val) is types.DictType:
+                elif type(val) is dict:
                     fmt = ""
                     first = True
-                    for k in val.keys():
+                    for k in list(val.keys()):
                         if first:
                             fmt += '%s: %s' % (k, format)
                             first = False
@@ -584,7 +584,7 @@ class Instrument(object):
 
                 valstr = format % (val)
 
-        except Exception, e:
+        except Exception as e:
             valstr = str(val)
 
         if 'units' in opt:
@@ -647,7 +647,7 @@ class Instrument(object):
         try:
             p = self._parameters[name]
         except:
-            print 'Could not retrieve options for parameter %s' % name
+            print('Could not retrieve options for parameter %s' % name)
             return None
 
         if 'channel' in p and 'channel' not in kwargs:
@@ -666,7 +666,7 @@ class Instrument(object):
 
         # Check this here; getting of cached values should work
         if not flags & 1: #Instrument.FLAG_GET:
-            print 'Instrument does not support getting of %s' % name
+            print('Instrument does not support getting of %s' % name)
             return None
 
         if 'base_name' in p:
@@ -678,20 +678,20 @@ class Instrument(object):
         value = func(**kwargs)
         if 'type' in p and value is not None:
             try:
-                if p['type'] == types.IntType:
+                if p['type'] == int:
                     value = int(value)
-                elif p['type'] == types.FloatType:
+                elif p['type'] == float:
                     value = float(value)
-                elif p['type'] == types.ComplexType:
+                elif p['type'] == complex:
                     value = complex(value)
-                elif p['type'] == types.StringType:
+                elif p['type'] == bytes:
                     pass
-                elif p['type'] == types.BooleanType:
+                elif p['type'] == bool:
                     try:
                         value = bool(int(value))
                     except ValueError:
                         value = bool(value)
-                elif p['type'] == types.NoneType:
+                elif p['type'] == type(None):
                     pass
                 elif p['type'] == np.ndarray:
                     value = np.array(value)
@@ -728,7 +728,7 @@ class Instrument(object):
                 self._access_lock.release()
             return ret
 
-        if type(name) in (types.ListType, types.TupleType):
+        if type(name) in (list, tuple):
             changed = {}
             result = {}
             for key in name:
@@ -754,13 +754,13 @@ class Instrument(object):
         Query all parameters with FLAG_GET flag.
         '''
         keys = []
-        for k, v in self._parameters.iteritems():
+        for k, v in self._parameters.items():
             if v['flags'] & Instrument.FLAG_GET:
                 keys.append(k)
         return self.get(keys)
 
     def _key_from_format_map_val(self, dic, value):
-        for key, val in dic.iteritems():
+        for key, val in dic.items():
             if val == value:
                 return key
         return None
@@ -768,13 +768,13 @@ class Instrument(object):
     def _val_from_option_list(self, opts, value, retidx=False):
         if type(opts[0]) is not type(value):
             return None
-        if type(value) is types.StringType:
+        if type(value) is bytes:
             value = value.upper()
 
         match = None
         matches = 0
         for iopt, val in enumerate(opts):
-            if type(val) is types.StringType:
+            if type(val) is bytes:
                 val = val.upper()
                 if val.startswith(value):
                     matches += 1
@@ -811,31 +811,31 @@ class Instrument(object):
             pass
 
         # Not found in the keys, try to match the values
-        idx = self._val_from_option_list(opts.values(), value, retidx=True)
+        idx = self._val_from_option_list(list(opts.values()), value, retidx=True)
         if idx is None:
             return None
         else:
-            return opts.keys()[idx]
+            return list(opts.keys())[idx]
 
     _CONVERT_MAP = {
-            types.IntType: int,
-            types.FloatType: float,
-            types.ComplexType: complex,
-            types.StringType: str,
-            types.BooleanType: bool,
-            types.TupleType: tuple,
-            types.ListType: list,
+            int: int,
+            float: float,
+            complex: complex,
+            bytes: str,
+            bool: bool,
+            tuple: tuple,
+            list: list,
             np.ndarray: lambda x: x.tolist(),
     }
 
     def _convert_value(self, value, ttype):
-        if type(value) is types.BooleanType and \
-                ttype is not types.BooleanType:
+        if type(value) is bool and \
+                ttype is not bool:
             logging.warning('Setting a boolean, but that is not the expected type')
             raise ValueError()
 
         if ttype == TYPE_INSTRUMENT:
-            if type(value) is types.StringType:
+            if type(value) is bytes:
                 ins = self.get_instruments()
                 if ins is None:
                     return None
@@ -845,7 +845,7 @@ class Instrument(object):
             else:
                 raise ValueError('Unable to convert %s to an Instrument' % value)
 
-        if ttype in (types.ListType, types.TupleType) and type(value) is types.StringType:
+        if ttype in (list, tuple) and type(value) is bytes:
             try:
                 value = eval(value)
             except:
@@ -877,13 +877,13 @@ class Instrument(object):
         Output: Value returned by the _do_set_<name> function,
                 or result of get in FLAG_GET_AFTER_SET specified.
         '''
-        if self._parameters.has_key(name):
+        if name in self._parameters:
             p = self._parameters[name]
         else:
             return None
 
         if not p['flags'] & Instrument.FLAG_SET:
-            print 'Instrument does not support setting of %s' % name
+            print('Instrument does not support setting of %s' % name)
             return None
 
         if 'channel' in p and 'channel' not in kwargs:
@@ -999,7 +999,7 @@ class Instrument(object):
 
         result = True
         changed = {}
-        if type(name) == types.DictType:
+        if type(name) == dict:
 
             # If a set order is specified, process those params in the right order
             if self._set_order:
@@ -1013,7 +1013,7 @@ class Instrument(object):
                         result = False
 
             # Process remaining items
-            for key, val in name.iteritems():
+            for key, val in name.items():
                 val = self._set_value(key, val, **kwargs)
                 if val is not None:
                     changed[key] = val
@@ -1042,7 +1042,7 @@ class Instrument(object):
         so use with caution.
         '''
 
-        if self._parameters.has_key(name):
+        if name in self._parameters:
             p = self._parameters[name]
         else:
             return None
@@ -1080,7 +1080,7 @@ class Instrument(object):
         Input:  name of function (string)
         Output: dictionary of options for function 'name'
         '''
-        if self._functions.has_key(name):
+        if name in self._functions:
             return self._functions[name]
         else:
             return None
@@ -1089,8 +1089,8 @@ class Instrument(object):
         '''
         Return info about parameters for function.
         '''
-        if self._functions.has_key(name):
-            if self._functions[name].has_key('parameters'):
+        if name in self._functions:
+            if 'parameters' in self._functions[name]:
                 return self._functions[name]['parameters']
         return None
 
@@ -1101,7 +1101,7 @@ class Instrument(object):
         Input: None
         Output: list of function names (list of strings)
         '''
-        return self._functions.keys()
+        return list(self._functions.keys())
 
     def get_functions(self):
         '''
@@ -1198,12 +1198,12 @@ class Instrument(object):
         import pythonprocess
         ap = pythonprocess.ArgParser()
         args, kwargs = ap.parse_args()
-        print 'Testing instrument with args %s, keyword args %s' % (args, kwargs)
+        print('Testing instrument with args %s, keyword args %s' % (args, kwargs))
         ins = insclass(*args, **kwargs)
         for p in ins.get_parameter_names():
-            print 'Getting %s' % (p,)
+            print('Getting %s' % (p,))
             val = ins.get(p)
-            print '  Value %s' % (val,)
+            print('  Value %s' % (val,))
         return ins
 
     # Auxiliary parameter functions
@@ -1255,7 +1255,7 @@ class Instrument(object):
         '''
         Set the auxiliary parameter values on the linked instruments.
         '''
-        for p, pi in self._aux_info.iteritems():
+        for p, pi in self._aux_info.items():
             pi['ins'].set(pi['param'], pi['value'])
 
     def get_all_aux(self):
@@ -1263,7 +1263,7 @@ class Instrument(object):
         Update the auxiliary parameter settings  by getting the parameters
         from the linked instruments.
         '''
-        for p, pi in self._aux_info.iteritems():
+        for p, pi in self._aux_info.items():
             v = pi['ins'].get(pi['param'])
             self.set(p, v)
 

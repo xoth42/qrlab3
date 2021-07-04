@@ -6,7 +6,8 @@ Created on Wed Oct 30 16:41:20 2019
 """
 
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib
 import matplotlib
@@ -50,7 +51,7 @@ for ifield, field in enumerate(fields):
 #        time.sleep(600)
         
         Magnet.do_set_field(field)
-        print('set Magnet field to %s'%(field))
+        print(('set Magnet field to %s'%(field)))
         time.sleep(900)
         Magnet.do_set_PSwitch(0)
         print('set PSwitch heater off')
@@ -61,7 +62,7 @@ for ifield, field in enumerate(fields):
 #        amp = np.zeros((len(freqs),51))
         
     if do_cav_spec:
-        from single_cavity import rocavspectroscopy_keysight
+        from .single_cavity import rocavspectroscopy_keysight
         rofreq = 10.933e9
         freq_r = 5e6
         ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(10, 10, 1),
@@ -70,10 +71,10 @@ for ifield, field in enumerate(fields):
         ro.measure()
 #        max_freq = ro.fit_params[2]
         max_freq = ro.freqs[np.argmax(ro.ampdata[0])]
-        print max_freq
+        print(max_freq)
         readout_info.rfsource1.set_frequency(max_freq)
         readout_info.rfsource2.set_frequency(max_freq+50e6)
-    from single_qubit import rabi
+    from .single_qubit import rabi
     dig.set_naverages(20000) 
     #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
     tr = rabi.Rabi(qubit_info, 
@@ -95,7 +96,7 @@ for ifield, field in enumerate(fields):
         qubit1_g = tr.avg_data[np.argmin(abs(tr.avg_data))]
         qubit1_e = tr.avg_data[np.argmax(abs(tr.avg_data))]
 
-    print abs(tr.avg_data[np.argmax(abs(tr.avg_data))]- tr.avg_data[np.argmin(abs(tr.avg_data))])
+    print(abs(tr.avg_data[np.argmax(abs(tr.avg_data))]- tr.avg_data[np.argmin(abs(tr.avg_data))]))
     dig.set_naverages(10000)     
     tr = rabi.Rabi(qubit2_info, 
     #                               np.linspace(-0.3, 0.3, 81), selective=False,
@@ -117,7 +118,7 @@ for ifield, field in enumerate(fields):
         qubit2_g = tr.avg_data[np.argmin(abs(tr.avg_data))]
         qubit2_e = tr.avg_data[np.argmax(abs(tr.avg_data))]
 
-    print abs(tr.avg_data[np.argmax(abs(tr.avg_data))]- tr.avg_data[np.argmin(abs(tr.avg_data))])
+    print(abs(tr.avg_data[np.argmax(abs(tr.avg_data))]- tr.avg_data[np.argmin(abs(tr.avg_data))]))
     for ilist,freqs in enumerate(freqs_list):
         powers = powers_list[ilist]
         fit_freq = np.zeros((len(fields),len(freqs)))
@@ -185,7 +186,7 @@ for ifield, field in enumerate(fields):
     
             dig.set_naverages(50000)    
                 
-            from single_qubit import ssbspec_gaussianfit_SS
+            from .single_qubit import ssbspec_gaussianfit_SS
     
             seq = sequencer.Trigger(600)
             
@@ -213,7 +214,7 @@ for ifield, field in enumerate(fields):
             
             SSdrive.set_rf_on(False)
             time.sleep(0.1)
-            from single_qubit import ssbspec_gaussianfit
+            from .single_qubit import ssbspec_gaussianfit
     
             seq = sequencer.Trigger(600)
             
@@ -254,7 +255,7 @@ for ifield, field in enumerate(fields):
             dig.set_naverages(10000)
     
     
-            from single_qubit import ssbspec_gaussianfit_SS
+            from .single_qubit import ssbspec_gaussianfit_SS
     
             seq = sequencer.Trigger(600)
             
@@ -282,7 +283,7 @@ for ifield, field in enumerate(fields):
             
             SSdrive.set_rf_on(False)
             time.sleep(0.1)
-            from single_qubit import ssbspec_gaussianfit
+            from .single_qubit import ssbspec_gaussianfit
     
             seq = sequencer.Trigger(600)
             

@@ -7,7 +7,7 @@ import pyqtgraph.opengl as gl
 import pyqtgraph.dockarea
 import numpy as np
 
-from window import WindowMultiPlot
+from .window import WindowMultiPlot
 
 class MyDockArea(pg.dockarea.DockArea):
     def __init__(self, *args, **kwargs):
@@ -55,7 +55,7 @@ class MyDockArea(pg.dockarea.DockArea):
             dock.label.show()
         dock.timestamp = time.time()
         while len(self._docks) > self.max_plot_count:
-            least_recently_edited = sorted(self._docks.values(), key=lambda d: d.timestamp)[0]
+            least_recently_edited = sorted(list(self._docks.values()), key=lambda d: d.timestamp)[0]
             self.remove_dock(least_recently_edited)
 
         if self.insert_location == 'right':
@@ -66,7 +66,7 @@ class MyDockArea(pg.dockarea.DockArea):
         self.second_last_dock, self.last_dock = self.last_dock, dock
 
     def hide_all_but(self, dock):
-        for d in self._docks.values():
+        for d in list(self._docks.values()):
             if d is not dock:
                 self.remove_dock(d)
 
@@ -86,7 +86,7 @@ class NodeEditWidget(Qt.QFrame):
         self.attr_list.setColumnCount(2)
         self.attr_list.setHeaderLabels(['Name', 'Value', 'Type'])
 
-        for attr, value in attrs.items():
+        for attr, value in list(attrs.items()):
             self.attr_list.addTopLevelItem(Qt.QTreeWidgetItem([attr, self.repr_value(value), str(type(value))]))
 
         add_attr_box = Qt.QWidget()
@@ -121,7 +121,7 @@ class NodeEditWidget(Qt.QFrame):
         self.proxy = proxy
 
     def update_attrs(self, attrs):
-        for k, v in attrs.items():
+        for k, v in list(attrs.items()):
             if k not in self.attr_list_items:
                 item = Qt.QTreeWidgetItem([k, self.repr_value(v), str(type(v))])
                 self.attr_list_items[k] = item
@@ -336,7 +336,7 @@ class ParametricItemWidget(Rank1ItemWidget):
         self.refresh_plot(attrs)
 
     def refresh_plot(self, attrs=None):
-        data = np.array(zip(self.datas[self.path1],  self.datas[self.path2]))
+        data = np.array(list(zip(self.datas[self.path1],  self.datas[self.path2])))
         if attrs is None:
             attrs = {}
         attrs = attrs.copy()
@@ -393,7 +393,7 @@ class Rank2ItemWidget(Rank1ItemWidget):
         self.cur_attrs = {}
 
     def set_line(self, value):
-        print 'set line', value
+        print('set line', value)
         if self.cur_data is not None:
             Rank1ItemWidget.update_plot(self, self.cur_data[value, :], self.cur_attrs)
 
@@ -557,7 +557,7 @@ class CrosshairPlotWidget(pg.PlotWidget):
                     xdata, ydata = data_item.xData, data_item.yData
                     index_distance = lambda i: (xdata[i]-view_x)**2 + (ydata[i] - view_y)**2
                     if self.parametric:
-                        index = min(range(len(xdata)), key=index_distance)
+                        index = min(list(range(len(xdata))), key=index_distance)
                     else:
                         index = min(np.searchsorted(xdata, view_x), len(xdata)-1)
                         if index and xdata[index] - view_x > view_x - xdata[index - 1]:

@@ -97,7 +97,7 @@ if read_data == False:
     #    print int(title[0:6]) <= 020617
         if int(title[0:6]) <= int('240000') and int(title[0:6]) > int('000000') and title[7:12] =='Singl':
     #    if int(title[0:6]) <= int('192459') and int(title[0:6]) > int('192457') and title[7:12] =='Power':
-            print title
+            print(title)
     
     
     
@@ -105,7 +105,7 @@ if read_data == False:
             #x2_key = 'powers'
             exp = f[date][title]
     #    exp = f['/' + date1 + '/' + time + '_' + experiment]
-            y_keys = exp.keys()
+            y_keys = list(exp.keys())
             #print(y_keys)
             
             #y_keys.remove(x_key)
@@ -167,7 +167,7 @@ if read_data == False:
 #                ct = 0
 #                itime += 1
 if read_data == True:
-    file_path = 'C:\Users\WangLab\Documents\circulator results\\20210201_163118\\'
+    file_path = 'C:\\Users\WangLab\Documents\circulator results\\20210201_163118\\'
     file_name = 'S21_results-0.05.txt'
     data_txt = np.loadtxt(file_path+file_name)
     freq_mid = data_txt[0]

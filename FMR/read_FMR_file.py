@@ -5,9 +5,9 @@ import numpy as np
 import matplotlib.pyplot as pl
 
 # Read the array from file
-new_data = np.loadtxt('C:\Users\WangLab\Documents\FMR(2019)\\YIG_3_1.5mm_DCC_ZoomForModes_S12_0.5-0.55-5e-05_Date_3-24_16-1-35_XandY.txt')
-new_data2 = np.loadtxt('C:\Users\WangLab\Documents\FMR(2019)\\YIG_3_1.5mm_DCC_ZoomForModes_S12_0.5-0.55-5e-05_Date_3-24_16-1-35_ZandPhase.txt')
-print new_data.shape
+new_data = np.loadtxt('C:\\Users\WangLab\Documents\FMR(2019)\\YIG_3_1.5mm_DCC_ZoomForModes_S12_0.5-0.55-5e-05_Date_3-24_16-1-35_XandY.txt')
+new_data2 = np.loadtxt('C:\\Users\WangLab\Documents\FMR(2019)\\YIG_3_1.5mm_DCC_ZoomForModes_S12_0.5-0.55-5e-05_Date_3-24_16-1-35_ZandPhase.txt')
+print(new_data.shape)
 # Note that this returned a 2D array!
 # However, going back to 3D is easy if we know the 
 # original shape of the array

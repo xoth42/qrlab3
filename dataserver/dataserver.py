@@ -41,14 +41,14 @@ class DataSet(object):
         dataserv._register(self.get_fullname(), self)
 
     def __getitem__(self, idx):
-        if type(idx) is types.ListType:
+        if type(idx) is list:
             idx = tuple(idx)
         if self._h5f.shape[0] == 0 and idx == slice(None, None, None):
             return np.array([])
         return self._h5f[idx]
 
     def __setitem__(self, idx, val):
-        if type(idx) is types.ListType:
+        if type(idx) is list:
             idx = tuple(idx)
         self._h5f[idx] = val
         self.flush()
@@ -64,7 +64,7 @@ class DataSet(object):
         '''
         Set HDF5 attributes.
         '''
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             self._h5f.attrs[k] = v
         self.flush()
         self.emit('attrs-changed', kwargs)
@@ -183,12 +183,12 @@ class DataGroup(object):
                 fullname = self._h5f.file.filename + self._h5f[key].name
                 if fullname in dataserv._datagroups:
                     dataserv._datagroups[fullname]._h5f = self._h5f[key]
-                for k, v in attrs.items():
+                for k, v in list(attrs.items()):
                     self._h5f[key].attrs[k] = v
             else:
                 self._h5f[key][:] = val
         elif isinstance(val, DataSet):
-            print(val._name)
+            print((val._name))
             self._h5f[key] = val._h5f
         else:
             self._h5f[key] = val
@@ -208,7 +208,7 @@ class DataGroup(object):
 
     def get_numbered_child(self):
         max_n = 0
-        for k in self.keys():
+        for k in list(self.keys()):
             try:
                 n = int(k)
                 max_n = max(n, max_n)
@@ -258,7 +258,7 @@ class DataGroup(object):
         '''
         Return the available sub-groups and sets.
         '''
-        return self._h5f.keys()
+        return list(self._h5f.keys())
 
     def flush(self):
         self._h5f.file.flush()
@@ -266,7 +266,7 @@ class DataGroup(object):
     def set_attrs(self, **kwargs):
         #JEFF added print statements to track bug
         #print('inside dataserver, inside datagroup, not set. Before loop shit')
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             self._h5f.attrs[k] = v
         self.flush()
         self.emit('attrs-changed', kwargs)
@@ -274,7 +274,7 @@ class DataGroup(object):
 
     def get_attrs(self):
         ret = {}
-        for k, v in self._h5f.attrs.iteritems():
+        for k, v in self._h5f.attrs.items():
             ret[k] = v
         return ret
 
@@ -339,7 +339,7 @@ class DataServer(object):
         return self._datagroups[groupname]
 
     def list_files(self, names_only=True):
-        files = self._hdf5_files.keys()
+        files = list(self._hdf5_files.keys())
         if names_only:
             return files
         else:
@@ -349,7 +349,7 @@ class DataServer(object):
         fn = os.path.abspath(fn)
         logging.debug('removing file ' + fn)
         self._hdf5_files.pop(fn).close()
-        for name in self._datagroups.keys():
+        for name in list(self._datagroups.keys()):
             if name.split('/')[0] == fn:
                 del self._datagroups[name]
 
@@ -363,7 +363,7 @@ class DataServer(object):
 
     def quit(self):
         logging.info('Closing files...')
-        for file in self._hdf5_files.values():
+        for file in list(self._hdf5_files.values()):
             if file.id:
                 file.close()
         import sys

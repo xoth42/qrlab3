@@ -59,10 +59,10 @@ for i, title in enumerate(f[date].keys()):
 #    print int(title[0:6])
 #    print int(title[0:6]) <= 020617
     if title[7:13] == 'Single' and int(title[0:6]) <= int('094850') and int(title[0:6]) >int('041526'):
-        print title
+        print(title)
         
         exp = f[date][title]
-        y_keys = exp.keys()
+        y_keys = list(exp.keys())
 #        xs = exp['detunings'].value
 #        data = exp['avg_pp'].value
 #        data_c = exp['avg'].value

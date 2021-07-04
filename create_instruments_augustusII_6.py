@@ -12,7 +12,7 @@ if 1:
     os.system(r'C:\qrlab\start.bat')
     time.sleep(1)
 
-from mclient import instruments
+from .mclient import instruments
 IQ_mod = instruments.create('IQ_mod', 'SC5413A', devid='10001FA5')
     
 #SCsource = instruments.create('SCsource', 'SC5506A', devid='10001FA3')

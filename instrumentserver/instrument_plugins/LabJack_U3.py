@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  US
 #
 #
-from instrument import Instrument
+from .instrument import Instrument
 
 from measurement.hardware.Labjack.src import u3, LabJackPython #python commands for LJ, you should download this from labjack.com
 import struct
@@ -49,7 +49,7 @@ class LabJack_U3(Instrument):
                                           #should be changed if FIO0-3 should be used for sth else
         self.add_parameter('bipolar_dac',
                 flags=Instrument.FLAG_GETSET,
-                type=types.FloatType,
+                type=float,
                 units='V',
                 minval=-10., maxval=10.,
                 channels=(0,1,2,3),
@@ -59,7 +59,7 @@ class LabJack_U3(Instrument):
 
         self.add_parameter('dac',
              flags=Instrument.FLAG_GETSET,
-             type=types.FloatType,
+             type=float,
              units='V',
              minval=0.0,maxval=5.0,
              channels=(0,1),
@@ -67,7 +67,7 @@ class LabJack_U3(Instrument):
 
         self.add_parameter('analog_in',
                 flags=Instrument.FLAG_GET,
-                type=types.FloatType,
+                type=float,
                 channels=(0,1,2,3),
                 doc='0-2.4V anolog input with 12 bit resolution')
 
@@ -137,9 +137,9 @@ class LabJack_U3(Instrument):
             module['bOffset'] = self.toDouble(response[24:32])
 
             if 255 in response:
-                print 'The calibration constants seem a little off. Please \
+                print('The calibration constants seem a little off. Please \
                         go into settings and make sure the pin numbers are \
-                         correct and that the LJTickDAC is properly attached.'
+                         correct and that the LJTickDAC is properly attached.')
 
             self.dac_modules['LJTDAC'+str(i)] = module
 
@@ -156,7 +156,7 @@ class LabJack_U3(Instrument):
             self.bipolar_dac_values[channel]=voltage
 
         except:
-            print "I2C Error! Something went wrong when setting the LJTickDAC. Is the device detached?"
+            print("I2C Error! Something went wrong when setting the LJTickDAC. Is the device detached?")
         self.save_cfg()
 
     def do_get_bipolar_dac(self, channel):

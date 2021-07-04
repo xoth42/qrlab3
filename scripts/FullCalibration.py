@@ -1,5 +1,6 @@
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer
 
@@ -151,7 +152,7 @@ for i in range(5): # Calibrate storage chi with ramsey revival
     rr.measure()
 
 if 1: # Calibrate storage gf_chi with ramsey revival
-    reload(GFT2measurement)
+    importlib.reload(GFT2measurement)
     alz.set_naverages(500)
     seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate(2.0, 0)])
     rr = GFT2measurement.GFT2Measurement(qubit_info, ef_info, np.linspace(0, 1.2e3, 121), detune=0e3, double_freq=False,
@@ -163,10 +164,10 @@ if 1: # Calibrate storage gf_chi with ramsey revival
                                      postseq=efpi, seq=seq, extra_info=[cavity_infoB, ef_info,])
     rr.measure()
 
-print 'Qubit ge frequency shifted by %d kHz \n' % (np.average(delta_qubit_freq)/1000)
-print 'Qubit ef frequency shifted by %d kHz \n' % (delta_ef_freq/1000)
-print 'CavityA frequency shifted by %d kHz \n' % (delta_cavA_freq/1000)
-print 'CavityB frequency shifted by %d kHz \n' % (delta_cavB_freq/1000)
+print('Qubit ge frequency shifted by %d kHz \n' % (np.average(delta_qubit_freq)/1000))
+print('Qubit ef frequency shifted by %d kHz \n' % (delta_ef_freq/1000))
+print('CavityA frequency shifted by %d kHz \n' % (delta_cavA_freq/1000))
+print('CavityB frequency shifted by %d kHz \n' % (delta_cavB_freq/1000))
 
 bla
 

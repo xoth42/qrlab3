@@ -42,16 +42,16 @@ def analysis(meas, data=None, fig=None):
     ofs0 = np.min(ys)
     amp0 = (np.max(ys) - np.min(ys)) * np.sign(ys[0]-ys[-1])
     scaling0 = .001
-    print 'Amplitude estimate: %.03f ' % (amp0)
+    print('Amplitude estimate: %.03f ' % (amp0))
 
     fPoiss = PoissonFit(meas.proj_num, xs, ys)
     p0 = [ofs0, amp0, scaling0] # JEFF this order seems totally wrong. I might be an idiot though...
     p0 = [amp0, scaling0, ofs0]
-    print('p0', p0)
+    print(('p0', p0))
 #    fig.axes[0].plot(xs, p0[2] + p0[0] * np.exp(-np.square(p0[1] * xs)) * np.power(np.abs(p0[1]*xs), (2*meas.proj_num)) 
 #                / factorial(meas.proj_num), label='Guess')
     p = fPoiss.fit(p0)
-    print('p', p)
+    print(('p', p))
     fig.axes[0].plot(xs, fPoiss.func(p, xs), label='Fit, Ofs=%.03f, Amp=%.03f , Scaling=%.03f '%(p[2], p[0], p[1]))
     fig.axes[0].legend()
     fig.axes[0].set_ylabel('Intensity [AU]')
@@ -156,8 +156,8 @@ class GRAPE_CavDisp(Measurement1D):
         cav = mclient.instruments.get(self.cav_info.insname)
         amp_new = cav.get_pi_amp() / self.scaling
         if self.update_ins:
-            print 'Setting cavity amp scaling by %.03f' % self.scaling
+            print('Setting cavity amp scaling by %.03f' % self.scaling)
             cav.set_pi_amp(amp_new)
         else:
-            print 'Estimated new amp: %.03f (not setting)' % amp_new
+            print('Estimated new amp: %.03f (not setting)' % amp_new)
         return amp_new

@@ -37,7 +37,7 @@ x_key = 'amps'
 
 f = h5.File(filepath + hdf5_name, 'r')
 exp = f['/' + date + '/' + time + '_' + experiment]
-y_keys = exp.keys()
+y_keys = list(exp.keys())
 
     
 xs = exp[x_key].value

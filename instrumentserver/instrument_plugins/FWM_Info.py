@@ -1,5 +1,5 @@
-from Qubit_Info import Qubit_Info
-from instrument import Instrument
+from .Qubit_Info import Qubit_Info
+from .instrument import Instrument
 import types
 
 ROTATIONS = (

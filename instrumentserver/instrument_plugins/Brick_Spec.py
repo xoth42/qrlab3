@@ -2,7 +2,7 @@
 
 import pywinusb.hid
 import time
-from instrument import Instrument
+from .instrument import Instrument
 
 LMS_802 = 0x1221
 LMS_103 = 0x1220

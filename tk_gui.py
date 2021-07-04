@@ -14,10 +14,10 @@
 import objectsharer as objsh
 # Tkinter is the native python GUI framework. Should be easier than Qt. Also
 # no version upgrade issues.
-import Tkinter as tk
+import tkinter as tk
 # ttk provides the means to make the instrument tabs in the GUI. Also provides
 # some other themed widgets.
-import ttk as ttk
+import tkinter.ttk as ttk
 
 ### NOTABLE CONSTANTS ###
 # **************************#
@@ -143,7 +143,7 @@ class InstrumentInputItem():
             if self.option_condition:
                 dropdown_options = self.option_dict[key]['option_list']
             if self.format_map_condition:
-                dropdown_options = self.format_map.values()
+                dropdown_options = list(self.format_map.values())
             self.valuevar = tk.StringVar(self.frame)
             self.setvar = tk.StringVar(self.frame)
             # When the GUI first starts, set all of the parameters to the
@@ -214,7 +214,7 @@ class InstrumentInputItem():
         try:
             param = instr[self.instrument_name].get(self.key)
         except objsh.TimeoutError as err:
-            print 'The instrument server has now timed out'
+            print('The instrument server has now timed out')
             param = None
         if self.option_condition:
             self.valuevar.set(str(param))
@@ -246,7 +246,7 @@ class InstrumentInputItem():
             new_value = self.setvar.get()
         if self.format_map_condition:
             new_value = self.setvar.get()
-            for i in self.format_map.keys():
+            for i in list(self.format_map.keys()):
                 if self.format_map[i] == new_value:
                     new_value = i
         if (not self.option_condition) and (not self.format_map_condition):
@@ -257,7 +257,7 @@ class InstrumentInputItem():
         parameter_type = self.option_dict[self.key]['type']
         if new_value[0:3] == 'P: ':
             new_value = eval(new_value[3:])
-        print type(parameter_type)
+        print(type(parameter_type))
         if parameter_type == type('string'):
             new_value = str(new_value)
         if parameter_type == type(3):
@@ -288,7 +288,7 @@ class InstrumentInformationDisplayFrame():
         self.frame = tk.Frame(root_window)
         tk.Grid.rowconfigure(self.frame, 0, weight=1)
         tk.Grid.columnconfigure(self.frame, 0, weight=1)
-        self.refresh_button = tk.Button(self.frame, text=u"\U0001F5D8",
+        self.refresh_button = tk.Button(self.frame, text="\U0001F5D8",
                                         command=self.refresh_all_parameters)
         # u"\U0001F5D8" is the unicode string that represents a sort of refresh
         #  symbol. This label could have been any other character or phrase;
@@ -303,8 +303,8 @@ class InstrumentInformationDisplayFrame():
         name_value_dict = instr[instrument_name].get_parameter_values()
         self.fields = {}
 
-        self.sorted_instrument_keys = instr[
-            instrument_name].get_shared_parameters().keys()
+        self.sorted_instrument_keys = list(instr[
+            instrument_name].get_shared_parameters().keys())
         self.sorted_instrument_keys.sort()
         # The fake frame doesn't contain anything. Its used as padding so the
         # first and last fields don't get cut off.
@@ -314,10 +314,8 @@ class InstrumentInformationDisplayFrame():
         self.canvas.create_window(0, 0,
                                   window=self.fake_frame,
                                   anchor=tk.W)
-        self.grouped_parameters = filter(lambda x:
-                                         'gui_group' in
-                                         self.total_information_dict[x],
-                                         self.sorted_instrument_keys)
+        self.grouped_parameters = [x for x in self.sorted_instrument_keys if 'gui_group' in
+                                         self.total_information_dict[x]]
         self.misc_parameters = set(self.sorted_instrument_keys) - set(
             self.grouped_parameters)
         self.groups = [self.total_information_dict[x]['gui_group'] for x

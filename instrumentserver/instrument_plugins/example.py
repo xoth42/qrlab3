@@ -1,4 +1,4 @@
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import logging
 
@@ -8,11 +8,11 @@ class example(Instrument):
         Instrument.__init__(self, name, tags=['measure', 'example'])
 
         # minimum
-        self.add_parameter('value1', type=types.FloatType,
+        self.add_parameter('value1', type=float,
                 flags=Instrument.FLAG_GET)
 
         # tags, format, units and doc
-        self.add_parameter('value2', type=types.FloatType,
+        self.add_parameter('value2', type=float,
                 flags=Instrument.FLAG_GET,
                 tags=['measure'],
                 format='%0.2e',
@@ -20,34 +20,34 @@ class example(Instrument):
                 doc='some extra info')
 
         # set bounds and limit rate (stepdelay in ms)
-        self.add_parameter('output1', type=types.FloatType,
+        self.add_parameter('output1', type=float,
                 flags=Instrument.FLAG_SET,
                 minval=0, maxval=10,
                 maxstep=0.01, stepdelay=50)
 
         # option_list
-        self.add_parameter('status', type=types.StringType,
+        self.add_parameter('status', type=bytes,
                 flags=Instrument.FLAG_GETSET,
                 option_list=('on', 'off'))
 
         # format_map and get_after_set
-        self.add_parameter('speed', type=types.IntType,
+        self.add_parameter('speed', type=int,
                 flags=Instrument.FLAG_GETSET | \
                         Instrument.FLAG_GET_AFTER_SET,
                 format_map={0: 'slow', 1: 'medium', 2: 'fast'})
 
         # channels
-        self.add_parameter('input', type=types.FloatType,
+        self.add_parameter('input', type=float,
                 flags=Instrument.FLAG_GET,
                 channels=(1, 4))
 
         # channels with prefix
-        self.add_parameter('output', type=types.FloatType,
+        self.add_parameter('output', type=float,
                 flags=Instrument.FLAG_GETSET,
                 channels=('A', 'B', 'C'), channel_prefix='ch%s_')
 
         # persist, softget
-        self.add_parameter('gain', type=types.FloatType,
+        self.add_parameter('gain', type=float,
                 flags=Instrument.FLAG_SET | \
                         Instrument.FLAG_SOFTGET | \
                         Instrument.FLAG_PERSIST)
@@ -69,7 +69,7 @@ class example(Instrument):
         if address == None:
             raise ValueError('Example Instrument requires an address parameter')
         else:
-            print 'Example Instrument  address %s' % address
+            print('Example Instrument  address %s' % address)
 
         if reset:
             self.reset()
@@ -141,7 +141,7 @@ class example(Instrument):
         return self._dummy_output[channel]
 
     def do_set_output(self, val, channel, times2=False):
-        print 'Set output: ch=%s, val=%s' % (channel, val)
+        print('Set output: ch=%s, val=%s' % (channel, val))
         if times2:
             val *= 2
         self._dummy_output[channel] = val
@@ -151,7 +151,7 @@ class example(Instrument):
 
     def step(self, channel, stepsize=0.1):
         '''Step channel <channel>'''
-        print 'Stepping channel %s by %f' % (channel, stepsize)
+        print('Stepping channel %s by %f' % (channel, stepsize))
         cur = self.get('ch%s_output' % channel, query=False)
         self.set('ch%s_output' % channel, cur + stepsize)
 

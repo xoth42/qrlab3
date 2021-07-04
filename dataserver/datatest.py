@@ -10,7 +10,7 @@ if objsh.helper.backend is None:
 zbe.connect_to('tcp://127.0.0.1:55556')     # Data server
 
 def group_changed_cb(key, group=None):
-    print 'Key %s changed in group %s' % (key, group, )
+    print('Key %s changed in group %s' % (key, group, ))
 
 dataserver = objsh.helper.find_object('dataserver')
 
@@ -31,7 +31,7 @@ g['xs2'] = xs**2
 data = g.create_dataset('averaged', shape=(1001,1001), dtype=np.float)
 data[:] = ZS
 end = time.time()
-print 'Sent in %.03f sec' % (end - start,)
+print('Sent in %.03f sec' % (end - start,))
 data.set_attrs(done=True)
 
 aslice = data[0,:]

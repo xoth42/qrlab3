@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import visa
 import types
 import logging
@@ -53,16 +53,16 @@ class Rigol_DP1308(Instrument):
 
         self._address = address
         self._visainstrument = visa.instrument(self._address, timeout = 2)
-        print ' Rigol timeout set to: %s s'%self._visainstrument.timeout
+        print(' Rigol timeout set to: %s s'%self._visainstrument.timeout)
 
 	# add parameters
-        self.add_parameter('channel', type=types.StringType,
+        self.add_parameter('channel', type=bytes,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET)
 
-        self.add_parameter('status', type=types.StringType,
+        self.add_parameter('status', type=bytes,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET)
 
-        self.add_parameter('current', type=types.FloatType,
+        self.add_parameter('current', type=float,
                 flags=Instrument.FLAG_GETSET, units = 'Amps')
 
 

@@ -4,7 +4,7 @@ Created on Wed Jul 12 16:55:53 2017
 
 @author: WangLab
 """
-from mclient import instruments
+from .mclient import instruments
 # initialize VNA, pull whatever data is on the screen, plot and save it
 VNA = instruments.create('VNA', 'Agilent_E5071C', address='GPIB1::17::INSTR')
 data = VNA.do_get_data()
@@ -25,7 +25,7 @@ pl.plot(x, y)
 pl.title('0815_hanger_magshield_cold, -40dBm')
 pl.xlabel('GHz')
 pl.ylabel('dB')
-print 'before'
+print('before')
 pl.show()
-print 'after'
+print('after')
 bla

@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import visa
 
@@ -34,43 +34,43 @@ class Coherent_Verdi(Instrument):
 #        self.add_function('optimize_diodes')
 
         self.add_parameter('tgt_power',
-            type=types.FloatType, units='W', format='%.04f',
+            type=float, units='W', format='%.04f',
             flags=Instrument.FLAG_GETSET)
         self.add_parameter('output_power',
-            type=types.FloatType, units='W', format='%.03f',
+            type=float, units='W', format='%.03f',
             flags=Instrument.FLAG_GET)
         self.add_parameter('shutter',
-            type=types.IntType, format_map={0: 'Closed', 1: 'Open'},
+            type=int, format_map={0: 'Closed', 1: 'Open'},
             flags=Instrument.FLAG_GETSET)
         self.add_parameter('mode',
-            type=types.IntType, format_map={1: 'Light', 0: 'Current'},
+            type=int, format_map={1: 'Light', 0: 'Current'},
             flags=Instrument.FLAG_GET)
         self.add_parameter('current',
-            type=types.FloatType, units='A', format='%.01f',
+            type=float, units='A', format='%.01f',
             flags=Instrument.FLAG_GET)
         self.add_parameter('Tbaseplate',
-            type=types.FloatType, units='C', format='%.02f',
+            type=float, units='C', format='%.02f',
             flags=Instrument.FLAG_GET)
         self.add_parameter('Tetalon',
-            type=types.FloatType, units='C', format='%.02f',
+            type=float, units='C', format='%.02f',
             flags=Instrument.FLAG_GET)
         self.add_parameter('TLBO',
-            type=types.FloatType, units='C', format='%.02f',
+            type=float, units='C', format='%.02f',
             flags=Instrument.FLAG_GET)
         self.add_parameter('Tdiode',
-            type=types.FloatType, units='C', format='%.02f',
+            type=float, units='C', format='%.02f',
             flags=Instrument.FLAG_GET, channels=(1,2))
         self.add_parameter('THSdiode',
-            type=types.FloatType, units='C', format='%.02f',
+            type=float, units='C', format='%.02f',
             flags=Instrument.FLAG_GET, channels=(1,2))
         self.add_parameter('Idiode',
-            type=types.FloatType, units='A', format='%.01f',
+            type=float, units='A', format='%.01f',
             flags=Instrument.FLAG_GET, channels=(1,2))
         self.add_parameter('Tvanadate',
-            type=types.FloatType, units='C', format='%.02f',
+            type=float, units='C', format='%.02f',
             flags=Instrument.FLAG_GET, channels=(1,2))
         self.add_parameter('PCdiode',
-            type=types.FloatType, units='W', format='%.02f',
+            type=float, units='W', format='%.02f',
             flags=Instrument.FLAG_GET, channels=(1,2))
 
         self._visa = visa.SerialInstrument(address,

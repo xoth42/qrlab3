@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import types
 
 class dummy_positioner(Instrument):
@@ -25,15 +25,15 @@ class dummy_positioner(Instrument):
 
         # Instrument parameters
         self.add_parameter('position',
-            type=types.TupleType,
+            type=tuple,
             flags=Instrument.FLAG_GET,
             format='%.03f, %.03f, %.03f')
         self.add_parameter('speed',
-            type=types.TupleType,
+            type=tuple,
             flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
             format='%.1f, %.01f, %.01f')
         self.add_parameter('channels',
-            type=types.IntType,
+            type=int,
             flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET)
 
         self.set_channels(channels)
@@ -50,16 +50,16 @@ class dummy_positioner(Instrument):
         return True
 
     def do_set_speed(self, val):
-        print 'Setting speed to %r' % (val, )
+        print('Setting speed to %r' % (val, ))
 
     def start(self):
-        print 'Starting'
+        print('Starting')
 
     def stop(self):
-        print 'Stopping'
+        print('Stopping')
 
     def step(self, chan, nsteps):
-        print 'Stepping channel %d by %d' % (chan, nsteps)
+        print('Stepping channel %d by %d' % (chan, nsteps))
 
     def move_abs(self, pos, **kwargs):
-        print 'Moving to %r' % (pos, )
+        print('Moving to %r' % (pos, ))

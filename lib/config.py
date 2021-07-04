@@ -47,7 +47,7 @@ class Config(object):
         filename = os.path.join(get_execdir(), 'userconfig.py')
         if os.path.exists(filename):
             logging.debug('Loading userconfig from %s', filename)
-            execfile(filename, {'config': self})
+            exec(compile(open(filename, "rb").read(), filename, 'exec'), {'config': self})
 
     def setup_tempdir(self):
         '''Get directory for temporary files.'''
@@ -81,7 +81,7 @@ class Config(object):
             f = file(self._get_filename(), 'r')
             self._config = json.load(f)
             f.close()
-        except Exception, e:
+        except Exception as e:
             logging.warning('Unable to load config file')
             self._config = {}
 
@@ -121,7 +121,7 @@ class Config(object):
             f = file(filename, 'w+')
             json.dump(self._config, f, indent=4, sort_keys=True)
             f.close()
-        except Exception, e:
+        except Exception as e:
             logging.warning('Unable to save config file')
 
     def __getitem__(self, key):

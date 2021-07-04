@@ -23,8 +23,8 @@ def benchmark():
     end = time.time()
     ar = ds.get_numpy_array()
     end2 = time.time()
-    print 'Time: %.03f usec/read' % ((end - start)*1e6/1000, )
-    print 'Time: %.03f msec/10MB' % ((end2 - end)*1e3, )
+    print('Time: %.03f usec/read' % ((end - start)*1e6/1000, ))
+    print('Time: %.03f msec/10MB' % ((end2 - end)*1e3, ))
 
 benchmark()
 

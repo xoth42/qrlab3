@@ -3,9 +3,9 @@ from demo_helpers import *
 
 f = get_file('updating_test.h5').get_numbered_child()
 for _ in range(20):
-    print "Enter to Step",
-    raw_input()
+    print("Enter to Step", end=' ')
+    input()
     f['line'] = generate_rank1_data()
     f['img'] = generate_rank2_data()
 
-print 'Done'
+print('Done')

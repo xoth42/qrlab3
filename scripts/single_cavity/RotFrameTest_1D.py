@@ -71,15 +71,15 @@ def analysis(delays, displacements, data, ax=None, bgcor=False, plotdx=None, plo
     t0 = -20
     detuning0 = -0.01
     p0 = [-amp0, detuning0, t0]
-    print p0
+    print(p0)
     dispMag = np.max(np.abs(displacements))
-    print dispMag
+    print(dispMag)
     dispAng = plotdy
-    print dispAng
+    print(dispAng)
 
     fDetuning3D = Detuning3DFit(dispMag, XS, YS, ZS)
     p3D = fDetuning3D.fit(p0)
-    print p3D
+    print(p3D)
     fig, axes = plt.subplots(nrows = 3, ncols = 1)
     for i, ax in enumerate(axes):
         ax.plot(plotdx, ZS[i])
@@ -177,7 +177,7 @@ class RotFrameTest(Measurement2D):
             self.qubit_info.ssb.modulate(seqs)
         if self.cav_info.ssb:
             self.cav_info.ssb.modulate(seqs)
-        if type(self.extra_info) in (types.TupleType, types.ListType):
+        if type(self.extra_info) in (tuple, list):
             for info in self.extra_info:
                 if info.ssb:
                     info.ssb.modulate(seqs)

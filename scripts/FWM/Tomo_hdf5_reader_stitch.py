@@ -40,7 +40,7 @@ from scripts.single_cavity import WignerbyParity
 
 
 ''' Path to the .hdf5 file '''
-filepath = 'C:\Users\wanglab\Desktop\hdf_tomo_copy'
+filepath = 'C:\\Users\wanglab\Desktop\hdf_tomo_copy'
 hdf5_name = '\June19PumpCat.hdf5'
 date = '20190623'
 #time = '110154'
@@ -72,7 +72,7 @@ t_list=['060228', '062649', '065109', '071529', '073948', '080408', '082828', '0
 
 
 
-fig_list=range(8)
+fig_list=list(range(8))
 
 for kkk in fig_list:
 
@@ -81,8 +81,8 @@ for kkk in fig_list:
     f = h5.File(filepath + hdf5_name, 'r')
     exp = f['/' + date + '/' + time + '_' + experiment]
     data = exp['avg_pp'].value
-    x_index=range(x_row)
-    y_index=range(y_col)
+    x_index=list(range(x_row))
+    y_index=list(range(y_col))
 
     data_2D = np.zeros([x_row,y_col])
 

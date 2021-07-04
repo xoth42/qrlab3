@@ -2,7 +2,7 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from lib.math import fit
+from .lib.math import fit
 
 mpl.rcParams['legend.fontsize'] = 7
 
@@ -34,21 +34,21 @@ class AWGCalibrator:
             self.awg.get('ch%s_offset'%chan)
 #            time.sleep(self.delay)
             plevel = self.sa.get_power()
-            print 'V %.03f, power %.03f' % (v, plevel, )
+            print('V %.03f, power %.03f' % (v, plevel, ))
             ps.append(plevel)
 
         ps = np.array(ps)
         f = fit.Polynomial(vs, ps, order=2)
         p0 = [np.min(ps), 0, 1]
         p = f.fit(p0)
-        print 'Fit parameters: %s' % (p,)
+        print('Fit parameters: %s' % (p,))
         center = -p[1] / 2.0 / p[2]
 
         if plot:
             plt.plot(vs, ps, label='chan%d, V %.03f +- %.03f, C = %.03f'%(chan, V0, vrange, center))
 
         imin = np.argmin(ps)
-        print 'Minimum power at %s = %.03f, fit = %.03f' % (chan, vs[imin], center)
+        print('Minimum power at %s = %.03f, fit = %.03f' % (chan, vs[imin], center))
 
         self.awg.set('ch%s_offset'%chan, vs[imin])
         return vs[imin]
@@ -119,7 +119,7 @@ class AWGCalibrator:
             time.sleep(0.2)
             p1 = self.sa.get_power_at(f1)
             p2 = self.sa.get_power_at(f2)
-            print 'Phi %.03f, p1 = %.03f, p2 = %.03f' % (phi, p1, p2)
+            print('Phi %.03f, p1 = %.03f, p2 = %.03f' % (phi, p1, p2))
             rs.append(p1 - p2)
             rs2.append(p2)
 
@@ -141,7 +141,7 @@ class AWGCalibrator:
             time.sleep(self.delay)
             p1 = self.sa.get_power_at(f1)
             p2 = self.sa.get_power_at(f2)
-            print 'Amp %.03f, p1 = %.03f, p2 = %.03f' % (amp, p1, p2)
+            print('Amp %.03f, p1 = %.03f, p2 = %.03f' % (amp, p1, p2))
             rs.append(p1 - p2)
             rs2.append(p2)
 
@@ -170,7 +170,7 @@ class AWGCalibrator:
         # Find frequencies more accurately
 #        f1 = self.sa.find_peak(f1, 5e6, 41, plot=False)
 #        f2 = self.sa.find_peak(f2, 5e6, 41, plot=False)
-        print 'Sidebands @ f1 = %.03f MHz, f2 = %.03f MHz' % (f1/1e6, f2/1e6)
+        print('Sidebands @ f1 = %.03f MHz, f2 = %.03f MHz' % (f1/1e6, f2/1e6))
 
         # Find whether we need a pi phase shift on the first channel to get to the requested sideband
         p1_noflip = self.sa.get_power_at(f1)
@@ -183,10 +183,10 @@ class AWGCalibrator:
         r_flip = p1_flip - p2_flip
 
         if r_noflip > r_flip:
-            print '  Pi phase-shift NOT required.'
+            print('  Pi phase-shift NOT required.')
             self.awg.sideband_modulate(period, flip=False)
         else:
-            print '  Pi phase shift required.'
+            print('  Pi phase shift required.')
 
         if plot:
             ax_time = plt.figure().add_subplot(111)
@@ -204,7 +204,7 @@ class AWGCalibrator:
         for i in range(3):
             t0 = self.optimize_delay_time(chan, t0, trange, f1, f2, ax=ax_time)
             amp0 = self.optimize_amplitude(chan, amp0, amprange, f1, f2, ax=ax_amp)
-            print 'Optimized t = %s, amp = %.03f' % (t0, amp0)
+            print('Optimized t = %s, amp = %.03f' % (t0, amp0))
 
             trange /= 2
             amprange /= 2
@@ -235,7 +235,7 @@ class AWGCalibrator:
         if find_peaks:
             f1 = self.sa.find_peak(f1, freqrange=500e3, N=21)
             f2 = self.sa.find_peak(f2, freqrange=500e3, N=21)
-        print 'Sidebands @ f1 = %.03f MHz, f2 = %.03f MHz' % (f1/1e6, f2/1e6)
+        print('Sidebands @ f1 = %.03f MHz, f2 = %.03f MHz' % (f1/1e6, f2/1e6))
 
         self.sa.set_rf_on(True)
 
@@ -256,7 +256,7 @@ class AWGCalibrator:
         for i in range(iterations):
             phi0 = self.optimize_phase(chans, period, phi0, phirange, f1, f2, ax=ax_phase, N=19)
             amp0 = self.optimize_amplitude(chans[0], amp0, amprange, f1, f2, ax=ax_amp, N=15)
-            print 'Optimized phi = %s, amp = %.03f' % (phi0, amp0)
+            print('Optimized phi = %s, amp = %.03f' % (phi0, amp0))
 
             phirange /= divide
             amprange /= divide

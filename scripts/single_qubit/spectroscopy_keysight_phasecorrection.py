@@ -120,7 +120,7 @@ class Spectroscopy_Keysight_phasecorrection(Measurement1D):
                 IQ = np.average(ret)
                 amps.append(np.abs(IQ))
                 phases1.append(np.angle(IQ, deg=True))
-                print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
+                print('F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True)))
                 self.qubit_rfsource.set_rf_on(0)
                 
                 time.sleep(0.1)
@@ -132,7 +132,7 @@ class Spectroscopy_Keysight_phasecorrection(Measurement1D):
                 dig.release_buf()
                 IQ = np.average(ret)
                 phases2.append(np.angle(IQ, deg=True))
-                print 'brick off F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
+                print('brick off F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True)))
                 self.qubit_rfsource.set_rf_on(1)
                 time.sleep(0.1)
                 
@@ -165,7 +165,7 @@ class Spectroscopy_Keysight_phasecorrection(Measurement1D):
             p0 = [np.max(amps), w0*h0, pos, w0]
             p = f.fit(p0)
             txt = 'Center = %.03f MHz' % (p[2]/1e6,)
-            print 'Fit gave: %s' % (txt,)
+            print('Fit gave: %s' % (txt,))
             ax1.plot(fs/1e6, f.func(p, fs), label=txt)
 
             ax1.legend()

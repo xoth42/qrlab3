@@ -18,7 +18,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import visa
 import pyvisa.vpp43 as vpp43
@@ -46,35 +46,35 @@ class Zaber_TNM(Instrument):
 
         self.add_parameter('firmware',
             flags=Instrument.FLAG_GET,
-            type=types.IntType)
+            type=int)
 
         self.add_parameter('position',
             flags=Instrument.FLAG_GETSET,
-            type=types.IntType)
+            type=int)
 
         self.add_parameter('cursetposition',
             flags=Instrument.FLAG_SET,
-            type=types.IntType)
+            type=int)
 
         self.add_parameter('max_position',
             flags=Instrument.FLAG_GETSET,
-            type=types.IntType)
+            type=int)
 
         self.add_parameter('max_relmove',
             flags=Instrument.FLAG_GETSET,
-            type=types.IntType)
+            type=int)
 
         self.add_parameter('speed',
             flags=Instrument.FLAG_GETSET,
-            type=types.IntType)
+            type=int)
 
         self.add_parameter('acceleration',
             flags=Instrument.FLAG_GETSET,
-            type=types.IntType)
+            type=int)
 
         self.add_parameter('microsteps',
             flags=Instrument.FLAG_GETSET,
-            type=types.IntType)
+            type=int)
 
         # Add functions
         self.add_function('reset')
@@ -182,7 +182,7 @@ class Zaber_TNM(Instrument):
 
         tosend = "%c" % self._deviceid
         if len(data) != 5:
-            print "Data should contain 5 elements"
+            print("Data should contain 5 elements")
         for ch in data:
             tosend += "%c" % ch
 
@@ -226,15 +226,15 @@ class Zaber_TNM(Instrument):
 
     def store_pos(self, store_address):
         if store_address < 1 or store_address > 16:
-            print 'Storage address should be an integer between 1 to 16'
+            print('Storage address should be an integer between 1 to 16')
             return None
 
         reply = self.send_cmd(16, values)
-        print 'Position stored at address %r' % reply
+        print('Position stored at address %r' % reply)
 
     def return_store_pos(self, store_address):
         if store_address < 1 or store_address > 16:
-            print 'Storage address should be an integer between 1 to 16'
+            print('Storage address should be an integer between 1 to 16')
             return None
 
         pos = self.send_cmd(17, store_address)
@@ -242,7 +242,7 @@ class Zaber_TNM(Instrument):
 
     def move_store_pos(self, store_address):
         if store_address < 1 or store_address > 16:
-            print 'Storage address should be an integer between 1 to 16'
+            print('Storage address should be an integer between 1 to 16')
             return None
 
         pos = self.send_cmd(17, store_address)

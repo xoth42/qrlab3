@@ -55,7 +55,7 @@ class Fitter(object):
         self.fit_params = None
 
     def residual_func(self, params, xs, ys, zs=None):
-        kwargs = {k: params[k].value for k in params.keys()}
+        kwargs = {k: params[k].value for k in list(params.keys())}
         if self.is_2d:
             if zs is None:
                 raise Exception('2D function but zs not specified')
@@ -88,7 +88,7 @@ class Fitter(object):
         if self.is_2d and ys is None:
             ys = self.last_ys
 
-        f_kwargs = {k: v.value for k, v in params.items()}
+        f_kwargs = {k: v.value for k, v in list(params.items())}
         f_kwargs.update(kwargs)
 
         if self.is_2d:
@@ -137,7 +137,7 @@ class Fitter(object):
     def get_lmfit_parameters(self, xs, ys, zs=None):
         pdict = self.get_parameter_dict(xs, ys, zs=zs)
         p = lmfit.Parameters()
-        for k, v in pdict.items():
+        for k, v in list(pdict.items()):
             p.add(k, value=v)
         return p
 
@@ -168,7 +168,7 @@ class Fitter(object):
 
         if p is None:
             p = self.get_lmfit_parameters(xs, ys, zs=zs)
-            for key, val in kwargs.items():
+            for key, val in list(kwargs.items()):
                 p[key].value = val
                 p[key].vary = False
 
@@ -178,7 +178,7 @@ class Fitter(object):
 
         if plot:
             import matplotlib.pyplot as plt
-            kwargs = {k: p[k].value for k in p.keys()}
+            kwargs = {k: p[k].value for k in list(p.keys())}
             plt.figure()
             if self.is_2d:
                 plt.pcolor(xs, ys, zs)
@@ -194,7 +194,7 @@ class Fitter(object):
         self.fit_params = p
 
         if print_report:
-            print lmfit.fit_report(p)
+            print(lmfit.fit_report(p))
         if plot:
             if self.is_2d:
                 plt.contour(xs, ys, self.eval_func(xs, ys))
@@ -228,13 +228,13 @@ class Fitter(object):
         return ret
 
 if __name__ == '__main__':
-    print 'Available fitting functions: %s' % (Fitter.get_fit_functions(),)
+    print('Available fitting functions: %s' % (Fitter.get_fit_functions(),))
 
     for fn in Fitter.get_fit_functions():
-        print 'Testing %s' % (fn,)
+        print('Testing %s' % (fn,))
         try:
             f = Fitter(fn)
             f.test()
-        except Exception, e:
-            print 'Function %s failed: %s' % (fn, e)
+        except Exception as e:
+            print('Function %s failed: %s' % (fn, e))
 

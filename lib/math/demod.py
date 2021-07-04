@@ -179,7 +179,7 @@ class ReferencedMeasurement:
 
     def done(self):
         self.summed /= self.robins
-        print 'Averaged data: %s' % (self.summed, )
+        print('Averaged data: %s' % (self.summed, ))
 
 IF_PERIOD = 20
 DEMOD_MAP = {

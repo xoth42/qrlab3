@@ -12,7 +12,8 @@ def gaussian(params, x, data):
 
 
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib
 import matplotlib
@@ -53,7 +54,7 @@ os.chdir(r'C:/qrlab/scripts')
 if 0: # test digitizer
     dig = mclient.instruments['dig']
     data = dig.test_dig(5200, 1, 1, 1)
-    print(np.shape(data))
+    print((np.shape(data)))
     plt.figure()
     plt.plot(data[0][0][:], label = 'sig')
     plt.plot(data[1][0][:], label = 'ref')
@@ -64,7 +65,7 @@ if 0: # test digitizer
 if 0: # test digitizer DEMODULATED
     dig = mclient.instruments['dig']
     avgs = dig.test_dig_demod(3000, 10000)
-    print(np.shape(avgs))
+    print((np.shape(avgs)))
     plt.figure()
     plt.plot(np.real(avgs), label = 'real')
     plt.plot(np.imag(avgs), label = 'imag')
@@ -115,7 +116,7 @@ def take_snr():
         #lmfit.report_fit(result.params)
     
     snr = (means[1] - means[0]) / (stds[0] + stds[1])/2
-    print('SNR = ', snr)
+    print(('SNR = ', snr))
     return snr
 
 if 0: # Check histogramming
@@ -191,7 +192,7 @@ if 0: # histogram calculating and plotting
         ax2.plot(xs[i], -gaussian(result.params, xs[i], 0), color=colors[i], linestyle='dashed')
     
     
-    print('SNR = ', np.abs(means[1] - means[0]) / (stds[0] + stds[1])/2)
+    print(('SNR = ', np.abs(means[1] - means[0]) / (stds[0] + stds[1])/2))
     '''
     ax2.plot(np.linspace(-lim, lim, 100), gaussian(np.linspace(-lim, lim, 100), 
                          g_mean, g_std), linestyle='dashed', color='b')
@@ -217,9 +218,9 @@ if 0: #calibrate twpa (correct w/ snr)
             time.sleep(.1)
             snrs[i,j] = take_snr()
     
-    print('max of ' + str(np.max(snrs)) + ' at ' 
+    print(('max of ' + str(np.max(snrs)) + ' at ' 
           + str(twpa_powers[np.argmax(snrs)/len(twpa_freqs)]) + 'dbm and ' 
-          + str(twpa_freqs[np.argmax(snrs)%len(twpa_freqs)]/1e6) + 'mhz')
+          + str(twpa_freqs[np.argmax(snrs)%len(twpa_freqs)]/1e6) + 'mhz'))
     
     plt.figure()
     plt.yticks(twpa_powers)   # dumb stuff to make plotting nicer
@@ -232,7 +233,7 @@ if 0: #calibrate twpa (correct w/ snr)
 
 
 if 0: # cav transmission
-    from single_cavity import rocavspectroscopy_keysight
+    from .single_cavity import rocavspectroscopy_keysight
     rofreq = 7317.52e6
 #    rofreq = 7320e6
     freq_range =1e6
@@ -267,7 +268,7 @@ if 0: # Calibrate TWPA SNR (questionable???)
         ax.set_xlabel('twpa powers')
         ax.set_ylabel('twpa frequencies')
 
-    from single_qubit import rabi
+    from .single_qubit import rabi
     twpa_powers = np.linspace(-4.2, -4.0, 5)
     freq = 7.918e9
     freq_range = 3e6
@@ -300,7 +301,7 @@ if 0: # Calibrate TWPA SNR (questionable???)
 
     
 if 0: # Calibrate pi pulse
-    from single_qubit import rabi
+    from .single_qubit import rabi
     tr = rabi.Rabi(qubit_info, 
                    np.linspace(-1, 1, 51), selective=False,
 #                   np.linspace(-.1, .1, 51), selective=.5,
@@ -313,7 +314,7 @@ if 0: # Calibrate pi pulse
     
 if 0: # T1
 #    dig.set_trigger_period(500)
-    from single_qubit import T1measurement
+    from .single_qubit import T1measurement
     t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0, 19e3, 20), np.linspace(20e3, 160e3, 20))), 
 #    t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0, 1e3, 151),)), 
                                      double_exp=False, generate=True, plot_seqs=False, seq=None)
@@ -321,7 +322,7 @@ if 0: # T1
 #    bla
 
 if 0: # T2
-    from single_qubit import T2measurement
+    from .single_qubit import T2measurement
     t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0e3, 20e3, 101), detune=.5e6, 
 #    t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0, 3.9e3, 81), detune=2e6, 
                                      double_freq=False, generate=True, seq=None,
@@ -331,7 +332,7 @@ if 0: # T2
     
 
 if 0: # EF rabi for calibration
-    from single_qubit import efrabi
+    from .single_qubit import efrabi
     dig = mclient.instruments['dig']
     dig.set_naverages(1000)
     efr = efrabi.EFRabi(qubit_info, ef_info, 
@@ -344,7 +345,7 @@ if 0: # EF rabi for calibration
 
     
 if 0: # FT1
-    from single_qubit import FT1measurement
+    from .single_qubit import FT1measurement
     #ft1times = np.zeros(len(range(20)))
     for i in range(1):
         ft1 = FT1measurement.FT1Measurement(qubit_info, ef_info, np.linspace(0, 100e3, 101))
@@ -354,7 +355,7 @@ if 0: # FT1
     bla
 
 if 0: # EFT2
-    from single_qubit import EFT2measurement
+    from .single_qubit import EFT2measurement
 
     eft2 = EFT2measurement.EFT2Measurement(qubit_info, ef_info, np.linspace(0e3, 15e3, 161),
                                            detune=0.7e6, 

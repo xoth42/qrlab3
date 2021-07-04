@@ -25,8 +25,8 @@ def analysis(meas, data=None, fig=None):
     ax.set_ylabel('cavity amp')
     fig.canvas.draw()
     
-    print('best qubit amp', meas.qubit_amps[np.unravel_index(zs.argmin(), zs.shape)[1]],
-          'best cavity amp',  meas.cavity_amps[np.unravel_index(zs.argmin(), zs.shape)[0]])
+    print(('best qubit amp', meas.qubit_amps[np.unravel_index(zs.argmin(), zs.shape)[1]],
+          'best cavity amp',  meas.cavity_amps[np.unravel_index(zs.argmin(), zs.shape)[0]]))
 
 
 class GRAPE_optimize(Measurement2D):

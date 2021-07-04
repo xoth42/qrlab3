@@ -9,8 +9,8 @@ import time
 import types
 
 
-from instrument import Instrument
-from windfreak import SynthHD
+from .instrument import Instrument
+from .windfreak import SynthHD
 
 # Please check what COM-port you have the windfreak connected to and then change self.synth in line 21
 
@@ -29,24 +29,24 @@ class WFT1153(Instrument):
         
          
         
-        print(self.channel_index)
-        print(self.synth[self.channel_index].frequency)
+        print((self.channel_index))
+        print((self.synth[self.channel_index].frequency))
         self._min_freq = 10e6
         self._max_freq = 15000e6
         self._min_power = -70.
         self._max_power = 20.
         
-        self.add_parameter('frequency', type=types.FloatType,
+        self.add_parameter('frequency', type=float,
             flags=Instrument.FLAG_GETSET, units='Hz',
             minval=self._min_freq, maxval=self._max_freq,
             display_scale=6, value = self.synth[self.channel_index].frequency)
         
-        self.add_parameter('power', type=types.FloatType,
+        self.add_parameter('power', type=float,
             flags=Instrument.FLAG_GETSET, units='dBm',
             minval=self._min_power, maxval=self._max_power,
             format='%.02f', value = self.synth[self.channel_index].power)
         
-        self.add_parameter('rf_on', type=types.BooleanType,
+        self.add_parameter('rf_on', type=bool,
             flags=Instrument.FLAG_GETSET, value = self.synth[self.channel_index].enable)
         
         

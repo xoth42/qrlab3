@@ -1,4 +1,4 @@
-from windfreak import SynthHD
+from .windfreak import SynthHD
 
 if 0: #initialization
     synth = SynthHD('COM3')
@@ -25,8 +25,8 @@ synth.reference_mode = 'external'
 #synth.reference_frequency = 10e6
 synth[0].enable=True
 synth[1].enable=False
-print(synth[0].power)
-print(synth.reference_mode)
+print((synth[0].power))
+print((synth.reference_mode))
 
 
 #synth.init()

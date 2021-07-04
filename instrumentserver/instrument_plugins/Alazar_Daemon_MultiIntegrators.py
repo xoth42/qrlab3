@@ -17,7 +17,7 @@ from lib.dll_support import alazar
 AC = alazar.Constants
 from lib.math import demod
 from lib.math import excise
-from instrument import Instrument
+from .instrument import Instrument
 import logging
 import gc
 import os
@@ -74,7 +74,7 @@ class Alazar_Daemon_MultiIntegrators(Alazar_Daemon):
 #        cyclereps = MAX_BUFFER_SIZE / size_per_expt # approx # buffers
 #        cyclereps = np.ceil(cyclereps)
 
-        print 'Cyclereps: %s' % cyclereps
+        print('Cyclereps: %s' % cyclereps)
 
         assert cyclereps > 0
 
@@ -93,8 +93,8 @@ class Alazar_Daemon_MultiIntegrators(Alazar_Daemon):
 
         self.recperbuf = cyclereps * cycles
 
-        print 'Recperbuf %s' % self.recperbuf
-        print 'number of buffers to fill %s ' % (self._num_buffers_to_fill)
+        print('Recperbuf %s' % self.recperbuf)
+        print('number of buffers to fill %s ' % (self._num_buffers_to_fill))
 
     def setup_alazar(self, cycles):
         '''
@@ -250,7 +250,7 @@ class Alazar_Daemon_MultiIntegrators(Alazar_Daemon):
 
         if acqtimeout is None:
             acqtimeout = self.get_timeout()
-        print acqtimeout
+        print(acqtimeout)
 
         buf_index = 0
         nsamples = self.get_nsamples()

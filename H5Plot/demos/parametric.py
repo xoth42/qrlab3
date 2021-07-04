@@ -14,10 +14,10 @@ pos_2d = np.zeros(2)
 
 xs, ys, zs = (generate_rank1_data() for _ in range(3))
 for x, y, z in zip(xs, ys, zs):
-    raw_input("Enter to Step")
+    input("Enter to Step")
     pos_2d += (x, y)
 #    pos_3d += (x, y, z)
     f['random walk'].append(pos_2d)
 #    f['3d random walk'].append(pos_3d)
 
-print 'Done'
+print('Done')

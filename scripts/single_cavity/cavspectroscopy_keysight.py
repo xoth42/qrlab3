@@ -26,7 +26,7 @@ def analysis(cav_disps, cav_freqs, ampdata, phasedata=None, plot_type=POWER, fig
         p0 = [np.min(amps), w0*h0, pos, w0]
         p = f.fit(p0)
         txt = 'Center = %.03f MHz' % (p[2]/1e6,)
-        print 'Fit gave: %s' % (txt,)
+        print('Fit gave: %s' % (txt,))
 #        plt.plot(fs/1e6, f.func(p, fs), label=txt)
 
         plt.legend()
@@ -142,7 +142,7 @@ class CavSpectroscopy(Measurement1D):
                 IQ = np.average(ret.get())
                 amps.append(np.abs(IQ))
                 phases.append(np.angle(IQ, deg=True))
-                print 'F = %.03f MHz --> amp = %.1f, angle = %.01f' % (freq / 1e6, np.abs(IQ), np.angle(IQ, deg=True))
+                print('F = %.03f MHz --> amp = %.1f, angle = %.01f' % (freq / 1e6, np.abs(IQ), np.angle(IQ, deg=True)))
 
             self.ampdata[idisp,:] = amps
             self.phasedata[idisp,:] = phases

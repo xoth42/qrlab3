@@ -1,5 +1,6 @@
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 import matplotlib.pyplot as plt
 from pulseseq import sequencer, pulselib
@@ -81,9 +82,9 @@ if 0: # T1_FT1 static flux
         start_time[13] = '-'
         start_time[16] = '-'
         for i in range(N):
-            print '###############'
-            print i
-            print '##############'
+            print('###############')
+            print(i)
+            print('##############')
             '''Do the T1 measurement and save the fit parameters'''
             t1 = T1measurement.T1Measurement(qubit_info, delays, double_exp=False, generate=True, plot_seqs=False, proj_func='projection')
             t1.measure()
@@ -112,8 +113,8 @@ if 0: # T1_FT1 static flux
         end_time[16] = '-'
         
         '''These are just showing you how good your fits were for this run'''
-        print('Average percent error on %.0f T1 measurements was %.03f:' %(int(N), np.average(t1_err/t1_result)))
-        print('Average percent error on %.0f FT1 measurements was %.03f:' %(int(N), np.average(ft1_err/ft1_result)))
+        print(('Average percent error on %.0f T1 measurements was %.03f:' %(int(N), np.average(t1_err/t1_result))))
+        print(('Average percent error on %.0f FT1 measurements was %.03f:' %(int(N), np.average(ft1_err/ft1_result))))
         
         '''Save the data for later analysis'''
         main_filepath = 'C:/Users/wanglab/Documents/DRosenstock/t1ft1/full curve results/static_flux/'
@@ -143,8 +144,8 @@ if 0: # T1_FT1 static flux
         
         '''Plot the data'''
         plt.figure()
-        plt.errorbar(range(len(t1_result)), t1_result, yerr = t1_err, label='|e> decay')
-        plt.errorbar(range(len(ft1_result)), ft1_result, yerr = ft1_err, label='|f> decay')
+        plt.errorbar(list(range(len(t1_result))), t1_result, yerr = t1_err, label='|e> decay')
+        plt.errorbar(list(range(len(ft1_result))), ft1_result, yerr = ft1_err, label='|f> decay')
         plt.xlabel('Measurement iterations')
         plt.ylabel('lifetime (us)')
         plt.legend(loc='upper right')
@@ -230,9 +231,9 @@ if 0: # T1_FT1 switching flux
         Yoko.do_set_output_state(1)
 #        alz.set_naverages(2500)
         for i in range(N):
-            print '###############'
-            print i
-            print '##############'
+            print('###############')
+            print(i)
+            print('##############')
             '''Do the T1 measurement and save the fit parameters'''
             t1 = T1measurement.T1Measurement(qubit2_info, t1delays, double_exp=False, generate=True, plot_seqs=False,
                                              proj_func='amplitude')
@@ -302,9 +303,9 @@ if 0: # T1_FT1 switching flux
         yoko.do_set_output_state(0)
         
         '''These are just showing you how good your fits were for this run'''
-        print('Average percent error on %.0f T1 measurements was %.03f:' %(int(N), np.average(t1_err/t1_result)))
-        print('Average percent error on %.0f FT1 measurements was %.03f:' %(int(N), np.average(ft1_err/ft1_result)))
-        print('Average percent error on %.0f T1(B) measurements was %.03f:' %(int(N), np.average(t1B_err/t1B_result)))
+        print(('Average percent error on %.0f T1 measurements was %.03f:' %(int(N), np.average(t1_err/t1_result))))
+        print(('Average percent error on %.0f FT1 measurements was %.03f:' %(int(N), np.average(ft1_err/ft1_result))))
+        print(('Average percent error on %.0f T1(B) measurements was %.03f:' %(int(N), np.average(t1B_err/t1B_result))))
         
         main_filepath = 'C:/Users/wanglab/Documents/DRosenstock/t1ft1/full curve results/switching_flux/'
         time_stamp = start_time + list(str(' to ')) + end_time
@@ -339,9 +340,9 @@ if 0: # T1_FT1 switching flux
         
         '''Plot the data'''
         plt.figure()
-        plt.errorbar(range(len(t1_result)), t1_result, yerr = t1_err, label='|e> decay')
-        plt.errorbar(range(len(ft1_result)), ft1_result, yerr = ft1_err, label='|f> decay')
-        plt.errorbar(range(len(t1B_result)), t1B_result, yerr = t1B_err, label='|e>(B) decay')
+        plt.errorbar(list(range(len(t1_result))), t1_result, yerr = t1_err, label='|e> decay')
+        plt.errorbar(list(range(len(ft1_result))), ft1_result, yerr = ft1_err, label='|f> decay')
+        plt.errorbar(list(range(len(t1B_result))), t1B_result, yerr = t1B_err, label='|e>(B) decay')
         plt.xlabel('Measurement iterations')
         plt.ylabel('lifetime (us)')
         plt.legend(loc='upper right')
@@ -377,7 +378,7 @@ if 0: # T1 Loop
         hour = int(str(now)[11:13])
         minute = int(str(now)[14:16])
         second = int(str(now)[17:19])
-        print 'This measurement took place at %.f:%.f:%.f' %(hour, minute, second)
+        print('This measurement took place at %.f:%.f:%.f' %(hour, minute, second))
         t1_result.append(t1.result_params['tau'].value)
         tau_err.append(t1.result_params['tau'].stderr)
         v_g.append(t1.result_params['ofs'].value)
@@ -391,14 +392,14 @@ if 0: # T1 Loop
     plt.figure()
 #    plt.xticks(ticks, times)
 #    plt.errorbar(range(len(t1_result)), t1_result, yerr = tau_err)
-    plt.plot(range(len(t1_result)), t1_result)
+    plt.plot(list(range(len(t1_result))), t1_result)
     plt.xlabel('Measurement iterations')
     plt.ylabel('T1 lifetime')
     
     plt.figure()
 #    plt.xticks(ticks, times)
-    plt.errorbar(range(len(v_g)), v_g, yerr = g_err, label='|g>')
-    plt.errorbar(range(len(v_e)), v_e, yerr = e_err, label='|e>')
+    plt.errorbar(list(range(len(v_g))), v_g, yerr = g_err, label='|g>')
+    plt.errorbar(list(range(len(v_e))), v_e, yerr = e_err, label='|e>')
     plt.legend(loc='upper right')
     plt.xlabel('Measurement iterations')
     plt.ylabel('Amplitude (AU)')
@@ -432,7 +433,7 @@ if 0: # FT1 Loop
         hour = int(str(now)[11:13])
         minute = int(str(now)[14:16])
         second = int(str(now)[17:19])
-        print 'This measurement took place at %.f:%.f:%.f' %(hour, minute, second)
+        print('This measurement took place at %.f:%.f:%.f' %(hour, minute, second))
         ft1_result.append(ft1.fit_params['tau'].value)
         tau_err.append(ft1.fit_params['tau'].stderr)
         v_g.append(ft1.fit_params['ofs'].value)
@@ -446,14 +447,14 @@ if 0: # FT1 Loop
     plt.figure()
 #    plt.xticks(ticks, times)
 #    plt.errorbar(range(len(ft1_result)), ft1_result, yerr = tau_err)
-    plt.plot(range(len(ft1_result)), ft1_result)
+    plt.plot(list(range(len(ft1_result))), ft1_result)
     plt.xlabel('Measurement iterations')
     plt.ylabel('FT1 lifetime')
     
     plt.figure()
 #    plt.xticks(ticks, times)
-    plt.errorbar(range(len(v_g)), v_g, yerr = g_err, label='|g>')
-    plt.errorbar(range(len(v_eq)), v_eq, yerr = eq_err, label='|g>+|e>/2')
+    plt.errorbar(list(range(len(v_g))), v_g, yerr = g_err, label='|g>')
+    plt.errorbar(list(range(len(v_eq))), v_eq, yerr = eq_err, label='|g>+|e>/2')
     plt.legend(loc='upper right')
     plt.xlabel('Measurement iterations')
     plt.ylabel('Amplitude (AU)')
@@ -522,9 +523,9 @@ if 1: # T1_FT1 (new)
         yoko.do_set_output_state(1)
         alz.set_naverages(500)
         for j in range(N):
-            print '###############'
-            print j
-            print '##############'
+            print('###############')
+            print(j)
+            print('##############')
             
             
             if j == 0:
@@ -603,8 +604,8 @@ if 1: # T1_FT1 (new)
         
         '''These are just showing you how good your fits were for this run'''
 #        print('Average percent error on %.0f T1 measurements was %.03f:' %(int(N), np.average(t1_err/t1_result)))
-        print('Average percent error on %.0f FT1 measurements was %.03f:' %(int(N), np.average(ft1_err/ft1_result)))
-        print('Average percent error on %.0f T1(B) measurements was %.03f:' %(int(N), np.average(t1B_err/t1B_result)))
+        print(('Average percent error on %.0f FT1 measurements was %.03f:' %(int(N), np.average(ft1_err/ft1_result))))
+        print(('Average percent error on %.0f T1(B) measurements was %.03f:' %(int(N), np.average(t1B_err/t1B_result))))
 #        
         main_filepath = 'C:/Users/WangLabPC7/Documents/DRosenstock/t1ft1/'
         time_stamp = start_time + list(str(' to ')) + end_time
@@ -655,9 +656,9 @@ if 1: # T1_FT1 (new)
         '''Plot the data'''
         plt.figure()
         for i in range(5):
-            plt.errorbar(range(len(t1_results)), t1_results[:,i], yerr = t1_errs[:,i], label='|e> decay, %.0f' %(w_q[i]))
-        plt.errorbar(range(len(ft1_result)), ft1_result, yerr = ft1_err, label='|f> decay')
-        plt.errorbar(range(len(t1B_result)), t1B_result, yerr = t1B_err, label='|e>(B) decay')
+            plt.errorbar(list(range(len(t1_results))), t1_results[:,i], yerr = t1_errs[:,i], label='|e> decay, %.0f' %(w_q[i]))
+        plt.errorbar(list(range(len(ft1_result))), ft1_result, yerr = ft1_err, label='|f> decay')
+        plt.errorbar(list(range(len(t1B_result))), t1B_result, yerr = t1B_err, label='|e>(B) decay')
         plt.xlabel('Measurement iterations')
         plt.ylabel('lifetime (us)')
         plt.legend(loc='upper right')

@@ -1,8 +1,8 @@
-from sequencer import Combined, Sequence, Sequencer, Delay, Pulse, Instruction, Constant
+from .sequencer import Combined, Sequence, Sequencer, Delay, Pulse, Instruction, Constant
 import numpy as np
 import scipy.special
 import scipy.signal
-import ampgen
+from . import ampgen
 
 #########################################
 # Constants

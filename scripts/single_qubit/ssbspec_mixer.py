@@ -59,12 +59,12 @@ def analysis(meas, data=None, fig=None):
     meas.height=f.get_height()
 #    print(meas.height)
     meas.center = -p[2]/1e6
-    print(meas.center)
+    print((meas.center))
     meas.width = f.get_fwhm
     txt = 'Center = %.03f MHz, FWHM = %.03f MHz' % (-p[2]/1e6, p[3]/1e6)
     plt.plot(-xs/1e6, f.func(p, xs), label=txt)
     plt.legend()
-    print 'Fit gave: %s' % (txt,)
+    print('Fit gave: %s' % (txt,))
 
 class SSBSpec_mixer(Measurement1D):
 

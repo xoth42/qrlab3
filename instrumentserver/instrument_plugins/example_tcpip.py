@@ -1,7 +1,7 @@
 # QTLab example instrument communicating by TCP/IP
 # Reinier Heeres, 2009
 
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import socket
 
@@ -10,7 +10,7 @@ class example_tcpip(Instrument):
     def __init__(self, name, host, port):
         Instrument.__init__(self, name, tags=['measure'])
 
-        self.add_parameter('position', type=types.FloatType,
+        self.add_parameter('position', type=float,
                 flags=Instrument.FLAG_GETSET)
 
         self.add_function('reset')
@@ -47,5 +47,5 @@ class example_tcpip(Instrument):
 
     def step(self, channel, stepsie=0.1):
         '''Step channel <channel>'''
-        print 'Stepping channel %d by %f' % (channel, stepsize)
+        print('Stepping channel %d by %f' % (channel, stepsize))
 

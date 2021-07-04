@@ -102,7 +102,7 @@ class Current_Sweep_Varies_freq_VNA(Measurement1D):
 #            stop_at = '0/%s'%(len(self.currents)),
 #            avelimit = self.avelimit,   
 #        )
-        print self.data.get_fullname()
+        print(self.data.get_fullname())
         self.full_fig_name = self.data.get_fullname()
         self.currentdata = self.data.create_dataset('currents', data=self.currents)
         self.freqs = self.data.create_dataset('freqs', shape=[len(self.currents),self.VNA_points])
@@ -207,7 +207,7 @@ class Current_Sweep_Varies_freq_VNA(Measurement1D):
                         objsh.helper.backend.main_loop(100)
                         VNA.set_format('MLOG')
                 except:
-                    print 'error with async'
+                    print('error with async')
     #                VNA.set_interrupt(True)
     #        '''
         
@@ -248,9 +248,9 @@ class Current_Sweep_Varies_freq_VNA(Measurement1D):
     
                 VNA.set_trigger_source('internal')
                 count = count + ave
-                print '%s averages done' %(count)
+                print('%s averages done' %(count))
             
-            print 'current = %.05fmA done  %s/%s' % (current, icurrent+1, len(self.currents))
+            print('current = %.05fmA done  %s/%s' % (current, icurrent+1, len(self.currents)))
             if icurrent == 0:
                 self.fig = pl.figure()
                 if len(self.Sij) == 1:
@@ -281,14 +281,14 @@ class Current_Sweep_Varies_freq_VNA(Measurement1D):
                 y[0] = y[1] = self.freqs[icurrent]
                 y = np.transpose(y)
                 self.fig.axes[i].pcolormesh(x, y, z,vmax=np.max(z))#,vmin = np.max([np.min(z),-200]))
-                print np.max(z), np.min(z)
+                print(np.max(z), np.min(z))
         #        fig.axes[i].set_xlim(xs.min(), xs.max())
         #        fig.axes[i].set_ylim(ys.min(), ys.max())
                 self.fig.canvas.draw()
 
 #        print 'self.freqs\n', self.freqs.value
         self.analyze()
-        print self.data.get_fullname()
+        print(self.data.get_fullname())
         
     def analyze(self):
         analysis(self.currents, self.freqs, self.realdata, self.imagdata, self.fig_name,self.full_fig_name, self.Sij, fig = None)

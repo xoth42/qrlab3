@@ -23,7 +23,7 @@
 #    10) Moet er bij inlezen data worden gecontroleerd of de dacpolarity nog klopt?
 #
 
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import pyvisa.vpp43 as vpp43
 from time import sleep
@@ -70,8 +70,8 @@ class SMS(Instrument):
             self._numdacs = int(numdacs)
         else:
             logging.error(__name__ + ' : specified number of dacs needs to be multiple of 4')
-        self.dac_byte = range(self._numdacs)
-        self.pol_num = range(self._numdacs)
+        self.dac_byte = list(range(self._numdacs))
+        self.pol_num = list(range(self._numdacs))
 
         self._config = config.get_config()
         self._filepath = os.path.join(self._config['execdir'],
@@ -91,18 +91,18 @@ class SMS(Instrument):
 
         # Add parameters
         self.add_parameter('pol_dacrack',
-                type=types.StringType,
+                type=bytes,
                 flags=Instrument.FLAG_GET,
                 channels=(1, self._numdacs/4))
         self.add_parameter('dac',
-                type=types.FloatType,
+                type=float,
                 flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
                 channels=(1, self._numdacs),
                 maxstep=0.01, stepdelay=50,
                 units='Volts', format='%.6e')
-        self.add_parameter('battvoltage_pos', type=types.FloatType,
+        self.add_parameter('battvoltage_pos', type=float,
                 flags=Instrument.FLAG_GET, units='Volts')
-        self.add_parameter('battvoltage_neg', type=types.FloatType,
+        self.add_parameter('battvoltage_neg', type=float,
                 flags=Instrument.FLAG_GET, units='Volts')
 
         self._open_serial_connection()

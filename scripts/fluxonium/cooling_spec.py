@@ -127,15 +127,15 @@ class Cooling_spec(Measurement2D):
                 try:
                     while not ret.is_valid():
                         objsh.helper.backend.main_loop(100)
-                except Exception, e:
+                except Exception as e:
                     alz.set_interrupt(True)
-                    print 'Error: %s' % (str(e), )
+                    print('Error: %s' % (str(e), ))
                     return
 
                 IQ = np.average(ret.get())
                 amps.append(np.abs(IQ))
                 phases.append(np.angle(IQ, deg=True))
-                print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
+                print('F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True)))
             self.ampdata[ipower,:] = amps[(2*ipower)+1]-amps[(2*ipower)]
             self.phasedata[ipower,:] = phases[(2*ipower)+1]-amps[(2*ipower)]
 

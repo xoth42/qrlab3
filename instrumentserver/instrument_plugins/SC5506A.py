@@ -14,7 +14,7 @@ import ctypes
 import ctypes.wintypes as win
 import types
 import numpy as np
-from instrument import Instrument
+from .instrument import Instrument
 import logging
 
 SUCCESS = 0
@@ -26,7 +26,7 @@ try:
     lb_dll = ctypes.windll.LoadLibrary(LB_DLL)
     #lb_dll = ctypes.cdll.LoadLibrary(LB_DLL)
     
-except Exception, e:
+except Exception as e:
     s = 'Unable to load SignalCore DLL, please put sc5506a_usb.dll in instrumentserver directory ' + str(e)
     raise ValueError(s)
 
@@ -37,11 +37,11 @@ class deviceParams_t(ctypes.Structure):
                      ('ch2PowerLevel', ctypes.c_float)]
     
     def print_params(self):
-        print('\ndevice rf params:\n'
+        print(('\ndevice rf params:\n'
               + 'ch1Frequency = ' + str(self.ch1Frequency) + '\n'
               + 'ch2Frequency = ' + str(self.ch2Frequency) + '\n'
               + 'ch1PowerLevel = ' + str(self.ch1PowerLevel) + '\n'
-              + 'ch2PowerLevel = ' + str(self.ch2PowerLevel))
+              + 'ch2PowerLevel = ' + str(self.ch2PowerLevel)))
     
 class deviceInfo_t(ctypes.Structure):
     _fields_ = [('productSerialNumber', ctypes.c_uint),
@@ -52,13 +52,13 @@ class deviceInfo_t(ctypes.Structure):
                 ('manDate', ctypes.c_uint)]
     
     def print_params(self):
-        print('\ndevice info params:\n'
+        print(('\ndevice info params:\n'
               + 'productSerialNumber = ' + str(self.productSerialNumber) + '\n'
               + 'rfModuleSerialNumber = ' + str(self.rfModuleSerialNumber) + '\n'
               + 'firmwareRevision = ' + str(self.firmwareRevision) + '\n'
               + 'hardwareRevision = ' + str(self.hardwareRevision) + '\n'
               + 'calDate = ' + str(self.calDate) + '\n'
-              + 'manDate = ' + str(self.manDate))
+              + 'manDate = ' + str(self.manDate)))
               
         
 class deviceStatus_t(ctypes.Structure):
@@ -84,7 +84,7 @@ class deviceStatus_t(ctypes.Structure):
                      ('deviceAccess', ctypes.c_ubyte)]
     
     def print_params(self):
-        print('\ndevice status params:\n'
+        print(('\ndevice status params:\n'
               + 'ch1AutoLevelEnable = ' + str(self.ch1AutoLevelEnable) + '\n'
               + 'ch2AutoLevelEnable = ' + str(self.ch2AutoLevelEnable) + '\n'
               + 'ch1AlcOpen = ' + str(self.ch1AlcOpen) + '\n'
@@ -104,7 +104,7 @@ class deviceStatus_t(ctypes.Structure):
               + 'extRefDetected = ' + str(self.extRefDetected) + '\n'
               + 'extRefLockEnable = ' + str(self.extRefLockEnable) + '\n'
               + 'refClkOutEnable = ' + str(self.refClkOutEnable) + '\n'
-              + 'deviceAccess = ' + str(self.deviceAccess))        
+              + 'deviceAccess = ' + str(self.deviceAccess)))        
 
 NUM_MAX_DEVICES = 5
 ID_BUFFER_SIZE = 8
@@ -123,7 +123,7 @@ class SC5506A(Instrument):
         
         # This is the code Josh wrote
         string_buffers = [ctypes.create_string_buffer(ID_BUFFER_SIZE) for i in range(NUM_MAX_DEVICES)]
-        pointers = (ctypes.c_char_p*NUM_MAX_DEVICES)(*map(ctypes.addressof, string_buffers))
+        pointers = (ctypes.c_char_p*NUM_MAX_DEVICES)(*list(map(ctypes.addressof, string_buffers)))
         results = [s.value for s in string_buffers]
         self.dev_num = ctypes.c_char_p(devid)
         lb_dll.sc5506a_OpenDevice.restype = ctypes.POINTER(ctypes.c_int)
@@ -176,27 +176,27 @@ class SC5506A(Instrument):
 #            flags=Instrument.FLAG_GET, value=self._serialno)
 #        self.add_parameter('handle', type=types.IntType,
 #            flags=Instrument.FLAG_GET, value=self._handle)
-        self.add_parameter('ch1_frequency', type=types.FloatType,
+        self.add_parameter('ch1_frequency', type=float,
             flags=Instrument.FLAG_GETSET, units='Hz',
             minval=self._min_freq, maxval=self._max_freq,
             display_scale=6, value = deviceParams.ch1Frequency)
-        self.add_parameter('ch2_frequency', type=types.FloatType,
+        self.add_parameter('ch2_frequency', type=float,
             flags=Instrument.FLAG_GETSET, units='MHz',
             minval=self._min_freq, maxval=self._max_freq,
             display_scale=6, value = deviceParams.ch2Frequency)
-        self.add_parameter('ch1_power', type=types.FloatType,
+        self.add_parameter('ch1_power', type=float,
             flags=Instrument.FLAG_GETSET, units='dBm',
             minval=self._min_power, maxval=self._max_power,
             format='%.02f', value = deviceParams.ch1PowerLevel)
-        self.add_parameter('ch2_power', type=types.FloatType,
+        self.add_parameter('ch2_power', type=float,
             flags=Instrument.FLAG_GETSET, units='dBm',
             minval=self._min_power, maxval=self._max_power,
             format='%.02f', value = deviceParams.ch2PowerLevel)
-        self.add_parameter('ch1_output', type=types.BooleanType,
+        self.add_parameter('ch1_output', type=bool,
             flags=Instrument.FLAG_GETSET, value = True)
-        self.add_parameter('ch2_output', type=types.BooleanType,
+        self.add_parameter('ch2_output', type=bool,
             flags=Instrument.FLAG_GETSET, value = True)
-        self.add_parameter('ext_locked', type=types.BooleanType,
+        self.add_parameter('ext_locked', type=bool,
             flags=Instrument.FLAG_GET, value = True)
         
         

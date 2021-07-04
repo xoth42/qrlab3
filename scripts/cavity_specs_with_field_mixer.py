@@ -19,7 +19,8 @@ Created on Fri Nov 15 13:07:24 2019
 @author: Wang_Lab
 """
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib
 import matplotlib
@@ -101,7 +102,7 @@ for field in fields:
     
     for j in range(repeat):
           
-        from single_cavity import rocavspectroscopy_keysight_mixer
+        from .single_cavity import rocavspectroscopy_keysight_mixer
     #    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])
     #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0), ef2_info.rotate(np.pi, 0)])
     #    Yoko.do_set_current(-0.00175)

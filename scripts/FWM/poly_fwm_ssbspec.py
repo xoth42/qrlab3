@@ -44,7 +44,7 @@ def analysis(meas, data=None, fig=None):
         p0 = [np.max(ys), w0*h0, pos, w0]
         p = f.fit(p0)
     txt = 'Center = %.03f MHz, FWHM = %.03f MHz' % (p[2]/1e6, p[3]/1e6)
-    print 'Fit gave: %s' % (txt,)
+    print('Fit gave: %s' % (txt,))
 
     fig.axes[0].plot(xs/1e6, ys, '.')
     fig.axes[0].set_xlabel('Detuning (MHz)')

@@ -1,4 +1,4 @@
-from instrument import Instrument
+from .instrument import Instrument
 from lib.network import remote_instrument as ri
 from lib.network import object_sharer as objsh
 import logging
@@ -13,7 +13,7 @@ class Remote_Instrument(Instrument):
             inssrv = objsh.helper.find_object('%s:instrument_server' % server)
         self._srv = inssrv
         params = self._srv.get_ins_parameters(remote_name)
-        for name, info in params.iteritems():
+        for name, info in params.items():
             if info['flags'] & Instrument.FLAG_GET:
                 info['get_func'] = self._get
             elif info['flags'] & Instrument.FLAG_SOFTGET:
@@ -25,14 +25,14 @@ class Remote_Instrument(Instrument):
             self.add_parameter(name, **info)
 
         funcs = self._srv.get_ins_functions(remote_name)
-        for name, info in funcs.iteritems():
+        for name, info in funcs.items():
             try:
                 func = self.create_lambda(name, info.get('argspec', None))
                 if 'doc' in info:
                     func.__doc__ = info['doc']
                 setattr(self, name, func)
                 self.add_function(name, **info)
-            except Exception, e:
+            except Exception as e:
                 logging.warning('Failed to create function %s: %s', name, e)
 
     def _extend_args(self, args, add):

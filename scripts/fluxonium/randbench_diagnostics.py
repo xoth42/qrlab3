@@ -57,7 +57,7 @@ class rndm_diagnostics(Measurement1D):
         
         if seq is None:
             seq = Trigger(250)
-        self.xs = np.append(np.array(range(1,2*num_cal_points+1,1)),np.array(range(n_gates_start + 2*num_cal_points, n_gates_stop+2*num_cal_points +1, n_gates_step)))                                  
+        self.xs = np.append(np.array(list(range(1,2*num_cal_points+1,1))),np.array(list(range(n_gates_start + 2*num_cal_points, n_gates_stop+2*num_cal_points +1, n_gates_step))))                                  
         self.start = n_gates_start
         self.stop = n_gates_stop
         self.step = n_gates_step
@@ -76,8 +76,8 @@ class rndm_diagnostics(Measurement1D):
         
         rotation_list = ['A3', 'B5', 'A1', 'B5', 'A3', 'B7', 'A3', 'B3', 'A4', 'B2', 'A3', 'B4', 'A2', 'B5', 'A1', 'B1', 'A2', 'B7', 'A4', 'B5', 'A2', 'B2', 'A2', 'B2', 'A3', 'B2', 'A1', 'B1', 'A1', 'B2', 'A3', 'B5', 'A4', 'B3', 'A4', 'B1', 'A4', 'B6', 'A1', 'B4', 'A4', 'B6', 'A4', 'B1', 'A3', 'B4', 'A3', 'B3', 'A4', 'B7', 'A4', 'B3', 'A1', 'B7', 'A2', 'B6', 'A1', 'B1', 'A2', 'B5', 'A2', 'B4', 'A3', 'B6', 'A4', 'B5', 'A4', 'B4', 'A2', 'B3', 'A3', 'B5', 'A3', 'B5', 'A1', 'B1', 'A2', 'B4', 'A2', 'B4', 'A1', 'B4', 'A1', 'B3', 'A2', 'B6', 'A1', 'B2', 'A3', 'B4', 'A3', 'B4', 'A3', 'B3', 'A3', 'B2', 'A2', 'B7', 'A4', 'B2', 'A3', 'B4', 'A1', 'B2', 'A4', 'B7', 'A4', 'B6', 'A3', 'B2', 'A4', 'B3', 'A3', 'B7', 'A4', 'B6', 'A3', 'B4', 'A3', 'B1', 'A2', 'B3', 'A4', 'B2', 'A1', 'B2', 'A1', 'B2', 'A3', 'B7', 'A3', 'B1', 'A2', 'B2', 'A4', 'B7', 'A3', 'B5', 'A4', 'B4', 'A4', 'B6', 'A2', 'B5', 'A3', 'B5', 'A1', 'B1', 'A4', 'B3', 'A1', 'B2', 'A4', 'B3', 'A2', 'B2', 'A4', 'B5', 'A4', 'B4', 'A2', 'B1', 'A4', 'B3', 'A2', 'B1', 'A3', 'B4', 'A3', 'B7', 'A1', 'B5', 'A3', 'B3', 'A1', 'B1', 'A4', 'B1', 'A4', 'B1', 'A1', 'B3', 'A3', 'B3', 'A3', 'B5', 'A2', 'B1', 'A3', 'B5', 'A3', 'B7', 'A4', 'B2', 'A4', 'B3', 'A4', 'B6', 'A3', 'B6', 'A4', 'B4', 'A3', 'B5', 'A2', 'B3', 'A2', 'B6', 'A2', 'B5', 'A4', 'B7', 'A2', 'B6', 'A2', 'B7', 'A2', 'B6', 'A4', 'B1', 'A4', 'B1', 'A4', 'B2', 'A1', 'B2', 'A1', 'B6', 'A4', 'B5', 'A3', 'B6', 'A3', 'B1', 'A2', 'B3', 'A2', 'B3', 'A2', 'B4', 'A4', 'B7', 'A2', 'B5', 'A3', 'B1', 'A2', 'B7', 'A2', 'B5', 'A4', 'B3', 'A4', 'B6', 'A2', 'B1', 'A1', 'B5', 'A2', 'B3', 'A2', 'B6', 'A1', 'B4', 'A4', 'B5', 'A1', 'B5', 'A2', 'B2', 'A4', 'B7', 'A3', 'B6', 'A2', 'B2', 'A3', 'B7', 'A4', 'B7', 'A3', 'B5', 'A1', 'B6', 'A4', 'B7', 'A2', 'B7', 'A4', 'B6', 'A4', 'B5', 'A1', 'B5', 'A1', 'B6', 'A3', 'B5', 'A3', 'B5', 'A4', 'B3', 'A4', 'B6', 'A3', 'B1', 'A3', 'B1', 'A4', 'B3', 'A4', 'B2', 'A2', 'B7', 'A3', 'B3', 'A1', 'B2', 'A2', 'B2', 'A4', 'B5', 'A2', 'B1', 'A3', 'B3', 'A1', 'B7', 'A4', 'B6', 'A2', 'B1', 'A2', 'B1', 'A4', 'B3', 'A2', 'B1', 'A3', 'B6', 'A2', 'B2', 'A4', 'B3', 'A2', 'B3', 'A3', 'B1', 'A3', 'B6', 'A3', 'B2', 'A2', 'B4', 'A3', 'B4', 'A4', 'B4', 'A1', 'B2', 'A1', 'B1', 'A4', 'B4', 'A1', 'B4', 'A2', 'B5', 'A1', 'B4', 'A2', 'B3', 'A2', 'B6', 'A3', 'B2', 'A3', 'B4', 'A2', 'B5', 'A3', 'B7', 'A4', 'B1', 'A3', 'B4', 'A1', 'B6', 'A2', 'B2', 'A1', 'B4', 'A1', 'B4', 'A2', 'B5', 'A2', 'B5', 'A2', 'B4', 'A2', 'B5', 'A4', 'B3', 'A2', 'B6', 'A3', 'B5', 'A4', 'B5', 'A1', 'B5', 'A1', 'B1', 'A1', 'B5', 'A4', 'B6', 'A4', 'B4', 'A4', 'B5']
         correction_list = ['A3', 'B4', 'A3', 'B4', 'A4', 'A4', 'B4', 'A1', 'A3', 'A1', 'A1', 'A1', 'B4', 'A1', 'B2', 'A1', 'A3', 'A1', 'A1', 'B4', 'A4', 'B2', 'A3', 'B4', 'A4', 'B4', 'A1', 'A1', 'B2', 'A2', 'B4', 'A1', 'A3', 'A3', 'A1', 'B4', 'A3', 'B4', 'A4', 'B2', 'A1', 'B4', 'A2', 'A4', 'A4', 'A4', 'A2', 'A4', 'B2', 'A2', 'A2', 'A4', 'B4', 'A4', 'A2', 'B2', 'A1', 'A1', 'B2', 'A1', 'A3', 'A3', 'B4', 'A3', 'B4', 'A3', 'A3', 'A1', 'B4', 'A2', 'B4', 'A4', 'A4', 'A4', 'B4', 'A3', 'A1', 'A1', 'A3', 'A3', 'A1', 'A3', 'A1', 'B2', 'A1', 'B2', 'A1', 'B2', 'A4', 'B2', 'A3', 'B4', 'A3', 'A1', 'B4', 'A3', 'A3', 'A1', 'A1', 'B4', 'A2', 'A2', 'B4', 'A2', 'B2', 'A2', 'B2', 'A4', 'B4', 'A2', 'B4', 'A4', 'A2', 'A4', 'B2', 'A3', 'B2', 'A4', 'B2', 'A2', 'B2', 'A2', 'A2', 'B4', 'A4', 'B4', 'A4', 'B4', 'A1', 'A3', 'A3', 'B2', 'A4', 'A4', 'B4', 'A4', 'A2', 'B2', 'A1', 'A3', 'B2', 'A1', 'A3', 'A1', 'A1', 'A3', 'B4', 'A3', 'B2', 'A1', 'A3', 'A3', 'B2', 'A1', 'A3', 'A3', 'A1', 'B2', 'A1', 'A1', 'A3', 'A1', 'B2', 'A3', 'A3', 'A1', 'A3', 'A1', 'A3', 'B2', 'A4', 'B4', 'A2', 'A2', 'A4', 'A2', 'B4', 'A1', 'A1', 'B2', 'A3', 'A3', 'B2', 'A2', 'A2', 'B4', 'A2', 'A4', 'A4', 'B4', 'A3', 'A1', 'B2', 'A1', 'A1', 'B4', 'A3', 'A1', 'A3', 'A3', 'A1', 'A3', 'A3', 'B2', 'A4', 'A4', 'A4', 'A4', 'B2', 'A4', 'B2']
-        print rotation_list
-        print correction_list
+        print(rotation_list)
+        print(correction_list)
          
 #        for j in range(self.num_cal_points):
 #            s.append(self.seq)
@@ -165,9 +165,9 @@ class rndm_diagnostics(Measurement1D):
             
         s = self.get_sequencer(s)
         time_before_render = time.time()
-        print('before render', time_before_render)
+        print(('before render', time_before_render))
         seqs = s.render()
-        print('after render', time.time() - time_before_render)
+        print(('after render', time.time() - time_before_render))
 
         return seqs
 

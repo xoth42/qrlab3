@@ -43,7 +43,7 @@ x_key = 'detunings'
 
 f = h5.File(filepath + hdf5_name, 'r')
 exp = f['/' + date + '/' + time + '_' + experiment]
-y_keys = exp.keys()
+y_keys = list(exp.keys())
 
     
 xs = exp[x_key].value
@@ -76,7 +76,7 @@ params.add('off', value = np.average(ys))
 #    datas = realdata[0,:]+ 1j*imagdata[0,:]    
 result = lmfit.minimize(Gaussfit, params, args=(xs,ys))
 lmfit.report_fit(result.params)
-print ('fit freq: %s +/- %s  '%(result.params['freq'].value/1e6,result.params['freq'].stderr/1e6))
+print(('fit freq: %s +/- %s  '%(result.params['freq'].value/1e6,result.params['freq'].stderr/1e6)))
 
 
 fig.axes[0].plot(xs/1e6, -Gaussfit(result.params, xs, 0), label='fit freq: %s +/- %s MHz '%(result.params['freq'].value/1e6,result.params['freq'].stderr/1e6))

@@ -3,7 +3,7 @@
 # This example configures the receiver for IQ acquisition and plots
 # the spectrum of a single IQ acquisition.
 
-from smdevice import sm_api
+from .smdevice import sm_api
 
 def iq():
     # Open device

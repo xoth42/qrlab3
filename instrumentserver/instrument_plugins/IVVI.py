@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import pyvisa.vpp43 as vpp43
 from time import sleep
@@ -64,7 +64,7 @@ class IVVI(Instrument):
             self._numdacs = int(numdacs)
         else:
             logging.error('Number of dacs needs to be multiple of 4')
-        self.pol_num = range(self._numdacs)
+        self.pol_num = list(range(self._numdacs))
 
 
         # Add functions
@@ -75,11 +75,11 @@ class IVVI(Instrument):
 
         # Add parameters
         self.add_parameter('pol_dacrack',
-            type=types.StringType,
+            type=bytes,
             channels=(1, self._numdacs/4),
             flags=Instrument.FLAG_SET)
         self.add_parameter('dac',
-            type=types.FloatType,
+            type=float,
             flags=Instrument.FLAG_GETSET,
             channels=(1, self._numdacs),
             maxstep=10, stepdelay=50,
@@ -204,7 +204,7 @@ class IVVI(Instrument):
         Converts a list of bytes to a list containing
         the corresponding mvoltages
         '''
-        values = range(self._numdacs)
+        values = list(range(self._numdacs))
         for i in range(self._numdacs):
             values[i] = ((numbers[2 + 2*i]*256 + numbers[3 + 2*i])/65535.0*4000.0) + self.pol_num[i]
         return values

@@ -1,10 +1,11 @@
 import matplotlib
+import importlib
 matplotlib.interactive(True)
-import mclient
-reload(mclient)
+from . import mclient
+importlib.reload(mclient)
 import numpy as np
 import matplotlib.pyplot as pl
-from pulseseq import sequencer, pulselib
+from .pulseseq import sequencer, pulselib
 import matplotlib as mpl
 from matplotlib import gridspec
 #from t1t2_plotting import smart_T1_delays
@@ -60,7 +61,7 @@ for field in fields:
 #    Magnet.do_set_PSwitch(0)
 #    time.sleep(350)
 
-    from scripts.single_cavity import VNA_single_trace_V2
+    from .scripts.single_cavity import VNA_single_trace_V2
 #    print 'OK2'
     freqs = VNA.do_get_xaxis()
     ro = VNA_single_trace_V2.SingleTraceNoAsync(freqs, fit_S12 = 1, fit_S11 =0)

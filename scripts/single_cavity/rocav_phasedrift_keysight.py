@@ -114,7 +114,7 @@ class ROCavPhaseDrift_keysight(Measurement1D):
 
         for ipower, power in enumerate(self.powers):
             self.readout_info.rfsource1.set_power(power)
-            print 'Power = %s' % (power, )
+            print('Power = %s' % (power, ))
             time.sleep(2)
 
             amps = []
@@ -149,8 +149,8 @@ class ROCavPhaseDrift_keysight(Measurement1D):
                 IQ = np.average(ret)
                 amps.append(np.abs(IQ))
                 phases.append(np.angle(IQ, deg=True))
-                print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
-                print 'I,Q = %.03f, %.03f' % (np.real(IQ), np.imag(IQ)) #DARIO 9/5
+                print('F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True)))
+                print('I,Q = %.03f, %.03f' % (np.real(IQ), np.imag(IQ))) #DARIO 9/5
 
             self.ampdata[ipower,:] = amps
             self.phasedata[ipower,:] = phases

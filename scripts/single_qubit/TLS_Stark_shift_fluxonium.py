@@ -18,7 +18,8 @@ Created on Thu Jan 24 11:20:37 2019
 
 
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib
 import matplotlib

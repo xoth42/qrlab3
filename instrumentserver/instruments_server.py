@@ -4,6 +4,7 @@ import os
 import logging
 import types
 from lib import jsonext
+import importlib
 
 logging.getLogger().setLevel(logging.INFO)
 import objectsharer as objsh
@@ -38,7 +39,7 @@ class Instruments(object):
         self.emit('instrument-added', name)
 
     def list_instruments(self):
-        return self._instruments.keys()
+        return list(self._instruments.keys())
 
     def get(self, name):
         return self._instruments.get(name, None)
@@ -47,7 +48,7 @@ class Instruments(object):
         if name not in self._instruments:
             return
         # Remove asynchronously so that it doesn't have to return
-        self._instruments[name].remove(async=True)
+        self._instruments[name].remove(async_=True)
         del self._instruments[name]
         self.emit('instrument-removed', name)
 
@@ -88,14 +89,14 @@ class Instruments(object):
 
         # Query all instruments asynchronously
         params = {}
-        for name, ins in self._instruments.iteritems():
-            params[name] = ins.get_parameter_values(async=True)
+        for name, ins in self._instruments.items():
+            params[name] = ins.get_parameter_values(async_=True)
 
         # Wait for replies
-        backend.main_loop(1000, wait_for=params.values(), origin=3)
+        backend.main_loop(1000, wait_for=list(params.values()), origin=3)
 
         # Remove timed-out queries
-        for name in params.keys():
+        for name in list(params.keys()):
             if not params[name].is_valid():
                 del params[name]
             else:
@@ -181,7 +182,7 @@ class Instruments(object):
         module = _get_driver_module(driver)
         if module is None:
             return False
-        reload(module)
+        importlib.reload(module)
 
         if not hasattr(module, 'detect_instruments'):
             logging.warning('Driver does not support instrument detection')
@@ -203,7 +204,7 @@ class Instruments(object):
         Save instrument settings for later use, by default in <ins_store_fn>.
         '''
         settings = self.get_all_parameters()
-        for ins_name, ins_settings in settings.items():
+        for ins_name, ins_settings in list(settings.items()):
             ins_settings['_create_params'] = self._create_parameters.get(ins_name)
         with open(fn, "w") as sfile:
             jsonext.dump(settings, sfile)
@@ -225,7 +226,7 @@ class Instruments(object):
         f = open(fn)
         settings = jsonext.load(f)
         if inslist == 'all':
-            inslist = settings.keys()
+            inslist = list(settings.keys())
         for insname in inslist:
             print(insname)
             if insname not in settings:
@@ -241,9 +242,9 @@ class Instruments(object):
                     ins = self.create(insname, instype, waittime=waittime, **oldkwargs)
                 else:
                     continue
-            for key, val in settings[insname].iteritems():
-                print('Setting ' + str(key) + ' to ' + str(val))
-                if type(val) is types.UnicodeType:
+            for key, val in settings[insname].items():
+                print(('Setting ' + str(key) + ' to ' + str(val)))
+                if type(val) is str:
                     val = str(val)
                 ins.set(str(key), val)
 

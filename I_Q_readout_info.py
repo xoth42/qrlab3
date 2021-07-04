@@ -9,7 +9,7 @@ import types
 
 from instrument import Instrument
 from Pulse_Info import Pulse_Info
-from mclient import instruments
+from .mclient import instruments
 
 from Qubit_Info import Qubit_Info
 

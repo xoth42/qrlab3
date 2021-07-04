@@ -1,5 +1,5 @@
-import mclient
-import config
+from . import mclient
+from . import config
 import types
 import time
 import numpy as np
@@ -9,15 +9,15 @@ from matplotlib import gridspec
 import logging
 logging.getLogger().setLevel(logging.INFO)
 import signal
-import objectsharer as objsh
-from lib import jsonext
+from . import objectsharer as objsh
+from .lib import jsonext
 import os
-import pulseseq
-import awgloader
+from . import pulseseq
+from . import awgloader
 
 from PyQt5 import QtWidgets
-from pulseseq import sequencer
-from pulseseq import pulselib
+from .pulseseq import sequencer
+from .pulseseq import pulselib
 
 STYLE_IMAGE = 'IMAGE'
 STYLE_LINES = 'LINES'
@@ -104,12 +104,12 @@ class Measurement(object):
         # Build list of info objects
         if infos is None:
             infos = []
-        elif type(infos) is types.TupleType:
+        elif type(infos) is tuple:
             infos = list(infos)
-        elif type(infos) is not types.ListType:
+        elif type(infos) is not list:
             infos = [infos,]
         if extra_info is not None:
-            if type(extra_info) in (types.ListType, types.TupleType):
+            if type(extra_info) in (list, tuple):
                 infos.extend(extra_info)
             else:
                 infos.append(extra_info)
@@ -185,7 +185,7 @@ class Measurement(object):
             self.shot_data = shotdata
             self.ste_data = stedata
 
-        except Exception, e:
+        except Exception as e:
             logging.warning('Unable to remove data: %s' % str(e))
 
     def set_parameters(self, **kwargs):
@@ -318,7 +318,7 @@ class Measurement(object):
             try:
                 l.load(seqs)
                 break
-            except Exception, e:
+            except Exception as e:
                 logging.warning('Loading failed (%s), retrying', str(e))
                 time.sleep(1)
 
@@ -353,7 +353,7 @@ class Measurement(object):
         l = self.get_awg_loader()
         #JEFF trying to force all awgs to run
 #        l.set_all_awgs_active()
-        print('starting awgs:', l.get_awgs(), l.get_active_awgs())
+        print(('starting awgs:', l.get_awgs(), l.get_active_awgs()))
         l.run()
 
     def stop_funcgen(self):
@@ -376,7 +376,7 @@ class Measurement(object):
 
     def _capture_progress_cb(self, navg):
         if self.print_progress:
-            print '%d averages done' % navg
+            print('%d averages done' % navg)
 
     def update(self, avg_data):
         '''
@@ -390,8 +390,8 @@ class Measurement(object):
         avg_data = self.avg_data[:]
         try:
             self.update(avg_data)
-        except Exception, e:
-            print 'Error: %s' % (str(e),)
+        except Exception as e:
+            print('Error: %s' % (str(e),))
 
     def _ctrlc_cb(self, *args):
         self._interrupted = True
@@ -465,7 +465,7 @@ class Measurement(object):
 #            print 'Done with take experiment'
             if self._interrupted:
                 alz.set_interrupt(True)
-        except Exception, e:
+        except Exception as e:
             logging.info('CTRL-C Caught or error, stopping Alazar')
             alz.set_interrupt(True)
             logging.error(str(e))
@@ -633,7 +633,7 @@ class Measurement(object):
         progress_hid = dig.connect('capture-progress', self._capture_progress_cb)
         dataupd_hid = self.data.connect('changed', self._data_changed_cb)
         
-        print("Cycle length is %s"%(self.cyclelen))
+        print(("Cycle length is %s"%(self.cyclelen)))
 
         dig.stop_hvi()
         if self.histogram:
@@ -670,7 +670,7 @@ class Measurement(object):
                 QtWidgets.QApplication.processEvents()
             if self._interrupted:
                 dig.set_interrupt(True)
-        except Exception, e:
+        except Exception as e:
             logging.info('CTRL-C Caught or error, stopping Alazar')
             dig.set_interrupt(True)
             logging.error(str(e))
@@ -795,7 +795,7 @@ class Measurement(object):
         # Remove pulse data to keep memory usage reasonable
         pulseseq.sequencer.Pulse.clear_pulse_data()
  
-        print ret
+        print(ret)
         return ret
 
     def play_sequence(self, load=True):
@@ -844,7 +844,7 @@ class Measurement(object):
             #print "There already exists the figure"
             return self.fig
         else:
-            print "Here we create a figure"
+            print("Here we create a figure")
         return self.create_figure()
 
     def complex_to_real(self, ys):
@@ -1002,7 +1002,7 @@ class Measurement(object):
     def plot_histogram(self, data):
         fig = self.get_figure()
         avg = np.average(data)
-        print(np.shape(data))
+        print((np.shape(data)))
         if self.cyclelen == 2:
             data1 = data[::2]
             data2 = data[1::2]
@@ -1010,7 +1010,7 @@ class Measurement(object):
             data1 = data[::3]
             data2 = data[1::3]
             data3 = data[2::3]
-        print 'average I,Q is:', avg, '\n'
+        print('average I,Q is:', avg, '\n')
         if 0:
             fig.axes[0].scatter(np.real(data), np.imag(data), label='avg=%s'%(avg,))
         else:

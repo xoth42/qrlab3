@@ -6,7 +6,8 @@ Created on Thu Apr 26 14:53:09 2018
 """
 
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib
 import matplotlib
@@ -31,7 +32,7 @@ os.chdir(r'C:/qrlab/scripts')
 if 0: # test digitizer
     dig = mclient.instruments['dig']
     data = dig.test_dig(10000, 1, 1, 1)
-    print(np.shape(data))
+    print((np.shape(data)))
     plt.figure()
     plt.plot(data[0][0][:], label = 'sig')
     plt.plot(data[1][0][:], label = 'ref')
@@ -40,7 +41,7 @@ if 0: # test digitizer
     bla
 
 if 1: # cav transmission
-    from single_cavity import rocavspectroscopy_keysight
+    from .single_cavity import rocavspectroscopy_keysight
 #    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])
 #    Yoko.do_set_current(-0.00175)
     rofreq = 8302e6
@@ -54,7 +55,7 @@ if 1: # cav transmission
     
 if 0: # calibrate TWPA
     SCpump = mclient.instruments['SCpump']
-    from single_cavity import twpa_calibration_keysight
+    from .single_cavity import twpa_calibration_keysight
     twpa_powers = np.linspace(-5.4, -5.2, 7)
     twpa_freqs = np.linspace(6.19e9, 6.20e9, 7)
     tc = twpa_calibration_keysight.twpa_calibration_keysight(qubit_info, 3, 7.71953e9, twpa_powers, 
@@ -63,7 +64,7 @@ if 0: # calibrate TWPA
     
     
 if 0:
-    from single_cavity import rocavspectroscopy_keysight_IQmod
+    from .single_cavity import rocavspectroscopy_keysight_IQmod
 #    rofreq = 8553.1e6
     rofreq = 8306.00e6
     freq_range = 15e6
@@ -75,7 +76,7 @@ if 0:
     
 
 if 0:
-    from single_qubit import spectroscopy_keysight
+    from .single_qubit import spectroscopy_keysight
 #    from scripts.single_qubit import spectroscopy_IQ
 #    for i in range(5560, 5560, 0):
     qubit_freq = 5140.69e6
@@ -90,7 +91,7 @@ if 0:
     
 
 if 0: # SSB spec
-    from single_qubit import ssbspec
+    from .single_qubit import ssbspec
     seq = sequencer.Trigger(600)
 #    seq = sequencer.Join([sequencer.Trigger(250),sequencer.Constant(int(100e3), 1, chan='4m1'),
 #                          sequencer.Delay(1000)])
@@ -102,7 +103,7 @@ if 0: # SSB spec
     
 
 if 0: #Multiple times SSB spec
-    from single_qubit import ssbspec
+    from .single_qubit import ssbspec
     seq = sequencer.Trigger(250)
     freq_array = np.linspace(-1.5e6, 0.3e6, 60)
     spec = ssbspec.SSBSpec(qubit_info, freq_array, seq=seq, plot_seqs=False)
@@ -121,7 +122,7 @@ if 0: #Multiple times SSB spec
     
 if 0: # Power Rabi, Calibrate pi pulse
 
-    from single_qubit import rabi
+    from .single_qubit import rabi
     tr = rabi.Rabi(qubit_info, 
 #                   np.linspace(-0.8, 0.8, 81), selective=False,
 #                   np.linspace(-0.008, 0.008, 81), selective=True,
@@ -131,7 +132,7 @@ if 0: # Power Rabi, Calibrate pi pulse
     bla
     
 if 0: # two tone rabi, for hot cavities
-    from single_qubit import Rabi_two_tone
+    from .single_qubit import Rabi_two_tone
     deltaf1 = qubit_info.deltaf
     deltaf2 = qubit2_info.deltaf
     qubit1ge = mclient.instruments['qubit1ge']
@@ -153,7 +154,7 @@ if 0: # two tone rabi, for hot cavities
     bla
     
 if 0: # T1
-    from single_qubit import T1measurement
+    from .single_qubit import T1measurement
 
     t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 120e3, 51), 
                                      double_exp=False, generate=True, plot_seqs=False)
@@ -169,7 +170,7 @@ if 0:
 
     
 if 0: # T2
-    from single_qubit import T2measurement
+    from .single_qubit import T2measurement
     seq = None
     t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0e3, 5e3, 151), detune=5e6, 
                                      double_freq=False, generate=True, seq=seq)    
@@ -177,9 +178,9 @@ if 0: # T2
     bla
     
 if 0: 
-    from single_qubit import rabi
-    from single_qubit import T1measurement
-    from single_qubit import T2measurement
+    from .single_qubit import rabi
+    from .single_qubit import T1measurement
+    from .single_qubit import T2measurement
     SCpump = mclient.instruments['SCpump']
     postseq = sequencer.Delay(500)
     pi_amp = []
@@ -218,7 +219,7 @@ if 0:
     
     
 if 1: # T2echo
-    from single_qubit import T2measurement
+    from .single_qubit import T2measurement
     seq = None
     t2 = T2measurement.T2Measurement(qubit_info, 
 #                                     np.linspace(0e3, 9e3, 10),
@@ -232,7 +233,7 @@ if 1: # T2echo
     bla  
     
 if 0: # EF SSBspec
-    from single_qubit import ssbspec
+    from .single_qubit import ssbspec
     seq = sequencer.Sequence([sequencer.Trigger(400), qubit_info.rotate(np.pi, 0)])
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit_info.rotate_selective(np.pi, 0)])
     postseq = sequencer.Sequence(qubit_info.rotate(np.pi, 0))
@@ -242,7 +243,7 @@ if 0: # EF SSBspec
     bla
     
 if 0: # EF rabi 
-    from single_qubit import efrabi
+    from .single_qubit import efrabi
     dig = mclient.instruments['dig']
     dig.set_naverages(2000)
     postseq = sequencer.Delay(400)
@@ -256,7 +257,7 @@ if 0: # EF rabi
     bla
     
 if 0: # FT1
-    from single_qubit import FT1measurement
+    from .single_qubit import FT1measurement
     #ft1times = np.zeros(len(range(20)))
     for i in range(1):
         ft1 = FT1measurement.FT1Measurement(qubit_info, ef_info, np.linspace(0, 120e3, 101))
@@ -341,7 +342,7 @@ if 0: # stark shift measurments
         dig.set_naverages(2000)
         for j in range(num_frequencies):
             print('#################################')
-            print('frequency set to ' + str(frequencies[j]))
+            print(('frequency set to ' + str(frequencies[j])))
             print('#################################')
             geFG.set_frequency(bare_ge + 100e6 - 20e6)
             ge_instrument.set_pi_amp_selective(pi_amp_selective_guess)

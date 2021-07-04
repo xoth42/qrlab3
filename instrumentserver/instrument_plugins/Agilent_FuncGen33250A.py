@@ -10,10 +10,10 @@ class Agilent_FuncGen33250A(VisaInstrument):
 
         self.add_visa_parameter('output_on',
             'OUTP?', 'OUTP %d',
-            type=types.BooleanType,
+            type=bool,
             flags=Instrument.FLAG_GETSET)
         self.add_parameter('function',
-            type=types.StringType,
+            type=bytes,
             flags=Instrument.FLAG_GETSET,
             format_map={
                 'SIN': 'SIN',
@@ -26,31 +26,31 @@ class Agilent_FuncGen33250A(VisaInstrument):
             })
         self.add_visa_parameter('sync_on',
             'OUTP:SYNC?', 'OUTP:SYNC %d',
-            type=types.BooleanType,
+            type=bool,
             flags=Instrument.FLAG_GETSET)
-        self.add_parameter('frequency', type=types.FloatType,
+        self.add_parameter('frequency', type=float,
             flags=Instrument.FLAG_GETSET, units='Hz', minval=0, maxval=50e6)
-        self.add_parameter('period_us', type=types.FloatType,
+        self.add_parameter('period_us', type=float,
             flags=Instrument.FLAG_GETSET)
         self.add_visa_parameter('Vhigh',
             'VOLT:HIGH?', 'VOLT:HIGH %.06f',
-            type=types.FloatType,
+            type=float,
             flags=Instrument.FLAG_GETSET, units='V')
         self.add_visa_parameter('Vlow',
             'VOLT:LOW?', 'VOLT:LOW %.06f',
-            type=types.FloatType,
+            type=float,
             flags=Instrument.FLAG_GETSET, units='V')
         self.add_visa_parameter('DCOffset',
             'VOLT:OFFS?', 'VOLT:OFFS %.06f',
-            type=types.FloatType,
+            type=float,
             flags=Instrument.FLAG_GETSET, units='V')
         self.add_visa_parameter('edgetime',
             'PULS:TRAN?', 'PULS:TRAN %.06e',
-            type=types.FloatType,
+            type=float,
             flags=Instrument.FLAG_GETSET, units='sec')
         self.add_visa_parameter('pulsewidth',
             'PULS:WIDTH?', 'PULS:WIDTH %.06e',
-            type=types.FloatType,
+            type=float,
             flags=Instrument.FLAG_GETSET, units='sec')
 
         self.get_all()

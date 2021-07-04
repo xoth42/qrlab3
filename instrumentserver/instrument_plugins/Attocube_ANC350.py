@@ -1,5 +1,5 @@
 import types
-from instrument import Instrument
+from .instrument import Instrument
 import ctypes
 import logging
 logging.getLogger().setLevel(logging.WARNING)
@@ -68,7 +68,7 @@ class Attocube_ANC350(Instrument):
 
     def add_parameter(self, name, **kwargs):
         if 'type' not in kwargs:
-            kwargs['type'] = types.IntType
+            kwargs['type'] = int
         return super(Attocube_ANC350, self).add_parameter(name, **kwargs)
 
     def get_int_from_func(self, func):

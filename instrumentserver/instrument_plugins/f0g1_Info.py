@@ -1,4 +1,4 @@
-from instrument import Instrument
+from .instrument import Instrument
 import types
 
 class f0g1_Info(Instrument):
@@ -12,11 +12,11 @@ class f0g1_Info(Instrument):
 #                flags=Instrument.FLAG_SET|Instrument.FLAG_GET)
 #        self.add_parameter('pump_power', type=types.FloatType,
 #               flags=Instrument.FLAG_SET|Instrument.FLAG_GET)
-        self.add_parameter('sideband_amp', type=types.FloatType,
+        self.add_parameter('sideband_amp', type=float,
                flags=Instrument.FLAG_GETSET)
-        self.add_parameter('pump_time', type=types.FloatType,
+        self.add_parameter('pump_time', type=float,
                flags=Instrument.FLAG_GETSET)
-        self.add_parameter('pump_chan', type=types.StringType,
+        self.add_parameter('pump_chan', type=bytes,
                flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                set_func=lambda x: True)
 #        self.add_parameter('ef_info_name', type=types.StringType,

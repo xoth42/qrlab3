@@ -600,7 +600,7 @@ params.add('A',value = 3, vary = True)
 params.add('k',value = 8, vary = False)
 # params.add('phi',value = 0, vary = fix_vary)
 #freqs = freq/1e9
-print 'data seze %s'%(len(datas))
+print('data seze %s'%(len(datas)))
 result = lmfit.minimize(Sij_resid, params, args=(fields, datas))
 lmfit.report_fit(result.params)
 

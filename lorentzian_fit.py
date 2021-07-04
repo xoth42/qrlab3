@@ -64,17 +64,17 @@ power = 10**(S21)
 a = Symbol('a')
 Qi = Symbol('Qi')
 ratio = max(solve((a**2/((1+a)**2)-power), a))
-print ratio
+print(ratio)
 
 Qi = solve(1/Q - 1/Qi - 1/(ratio*Qi), Qi)
-print Qi
+print(Qi)
 
-print best_parameters
+print(best_parameters)
 
-print 'FWHM:', FWHM
-print 'Q:', Q
-print 'Qi:', Qi
-print 'Qc:', ratio*Qi[0]
+print('FWHM:', FWHM)
+print('Q:', Q)
+print('Qi:', Qi)
+print('Qc:', ratio*Qi[0])
 
 
 

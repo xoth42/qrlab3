@@ -23,7 +23,7 @@ class ColorPlot_YOKO(Measurement1D):
 
     def __init__(self, currents, freqs, sleeptime_field, **kwargs):
         self.currents = currents
-        print 'self.currents', self.currents
+        print('self.currents', self.currents)
         self.freqs = freqs
         self.sleeptime_field = sleeptime_field
 #        self.plot_type = plot_type
@@ -47,7 +47,7 @@ class ColorPlot_YOKO(Measurement1D):
         VNA.set_points(len(self.freqs))
         freqs = VNA.do_get_xaxis()
         if not (freqs == self.freqs).all():
-            print 'error in setting frequency'
+            print('error in setting frequency')
 #            break
         
         for icurrent, current in enumerate(self.currents):
@@ -72,7 +72,7 @@ class ColorPlot_YOKO(Measurement1D):
                 while not VNA.opc.is_valid():
                     objsh.helper.backend.main_loop(100)
             except:
-                print 'error with async'
+                print('error with async')
     #            VNA.set_interrupt(True)
     
 
@@ -82,25 +82,25 @@ class ColorPlot_YOKO(Measurement1D):
             amps=ret[0]
             phases=ret[1]
     #        print 'F = %.03f GHz --> amp = %.1f, angle = %.01f' % (freq / 1e9, np.abs(IQ), np.angle(IQ, deg=True))
-            print 'current = %.03f mA' % (current)
+            print('current = %.03f mA' % (current))
 
             self.ampdata[icurrent,:] = amps
             self.phasedata[icurrent,:] = phases
 
-        print 'self.ampdata\n', self.ampdata
+        print('self.ampdata\n', self.ampdata)
         self.analyze()
 
     def analyze(self):
         X, Y = np.meshgrid(self.currents, self.freqs)
 #        print 'self.volts again', self.volts
-        print X
-        print Y
+        print(X)
+        print(Y)
         Z = np.zeros((len(self.currents),len(self.freqs)))
         phase = np.zeros((len(self.currents),len(self.freqs)))
         for i in range(len(self.currents)):
             Z[i] = np.array(self.ampdata[i,:])
             phase[i] = np.array(self.phasedata[i,:])
-        print Z
+        print(Z)
         Z = np.transpose(Z)
         phase = np.transpose(phase)
         plt.figure()

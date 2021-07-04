@@ -1,4 +1,4 @@
-import mclient
+from . import mclient
 import numpy as np
 
 fg = mclient.instruments['funcgen']
@@ -15,7 +15,7 @@ def auto_set_fg_freq(seq_len, max_freq=10000):
         if (freq <= max_freq) and (seq_len < 1.0/freq):
             fg.set_frequency(freq)
             return freq
-    print "Warning: auto_set_fg_frequency failed!"
+    print("Warning: auto_set_fg_frequency failed!")
     return
 
 def estimate_T1(QP_delays, T1_int=90e3, tau_QP=1.5e6, half_decay_point=1e6, eff_T1_delay=500.0):

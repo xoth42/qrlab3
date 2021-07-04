@@ -1,5 +1,5 @@
 import sys
-from instrument import Instrument
+from .instrument import Instrument
 import numpy as np
 import os, types, ctypes
 import logging
@@ -17,7 +17,7 @@ class Trajectory_Integrator(Instrument):
 #        self.add_parameter('channel', type=types.StringType,
 #                flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
 #                help='physical channel')
-        self.add_parameter('c2r_method', type=types.StringType,
+        self.add_parameter('c2r_method', type=bytes,
                            flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                            format_map={
                                'IQeIQg': 'IQeIQg',
@@ -26,35 +26,35 @@ class Trajectory_Integrator(Instrument):
                            }, value='IQeIQg',
                            set_func=lambda x: True)
 
-        self.add_parameter('IQg', type=types.ComplexType,
+        self.add_parameter('IQg', type=complex,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 help='IQ point of g')
-        self.add_parameter('IQe', type=types.ComplexType,
+        self.add_parameter('IQe', type=complex,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 help='IQ point of e')
 
         self.add_parameter('use_threshold', flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-                type=types.BooleanType, value=False,
+                type=bool, value=False,
                 help='Whether to use_threshold')
 
-        self.add_parameter('threshold_pt', type=types.FloatType,
+        self.add_parameter('threshold_pt', type=float,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 help='projected threshold for g/e discrimination')
 
-        self.add_parameter('weight_func', type=types.StringType,
+        self.add_parameter('weight_func', type=bytes,
                            flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                            help='path to weighting function',
                            value='')
-        self.add_parameter('if_period', type=types.IntType,
+        self.add_parameter('if_period', type=int,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 help='if_period',
                 value=20,)
-        self.add_parameter('if_length', type=types.IntType,
+        self.add_parameter('if_length', type=int,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 help='length of integration in if periods',
                 value=500,)
 
-        self.add_parameter('length', type=types.IntType,
+        self.add_parameter('length', type=int,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 help='length of integration',
                 value=1000,)
@@ -83,7 +83,7 @@ class Trajectory_Integrator(Instrument):
         try:
             self.load_weight_array(path=weight_func)
         except:
-            print 'Loading failed'
+            print('Loading failed')
             raise
 
     def load_weight_array(self, path=None):#, totlen=None):

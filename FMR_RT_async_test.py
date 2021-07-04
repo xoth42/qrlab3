@@ -6,12 +6,13 @@ Created on Wed Mar 27 19:09:32 2019
 """
 
 import matplotlib
+import importlib
 matplotlib.interactive(True)
 
 #
-import mclient
-reload(mclient)
-from mclient import instruments
+from . import mclient
+importlib.reload(mclient)
+from .mclient import instruments
 
 VNA = instruments['VNA']
 Yoko = instruments['Yoko']
@@ -20,7 +21,7 @@ import numpy as np
 import datetime
 import time
 import matplotlib.pyplot as pl
-import objectsharer as objsh
+from . import objectsharer as objsh
 
 
 currents = np.linspace(0,0.1,1001)
@@ -68,7 +69,7 @@ datagroup.create_dataset('currents', data=currents)
 datagroup.create_dataset('freqs', data = freqs)
 #        self.ampdata = self.data.create_dataset('amplitudes', shape=[len(self.currents),len(freqs)])
 #        self.phasedata = self.data.create_dataset('phases', shape=[len(self.currents),len(freqs)])
-print datagroup.get_fullname()
+print(datagroup.get_fullname())
 realdata = [0,0,0,0,0,0,0,0]
 imagdata = [0,0,0,0,0,0,0,0]
 for i, sij in enumerate(Sij):

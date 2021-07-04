@@ -69,7 +69,7 @@ def analysis(meas, data=None, fig=None):
     Vge = np.mean(calibration_qubit2_excited)
     Vee = np.mean(calibration_bothqubits_excited)
     Vgg = np.mean(calibration_ground)
-    print Veg, Vge, Vee, Vgg
+    print(Veg, Vge, Vee, Vgg)
 
     rd = y1s[12:]
     bl = y2s[12:]
@@ -244,7 +244,7 @@ class TwoQubit_RB(Measurement1D):
         self.cancel_info = cancel_info
         self.N_cliffords = N_cliffords
         self.num_cal_points = num_cal_points
-        XS = np.asarray(range(N_cliffords+4*self.num_cal_points)) - (4*self.num_cal_points-1)
+        XS = np.asarray(list(range(N_cliffords+4*self.num_cal_points))) - (4*self.num_cal_points-1)
         self.xs = np.array([XS,XS,XS,XS]).transpose().flatten() # for plotting purposes
         self.filepath_lookup_table = ""
         self.cnum=cnum
@@ -260,7 +260,7 @@ class TwoQubit_RB(Measurement1D):
         
             
         super(TwoQubit_RB, self).__init__(4*(N_cliffords+4*num_cal_points), infos=(qubit_info,qubit2_info,twoQ_info,cancel_info), **kwargs)
-        self.data.create_dataset('Cliffords', data=range(4*(N_cliffords+4*num_cal_points)))
+        self.data.create_dataset('Cliffords', data=list(range(4*(N_cliffords+4*num_cal_points))))
          
 
     def generate(self):
@@ -307,7 +307,7 @@ class TwoQubit_RB(Measurement1D):
                rndnum = rnd.randint(0, 11519)
            if self.cnum is not None:
                rndnum = self.cnum
-           print(n, rndnum)
+           print((n, rndnum))
            temp_pulseSeq1 = []
            temp_pulseSeq2 = []
            self.add_twoQ_clifford(rndnum, cliffordSeq1, cliffordSeq2, temp_pulseSeq1, temp_pulseSeq2, len1, len2, generator = self.generator)
@@ -322,13 +322,13 @@ class TwoQubit_RB(Measurement1D):
            recov_pulseSeq2.append(recovery_pulseSeq2)
            pulseSeq1.append(temp_pulseSeq1)
            pulseSeq2.append(temp_pulseSeq2)
-        print('cliffordSeq1 is:', cliffordSeq1)
-        print('cliffordSeq2 is:', cliffordSeq2)
-        print('total # gates:', len(cliffordSeq1))
-        print('total # gates:', len(cliffordSeq2))
+        print(('cliffordSeq1 is:', cliffordSeq1))
+        print(('cliffordSeq2 is:', cliffordSeq2))
+        print(('total # gates:', len(cliffordSeq1)))
+        print(('total # gates:', len(cliffordSeq2)))
 
-        print('recov_cliffordSeq1 is:', recov_cliffordSeq1)
-        print('recov_cliffordSeq2 is:', recov_cliffordSeq2)
+        print(('recov_cliffordSeq1 is:', recov_cliffordSeq1))
+        print(('recov_cliffordSeq2 is:', recov_cliffordSeq2))
         
         
         self.num_gates = len(cliffordSeq1)
@@ -635,7 +635,7 @@ class TwoQubit_RB(Measurement1D):
 
         # Calculate the matrix of the clifford sequence
         matrix_cliffords = evaluate_sequence(gate_seq_1, gate_seq_2, generator = generator)
-        print('matrix_cliffords is:', matrix_cliffords)
+        print(('matrix_cliffords is:', matrix_cliffords))
 
         for i in range(total_num_cliffords):
             recovery_seq_1 = []
@@ -706,10 +706,10 @@ class TwoQubit_RB(Measurement1D):
 #                                log.info('the cheapest sequence update! [N_2QB_gate, N_1QB_gate, N_I_gate, seq. index] ' + str([min_N_2QB_gate, min_N_1QB_gate, max_N_I_gate, cheapest_index]))
 
                 else:
-                    print('recovery_index is:', i)
-                    print('matrix_recovery is:', matrix_recovery)
-                    print('matrix_total is:', matrix_total)
-                    print(CheckIdentity(matrix_total))
+                    print(('recovery_index is:', i))
+                    print(('matrix_recovery is:', matrix_recovery))
+                    print(('matrix_total is:', matrix_total))
+                    print((CheckIdentity(matrix_total)))
                     return(recovery_seq_1, recovery_seq_2, temp_pulse_seq_1, temp_pulse_seq_2)
 
         if (self.find_cheapest_recovery == True):
@@ -730,7 +730,7 @@ class TwoQubit_RB(Measurement1D):
         
 #        print('cheapest_index is:', cheapest_index)
 #        print('cheapest matrix_recovery is:', matrix_recovery)
-        print('matrix_total is:', matrix_total)
+        print(('matrix_total is:', matrix_total))
         return (recovery_seq_1, recovery_seq_2, temp_pulse_seq_1, temp_pulse_seq_2)
     
     

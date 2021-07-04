@@ -71,7 +71,7 @@ def analysis(meas, data=None, fig=None):
     Vge = np.mean(calibration_qubit2_excited)
     Vee = np.mean(calibration_bothqubits_excited)
     Vgg = np.mean(calibration_ground)
-    print Veg, Vge, Vee, Vgg
+    print(Veg, Vge, Vee, Vgg)
 
     rd = y1s[1:]
     bl = y2s[1:]
@@ -86,10 +86,10 @@ def analysis(meas, data=None, fig=None):
     Pegge = ((rd+yw-bl-gr)/(Vge+Veg-Vee-Vgg)+1)/2
     Pgg = (Pg1+Pg2-Pegge)/2
     Pg_cplx = (Pg1+Pg2-Pegge)/2
-    print(np.abs(Pgg))
-    print(np.abs(Pg1-Pgg))
-    print(np.abs(Pg2-Pgg))
-    print(np.abs(1-(Pg2-Pgg)-Pgg-(Pg1-Pgg)))
+    print((np.abs(Pgg)))
+    print((np.abs(Pg1-Pgg)))
+    print((np.abs(Pg2-Pgg)))
+    print((np.abs(1-(Pg2-Pgg)-Pgg-(Pg1-Pgg))))
 #    
 #    fig2, axes2 = plt.subplots(2)
 #    axes2[0].plot(xs[12:], np.real(Pgg))
@@ -151,7 +151,7 @@ def analysis(meas, data=None, fig=None):
 #        ideal_pops[i] = np.dot(I_matrix, ideal_pops[i])
 
 
-    print('ideal_pops:', ideal_pops)
+    print(('ideal_pops:', ideal_pops))
     
 #    ideal_pops_correct = np.dot(I_matrix, ideal_pops)
 
@@ -196,10 +196,10 @@ def analysis(meas, data=None, fig=None):
 #    
     plt.figure()
     plt.plot(np.linspace(1, meas.N_cycles, meas.N_cycles), alpha, linestyle='None', marker='o')
-    print('alpha:', alpha)
-    print('H_inc_exp was:', H_inc_exp)
-    print('H_meas_exp was:', H_meas_exp)
-    print('H_exp was:', H_exp)
+    print(('alpha:', alpha))
+    print(('H_inc_exp was:', H_inc_exp))
+    print(('H_meas_exp was:', H_meas_exp))
+    print(('H_exp was:', H_exp))
     
     return [alpha]
 
@@ -390,7 +390,7 @@ class CrossEB(Measurement1D):
         self.N_cycles = N_cycles
 
         self.num_cal_points = num_cal_points
-        XS = np.asarray(range(N_cycles+1)) 
+        XS = np.asarray(list(range(N_cycles+1))) 
         self.xs = np.array([XS,XS,XS,XS]).flatten() # for plotting purposes
         self.filepath_lookup_table = ""
         self.cnum=cnum
@@ -405,7 +405,7 @@ class CrossEB(Measurement1D):
         
             
         super(CrossEB, self).__init__(4*(N_cycles+1), infos=(qubit_info,qubit2_info,twoQ_info,cancel_info), **kwargs)
-        self.data.create_dataset('Cycles', data=range(4*(N_cycles+1)))
+        self.data.create_dataset('Cycles', data=list(range(4*(N_cycles+1))))
 #        self.data.set_attrs(
 #            cnum=cnum,
 #            interleave=interleave
@@ -447,11 +447,11 @@ class CrossEB(Measurement1D):
             rndnum = rnd.randint(0, 63) 
             if self.cnum is not None:
                 rndnum = self.cnum
-            print(n, rndnum)
+            print((n, rndnum))
             temp_pulseSeq1 = []
             temp_pulseSeq2 = []
             self.add_cycle(rndnum, cycleSeq1, cycleSeq2, temp_pulseSeq1, temp_pulseSeq2, len1, len2, phi1, phi2, virtual=self.use_virtual_Z, final_gates=False)
-            print(phi1[0], phi2[0])
+            print((phi1[0], phi2[0]))
             if self.interleave == 'ZX90':
                 print ('This code does not support ZX90 yet')
                
@@ -488,16 +488,16 @@ class CrossEB(Measurement1D):
             finalpulseSeq2.append(temp_finalpulseSeq2)
             finalgateSeq1.append(temp_finalgateSeq1)
             finalgateSeq2.append(temp_finalgateSeq2)
-            print('cycleSeq1 is:', cycleSeq1)
-            print('cycleSeq2 is:', cycleSeq2)
-            print('finalgateSeq1 is:', finalgateSeq1)
-            print('finalgateSeq2 is:', finalgateSeq2)
-            print('temp_finalgateSeq1 is:', temp_finalgateSeq1)
-            print('temp_finalgateSeq2 is:', temp_finalgateSeq2)
+            print(('cycleSeq1 is:', cycleSeq1))
+            print(('cycleSeq2 is:', cycleSeq2))
+            print(('finalgateSeq1 is:', finalgateSeq1))
+            print(('finalgateSeq2 is:', finalgateSeq2))
+            print(('temp_finalgateSeq1 is:', temp_finalgateSeq1))
+            print(('temp_finalgateSeq2 is:', temp_finalgateSeq2))
             
             
             self.exp_dists.append(self.calc_exp_dist(cycleSeq1, cycleSeq2, temp_finalgateSeq1, temp_finalgateSeq2))
-            print('expected final state is:', self.calc_exp_dist(cycleSeq1, cycleSeq2, temp_finalgateSeq1, temp_finalgateSeq2))
+            print(('expected final state is:', self.calc_exp_dist(cycleSeq1, cycleSeq2, temp_finalgateSeq1, temp_finalgateSeq2)))
 
         for ROpostseq in [None, r(np.pi,0), r2(np.pi,0),
                               Combined([r(np.pi,0),r2(np.pi,0)])]:
@@ -522,7 +522,7 @@ class CrossEB(Measurement1D):
                 s.append(self.seq)
                 for k in range(m+1):
                     s.append(Combined([Join(pulseSeq1[k]), Join(pulseSeq2[k])]))
-                    print(k, pulseSeq1[k], pulseSeq2[k])
+                    print((k, pulseSeq1[k], pulseSeq2[k]))
                 s.append(Combined([Join(finalpulseSeq1[m]), Join(finalpulseSeq2[m])]))
 
                     

@@ -1,5 +1,6 @@
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -30,10 +31,10 @@ def try_twice(func, N=2, **kwargs):
     for i in range(N):
         try:
             return func(**kwargs)
-        except Exception, e:
-            print 'Error %s' % (e,)
+        except Exception as e:
+            print('Error %s' % (e,))
             pass
-    print 'Failed to do %s %s times...' % (func, N)
+    print('Failed to do %s %s times...' % (func, N))
 
 def calibrate_IQ(qubit_info, n_avg):
     alz.set_naverages(n_avg)
@@ -80,7 +81,7 @@ def do_T1_plot(qubit_info, n_avg, delays, t1_fits, fig_num, QP_injection_delay=N
         plt.figure(fig_num)
         plt.clf()
         plt.axis(xmin=-len(t1_fits['t1s'])*0.10, xmax=len(t1_fits['t1s'])*1.10)
-        plt.errorbar(range(len(t1_fits['t1s'])),t1_fits['t1s'],t1_fits['t1s_err'],fmt='go')
+        plt.errorbar(list(range(len(t1_fits['t1s']))),t1_fits['t1s'],t1_fits['t1s_err'],fmt='go')
         plt.xlabel("Measurement iterations")
         plt.ylabel("T1(us)")
 #       plt.semilogy()\
@@ -90,7 +91,7 @@ def do_T1_plot(qubit_info, n_avg, delays, t1_fits, fig_num, QP_injection_delay=N
         plt.figure(fig_num)
         plt.clf()
         plt.axis(xmin=-len(t1_fits['t1s_QP'])*0.10, xmax=len(t1_fits['t1s_QP'])*1.10)
-        plt.errorbar(range(len(t1_fits['t1s_QP'])),t1_fits['t1s_QP'],t1_fits['t1s_QP_err'], fmt ='go')
+        plt.errorbar(list(range(len(t1_fits['t1s_QP']))),t1_fits['t1s_QP'],t1_fits['t1s_QP_err'], fmt ='go')
         plt.xlabel("QPdelay")
         plt.ylabel("T1(us)")
 
@@ -155,10 +156,10 @@ def do_QPdecay_plot(qubit_info, n_avg, T1_delay, qpd_fits, fig_num, **kwargs):
     plt.figure(fig_num)
     plt.clf()
     plt.subplot(211).axis(xmin=-len(qpd_fits['qpt1s'])*0.10, xmax=len(qpd_fits['qpt1s'])*1.10)#, ymin=0, ymax=1)
-    plt.errorbar(range(len(qpd_fits['qpt1s'])),qpd_fits['qpt1s'],qpd_fits['qpt1s_err'],fmt='go')
+    plt.errorbar(list(range(len(qpd_fits['qpt1s']))),qpd_fits['qpt1s'],qpd_fits['qpt1s_err'],fmt='go')
     plt.ylabel("Tau QP(ms)")
     plt.subplot(212).axis(xmin=-len(np.array(qpd_fits['qpofs']))*0.10, xmax=len(np.array(qpd_fits['qpofs']))*1.10)#, ymin=10, ymax=30)
-    plt.errorbar(range(len(qpofs_array)), 1/qpofs_array, qpofs_err_array/qpofs_array/qpofs_array, fmt='b^')
+    plt.errorbar(list(range(len(qpofs_array))), 1/qpofs_array, qpofs_err_array/qpofs_array/qpofs_array, fmt='b^')
     plt.xlabel("Measurement iterations")
     plt.ylabel("Qubit T1-floor(us)")
     ag3.set_rf_on(False)
@@ -207,36 +208,36 @@ def do_T2_plot(qubit_info, n_avg, delays, detune, t2_fits, fig_num, double_freq=
         plt.figure(fig_num)
         plt.clf()
         plt.subplot(211).axis(xmin=-len(t2_fits['t2s'])*0.10, xmax=len(t2_fits['t2s'])*1.10, ymin= min(t2_fits['t2s'])*0.7, ymax=max(t2_fits['t2s'])*1.3)
-        plt.errorbar(range(len(t2_fits['t2s'])),t2_fits['t2s'],t2_fits['t2s_err'],fmt='rs')
+        plt.errorbar(list(range(len(t2_fits['t2s']))),t2_fits['t2s'],t2_fits['t2s_err'],fmt='rs')
         plt.ylabel("T2(us)")
         plt.subplot(212).axis(xmin=-len(t2_fits['t2freqs'])*0.10, xmax=len(t2_fits['t2freqs'])*1.10, ymin=min(t2_fits['t2freqs'])-0.02, ymax=max(t2_fits['t2freqs'])+0.02)
-        plt.errorbar(range(len(t2_fits['t2freqs'])),t2_fits['t2freqs'],t2_fits['t2freqs_err'],fmt='b^')
+        plt.errorbar(list(range(len(t2_fits['t2freqs']))),t2_fits['t2freqs'],t2_fits['t2freqs_err'],fmt='b^')
         plt.xlabel("Measurement iterations")
         plt.ylabel("Ramsey Freq.(MHz) (= Actual Qubit Freq. - Drive Freq.)")
     if double_freq == False and QP_injection_delay is not None:
         plt.figure(fig_num)
         plt.clf()
         plt.subplot(211).axis(xmin=-len(t2_fits['t2s_QP'])*0.10, xmax=len(t2_fits['t2s_QP'])*1.10, ymin= min(t2_fits['t2s_QP'])*0.7, ymax=max(t2_fits['t2s_QP'])*1.3)
-        plt.errorbar(range(len(t2_fits['t2s_QP'])),t2_fits['t2s_QP'],t2_fits['t2s_QP_err'],fmt='rs')
+        plt.errorbar(list(range(len(t2_fits['t2s_QP']))),t2_fits['t2s_QP'],t2_fits['t2s_QP_err'],fmt='rs')
         plt.ylabel("T2 with QP injection (us)")
         plt.subplot(212).axis(xmin=-len(t2_fits['t2freqs_QP'])*0.10, xmax=len(t2_fits['t2freqs_QP'])*1.10, ymin= min(min(t2_fits['gft2freqs']),min(t2_fits['t22freqs']))-0.02, ymax=max(max(t2_fits['t2freqs']), max(t2_fits['t22freqs']))+0.02)
-        plt.errorbar(range(len(t2_fits['t2freqs_QP'])),t2_fits['t2freqs_QP'],t2_fits['t2freqs_QP_err'],fmt='b^')
+        plt.errorbar(list(range(len(t2_fits['t2freqs_QP']))),t2_fits['t2freqs_QP'],t2_fits['t2freqs_QP_err'],fmt='b^')
         plt.xlabel("Measurement iterations")
         plt.ylabel("Ramsey Freq.(MHz) (= Actual Qubit Freq. - Drive Freq.)")
     if double_freq is True:
         plt.figure(fig_num)
         plt.clf()
         plt.subplot(311).axis(xmin=-len(t2_fits['t2s'])*0.10, xmax=len(t2_fits['t2s'])*1.10, ymin= min(t2_fits['t2s'])*0.7, ymax=max(t2_fits['t22s'])*1.3)
-        plt.errorbar(range(len(t2_fits['t2s'])),t2_fits['t2s'],t2_fits['t2s_err'],fmt='rs')
-        plt.errorbar(range(len(t2_fits['t22s'])),t2_fits['t22s'],t2_fits['t22s_err'],fmt='b^')
+        plt.errorbar(list(range(len(t2_fits['t2s']))),t2_fits['t2s'],t2_fits['t2s_err'],fmt='rs')
+        plt.errorbar(list(range(len(t2_fits['t22s']))),t2_fits['t22s'],t2_fits['t22s_err'],fmt='b^')
         plt.ylabel("T2(us)")
         plt.subplot(312).axis(xmin=-len(t2_fits['t2freqs'])*0.10, xmax=len(t2_fits['t2freqs'])*1.10,ymin= min(min(t2_fits['t2freqs']),min(t2_fits['t22freqs']))-0.02, ymax=max(max(t2_fits['t2freqs']), max(t2_fits['t22freqs']))+0.02)
-        plt.errorbar(range(len(t2_fits['t2freqs'])),t2_fits['t2freqs'],t2_fits['t2freqs_err'],fmt='rs')
-        plt.errorbar(range(len(t2_fits['t22freqs'])),t2_fits['t22freqs'],t2_fits['t22freqs_err'],fmt='b^')
+        plt.errorbar(list(range(len(t2_fits['t2freqs']))),t2_fits['t2freqs'],t2_fits['t2freqs_err'],fmt='rs')
+        plt.errorbar(list(range(len(t2_fits['t22freqs']))),t2_fits['t22freqs'],t2_fits['t22freqs_err'],fmt='b^')
         plt.ylabel("Ramsey Freq.(MHz) (= Actual Qubit Freq. - Drive Freq.)")
         plt.subplot(313).axis(xmin=-len(t2_fits['amps'])*0.10, xmax=len(t2_fits['amps'])*1.10,ymin= min(t2_fits['amp2s'])*0.8, ymax=max(t2_fits['amps'])*1.2)
-        plt.errorbar(range(len(t2_fits['amps'])),t2_fits['amps'],t2_fits['amps_err'],fmt='rs')
-        plt.errorbar(range(len(t2_fits['amp2s'])),t2_fits['amp2s'],t2_fits['amp2s_err'],fmt='b^')
+        plt.errorbar(list(range(len(t2_fits['amps']))),t2_fits['amps'],t2_fits['amps_err'],fmt='rs')
+        plt.errorbar(list(range(len(t2_fits['amp2s']))),t2_fits['amp2s'],t2_fits['amp2s_err'],fmt='b^')
         plt.xlabel("Measurement iterations")
         plt.ylabel("Amplitudes (AU)")
 
@@ -260,7 +261,7 @@ def do_T2echo_plot(qubit_info, n_avg, delays, detune, t2E_fits, fig_num, laser_p
     plt.figure(fig_num)
     plt.clf()
     plt.axis(xmin=-len(t2E_fits['t2es'])*0.10, xmax=len(t2E_fits['t2es'])*1.10, ymin= min(t2E_fits['t2es'])*0.8, ymax=max(t2E_fits['t2es'])*1.2)
-    plt.errorbar(range(len(t2E_fits['t2es'])),t2E_fits['t2es'],t2E_fits['t2es_err'],fmt='mv') # magenta color and v-shape markers
+    plt.errorbar(list(range(len(t2E_fits['t2es']))),t2E_fits['t2es'],t2E_fits['t2es_err'],fmt='mv') # magenta color and v-shape markers
     plt.xlabel("Measurement iterations")
     plt.ylabel("T2Echo(us)")
 
@@ -283,7 +284,7 @@ def do_FT1_plot(qubit_info, ef_info, n_avg, delays, ft1_fits, fig_num):
     plt.figure(fig_num)
     plt.clf()
     plt.axis(xmin=-len(ft1_fits['ft1s'])*0.10, xmax=len(ft1_fits['ft1s'])*1.10, ymin= min(ft1_fits['ft1s'])*0.8, ymax=max(ft1_fits['ft1s'])*1.2)
-    plt.errorbar(range(len(ft1_fits['ft1s'])),ft1_fits['ft1s'],ft1_fits['ft1s_err'],fmt='go')
+    plt.errorbar(list(range(len(ft1_fits['ft1s']))),ft1_fits['ft1s'],ft1_fits['ft1s_err'],fmt='go')
     plt.xlabel("Measurement iterations")
     plt.ylabel("FT1(us)")
 
@@ -322,36 +323,36 @@ def do_EFT2_plot(qubit_info, ef_info, n_avg, delays, detune, ft2_fits, fig_num, 
         plt.figure(fig_num)
         plt.clf()
         plt.subplot(211).axis(xmin=-len(ft2_fits['eft2s'])*0.10, xmax=len(ft2_fits['eft2s'])*1.10, ymin= min(ft2_fits['eft2s'])*0.7, ymax=max(ft2_fits['eft2s'])*1.3)
-        plt.errorbar(range(len(ft2_fits['eft2s'])),ft2_fits['eft2s'],ft2_fits['eft2s_err'],fmt='rs')
+        plt.errorbar(list(range(len(ft2_fits['eft2s']))),ft2_fits['eft2s'],ft2_fits['eft2s_err'],fmt='rs')
         plt.ylabel("EFT2(us)")
         plt.subplot(212).axis(xmin=-len(ft2_fits['eft2freqs'])*0.10, xmax=len(ft2_fits['eft2freqs'])*1.10, ymin=min(ft2_fits['eft2freqs'])-0.02, ymax=max(ft2_fits['eft2freqs'])+0.02)
-        plt.errorbar(range(len(ft2_fits['eft2freqs'])),ft2_fits['eft2freqs'],ft2_fits['eft2freqs_err'],fmt='b^')
+        plt.errorbar(list(range(len(ft2_fits['eft2freqs']))),ft2_fits['eft2freqs'],ft2_fits['eft2freqs_err'],fmt='b^')
         plt.xlabel("Measurement iterations")
         plt.ylabel("Ramsey Freq.(MHz) (= Actual Qubit Freq. - Drive Freq.)")
     if double_freq == False and QP_injection_delay is not None:
         plt.figure(fig_num)
         plt.clf()
         plt.subplot(211).axis(xmin=-len(ft2_fits['eft2s_QP'])*0.10, xmax=len(ft2_fits['eft2s_QP'])*1.10, ymin= min(ft2_fits['eft2s_QP'])*0.7, ymax=max(ft2_fits['eft2s_QP'])*1.3)
-        plt.errorbar(range(len(ft2_fits['eft2s_QP'])),ft2_fits['eft2s_QP'],ft2_fits['eft2s_QP_err'],fmt='rs')
+        plt.errorbar(list(range(len(ft2_fits['eft2s_QP']))),ft2_fits['eft2s_QP'],ft2_fits['eft2s_QP_err'],fmt='rs')
         plt.ylabel("EFT2 with QP injection (us)")
         plt.subplot(212).axis(xmin=-len(ft2_fits['eft2freqs_QP'])*0.10, xmax=len(ft2_fits['eft2freqs_QP'])*1.10, ymin=min(ft2_fits['eft2freqs_QP'])-0.02, ymax=max(ft2_fits['eft2freqs_QP'])+0.02)
-        plt.errorbar(range(len(ft2_fits['eft2freqs_QP'])),ft2_fits['eft2freqs_QP'],ft2_fits['eft2freqs_QP_err'],fmt='b^')
+        plt.errorbar(list(range(len(ft2_fits['eft2freqs_QP']))),ft2_fits['eft2freqs_QP'],ft2_fits['eft2freqs_QP_err'],fmt='b^')
         plt.xlabel("Measurement iterations")
         plt.ylabel("Ramsey Freq.(MHz) (= Actual Qubit Freq. - Drive Freq.)")
     if double_freq is True:
         plt.figure(fig_num)
         plt.clf()
         plt.subplot(311).axis(xmin=-len(ft2_fits['eft2s'])*0.10, xmax=len(ft2_fits['eft2s'])*1.10, ymin= min(ft2_fits['eft2s'])*0.7, ymax=max(ft2_fits['eft22s'])*1.3)
-        plt.errorbar(range(len(ft2_fits['eft2s'])),ft2_fits['eft2s'],ft2_fits['eft2s_err'],fmt='rs')
-        plt.errorbar(range(len(ft2_fits['eft22s'])),ft2_fits['eft22s'],ft2_fits['eft22s_err'],fmt='b^')
+        plt.errorbar(list(range(len(ft2_fits['eft2s']))),ft2_fits['eft2s'],ft2_fits['eft2s_err'],fmt='rs')
+        plt.errorbar(list(range(len(ft2_fits['eft22s']))),ft2_fits['eft22s'],ft2_fits['eft22s_err'],fmt='b^')
         plt.ylabel("EFT2(us)")
         plt.subplot(312).axis(xmin=-len(ft2_fits['eft2freqs'])*0.10, xmax=len(ft2_fits['eft2freqs'])*1.10,ymin= min(min(ft2_fits['eft2freqs']),min(ft2_fits['eft22freqs']))-0.02, ymax=max(max(ft2_fits['eft2freqs']), max(ft2_fits['eft22freqs']))+0.02)
-        plt.errorbar(range(len(ft2_fits['eft2freqs'])),ft2_fits['eft2freqs'],ft2_fits['eft2freqs_err'],fmt='rs')
-        plt.errorbar(range(len(ft2_fits['eft22freqs'])),ft2_fits['eft22freqs'],ft2_fits['eft22freqs_err'],fmt='b^')
+        plt.errorbar(list(range(len(ft2_fits['eft2freqs']))),ft2_fits['eft2freqs'],ft2_fits['eft2freqs_err'],fmt='rs')
+        plt.errorbar(list(range(len(ft2_fits['eft22freqs']))),ft2_fits['eft22freqs'],ft2_fits['eft22freqs_err'],fmt='b^')
         plt.ylabel("Ramsey Freq.(MHz) (= Actual Qubit Freq. - Drive Freq.)")
         plt.subplot(313).axis(xmin=-len(ft2_fits['eft2amps'])*0.10, xmax=len(ft2_fits['eft2amps'])*1.10,ymin= min(ft2_fits['eft2amp2s'])*0.8, ymax=max(ft2_fits['eft2amps'])*1.2)
-        plt.errorbar(range(len(ft2_fits['eft2amps'])),ft2_fits['eft2amps'],ft2_fits['eft2amps_err'],fmt='rs')
-        plt.errorbar(range(len(ft2_fits['eft2amp2s'])),ft2_fits['eft2amp2s'],ft2_fits['eft2amp2s_err'],fmt='b^')
+        plt.errorbar(list(range(len(ft2_fits['eft2amps']))),ft2_fits['eft2amps'],ft2_fits['eft2amps_err'],fmt='rs')
+        plt.errorbar(list(range(len(ft2_fits['eft2amp2s']))),ft2_fits['eft2amp2s'],ft2_fits['eft2amp2s_err'],fmt='b^')
         plt.xlabel("Measurement iterations")
         plt.ylabel("Amplitudes (AU)")
 
@@ -373,7 +374,7 @@ def do_EFT2echo_plot(qubit_info, ef_info, n_avg, delays, detune, t2E_fits, fig_n
     plt.figure(fig_num)
     plt.clf()
     plt.axis(xmin=-len(t2E_fits['eft2es'])*0.10, xmax=len(t2E_fits['eft2es'])*1.10, ymin= min(t2E_fits['eft2es'])*0.8, ymax=max(t2E_fits['eft2es'])*1.2)
-    plt.errorbar(range(len(t2E_fits['eft2es'])),t2E_fits['eft2es'],t2E_fits['eft2es_err'],fmt='mv') # magenta color and v-shape markers
+    plt.errorbar(list(range(len(t2E_fits['eft2es']))),t2E_fits['eft2es'],t2E_fits['eft2es_err'],fmt='mv') # magenta color and v-shape markers
     plt.xlabel("Measurement iterations")
     plt.ylabel("EFT2Echo(us)")
 
@@ -412,36 +413,36 @@ def do_GFT2_plot(qubit_info, ef_info, n_avg, delays, detune, ft2_fits, fig_num, 
         plt.figure(fig_num)
         plt.clf()
         plt.subplot(211).axis(xmin=-len(ft2_fits['gft2s'])*0.10, xmax=len(ft2_fits['gft2s'])*1.10, ymin= min(ft2_fits['gft2s'])*0.7, ymax=max(ft2_fits['gft2s'])*1.3)
-        plt.errorbar(range(len(ft2_fits['gft2s'])),ft2_fits['gft2s'],ft2_fits['gft2s_err'],fmt='ks')
+        plt.errorbar(list(range(len(ft2_fits['gft2s']))),ft2_fits['gft2s'],ft2_fits['gft2s_err'],fmt='ks')
         plt.ylabel("GFT2(us)")
         plt.subplot(212).axis(xmin=-len(ft2_fits['gft2freqs'])*0.10, xmax=len(ft2_fits['gft2freqs'])*1.10, ymin=min(ft2_fits['gft2freqs'])-0.02, ymax=max(ft2_fits['gft2freqs'])+0.02)
-        plt.errorbar(range(len(ft2_fits['gft2freqs'])),ft2_fits['gft2freqs'],ft2_fits['gft2freqs_err'],fmt='c^')
+        plt.errorbar(list(range(len(ft2_fits['gft2freqs']))),ft2_fits['gft2freqs'],ft2_fits['gft2freqs_err'],fmt='c^')
         plt.xlabel("Measurement iterations")
         plt.ylabel("Ramsey Freq.(MHz) (= Actual Qubit Freq. - Drive Freq.)")
     if double_freq == False and QP_injection_delay is not None:
         plt.figure(fig_num)
         plt.clf()
         plt.subplot(211).axis(xmin=-len(ft2_fits['gft2s_QP'])*0.10, xmax=len(ft2_fits['gft2s_QP'])*1.10, ymin= min(ft2_fits['gft2s_QP'])*0.7, ymax=max(ft2_fits['gft2s_QP'])*1.3)
-        plt.errorbar(range(len(ft2_fits['gft2s_QP'])),ft2_fits['gft2s_QP'],ft2_fits['gft2s_QP_err'],fmt='ks')
+        plt.errorbar(list(range(len(ft2_fits['gft2s_QP']))),ft2_fits['gft2s_QP'],ft2_fits['gft2s_QP_err'],fmt='ks')
         plt.ylabel("GFT2 with QP injection (us)")
         plt.subplot(212).axis(xmin=-len(ft2_fits['gft2freqs_QP'])*0.10, xmax=len(ft2_fits['gft2freqs_QP'])*1.10, ymin=min(ft2_fits['gft2freqs_QP'])-0.02, ymax=max(ft2_fits['gft2freqs_QP'])+0.02)
-        plt.errorbar(range(len(ft2_fits['gft2freqs_QP'])),ft2_fits['gft2freqs_QP'],ft2_fits['gft2freqs_QP_err'],fmt='c^')
+        plt.errorbar(list(range(len(ft2_fits['gft2freqs_QP']))),ft2_fits['gft2freqs_QP'],ft2_fits['gft2freqs_QP_err'],fmt='c^')
         plt.xlabel("Measurement iterations")
         plt.ylabel("Ramsey Freq.(MHz) (= Actual Qubit Freq. - Drive Freq.)")
     if double_freq is True:
         plt.figure(fig_num)
         plt.clf()
         plt.subplot(311).axis(xmin=-len(ft2_fits['gft2s'])*0.10, xmax=len(ft2_fits['gft2s'])*1.10, ymin= min(ft2_fits['gft2s'])*0.7, ymax=max(ft2_fits['gft22s'])*1.3)
-        plt.errorbar(range(len(ft2_fits['gft2s'])),ft2_fits['gft2s'],ft2_fits['gft2s_err'],fmt='ks')
-        plt.errorbar(range(len(ft2_fits['gft22s'])),ft2_fits['gft22s'],ft2_fits['gft22s_err'],fmt='c^')
+        plt.errorbar(list(range(len(ft2_fits['gft2s']))),ft2_fits['gft2s'],ft2_fits['gft2s_err'],fmt='ks')
+        plt.errorbar(list(range(len(ft2_fits['gft22s']))),ft2_fits['gft22s'],ft2_fits['gft22s_err'],fmt='c^')
         plt.ylabel("GFT2(us)")
         plt.subplot(312).axis(xmin=-len(ft2_fits['gft2freqs'])*0.10, xmax=len(ft2_fits['gft2freqs'])*1.10,ymin= min(min(ft2_fits['gft2freqs']),min(ft2_fits['gft22freqs']))-0.02, ymax=max(max(ft2_fits['gft2freqs']), max(ft2_fits['gft22freqs']))+0.02)
-        plt.errorbar(range(len(ft2_fits['gft2freqs'])),ft2_fits['gft2freqs'],ft2_fits['gft2freqs_err'],fmt='ks')
-        plt.errorbar(range(len(ft2_fits['gft22freqs'])),ft2_fits['gft22freqs'],ft2_fits['gft22freqs_err'],fmt='c^')
+        plt.errorbar(list(range(len(ft2_fits['gft2freqs']))),ft2_fits['gft2freqs'],ft2_fits['gft2freqs_err'],fmt='ks')
+        plt.errorbar(list(range(len(ft2_fits['gft22freqs']))),ft2_fits['gft22freqs'],ft2_fits['gft22freqs_err'],fmt='c^')
         plt.ylabel("Ramsey Freq.(MHz) (= Actual Qubit Freq. - Drive Freq.)")
         plt.subplot(313).axis(xmin=-len(ft2_fits['gft2amps'])*0.10, xmax=len(ft2_fits['gft2amps'])*1.10,ymin= min(ft2_fits['gft2amp2s'])*0.8, ymax=max(ft2_fits['gft2amps'])*1.2)
-        plt.errorbar(range(len(ft2_fits['gft2amps'])),ft2_fits['gft2amps'],ft2_fits['gft2amps_err'],fmt='ks')
-        plt.errorbar(range(len(ft2_fits['gft2amp2s'])),ft2_fits['gft2amp2s'],ft2_fits['gft2amp2s_err'],fmt='c^')
+        plt.errorbar(list(range(len(ft2_fits['gft2amps']))),ft2_fits['gft2amps'],ft2_fits['gft2amps_err'],fmt='ks')
+        plt.errorbar(list(range(len(ft2_fits['gft2amp2s']))),ft2_fits['gft2amp2s'],ft2_fits['gft2amp2s_err'],fmt='c^')
         plt.xlabel("Measurement iterations")
         plt.ylabel("Amplitudes (AU)")
 
@@ -463,7 +464,7 @@ def do_GFT2echo_plot(qubit_info, ef_info, n_avg, delays, detune, t2E_fits, fig_n
     plt.figure(fig_num)
     plt.clf()
     plt.axis(xmin=-len(t2E_fits['gft2es'])*0.10, xmax=len(t2E_fits['gft2es'])*1.10, ymin= min(t2E_fits['gft2es'])*0.8, ymax=max(t2E_fits['gft2es'])*1.2)
-    plt.errorbar(range(len(t2E_fits['gft2es'])),t2E_fits['gft2es'],t2E_fits['gft2es_err'],fmt='yv') # yellow color and v-shape markers
+    plt.errorbar(list(range(len(t2E_fits['gft2es']))),t2E_fits['gft2es'],t2E_fits['gft2es_err'],fmt='yv') # yellow color and v-shape markers
     plt.xlabel("Measurement iterations")
     plt.ylabel("GFT2Echo(us)")
 
@@ -476,8 +477,8 @@ def do_FT2echo_plot(qubit_info, ef_info, n_avg, delays, detune, t2E_fits, fig_nu
     plt.figure(fig_num)
     plt.clf()
     plt.axis(xmin=-len(t2E_fits['eft2es'])*0.10, xmax=len(t2E_fits['eft2es'])*1.10, ymin= min(t2E_fits['eft2es'])*0.8, ymax=max(t2E_fits['eft2es'])*1.2)
-    plt.errorbar(range(len(t2E_fits['eft2es'])),t2E_fits['eft2es'],t2E_fits['eft2es_err'],fmt='mv', label='EFT2echo') # magenta color and v-shape markers
-    plt.errorbar(range(len(t2E_fits['gft2es'])),t2E_fits['gft2es'],t2E_fits['gft2es_err'],fmt='yv', label='GFT2echo') # yellow color and v-shape markers
+    plt.errorbar(list(range(len(t2E_fits['eft2es']))),t2E_fits['eft2es'],t2E_fits['eft2es_err'],fmt='mv', label='EFT2echo') # magenta color and v-shape markers
+    plt.errorbar(list(range(len(t2E_fits['gft2es']))),t2E_fits['gft2es'],t2E_fits['gft2es_err'],fmt='yv', label='GFT2echo') # yellow color and v-shape markers
     plt.xlabel("Measurement iterations")
     plt.ylabel("FT2Echo(us)")
 
@@ -488,8 +489,8 @@ def do_FT2echo_plot(qubit_info, ef_info, n_avg, delays, detune, t2E_fits, fig_nu
     plt.figure(fig_num)
     plt.clf()
     plt.axis(xmin=-len(t2E_fits['gft2es'])*0.10, xmax=len(t2E_fits['gft2es'])*1.10, ymin= min(t2E_fits['eft2es'])*0.8, ymax=max(t2E_fits['gft2es'])*1.2)
-    plt.errorbar(range(len(t2E_fits['eft2es'])),t2E_fits['eft2es'],t2E_fits['eft2es_err'],fmt='mv', label='EFT2echo') # magenta color and v-shape markers
-    plt.errorbar(range(len(t2E_fits['gft2es'])),t2E_fits['gft2es'],t2E_fits['gft2es_err'],fmt='yv', label='GFT2echo') # yellow color and v-shape markers
+    plt.errorbar(list(range(len(t2E_fits['eft2es']))),t2E_fits['eft2es'],t2E_fits['eft2es_err'],fmt='mv', label='EFT2echo') # magenta color and v-shape markers
+    plt.errorbar(list(range(len(t2E_fits['gft2es']))),t2E_fits['gft2es'],t2E_fits['gft2es_err'],fmt='yv', label='GFT2echo') # yellow color and v-shape markers
     plt.xlabel("Measurement iterations")
     plt.ylabel("FT2Echo(us)")
 
@@ -530,7 +531,7 @@ def do_population_plot(qubit_info, ef_info, n_avg_rabiup, n_avg_rabinoup, amps, 
     plt.figure(fig_num).show()
     plt.clf()
     plt.subplot(211).axis(xmin=-len(pops_fits['rabiupAmp'])*0.10, xmax=len(pops_fits['rabiupAmp'])*1.10, ymin=min(pops_fits['rabiupAmp'])*0.7, ymax=max(pops_fits['rabiupAmp'])*1.3)
-    plt.errorbar(range(len(pops_fits['rabiupAmp'])),pops_fits['rabiupAmp'],pops_fits['rabiupAmp_err'],fmt='b^')
+    plt.errorbar(list(range(len(pops_fits['rabiupAmp']))),pops_fits['rabiupAmp'],pops_fits['rabiupAmp_err'],fmt='b^')
     #plt.xlabel("Measurement iterations")
     plt.ylabel("Rabiup")
 
@@ -542,7 +543,7 @@ def do_population_plot(qubit_info, ef_info, n_avg_rabiup, n_avg_rabinoup, amps, 
         #population.append(population)
     plt.figure(fig_num).show()
     plt.subplot(212).axis(xmin=-len(pops_fits['rabinoupAmp'])*0.10, xmax=len(pops_fits['rabinoupAmp'])*1.10, ymin=0.0, ymax=max(pops_fits['rabinoupAmp'])*2.0)
-    plt.errorbar(range(len(pops_fits['rabinoupAmp'])),pops_fits['rabinoupAmp'],pops_fits['rabinoupAmp_err'],fmt='go')
+    plt.errorbar(list(range(len(pops_fits['rabinoupAmp']))),pops_fits['rabinoupAmp'],pops_fits['rabinoupAmp_err'],fmt='go')
     plt.xlabel("Measurement iterations")
     plt.ylabel("Rabinoup")
 

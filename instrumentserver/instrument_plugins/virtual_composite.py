@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import types
 
 class virtual_composite(Instrument):
@@ -130,7 +130,7 @@ class virtual_composite(Instrument):
             pinfo['instrument'].set(pinfo['parameter'], newval)
 
     def _instrument_changed_cb(self, sender, changes):
-        for combined_name, info in self._combine_info.iteritems():
+        for combined_name, info in self._combine_info.items():
             for pinfo in info:
                 if pinfo['instrument'] == sender:
                     if pinfo['parameter'] in changes:

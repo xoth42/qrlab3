@@ -50,7 +50,7 @@ sleeptime = 1
 #foldername = 'C:\Users\WangLab\Documents\\yingying\\circulator\\20190109' 
 #foldername = r"C:\Users\WangLab\Documents\TConnolly\calibrated_circulator\transition1-3"
 
-foldername = 'C:\Users\WangLab\Documents\FMR(2019)'
+foldername = 'C:\\Users\WangLab\Documents\FMR(2019)'
 filename = '%s\\YIG_3_1.5mm_DCC_ZoomForModes_S12_%s-%s-%s_Date_%s-%s_%s-%s-%s.txt'%(foldername,I_i,I_f,step,date.month,date.day,date.hour,date.minute,date.second)
 
 VNA.set_s_param('S12')
@@ -64,7 +64,7 @@ while ( I < I_i): #Rewrite ramp function to work correctly
     time.sleep(0.5)
     I = I + rstep
     Yoko.do_set_current(I)
-    print I
+    print(I)
     
 '''Take Data!'''
 time.sleep(sleeptime) 
@@ -79,7 +79,7 @@ axis = VNA.do_get_xaxis()
 I = I + step
 #axis = axis[:,None].T
 while np.abs(I) <= np.abs(I_f): #current field
-    print I
+    print(I)
     Yoko.do_set_current(I)
 #    time.sleep(sleeptime)
     
@@ -107,7 +107,7 @@ while np.abs(I) <= np.abs(I_f): #current field
             objsh.helper.backend.main_loop(100) #main_loop_time = 100 ms
             VNA.set_format('MLOG')
     except:
-        print 'error with async'
+        print('error with async')
 #                VNA.set_interrupt(True)
 
     datanew = VNA.do_get_data()
@@ -131,12 +131,12 @@ print('Finished Measuring!')
 '''Ramp back to current = 0 mA'''
 while (I > 0):
     I = I - rstep
-    print I
+    print(I)
     Yoko.do_set_current(I)
     time.sleep(0.1)
 I = 0
 Yoko.do_set_current(I)
-print I
+print(I)
 print('All done!')
 
 '''Convert Yoko current to magnetic field, in mT'''

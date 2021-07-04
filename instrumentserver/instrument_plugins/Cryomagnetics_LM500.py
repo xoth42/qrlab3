@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import visa
 import types
 import logging
@@ -38,31 +38,31 @@ class Cryomagnetics_LM500(Instrument):
 
         self.add_parameter('units',
             flags=Instrument.FLAG_GETSET,
-            type=types.StringType)
+            type=bytes)
 
         self.add_parameter('mode',
             flags=Instrument.FLAG_GETSET,
             format_map={'S': 'Sample', 'C': 'Continuous'},
-            type=types.StringType)
+            type=bytes)
 
         self.add_parameter('length',
             flags=Instrument.FLAG_GET,
-            type=types.FloatType)
+            type=float)
 
         self.add_parameter('lastval',
             flags=Instrument.FLAG_GET,
-            type=types.FloatType,
+            type=float,
             units='cm')
 
         self.add_parameter('interval',
             flags=Instrument.FLAG_GETSET,
-            type=types.IntType,
+            type=int,
             minval=0,
             units='s')
 
         self.add_parameter('alarmlim',
             flags=Instrument.FLAG_GETSET,
-            type=types.FloatType,
+            type=float,
             minval=0,
             units='cm')
 

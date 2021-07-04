@@ -2,7 +2,7 @@ import hashlib
 import numpy as np
 import logging
 import time
-from lib.file_support import awg_files
+from .lib.file_support import awg_files
 import os
 
 ''' JEFF. Added another 0 to let AWG load '''
@@ -33,7 +33,7 @@ class AWGLoader:
         self._awgs[awg] = ch_map
 
     def get_awgs(self):
-        return self._awgs.keys()
+        return list(self._awgs.keys())
 
     def get_active_awgs(self):
         return self._active_awgs
@@ -51,11 +51,11 @@ class AWGLoader:
         
 
     def load_file(self, seqs, delay_override=False):
-        for awg, ch_map in self._awgs.iteritems():
+        for awg, ch_map in self._awgs.items():
             start = time.clock()
 
             seqs_to_load = {}
-            for dst_ch, src_ch in ch_map.iteritems():
+            for dst_ch, src_ch in ch_map.items():
                 if src_ch in seqs:
                     m1seq = seqs.get('%sm1'%src_ch, None)
                     m2seq = seqs.get('%sm2'%src_ch, None)
@@ -73,25 +73,25 @@ class AWGLoader:
             awgld.load_seqs(delay_override=delay_override)
 
             dt = time.clock() - start
-            print 'Loaded in %.03f sec' % (dt)
+            print('Loaded in %.03f sec' % (dt))
 
     def load_direct(self, seqs):
-        for awg, ch_map in self._awgs.iteritems():
+        for awg, ch_map in self._awgs.items():
             seqlen = None
-            for dst_ch, src_ch in ch_map.iteritems():
+            for dst_ch, src_ch in ch_map.items():
                 if src_ch in seqs:
                     seqlen = len(seqs[src_ch].seq)
                     break
             if seqlen is None:
                 continue
-            print "sequence length is %d \n" %(seqlen)
+            print("sequence length is %d \n" %(seqlen))
             
 
             awg.delete_all_waveforms(timeout=AWG_TIMEOUT)     # This can take a while
             self._loaded_wforms = []
             awg.setup_sequence(seqlen, reset=True, loop=True)
 
-            for dst_ch, src_ch in ch_map.iteritems():
+            for dst_ch, src_ch in ch_map.items():
                 if src_ch in seqs:
                     m1seq = seqs.get('%sm1'%src_ch, None)
                     m2seq = seqs.get('%sm2'%src_ch, None)
@@ -204,7 +204,7 @@ class AWGLoader:
                 self._loaded_wforms.append(wname)
 
             awg.set_seq_element(chan, i_seq+1, wname, p.repeat, p.trigger, timeout=AWG_TIMEOUT)
-        print "completed a channel\n"
+        print("completed a channel\n")
 
     def load_channel_sequence_bulk(self, awg, chan, seq, m1seq=None, m2seq=None):
         '''

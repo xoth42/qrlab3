@@ -8,7 +8,7 @@ Created on Thu Jun 29 14:36:07 2017
 
 import numpy as np
 import matplotlib.pyplot as pl
-import fitting_programs as fp
+from . import fitting_programs as fp
 
 
 data = np.loadtxt("0629_hangercavity_transmission_cold")

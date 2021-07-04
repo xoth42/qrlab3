@@ -1,5 +1,6 @@
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 import matplotlib.pyplot as plt
 from pulseseq import sequencer, pulselib
@@ -181,7 +182,7 @@ if 0: # Single qubit tomography
         sqtomo.measure()
         tomo_result.append(sqtomo.get_ys())
         plt.close()
-    print tomo_result
+    print(tomo_result)
     bla
     
 if 0: # Process_tomography 
@@ -195,7 +196,7 @@ if 0: # Process_tomography
     ptomo_result.append(sqtomo.get_ys())
     plt.close()
     
-    print ptomo_result
+    print(ptomo_result)
     bla
 
 if 0: # Drag test
@@ -224,7 +225,7 @@ if 0: # AllXY
         axy.measure()
         allxy_result.append(allxy.get_ys())
         plt.close()
-    print allxy_result
+    print(allxy_result)
     plt.figure()
     for i in range(10): plt.plot(allxy_result[i])
     bla
@@ -525,7 +526,7 @@ if 0:
             plt.figure(1)
             plt.clf()
 #            plt.errorbar(np.array(delays)/1000.0, np.array(tau)/1000.0, np.array(tau_err)/1000.0, fmt ='mo')
-            plt.errorbar(np.array(range(len(tau))),np.array(tau)/1000.0, np.array(tau_err)/1000.0, fmt ='mo')
+            plt.errorbar(np.array(list(range(len(tau)))),np.array(tau)/1000.0, np.array(tau_err)/1000.0, fmt ='mo')
 #            plt.axis(xmin=min(delays)*0.9/1000.0, xmax=max(delays)*1.10/1000.0)
             #plt.semilogx()
             plt.title('QP Decay After Optical Injection')

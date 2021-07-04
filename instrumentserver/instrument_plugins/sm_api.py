@@ -236,13 +236,13 @@ smGetProductID.restype = c_char_p
 # --------------------------------- Utility --------------------------------- #
 def print_status(handle, status):
     error_string = smGetErrorString(status)
-    print("id:\t", handle)
-    print("status:\t", status)
+    print(("id:\t", handle))
+    print(("status:\t", status))
     print(error_string)
 
 def print_status_if_error(handle, status, function):
     if(status != 0):
-        print ("\n", function)
+        print(("\n", function))
         print_status(handle, status)
 
 

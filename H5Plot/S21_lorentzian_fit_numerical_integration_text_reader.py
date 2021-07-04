@@ -63,7 +63,7 @@ create_array = True
 
 save_data = True
 
-field_range = range(0,15)
+field_range = list(range(0,15))
 
 model_data_len = 4001
 freqs_model = np.linspace(10.78e9,10.83e9,model_data_len)

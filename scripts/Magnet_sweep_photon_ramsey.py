@@ -6,7 +6,8 @@ Created on Mon Feb 08 15:58:43 2021
 """
 
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib
 import matplotlib
@@ -94,7 +95,7 @@ for field in [-0.021,-0.021,-0.021]:
                     objsh.helper.backend.main_loop(100)
         
             except:
-                print 'error in setting persistent mode'
+                print('error in setting persistent mode')
             
 #        elif abs(float(Magnet.do_get_field()) - field) > 0.0002:
         else:
@@ -112,14 +113,14 @@ for field in [-0.021,-0.021,-0.021]:
                     objsh.helper.backend.main_loop(100)
         
             except:
-                print 'error in setting persistent mode'        
+                print('error in setting persistent mode')        
             
         
             
         field0 = Magnet.do_get_field()
-        print 'field at %sT'%(float(field0))
+        print('field at %sT'%(float(field0)))
     
-    from single_cavity import rocavspectroscopy_keysight_mixer
+    from .single_cavity import rocavspectroscopy_keysight_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), cavity_infoA.rotate_selective(np.pi, 0)])
 #    seq = sequencer.Sequence([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0), ef2_info.rotate(np.pi, 0)])
 #    Yoko.do_set_current(-0.00175)
@@ -277,13 +278,13 @@ for field in [-0.021,-0.021,-0.021]:
             ax2.plot(xs[i], -gaussian(result.params, xs[i], 0), color=colors[i], linestyle='dashed')
         
         
-        print('SNR = ', (means[1] - means[0]) / (stds[0] + stds[1])/2)
+        print(('SNR = ', (means[1] - means[0]) / (stds[0] + stds[1])/2))
     
     dig.do_set_naverages(10000)
     
     
     if 1: #ssb with stark shift with mixer with gaussian fit
-        from single_qubit import stark_shift_with_mixer
+        from .single_qubit import stark_shift_with_mixer
     #    seq = sequencer.Join([sequencer.Trigger(250), cool, sequencer.Delay(500)])
         phase1 =0
         pi_amps = [0,0.3,0.6, 0.7]
@@ -305,7 +306,7 @@ for field in [-0.021,-0.021,-0.021]:
                 shift = spec.center
     
     if 1:    #photon ramsey
-        from single_qubit import photon_ramsey_test
+        from .single_qubit import photon_ramsey_test
     #    delay = np.linspace(130,260,6)
         SS_mixer_info1_set.set_pi_amp_selective(0.4)
     

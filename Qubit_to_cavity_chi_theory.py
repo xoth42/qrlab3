@@ -39,8 +39,8 @@ def S31_model(gamma1,gamma2,gamma3,gamma4,wa,wb,wp,wn,ga,ga2,gb,gb2,spl,delta,A,
     out_3_ = np.conj(out_3)
     S31_mag = abs(np.array(out_3_))
     S31_phase = np.angle(np.array(out_3_))
-    print(out_3[0])
-    print(out_3_[0])
+    print((out_3[0]))
+    print((out_3_[0]))
     return [out_3_,S31_mag,S31_phase]
 
 def S31_eigen(gamma1,gamma2,gamma3,gamma4,wa,wb,wp,wn,ga,ga2,gb,gb2,spl,delta,A,k,phi,chi):

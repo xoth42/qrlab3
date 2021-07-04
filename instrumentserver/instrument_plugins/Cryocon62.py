@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import visa
 from time import sleep
@@ -52,22 +52,22 @@ class Cryocon62(Instrument):
         self._address = address
         self._visainstrument = visa.instrument(self._address)
 
-        self.add_parameter('temperature', type=types.FloatType,
+        self.add_parameter('temperature', type=float,
             channel_prefix='ch%d_',
             flags=Instrument.FLAG_GET, channels=(1,2))
-        self.add_parameter('units', type=types.StringType,
+        self.add_parameter('units', type=bytes,
             channel_prefix='ch%d_',
             flags=Instrument.FLAG_GET, channels=(1,2))
-        self.add_parameter('sensor_index', type=types.IntType,
+        self.add_parameter('sensor_index', type=int,
             channel_prefix='ch%d_',
             flags=Instrument.FLAG_GET, channels=(1,2))
-        self.add_parameter('vbias', type=types.StringType,
+        self.add_parameter('vbias', type=bytes,
             channel_prefix='ch%d_',
             flags=Instrument.FLAG_GET, channels=(1,2))
-        self.add_parameter('channel_name', type=types.StringType,
+        self.add_parameter('channel_name', type=bytes,
             channel_prefix='ch%d_',
             flags=Instrument.FLAG_GET, channels=(1,2))
-        self.add_parameter('sensor_name', type=types.StringType,
+        self.add_parameter('sensor_name', type=bytes,
             channel_prefix='ch%d_',
             flags=Instrument.FLAG_GET, channels=(1,2))
 

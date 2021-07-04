@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-import keysightSD1 as key
+from . import keysightSD1 as key
 def error_decorator(function):
     def wrapper(*args):
         result = function(*args)
         if (result < 0) and (result != -8038) and (result != -8031):
-            raise ValueError("Error is " + str(result) + ' in function: ' + str(function.func_name))
+            raise ValueError("Error is " + str(result) + ' in function: ' + str(function.__name__))
     return wrapper
         
 class CompiledHVI(object):

@@ -116,14 +116,14 @@ class Spectroscopy_IQ(Measurement1D):
                 try:
                     while not ret.is_valid():
                         objsh.helper.backend.main_loop(100)
-                except Exception, e:
+                except Exception as e:
                     alz.set_interrupt(True)
-                    print 'Error: %s' % (str(e), )
+                    print('Error: %s' % (str(e), ))
                     return
                 IQ = np.average(ret.get())
                 amps.append(np.abs(IQ))
                 phases.append(np.angle(IQ, deg=True))
-                print 'F = %.05f GHz --> amp = %.1f, angle = %.01f' % (freq / 1e9, np.abs(IQ), np.angle(IQ, deg=True))
+                print('F = %.05f GHz --> amp = %.1f, angle = %.01f' % (freq / 1e9, np.abs(IQ), np.angle(IQ, deg=True)))
 
             self.ampdata[ipower,:] = amps
             self.phasedata[ipower,:] = phases
@@ -148,7 +148,7 @@ class Spectroscopy_IQ(Measurement1D):
             p0 = [np.min(amps), w0*h0, pos, w0]
             p = f.fit(p0)
             txt = 'Center = %.03f MHz' % (p[2]/1e6,)
-            print 'Fit gave: %s' % (txt,)
+            print('Fit gave: %s' % (txt,))
             plt.plot(fs/1e6, f.func(p, fs), label=txt)
 
             plt.legend()

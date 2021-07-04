@@ -31,7 +31,7 @@ class SingleTrace(Measurement1D):
 
     def measure(self):
         # Generate and load sequences
-        print 'ok6'
+        print('ok6')
         VNA = self.instruments['VNA']
 
         if self.use_async:
@@ -70,21 +70,21 @@ class SingleTrace(Measurement1D):
     
     #        ret = VNA.do_get_data()
     
-            print 'ok7'
+            print('ok7')
             a=0
             try:
                 while not wait.is_valid():
-                    print 'async', a 
+                    print('async', a) 
                     a= a + 1
                     
 #                    time.sleep(0.1)
                     objsh.helper.backend.main_loop(100)
             except:
-                print 'error with async'
+                print('error with async')
 #                VNA.set_interrupt(True)
 #        '''
     
-        print 'ok8'
+        print('ok8')
         freqs = VNA.do_get_xaxis()
         ret = VNA.do_get_data()
         VNA.set_trigger_source('internal')

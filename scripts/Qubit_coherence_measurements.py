@@ -6,7 +6,8 @@ Created on Tue Jun 15 16:04:17 2021
 """
 
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib
 import matplotlib
@@ -75,7 +76,7 @@ alz.set_naverages(20000)
 repeat = 1
 
 if 1: #T2 mixer
-    from single_qubit import T2measurement_mixer
+    from .single_qubit import T2measurement_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0)])
     for i in range(repeat):
         t2 = T2measurement_mixer.T2Measurement_mixer(qubit2_info, mixer_info1, mixer_info2, np.linspace(0, 30e3, 101), 
@@ -88,7 +89,7 @@ if 1: #T2 mixer
         t2.measure()
     
 if 1: #T2 mixer
-    from single_qubit import T2measurement_mixer
+    from .single_qubit import T2measurement_mixer
 #    seq = sequencer.Join([sequencer.Trigger(250), qubit2_info.rotate(np.pi, 0)])
     for i in range(repeat):
         t2 = T2measurement_mixer.T2Measurement_mixer(qubit2_info, mixer_info1, mixer_info2, np.linspace(0, 8e3, 101), 
@@ -102,7 +103,7 @@ if 1: #T2 mixer
     
 if 1: # T1 mixer
 
-    from single_qubit import T1measurement_mixer
+    from .single_qubit import T1measurement_mixer
     for i in range(repeat):
 #    t1 = T1measurement.T1Measurement(qubit_info, np.linspace(0, 250e3, 121), 
 #    seq = sequencer.Join([sequencer.Trigger(250), sequencer.Constant(2000, 1, chan='3m1'), sequencer.Delay(250),

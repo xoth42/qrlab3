@@ -11,7 +11,8 @@ Created on Thu Jan 24 11:20:37 2019
 
 
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib
 import matplotlib
@@ -126,7 +127,7 @@ while QK_freq < stop_freq and current < stop_current:
     
     #setting RO power to some other
         RObrick.do_set_power(ROpower_initial + sweep_pow[i])
-        print(ROpower_initial + sweep_pow[i])
+        print((ROpower_initial + sweep_pow[i]))
         seq = sequencer.Trigger(600)
         spec = ssbspec_lorentzianfit.SSBSpec_lorentzianfit(qubit_info, np.linspace(-30e6, 30e6, 141), seq=seq, plot_seqs=False, proj_func='phase')
         spec.measure_keysight()
@@ -251,7 +252,7 @@ while QK_freq < stop_freq and current > stop_current:
     
     #setting RO power to some other
         RObrick.do_set_power(ROpower_initial + sweep_pow[i])
-        print(ROpower_initial + sweep_pow[i])
+        print((ROpower_initial + sweep_pow[i]))
         seq = sequencer.Trigger(600)
         spec = ssbspec_lorentzianfit.SSBSpec_lorentzianfit(qubit_info, np.linspace(-30e6, 30e6, 141), seq=seq, plot_seqs=False, proj_func='phase')
         spec.measure_keysight()

@@ -9,7 +9,7 @@ if 1:
     os.system(r'C:\qrlab\start.bat')
     time.sleep(1)
 
-from mclient import instruments
+from .mclient import instruments
 
 #yoko = instruments.create('yoko', 'Yokogawa_7651_old', address = 'GPIB0::3::INSTR')
 WF_ss = instruments.create('WF_ss', 'WFT1153', COM_adrs='COM3', serial = '1153')
@@ -312,7 +312,7 @@ dfreqs[1, 2] = -112.41e6
 
 #dfreqs[4, 4] = -127.5e6
 
-for i, j in itertools.product(range(N), range(N)):
+for i, j in itertools.product(list(range(N)), list(range(N))):
     if dfreqs[i,j] != 0:
         instruments.create('_qubit_a' + str(i) + 'b' + str(j), 'Qubit_Info',
                            deltaf = dfreqs[i, j],

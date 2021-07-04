@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import visa
 import types
 import logging
@@ -52,12 +52,12 @@ class LeCroy_44Xi(Instrument):
         self._values = {}
 
         # Add parameters
-        self.add_parameter('timebase', type=types.FloatType,
+        self.add_parameter('timebase', type=float,
             flags=Instrument.FLAG_GETSET)
-        self.add_parameter('vertical', type=types.FloatType,
+        self.add_parameter('vertical', type=float,
             flags=Instrument.FLAG_GETSET, channels=(1, 4),
             channel_prefix='ch%d_')
-        self.add_parameter('msize', type=types.FloatType,
+        self.add_parameter('msize', type=float,
             flags=Instrument.FLAG_GETSET)
 
         # Make Load/Delete Waveform functions for each channel

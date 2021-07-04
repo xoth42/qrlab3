@@ -22,7 +22,7 @@ import time
 import sys
 import numpy as np
 
-from instrument import Instrument
+from .instrument import Instrument
 import qt
 
 d = ctypes.cdll.LoadLibrary('c:/Program Files/Fianium/config files/AotfLibrary.dll')
@@ -60,18 +60,18 @@ class Fianium_AOTF(Instrument):
 
         self.add_parameter('wavelength',
             flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-            type=types.IntType,
+            type=int,
             units='nm')
 
         self.add_parameter('power',
             flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
-            type=types.IntType,
+            type=int,
             units='%',
             help='Set crystal power')
 
         self.add_parameter('wlenopt',
             flags=Instrument.FLAG_SET,
-            type=types.IntType,
+            type=int,
             units='nm',
             help='Set wavelength and optimal power')
 

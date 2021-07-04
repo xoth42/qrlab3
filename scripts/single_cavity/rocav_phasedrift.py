@@ -112,7 +112,7 @@ class ROCavPhaseDrift(Measurement1D):
 
         for ipower, power in enumerate(self.powers):
             self.readout_info.rfsource1.set_power(power)
-            print 'Power = %s' % (power, )
+            print('Power = %s' % (power, ))
             time.sleep(1)
 
             amps = []
@@ -128,16 +128,16 @@ class ROCavPhaseDrift(Measurement1D):
                 try:
                     while not ret.is_valid():
                         objsh.helper.backend.main_loop(100)
-                except Exception, e:
+                except Exception as e:
                     alz.set_interrupt(True)
-                    print 'Error: %s' % (str(e), )
+                    print('Error: %s' % (str(e), ))
                     return
 
                 IQ = np.average(ret.get())
                 amps.append(np.abs(IQ))
                 phases.append(np.angle(IQ, deg=True))
-                print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
-                print 'I,Q = %.03f, %.03f' % (np.real(IQ), np.imag(IQ))
+                print('F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True)))
+                print('I,Q = %.03f, %.03f' % (np.real(IQ), np.imag(IQ)))
 
             self.ampdata[ipower,:] = amps
             self.phasedata[ipower,:] = phases

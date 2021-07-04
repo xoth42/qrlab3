@@ -39,7 +39,7 @@ from scripts.single_qubit import ssbspec
 
 
 ''' Path to the .hdf5 file '''
-filepath = 'C:\Users\wanglab\Desktop\hdf_tomo_copy'
+filepath = 'C:\\Users\wanglab\Desktop\hdf_tomo_copy'
 hdf5_name = '\June19PumpCat.hdf5'
 
 if 1:        #07/11
@@ -53,7 +53,7 @@ experiment = 'SSBSpec'
 x_key = 'gates'
 #x2_key = 'powers'
 t_list=['165236']
-xxx=range(1)
+xxx=list(range(1))
 y_array=np.zeros([1, 121])
 for jjj in xxx:
 
@@ -68,7 +68,7 @@ for jjj in xxx:
     data = exp['avg_pp'].value
     spec.avg_data = exp['avg_pp']
 #    spec.analyze(data = -data)
-    mmm=range(121)
+    mmm=list(range(121))
 #    for nnn in mmm:
 #        y_array[jjj][mmm]=data[mmm]
    

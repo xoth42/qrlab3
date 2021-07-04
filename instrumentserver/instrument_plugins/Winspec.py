@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import logging
 
@@ -29,15 +29,15 @@ class Winspec(Instrument):
     def __init__(self, name, address=None, reset=False):
         Instrument.__init__(self, name, tags=['measure'])
 
-        self.add_parameter('target_temperature', type=types.IntType,
+        self.add_parameter('target_temperature', type=int,
                 flags=Instrument.FLAG_GETSET,
                 units='C')
 
-        self.add_parameter('temperature', type=types.IntType,
+        self.add_parameter('temperature', type=int,
                 flags=Instrument.FLAG_GET,
                 units='C')
 
-        self.add_parameter('exposure_time', type=types.FloatType,
+        self.add_parameter('exposure_time', type=float,
                 flags=Instrument.FLAG_GETSET,
                 units='s')
 
@@ -48,18 +48,18 @@ class Winspec(Instrument):
             name = winspec.get_grating_name(grbase + i + 1)
             gratings[i+1] = '%s (%s)' % (gr, name)
 
-        self.add_parameter('grating', type=types.IntType,
+        self.add_parameter('grating', type=int,
                 flags=Instrument.FLAG_GETSET,
                 format_map=gratings)
 
-        self.add_parameter('wavelength', type=types.FloatType,
+        self.add_parameter('wavelength', type=float,
                 flags=Instrument.FLAG_GETSET,
                 units='nm')
 
-        self.add_parameter('newwindow', type=types.BooleanType,
+        self.add_parameter('newwindow', type=bool,
                 flags=Instrument.FLAG_GETSET,
                 help='Create new winodw for each measurement?')
-        self.add_parameter('autosave', type=types.IntType,
+        self.add_parameter('autosave', type=int,
                 flags=Instrument.FLAG_GETSET,
                 format_map={
                 1: 'Ask',
@@ -67,7 +67,7 @@ class Winspec(Instrument):
                 3: "Don't autosave / ask"
                 },
                 help='Autosave every spectrum?')
-        self.add_parameter('fileincenable', type=types.BooleanType,
+        self.add_parameter('fileincenable', type=bool,
                 flags=Instrument.FLAG_GETSET,
                 help='File name increment enable?')
 

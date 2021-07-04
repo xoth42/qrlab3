@@ -21,7 +21,7 @@ def analysis(meas, data=None, fig=None, ofs=None, amplitude=None, f_ofs=None, f_
 #    
 #    fig.axes[0].plot(xs, ys, 'ks', ms=3)
 #    
-    print ys
+    print(ys)
 #    print xs
 #    print T1delay
 #    print FT1delay
@@ -34,7 +34,7 @@ def analysis(meas, data=None, fig=None, ofs=None, amplitude=None, f_ofs=None, f_
     T1 = -T1delay / np.log((data[2]-g)/(e-g))
     FT1 = -FT1delay / np.log((data[4]-eq)/(f-eq))
     
-    print T1, FT1
+    print(T1, FT1)
     return T1, FT1
     
     

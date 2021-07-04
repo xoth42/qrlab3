@@ -19,7 +19,7 @@ import _ftd2xx as f
 from _ftd2xx.defines import *
 from time import sleep
 
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import logging
 
@@ -36,10 +36,10 @@ class ThorlabsFTD2XX(Instrument):
     try:
       L = f.listDevices()
     except f.DeviceError:
-      print "No active devices!!"
+      print("No active devices!!")
       L = ['None']
 
-    print L
+    print(L)
 
     if '83828433' in L:
       self.g = f.openEx('83828433')
@@ -78,9 +78,9 @@ class ThorlabsFTD2XX(Instrument):
 
     # Add parameters
     self.add_parameter('Position',
-      flags=Instrument.FLAG_GETSET, units='deg', minval=-720, maxval=720, type=types.FloatType)
+      flags=Instrument.FLAG_GETSET, units='deg', minval=-720, maxval=720, type=float)
     self.add_parameter('IsMoving',
-      flags=Instrument.FLAG_GET, type=types.BooleanType)
+      flags=Instrument.FLAG_GET, type=bool)
 
 
     self.status = {}

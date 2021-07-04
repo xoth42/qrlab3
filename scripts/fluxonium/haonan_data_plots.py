@@ -36,7 +36,7 @@ def RB_fit(ys, xs, std, N, label='', F_final=0.5, F_init=1.0, fig=None):
     result= lmfit.minimize(exp_decay, params, args=(xs,ys))
     lmfit.report_fit(result.params)
     EPC = (1-F_final-(1-F_final)*np.exp(-1.0/result.params['tau']))
-    print ("EPC: %f" %(EPC))
+    print(("EPC: %f" %(EPC)))
     label = label+"EPC: %.4f" %(EPC)
     if fig==None:
         fig, ax=plt.subplots(1)
@@ -71,7 +71,7 @@ def XEB_fit(ys, xs,  label='', F_final=0.5, F_init=1.0, fig=None):
     result= lmfit.minimize(exp_decay, params, args=(xs,ys))
     lmfit.report_fit(result.params)
     Pauli_EPC = (15.0/16.0)*(1-F_final-(1-F_final)*np.exp(-1.0/result.params['tau']))
-    print ("Pauli EPC: %f" %(Pauli_EPC))
+    print(("Pauli EPC: %f" %(Pauli_EPC)))
     label = label+"Pauli EPC: %.4f" %(Pauli_EPC)
 
     if fig==None:

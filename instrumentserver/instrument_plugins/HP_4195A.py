@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import visa
 import types
 import logging
@@ -62,16 +62,16 @@ class HP_4195A(Instrument):
         # necessary to add additional delay
         # ( ~ numpoints / IFBW ) yourself!
 
-        self.add_parameter('resbw', flags=Instrument.FLAG_GETSET, type=types.IntType)
-        self.add_parameter('numpoints', flags=Instrument.FLAG_GETSET, type=types.IntType)
-        self.add_parameter('start_freq', flags=Instrument.FLAG_GETSET, type=types.FloatType)
-        self.add_parameter('stop_freq', flags=Instrument.FLAG_GETSET, type=types.FloatType)
-        self.add_parameter('power', flags=Instrument.FLAG_GETSET, type=types.FloatType)
-        self.add_parameter('center_freq', flags=Instrument.FLAG_GETSET, type=types.FloatType)
-        self.add_parameter('span_freq', flags=Instrument.FLAG_GETSET, type=types.FloatType)
-        self.add_parameter('att_t1', flags=Instrument.FLAG_GETSET, type=types.IntType)
-        self.add_parameter('att_r1', flags=Instrument.FLAG_GETSET, type=types.IntType)
-        self.add_parameter('sweep_time', flags=Instrument.FLAG_GET, type=types.FloatType)
+        self.add_parameter('resbw', flags=Instrument.FLAG_GETSET, type=int)
+        self.add_parameter('numpoints', flags=Instrument.FLAG_GETSET, type=int)
+        self.add_parameter('start_freq', flags=Instrument.FLAG_GETSET, type=float)
+        self.add_parameter('stop_freq', flags=Instrument.FLAG_GETSET, type=float)
+        self.add_parameter('power', flags=Instrument.FLAG_GETSET, type=float)
+        self.add_parameter('center_freq', flags=Instrument.FLAG_GETSET, type=float)
+        self.add_parameter('span_freq', flags=Instrument.FLAG_GETSET, type=float)
+        self.add_parameter('att_t1', flags=Instrument.FLAG_GETSET, type=int)
+        self.add_parameter('att_r1', flags=Instrument.FLAG_GETSET, type=int)
+        self.add_parameter('sweep_time', flags=Instrument.FLAG_GET, type=float)
 
         #self.add_function('set_measurement_S11')
         #self.add_function('set_measurement_S22')
@@ -128,34 +128,34 @@ class HP_4195A(Instrument):
 
         sl = 1
 
-        print 'resetting'
+        print('resetting')
         self.reset()
         sleep(sl)
 
-        print 'set trigger single'
+        print('set trigger single')
         self.set_trigger_single()
         sleep(sl)
 
 #        print 'set format logm'
 #        self.set_format_logm()
 #        sleep(sl)
-        print 'set measurement S21'
+        print('set measurement S21')
         self.set_measurement_S21()
         sleep(sl)
 
-        print 'set start freq'
+        print('set start freq')
         self.set_start_freq(10e6)
         sleep(sl)
-        print 'set stop freq'
+        print('set stop freq')
         self.set_stop_freq(3e9)
         sleep(sl)
-        print 'set IF bandwidth'
+        print('set IF bandwidth')
         self.set_IF_Bandwidth(3000)
         sleep(sl)
-        print 'set numpoints'
+        print('set numpoints')
         self.set_numpoints(401)
         sleep(sl)
-        print 'set power'
+        print('set power')
         self.set_power(0.0)
         sleep(sl)
 
@@ -255,17 +255,17 @@ class HP_4195A(Instrument):
         elif mode=='log':
             freqs = numpy.logspace(numpy.log10(startfreq),numpy.log10(stopfreq),numpoints)
         else:
-            print 'mode needs to be either "lin" or "log"!'
+            print('mode needs to be either "lin" or "log"!')
             return False
 
         sweep_time = self.get_sweep_time(query=False)
 
-        print 'sending trigger to network analyzer, and wait to finish'
-        print 'estimated waiting time: %.2f s' % sweep_time
+        print('sending trigger to network analyzer, and wait to finish')
+        print('estimated waiting time: %.2f s' % sweep_time)
         self.send_trigger()
         qt.msleep(sweep_time)
 
-        print 'readout network analyzer'
+        print('readout network analyzer')
         reply = self.read()
         reply = numpy.array(reply)
 
@@ -289,7 +289,7 @@ class HP_4195A(Instrument):
         d.add_coordinate('freq [Hz]')
         d.add_value('S_ij [dB]')
         d.create_file(filepath=filepath)
-        d.add_data_point(zip(freqs, reply))
+        d.add_data_point(list(zip(freqs, reply)))
         d.close_file()
         if plot:
             p = qt.plot(d, name='netan', clear=True)

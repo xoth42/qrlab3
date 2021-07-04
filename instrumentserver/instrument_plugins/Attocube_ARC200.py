@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import visa
 import types
 import logging
@@ -36,7 +36,7 @@ class Attocube_ARC200(Instrument):
 
         self.add_parameter('mode',
             flags=Instrument.FLAG_SET,
-            type=types.IntType,
+            type=int,
             format_map={
                 0: 'CONT',
                 1: 'SINGLE',
@@ -49,7 +49,7 @@ class Attocube_ARC200(Instrument):
 
         self.add_parameter('refvoltage',
             flags=Instrument.FLAG_SET | Instrument.FLAG_SOFTGET,
-            type=types.IntType,
+            type=int,
             format_map={
                 0: 5,
                 1: 3,
@@ -61,7 +61,7 @@ class Attocube_ARC200(Instrument):
 
         self.add_parameter('units',
             flags=Instrument.FLAG_SET,
-            type=types.IntType,
+            type=int,
             format_map={
                 0: '%',
                 1: 'um',
@@ -95,7 +95,7 @@ class Attocube_ARC200(Instrument):
             self.write(query)
             reply = self._visa.read()
             return reply.rstrip(' \t\r\n')
-        except Exception, e:
+        except Exception as e:
             logging.error('Failed to ask ARC200')
             return ''
 
@@ -127,7 +127,7 @@ class Attocube_ARC200(Instrument):
         try:
             float_list = [float(str_item) for str_item in str_list]
             return float_list
-        except Exception, e:
+        except Exception as e:
             return None
 
     def do_set_channel_units(self, channel, units_id):

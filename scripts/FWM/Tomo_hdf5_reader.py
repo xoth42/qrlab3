@@ -40,7 +40,7 @@ from scripts.single_cavity import WignerbyParity
 
 
 ''' Path to the .hdf5 file '''
-filepath = 'C:\Users\wanglab\Desktop\hdf_tomo_copy'
+filepath = 'C:\\Users\wanglab\Desktop\hdf_tomo_copy'
 hdf5_name = '\June19PumpCat.hdf5'
 date = '20190623'
 #time = '110154'
@@ -79,8 +79,8 @@ Wfun = WignerbyParity.WignerFunction(qubit_info, ef_info, cavity_infoB, t_ge=210
 data = exp['avg_pp'].value
 
 
-x_index=range(x_row)
-y_index=range(y_col)
+x_index=list(range(x_row))
+y_index=list(range(y_col))
 
 data_2D = np.zeros([x_row,y_col])
 

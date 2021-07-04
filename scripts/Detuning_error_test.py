@@ -23,7 +23,7 @@ class Detuning_error_test(Measurement1D):
         self.postseq = postseq
 
         super(Detuning_error_test, self).__init__(6, infos=(qubit_info,), **kwargs)
-        self.data.create_dataset('sequence', data=[range(0,6)])
+        self.data.create_dataset('sequence', data=[list(range(0,6))])
 #        self.data.set_attrs()
 
 

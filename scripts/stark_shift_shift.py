@@ -6,7 +6,8 @@ Created on Wed Sep  4 13:32:21 2019
 """
 
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 
 #ge_ss = -1.625e6#-1.261e6 #-1.295e6
 #ge_ss = -2.745e6

@@ -3,8 +3,8 @@ Created on Thu Oct 17 14:04:39 2019
 
 @author: Wang_Lab
 """
-from sequencer import Combined, Sequence, Sequencer, Delay, Pulse, Instruction, Constant, Join
-from pulselib import CSVPulse, DetunedGaussSquare, DataPulse
+from .sequencer import Combined, Sequence, Sequencer, Delay, Pulse, Instruction, Constant, Join
+from .pulselib import CSVPulse, DetunedGaussSquare, DataPulse
 import mclient
 import numpy as np
 

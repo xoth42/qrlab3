@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import time
-from lib.math import demod
+from .lib.math import demod
 
 
 def moving_average(a, n=20) :
@@ -12,7 +12,7 @@ def moving_average(a, n=20) :
 ## Setup alazar according to settings in GUI
 
 
-import mclient
+from . import mclient
 alz = mclient.instruments['alazar']
 #mclient.instruments.reload('alazar')
 #alz = mclient.instruments['alazar']
@@ -43,7 +43,7 @@ if 0:
         plt.legend()
         plt.xlabel('Time [ns]')
         plt.show()
-        print alz.get_ch1_range()
+        print(alz.get_ch1_range())
 
     
 #alz.set_naverages(5)
@@ -64,7 +64,7 @@ if 0:
             I.append(np.sum(np.real(buf)))
             Q.append(np.sum(np.imag(buf)))
             time.sleep(0.5)
-            print "k=", k, ", amplitude=", amplitude[-1], "\n"
+            print("k=", k, ", amplitude=", amplitude[-1], "\n")
             plt.figure(i+1)
             plt.clf()
             plt.subplot(311)
@@ -143,7 +143,7 @@ if 0:
         signalB = np.average(IQB, 1)
         phaseB = np.angle(signalB, deg=True)
         
-        print(np.average(phase), np.average(phaseB), np.average(phase-phaseB))
+        print((np.average(phase), np.average(phaseB), np.average(phase-phaseB)))
     
         plt.figure()
         
@@ -175,7 +175,7 @@ if 0:
         print(start_time)
         for i in range(n):
             current_time = time.time()
-            print(i, current_time - start_time)
+            print((i, current_time - start_time))
             alz.setup_shots(N)
             nsamp = alz.get_nsamples()
             buf = alz.take_raw_shots()
@@ -191,7 +191,7 @@ if 0:
             signalB = np.average(IQB, 1)
             phaseB = np.angle(signalB, deg=True)
             
-            print(np.average(phase), np.average(phaseB), np.average(phase-phaseB))
+            print((np.average(phase), np.average(phaseB), np.average(phase-phaseB)))
             
             avg_phaseA[i] = np.average(phase)
             avg_phaseB[i] = np.average(phaseB)

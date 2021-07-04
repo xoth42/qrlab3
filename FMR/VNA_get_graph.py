@@ -23,7 +23,7 @@ Sij = 'S11'
 VNA.set_s_param(Sij)
 filename = '%s_%s_%s_%s'%(Sij,date.hour,date.minute,date.second)
 
-print filename
+print(filename)
 newpath = r'C:\Users\wanglab\Documents\juliang\\%s.txt'%(filename)
 
 if not os.path.exists(os.path.dirname(newpath)):
@@ -44,7 +44,7 @@ elif axis[len(axis) - 1] > 10 **6:
 
 
 pl.plot(xaxis, data[0], label = filename[0:-8] + fm)
-pl.savefig('C:\Users\wanglab\Documents\juliang\%s.png'%(filename))
+pl.savefig('C:\\Users\wanglab\Documents\juliang\%s.png'%(filename))
 
 pl.ylabel('dB')
 pl.show()

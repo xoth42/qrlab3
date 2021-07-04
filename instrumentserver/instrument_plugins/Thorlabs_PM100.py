@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import visa
 import types
 import logging
@@ -48,21 +48,21 @@ class Thorlabs_PM100(Instrument):
 
         self.add_parameter('power',
             flags=Instrument.FLAG_GET,
-            type=types.FloatType,
+            type=float,
             units='W')
 
         self.add_parameter('head_info',
             flags=Instrument.FLAG_GET,
-            type=types.StringType)
+            type=bytes)
 
         self.add_parameter('wavelength',
             flags=Instrument.FLAG_GETSET,
-            type=types.FloatType,
+            type=float,
             units='m')
 
         self.add_parameter('filter_freq',
             flags=Instrument.FLAG_GETSET,
-            type=types.IntType,
+            type=int,
             units='Hz')
 
         if reset:

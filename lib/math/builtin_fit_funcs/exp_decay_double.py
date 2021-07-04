@@ -1,5 +1,5 @@
 import numpy as np
-import common
+from . import common
 
 def func(xs, A=1, B=1, tau=1, tau1=1, ofs=0):
     return A * np.exp(-xs / tau) + B * np.exp(-xs / tau1) + ofs

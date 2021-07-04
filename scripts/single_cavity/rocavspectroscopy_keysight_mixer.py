@@ -71,7 +71,7 @@ def analysis(powers, freqs, ampdata, phasedata=None, full_fig_name = None, plot_
     #    datas = realdata[0,:]+ 1j*imagdata[0,:]    
         result = lmfit.minimize(S21, params, args=(freqs, amps))
         lmfit.report_fit(result.params)
-        print ('total Q: ',result.params['omega_c'].value/result.params['kappa_a'].value)
+        print(('total Q: ',result.params['omega_c'].value/result.params['kappa_a'].value))
 
         fitdata = np.sqrt(result.params['kappa_prod'].value)/(-1j*(freqs-result.params['omega_c'].value)-(result.params['kappa_a'].value)/2.0 )
         fitdata = fitdata + result.params['roff'].value + 1j*result.params['ioff'].value
@@ -147,7 +147,7 @@ class ROCavSpectroscopy_keysight_mixer(Measurement1D):
         self.plot_type = plot_type
 
         super(ROCavSpectroscopy_keysight_mixer, self).__init__(1, infos=(qubit_info,mixer_info,mixer_info2), **kwargs)
-        print self.data.get_fullname()
+        print(self.data.get_fullname())
         self.full_fig_name = self.data.get_fullname()
         self.data.create_dataset('powers', data=powers)
         self.data.create_dataset('freqs', data=freqs)
@@ -229,7 +229,7 @@ class ROCavSpectroscopy_keysight_mixer(Measurement1D):
                 self.readout_info.rfsource.set_power(power)
             else:
                 self.readout_info.rfsource1.set_power(power)
-            print 'Power = %s' % (power, )
+            print('Power = %s' % (power, ))
             time.sleep(2)
 
             amps = []
@@ -271,8 +271,8 @@ class ROCavSpectroscopy_keysight_mixer(Measurement1D):
                 IQ = np.average(ret)
                 amps.append(np.abs(IQ))
                 phases.append(np.angle(IQ, deg=True))
-                print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
-                print 'I,Q = %.03f, %.03f' % (np.real(IQ), np.imag(IQ)) #DARIO 9/5
+                print('F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True)))
+                print('I,Q = %.03f, %.03f' % (np.real(IQ), np.imag(IQ))) #DARIO 9/5
 
             self.ampdata[ipower,:] = amps
             self.phasedata[ipower,:] = phases

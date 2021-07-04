@@ -1,5 +1,5 @@
 import sys
-import cPickle as pickle
+import pickle as pickle
 import base64
 import subprocess
 
@@ -84,6 +84,6 @@ if __name__ == '__main__':
             test=['an array', 'with', 'some', 'elements'],
             test2={'a': 'dictionary'})
     else:
-        print ('Arguments: ' + str(args) + ', Keyword arguments: ' + str(kwargs))
+        print(('Arguments: ' + str(args) + ', Keyword arguments: ' + str(kwargs)))
 
 

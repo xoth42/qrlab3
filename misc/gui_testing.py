@@ -12,5 +12,5 @@ while True:
     value = instr['qubit1ge'].get('sideband_phase')
     value = value + 0.1
     instr['qubit1ge'].set('sideband_phase', value)
-    print value
+    print(value)
     time.sleep(1)

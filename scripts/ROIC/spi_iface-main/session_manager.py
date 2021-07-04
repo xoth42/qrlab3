@@ -31,7 +31,7 @@ class session_manager:
     def __init__(self):
         try:
 #            os.chdir("/Users/chik")
-            print("Current Directory: " + os.getcwd())
+            print(("Current Directory: " + os.getcwd()))
             # Start new log file (non-blocking to allow console display access)
             session_manager.log = open("debug.log","r+") #os.O_NONBLOCK)
             session_manager.log.seek(0)
@@ -246,7 +246,7 @@ class session_manager:
             self.debug_log(str(e))
 
     def debug_log(self,message):
-        print(message + "\n")
+        print((message + "\n"))
         try:
             session_manager.log.seek(0,os.SEEK_END)
             session_manager.log.write(message + "\n")

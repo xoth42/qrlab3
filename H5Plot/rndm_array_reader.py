@@ -36,7 +36,7 @@ import json
 
 
 ''' Path to the .hdf5 file '''
-filepath = 'C:\Users\Wang_Lab\Desktop\hdf5_copies'
+filepath = 'C:\\Users\Wang_Lab\Desktop\hdf5_copies'
 hdf5_name = '\April9Fluxonium_24maycopy.hdf5'
 #hdf5_name = '20190204 Cooldown.hdf5'
 date = '20190524'

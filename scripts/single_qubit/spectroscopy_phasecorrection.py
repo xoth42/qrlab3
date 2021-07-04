@@ -118,15 +118,15 @@ class Spectroscopy_phasecorrection(Measurement1D):
                 try:
                     while not ret.is_valid():
                         objsh.helper.backend.main_loop(100)
-                except Exception, e:
+                except Exception as e:
                     alz.set_interrupt(True)
-                    print 'Error: %s' % (str(e), )
+                    print('Error: %s' % (str(e), ))
                     return
 
                 IQ = np.average(ret.get())
                 amps.append(np.abs(IQ))
                 phases1.append(np.angle(IQ, deg=True))
-                print 'F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
+                print('F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True)))
                 
 #                self.qubit_rfsource.do_set_rf_on(0)
                 self.qubit_rfsource.set_rf_on(0)
@@ -139,15 +139,15 @@ class Spectroscopy_phasecorrection(Measurement1D):
                 try:
                     while not ret.is_valid():
                         objsh.helper.backend.main_loop(100)
-                except Exception, e:
+                except Exception as e:
                     alz.set_interrupt(True)
-                    print 'Error: %s' % (str(e), )
+                    print('Error: %s' % (str(e), ))
                     return
 
                 IQ = np.average(ret.get())
 
                 phases2.append(np.angle(IQ, deg=True))
-                print 'brick off F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True))
+                print('brick off F = %.03f MHz --> re = %.01f, amp = %.1f, angle = %.01f' % (freq / 1e6, np.real(IQ), np.abs(IQ), np.angle(IQ, deg=True)))
                                 
 #                self.qubit_rfsource.do_set_rf_on(1)
                 self.qubit_rfsource.set_rf_on(1)
@@ -184,7 +184,7 @@ class Spectroscopy_phasecorrection(Measurement1D):
             p0 = [np.max(amps), w0*h0, pos, w0]
             p = f.fit(p0)
             txt = 'Center = %.03f MHz' % (p[2]/1e6,)
-            print 'Fit gave: %s' % (txt,)
+            print('Fit gave: %s' % (txt,))
             ax1.plot(fs/1e6, f.func(p, fs), label=txt)
 
             ax1.legend()

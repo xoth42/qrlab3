@@ -3,11 +3,11 @@ import time
 import types
 import ctypes
 import numpy as np
-import keysightSD1 as key
-from instrument import Instrument
+from . import keysightSD1 as key
+from .instrument import Instrument
 import logging
 
-NO_ERROR = u'0,"No error"'
+NO_ERROR = '0,"No error"'
 
 
 DEFAULT_TIMEOUT = 2000
@@ -39,28 +39,28 @@ class Keysight_AWG(Instrument):
         self.clear_sequence()
         if awgID < 0:
             print("ERROR")
-            print("awgID:", awgID)
+            print(("awgID:", awgID))
             self.awg.close()
             raise Exception("Shit don't work. Check the chassis and slot")
 
 
         
-        self.add_parameter('serial', type=types.StringType,
+        self.add_parameter('serial', type=bytes,
             flags=Instrument.FLAG_GET, 
             value = self.awg.getSerialNumberBySlot(self._chassis, self._slot))
-        self.add_parameter('part', type=types.StringType,
+        self.add_parameter('part', type=bytes,
             flags=Instrument.FLAG_GET,
             value = self.awg.getProductNameBySlot(self._chassis, self._slot))
-        self.add_parameter('num_modules', type=types.StringType,
+        self.add_parameter('num_modules', type=bytes,
             flags=Instrument.FLAG_GET,
             value = self.awg.moduleCount())
-        self.add_parameter('status', type=types.StringType,
+        self.add_parameter('status', type=bytes,
             flags=Instrument.FLAG_GET,
             value = self.awg.getStatus())
-        self.add_parameter('clock_freq', type=types.StringType,
+        self.add_parameter('clock_freq', type=bytes,
             flags=Instrument.FLAG_GET,
             value = self.awg.clockGetFrequency())
-        self.add_parameter('clock_sync_freq', type=types.StringType,
+        self.add_parameter('clock_sync_freq', type=bytes,
             flags=Instrument.FLAG_GET,
             value = self.awg.clockGetSyncFrequency())
 
@@ -91,11 +91,11 @@ class Keysight_AWG(Instrument):
 #            option_list=('POS', 'NEG'))
 
         # Channel options
-        self.add_parameter('amplitude', type=types.FloatType,
+        self.add_parameter('amplitude', type=float,
             flags=Instrument.FLAG_GETSET,
             channels=(1, 4), channel_prefix='ch%d_',
             minval=0, maxval=4.5, units='V')
-        self.add_parameter('offset', type=types.FloatType,
+        self.add_parameter('offset', type=float,
             flags=Instrument.FLAG_GETSET,
             channels=(1, 4), channel_prefix='ch%d_',
             minval=-2, maxval=2, units='V')
@@ -104,14 +104,14 @@ class Keysight_AWG(Instrument):
 #            channels=(1, 4), channel_prefix='ch%d_',
 #            minval=-5000, maxval=5000, units='ps',
 #            gui_group='channels')
-        self.add_parameter('output', type=types.BooleanType,
+        self.add_parameter('output', type=bool,
             flags=Instrument.FLAG_GETSET,
             channels=(1, 4), channel_prefix='ch%d_',
             gui_group='channels')
 #        self.add_parameter('error',
 #            type=types.StringType,
 #            flags=Instrument.FLAG_GET)
-        self.add_parameter('timeout', type=types.IntType, value=DEFAULT_TIMEOUT,
+        self.add_parameter('timeout', type=int, value=DEFAULT_TIMEOUT,
            units='ms', help='Instrument read timeout')
 
         for i in range(4):
@@ -163,7 +163,7 @@ class Keysight_AWG(Instrument):
         return self.awg.clockGetSyncFrequency()
         
     def get_runstate(self):
-        print('keysight get_runstate', self.awg.getStatus())
+        print(('keysight get_runstate', self.awg.getStatus()))
         return self.awg.getStatus() == 0
         
     def wait_done(self, delay=60000):
@@ -272,7 +272,7 @@ class Keysight_AWG(Instrument):
         Query all parameters with FLAG_GET flag.
         '''
         keys = []
-        for k, v in self._parameters.iteritems():
+        for k, v in self._parameters.items():
             if v['flags'] & Instrument.FLAG_GET:
                 keys.append(k)
             if v['flags'] & Instrument.FLAG_GETSET:
@@ -302,7 +302,7 @@ class Keysight_AWG(Instrument):
         if m1 is not None:
             if len(data) != len(m1):
                 raise ValueError('Data and marker1 should have same length')
-            print m1
+            print(m1)
             bytemem |= 1<<14 * m1.astype(np.uint16)
         if m2 is not None:
             if len(data) != len(m2):
@@ -378,7 +378,7 @@ class Keysight_AWG(Instrument):
 
     def setup_sequence(self, n_el, reset=True, loop=True):
         self._n_el = n_el
-        print('n_el', n_el, loop)
+        print(('n_el', n_el, loop))
         0==0
         #TODO
         ''' maybe this should be adding to a queue. Need to figure out what n_el is. loop might be cyclic mode '''

@@ -34,33 +34,33 @@ def visaWESR(instr,cmd):
     instr.write(cmd)
     esr = int(instr.ask("*ESR?").strip("\n"))
     if (esr != 0):
-        print
-        print
-        print "***** visa write error"
-        print "instrument: %s" % instr.resource_name
-        print "command: %s" % cmd
-        print "*ESR? %d" % esr
-        print ":SYST:ERR:ALL?"
+        print()
+        print()
+        print("***** visa write error")
+        print("instrument: %s" % instr.resource_name)
+        print("command: %s" % cmd)
+        print("*ESR? %d" % esr)
+        print(":SYST:ERR:ALL?")
         err = instr.ask(":SYST:ERR:ALL?").strip("\n")
-        print err
-        print
+        print(err)
+        print()
 
 # visa write with error-checking
 def visaQ(instr,cmd):
     retVal = instr.ask(cmd).strip("\n")
     esr = int(instr.ask("*ESR?").strip("\n"))
     if (esr != 0):
-        print
-        print
-        print "***** visa query error"
-        print "instrument: %s" % instr.resource_name
-        print "command: %s" % cmd
-        print "result: %s" % retVal
-        print "*ESR? %d" % esr
-        print ":SYST:ERR:ALL?"
+        print()
+        print()
+        print("***** visa query error")
+        print("instrument: %s" % instr.resource_name)
+        print("command: %s" % cmd)
+        print("result: %s" % retVal)
+        print("*ESR? %d" % esr)
+        print(":SYST:ERR:ALL?")
         err = instr.ask(":SYST:ERR:ALL?").strip("\n")
-        print err
-        print
+        print(err)
+        print()
     return retVal
 
 # find the available instruments
@@ -82,33 +82,33 @@ for resource in resource_names:
     if ((idnStr.find("N4960") != -1) | (idnStr.find("SSB16000") != -1)):
         n4960a = instr;
         headStr = n4960a.ask(":SYST:HEAD?").strip("\n").strip("\r")  # query remote heads
-        print "N4960A found"
-        print " VISA: " + n4960a.resource_name
-        print " IDN: " + idnStr
-        print " Heads: " + headStr
-        print " Errors: " + n4960a.ask(":syst:err:all?").strip("\n")
-        print ""
+        print("N4960A found")
+        print(" VISA: " + n4960a.resource_name)
+        print(" IDN: " + idnStr)
+        print(" Heads: " + headStr)
+        print(" Errors: " + n4960a.ask(":syst:err:all?").strip("\n"))
+        print("")
     else:
-        print "Unknown instrument:"
-        print " VISA: " + resource
-        print " IDN: " + idnStr
-        print " Errors: " + n4960a.ask(":syst:err:all?").strip("\n")
-        print ""
+        print("Unknown instrument:")
+        print(" VISA: " + resource)
+        print(" IDN: " + idnStr)
+        print(" Errors: " + n4960a.ask(":syst:err:all?").strip("\n"))
+        print("")
         
 # check that the N4960A was found, and that it has a PG and ED head connected
 try:
     if (not ((headStr.find("PG") != -1) | (headStr.find("N4951") != -1))) & (not (headStr.find("ED") != -1 | (headStr.find("N4952") != -1))):
-        print "A PG and ED head need to be attached; exiting"
+        print("A PG and ED head need to be attached; exiting")
         sys.exit(-1)
 except NameError:
-    print "N4960A not found; exiting"
+    print("N4960A not found; exiting")
     sys.exit(-1)
 
 # check that the N4960A controller version is updated
 n4960aFWRev = float(idnStr.split(',')[3])
 if (n4960aFWRev <  n4960aFWRevMin):
-    print "N4960A controller firmware is version " + n4960aFWRev
-    print "Please upgrade the firmware beyond version " + n4960aFWRevMin
+    print("N4960A controller firmware is version " + n4960aFWRev)
+    print("Please upgrade the firmware beyond version " + n4960aFWRevMin)
     sys.exit(-1)
     
 # ***************
@@ -116,7 +116,7 @@ if (n4960aFWRev <  n4960aFWRevMin):
 # many of these settings are the default values and are unnecessary if the instrument is reset
 #
 # ** Controller settings
-print "Controller settings;",
+print("Controller settings;", end=' ')
 
 # reset the instrument (this may not be necessary or desirable)
 #  we must query OPC? to determine when this command is complete
@@ -128,10 +128,10 @@ s = n4960a.ask("*OPC?").strip("\n")  # *OPC? must be sent separately for this co
 s = n4960a.ask(":SOUR:FREQ %0.0fHz;*OPC?" % (datarate / 2)).strip("\n")   # 14GHz = 28Gb/s
 
 # check and report instrument errors
-print " " + n4960a.ask(":syst:err:all?").strip("\n")
+print(" " + n4960a.ask(":syst:err:all?").strip("\n"))
 
 # ** PG settings
-print "PG settings;",
+print("PG settings;", end=' ')
 
 # set the pattern generator pattern
 #  we must query OPC? to determine when this command is complete
@@ -144,10 +144,10 @@ n4960a.write(":PG:DATA:LLEV:AMPL %0.3f" % amplitude)
 n4960a.write(":PG:DATA:OUTP ON")
 
 # check and report instrument errors
-print " " + n4960a.ask(":syst:err:all?").strip("\n")
+print(" " + n4960a.ask(":syst:err:all?").strip("\n"))
 
 # ** ED settings
-print "ED settings;",
+print("ED settings;", end=' ')
 
 # ensure the error detector is OFF, clear any results
 n4960a.write(":ED:DATA:ACC:STOP")
@@ -177,26 +177,26 @@ n4960a.write(":ED:DATA:AAL:CAAL:DEL ON")    # sweep sampling delay ON
 n4960a.write(":ED:DATA:AAL:CAAL:SVOL ON")   # sweep sampling voltage ON
 
 # check and report instrument errors
-print " " + n4960a.ask(":syst:err:all?").strip("\n")
+print(" " + n4960a.ask(":syst:err:all?").strip("\n"))
 
 # ***************
 # now the N4960A and heads are configured, we can run an auto align procedure and make a BER measurement
 #
 # start the error detector auto-align procedure
 #  we must query OPC? to determine when this command is complete
-print "ED auto-align;",
+print("ED auto-align;", end=' ')
 s = n4960a.ask(":ED:DATA:AAL:EXEC;*OPC?").strip("\n")
 
 # check AA results: eye width
 eyewidth = n4960a.ask(":ED:DATA:AAL:RES:EWID?").strip("\n").strip(" ")
-print " eye width: %s" % eyewidth,
+print(" eye width: %s" % eyewidth, end=' ')
 
 # check AA results: eye height
 eyeheight = n4960a.ask(":ED:DATA:AAL:RES:EHE?").strip("\n").strip(" ")
-print " eye height: %s" % eyeheight
+print(" eye height: %s" % eyeheight)
 
 # clear BER results and start BER measurement
-print "ED BER meas;",
+print("ED BER meas;", end=' ')
 n4960a.write(":ED:DATA:ACC:CLR")
 n4960a.write(":ED:DATA:ACC:STAR")
 
@@ -223,11 +223,11 @@ BER = Decimal(0)
 if (nBit != 0): BER = nErr / nBit;
 
 # output results
-print " BER: %.0e" % BER,
-print " #Bit: %d #Err: %d Time: %0.3fs" % (nBit, nErr, elapTime),
+print(" BER: %.0e" % BER, end=' ')
+print(" #Bit: %d #Err: %d Time: %0.3fs" % (nBit, nErr, elapTime), end=' ')
 
 # check and report instrument errors
-print " " + n4960a.ask(":syst:err:all?").strip("\n")
+print(" " + n4960a.ask(":syst:err:all?").strip("\n"))
 
 # close the VI VISA connections
 n4960a.close()

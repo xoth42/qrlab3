@@ -1,4 +1,4 @@
-from instrument import Instrument
+from .instrument import Instrument
 from visainstrument import VisaInstrument
 import types
 import time
@@ -17,23 +17,23 @@ class Vlastakis_Spec(VisaInstrument):
 
         self.rf_ins = None
 
-        self.add_parameter('rfsource', type=types.StringType,
+        self.add_parameter('rfsource', type=bytes,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET)
-        self.add_parameter('df0', type=types.FloatType,
+        self.add_parameter('df0', type=float,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 set_func=lambda x: True,
                 value=10.6e6)
-        self.add_parameter('frequency', type=types.FloatType,
+        self.add_parameter('frequency', type=float,
                 flags=Instrument.FLAG_GETSET)
-        self.add_parameter('rf_on', type=types.BooleanType,
+        self.add_parameter('rf_on', type=bool,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_GET)
-        self.add_parameter('Navg', type=types.IntType,
+        self.add_parameter('Navg', type=int,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 set_func=lambda x: True,
                 value=5)
-        self.add_parameter('power', type=types.FloatType,
+        self.add_parameter('power', type=float,
                 flags=Instrument.FLAG_GET)
-        self.add_parameter('delay', type=types.FloatType,
+        self.add_parameter('delay', type=float,
                 flags=Instrument.FLAG_SET|Instrument.FLAG_SOFTGET,
                 set_func=lambda x: True, value=0.05)
 
@@ -149,5 +149,5 @@ class Vlastakis_Spec(VisaInstrument):
 
 if __name__ == '__main__':
     ins = Vlastakis_Spec('vspec', 'COM6')
-    print ins.get_all()
+    print(ins.get_all())
     ins.close()

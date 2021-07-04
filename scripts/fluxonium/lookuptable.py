@@ -888,7 +888,7 @@ recovery_list_1 = []
 recovery_list_2 = []
 recovery_index_list = []
 for i in range(num_2Q_cliffords):
-    print('Calculating 2Q clifford #:', i+1)
+    print(('Calculating 2Q clifford #:', i+1))
     gateseq_1 = []
     gateseq_2 = []
     add_twoQ_clifford(i, gateseq_1, gateseq_2, generator = generator)

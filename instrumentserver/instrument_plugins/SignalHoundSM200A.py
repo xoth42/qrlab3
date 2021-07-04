@@ -4,7 +4,7 @@ Driver for the fancy signal hound.
 By Josh, 5/29/18
 joshuacarey@umass.edu
 """
-from instrument import Instrument
+from .instrument import Instrument
 import ctypes
 import types
 import numpy
@@ -36,21 +36,21 @@ SmWindowType = {
 
 class APIFunction():
     def __init__(self, func_name, args_list, restype):
-        self.func_name = func_name
-        self.func_name.argtypes = args_list
-        self.func_name.restype = restype
+        self.__name__ = func_name
+        self.__name__.argtypes = args_list
+        self.__name__.restype = restype
 
     def __call__(self, *args):
-        return_code = self.func_name(*args)
+        return_code = self.__name__(*args)
         if return_code != 0:
             self.error_report(return_code)
 
     def error_report(self, return_code):
-        print "ALERT: There was an event with the SM200A:"
-        print"In function: " + str(self.func_name.__name__)
-        print "Returned: " + str(return_code)
+        print("ALERT: There was an event with the SM200A:")
+        print("In function: " + str(self.__name__.__name__))
+        print("Returned: " + str(return_code))
         DLL_LIB.smGetErrorString.restype = ctypes.c_char_p
-        print"info: " + DLL_LIB.smGetErrorString(return_code)
+        print("info: " + DLL_LIB.smGetErrorString(return_code))
 
 
 class SignalHoundSM200A(Instrument):
@@ -70,7 +70,7 @@ class SignalHoundSM200A(Instrument):
         # Configure the mode for the data taking.
         self.add_parameter(
             'vbw',
-            type=types.FloatType,
+            type=float,
             flags=Instrument.FLAG_GETSET,
             doc='Video bandwidth',
             set_func=lambda x: True,
@@ -78,7 +78,7 @@ class SignalHoundSM200A(Instrument):
             units='Hz')
         self.add_parameter(
             'speed',
-            type=types.StringType,
+            type=bytes,
             flags=Instrument.FLAG_GETSET,
             doc='Sweep speed for swept mode',
             set_func=lambda x: True,
@@ -86,14 +86,14 @@ class SignalHoundSM200A(Instrument):
 
         self.add_parameter(
             'ref',
-            types=types.FloatType,
+            types=float,
             flags=Instrument.FLAG_GETSET,
             doc='reference level',
             set_func=lambda x: True,
             value=3.14)
         self.add_parameter(
             'rbw',
-            type=types.IntType,
+            type=int,
             flags=Instrument.FLAG_GETSET,
             doc="resolution bandwidth",
             set_func=lambda x: True,
@@ -101,21 +101,21 @@ class SignalHoundSM200A(Instrument):
             units="Hz")
         self.add_parameter(
             'mode',
-            type=types.StringType,
+            type=bytes,
             flags=Instrument.FLAG_GETSET,
             doc="Sweeping mode",
             set_func=lambda x: True,
             value='')
         self.add_parameter(
             'external_reference',
-            type=types.BooleanType,
+            type=bool,
             flags=Instrument.FLAG_GETSET,
             doc="Use external 10 MHz reference port",
             set_func=lambda x: True,
             value=False)
         self.add_parameter(
             'center',
-            type=types.FloatType,
+            type=float,
             flags=Instrument.FLAG_GETSET,
             doc='Center frequency for sweep.',
             set_func=lambda x: True,
@@ -123,7 +123,7 @@ class SignalHoundSM200A(Instrument):
             value=1e7)
         self.add_parameter(
             'span',
-            type=types.FloatType,
+            type=float,
             flags=Instrument.FLAG_GETSET,
             doc="Span for frequency sweep",
             set_func=lambda x: True,
@@ -131,7 +131,7 @@ class SignalHoundSM200A(Instrument):
             value=1e4)
         self.add_parameter(
             'spur',
-            type=types.BooleanType,
+            type=bool,
             flags=Instrument.FLAG_GETSET,
             doc='Software spur rejection',
             set_func=lambda x: True,

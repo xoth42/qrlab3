@@ -129,13 +129,13 @@ class Rabi_QP(Measurement1D):
             pi_amp = self.fit_params['pi_amp'].value
             pi2_amp = self.fit_params['pi2_amp'].value
             if self.update_ins:
-                print 'Setting qubit pi-rotation ampltidue to %.06f, pi/2 to %.06f' % (pi_amp, pi2_amp)
+                print('Setting qubit pi-rotation ampltidue to %.06f, pi/2 to %.06f' % (pi_amp, pi2_amp))
                 mclient.instruments[self.qubit_info.insname].set_pi_amp(pi_amp)
                 mclient.instruments[self.qubit_info.insname].set_pi2_amp(pi2_amp)
         else:
             pi_amp = self.fit_params['period'].value / 2 * self.repeat_pulse
             if self.update_ins:
-                print 'Setting qubit pi-rotation ampltidue to %.06f' % pi_amp
+                print('Setting qubit pi-rotation ampltidue to %.06f' % pi_amp)
                 mclient.instruments[self.qubit_info.insname].set_pi_amp(pi_amp)
 
         return pi_amp

@@ -4,7 +4,8 @@ import inspect
 from lib import jsonext
 
 import config
-reload(config)
+import importlib
+importlib.reload(config)
 
 # Make sure we have our objectsharer and pulse sequencer in the path
 srcdir = os.path.split(os.path.abspath(inspect.getsourcefile(lambda _: None)))[0]
@@ -41,7 +42,7 @@ logging.debug('Connecting to instrument/data server...')
 # 55555 = instrument, 55556 = data
 for addr in ('tcp://127.0.0.1:55555', 'tcp://127.0.0.1:55556'):
     if addr not in objsh.helper.backend.addr_to_sock_map:
-        print 'Connecting to %s' % (addr,)
+        print('Connecting to %s' % (addr,))
         objsh.helper.backend.connect_to(addr)
         time.sleep(1)
 
@@ -70,7 +71,7 @@ def get_container_object(name):
     qins = instruments.get(name)
     vals = qins.get_parameter_values()
     ret = Container()
-    for k, v in vals.iteritems():
+    for k, v in vals.items():
         setattr(ret, k, v)
     return ret
 
@@ -116,7 +117,7 @@ def get_qubit_info(name, detune=None):
 
     # Setup rotation
     r = ret.rotation
-    if type(r) is types.StringType:
+    if type(r) is bytes:
         r = r.upper()
     if r == 'GAUSSIAN':
         ret.rotate = pulselib.AmplitudeRotation(pulselib.Gaussian, ret.w, ret.pi_amp, drag=ret.drag, pi2_amp=ret.pi2_amp, chans=ret.sideband_channels)
@@ -138,7 +139,7 @@ def get_qubit_info(name, detune=None):
     
     # Setup rotation selective
     r = ret.rotation_selective
-    if type(r) is types.StringType:
+    if type(r) is bytes:
         r = r.upper()
     if r == 'GAUSSIAN':
         ret.rotate_selective = pulselib.AmplitudeRotation(pulselib.Gaussian, ret.w_selective, ret.pi_amp_selective, pi2_amp=ret.pi2_amp_selective, chans=ret.sideband_channels)
@@ -159,7 +160,7 @@ def get_qubit_info(name, detune=None):
 
     # Setup rotation quasi-selective
     r = ret.rotation_quasilective
-    if type(r) is types.StringType:
+    if type(r) is bytes:
         r = r.upper()
     if r == 'GAUSSIAN':
         ret.rotate_quasilective = pulselib.AmplitudeRotation(pulselib.Gaussian, ret.w_quasilective, ret.pi_amp_quasilective, pi2_amp=ret.pi2_amp_quasilective, chans=ret.sideband_channels)
@@ -234,7 +235,7 @@ def get_gate_info(name, detune=None):
 
     # Setup rotation
     r = ret.rotation
-    if type(r) is types.StringType:
+    if type(r) is bytes:
         r = r.upper()
             
     if r == 'GAUSSIAN':
@@ -301,19 +302,19 @@ def load_settings_from_file(fn, inslist):
     f = open(fn)
     settings = json.load(f, object_hook=object_hook)
     if inslist == 'all':
-        inslist = settings.keys()
+        inslist = list(settings.keys())
     for insname in inslist:
-        print '%s:' % (insname,)
+        print('%s:' % (insname,))
         if insname not in settings:
-            print '    No settings available'
+            print('    No settings available')
             continue
         ins = instruments[insname]
         if ins is None:
-            print '    Instrument not present'
+            print('    Instrument not present')
             continue
-        for key, val in settings[insname].iteritems():
-            print '    Setting %s to %s' % (key, val)
-            if type(val) is types.UnicodeType:
+        for key, val in settings[insname].items():
+            print('    Setting %s to %s' % (key, val))
+            if type(val) is str:
                 val = str(val)
             ins.set(str(key), val)
 
@@ -327,7 +328,7 @@ def remove_temp_file():
         name = tmp.get_fullname()
         tmp.close()
         os.remove(config.tempfilename)
-    except Exception, e:
+    except Exception as e:
         logging.warning('Failed to remove temporary file: %s' % str(e))
         pass
 

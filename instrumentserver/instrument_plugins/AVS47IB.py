@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 from time import sleep
 import visa
 import types
@@ -48,14 +48,14 @@ class AVS47IB(Instrument):
         self._address = address
         self._visainstrument = visa.instrument(self._address)
 
-        self.add_parameter('input', flags=Instrument.FLAG_GETSET, type=types.StringType)
-        self.add_parameter('range', flags=Instrument.FLAG_GETSET, type=types.IntType)
-        self.add_parameter('excitation', flags=Instrument.FLAG_GETSET, type=types.IntType)
-        self.add_parameter('remoteStatus', flags=Instrument.FLAG_GETSET, type=types.IntType)
-        self.add_parameter('display', flags=Instrument.FLAG_GETSET, type=types.IntType)
-        self.add_parameter('channel', flags=Instrument.FLAG_GETSET, type=types.IntType)
+        self.add_parameter('input', flags=Instrument.FLAG_GETSET, type=bytes)
+        self.add_parameter('range', flags=Instrument.FLAG_GETSET, type=int)
+        self.add_parameter('excitation', flags=Instrument.FLAG_GETSET, type=int)
+        self.add_parameter('remoteStatus', flags=Instrument.FLAG_GETSET, type=int)
+        self.add_parameter('display', flags=Instrument.FLAG_GETSET, type=int)
+        self.add_parameter('channel', flags=Instrument.FLAG_GETSET, type=int)
 
-        self.add_parameter('resistance', flags=Instrument.FLAG_GET, type=types.FloatType)
+        self.add_parameter('resistance', flags=Instrument.FLAG_GET, type=float)
 
         self.add_function('reset')
         self.add_function('get_all')

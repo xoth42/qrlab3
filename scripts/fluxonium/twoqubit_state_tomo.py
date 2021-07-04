@@ -87,7 +87,7 @@ class twoqubit_state_tomo(Measurement1D):
         
 
         super(twoqubit_state_tomo, self).__init__(19, infos=(gate_info1,gate_info2), **kwargs)
-        self.data.create_dataset('sequence', data=[range(0,15)])
+        self.data.create_dataset('sequence', data=[list(range(0,15))])
         self.data.set_attrs()
 
 

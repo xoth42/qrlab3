@@ -122,7 +122,7 @@ experiment = 'Power_Sweep_VNA'
 
 f = h5.File(filepath + hdf5_name, 'r')
 exp = f['/' + date + '/' + time + '_' + experiment]
-y_keys = exp.keys()
+y_keys = list(exp.keys())
 #print(y_keys)
 
 #y_keys.remove(x_key)

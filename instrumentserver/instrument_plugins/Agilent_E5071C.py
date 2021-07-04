@@ -3,7 +3,7 @@ import logging
 
 import numpy as np
 
-from instrument import Instrument
+from .instrument import Instrument
 from visainstrument import SCPI_Instrument
 
 
@@ -28,20 +28,20 @@ class Agilent_E5071C(SCPI_Instrument):
         logging.info(__name__ + ' : Initializing instrument Agilent_E5071C')
         super(Agilent_E5071C, self).__init__(name, address)
 
-        self.add_scpi_parameter("start_freq", "SENS:FREQ:STAR", "%d", units="Hz", type=types.FloatType)
-        self.add_scpi_parameter('stop_freq', "SENS:FREQ:STOP", "%d", units="Hz", type=types.FloatType)
-        self.add_scpi_parameter('center_freq', "SENS:FREQ:CENT", "%d", units="Hz", type=types.FloatType)
-        self.add_scpi_parameter('span', "SENS:FREQ:SPAN", "%d", units="Hz", type=types.FloatType)
-        self.add_scpi_parameter('if_bandwidth', "SENS:BAND", "%d", units="Hz", type=types.FloatType)
-        self.add_scpi_parameter('power', "SOUR:POW", "%.2f", units="dBm", type=types.FloatType)
-        self.add_scpi_parameter('points', "SENS:SWE:POIN", "%d", units="", type=types.IntType)
-        self.add_scpi_parameter('average_factor', "SENS:AVER:COUN", "%d", type=types.IntType)
-        self.add_scpi_parameter('error', "SYST:ERR", "%s", type=types.StringType, flags=Instrument.FLAG_GET)
-        self.add_scpi_parameter('sweep_time', 'SENS:SWE:TIME:DATA', '%.8f', type=types.FloatType,
+        self.add_scpi_parameter("start_freq", "SENS:FREQ:STAR", "%d", units="Hz", type=float)
+        self.add_scpi_parameter('stop_freq', "SENS:FREQ:STOP", "%d", units="Hz", type=float)
+        self.add_scpi_parameter('center_freq', "SENS:FREQ:CENT", "%d", units="Hz", type=float)
+        self.add_scpi_parameter('span', "SENS:FREQ:SPAN", "%d", units="Hz", type=float)
+        self.add_scpi_parameter('if_bandwidth', "SENS:BAND", "%d", units="Hz", type=float)
+        self.add_scpi_parameter('power', "SOUR:POW", "%.2f", units="dBm", type=float)
+        self.add_scpi_parameter('points', "SENS:SWE:POIN", "%d", units="", type=int)
+        self.add_scpi_parameter('average_factor', "SENS:AVER:COUN", "%d", type=int)
+        self.add_scpi_parameter('error', "SYST:ERR", "%s", type=bytes, flags=Instrument.FLAG_GET)
+        self.add_scpi_parameter('sweep_time', 'SENS:SWE:TIME:DATA', '%.8f', type=float,
                                 flags=Instrument.FLAG_GET)
 
         self.add_scpi_parameter('format', 'CALC:FORM', '%s',
-                                type=types.StringType, flags=Instrument.FLAG_GETSET,
+                                type=bytes, flags=Instrument.FLAG_GETSET,
                                 format_map={"MLOG": "log mag",
                                        "PHAS": "phase",
                                        "GDEL": "group delay",
@@ -59,19 +59,19 @@ class Agilent_E5071C(SCPI_Instrument):
                                        "UPH": "expanded phase",
                                        "PPH": "positive phase"})
         self.add_scpi_parameter('trigger_source', 'TRIG:SOUR', '%s',
-                           type=types.StringType, flags=Instrument.FLAG_GETSET,
+                           type=bytes, flags=Instrument.FLAG_GETSET,
                            format_map={"INT": "internal",
                                        "EXT": "external",
                                        "MAN": "manual",
                                        "BUS": "external bus"})
         self.add_scpi_parameter('instrument_state_data', 'MMEM:STOR:STYP', '%s',
-                           type=types.StringType, flags=Instrument.FLAG_GETSET,
+                           type=bytes, flags=Instrument.FLAG_GETSET,
                            format_map={"STAT": "measurement conditions only",
                                        "CST": "+ calibration",
                                        "DST": "+ data",
                                        "CDST": "+ calibration + data"})
         self.add_scpi_parameter('sweep_type', 'SENS:SWE:TYPE', '%s',
-                           type=types.StringType, flags=Instrument.FLAG_GETSET,
+                           type=bytes, flags=Instrument.FLAG_GETSET,
                            format_map={"LIN": "linear",
                                        "LOG": "logarithmic",
                                        "SEGM": "segment",
@@ -87,10 +87,10 @@ class Agilent_E5071C(SCPI_Instrument):
 #                           format_map={"1": "allowed",
 #                                       "0": "disallowed"}) # requires firmware upgrade
         self.add_scpi_parameter('clock_reference', 'SENS:ROSC:SOUR', '%s',
-                           type=types.StringType, flags=Instrument.FLAG_GET,
+                           type=bytes, flags=Instrument.FLAG_GET,
                            format_map={"INT": "internal",
                                        "EXT": "external"})
-        self.add_parameter('instrument_state_file', type=types.StringType,
+        self.add_parameter('instrument_state_file', type=bytes,
                            flags=Instrument.FLAG_GETSET)
         self.add_function("save_state")
         self.add_function("load_state")
@@ -129,11 +129,11 @@ class Agilent_E5071C(SCPI_Instrument):
         return data
 
     def do_get_xaxis(self):
-        return np.array(map(float, self.ask('CALC:DATA:XAXis?', timeout=0.1).split(',')))
+        return np.array(list(map(float, self.ask('CALC:DATA:XAXis?', timeout=0.1).split(','))))
 
     def do_get_yaxes(self):
         strdata = self.ask('CALC:DATA:FDATa?', timeout=0.1)
-        data = np.array(map(float, strdata.split(',')))
+        data = np.array(list(map(float, strdata.split(','))))
         data = data.reshape((len(data)/2, 2))
         return data.transpose() # mags, phases
 
@@ -193,7 +193,7 @@ class Agilent_E5071C(SCPI_Instrument):
         if transpose:
             indata = (starts,stops,points)
         else:
-            indata = zip(*(starts,stops,points))
+            indata = list(zip(*(starts,stops,points)))
         flat = [a for b in indata for a in b]
         data = ','.join(flat)
         self.write('SENS:SEGM:DATA %s%s' % (header,data))

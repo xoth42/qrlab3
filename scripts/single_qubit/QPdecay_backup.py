@@ -45,7 +45,7 @@ def analysis(meas, data=None, fig=None, fit_start='auto', fit_end='auto', vg=-0.
         dictionary[xs_temp[i]]=ys_temp[i]
     xs=[]
     ys=[]
-    keys = dictionary.keys()
+    keys = list(dictionary.keys())
     keys.sort()
     for k in keys:
         xs.append(k)
@@ -188,7 +188,7 @@ class QPdecay(Measurement1D):
         for i in range(meas_per_reptime):
             while self.inj_delays[i]<0:
                 self.inj_delays[i]+=rep_time
-        print self.inj_delays
+        print(self.inj_delays)
         QP_delays= np.linspace(QP_delay_step, QP_delay_step*n_points, n_points)  # Note QP_delays will stay as the clean form without transpose
         self.QP_delays = np.transpose(np.reshape(QP_delays, (-1, meas_per_reptime))).flatten()-20e3
 #        print 'QP_delays=', self.QP_delays

@@ -214,7 +214,7 @@ if 0: #ZX90_Echo tune up
 
 
 if 0:#Check if zx90 parameters match with gate1
-    print(zx90_info.deltaf == gate_info1.deltaf)
+    print((zx90_info.deltaf == gate_info1.deltaf))
 #    print(zx90_info.relative_phase == gate_info1.relative_phase)
 #    print(zx90_info.sideband_phase == gate_info1.sideband_phase)
 #    print(zx90_info.sideband_phase2 == gate_info1.sideband_phase2)

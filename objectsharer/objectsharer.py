@@ -17,7 +17,7 @@
 
 import logging
 import random
-import cPickle as pickle
+import pickle as pickle
 import time
 import numpy as np
 import inspect
@@ -133,11 +133,11 @@ class AsyncHelloReply(object):
 #########################################
 
 def _walk_objects(obj, func, *args):
-    if type(obj) in (types.ListType, types.TupleType):
+    if type(obj) in (list, tuple):
         obj = list(obj)
         for i, v in enumerate(obj):
             obj[i] = _walk_objects(v, func, *args)
-    if type(obj) is types.DictType:
+    if type(obj) is dict:
         for k in sorted(obj):
             obj[k] = _walk_objects(obj[k], func, *args)
     return func(obj, *args)
@@ -182,7 +182,7 @@ def _unwrap_ars_sobjs(obj, bufs, client=None):
     '''
 
     def replace(o):
-        if type(o) is types.DictType:
+        if type(o) is dict:
             if 'OS_AR' in o:
                 if len(bufs) == 0:
                     raise ValueError('No buffer!')
@@ -242,14 +242,14 @@ class ObjectSharer(object):
     def call(self, client, obj_name, func_name, *args, **kwargs):
         is_signal = kwargs.get(OS_SIGNAL, False)
         callback = kwargs.pop('callback', None)
-        async = kwargs.pop('async', False) or (callback is not None) or is_signal
+        async_ = kwargs.pop('async', False) or (callback is not None) or is_signal
         timeout = kwargs.pop('timeout', DEFAULT_TIMEOUT)
 
         self._last_call_id += 1
         callid = self._last_call_id
         async_reply = AsyncReply(callid, callback=callback)
         self.reply_objects[callid] = async_reply
-        logger.debug('Sending call %d to %s: %s.%s(%s,%s), async=%s', callid, client, obj_name, func_name, ellipsize(str(args)), ellipsize(str(kwargs)), async)
+        logger.debug('Sending call %d to %s: %s.%s(%s,%s), async=%s', callid, client, obj_name, func_name, ellipsize(str(args)), ellipsize(str(kwargs)), async_)
 
         args, arlist = _wrap_ars_sobjs(args)
         kwargs, arlist = _wrap_ars_sobjs(kwargs, arlist)
@@ -267,7 +267,7 @@ class ObjectSharer(object):
             raise Exception('Unable to pickle function call: %s' % str(msg))
         self.backend.send_to(client, msg, arlist)
 
-        if async:
+        if async_:
             return async_reply
 
         ret = self.backend.main_loop(delay=timeout, wait_for=async_reply, origin=2)
@@ -288,7 +288,7 @@ class ObjectSharer(object):
         and the aliases.
         '''
         ret = list(self.objects.keys())
-        ret.extend(self.name_map.keys())
+        ret.extend(list(self.name_map.keys()))
         return ret
 
     def get_object(self, objname):
@@ -406,13 +406,13 @@ class ObjectSharer(object):
                 return self._proxy_cache[objname]
 
             # See if we already know which client has this object
-            for client_id, names in self._client_object_list_cache.iteritems():
+            for client_id, names in self._client_object_list_cache.items():
                 if objname in names:
                     return self.get_object_from(objname, client_id)
 
         # Query all clients
         # TODO: asynchronously
-        for client_id in self.clients.keys():
+        for client_id in list(self.clients.keys()):
             obj = self.get_object_from(objname, client_id, no_cache=no_cache)
             if obj is not None:
                 return obj
@@ -455,7 +455,7 @@ class ObjectSharer(object):
             del self.objects[obj._OS_UID]
             root.emit('object-removed', obj._OS_UID)
 
-        for name, id in self.name_map.items():
+        for name, id in list(self.name_map.items()):
             if obj._OS_UID == id:
                 del self.name_map[name]
 
@@ -490,7 +490,7 @@ class ObjectSharer(object):
         if hid in self._callbacks_hid:
             del self._callbacks_hid[hid]
 
-        for name, info_list in self._callbacks_name.iteritems():
+        for name, info_list in self._callbacks_name.items():
             for index, info in enumerate(info_list):
                 if info['hid'] == hid:
                     del self._callbacks_name[name][index]
@@ -501,7 +501,7 @@ class ObjectSharer(object):
                 signame, args, kwargs, uid, len(self.clients))
 
         kwargs[OS_SIGNAL] = True
-        for client_id, client in self.clients.iteritems():
+        for client_id, client in self.clients.items():
 #            print 'Calling receive sig, uid=%s, signame %s, args %s, kwargs %s' % (uid, signame, args, kwargs)
             client.receive_signal(uid, signame, *args, **kwargs)
         self.receive_signal(uid, signame, *args, **kwargs)
@@ -524,7 +524,7 @@ class ObjectSharer(object):
                     fkwargs = kwargs.copy()
                     fkwargs.update(info['kwargs'])
                     info['callback'](*fargs, **fkwargs)
-                except Exception, e:
+                except Exception as e:
                     logger.warning('Callback to %s failed for %s.%s: %s\n%s',
                             info.get('callback', None), uid, signame, str(e), traceback.format_exc())
 
@@ -548,8 +548,8 @@ class ObjectSharer(object):
         self.clients[uid].list_objects(callback=lambda reply, uid=uid:
             self._update_client_object_list(uid, reply))
 
-    def request_client_proxy(self, uid, async=False):
-        if not async:
+    def request_client_proxy(self, uid, async_=False):
+        if not async_:
             info = self.call(uid, 'root', 'get_object_info', 'root')
             self._add_client_to_list(uid, info)
         else:
@@ -606,7 +606,7 @@ class ObjectSharer(object):
                 logger.debug('  Returning for call %s: %s', callid, lambda:ellipsize(str(ret)))
 
             # Handle errors
-            except Exception, e:
+            except Exception as e:
                 if len(info) < 6:
                     logger.error('Invalid call msg: %s', info)
                     ret = RemoteException('Invalid call msg')
@@ -650,7 +650,7 @@ class ObjectSharer(object):
             if not self.backend.connected_to(from_uid):
                 logger.debug('Initiating reverse connection...')
                 self.backend.connect_to(info[1])
-                self.request_client_proxy(from_uid, async=True)
+                self.request_client_proxy(from_uid, async_=True)
             return
 
         if info[0] == 'goodbye_from':
@@ -918,7 +918,7 @@ class ZMQBackend(object):
         return self.addr_to_uid_map.get(addr, None)
 
     def get_addr_for_uid(self, uid):
-        for k, v in self.addr_to_uid_map.iteritems():
+        for k, v in self.addr_to_uid_map.items():
             if v == uid:
                 return k
         return None
@@ -963,7 +963,7 @@ class ZMQBackend(object):
             idstr += chars[random.randint(0, len(chars)-1)]
         return idstr
 
-    def connect_to(self, addr, delay=1000, async=False, uid=None):
+    def connect_to(self, addr, delay=1000, async_=False, uid=None):
         '''
         Connect to a remote ObjectSharer at <addr>.
         If <uid> is specified it is associated with the client at <addr>.
@@ -974,13 +974,13 @@ class ZMQBackend(object):
             logger.warning('Already connected to %s' % addr)
             return
         if uid is not None:
-            if uid in self.addr_to_uid_map.values():
+            if uid in list(self.addr_to_uid_map.values()):
                 logger.warning('Client %s already present at different address')
                 return
             self.addr_to_uid_map[addr] = uid
 
         sock = self.ctx.socket(zmq.DEALER)
-        sock.setsockopt(zmq.IDENTITY, self._generate_id())
+        sock.setsockopt_string(zmq.IDENTITY, self._generate_id())
 
         sock.connect(addr)
         self.addr_to_sock_map[addr] = sock
@@ -1004,7 +1004,7 @@ class ZMQBackend(object):
 
         if addr not in self.addr_to_uid_map:
             raise Exception('UID not resolved!')
-        helper.request_client_proxy(self.addr_to_uid_map[addr], async=async)
+        helper.request_client_proxy(self.addr_to_uid_map[addr], async_=async_)
 
     def send_to(self, dest, msg, bufs=None):
         '''
@@ -1075,7 +1075,7 @@ class ZMQBackend(object):
                 t_new = now2 + info['delay'] - delta
                 logger.debug('Rescheduling timeout %d for %s', t_id, t_new - now2)
                 bisect.insort(self._scheduled_timeouts, (t_new, t_id))
-            except Exception, e:
+            except Exception as e:
                 logger.error('Timeout call %d failed: %s', t_id, str(e))
                 self.timeout_remove(t_id)
 
@@ -1104,7 +1104,7 @@ class ZMQBackend(object):
             
         # Convert wait_for to a list
         if wait_for is not None:
-            if type(wait_for) in (types.TupleType, types.ListType):
+            if type(wait_for) in (tuple, list):
                 wait_for = list(wait_for)
             else:
                 wait_for = [wait_for,]
@@ -1146,7 +1146,7 @@ class ZMQBackend(object):
             # Decode message
             try:
                 info = pickle.loads(msgs[1])
-            except Exception, e:
+            except Exception as e:
             
                 logger.warning('Unable to decode object: %s %s', str(e), msgs[1].decode('string_escape'))
 
@@ -1157,7 +1157,7 @@ class ZMQBackend(object):
                 logger.debug('Starting Message processing %s', str(info))
                 waiting = (wait_for is not None)
                 helper.process_message(client, info, msgs[2:], waiting=waiting)
-            except Exception, e:
+            except Exception as e:
                 logger.warning('Failed to process message: %s\n%s', str(e), traceback.format_exc())
             finally:
                 logger.debug('Message processed %s', str(info))
@@ -1203,7 +1203,7 @@ class ZMQBackend(object):
             
         # Convert wait_for to a list
         if wait_for is not None:
-            if type(wait_for) in (types.TupleType, types.ListType):
+            if type(wait_for) in (tuple, list):
                 wait_for = list(wait_for)
             else:
                 wait_for = [wait_for,]
@@ -1252,9 +1252,9 @@ class ZMQBackend(object):
             # Decode message
             try:
                 info = pickle.loads(msgs[1])
-            except Exception, e:
+            except Exception as e:
 
-                print(msgs[1])
+                print((msgs[1]))
                 logger.warning('Unable to decode object: %s %r', str(e), msgs[1])
                 logger.warning(msgs[1])
 
@@ -1265,7 +1265,7 @@ class ZMQBackend(object):
                 logger.debug('Starting Message processing %s', str(info))
                 waiting = (wait_for is not None)
                 helper.process_message(client, info, msgs[2:], waiting=waiting)
-            except Exception, e:
+            except Exception as e:
                 logger.warning('Failed to process message: %s\n%s', str(e), traceback.format_exc())
             finally:
                 logger.debug('Message processed %s', str(info))

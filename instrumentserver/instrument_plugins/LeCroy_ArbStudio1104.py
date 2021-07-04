@@ -20,7 +20,7 @@
 # Further, it requires Python for .NET (http://pythonnet.sourceforge.net/) to be properly installed.
 # This driver was developed and tested on Python 2.5.
 
-from instrument import Instrument
+from .instrument import Instrument
 import types
 import logging
 import numpy
@@ -70,13 +70,13 @@ class LeCroy_ArbStudio1104(Instrument):
         Instrument.__init__(self, name, tags=['physical'])
 
         # Add parameters
-        self.add_parameter('status', type=types.StringType,
+        self.add_parameter('status', type=bytes,
             flags=Instrument.FLAG_GET, channels=(1, 4), channel_prefix='ch%d_')
-        self.add_parameter('run_mode', type=types.StringType,
+        self.add_parameter('run_mode', type=bytes,
             flags=Instrument.FLAG_SET, channels=(1, 4), channel_prefix='ch%d_')
-        self.add_parameter('trigger_in_delay', type=types.FloatType,
+        self.add_parameter('trigger_in_delay', type=float,
             flags=Instrument.FLAG_SET, channels=(1, 4), channel_prefix='ch%d_')
-        self.add_parameter('trigger_out_delay', type=types.FloatType,
+        self.add_parameter('trigger_out_delay', type=float,
             flags=Instrument.FLAG_SET, channels=(1, 4), channel_prefix='ch%d_')
 
         # Add functions
@@ -145,7 +145,7 @@ class LeCroy_ArbStudio1104(Instrument):
 
         if (self._device == None):
             logging.error(__name__  +' : Initialization failed.')
-            print "Initialization failed."
+            print("Initialization failed.")
 
     def reset(self):
         '''
@@ -304,7 +304,7 @@ class LeCroy_ArbStudio1104(Instrument):
         for oneSource in sources:
             if (oneSource.upper() not in ['NONE', 'STOP', 'START', 'EVENT_MARKER', 'DCTRIGGERIN', 'FPTRIGGERIN']):
                 logging.debug(__name__ + ' : error - source %s' %oneSource)
-                print "error: source - %s" % oneSource
+                print("error: source - %s" % oneSource)
             elif(oneSource.upper() == 'NONE'):
                 sourceClass.append(TriggerSource.None)
             elif(oneSource.upper() == 'STOP'):
@@ -320,7 +320,7 @@ class LeCroy_ArbStudio1104(Instrument):
 
         if (edge.upper() not in ['RISING', 'FALLING']):
             logging.debug(__name__ + ' : error - edge %s' %edge)
-            print "error: edge - %s" % edge
+            print("error: edge - %s" % edge)
         else:
             if (edge.upper() == 'RISINGEDGE'):
                 edgeClass = SensitivityEdge.RisingEdge
@@ -381,11 +381,11 @@ class LeCroy_ArbStudio1104(Instrument):
 
         if (channel < 1 or channel > 4):
             logging.debug(__name__ + ' : Invalid channel %s' % channel)
-            print __name__ + ' : Invalid channel %s' % channel
+            print(__name__ + ' : Invalid channel %s' % channel)
 
         if (factor not in [1,2,4]):
             logging.debug(__name__ + ' : Invalid factor %s' % factor)
-            print __name__ + ' : Invalid factor %s' % factor
+            print(__name__ + ' : Invalid factor %s' % factor)
 
         if (self._device != None):
             if (channel == 1 or channel == 2):
@@ -461,7 +461,7 @@ class LeCroy_ArbStudio1104(Instrument):
             return True
         else:
             logging.debug(__name__ + ' : Could not get channel %s' % channel)
-            print "Error getting channel!"
+            print("Error getting channel!")
             return False
 
     def setup_BNC_trigger_out(self):
@@ -476,7 +476,7 @@ class LeCroy_ArbStudio1104(Instrument):
         logging.debug(__name__ + ' : Setup the BNC trigger output.')
         result = self._device.SetupBNCTriggerOut(ChannelOutLogicOperation.OperationOR, ChannelOutLogicOperation.OperationOR, ChannelOutLogicOperation.OperationOR)
         # the input paras are ChannelOutLogicOperation, see P45 ArbStudio-GSM_RevA.pdf for detail
-        print result.ErrorDescription
+        print(result.ErrorDescription)
 
     def force_stop(self, channellist):
         '''

@@ -22,8 +22,8 @@ for slot in [7, 8, 10]:
     # Gather Information about AWG S/N, Slot and S/N
     AWGPart = awg.getProductNameBySlot(CHASSIS, slot)
     AWGNumber = awg.getSerialNumberBySlot(CHASSIS, slot)
-    print("Part =", AWGPart)
-    print("S/N =", AWGNumber)
+    print(("Part =", AWGPart))
+    print(("S/N =", AWGNumber))
     
     error += [awg.AWGstopMultiple(15)]
     error += [awg.waveformFlush()]

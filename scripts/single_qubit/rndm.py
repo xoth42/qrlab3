@@ -76,7 +76,7 @@ class rndm(Measurement1D):
         self.build_dict()
         if seq is None:
             seq = Trigger(250)
-        self.xs = np.array(range(min_gates, max_gates+1, gate_step))
+        self.xs = np.array(list(range(min_gates, max_gates+1, gate_step)))
         
         self.start = min_gates
         self.stop = max_gates
@@ -96,7 +96,7 @@ class rndm(Measurement1D):
         a_list = a_rotations(self.stop)
         b_list = b_rotations(self.stop)
         x_list = x_rotations(a_list, b_list)
-        print a_list, b_list, x_list
+        print(a_list, b_list, x_list)
         
         for n in range(self.start, self.stop+1, self.step):
             s.append(self.seq)

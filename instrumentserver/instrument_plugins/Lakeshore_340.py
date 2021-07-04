@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-from instrument import Instrument
+from .instrument import Instrument
 import visa
 import types
 import logging
@@ -37,19 +37,19 @@ class Lakeshore_340(Instrument):
 
         self.add_parameter('kelvin',
             flags=Instrument.FLAG_GET,
-            type=types.FloatType,
+            type=float,
             channels=self._channels,
             units='K')
 
         self.add_parameter('sensor',
             flags=Instrument.FLAG_GET,
-            type=types.FloatType,
+            type=float,
             channels=self._channels,
             units='')
 
         self.add_parameter('heater_range',
             flags=Instrument.FLAG_GETSET,
-            type=types.IntType,
+            type=int,
             format_map={
                 1: '25 W',
                 2: '2.5 W',
@@ -60,22 +60,22 @@ class Lakeshore_340(Instrument):
 
         self.add_parameter('heater_output',
             flags=Instrument.FLAG_GET,
-            type=types.FloatType,
+            type=float,
             units='%')
 
         self.add_parameter('mode',
             flags=Instrument.FLAG_GETSET,
-            type=types.IntType,
+            type=int,
             format_map={1: 'Local', 2: 'Remote', 3: 'Remote, local lock'})
 
         self.add_parameter('pid',
             flags=Instrument.FLAG_GETSET,
-            type=types.TupleType,
+            type=tuple,
             channels=(1,4))
 
         self.add_parameter('setpoint',
             flags=Instrument.FLAG_GETSET,
-            type=types.FloatType,
+            type=float,
             channels=(1,4))
 
         self.add_function('local')

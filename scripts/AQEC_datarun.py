@@ -6,15 +6,16 @@ BREAK EVEN OR BROKE
 """
 
 import mclient
-reload(mclient)
+import importlib
+importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib, OCTlib
 import matplotlib.pyplot as plt
 import os
 os.chdir(r'C:/qrlab/scripts')
 
-from FWM import poly_fwm_ssbspec, poly_time_domain
-from AQEC import husimiq_angle_test, CavT2_AQEC
+from .FWM import poly_fwm_ssbspec, poly_time_domain
+from .AQEC import husimiq_angle_test, CavT2_AQEC
 
 qubit_info = mclient.get_qubit_info('qubit1ge')
 ef_info = mclient.get_qubit_info('qubit1ef')
@@ -141,7 +142,7 @@ def stark_cal(fwm_comb, ge_comb, fast=False, update=True, confidence=0.7):
 
     if fast:
         ss -= (dss0+10e3)*confidence   #Estimate ss is 10kHz above dss0
-        print 'Fast check stark shift -- Only 0->1 is measured.\n', 'dss0=', dss0, '\n', 'ss=', ss/1000, '\n'
+        print('Fast check stark shift -- Only 0->1 is measured.\n', 'dss0=', dss0, '\n', 'ss=', ss/1000, '\n')
     
     else:   
         seq = sequencer.Join([sequencer.Trigger(200), lib.fock_state_two_file('2')])
@@ -160,7 +161,7 @@ def stark_cal(fwm_comb, ge_comb, fast=False, update=True, confidence=0.7):
         dss6 = ssb.measure_keysight()    
         
         ss -= (dss0+dss2+dss4+dss6)/4*confidence
-        print '\n', 'dss=', dss0/1000, dss2/1000, dss4/1000, dss6/1000, '\n', 'ss=', ss/1000, '\n'
+        print('\n', 'dss=', dss0/1000, dss2/1000, dss4/1000, dss6/1000, '\n', 'ss=', ss/1000, '\n')
     
     if update:
         fwm_comb.stark_shift = ss
@@ -171,7 +172,7 @@ def stark_cal(fwm_comb, ge_comb, fast=False, update=True, confidence=0.7):
     return ss
 
 def T2_stark_cal(fwm_comb, ge_comb, fast=True, update=True):
-    from AQEC import T2_AQEC
+    from .AQEC import T2_AQEC
     ss = fwm_comb.stark_shift
     period = dig.get_trigger_period()
     naverages = dig.get_naverages()
@@ -188,7 +189,7 @@ def T2_stark_cal(fwm_comb, ge_comb, fast=True, update=True):
     ss = 2.600e6 + deltaf*1e9
     if fwm_comb == fwm_comb2:
         ss = (deltaf*1e9-0.3e6)*0.86+2.491e6
-    print '\n', 'ss=', ss/1000, 'kHz \n'
+    print('\n', 'ss=', ss/1000, 'kHz \n')
     
     if update:
         fwm_comb.stark_shift = ss
@@ -198,8 +199,8 @@ def T2_stark_cal(fwm_comb, ge_comb, fast=True, update=True):
     return ss
 
 def cav_qubit_T2(echo=False):
-    from single_cavity import cavT2
-    from single_qubit import T2measurement
+    from .single_cavity import cavT2
+    from .single_qubit import T2measurement
     period = dig.get_trigger_period()
     naverages = dig.get_naverages()
     dig.set_naverages(1000)
@@ -219,7 +220,7 @@ def cav_qubit_T2(echo=False):
     return #[ct2, t2, st2]
     
 def cav_T2(echo=False):
-    from single_cavity import cavT2
+    from .single_cavity import cavT2
     period = dig.get_trigger_period()
     naverages = dig.get_naverages()
     dig.set_naverages(1000)
@@ -246,7 +247,7 @@ def rot_frame_cal(fwm_comb, ge_comb):
 
 def prekerr_check(fwm_comb, ge_comb, fast=True):
     ''' We check conversion efficiency and check how far we've drifed from the optimal values in 4 of the most sensitive parameters'''
-    from AQEC import prekerr_optimize, prekerr_calibrate
+    from .AQEC import prekerr_optimize, prekerr_calibrate
     dig.set_naverages(1500)
     dig.set_trigger_period(3000)
     pc = prekerr_calibrate.prekerr_calibrate(qubit_info, cavity_infoA, lib, [fwm_comb, ge_comb],
@@ -269,7 +270,7 @@ def prekerr_check(fwm_comb, ge_comb, fast=True):
 
 def AQEC144_check(fwm_comb, ge_comb):
     ''' We check AQEC performance on +x state at 144 us'''
-    from AQEC import prekerr_calibrate
+    from .AQEC import prekerr_calibrate
     dig.set_naverages(2000)
     dig.set_trigger_period(3000)
     pc = prekerr_calibrate.prekerr_calibrate(qubit_info, cavity_infoA, lib, [fwm_comb, ge_comb],
@@ -327,7 +328,7 @@ def rate_curves(fwm_comb, ge_comb, fast=False):
 
 def xy_optimizer(parameter, fwm_comb, ge_comb, values, phase=2.55, allxy=True, threshold=60, confidence=0.5):
     '''Take 144us optimizer data for init state of +x and +y to find optimal parameter'''
-    from AQEC import loptimize
+    from .AQEC import loptimize
     pump_time = 144e3
     lop = loptimize.loptimize(qubit_info, cavity_infoA, lib, [fwm_comb, ge_comb], parameter, values, phase = phase-np.pi/2, pump_time=pump_time)
     result = lop.measure_keysight()
@@ -340,13 +341,13 @@ def xy_optimizer(parameter, fwm_comb, ge_comb, values, phase=2.55, allxy=True, t
         adj = min(1.04, max(adj, 0.96))
         if ymax > threshold:
             ge_comb.amps[index] *= adj
-            print 'ge_comb amp%i adjusting by %.03f' %(index, adj), '\n'
+            print('ge_comb amp%i adjusting by %.03f' %(index, adj), '\n')
     elif 'ge_phase' in parameter:
         adj = optimum*confidence
         adj = min(0.08, max(adj, -0.08))
         if ymax > threshold:
             ge_comb.phases[index] += adj
-            print 'ge_comb phase%i adjusting by %.03f' %(index, adj), '\n'
+            print('ge_comb phase%i adjusting by %.03f' %(index, adj), '\n')
 
     return adj
 
@@ -358,7 +359,7 @@ def xy_optimizer(parameter, fwm_comb, ge_comb, values, phase=2.55, allxy=True, t
 
     
 if 1:  # Optimizer144 (~2 h per round)
-    from AQEC import prekerr_calibrate
+    from .AQEC import prekerr_calibrate
     fwm_comb, ge_comb = fwm_comb4, ge_comb4
 
     for rep in range(3):
@@ -416,7 +417,7 @@ if 1: # Regular function calls
 
 if 0: # Wigner tomography with AQEC    
     from scripts.single_cavity import WignerbyParity
-    from AQEC import time_bloch
+    from .AQEC import time_bloch
     
 #    times = np.arange(72e3, 250e3, 72e3)  #Typically we measure at 72us, 144us and 216us
     wignertimes = np.arange(0, 250e3, 35.2e3)
@@ -476,8 +477,8 @@ if 0: # Wigner tomography with AQEC
                 
 if 0: # Conversion Wigner for process matrix reconstruction
     from scripts.single_cavity import WignerbyParity
-    from AQEC import time_bloch
-    from single_qubit import ssbspec
+    from .AQEC import time_bloch
+    from .single_qubit import ssbspec
 
     fwm_comb, ge_comb = fwm_comb5, ge_comb5
     T2_stark_cal(fwm_comb, ge_comb)
@@ -553,7 +554,7 @@ if 0: # Conversion Wigner for process matrix reconstruction
 
 
 if 1: # Logical qubit lifetime
-    from AQEC import time_bloch
+    from .AQEC import time_bloch
     rep = 6
 #    times = np.arange(0, 340e3, 73e3)
     '''Kerr correction currently does not work
@@ -582,7 +583,7 @@ if 1: # Logical qubit lifetime
             ''' AQEC #OMP'''
             fwm_comb, ge_comb = fwm_comb5, ge_comb5
             stark_cal(fwm_comb, ge_comb, fast=True)
-            print "current SS =", fwm_comb.stark_shift, '\n'
+            print("current SS =", fwm_comb.stark_shift, '\n')
             times = np.arange(0, 240e3, 36e3)
             rotations = times/1.0e6 * 2*np.pi*rot_speed5
             seq = [sequencer.Join([sequencer.Trigger(200), lib.mod4_prep(state)])]
@@ -615,7 +616,7 @@ if 1: # Logical qubit lifetime
             ''' AQEC #OXY'''
             fwm_comb, ge_comb = fwm_comb4, ge_comb4
             T2_stark_cal(fwm_comb, ge_comb, fast=True)
-            print "current SS =", fwm_comb.stark_shift, '\n'
+            print("current SS =", fwm_comb.stark_shift, '\n')
             times = np.arange(0, 240e3, 36e3)
             rotations = times/1.0e6 * 2*np.pi*rot_speed4
             seq = [sequencer.Join([sequencer.Trigger(200), lib.mod4_prep(state)])]
@@ -653,17 +654,17 @@ if 0: # Regular transmon characterization (~6 minutes)
     dig.set_trigger_period(500)
     dig.set_naverages(1000)
 
-    from single_qubit import rabi
+    from .single_qubit import rabi
     tr = rabi.Rabi(qubit_info, np.linspace(-0.5, 0.5, 61), selective=False,
                    plot_seqs=False, generate=True, repeat_pulse=2, update=False, seq=None)
     tr.measure_keysight()
     
-    from single_qubit import T1measurement
+    from .single_qubit import T1measurement
     t1 = T1measurement.T1Measurement(qubit_info, np.concatenate((np.linspace(0, 19e3, 20), np.linspace(20e3, 160e3, 20))), 
                                      double_exp=False, generate=True, plot_seqs=False, seq=None)
     t1.measure_keysight()
 
-    from single_qubit import T2measurement
+    from .single_qubit import T2measurement
     t2 = T2measurement.T2Measurement(qubit_info, np.linspace(0e3, 40e3, 101), detune=0.3e6, 
                                      double_freq=True, generate=True, seq=None)
     t2.measure_keysight()
@@ -672,7 +673,7 @@ if 0: # Regular transmon characterization (~6 minutes)
     t2.measure_keysight()
     
     dig.set_trigger_period(1000)
-    from single_qubit import efrabi
+    from .single_qubit import efrabi
     efr = efrabi.EFRabi(qubit_info, ef_info, np.linspace(-0.7, 0.7, 51), plot_seqs=False, selective=False, generate=True, postseq = None, update=True)
     efr.measure_keysight()
     period = efr.fit_params['period'].value
@@ -724,8 +725,8 @@ if 0:  #Conversion phase calibration (new)
         phase_dif = (fit_phase-initial_phase)%(2*np.pi)
         phase_std = np.sqrt(np.power(angle_params[i].params['phase'].stderr*n_dif[i], 2)
                           + np.power(t2_params[i]['phi0'].stderr, 2))
-        print('initial ', initial_phase, ', fit ', fit_phase)
-        print(state + ' phase difference: ' + str(phase_dif) + ' +/- ' + str(phase_std) + '\n')
+        print(('initial ', initial_phase, ', fit ', fit_phase))
+        print((state + ' phase difference: ' + str(phase_dif) + ' +/- ' + str(phase_std) + '\n'))
         f.write('initial, %.03f, fit, %.03f \n'%(initial_phase, fit_phase))
         f.write('%s phase difference: %.03f +/- %.03f \n\n'%(state, phase_dif, phase_std))
         plt.plot(xs, -CavT2_AQEC.t2_fit(t2_params[i], xs, np.zeros_like(xs)), label = state)
@@ -757,13 +758,13 @@ if 0: # Kerr measurement (~45 min for 3 rounds)
                                     detune=detune_pz, seq=seq, postseq=None, bgcor=True, t_ge=356)
         pzt2 = ct2.measure_keysight()    
     
-        print('Rotating frame: ' + str(mzt2['freq']*1e6/4 + detune_mz/1e3) + ' +/- ' + str(mzt2['freq'].stderr*1e6/4) + 'KHz')
-        print('Kerr under AQEC: ' + str((pzt2['freq'] - mzt2['freq'])*1e6/8 + (detune_pz - detune_mz)/2/1e3) + ' +/- ' 
-                                  + str((np.sqrt(pzt2['freq'].stderr**2 + mzt2['freq'].stderr**2))*1e6/8) + 'KHz')
+        print(('Rotating frame: ' + str(mzt2['freq']*1e6/4 + detune_mz/1e3) + ' +/- ' + str(mzt2['freq'].stderr*1e6/4) + 'KHz'))
+        print(('Kerr under AQEC: ' + str((pzt2['freq'] - mzt2['freq'])*1e6/8 + (detune_pz - detune_mz)/2/1e3) + ' +/- ' 
+                                  + str((np.sqrt(pzt2['freq'].stderr**2 + mzt2['freq'].stderr**2))*1e6/8) + 'KHz'))
 
 
 if 0: # SSB of 0-1 conversion
-    from single_qubit import ssbspec
+    from .single_qubit import ssbspec
     dig.set_trigger_period(2000)
     dig.set_naverages(2000)
     times = np.arange(20e3, 40e3, 1e3)
@@ -787,7 +788,7 @@ if 0: # SSB of 0-1 conversion
         
         
 if 0: # SSB of all focks
-    from single_qubit import ssbspec
+    from .single_qubit import ssbspec
     dig.set_trigger_period(3000)
     dig.set_naverages(4000)
     fwm_comb, ge_comb = fwm_comb5, ge_comb5

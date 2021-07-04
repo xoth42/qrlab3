@@ -99,14 +99,14 @@ for i, title in enumerate(f[date].keys()):
 #    print int(title[0:6])
 #    print int(title[0:6]) <= 020617
     if int(title[0:6]) <= int('110625') and int(title[0:6]) > int('080000') and title[7:12] == 'Power':# and title[7:12] =='ROCav':
-        print title
+        print(title)
 
 
 
         x_key = 'freqs'
         #x2_key = 'powers'
         exp = f[date][title]
-        y_keys = exp.keys()
+        y_keys = list(exp.keys())
         
             
         freqs = exp[x_key].value
@@ -350,7 +350,7 @@ pl.savefig(fn, **kwargs)
 
 to_save = [freq1, freq1_err, freq2, freq2_err]
 
-with file('C:\Users\Wang_Lab\Documents\yingying\\03172020cooldown\\fitting\\fitting_result.txt','w') as outfile:
+with file('C:\\Users\Wang_Lab\Documents\yingying\\03172020cooldown\\fitting\\fitting_result.txt','w') as outfile:
 
     outfile.write('# Array\n')
 

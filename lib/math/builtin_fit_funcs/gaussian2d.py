@@ -1,5 +1,5 @@
 import numpy as np
-import common
+from . import common
 
 def func(xs, ys, x0=0, y0=0, sigmax=1, sigmay=1, area=1, ofs=0):
     r2 = (xs - x0)**2 / (2 * sigmax**2) + (ys - y0)**2 / (2 * sigmay)**2

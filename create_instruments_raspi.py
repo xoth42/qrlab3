@@ -5,7 +5,7 @@ if 1:
     os.system(r'C:\qrlab\start.bat')
     time.sleep(1)
 
-from mclient import instruments
+from .mclient import instruments
 
 raspi = instruments.create('raspi', 'raspi_manager')
 raspi.do_set_domain('172.30.52.81')

@@ -13,7 +13,7 @@ class ClientServerTestCase(unittest.TestCase):
         self.server_process = multiprocessing.Process(target=ds.run_dataserver)
         self.server_process.start()
         for f in glob.glob(os.path.join(ds.DATA_DIRECTORY, 'test_*.h5')):
-            print 'Deleting', f
+            print('Deleting', f)
             os.remove(f)
         time.sleep(.5)
         self.server_client = ds.dataserver_client()

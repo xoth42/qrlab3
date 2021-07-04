@@ -236,7 +236,7 @@ class Function(object):
                     self._params.add(param[0], value=param[1], vary=param[2],
                                      min=param[3], max=param[4], expr=param[5])
                 else:
-                    print 'error - set_parameters(): bad parameter list %s' % param
+                    print('error - set_parameters(): bad parameter list %s' % param)
         elif isinstance(params_list, Parameters):
             self._params = copy.deepcopy(params_list)
         else:
@@ -255,16 +255,16 @@ class Function(object):
         '''
         try:
             # check if the parameter name exists
-            self._params.keys().index(param_name)
+            list(self._params.keys()).index(param_name)
 
             # move through keyword argument list and add parameters
-            for key, value in kwargs.iteritems():
+            for key, value in kwargs.items():
                 try:
                     self._params.add(param_name, key=value)
                 except TypeError:
-                    print 'Function.update_parameter(): bad keyword argument'
+                    print('Function.update_parameter(): bad keyword argument')
         except ValueError:
-            print 'Function.update_parameter(): parameter does not exist'
+            print('Function.update_parameter(): parameter does not exist')
 
     def get_parameter_names(self):
         return self.param_names
@@ -289,7 +289,7 @@ class Function(object):
             msg += 'max = ' + str(self._params[name].max) + '\t'
             msg += 'expr = ' + str(self._params[name].expr) + '\t'
             msg += '\n'
-        print msg
+        print(msg)
 
     def func(self, x_data):
         '''
@@ -304,7 +304,7 @@ class Function(object):
         '''
 
         if self._params is None:
-            print 'Function.get_value(): parameters are not specified'
+            print('Function.get_value(): parameters are not specified')
             return
 
         temp = self.func(x_data)
@@ -984,7 +984,7 @@ class MultipleLorentzians(Function):
         # here I only specify the positions of all peaks, not sure
         # how best to specify other parameters
         if self._ydata is None:
-            print 'error - determine_initial_params() - no _ydata!'
+            print('error - determine_initial_params() - no _ydata!')
             return
 
         # define all parameters
@@ -992,7 +992,7 @@ class MultipleLorentzians(Function):
 
         peaks = find_peaks(self._ydata)
         peak_positions = [self._xdata[peaks[i]] for i in np.arange(len(peaks))]
-        print 'peak_positions at %s' % (peak_positions)
+        print('peak_positions at %s' % (peak_positions))
 
         for i in np.arange(len(peaks)):
             self._params['position' + str(i)].value = peak_positions[i]
@@ -1001,12 +1001,12 @@ class MultipleLorentzians(Function):
         # now perform a single lorentzian fit with initial seed to have position
         # at all of the found peaks
         for i, peak in enumerate(peak_positions):
-            print 'peak position: %f' % (peak)
+            print('peak position: %f' % (peak))
             p_temp = self.copy_params_subset(self._params, i)
-            print p_temp
+            print(p_temp)
             l = Lorentzian(x_data=self._xdata, y_data=self._ydata, params_list=p_temp)
             result, params, y_data = l.fit()
-            print params
+            print(params)
 
             # add these parameters to the multi-peak parameters
             self.update_params_subset(params, i)
@@ -1077,7 +1077,7 @@ if __name__ == "__main__":
 
     test_poly = False
     if test_poly:
-        print '--- Testing Polynomial fit ---'
+        print('--- Testing Polynomial fit ---')
 
         # generate x data
         xs = np.linspace(-10, 10, 101)
@@ -1123,7 +1123,7 @@ if __name__ == "__main__":
     test_lor = False
     if test_lor:
 
-        print ' ---- Testing Lorentzian fit ----'
+        print(' ---- Testing Lorentzian fit ----')
         # generate Lorentzian data
         xs = np.linspace(0, 100, 51)
 
@@ -1148,7 +1148,7 @@ if __name__ == "__main__":
     #    report_fit(params)
 
         # let's rely on the automated initial parameter list software for noisy data
-        print '----'
+        print('----')
 
         # now add noise to the data set
         noisy_x = xs + [np.random.uniform() * 0.00 for _ in np.arange(len(xs))]

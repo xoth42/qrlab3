@@ -21,8 +21,8 @@ def lo_leakage_func(params, awg, chans, spec, n_avg=1,delay=0.1, verbose=False):
     time.sleep(delay)
     val = np.average([spec.get_power() for _ in range(n_avg)])
     if verbose:
-        print 'Measuring at (%.06f, %.06f): %.01f' % \
-                (params['vI'].value, params['vQ'].value, val)
+        print('Measuring at (%.06f, %.06f): %.01f' % \
+                (params['vI'].value, params['vQ'].value, val))
     return val
 
 def osb_min_func(params, awg, chans, spec, n_avg=1, delay=0.1, chan_select='i', verbose=False):
@@ -38,8 +38,8 @@ def osb_min_func(params, awg, chans, spec, n_avg=1, delay=0.1, chan_select='i', 
     time.sleep(delay)
     val = np.average([spec.get_power() for _ in range(n_avg)])
     if verbose:
-        print 'Measuring at (%.06f, %.06f): %.01f' % \
-                (params['skew'].value, params['amplitude'].value, val)
+        print('Measuring at (%.06f, %.06f): %.01f' % \
+                (params['skew'].value, params['amplitude'].value, val))
 
     return val
 
@@ -112,8 +112,8 @@ class Mixer_Calibration(object):
         time.sleep(1)
 
     def tune_lo(self, verbose=None, plot=True,mode='coarse'):
-        print 'tuning LO leakage..' # Should be more informative.
-        print ''
+        print('tuning LO leakage..') # Should be more informative.
+        print('')
 
         if type(mode) == tuple or type(mode) == list:
             vrange,n_it,n_avg = mode
@@ -140,13 +140,13 @@ class Mixer_Calibration(object):
         self.spec.set_rf_on(0)
         self.opt_offset_I = m.params['vI'].value
         self.opt_offset_Q = m.params['vQ'].value
-        print 'Optimal offsets: %0.03f,%0.03f' % (m.params['vI'].value,m.params['vQ'].value)
+        print('Optimal offsets: %0.03f,%0.03f' % (m.params['vI'].value,m.params['vQ'].value))
 
         #The minimizer command automatically leaves it in its best values.
 
     def tune_osb(self, verbose=None, plot=True,mode='coarse'):
-        print 'tuning OSB leakage..' # Should be more informative.
-        print ''
+        print('tuning OSB leakage..') # Should be more informative.
+        print('')
 
         if type(mode) == tuple or type(mode) == list:
             amp_range,skew_range,n_it,n_avg = mode
@@ -165,12 +165,12 @@ class Mixer_Calibration(object):
         m.add_parameter(Parameter('amplitude', value=self.opt_amp_factor, vrange=amp_range))
         params = m.minimize()
 
-        print 'Amplitude imbalance: %0.4f' % params['amplitude'].value
-        print 'Skew imbalance (ps): %0.4f' % params['skew'].value
+        print('Amplitude imbalance: %0.4f' % params['amplitude'].value)
+        print('Skew imbalance (ps): %0.4f' % params['skew'].value)
         self.opt_skew_in_rads = (2 * np.pi * np.abs(self.if_freq) * params['skew'].value *1e-12)
         self.opt_skew_in_rads += self.shift_phase-np.pi
                         #Should be abs IF here - Jacob
-        print 'skew imbalance (rad): %0.4f' % (self.opt_skew_in_rads)
+        print('skew imbalance (rad): %0.4f' % (self.opt_skew_in_rads))
 
         ch_tune = self.chans[0]
         self.awg.set({

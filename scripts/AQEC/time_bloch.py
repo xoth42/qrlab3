@@ -93,13 +93,13 @@ def analysis(meas, data=None, fig=None):
     mZSv = ys[5*num_delays : 6*num_delays]    
     
     equators = (XSv+YSv+ZSv+mXSv+mYSv+mZSv) / 6.0
-    print equators
+    print(equators)
     
     pf = np.polyfit(meas.delays, equators, 1)
     eq_values = pf[0]*meas.delays + pf[1]
     e_values = meas.e_value * np.ones(num_delays)
     g_values = eq_values*2 - meas.e_value
-    print g_values
+    print(g_values)
     
     XS = (g_values - XSv) / (g_values - e_values) * 2 - 1
     YS = (g_values - YSv) / (g_values - e_values) * 2 - 1
@@ -148,13 +148,13 @@ def analysis(meas, data=None, fig=None):
     
     if meas.t2_check is not None:
         equators = (ys[6*num_delays : 7*num_delays] + ys[7*num_delays : 8*num_delays])*0.5
-        print equators
+        print(equators)
         
 #        pf = np.polyfit(meas.delays, equators, 1)
         eq_value = np.mean(equators)#pf[0]*meas.delays + pf[1]
         e_value = meas.e_value #* np.ones(num_delays)
         g_value = eq_value*2 - meas.e_value
-        print g_value
+        print(g_value)
 #        pf = np.polyfit(meas.delays, equators, 2)
 #        eq_values = pf[0]*meas.delays**2 + pf[1]*meas.delays + pf[2]                
 #        e_values = meas.e_value
@@ -192,10 +192,10 @@ def analysis_jeff(meas, data=None, fig=None):
     num_delays = len(xs)
     
     equators = (ys[2*num_delays : 3*num_delays] + ys[3*num_delays : 4*num_delays])*0.5
-    print equators       
+    print(equators)       
     e_values = meas.e_value * np.ones(num_delays)
     g_values = equators*2 - e_values
-    print g_values
+    print(g_values)
     
     XS = (g_values - ys[0*num_delays : (1)*num_delays]) / (g_values - e_values) * 2 - 1
     YS = (g_values - ys[1*num_delays : (2)*num_delays]) / (g_values - e_values) * 2 - 1
@@ -247,7 +247,7 @@ def analysis_chen(meas, data=None, fig=None):
     if meas.measure_ge:
         meas.g_value = ys[4*num_delays: 5*num_delays].mean()
         meas.e_value = ys[5*num_delays: 6*num_delays].mean()
-        print "g_value=", meas.g_value, "e_value=", meas.e_value, "\n" 
+        print("g_value=", meas.g_value, "e_value=", meas.e_value, "\n") 
     
     if meas.target_state is None:
         for i, axis in enumerate(['x', 'y', 'z']):
@@ -278,12 +278,12 @@ def analysis_chen(meas, data=None, fig=None):
         '''We perform a second order polynomial fit to smooth our extracted equator voltage (in the presence of possible spurious photons) vs delay time.
         We assume |e> state voltage does not change much with spurious photons, but |g> state does.'''
         equators = (ys[2*num_delays : 3*num_delays] + ys[3*num_delays : 4*num_delays])*0.5
-        print equators
+        print(equators)
         pf = np.polyfit(meas.delays, equators, 2)
         eq_values = pf[0]*meas.delays**2 + pf[1]*meas.delays + pf[2]                
         e_values = meas.e_value
         g_values = eq_values*2 - meas.e_value
-        print g_values
+        print(g_values)
         
         XS = (g_values - ys[0*num_delays : (1)*num_delays]) / (g_values - e_values) * 2 - 1
         YS = (g_values - ys[1*num_delays : (2)*num_delays]) / (g_values - e_values) * 2 - 1
@@ -445,7 +445,7 @@ class time_bloch(Measurement1D):
                 s_temp += [Delay(2000)]
                 s.append(Join(s_temp))
                 
-        print('before t2check', self.t2_check is not None)
+        print(('before t2check', self.t2_check is not None))
         if self.t2_check is not None:
             for angle in [-np.pi/2, np.pi/2]:
                 for i, dt in enumerate(self.delays):
