@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import time
-from .lib.math import demod
+from lib.math import demod
 
 
 def moving_average(a, n=20) :
@@ -12,7 +12,7 @@ def moving_average(a, n=20) :
 ## Setup alazar according to settings in GUI
 
 
-from . import mclient
+import mclient
 alz = mclient.instruments['alazar']
 #mclient.instruments.reload('alazar')
 #alz = mclient.instruments['alazar']

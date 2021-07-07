@@ -36,6 +36,7 @@ class SerialDevice:
         if len(args) + 1 != len(dtype):
             raise ValueError('Must have +1 more data-type than argument.')
         args = ((int(ar) if dt is bool else dt(ar)) for dt, ar in zip(dtype, args))
+        #print(request.format(*args))
         ret = self._query(request.format(*args))
         dtype = dtype[-1]
         if dtype is bool:

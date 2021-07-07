@@ -2,7 +2,7 @@ import time
 #import visa
 if 1:
     import os
-    os.system(r'C:\qrlab\start.bat')
+    os.system(r'C:\qrlab-3\start.bat')
     time.sleep(3)
 
 from mclient import instruments
@@ -27,7 +27,7 @@ from mclient import instruments
 #Yoko = instruments.create('Yoko','Yokogawa_7651_new',address='GPIB1::6::INSTR') # No. 2 
 #print 'Yoko OK'
 #
-#brick1 = instruments.create('brick1', 'LabBrick_RFSource', serial=14510, use_extref=True) # qubit
+##brick1 = instruments.create('brick1', 'LabBrick_RFSource', serial=21514, use_extref=True) # qubit
 #brick2 = instruments.create('brick2', 'LabBrick_RFSource', serial=14511, use_extref=True) # ref
 #brick3 = instruments.create('brick3', 'LabBrick_RFSource', serial=14524, use_extref=True) # RO
 #brick3 = instruments.create('brick3', 'LabBrick_RFSource', devid='3') # RO
@@ -66,6 +66,7 @@ readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
                              IQe_radius= 1 , rfsource1='brick3', rfsource2='brick2',
                              pulse_len=1000, readout_chan='3m1', acq_chan='4m2')
 
+WF_qubit = instruments.create('WF_qubit', 'WFT1153', serial='1266', COM_adrs='COM3')
 '''
 #AWG2 = instruments.create('AWG2', 'Tektronix_AWG5014C', address='AWG2',
 #                          clock=1e9, refsrc='EXT', reffreq=10e6)

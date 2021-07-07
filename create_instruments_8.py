@@ -2,10 +2,10 @@ import time
 
 if 1:
     import os
-    os.system(r'C:\qrlab\start.bat')
+    os.system(r'C:\qrlab-3\start.bat')
     time.sleep(1)
 
-from .mclient import instruments
+from mclient import instruments
 
 #SC_mod_test = instruments.create('SC_mod_test', 'SC5413A', devid='10001FA5')
 

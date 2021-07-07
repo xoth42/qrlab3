@@ -1,4 +1,4 @@
-from .instrument import Instrument
+from instrument import Instrument
 import types
 #import numpy as np
 #import matplotlib.pyplot as plt

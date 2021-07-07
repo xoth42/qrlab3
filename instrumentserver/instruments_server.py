@@ -19,6 +19,7 @@ class WaitForInstrument(object):
         self.instruments = instruments
         self.name = name
     def is_valid(self):
+        print(self.name in self.instruments._instruments)
         return self.name in self.instruments._instruments
 
 class Instruments(object):
