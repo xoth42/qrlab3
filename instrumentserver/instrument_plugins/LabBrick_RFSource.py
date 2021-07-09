@@ -118,7 +118,7 @@ def do_get_serial_number(devid):
 
 def do_get_model_name(devid):
     f = get_lb_func('fnLMS_GetModelNameA', [ctypes.c_uint32, ctypes.c_char_p])
-    model_name = ' ' * 32
+    model_name = b' ' * 32 
     name_len = f(devid, model_name)
     return model_name[:name_len]
 

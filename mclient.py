@@ -91,7 +91,7 @@ def get_qubit_info(name, detune=None):
     if ret.sideband_channels is None:
         ret.sideband_channels = ret.channels
     fixed_phase = None # JEFF CHANGES
-    if name is 'readout_IQ':
+    if name == 'readout_IQ':
         fixed_phase = ret.fixed_phase
 
     # Setup channels for this element. If no sideband modulation is used
@@ -278,7 +278,7 @@ def get_qubits():
 
 def get_readout_info(readout='readout'):
     ret = get_container_object(readout)
-    if readout is 'readout_IQ': # JEFF- changed to get IQ readout working
+    if readout == 'readout_IQ': # JEFF- changed to get IQ readout working
         ret.rfsource = instruments.get(ret.rfsource)
         return ret
     ret.rfsource1 = instruments.get(ret.rfsource1)
