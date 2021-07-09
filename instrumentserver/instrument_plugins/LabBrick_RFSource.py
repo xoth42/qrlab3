@@ -24,6 +24,7 @@ NO_DEVICE = 0
 
 # LB_DLL = r'c:\qrlab\instrumentserver\vnx_fmsynth.dll'
 LB_DLL = 'C:\\qrlab-3\\instrumentserver\\vnx_fmsynth.dll'
+print(LB_DLL)
 try:
     lb_dll = ctypes.windll.LoadLibrary(LB_DLL)
     # lb_dll = ctypes.cdll.LoadLibrary(LB_DLL)

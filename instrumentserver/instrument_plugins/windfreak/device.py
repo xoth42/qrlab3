@@ -51,7 +51,7 @@ class SerialDevice:
         Args:
             data (str): write data
         """
-        self._dev.write(data)
+        self._dev.write(data.encode())
 
     def _read(self):
         """Read from device.

@@ -27,7 +27,7 @@ from mclient import instruments
 #Yoko = instruments.create('Yoko','Yokogawa_7651_new',address='GPIB1::6::INSTR') # No. 2 
 #print 'Yoko OK'
 #
-##brick1 = instruments.create('brick1', 'LabBrick_RFSource', serial=21514, use_extref=True) # qubit
+brick1 = instruments.create('brick1', 'LabBrick_RFSource', serial=21514, use_extref=False) # qubit
 #brick2 = instruments.create('brick2', 'LabBrick_RFSource', serial=14511, use_extref=True) # ref
 #brick3 = instruments.create('brick3', 'LabBrick_RFSource', serial=14524, use_extref=True) # RO
 #brick3 = instruments.create('brick3', 'LabBrick_RFSource', devid='3') # RO
