@@ -19,6 +19,7 @@ import tkinter as tk
 # some other themed widgets.
 import tkinter.ttk as ttk
 
+
 ### NOTABLE CONSTANTS ###
 # **************************#
 # The time that the GUI will draw all the widgets again.
@@ -90,7 +91,7 @@ def fetch_instruments():
     '''
     instr = objsh.helper.find_object('instruments')
     instr_list = [x for x in instr.list_instruments() if 'temp' not in x
-                                                      and x[0] is not '_']
+                                                      and x[0] != '_']
     instr_list.sort()
     return instr_list
 

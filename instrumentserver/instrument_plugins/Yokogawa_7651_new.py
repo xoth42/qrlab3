@@ -4,7 +4,7 @@
 import time
 import pyvisa
 import numpy as np
-from .instrument import Instrument
+from instrument import Instrument
 import types
 import re
 

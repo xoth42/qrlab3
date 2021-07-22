@@ -21,45 +21,45 @@ class Tektronix_AWG5014C(VisaInstrument):
         super(Tektronix_AWG5014C, self).__init__(name, term_chars='\n', **kwargs)
         self.set_timeout(120000)
 
-        self.add_parameter('id', type=bytes,
-            flags=Instrument.FLAG_GET)
-        self.add_visa_parameter('clock',
-            'SOUR:FREQ?', 'SOUR:FREQ %f',
-            type=float,
-            flags=Instrument.FLAG_GETSET,
-            minval=1e6, maxval=1.2e9, units='Hz')
-        self.add_visa_parameter('refsrc',
-            'SOUR:ROSC:SOUR?', 'SOUR:ROSC:SOUR %s',
-            type=bytes,
-            flags=Instrument.FLAG_GETSET,
-            option_list=('INT', 'EXT'))
-        self.add_visa_parameter('reffreq',
-            'SOUR:ROSC:FREQ?', 'SOUR:ROSC:FREQ %f',
-            type=float,
-            flags=Instrument.FLAG_GETSET,
-            option_list=(10e6, 20e6, 100e6), units='Hz')
-        self.add_visa_parameter('mode',
-            'AWGC:RMOD?', 'AWGC:RMOD %s',
-            type=bytes,
-            option_list=(
-                'CONT', 'TRIG', 'GAT', 'SEQ', 'ENH'
-            ))
-        self.add_visa_parameter('trig_impedance',
-            'TRIG:IMP?', 'TRIG:IMP %f',
-            type=float,
-            flags=Instrument.FLAG_GETSET,
-            option_list=(1000, 50),
-            units='Ohm')
+        # self.add_parameter('id', type=bytes,
+        #     flags=Instrument.FLAG_GET)
+        # self.add_visa_parameter('clock',
+        #     'SOUR:FREQ?', 'SOUR:FREQ %f',
+        #     type=float,
+        #     flags=Instrument.FLAG_GETSET,
+        #     minval=1e6, maxval=1.2e9, units='Hz')    ### almost positive default 1e9
+        # self.add_visa_parameter('refsrc',
+        #     'SOUR:ROSC:SOUR?', 'SOUR:ROSC:SOUR %s',
+        #     type=bytes,
+        #     flags=Instrument.FLAG_GETSET,
+        #     option_list=('INT', 'EXT'))     ### default 'EXT' 99% of the time
+        # self.add_visa_parameter('reffreq',
+        #     'SOUR:ROSC:FREQ?', 'SOUR:ROSC:FREQ %f',
+        #     type=float,
+        #     flags=Instrument.FLAG_GETSET,
+        #     option_list=(10e6, 20e6, 100e6), units='Hz')   ### default 10e6
+        # self.add_visa_parameter('mode',
+        #     'AWGC:RMOD?', 'AWGC:RMOD %s',
+        #     type=bytes,
+        #     option_list=(
+        #         'CONT', 'TRIG', 'GAT', 'SEQ', 'ENH'    ### default ??
+        #     ))
+        # self.add_visa_parameter('trig_impedance',
+        #     'TRIG:IMP?', 'TRIG:IMP %f',
+        #     type=float,
+        #     flags=Instrument.FLAG_GETSET,
+        #     option_list=(1000, 50),
+        #     units='Ohm')                          ### default 50
         self.add_visa_parameter('trig_level',
             'TRIG:LEV?', 'TRIG:LEV %.03f',
             type=float,
             flags=Instrument.FLAG_GETSET,
             units='V')
-        self.add_visa_parameter('trig_slope',
-            'TRIG:SLOP?', 'TRIG:SLOP %s',
-            type=bytes,
-            flags=Instrument.FLAG_GETSET,
-            option_list=('POS', 'NEG'))
+        # self.add_visa_parameter('trig_slope',
+        #     'TRIG:SLOP?', 'TRIG:SLOP %s',
+        #     type=bytes,
+        #     flags=Instrument.FLAG_GETSET,
+        #     option_list=('POS', 'NEG'))     ## default 'POS'
 
         # Channel options
         self.add_parameter('amplitude', type=float,
@@ -75,21 +75,21 @@ class Tektronix_AWG5014C(VisaInstrument):
             channels=(1, 4), channel_prefix='ch%d_',
             minval=-5000, maxval=5000, units='ps',
             gui_group='channels')
-        self.add_parameter('m1_low', type=float,
-            flags=Instrument.FLAG_GETSET,
-            channels=(1, 4), channel_prefix='ch%d_',
-            minval=-2, maxval=2, units='V',
-            gui_group='channels')
+        # self.add_parameter('m1_low', type=float,
+        #     flags=Instrument.FLAG_GETSET,
+        #     channels=(1, 4), channel_prefix='ch%d_',
+        #     minval=-2, maxval=2, units='V',
+        #     gui_group='channels')
         self.add_parameter('m1_high', type=float,
             flags=Instrument.FLAG_GETSET,
             channels=(1, 4), channel_prefix='ch%d_',
             minval=-2.7, maxval=2.7, units='V',
             gui_group='channels')
-        self.add_parameter('m2_low', type=float,
-            flags=Instrument.FLAG_GETSET,
-            channels=(1, 4), channel_prefix='ch%d_',
-            minval=-2, maxval=2, units='V',
-            gui_group='channels')
+        # self.add_parameter('m2_low', type=float,
+        #     flags=Instrument.FLAG_GETSET,
+        #     channels=(1, 4), channel_prefix='ch%d_',
+        #     minval=-2, maxval=2, units='V',
+        #     gui_group='channels')
         self.add_parameter('m2_high', type=float,
             flags=Instrument.FLAG_GETSET,
             channels=(1, 4), channel_prefix='ch%d_',

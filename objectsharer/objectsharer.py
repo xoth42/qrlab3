@@ -1147,7 +1147,6 @@ class ZMQBackend(object):
             try:
                 info = pickle.loads(msgs[1])
             except Exception as e:
-            
                 logger.warning('Unable to decode object: %s %s', str(e), msgs[1].decode('unicode-escape'))
 
                 return

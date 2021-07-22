@@ -17,7 +17,7 @@ from windfreak import SynthHD
 class WFT1153(Instrument):
     
     
-    def __init__(self, name, channel_index = 0, COM_adrs='COM3', serial=None):
+    def __init__(self, name, channel_index = None, COM_adrs='COM3', serial=None):
         self.synth = SynthHD(COM_adrs)
 
 
@@ -27,28 +27,60 @@ class WFT1153(Instrument):
         if serial is None:
             raise Exception('Windfreak driver needs serial as parameter')
         
-         
         
-        print((self.channel_index))
-        print((self.synth[self.channel_index].frequency))
-        self._min_freq = 10e6
-        self._max_freq = 15000e6
-        self._min_power = -70.
-        self._max_power = 20.
+        # Added by Tal on 07/21/21.
+        # If channel_index is not specified, the GUI will create both channels, 
+        #if channel_index is specified it will create only the requested channel.
         
-        self.add_parameter('frequency', type=float,
-            flags=Instrument.FLAG_GETSET, units='Hz',
-            minval=self._min_freq, maxval=self._max_freq,
-            display_scale=6, value = self.synth[self.channel_index].frequency)
+        if self.channel_index==None: 
+            for channel in range(2):
+                print((channel))
+                print((self.synth[channel].frequency))
+                self._min_freq = 10e6
+                self._max_freq = 15000e6
+                self._min_power = -70.
+                self._max_power = 20.
+                
+                self.add_parameter('frequency', type=float,
+                                    flags=Instrument.FLAG_GETSET, units='Hz',
+                                    minval=self._min_freq, maxval=self._max_freq,
+                                    display_scale=6, value = self.synth[channel].frequency, 
+                                    channels = [channel + 1])
+                
+                self.add_parameter('power', type=float,
+                                    flags=Instrument.FLAG_GETSET, units='dBm',
+                                    minval=self._min_power, maxval=self._max_power,
+                                    format='%.02f', value = self.synth[channel].power,
+                                    channels = [channel + 1])
+                
+                self.add_parameter('rf_on', type=bool,
+                                    flags=Instrument.FLAG_GETSET, value = self.synth[channel].enable,
+                                    channels = [channel + 1])
         
-        self.add_parameter('power', type=float,
-            flags=Instrument.FLAG_GETSET, units='dBm',
-            minval=self._min_power, maxval=self._max_power,
-            format='%.02f', value = self.synth[self.channel_index].power)
-        
-        self.add_parameter('rf_on', type=bool,
-            flags=Instrument.FLAG_GETSET, value = self.synth[self.channel_index].enable)
-        
+        else:    
+            print((self.channel_index))
+            print((self.synth[self.channel_index].frequency))
+            self._min_freq = 10e6
+            self._max_freq = 15000e6
+            self._min_power = -70.
+            self._max_power = 20.
+            
+            self.add_parameter('frequency', type=float,
+                flags=Instrument.FLAG_GETSET, units='Hz',
+                minval=self._min_freq, maxval=self._max_freq,
+                display_scale=6, value = self.synth[self.channel_index].frequency, 
+                channels = self.channel_index)
+            
+            self.add_parameter('power', type=float,
+                flags=Instrument.FLAG_GETSET, units='dBm',
+                minval=self._min_power, maxval=self._max_power,
+                format='%.02f', value = self.synth[self.channel_index].power,
+                channels = self.channel_index)
+            
+            self.add_parameter('rf_on', type=bool,
+                flags=Instrument.FLAG_GETSET, value = self.synth[self.channel_index].enable,
+                channels = self.channel_index)
+            
         
      
     def do_get_frequency(self, index=None):
