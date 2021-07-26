@@ -2,7 +2,7 @@ import hashlib
 import numpy as np
 import logging
 import time
-from .lib.file_support import awg_files
+from lib.file_support import awg_files
 import os
 
 ''' JEFF. Added another 0 to let AWG load '''
@@ -117,6 +117,7 @@ class AWGLoader:
             return self.load_file(seqs, delay_override=delay_override)
         else:
             return self.load_direct(seqs)
+            
 
     def set_all_awgs_active(self):
         self._active_awgs = self.get_awgs()
@@ -182,7 +183,7 @@ class AWGLoader:
             wname += '_m2%s' % m2.name
             m2 = m2.data
         if self._hashname and len(wname) > 64 or chars_in_str('(),', wname):
-            wname = hashlib.md5(wname).hexdigest()
+            wname = hashlib.md5(wname.encode()).hexdigest()
 
         if wname not in self._loaded_wforms:
             return True, wname, m1, m2
@@ -193,13 +194,14 @@ class AWGLoader:
         '''
         Load sequence for a particular channel.
         '''
-#        logging.info('Loading sequence with %d elements to channel %s on %s' % (len(seq.seq), chan, awg.get_name()))
+        logging.info('Loading sequence with %d elements to channel %s on %s' % (len(seq.seq), chan, awg.get_name()))
 
         for i_seq, p in enumerate(seq.seq):
             load, wname, m1, m2 = self._get_wname_m1m2(p, m1seq, m2seq, i_seq)
             if load:
-#                logging.info('Loading waveform %s (%d bytes)' % (wname, len(p.data)))
-#                print('Inside load_channel_sequence_simple')
+                print(wname)
+                logging.info('Loading waveform %s (%d bytes)' % (wname, len(p.data)))
+                print('Inside load_channel_sequence_simple')
                 awg.add_waveform(wname, p.data, m1=m1, m2=m2, replace=True)
                 self._loaded_wforms.append(wname)
 

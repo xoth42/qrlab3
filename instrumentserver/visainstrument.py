@@ -150,7 +150,10 @@ class VisaInstrument(Instrument):
         # if OLD_VISA:
         #     self._ins.write(cmd)
         # else:
+        print("inside write raw")
+        print(type(self._ins))
         self._ins.write_raw(cmd)
+        print("leaving write_raw")
 
     def ask(self, cmd, timeout=None):
         self._check_ins()

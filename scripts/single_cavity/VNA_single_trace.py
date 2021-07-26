@@ -66,7 +66,7 @@ class SingleTrace(Measurement1D):
 #            except:
 #                print 'error with async'
 #            '''
-            wait = VNA.opc(async=True) # wait for completion
+            wait = VNA.opc(async_=True) # wait for completion
     
     #        ret = VNA.do_get_data()
     

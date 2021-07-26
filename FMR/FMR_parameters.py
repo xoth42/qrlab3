@@ -35,7 +35,7 @@ pl.plot(x, y-exp_decay(result.params, x, y), marker='s')
 '''
 
 
-#new_data = np.loadtxt(r'C:\qrlab\FMR\289.0mT.txt',delimiter=",")
+#new_data = np.loadtxt(r'C:\qrlab-3\FMR\289.0mT.txt',delimiter=",")
 #new_data = np.transpose(new_data)
 #x = new_data[0]
 #y = new_data[1]
@@ -69,7 +69,7 @@ pl.plot(x, y-exp_decay(result.params, x, y), marker='s')
 #with x the frequency
 #==============================================================================
 # 
-# new_data = np.loadtxt(r'C:\qrlab\FMR\290.0mT.txt',delimiter=",")
+# new_data = np.loadtxt(r'C:\qrlab-3\FMR\290.0mT.txt',delimiter=",")
 # new_data = np.transpose(new_data)
 # x = new_data[0]
 # y = new_data[1]
@@ -111,7 +111,7 @@ pl.plot(x, y-exp_decay(result.params, x, y), marker='s')
 
 # use kappa_prod and kappa_a instead of kappa 1, 2, int
 
-#new_data = np.loadtxt(r'C:\qrlab\FMR\290.0mT.txt',delimiter=",")
+#new_data = np.loadtxt(r'C:\qrlab-3\FMR\290.0mT.txt',delimiter=",")
 #new_data = np.transpose(new_data)
 #x = new_data[0]
 #y = new_data[1]
@@ -122,7 +122,7 @@ pl.plot(x, y-exp_decay(result.params, x, y), marker='s')
 #pl.plot(x, y)
 
 mag = 300  #set the magnetic field you want
-new_data = np.loadtxt(r'C:\\qrlab\FMR\text.txt')
+new_data = np.loadtxt(r'C:\\qrlab-3\FMR\text.txt')
 size = new_data.shape[1]
 new_data = new_data.reshape((4,1601,size))
 X = new_data[0]
@@ -182,7 +182,7 @@ pl.plot(x, y,'--')
 # 
 # 
 # 
-# new_data = np.loadtxt(r'C:\qrlab\FMR\0mT_0.75mm_trace\1.txt',delimiter=",")
+# new_data = np.loadtxt(r'C:\qrlab-3\FMR\0mT_0.75mm_trace\1.txt',delimiter=",")
 # new_data = np.transpose(new_data)
 # x = new_data[0] 
 # y = new_data[1] 
@@ -223,7 +223,7 @@ pl.plot(x, y,'--')
 
 ##the fitting of 0 magnetic field
 #
-#new_data = np.loadtxt(r'C:\qrlab\FMR\trace_S21_per.txt',delimiter=",")
+#new_data = np.loadtxt(r'C:\qrlab-3\FMR\trace_S21_per.txt',delimiter=",")
 #new_data = np.transpose(new_data)
 #x = new_data[0]
 #y = new_data[1]

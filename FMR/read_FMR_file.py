@@ -73,7 +73,7 @@ pl.show()
 # freq = freq[:,None].T
 # phase = phase[:,None].T
 # trace = np.concatenate([freq, z, phase]).T
-# np.savetxt(r'C:\qrlab\FMR\traces_1.5mm_240-320\%smT.txt' %(X[0][i]), trace , delimiter=",") 
+# np.savetxt(r'C:\qrlab-3\FMR\traces_1.5mm_240-320\%smT.txt' %(X[0][i]), trace , delimiter=",") 
 #==============================================================================
 
 #==============================================================================

@@ -59,7 +59,7 @@ if ainID < 0:
     print()
     print("AIN closed")
 
-data_filepath = "C:\\qrlab\instrumentserver\keysightAWG\data\\"
+data_filepath = "C:\\qrlab-3\instrumentserver\keysightAWG\data\\"
 print(data_filepath)
 
 #intitialize Digitizer

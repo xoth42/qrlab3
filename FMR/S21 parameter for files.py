@@ -43,10 +43,10 @@ for filename in filelist:
     print filename
     new_data = np.loadtxt(filename,delimiter=",")
 =======
-for filename in glob.glob('C:\qrlab\FMR\power_sweep\*.txt'):
+for filename in glob.glob('C:\qrlab-3\FMR\power_sweep\*.txt'):
 # Read the array from file
 
-    new_data = np.loadtxt(r'C:\qrlab\FMR\power_sweep\%s.txt'%(filename),delimiter=",")# while using this fitting, make sure that your peak is exactly at the center
+    new_data = np.loadtxt(r'C:\qrlab-3\FMR\power_sweep\%s.txt'%(filename),delimiter=",")# while using this fitting, make sure that your peak is exactly at the center
 >>>>>>> f59135e796c90615515b0f2c4bf0933eb63ea6b7
     new_data = np.transpose(new_data)
     x = new_data[0] 
@@ -209,7 +209,7 @@ k = 0.138
     pl.ylabel('phase')
     pl.legend()
 
-    f= open('C:\qrlab\FMR\power_sweep\parameters_%s.txt'%(filename),'a')
+    f= open('C:\qrlab-3\FMR\power_sweep\parameters_%s.txt'%(filename),'a')
     f.writelines('%s    %s\n'%(filename, result.params))
     f.close()
 >>>>>>> f59135e796c90615515b0f2c4bf0933eb63ea6b7

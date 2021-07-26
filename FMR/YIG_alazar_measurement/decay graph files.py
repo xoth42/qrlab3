@@ -12,7 +12,7 @@ import glob
 def dem_decay(params, x, data):
     est = params['ofs'] + params['amplitude'] * np.exp(-(x - start_fitting) /( 2*params['tau'].value))
     return data - est
-filepath = 'C:\qrlab\YIG_measurement\RT third mode'    
+filepath = 'C:\qrlab-3\YIG_measurement\RT third mode'    
 filelist = glob.glob(r'%s\decay*.txt'%(filepath))
 #pl.title('temperature dependence')
 taulist=np.empty(len(filelist))

@@ -125,7 +125,7 @@ class device_status_t(ctypes.Structure):
 
 
 
-LB_DLL = 'C:\\qrlab\\instrumentserver\\SignalCore\\x64\\sc5511a.dll'
+LB_DLL = 'C:\\qrlab-3\\instrumentserver\\SignalCore\\x64\\sc5511a.dll'
 lb_dll = ctypes.windll.LoadLibrary(LB_DLL)
 
 NUM_MAX_DEVICES = 5

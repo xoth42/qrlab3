@@ -193,7 +193,7 @@ class Current_Sweep_Varies_freq_VNA(Measurement1D):
 #                VNA.set_averaging_trigger(1)
                 VNA.trigger()
                 
-                wait = VNA.opc(async=True) # wait for completion
+                wait = VNA.opc(async_=True) # wait for completion
         
     #            print 'ok7'
 #                a=0

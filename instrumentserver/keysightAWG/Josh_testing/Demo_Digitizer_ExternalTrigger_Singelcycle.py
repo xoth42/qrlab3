@@ -51,7 +51,7 @@ if aouID < 0:
 
 
 # Load waveforms to AWG
-waveform_filepath = "C:\\qrlab\instrumentserver\keysightAWG\waveforms\\"
+waveform_filepath = "C:\\qrlab-3\instrumentserver\keysightAWG\waveforms\\"
 
 print(waveform_filepath)
 
@@ -138,7 +138,7 @@ if ainID < 0:
     print()
     print("AIN closed")
 
-data_filepath = "C:\\qrlab\instrumentserver\keysightAWG\data\\"
+data_filepath = "C:\\qrlab-3\instrumentserver\keysightAWG\data\\"
 print(data_filepath)
 
 #intitialize Digitizer

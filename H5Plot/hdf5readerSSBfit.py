@@ -8,7 +8,7 @@ Created on Wed Nov 13 11:40:50 2019
 import os
 import time
 if 0:
-    os.system(r'C:\qrlab\start.bat')
+    os.system(r'C:\qrlab-3\start.bat')
     time.sleep(1)
 
 from pulseseq import sequencer, pulselib

@@ -13,7 +13,7 @@ import numpy as np
 class octlib(object):
     
     def __init__(self, qt_amp, cav_amp, time_shift, qubit_info, cav_info,
-                 filepath=r'C:\qrlab\pulseseq\CSVPulses', decode_info=None):
+                 filepath=r'C:\qrlab-3\pulseseq\CSVPulses', decode_info=None):
         self.qt_amp = qt_amp
         self.cav_amp = cav_amp
         self.time_shift = time_shift

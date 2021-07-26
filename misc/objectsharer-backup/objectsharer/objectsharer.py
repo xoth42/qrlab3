@@ -646,7 +646,7 @@ class ObjectSharer(object):
             if not self.backend.connected_to(from_uid):
                 logger.debug('Initiating reverse connection...')
                 self.backend.connect_to(info[1])
-                self.request_client_proxy(from_uid, async=True)
+                self.request_client_proxy(from_uid, async_=True)
             return
 
         if info[0] == 'goodbye_from':

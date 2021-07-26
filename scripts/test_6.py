@@ -14,7 +14,7 @@ import time
 
 
 import os
-os.chdir(r'c:\qrlab')
+os.chdir(r'c:\qrlab-3')
 
 
 alz = mclient.instruments['alazar']

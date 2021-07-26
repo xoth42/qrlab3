@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 #Decorator that checks the return result from all of the keysight function, to
 #make sure there isn't any errors.
 
-testing_HVI_location = r'C:\qrlab\instrumentserver\keysightAWG\digitizer test\1600ustrigger.HVI'
+testing_HVI_location = r'C:\qrlab-3\instrumentserver\keysightAWG\digitizer test\1600ustrigger.HVI'
 from CompiledHVI import CompiledHVI
 test_instance = CompiledHVI(testing_HVI_location)
 #test_instance.assignHardware(0, 0, 7)
@@ -79,7 +79,7 @@ new_wave = new_wave * (1 / max(new_wave))
 
 
 # Load waveforms to AWG
-waveform_filepath = "C:\\qrlab\instrumentserver\keysightAWG\waveforms\\"
+waveform_filepath = "C:\\qrlab-3\instrumentserver\keysightAWG\waveforms\\"
 # print(waveform_filepath)
 
 
@@ -161,7 +161,7 @@ Voltage_Scale = 2.8  # Scale > 3 saturates the Digitizer input and folds the wav
 #    print()
 #    print("AIN closed")
 
-data_filepath = "C:\\qrlab\instrumentserver\keysightAWG\data\\"
+data_filepath = "C:\\qrlab-3\instrumentserver\keysightAWG\data\\"
 print(data_filepath)
 
 # intitialize Digitizer

@@ -71,7 +71,7 @@ class DemodulatorComplex(Demodulator):
         phis = np.linspace(0, 2*np.pi * avg_periods, self.samples_per_point, endpoint=False)
         self._exp_iphi = np.exp(1j * phis) / avg_periods * weight_func
         self._exp_iphi = self._exp_iphi.astype(np.complex64)
-        self.IQ = np.zeros([self.nsamples/self.samples_per_point,], dtype=np.complex64)
+        self.IQ = np.zeros([int(self.nsamples/self.samples_per_point)], dtype=np.complex64)
 
     def demodulate(self, ar):
         ar2 = ar.reshape((len(ar) / self.samples_per_point, self.samples_per_point))
@@ -163,7 +163,7 @@ class ReferencedMeasurement:
         self.reset()
 
     def reset(self):
-        self.summed = np.zeros([cyclelen,], dtype=np.complex128)
+        self.summed = np.zeros([self.cyclelen,], dtype=np.complex128)
         self.cur_index = 0
 
     def process(self, ar):

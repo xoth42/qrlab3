@@ -31,7 +31,7 @@ alz.setup_channels()
 alz.setup_trigger()
 
 
-if 0:
+if 1:
         alz.setup_shots(1)
         buf = alz.take_raw_shots()
         plt.figure()

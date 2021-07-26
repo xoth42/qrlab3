@@ -136,7 +136,7 @@ class cat_pump_spec(Measurement1D):
             dig.setup_avg_shot()
             dig.arm()
             dig.start_hvi()
-            ret = dig.take_avg_shot(async=True)
+            ret = dig.take_avg_shot(async_=True)
             
             
             try:
@@ -164,7 +164,7 @@ class cat_pump_spec(Measurement1D):
             dig.setup_avg_shot()
             dig.arm()
             dig.start_hvi()
-            ret = dig.take_avg_shot(async=True)
+            ret = dig.take_avg_shot(async_=True)
 
             dig.set_naverages(naverages)
             

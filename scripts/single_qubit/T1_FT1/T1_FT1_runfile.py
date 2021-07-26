@@ -10,7 +10,7 @@ import time
 import datetime
 
 import os
-os.chdir(r'c:\qrlab')
+os.chdir(r'c:\qrlab-3')
 
 qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')

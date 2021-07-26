@@ -107,7 +107,7 @@ class CavSpectroscopy(Measurement1D):
                 time.sleep(0.05)
 
                 alz.setup_avg_shot(alz.get_naverages())
-                ret = alz.take_avg_shot(async=True)
+                ret = alz.take_avg_shot(async_=True)
                 try:
                     while not ret.is_valid():
                         objsh.helper.backend.main_loop(100)

@@ -1,4 +1,4 @@
-from .instrument import Instrument
+from instrument import Instrument
 import types
 
 ROTATIONS = (

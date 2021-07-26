@@ -34,7 +34,7 @@ awg.AWGstopMultiple(15)
 
 
 # Load waveforms to AWG
-waveform_filepath = "C:\\qrlab\instrumentserver\keysightAWG\waveforms\\"
+waveform_filepath = "C:\\qrlab-3\instrumentserver\keysightAWG\waveforms\\"
 print(waveform_filepath)
 
 

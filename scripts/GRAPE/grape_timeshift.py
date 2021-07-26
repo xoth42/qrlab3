@@ -36,8 +36,8 @@ class grape_timeshift(Measurement1D):
         cav_amp = 102
         qt_amp = 44
         
-        grape_t = CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\encoding_unitary_transmon_1000ns.csv', qt_amp, chan=self.qubit_info.sideband_channels[0])
-        grape_c = CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\encoding_unitary_cavity_1000ns.csv', cav_amp, chan=self.cavity_info.sideband_channels[0])
+        grape_t = CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\encoding_unitary_transmon_1000ns.csv', qt_amp, chan=self.qubit_info.sideband_channels[0])
+        grape_c = CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\encoding_unitary_cavity_1000ns.csv', cav_amp, chan=self.cavity_info.sideband_channels[0])
                            
         for dt in self.rel_delays:
             s.append(self.seq)
@@ -47,20 +47,20 @@ class grape_timeshift(Measurement1D):
                                          Constant(int(-dt), 0, chan=self.cavity_info.sideband_channels[0])])
                         ]))
             elif dt > 0:
-                mod4_qt_I = Join([CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\encoding_unitary_transmon_1000ns.csv', 
+                mod4_qt_I = Join([CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\encoding_unitary_transmon_1000ns.csv', 
                                                                     qt_amp, chan=self.qubit_info.sideband_channels[0]),
                                             Constant(dt, 0, chan=self.qubit_info.sideband_channels[0])])
                 
-                mod4_qt_Q = Join([CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\encoding_unitary_transmon_q_1000ns.csv', 
+                mod4_qt_Q = Join([CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\encoding_unitary_transmon_q_1000ns.csv', 
                                                                     qt_amp, chan=self.qubit_info.sideband_channels[1]),
                                             Constant(dt, 0, chan=self.qubit_info.sideband_channels[1])])
                 
                 mod4_cav_I = Join([Constant(dt, 0, chan=self.cavity_info.sideband_channels[0]),
-                                             CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\encoding_unitary_cavity_1000ns.csv', 
+                                             CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\encoding_unitary_cavity_1000ns.csv', 
                                                                     cav_amp, chan=self.cavity_info.sideband_channels[0])])
                 
                 mod4_cav_Q = Join([Constant(dt, 0, chan=self.cavity_info.sideband_channels[1]),
-                                             CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\encoding_unitary_cavity_q_1000ns.csv', 
+                                             CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\encoding_unitary_cavity_q_1000ns.csv', 
                                                                     cav_amp, chan=self.cavity_info.sideband_channels[1])])
                 
                 mod4_encode = Combined([mod4_qt_I, mod4_qt_Q, mod4_cav_I, mod4_cav_Q])
@@ -96,21 +96,21 @@ class grape_timeshift(Measurement1D):
 #        for dt in self.rel_delays:
 #            s.append(self.seq)
 #            if dt < 0:
-#                s.append(Combined([CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\envelope_fock_0_4_transmon_1000ns.csv', 
+#                s.append(Combined([CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\envelope_fock_0_4_transmon_1000ns.csv', 
 #                                       44, chan=self.qubit_info.sideband_channels[0], pre_delay = 0, post_delay = -dt),
-#                              CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\envelope_fock_0_4_cavity_1000ns.csv', 
+#                              CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\envelope_fock_0_4_cavity_1000ns.csv', 
 #                                       144, chan=self.cavity_info.sideband_channels[0], pre_delay = -dt, post_delay = 0)
 #                    ]))
 #            elif dt > 0:
-#                s.append(Combined([CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\envelope_fock_0_4_transmon_1000ns.csv', 
+#                s.append(Combined([CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\envelope_fock_0_4_transmon_1000ns.csv', 
 #                                       44, chan=self.qubit_info.sideband_channels[0], pre_delay = dt, post_delay = 0),
-#                              CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\envelope_fock_0_4_cavity_1000ns.csv', 
+#                              CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\envelope_fock_0_4_cavity_1000ns.csv', 
 #                                       144, chan=self.cavity_info.sideband_channels[0], pre_delay = 0, post_delay = dt)
 #                    ]))
 #            elif dt == 0:
-#                s.append(Combined([CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\envelope_fock_0_4_transmon_1000ns.csv', 
+#                s.append(Combined([CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\envelope_fock_0_4_transmon_1000ns.csv', 
 #                                           44, chan=self.qubit_info.sideband_channels[0]),
-#                                  CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\envelope_fock_0_4_cavity_1000ns.csv', 
+#                                  CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\envelope_fock_0_4_cavity_1000ns.csv', 
 #                                           144, chan=self.cavity_info.sideband_channels[0])
 #                        ]))
 #            s.append(r_a4(np.pi, X_AXIS))
@@ -132,16 +132,16 @@ class grape_timeshift(Measurement1D):
 #            s.append(self.seq)
 #            d1 = dt * (np.sign(dt) + 1)/2
 #            d2 = np.abs(dt-d1)
-#            t_seq = CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\envelope_fock_0_4_transmon_1000ns.csv', 
+#            t_seq = CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\envelope_fock_0_4_transmon_1000ns.csv', 
 #                                       44, chan=self.qubit_info.sideband_channels[0], pre_delay = d1, post_delay = d2)
-#            c_seq = CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\envelope_fock_0_4_cavity_1000ns.csv', 
+#            c_seq = CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\envelope_fock_0_4_cavity_1000ns.csv', 
 #                                       144, chan=self.cavity_info.sideband_channels[0], pre_delay = d2, post_delay = d1)
 #            print(t_seq.get_length(), c_seq.get_length())
 #            
 #            s.append(Combined([t_seq, c_seq]))
-##            s.append(Combined([CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\envelope_fock_0_4_transmon_1000ns.csv', 
+##            s.append(Combined([CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\envelope_fock_0_4_transmon_1000ns.csv', 
 ##                                       44, chan=self.qubit_info.sideband_channels[0], pre_delay = d1, post_delay = d2),
-##                              CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\envelope_fock_0_4_cavity_1000ns.csv', 
+##                              CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\envelope_fock_0_4_cavity_1000ns.csv', 
 ##                                       144, chan=self.cavity_info.sideband_channels[0], pre_delay = d2, post_delay = d1)
 ##                    ]))
 #            s.append(r_a4(np.pi, X_AXIS))

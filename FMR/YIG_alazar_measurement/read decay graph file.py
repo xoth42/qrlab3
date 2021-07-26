@@ -23,7 +23,7 @@ def dem_decay(params, x, data):
 #freq_list = np.linspace(start_freq, stop_freq, num)
 #
 #for freq in freq_list:
-filename = 'C:\qrlab\YIG_measurement\RT FMR four\decay_graph_05012018_1.5mm_-22.0dB_281.6mT__8.0892 GHz_20000000_-22.0dB'
+filename = 'C:\qrlab-3\YIG_measurement\RT FMR four\decay_graph_05012018_1.5mm_-22.0dB_281.6mT__8.0892 GHz_20000000_-22.0dB'
 data_decay1 = np.loadtxt(r'%s.txt'%(filename), delimiter=",")
 print data_decay1.shape
 

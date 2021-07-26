@@ -112,7 +112,7 @@ class Keysight_P9373A(Instrument):
 #    def load_hvi(self):
 #        num_slots = len(self._awg_list) #DARIO 1/31 dynamic slot assignment
 #        HVI_location = 'C:/qrlab/instrumentserver/instrument_plugins/HVI/' + str(num_slots) + 'slot' + str(self._trigger_period) + 'us.HVI'
-##        HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\1slot' + str(self._trigger_period) + 'us.HVI'
+##        HVI_location = r'C:\qrlab-3\instrumentserver\instrument_plugins\HVI\1slot' + str(self._trigger_period) + 'us.HVI'
 #        self._hvi = CompiledHVI(HVI_location, self._awg_list) #DARIO 1/31 dynamic slot assignment
 #
 #        self._hvi.stop()

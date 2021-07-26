@@ -9,7 +9,7 @@ omega = []
 a = []
 while m<10:
 # use kappa_prod and kappa_a instead of kappa 1, 2, int
-    new_data = np.loadtxt(r'C:\qrlab\FMR\0mT_1mm_trace\%s.txt'%m,delimiter=",")
+    new_data = np.loadtxt(r'C:\qrlab-3\FMR\0mT_1mm_trace\%s.txt'%m,delimiter=",")
     new_data = np.transpose(new_data)
     x = new_data[0] 
     y = new_data[1] 

@@ -78,7 +78,7 @@ if 0: # GRAPE ge test
     from .GRAPE import GRAPE_Rabi
 
     tr = GRAPE_Rabi.GRAPE_Rabi(qubit_info, np.linspace(-1e2, 1e2, 51), 
-                   r'C:\qrlab\pulseseq\CSVPulses\gaussian_envelope_t_g_to_e_400ns.csv',
+                   r'C:\qrlab-3\pulseseq\CSVPulses\gaussian_envelope_t_g_to_e_400ns.csv',
 #                  np.linspace(-0.016, 0.016, 51), selective=True,
 #                   np.linspace(-0.1, 0.1, 41), selective=.5,
                    plot_seqs=False, generate=True, repeat_pulse=1, update=False, seq=None)
@@ -91,7 +91,7 @@ if 0: # GRAPE displacement test
     seq = sequencer.Trigger(250)
 
     disp = GRAPE_CavDisp.GRAPE_CavDisp(qubit_info, cavity_infoA, 300, 41, 0,
-                                       r'C:\qrlab\pulseseq\CSVPulses\Gaussian_envelope_coherent_c_400ns.csv', 
+                                       r'C:\qrlab-3\pulseseq\CSVPulses\Gaussian_envelope_coherent_c_400ns.csv', 
                                        seq=None, delay=0, bgcor=True, update=False, generate=True, plot_seqs = False,
 #                           Qswitch_infoA=Qswitch_infoB, Qswitch_infoB=Qswitch_infoB,
 #                           extra_info=[Qswitch_infoA, Qswitch_infoB,],
@@ -175,20 +175,20 @@ if 0: # Wigner line cut
 #        time_shift = 16
 #        cav_amp = 97
 #    
-#        mod4_qt_I = sequencer.Join([pulselib.CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\encoding_unitary_transmon_1000ns.csv', 
+#        mod4_qt_I = sequencer.Join([pulselib.CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\encoding_unitary_transmon_1000ns.csv', 
 #                                                            qt_amp, chan=qubit_info.sideband_channels[0]),
 #                                    sequencer.Constant(time_shift, 0, chan=qubit_info.sideband_channels[0])])
 #        
-#        mod4_qt_Q = sequencer.Join([pulselib.CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\encoding_unitary_transmon_q_1000ns.csv', 
+#        mod4_qt_Q = sequencer.Join([pulselib.CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\encoding_unitary_transmon_q_1000ns.csv', 
 #                                                            qt_amp, chan=qubit_info.sideband_channels[1]),
 #                                    sequencer.Constant(time_shift, 0, chan=qubit_info.sideband_channels[1])])
 #        
 #        mod4_cav_I = sequencer.Join([sequencer.Constant(time_shift, 0, chan=cavity_infoA.sideband_channels[0]),
-#                                     pulselib.CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\encoding_unitary_cavity_1000ns.csv', 
+#                                     pulselib.CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\encoding_unitary_cavity_1000ns.csv', 
 #                                                            cav_amp, chan=cavity_infoA.sideband_channels[0])])
 #        
 #        mod4_cav_Q = sequencer.Join([sequencer.Constant(time_shift, 0, chan=cavity_infoA.sideband_channels[1]),
-#                                     pulselib.CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\encoding_unitary_cavity_q_1000ns.csv', 
+#                                     pulselib.CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\encoding_unitary_cavity_q_1000ns.csv', 
 #                                                            cav_amp, chan=cavity_infoA.sideband_channels[1])])
 #        
 #        mod4_encode = sequencer.Combined([mod4_qt_I, mod4_qt_Q, mod4_cav_I, mod4_cav_Q])

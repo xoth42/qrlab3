@@ -9,7 +9,7 @@ import ctypes
 import types
 import numpy
 
-DLL_path = 'C:\\qrlab\\instrumentserver\\instrument_plugins\\sm_api.dll'
+DLL_path = 'C:\\qrlab-3\\instrumentserver\\instrument_plugins\\sm_api.dll'
 DLL_LIB = ctypes.windll.LoadLibrary(DLL_path)
 modes = {
     'swept': 1,

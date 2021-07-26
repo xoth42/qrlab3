@@ -19,7 +19,7 @@ class ClientServerTestCase(unittest.TestCase):
         self.server_client = ds.dataserver_client()
 
     def tearDown(self):
-        self.server_client.quit(async=True)
+        self.server_client.quit(async_=True)
         self.server_process.join()
 
     def testDataPersistence(self):

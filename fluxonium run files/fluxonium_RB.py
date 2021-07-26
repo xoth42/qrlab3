@@ -12,7 +12,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import os
 import lmfit
-os.chdir(r'c:\qrlab')
+os.chdir(r'c:\qrlab-3')
 
 alz = mclient.instruments['alazar']
 gaius01 = mclient.instruments['gaius01']

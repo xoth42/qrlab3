@@ -27,7 +27,7 @@ import ctypes
 import types
 import numpy as np
 
-DLL_PATH = "C:\\qrlab\\instrumentserver\\instrument_plugins\\sa_api.dll"
+DLL_PATH = "C:\\qrlab-3\\instrumentserver\\instrument_plugins\\sa_api.dll"
 DLL_LIB = ctypes.windll.LoadLibrary(DLL_PATH)
 
 # A whole list of constants

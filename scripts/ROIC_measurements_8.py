@@ -15,7 +15,7 @@ import lmfit
 
 
 import os
-os.chdir(r'c:\qrlab')
+os.chdir(r'c:\qrlab-3')
 
 def gaussian(params, x, data):
     return data - params['amp'] * np.exp(-.5 * ((x - params['mean']) / params['std'])**2)
@@ -234,7 +234,7 @@ if 0: # Sweep Raspberry Pi parameter(s) and record currents
     sweep_range = np.linspace(0, 255, 256)
     currents = []
     
-    params, chip_data = raspi.import_data_('C:\qrlab\scripts\ROIC\spi_iface-main\default_2.csv')
+    params, chip_data = raspi.import_data_('C:\qrlab-3\scripts\ROIC\spi_iface-main\default_2.csv')
     chip_data = [int(0*chip_data[x]) for x in range(len(chip_data))]
     time.sleep(wait_time)
     currents.append([float(Agilent1.do_get_current()), float(Agilent2.do_get_current()), float(Agilent3.do_get_current()), float(Keithley.do_get_current())])
@@ -246,7 +246,7 @@ if 0: # Sweep Raspberry Pi parameter(s) and record currents
         currents.append([float(Agilent1.do_get_current()), float(Agilent2.do_get_current()), float(Agilent3.do_get_current()), float(Keithley.do_get_current())])
         print((i, currents[i]))
     tstamp = time.strftime("%Y%m%d%H%M")
-    filename = 'C:\qrlab\scripts\ROIC\currents_' + str(tstamp) + '.csv'
+    filename = 'C:\qrlab-3\scripts\ROIC\currents_' + str(tstamp) + '.csv'
     np.savetxt(filename, currents)
 
 if 0: # Sweep chip param, get voltage
@@ -265,7 +265,7 @@ if 0: # Sweep chip param, get voltage
             voltages.append(float(DMM.do_get_voltage()))
             print((i, j, chipdata[indices_to_sweep[0]], chipdata[indices_to_sweep[1]]))
     tstamp = time.strftime("%Y%m%d%H%M")
-    filename = 'C:\qrlab\scripts\ROIC\DACvoltages_' + str(tstamp) + '.csv'
+    filename = 'C:\qrlab-3\scripts\ROIC\DACvoltages_' + str(tstamp) + '.csv'
     np.savetxt(filename, voltages)        
 
 if 0: # 
@@ -279,7 +279,7 @@ if 0: #
     Agilent3 = mclient.instruments['Agilent3']
     Keithley = mclient.instruments['Keithley']
     wait_time = 0.5
-    params, data = raspi.import_data_('C:\qrlab\scripts\ROIC\spi_iface-main\default_2.csv')
+    params, data = raspi.import_data_('C:\qrlab-3\scripts\ROIC\spi_iface-main\default_2.csv')
     data = [int(0*data[x]) for x in range(len(data))]
     
     current = float(Agilent1.do_get_current())
@@ -323,7 +323,7 @@ if 1: # Sweep phase of RF pulse for ROIC RT test
         
             roic_phase.measure(threshold=threshold)
 
-#        np.savetxt('C:\qrlab\scripts\ROIC\stats_RF_'+str(pwr)+'_time_'+str(time.strftime("%Y%m%d%H%M"))+'.csv',np.asarray(roic_stats))
+#        np.savetxt('C:\qrlab-3\scripts\ROIC\stats_RF_'+str(pwr)+'_time_'+str(time.strftime("%Y%m%d%H%M"))+'.csv',np.asarray(roic_stats))
 #        stats_array = np.asarray(roic_stats)
 #        fig = plt.figure()
 #        gs = gridspec.GridSpec(1,2)

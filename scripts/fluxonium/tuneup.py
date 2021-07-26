@@ -4,7 +4,7 @@ import numpy as np
 from pulseseq import sequencer, pulselib
 import matplotlib.pyplot as plt
 import os
-os.chdir(r'c:\qrlab')
+os.chdir(r'c:\qrlab-3')
 
 alz = mclient.instruments['alazar']
 gaius01 = mclient.instruments['gaius01']

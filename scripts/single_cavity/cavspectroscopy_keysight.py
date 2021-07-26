@@ -115,7 +115,7 @@ class CavSpectroscopy(Measurement1D):
                 dig.setup_avg_shot()
                 dig.arm()
                 dig.start_hvi()
-                ret = dig.take_avg_shot(async=True)
+                ret = dig.take_avg_shot(async_=True)
                 dig.release_buf()
 
 
@@ -126,7 +126,7 @@ class CavSpectroscopy(Measurement1D):
                 dig.setup_avg_shot()
                 dig.arm()
                 dig.start_hvi()
-                ret = dig.take_avg_shot(async=True)
+                ret = dig.take_avg_shot(async_=True)
                 dig.release_buf()              
                 IQ2 = np.average(ret.get())
                 IQ = IQ1-IQ2

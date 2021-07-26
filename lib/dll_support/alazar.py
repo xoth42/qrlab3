@@ -215,7 +215,9 @@ class Alazar:
                 return
         for buf in bufs:
             bufsize = len(buf)
-            ret = ats.AlazarPostAsyncBuffer(self.handle, buf.ctypes.data, bufsize)
+            # ret = ats.AlazarPostAsyncBuffer(self.handle, buf.ctypes.data, bufsize)
+            ret = ats.AlazarPostAsyncBuffer(self.handle, buf.ctypes.data_as(ctypes.c_void_p), bufsize)
+            print(ret)
             if ret == 512:
                 self._posted_buffers.append(buf)
             elif ret == 518:
@@ -261,9 +263,10 @@ class Alazar:
         if len(self._posted_buffers) == 0:
             return None
         buf = self._posted_buffers[0]
-#        print "_posted_buffer excuted"
-        ret = ats.AlazarWaitAsyncBufferComplete(self.handle, buf.ctypes.data, int(timeout))
-#        print "AlazarWaitAsyncBufferComplete executed, ret is", ret, "\n"
+#        print("_posted_buffer excuted")
+        ret = ats.AlazarWaitAsyncBufferComplete(self.handle, buf.ctypes.data_as(ctypes.c_void_p), int(timeout))
+        # ret = ats.AlazarWaitAsyncBufferComplete(self.handle, buf.ctypes.data, int(timeout))
+#        print("AlazarWaitAsyncBufferComplete executed, ret is", ret, "\n")
         if ret == 512:
             del self._posted_buffers[0]
             return buf

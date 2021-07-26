@@ -7,7 +7,7 @@ from CompiledHVI import CompiledHVI
 #make sure there isn't any errors.
 
 #trigger_period = 200
-#testing_HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\\' + '3slot' + str(trigger_period) + 'us.HVI'
+#testing_HVI_location = r'C:\qrlab-3\instrumentserver\instrument_plugins\HVI\\' + '3slot' + str(trigger_period) + 'us.HVI'
 #
 #test_instance = CompiledHVI(testing_HVI_location)
 #test_instance.assignHardware(0, 0, 7)
@@ -82,7 +82,7 @@ print("Number of Modules = ", DIGNumModules)
 
 
 # Load waveforms to AWG
-#waveform_filepath = "C:\\qrlab\instrumentserver\keysightAWG\waveforms\\"
+#waveform_filepath = "C:\\qrlab-3\instrumentserver\keysightAWG\waveforms\\"
 # print(waveform_filepath)
 
 
@@ -185,7 +185,7 @@ VOLTAGE_SCALE = 2.8  # Scale > 3 saturates the Digitizer input and folds the wav
 #    print()
 #    print("AIN closed")
 
-data_filepath = "C:\\qrlab\instrumentserver\keysightAWG\data\\"
+data_filepath = "C:\\qrlab-3\instrumentserver\keysightAWG\data\\"
 print(data_filepath)
 
 # intitialize Digitizer

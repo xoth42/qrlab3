@@ -69,20 +69,20 @@ class GRAPE_optimize(Measurement2D):
                     s.append(self.seq)
                     
                     time_shift = 13
-                    mod4_qt_I = Join([CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\encoding_unitary_transmon_1000ns.csv', 
+                    mod4_qt_I = Join([CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\encoding_unitary_transmon_1000ns.csv', 
                                                                         qt_amp, chan=self.qubit_info.sideband_channels[0]),
                                                 Constant(time_shift, 0, chan=self.qubit_info.sideband_channels[0])])
                     
-                    mod4_qt_Q = Join([CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\encoding_unitary_transmon_q_1000ns.csv', 
+                    mod4_qt_Q = Join([CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\encoding_unitary_transmon_q_1000ns.csv', 
                                                                         qt_amp, chan=self.qubit_info.sideband_channels[1]),
                                                 Constant(time_shift, 0, chan=self.qubit_info.sideband_channels[1])])
                     
                     mod4_cav_I = Join([Constant(time_shift, 0, chan=self.cavity_info.sideband_channels[0]),
-                                                 CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\encoding_unitary_cavity_1000ns.csv', 
+                                                 CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\encoding_unitary_cavity_1000ns.csv', 
                                                                         cav_amp, chan=self.cavity_info.sideband_channels[0])])
                     
                     mod4_cav_Q = Join([Constant(time_shift, 0, chan=self.cavity_info.sideband_channels[1]),
-                                                 CSVPulse(r'C:\qrlab\pulseseq\CSVPulses\encoding_unitary_cavity_q_1000ns.csv', 
+                                                 CSVPulse(r'C:\qrlab-3\pulseseq\CSVPulses\encoding_unitary_cavity_q_1000ns.csv', 
                                                                         cav_amp, chan=self.cavity_info.sideband_channels[1])])
                     mod4_encode = Combined([mod4_qt_I, mod4_qt_Q, mod4_cav_I, mod4_cav_Q])
     

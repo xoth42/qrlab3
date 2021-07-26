@@ -1,5 +1,5 @@
-from . import mclient
-from . import config
+import mclient
+import config
 import types
 import time
 import numpy as np
@@ -9,15 +9,15 @@ from matplotlib import gridspec
 import logging
 logging.getLogger().setLevel(logging.INFO)
 import signal
-from . import objectsharer as objsh
-from .lib import jsonext
+import objectsharer as objsh
+from lib import jsonext
 import os
-from . import pulseseq
-from . import awgloader
+import pulseseq
+import awgloader
 
 from PyQt5 import QtWidgets
-from .pulseseq import sequencer
-from .pulseseq import pulselib
+from pulseseq import sequencer
+from pulseseq import pulselib
 
 STYLE_IMAGE = 'IMAGE'
 STYLE_LINES = 'LINES'
@@ -311,8 +311,7 @@ class Measurement(object):
         awgs are located from the instruments list and should be named
         AWG1, AWG2, ... (up to 4 currently).
         '''
-        
-        start = time.clock()
+        start = time.process_time()
         l = self.get_awg_loader()
         for i in range(ntries):
             try:
@@ -445,12 +444,12 @@ class Measurement(object):
                 self.start_awgs()
 
         try:
-            take_ref = (self.readout is not 'readout_IQ')
+            take_ref = (self.readout != 'readout_IQ')
             if self.histogram:
                 #TODO: implement take_ref=False for take_hist JEFF
-                ret = alz.take_hist(async=True, take_ref=take_ref)
+                ret = alz.take_hist(async_=True, take_ref=take_ref)
             else:
-                ret = alz.take_experiment(avg_buf=self.avg_data, async=True, singleshotbin=self.singleshotbin, cov_buf=self.cov_data,
+                ret = alz.take_experiment(avg_buf=self.avg_data, async_=True, singleshotbin=self.singleshotbin, cov_buf=self.cov_data,
                                           shot_buf=self.shot_data, #Dario
                                           IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius, proj_func=self.proj_func,
                                           take_ref=take_ref)
@@ -650,15 +649,15 @@ class Measurement(object):
         dig.start_hvi()
 
 #        ret = dig.take_experiment(avg_buf=self.avg_data, ste_buf=self.ste_data, 
-#                                  async=True, IQ_e=self.readout_info.IQe, 
+#                                  async_=True, IQ_e=self.readout_info.IQe, 
 #                                  e_radius=self.readout_info.IQe_radius) 
 
         take_ref = (self.readout is not 'readout_IQ')
         if self.histogram:
-            ret = dig.take_hist(async=True, take_ref = take_ref)
+            ret = dig.take_hist(async_=True, take_ref = take_ref)
         else:
             ret = dig.take_experiment(avg_buf=self.avg_data, cov_buf=self.cov_data,
-                                      async=True, IQ_e=self.readout_info.IQe, 
+                                      async_=True, IQ_e=self.readout_info.IQe, 
                                       e_radius=self.readout_info.IQe_radius,
                                       take_ref=take_ref)#, proj_func=self.proj_func)
         

@@ -24,7 +24,7 @@ VNA = mclient.instruments['VNA']
 import matplotlib.pyplot as pl 
 
 if 1:
-    filepath = r'C:\qrlab\FMR\RT Measurements\transitions' 
+    filepath = r'C:\qrlab-3\FMR\RT Measurements\transitions' 
     #filepath = 'C:\Users\Wang_Lab\Documents\yingying\FMR\circulator with field 140mil pin' 
     filelist = glob.glob(r'%s\*'%(filepath))
     
@@ -38,7 +38,7 @@ if 1:
         if 1:
         #if i== 0 or i== 5:
         #if i == (0 or 1 or 2 or 3):
-        #if filename == 'C:\qrlab\FMR\RT Measurements\calibrated_1' or filename == 'C:\qrlab\FMR\RT Measurements\uncalibrated_1':
+        #if filename == 'C:\qrlab-3\FMR\RT Measurements\calibrated_1' or filename == 'C:\qrlab-3\FMR\RT Measurements\uncalibrated_1':
             new_data = np.loadtxt(filename,delimiter=",")
             new_data = np.transpose(new_data)
             axis = new_data[0]

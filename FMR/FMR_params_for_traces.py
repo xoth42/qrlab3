@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as pl
 
 # Read the array from file
-new_data = np.loadtxt(r'C:\\qrlab\FMR\text_0.75mm_parall_280-305-0.2.txt')
+new_data = np.loadtxt(r'C:\\qrlab-3\FMR\text_0.75mm_parall_280-305-0.2.txt')
 print(new_data.shape)
 # Note that this returned a 2D array!
 # However, going back to 3D is easy if we know the 
@@ -53,7 +53,7 @@ while m <= M:
 #      z = z[:,None].T
 #      freq = freq[:,None].T
 #      trace = np.concatenate([freq, z]).T
-#      np.savetxt(r'C:\qrlab\FMR\%smT.txt' %(X[0][i]), trace , delimiter=",") 
+#      np.savetxt(r'C:\qrlab-3\FMR\%smT.txt' %(X[0][i]), trace , delimiter=",") 
 #==============================================================================
 
 #==============================================================================

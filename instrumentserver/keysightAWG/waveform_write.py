@@ -15,7 +15,7 @@ def sinusoid(x, phi, w, a):
     return a * np.sin(2*np.pi * x * w + phi)
 
 # Load waveforms to AWG
-waveform_filepath = "C:\\qrlab\instrumentserver\keysightAWG\waveforms\\"
+waveform_filepath = "C:\\qrlab-3\instrumentserver\keysightAWG\waveforms\\"
 print(waveform_filepath)
 gaussian = key.SD_Wave()
 gaussian.newFromFile(waveform_filepath + 'Gaussian.csv')

@@ -117,8 +117,8 @@ def get_qubit_info(name, detune=None):
 
     # Setup rotation
     r = ret.rotation
-    if type(r) is bytes:
-        r = r.upper()
+    # if type(r) is bytes:
+    r = r.upper()
     if r == 'GAUSSIAN':
         ret.rotate = pulselib.AmplitudeRotation(pulselib.Gaussian, ret.w, ret.pi_amp, drag=ret.drag, pi2_amp=ret.pi2_amp, chans=ret.sideband_channels)
     elif r == 'GAUSSIANSQUARE':

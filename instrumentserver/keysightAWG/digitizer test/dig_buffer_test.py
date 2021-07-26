@@ -131,8 +131,8 @@ def load_awg(awg, npoints):
 
 
 def fetch_keysight_shit(trigger_period):
-#    testing_HVI_location = r'C:\qrlab\instrumentserver\keysightAWG\digitizer test\2nd_trigger.HVI'
-    testing_HVI_location = r'C:\qrlab\instrumentserver\instrument_plugins\HVI\3slot500us.HVI'
+#    testing_HVI_location = r'C:\qrlab-3\instrumentserver\keysightAWG\digitizer test\2nd_trigger.HVI'
+    testing_HVI_location = r'C:\qrlab-3\instrumentserver\instrument_plugins\HVI\3slot500us.HVI'
     hvi = CompiledHVI(testing_HVI_location)
     
     chassis = 0

@@ -38,12 +38,12 @@ class Tektronix_AWG5014C(VisaInstrument):
         #     type=float,
         #     flags=Instrument.FLAG_GETSET,
         #     option_list=(10e6, 20e6, 100e6), units='Hz')   ### default 10e6
-        # self.add_visa_parameter('mode',
-        #     'AWGC:RMOD?', 'AWGC:RMOD %s',
-        #     type=bytes,
-        #     option_list=(
-        #         'CONT', 'TRIG', 'GAT', 'SEQ', 'ENH'    ### default ??
-        #     ))
+        self.add_visa_parameter('mode',
+            'AWGC:RMOD?', 'AWGC:RMOD %s',
+            type=bytes,
+            option_list=(
+                'CONT', 'TRIG', 'GAT', 'SEQ', 'ENH'    ### default ??
+            ))
         # self.add_visa_parameter('trig_impedance',
         #     'TRIG:IMP?', 'TRIG:IMP %f',
         #     type=float,
@@ -301,12 +301,16 @@ class Tektronix_AWG5014C(VisaInstrument):
             return None
         logging.info('Adding waveform %s (%d bytes)', wname, len(data))
         self._loaded_waveforms.append(wname)
-
         bindata = self.get_bindata(data, m1, m2)
+        # bindata = np.array([8191, 8191, 8191, 8191, 8191, 8191], dtype= np.uint16)
+        # print("----------------------------------")
+        # print(bindata.tostring().decode('cp1252'))
+        # print(type(bindata.tostring().decode('cp1252')))
+        # print("----------------------------------")
         cmd = 'WLIST:WAV:DEL "%s";' % wname
         cmd += ':WLIST:WAV:NEW "%s",%d,INT;' % (wname, len(data))
         cmd += ':WLIST:WAV:DATA "%s",0,%d,#6%06d' % (wname, len(bindata), 2*len(bindata))
-        cmd += bindata.tostring() + '\n'
+        cmd += bindata.tostring().decode('cp1252') + "\n"
         logging.info(self.get_error())
 
         if return_cmd:
@@ -314,8 +318,10 @@ class Tektronix_AWG5014C(VisaInstrument):
 #        cmd += ':OUTP?'
 #        print "input command is: \n", cmd, "\n"
 #        print "bindata is: \n", bindata, "\n"
-        self.write_raw(cmd)
+        print("before write_raw")
+        self.write_raw(cmd.encode())
 #        self.read()
+        print("Exiting add_waveform")
 
     ###############################################
     # Sequence functions
@@ -344,6 +350,10 @@ class Tektronix_AWG5014C(VisaInstrument):
             self.write('SEQ:ELEM%d:GOTO:INDEX 1' % n_el)
 
     def set_seq_element(self, ch, el, wname, repeat=1, trig=False):
+        print("---------------------------------")
+        print(wname)
+        print(type(wname))
+        print("---------------------------------")
         self.write('SEQ:ELEM%d:WAV%d "%s"' % (el, ch, wname))
         if repeat > 1:
             self.write('SEQ:ELEM%d:LOOP:COUNT %d' % (el, repeat))

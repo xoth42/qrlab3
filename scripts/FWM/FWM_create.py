@@ -3,7 +3,7 @@ import time
 if 1:
     import os
     os.chdir(r'C:/qrlab/')
-    os.system(r'C:\qrlab\start.bat')
+    os.system(r'C:\qrlab-3\start.bat')
     time.sleep(1)
 
 from mclient import instruments

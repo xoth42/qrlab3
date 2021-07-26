@@ -8,7 +8,7 @@ import matplotlib.pyplot as pl
 # matplotlib.use('WXAgg')
 
 
-#new_data = np.loadtxt(r'C:\qrlab\FMR\trace_S11_without_cal.txt',delimiter=",")
+#new_data = np.loadtxt(r'C:\qrlab-3\FMR\trace_S11_without_cal.txt',delimiter=",")
 #new_data = np.transpose(new_data)
 #x = new_data[0]
 #y = new_data[1]
@@ -42,7 +42,7 @@ import matplotlib.pyplot as pl
 
 #with x to be frequency, and fit the trace 
 
-new_data = np.loadtxt(r'C:\qrlab\FMR\trace_cal_sub.txt' , delimiter=",")
+new_data = np.loadtxt(r'C:\qrlab-3\FMR\trace_cal_sub.txt' , delimiter=",")
 new_data = np.transpose(new_data)
 x = new_data[0]
 y = new_data[1]

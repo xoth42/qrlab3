@@ -63,7 +63,7 @@ class ColorPlot_YOKO(Measurement1D):
     
             VNA.set_averaging_trigger(1)
             VNA.trigger()
-#            ret = VNA.opc(async=True) # wait for completion
+#            ret = VNA.opc(async_=True) # wait for completion
         
         #        ret = VNA.do_get_data()
         

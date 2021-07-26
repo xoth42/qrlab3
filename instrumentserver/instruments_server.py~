@@ -47,7 +47,7 @@ class Instruments(object):
         if name not in self._instruments:
             return
         # Remove asynchronously so that it doesn't have to return
-        self._instruments[name].remove(async=True)
+        self._instruments[name].remove(async_=True)
         del self._instruments[name]
         self.emit('instrument-removed', name)
 
@@ -89,7 +89,7 @@ class Instruments(object):
         # Query all instruments asynchronously
         params = {}
         for name, ins in self._instruments.iteritems():
-            params[name] = ins.get_parameter_values(async=True)
+            params[name] = ins.get_parameter_values(async_=True)
 
         # Wait for replies
         backend.main_loop(1000, wait_for=params.values())

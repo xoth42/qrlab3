@@ -287,7 +287,7 @@ class ROCavSpectroscopy_Mixer(Measurement1D):
                 
                 take_ref = (self.readout is not 'readout_IQ')
                 alz.setup_avg_shot(alz.get_naverages())
-                ret = alz.take_avg_shot(async=True, take_ref=take_ref)
+                ret = alz.take_avg_shot(async_=True, take_ref=take_ref)
                 try:
                     while not ret.is_valid():
                         objsh.helper.backend.main_loop(100)

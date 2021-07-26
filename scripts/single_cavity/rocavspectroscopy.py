@@ -91,6 +91,7 @@ class ROCavSpectroscopy(Measurement1D):
 
 #        s.append(self.seq)
         if self.qubit_pulse:
+            print(self.qubit_info.rotate(np.pi, 0))
             s.append(self.qubit_info.rotate(np.pi, 0))
 #            s.append(Join([
 #                self.seq,
@@ -119,13 +120,16 @@ class ROCavSpectroscopy(Measurement1D):
 
     def measure(self):
         # Generate and load sequences
-        alz = self.instruments['alazar']
-        alz.set_interrupt(False)
         try:
-            dig = self.instruments['dig']
-            dig.start_hvi()
+            alz = self.instruments['alazar']
+            alz.set_interrupt(False)
         except:
-            print('no digitizer object for trigger')
+            pass
+        # try:
+        #     dig = self.instruments['dig']
+        #     dig.start_hvi()
+        # except:
+        #     print('no digitizer object for trigger')
 
         seqs = self.generate()
         self.load(seqs)
@@ -146,7 +150,7 @@ class ROCavSpectroscopy(Measurement1D):
                 time.sleep(.5)
                 
                 alz.setup_avg_shot(alz.get_naverages())
-                ret = alz.take_avg_shot(async=True)
+                ret = alz.take_avg_shot(async_=True)
                 try:
                     while not ret.is_valid():
                         objsh.helper.backend.main_loop(100)

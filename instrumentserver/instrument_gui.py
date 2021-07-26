@@ -420,7 +420,7 @@ class InstrumentsContainer(QtGui.QTabWidget):
         if fn:
             inslist = InstrumentSelectorDialog(fn).exec_()
             if inslist:
-                self.instruments.load_settings_from_file(fn, inslist, create=create, async=True)
+                self.instruments.load_settings_from_file(fn, inslist, create=create, async_=True)
 
     def _ins_added_cb(self, name):
         logging.info('Instrument %s added', name)

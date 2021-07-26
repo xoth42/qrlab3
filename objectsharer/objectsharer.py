@@ -242,7 +242,7 @@ class ObjectSharer(object):
     def call(self, client, obj_name, func_name, *args, **kwargs):
         is_signal = kwargs.get(OS_SIGNAL, False)
         callback = kwargs.pop('callback', None)
-        async_ = kwargs.pop('async', False) or (callback is not None) or is_signal
+        async_ = kwargs.pop('async_', False) or (callback is not None) or is_signal
         timeout = kwargs.pop('timeout', DEFAULT_TIMEOUT)
 
         self._last_call_id += 1

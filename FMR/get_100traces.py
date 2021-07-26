@@ -27,5 +27,5 @@ while m<10:
     
     axis = axis[:,None].T
     trace = np.concatenate([axis,data]).T
-    np.savetxt(r'C:\qrlab\FMR\0mT_1mm_trace\%s.txt'%(m) , trace , delimiter=",")# saves data
+    np.savetxt(r'C:\qrlab-3\FMR\0mT_1mm_trace\%s.txt'%(m) , trace , delimiter=",")# saves data
     m=m+1

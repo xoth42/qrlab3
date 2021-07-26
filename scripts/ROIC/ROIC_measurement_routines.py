@@ -14,7 +14,7 @@ import lmfit
 
 
 import os
-os.chdir(r'c:\qrlab')
+os.chdir(r'c:\qrlab-3')
 
 
 qubits = mclient.get_qubits()
@@ -49,7 +49,7 @@ def raspi_param_sweep(raspi_instr, bias_instr, analogpwr_instr, vcc1_instr, vcc2
             currents.append([float(bias_instr.do_get_current()), float(analogpwr_instr.do_get_current()), float(vcc1_instr.do_get_current()), float(vcc23_instr.do_get_current())])
             print((i, currents[i]))
 #        tstamp = time.strftime("%D%T")
-#        filename = 'C:\qrlab\scripts\ROIC\currents_sweep_' + param + str(tstamp) + '.csv'
+#        filename = 'C:\qrlab-3\scripts\ROIC\currents_sweep_' + param + str(tstamp) + '.csv'
 #        np.savetxt(filename, currents)
         return 1
     except Exception as e:
@@ -69,7 +69,7 @@ Agilent2 = mclient.instruments['Agilent2']
 Agilent3 = mclient.instruments['Agilent3']
 Keithley = mclient.instruments['Keithley']
 wait_time = 0.5
-params, data = raspi.import_data_('C:\qrlab\scripts\ROIC\spi_iface-main\default_2.csv')
+params, data = raspi.import_data_('C:\qrlab-3\scripts\ROIC\spi_iface-main\default_2.csv')
 data = [int(0*data[x]) for x in range(len(data))]
 
 current = float(Agilent1.do_get_current())

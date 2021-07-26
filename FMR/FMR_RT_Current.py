@@ -24,7 +24,7 @@ Yoko = instruments['Yoko']
     #import visa
 if 1:
         import os
-        os.system(r'C:\qrlab\start.bat')
+        os.system(r'C:\qrlab-3\start.bat')
         time.sleep(1)
     '''
 
@@ -93,7 +93,7 @@ while np.abs(I) <= np.abs(I_f): #current field
     
     VNA.trigger()
     
-    wait = VNA.opc(async=True) # wait for completion
+    wait = VNA.opc(async_=True) # wait for completion
 
 #            print 'ok7'
 #                a=0

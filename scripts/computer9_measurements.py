@@ -3,10 +3,9 @@ import importlib
 importlib.reload(mclient)
 import numpy as np
 from pulseseq import sequencer, pulselib
-import matplotlib
-matplotlib.rcParams['backend'] = 'Qt4Agg'
-matplotlib.rcParams['backend.qt4'] = 'PyQt4'
-import matplotlib.pyplot as plt
+import matplotlib as plt
+plt.rcParams['backend'] = 'Qt4Agg'
+#import matplotlib.pyplot as plt
 
 import math as math
 import time
@@ -17,8 +16,8 @@ import lmfit
 import os
 os.chdir(r'c:\qrlab-3')
 
-#alz = mclient.instruments['alazar']
-dig = mclient.instruments['dig']
+alz = mclient.instruments['alazar']
+# dig = mclient.instruments['dig']
 
 def gaussian(params, x, data):
     return data - params['amp'] * np.exp(-.5 * ((x - params['mean']) / params['std'])**2)
@@ -42,19 +41,19 @@ if 0:
 
 qubits = mclient.get_qubits()
 qubit_info = mclient.get_qubit_info('qubit1ge')
-ef_info = mclient.get_qubit_info('qubit1ef')
-qubit2_info = mclient.get_qubit_info('qubit2ge')
-gate_info = mclient.get_gate_info('sq_gate1')
+# ef_info = mclient.get_qubit_info('qubit1ef')
+# qubit2_info = mclient.get_qubit_info('qubit2ge')
+# gate_info = mclient.get_gate_info('sq_gate1')
 
 
 #Find read-out cavity and choose a power
 
-if 0: # RO Cavity spec
-    from scripts.single_cavity import rocavspectroscopy_keysight
+if 1: # RO Cavity spec
+    from scripts.single_cavity import rocavspectroscopy
     rofreq = 6537e6
     freq_range = 20e6
     for pulse in [False]:
-        ro = rocavspectroscopy_keysight.ROCavSpectroscopy_keysight(qubit_info, np.linspace(5, 5, 1),
+        ro = rocavspectroscopy.ROCavSpectroscopy(qubit_info, np.linspace(0, 5, 3),
                                              np.linspace(rofreq - freq_range, rofreq + freq_range, 101), qubit_pulse=pulse)
         ro.measure()
 
@@ -81,7 +80,7 @@ if 0: # Qubit spec
 #    spec.measure()
     spec.measure()
     bla
-
+    
 """Qubit SSBspec"""
 if 0: # Qubit SSBspec
     from scripts.single_qubit import ssbspec

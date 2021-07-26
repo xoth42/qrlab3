@@ -1,5 +1,5 @@
-from .Pulse_Info import Pulse_Info
-from .instrument import Instrument
+from Pulse_Info import Pulse_Info
+from instrument import Instrument
 import types
 
 ROTATIONS = (

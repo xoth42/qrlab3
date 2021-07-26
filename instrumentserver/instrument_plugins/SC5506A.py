@@ -20,8 +20,8 @@ import logging
 SUCCESS = 0
 NO_DEVICE = 0
 
-#LB_DLL = r'c:\qrlab\instrumentserver\vnx_fmsynth.dll'
-LB_DLL = 'C:\\qrlab\\instrumentserver\\SignalCore\\x64\\sc5506a_usb.dll'
+#LB_DLL = r'c:\qrlab-3\instrumentserver\vnx_fmsynth.dll'
+LB_DLL = 'C:\\qrlab-3\\instrumentserver\\SignalCore\\x64\\sc5506a_usb.dll'
 try:
     lb_dll = ctypes.windll.LoadLibrary(LB_DLL)
     #lb_dll = ctypes.cdll.LoadLibrary(LB_DLL)

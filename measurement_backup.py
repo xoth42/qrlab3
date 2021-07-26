@@ -325,9 +325,9 @@ class Measurement(object):
 
         try:
             if self.histogram:
-                ret = alz.take_hist(async=True)
+                ret = alz.take_hist(async_=True)
             else:
-                ret = alz.take_experiment(avg_buf=self.avg_data, async=True, singleshotbin=self.singleshotbin,
+                ret = alz.take_experiment(avg_buf=self.avg_data, async_=True, singleshotbin=self.singleshotbin,
                                           IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius)
             if self.print_progress:
                 logging.info('Acquiring...')

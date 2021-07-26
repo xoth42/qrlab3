@@ -43,7 +43,7 @@ if aouID < 0 or digID < 0:
 
 
 # Load waveforms to AWG
-waveform_filepath = "C:\\qrlab\instrumentserver\keysightAWG\waveforms\\"
+waveform_filepath = "C:\\qrlab-3\instrumentserver\keysightAWG\waveforms\\"
 print(waveform_filepath)
 gaussian = key.SD_Wave()
 gaussian.newFromFile(waveform_filepath + 'Readout.csv')

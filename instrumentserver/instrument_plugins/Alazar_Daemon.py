@@ -21,7 +21,7 @@ import time
 from lib.dll_support import alazar
 AC = alazar.Constants
 from lib.math import demod
-from .instrument import Instrument
+from instrument import Instrument
 import logging
 import gc
 import os
@@ -268,6 +268,7 @@ real part is applied to I and the imaginary part to Q.
     def setup_clock(self):
         logging.debug('Setting up clock')
         logging.debug('src: %s, sr: %s, edge: %s', self.get_clock_source(), self.get_sample_rate(), self.get_clock_edge())
+
         err = alazar.ats.AlazarSetCaptureClock(self._card.handle,
                 self.get_clock_source(),
                 self.get_sample_rate(),
@@ -462,6 +463,8 @@ real part is applied to I and the imaginary part to Q.
         self.allocate_buffers()
         self.set_demod(avg_periods=1)
         self.prepare_capture()
+        print(self._bufs)
+        print(type(self._bufs))
         self._card.post_buffers(self._bufs)
         self.start_capture()
 
@@ -563,6 +566,8 @@ real part is applied to I and the imaginary part to Q.
         self.set_demod(avg_periods=1)
 
         self.prepare_capture()
+        print(self._bufs)
+        print(type(self._bufs))
         self._card.post_buffers(self._bufs)
         self.start_capture()
 
