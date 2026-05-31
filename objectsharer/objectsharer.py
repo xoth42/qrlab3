@@ -15,39 +15,78 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-import logging
-import random
-import pickle as pickle
-import time
-import numpy as np
-import inspect
-import uuid
-import types
+"""
+ObjectSharer: peer-to-peer remote Python objects over ZeroMQ.
+
+Architecture
+------------
+Each process runs an ObjectSharer instance (global ``helper``) backed by a
+``ZMQBackend``. The backend listens on a ROUTER socket and maintains one DEALER
+socket per remote peer. Communication is bidirectional once connected; there is
+no strict client/server hierarchy beyond who initiates the first ``hello_from``.
+
+Main components:
+  - ``ObjectSharer`` (``helper``): registry, RPC dispatch, signals, proxies
+  - ``ZMQBackend``: sockets, event loop, connection handshake
+  - ``ObjectProxy`` / ``_FunctionCall``: client-side remote object stand-ins
+  - ``root`` (``RootObject``): well-known object every peer registers as ``root``
+
+Wire protocol (pickled tuple, first element is message type)
+-------------------------------------------------------------
+  - ``OS_CALL`` ('c'): remote method invocation; may carry ``OS_SIG`` in kwargs
+  - ``OS_RETURN`` ('r'): RPC reply keyed by call id
+  - ``hello_from``: connection handshake with peer address
+  - ``goodbye_from``: tear down connection state
+  - ``ping`` / ``pong``: liveness check
+
+Serialization markers embedded in call/return payloads:
+  - ``OS_AR``: numpy array sent as separate binary frame (zero-copy)
+  - ``OS_UID`` / ``OS_SRV_ID`` / ``OS_SRV_ADDR``: shared object reference
+
+Threading
+---------
+ZMQ sockets are not thread-safe. All ObjectSharer I/O must run in the thread
+that owns the backend's main loop (or via ``add_qt_timer`` for Qt integration).
+"""
+
 import bisect
+import inspect
+import logging
 import os
+import pickle
+import random
+import time
 import traceback
+import uuid
+
+import numpy as np
+import zmq
+
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
 
 logger = logging.getLogger("Object Sharer")
 logger.setLevel(logging.INFO)
-handler = logging.StreamHandler()
-formatter = logging.Formatter('%(name)s:%(levelname)s:%(message)s')
-handler.setLevel(logging.WARNING)
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+_handler = logging.StreamHandler()
+_handler.setLevel(logging.WARNING)
+_handler.setFormatter(logging.Formatter('%(name)s:%(levelname)s:%(message)s'))
+logger.addHandler(_handler)
 
-#Josh made this number bigger on 7/25/18 to try and stop timeout errors.
+# ---------------------------------------------------------------------------
+# Constants and protocol tags
+# ---------------------------------------------------------------------------
 
+DEFAULT_TIMEOUT = 600000  # RPC timeout in milliseconds
 
-DEFAULT_TIMEOUT = 600000      # Timeout in msec
+# Legacy scheduling hack: repeated os.getcwd() after send may reduce latency.
+REDUCE_LATENCY = True
 
-REDUCE_LATENCY  = True      # Use Voodoo latency reduction?
+OS_CALL = 'c'
+OS_RETURN = 'r'
+OS_SIGNAL = 'OS_SIG'
 
-OS_CALL         = 'c'
-OS_RETURN       = 'r'
-OS_SIGNAL       = 'OS_SIG'
-
-# List of special functions to wrap
-
+# Dunder methods forwarded from ObjectProxy to remote callables.
 SPECIAL_FUNCTIONS = (
     '__getitem__',
     '__setitem__',
@@ -57,45 +96,160 @@ SPECIAL_FUNCTIONS = (
     '__repr__',
 )
 
-def ellipsize(s):
-    if len(s) > 64:
-        return s[:64] + '...'
-    else:
-        return s
+# ---------------------------------------------------------------------------
+# Exceptions
+# ---------------------------------------------------------------------------
 
 class RemoteException(Exception):
-    pass
+    """Exception raised on the remote side and re-raised on the caller."""
+
 
 class TimeoutError(RuntimeError):
-    pass
+    """Raised when a synchronous RPC or connection handshake times out."""
 
-class OSSpecial(object):
-    def __init__(self, **kwargs):
-        for k, v in kwargs:
-            setattr(self, k, v)
 
-#########################################
-# Decorators
-#########################################
+# ---------------------------------------------------------------------------
+# Utilities
+# ---------------------------------------------------------------------------
+
+def ellipsize(s):
+    """Truncate long strings for debug log lines."""
+    if len(s) > 64:
+        return s[:64] + '...'
+    return s
+
+
+def _argspec_to_parts(args, defaults, varargs, varkw, kwonlyargs=None, kwonlydefaults=None):
+    """Build a parenthesized argument list string from inspect argspec fields."""
+    args = list(args or [])
+    if args and args[0] in ('self', 'cls'):
+        args = args[1:]
+    parts = []
+    defaults = defaults or ()
+    offset = len(args) - len(defaults)
+    for i, name in enumerate(args):
+        if i >= offset:
+            parts.append('%s=%r' % (name, defaults[i - offset]))
+        else:
+            parts.append(name)
+    if varargs:
+        parts.append('*%s' % varargs)
+    kwonly = kwonlyargs or ()
+    if kwonly:
+        if not varargs:
+            parts.append('*')
+        kwdefaults = kwonlydefaults or {}
+        for name in kwonly:
+            if name in kwdefaults:
+                parts.append('%s=%r' % (name, kwdefaults[name]))
+            else:
+                parts.append(name)
+    if varkw:
+        parts.append('**%s' % varkw)
+    return '(%s)' % ', '.join(parts)
+
+
+def _format_argspec_for_doc(argspec):
+    """Format stored signature metadata for proxy function docstrings."""
+    if argspec is None:
+        return '()'
+    if isinstance(argspec, str):
+        return argspec if argspec.startswith('(') else '(%s)' % argspec
+
+    if isinstance(argspec, inspect.FullArgSpec):
+        return _argspec_to_parts(
+            argspec.args, argspec.defaults, argspec.varargs, argspec.varkw,
+            argspec.kwonlyargs, argspec.kwonlydefaults,
+        )
+
+    # Legacy Argspec named tuple from inspect.getargspec() (Python 2 peers).
+    if hasattr(argspec, 'args') and hasattr(argspec, 'keywords') and not hasattr(argspec, 'kwonlyargs'):
+        return _argspec_to_parts(
+            argspec.args, argspec.defaults, argspec.varargs, argspec.keywords,
+        )
+
+    return '()'
+
 
 def cache_result(f):
-    '''
-    Decorator to instruct client to cache function result
-    '''
+    """Decorator: cache the return value on the client-side proxy."""
     if not hasattr(f, '_share_options'):
-        f._share_options = dict()
+        f._share_options = {}
     f._share_options['cache_result'] = True
     return f
 
-#########################################
+
+# ---------------------------------------------------------------------------
+# Serialization: wrap / unwrap numpy arrays and shared object references
+# ---------------------------------------------------------------------------
+
+def _walk_objects(obj, func, *args):
+    """Recursively apply *func* to *obj* and nested list/tuple/dict contents."""
+    if type(obj) in (list, tuple):
+        obj = list(obj)
+        for i, v in enumerate(obj):
+            obj[i] = _walk_objects(v, func, *args)
+    if type(obj) is dict:
+        for k in sorted(obj):
+            obj[k] = _walk_objects(obj[k], func, *args)
+    return func(obj, *args)
+
+
+def _wrap_ars_sobjs(obj, arlist=None):
+    """Replace numpy arrays and shared objects with wire-serializable markers."""
+    def replace(o):
+        if isinstance(o, np.ndarray):
+            if not o.flags['C_CONTIGUOUS']:
+                o = np.ascontiguousarray(o)
+            assert o.flags['C_CONTIGUOUS']
+            arlist.append(o)
+            return dict(OS_AR=True, shape=o.shape, dtype=o.dtype)
+        if hasattr(o, '_OS_UID'):
+            ret = dict(OS_UID=o._OS_UID)
+            if hasattr(o, '_OS_SRV_ID'):
+                ret['OS_SRV_ID'] = o._OS_SRV_ID
+                ret['OS_SRV_ADDR'] = o._OS_SRV_ADDR
+            return ret
+        return o
+
+    if arlist is None:
+        arlist = []
+    try:
+        obj = _walk_objects(obj, replace)
+        return obj, arlist
+    except Exception:
+        return obj, arlist
+
+
+def _unwrap_ars_sobjs(obj, bufs, client=None):
+    """Restore numpy arrays and shared object proxies from wire markers."""
+    def replace(o):
+        if type(o) is dict:
+            if 'OS_AR' in o:
+                if len(bufs) == 0:
+                    raise ValueError('No buffer!')
+                ar = np.frombuffer(bufs.pop(0), dtype=o['dtype'])
+                return ar.reshape(o['shape'])
+            if 'OS_UID' in o:
+                if 'OS_SRV_ID' in o and 'OS_SRV_ADDR' in o:
+                    return helper.get_object_from(o['OS_UID'], o['OS_SRV_ID'], o['OS_SRV_ADDR'])
+                return helper.get_object_from(o['OS_UID'], client)
+        return o
+
+    obj = _walk_objects(obj, replace)
+    return obj, bufs
+
+
+# ---------------------------------------------------------------------------
 # Asynchronous reply helpers
-#########################################
+# ---------------------------------------------------------------------------
 
 class AsyncReply(object):
-    '''
-    Container to receive the reply from an asynchoronous call.
-    Use is_valid() to see whether the value is valid.
-    '''
+    """
+    Holds the result of an asynchronous RPC.
+
+    Poll ``is_valid()`` or call ``get(block=True)`` to wait for the reply.
+    """
 
     def __init__(self, callid, callback=None):
         self._callid = callid
@@ -107,7 +261,7 @@ class AsyncReply(object):
         self.val = val
         self.val_valid = True
         if self.callback is not None:
-            logger.debug('Performing callback for call id %d' % self._callid)
+            logger.debug('Performing callback for call id %d', self._callid)
             self.callback(val)
 
     def get(self, block=False, delay=DEFAULT_TIMEOUT, do_raise=True):
@@ -120,106 +274,40 @@ class AsyncReply(object):
     def is_valid(self):
         return self.val_valid
 
+
 class AsyncHelloReply(object):
+    """Waits until a peer address is mapped to a ZMQ identity (uid)."""
+
     def __init__(self, target):
         self.target = target
+        self.val = None
+
     def is_valid(self):
         self.val = helper.backend.get_uid_for_addr(self.target)
-        return (self.val is not None)
+        return self.val is not None
 
-#########################################
-# Helper functions to replace parameters to make transmission possible
-# or more efficient.
-#########################################
 
-def _walk_objects(obj, func, *args):
-    if type(obj) in (list, tuple):
-        obj = list(obj)
-        for i, v in enumerate(obj):
-            obj[i] = _walk_objects(v, func, *args)
-    if type(obj) is dict:
-        for k in sorted(obj):
-            obj[k] = _walk_objects(obj[k], func, *args)
-    return func(obj, *args)
-
-def _wrap_ars_sobjs(obj, arlist=None):
-    '''
-    Function to wrap numpy arrays and shared objects for efficient transmission.
-    '''
-    def replace(o):
-        if isinstance(o, np.ndarray):
-            if not o.flags['C_CONTIGUOUS']:
-                o = np.ascontiguousarray(o)
-            assert o.flags['C_CONTIGUOUS']
-            arlist.append(o)
-            return dict(
-                OS_AR=True,
-                shape=o.shape,
-                dtype=o.dtype,
-            )
-        elif hasattr(o, '_OS_UID'):
-            ret = dict(OS_UID=o._OS_UID)
-            if hasattr(o, '_OS_SRV_ID'):    # Not a local object
-                ret['OS_SRV_ID'] = o._OS_SRV_ID
-                ret['OS_SRV_ADDR'] = o._OS_SRV_ADDR
-            return ret
-#        elif isinstance(o, ObjectProxy):
-#            raise ValueError('ObjectProxy without OS_UID')
-        return o
-
-    if arlist is None:
-        arlist = []
-    try:
-        obj = _walk_objects(obj, replace)
-        return obj, arlist
-    except:
-        return obj, arlist
-
-def _unwrap_ars_sobjs(obj, bufs, client=None):
-    '''
-    Function to unwrap numpy arrays and shared objects after efficient
-    transmission.
-    '''
-
-    def replace(o):
-        if type(o) is dict:
-            if 'OS_AR' in o:
-                if len(bufs) == 0:
-                    raise ValueError('No buffer!')
-                ar = np.frombuffer(
-                    bufs.pop(0),
-                    dtype=o['dtype']
-                )
-                ar = ar.reshape(o['shape'])
-                return ar
-            if 'OS_UID' in o:
-                if 'OS_SRV_ID' in o and 'OS_SRV_ADDR' in o:
-                    return helper.get_object_from(o['OS_UID'], o['OS_SRV_ID'], o['OS_SRV_ADDR'])
-                else:
-                    return helper.get_object_from(o['OS_UID'], client)
-        return o
-
-    obj = _walk_objects(obj, replace)
-    return obj, bufs
-
-#########################################
-# Object sharer core
-#########################################
+# ---------------------------------------------------------------------------
+# ObjectSharer core
+# ---------------------------------------------------------------------------
 
 class ObjectSharer(object):
-    '''
-    The object sharer core.
-    '''
+    """
+    Central registry and RPC dispatcher for shared Python objects.
+
+    Attach a ``ZMQBackend`` via ``set_backend()`` before making remote calls.
+    Lab scripts typically use the module-level ``helper`` singleton instead of
+    constructing their own instance.
+    """
 
     def __init__(self):
-        self.sock = None
         self.backend = None
 
-        # Local objects
+        # Locally registered objects keyed by uid; name_map holds alias -> uid.
         self.objects = {}
         self.name_map = {}
 
-        # Clients, proxies and remote object lists
+        # Remote peers and cached proxies.
         self.clients = {}
         self._proxy_cache = {}
         self._client_object_list_cache = {}
@@ -227,19 +315,22 @@ class ObjectSharer(object):
         self._last_call_id = 0
         self.reply_objects = {}
 
-        # Signal related
+        # Signal (pub/sub-style callback) state.
         self._last_hid = 0
         self._callbacks_hid = {}
         self._callbacks_name = {}
         self._signal_queue = []
+        self.announced_clients = set()
 
     def set_backend(self, backend):
         self.backend = backend
 
     def interact(self, delay=DEFAULT_TIMEOUT, wait_for=None):
+        """Process incoming messages until timeout or *wait_for* completes."""
         self.backend.main_loop(delay=delay, wait_for=wait_for, origin=1)
 
     def call(self, client, obj_name, func_name, *args, **kwargs):
+        """Invoke a method on a remote object (sync or async)."""
         is_signal = kwargs.get(OS_SIGNAL, False)
         callback = kwargs.pop('callback', None)
         async_ = kwargs.pop('async_', False) or (callback is not None) or is_signal
@@ -249,21 +340,18 @@ class ObjectSharer(object):
         callid = self._last_call_id
         async_reply = AsyncReply(callid, callback=callback)
         self.reply_objects[callid] = async_reply
-        logger.debug('Sending call %d to %s: %s.%s(%s,%s), async=%s', callid, client, obj_name, func_name, ellipsize(str(args)), ellipsize(str(kwargs)), async_)
+        logger.debug(
+            'Sending call %d to %s: %s.%s(%s,%s), async=%s',
+            callid, client, obj_name, func_name,
+            ellipsize(str(args)), ellipsize(str(kwargs)), async_,
+        )
 
         args, arlist = _wrap_ars_sobjs(args)
         kwargs, arlist = _wrap_ars_sobjs(kwargs, arlist)
-        msg = (
-            OS_CALL,
-            callid,
-            obj_name,
-            func_name,
-            args,
-            kwargs
-        )
+        msg = (OS_CALL, callid, obj_name, func_name, args, kwargs)
         try:
             msg = pickle.dumps(msg)
-        except:
+        except Exception:
             raise Exception('Unable to pickle function call: %s' % str(msg))
         self.backend.send_to(client, msg, arlist)
 
@@ -271,91 +359,65 @@ class ObjectSharer(object):
             return async_reply
 
         ret = self.backend.main_loop(delay=timeout, wait_for=async_reply, origin=2)
-
         if ret:
-            val = async_reply.get()
-            return val
-        else:
-            raise TimeoutError('Call timed out')
+            return async_reply.get()
+        raise TimeoutError('Call timed out')
 
-    #####################################
-    # Object resolving functions.
-    #####################################
+    # ----- Object registry and lookup -----
 
     def list_objects(self):
-        '''
-        Return a list of locally available objects, comprising of both the uids
-        and the aliases.
-        '''
+        """Return uids and aliases of all locally registered objects."""
         ret = list(self.objects.keys())
         ret.extend(list(self.name_map.keys()))
         return ret
 
     def get_object(self, objname):
-        '''
-        Get a local object.
-        <objname> can be a uid or an alias.
-        '''
-        # Look-up in name_map
+        """Return a local object by uid or alias."""
         objname = self.name_map.get(objname, objname)
-        # Look-up in objects list
         return self.objects.get(objname, None)
 
     def _get_object_shared_props_funcs(self, obj):
+        """Introspect *obj* to build the metadata dict sent to remote proxies."""
         props = []
         funcs = []
         for key, val in inspect.getmembers(obj):
-            if key.startswith('_') and not key in SPECIAL_FUNCTIONS:
+            if key.startswith('_') and key not in SPECIAL_FUNCTIONS:
                 continue
             if key == 'connect':
                 continue
-            elif callable(val):
-                if hasattr(val, '_share_options'):
-                    opts = val._share_options
-                else:
-                    opts = {}
+            if callable(val):
+                opts = val._share_options if hasattr(val, '_share_options') else {}
+                opts = dict(opts)
                 opts['__doc__'] = getattr(val, '__doc__', None)
                 try:
-                    opts['__argspec__'] = inspect.getargspec(val)
-                except:
+                    opts['__argspec__'] = str(inspect.signature(val))
+                except (ValueError, TypeError):
                     opts['__argspec__'] = None
                 funcs.append((key, opts))
             else:
                 props.append(key)
-
         return props, funcs
 
     def get_object_info(self, objname):
-        '''
-        Return the object info of a local object to build a proxy remotely.
-        '''
+        """Return introspection metadata for building a remote ``ObjectProxy``."""
         obj = self.get_object(objname)
         if obj is None:
             return None
-
         props, funcs = self._get_object_shared_props_funcs(obj)
-        info = dict(
-            uid=obj._OS_UID,
-            properties=props,
-            functions=funcs
-        )
-        return info
+        return dict(uid=obj._OS_UID, properties=props, functions=funcs)
 
     def get_object_info_from(self, objname, client_id, client_addr=None):
-        '''
-        Get object info from a particular client.
-        If not connected yet, do that first.
-        '''
-
-        # Handle clients that we are not yet connected to.
+        """Fetch object metadata from a remote peer, connecting if needed."""
         if client_id not in self.clients:
             if client_addr is None:
                 logger.warning('Object from unknown client requested')
                 return None
-            logger.info('Object %s requested from unconnected client %s @ %s, connecting...', objname, client_id, client_addr)
+            logger.info(
+                'Object %s requested from unconnected client %s @ %s, connecting...',
+                objname, client_id, client_addr,
+            )
             self.backend.connect_to(client_addr, uid=client_id)
 
-        # We should be connected now
         if client_id not in self.clients:
             logger.error('Unable to connect to client')
             return None
@@ -363,22 +425,16 @@ class ObjectSharer(object):
         try:
             return self.clients[client_id].get_object_info(objname)
         except TimeoutError:
-            logger.warning('Client %s unresponsive: Removing from connected' % client_id)
-            del self.clients[client_id] # I'm trying to think of a better place to do client invalidation!
+            logger.warning('Client %s unresponsive: Removing from connected', client_id)
+            del self.clients[client_id]
             return None
 
     def get_object_from(self, objname, client_id, client_addr=None, no_cache=False):
-        '''
-        Get an object from a particular client.
-        If a proxy is available in cache return that
-        If not connected yet, do that first.
-        '''
-
-        # Return from cache if it is the right object (it could be an object
-        # with the same alias at a different location),
+        """Return an ``ObjectProxy`` for a remote object, using cache when possible."""
         if not no_cache:
-            if objname in self._proxy_cache and self._proxy_cache[objname]._OS_SRV_ID == client_id:
-                return self._proxy_cache[objname]
+            cached = self._proxy_cache.get(objname)
+            if cached is not None and cached._OS_SRV_ID == client_id:
+                return cached
 
         info = self.get_object_info_from(objname, client_id, client_addr=client_addr)
         if info is None:
@@ -389,48 +445,38 @@ class ObjectSharer(object):
         return proxy
 
     def find_object(self, objname, client_id=None, client_addr=None, no_cache=False):
-        '''
-        Find a particular object either locally or with a client.
-        '''
-
+        """Resolve *objname* locally, from cache, or by querying connected peers."""
         if client_id is not None:
             return self.get_object_from(objname, client_id, client_addr)
 
-        # A local object?
         obj = self.get_object(objname)
         if obj is not None:
             return obj
+
         if not no_cache:
-            # A remote object with cached proxy?
             if objname in self._proxy_cache:
                 return self._proxy_cache[objname]
-
-            # See if we already know which client has this object
-            for client_id, names in self._client_object_list_cache.items():
+            for cid, names in self._client_object_list_cache.items():
                 if objname in names:
-                    return self.get_object_from(objname, client_id)
+                    return self.get_object_from(objname, cid)
 
-        # Query all clients
-        # TODO: asynchronously
-        for client_id in list(self.clients.keys()):
-            obj = self.get_object_from(objname, client_id, no_cache=no_cache)
+        for cid in list(self.clients.keys()):
+            obj = self.get_object_from(objname, cid, no_cache=no_cache)
             if obj is not None:
                 return obj
         return None
 
     def register(self, obj, name=None):
-        '''
-        This function registers an object as a shared object.
+        """
+        Register *obj* for remote access.
 
-        - Generates a unique id (<obj>.OS_UID)
-        - Adds an emit function (<obj>.emit), which can be used to emit
-        signals. A previously available emit function will still be called.
-        '''
-
+        Assigns ``obj._OS_UID``, optional alias in ``name_map``, and wires
+        ``obj.emit`` / ``obj.connect`` for the signal system.
+        """
         if obj is None:
             return
         if hasattr(obj, '_OS_UID') and obj._OS_UID is not None:
-            logger.warning('Object %s already registered' % obj._OS_UID)
+            logger.warning('Object %s already registered', obj._OS_UID)
             return
 
         obj._OS_UID = str(uuid.uuid4())
@@ -440,56 +486,51 @@ class ObjectSharer(object):
             self.name_map[name] = obj._OS_UID
 
         obj._OS_emit = getattr(obj, 'emit', None)
-        # TODO: make obj properly assigned
-        obj.emit = lambda signal, *args, **kwargs: self.emit_signal(obj._OS_UID, signal, *args, **kwargs)
-        obj.connect = lambda signame, callback, *args, **kwargs: self.connect_signal(obj._OS_UID, signame, callback, *args, **kwargs)
+        obj.emit = lambda signal, *a, **kw: self.emit_signal(obj._OS_UID, signal, *a, **kw)
+        obj.connect = lambda signame, callback, *a, **kw: self.connect_signal(
+            obj._OS_UID, signame, callback, *a, **kw,
+        )
         self.objects[obj._OS_UID] = obj
-
         root.emit('object-added', obj._OS_UID, name=name)
+
+    def add_client(self, name):
+        """Record a client name announced via ``RootObject.client_announce``."""
+        self.announced_clients.add(name)
 
     def unregister(self, obj):
         if not hasattr(obj, '_OS_UID'):
             logger.warning('Trying to unregister an unknown object')
+            return
 
         if obj._OS_UID in self.objects:
             del self.objects[obj._OS_UID]
             root.emit('object-removed', obj._OS_UID)
 
-        for name, id in list(self.name_map.items()):
-            if obj._OS_UID == id:
-                del self.name_map[name]
+        for alias, uid in list(self.name_map.items()):
+            if obj._OS_UID == uid:
+                del self.name_map[alias]
 
-    #####################################
-    # Signal functions
-    #####################################
+    # ----- Signals -----
 
     def connect_signal(self, uid, signame, callback, *args, **kwargs):
-        '''
-        Called by ObjectProxy instances to register a callback request.
-        '''
+        """Register a local callback for ``signame`` on object *uid*."""
         self._last_hid += 1
         info = {
-                'hid': self._last_hid,
-                'uid': uid,
-                'signal': signame,
-                'callback': callback,
-                'args': args,
-                'kwargs': kwargs,
+            'hid': self._last_hid,
+            'uid': uid,
+            'signal': signame,
+            'callback': callback,
+            'args': args,
+            'kwargs': kwargs,
         }
-
         self._callbacks_hid[self._last_hid] = info
         name = '%s__%s' % (uid, signame)
-        if name in self._callbacks_name:
-            self._callbacks_name[name].append(info)
-        else:
-            self._callbacks_name[name] = [info]
-
+        self._callbacks_name.setdefault(name, []).append(info)
         return self._last_hid
 
     def disconnect_signal(self, hid):
         if hid in self._callbacks_hid:
             del self._callbacks_hid[hid]
-
         for name, info_list in self._callbacks_name.items():
             for index, info in enumerate(info_list):
                 if info['hid'] == hid:
@@ -497,44 +538,41 @@ class ObjectSharer(object):
                     break
 
     def emit_signal(self, uid, signame, *args, **kwargs):
-        logger.debug('Emitting %s(%r, %r) for %s to %d clients',
-                signame, args, kwargs, uid, len(self.clients))
-
+        """Broadcast a signal to all connected peers and local callbacks."""
+        logger.debug(
+            'Emitting %s(%r, %r) for %s to %d clients',
+            signame, args, kwargs, uid, len(self.clients),
+        )
         kwargs[OS_SIGNAL] = True
-        for client_id, client in self.clients.items():
-#            print 'Calling receive sig, uid=%s, signame %s, args %s, kwargs %s' % (uid, signame, args, kwargs)
+        for client in self.clients.values():
             client.receive_signal(uid, signame, *args, **kwargs)
         self.receive_signal(uid, signame, *args, **kwargs)
 
     def receive_signal(self, uid, signame, *args, **kwargs):
         kwargs.pop(OS_SIGNAL, None)
-        logger.debug('Received signal %s(%r, %r) from %s',
-                signame, args, kwargs, uid)
+        logger.debug('Received signal %s(%r, %r) from %s', signame, args, kwargs, uid)
 
         ncalls = 0
         start = time.time()
         name = '%s__%s' % (uid, signame)
-        if name in self._callbacks_name:
-            info_list = self._callbacks_name[name]
-            for info in info_list:
+        for info in self._callbacks_name.get(name, []):
+            ncalls += 1
+            try:
+                fargs = list(args)
+                fargs.extend(info['args'])
+                fkwargs = kwargs.copy()
+                fkwargs.update(info['kwargs'])
+                info['callback'](*fargs, **fkwargs)
+            except Exception as e:
+                logger.warning(
+                    'Callback to %s failed for %s.%s: %s\n%s',
+                    info.get('callback', None), uid, signame, str(e), traceback.format_exc(),
+                )
 
-                try:
-                    fargs = list(args)
-                    fargs.extend(info['args'])
-                    fkwargs = kwargs.copy()
-                    fkwargs.update(info['kwargs'])
-                    info['callback'](*fargs, **fkwargs)
-                except Exception as e:
-                    logger.warning('Callback to %s failed for %s.%s: %s\n%s',
-                            info.get('callback', None), uid, signame, str(e), traceback.format_exc())
+        elapsed_ms = (time.time() - start) * 1000
+        logger.debug('Did %d callbacks in %.03fms for sig %s', ncalls, elapsed_ms, signame)
 
-        end = time.time()
-        logger.debug('Did %d callbacks in %.03fms for sig %s',
-                ncalls, (end - start) * 1000, signame)
-
-    #####################################
-    # Client management
-    #####################################
+    # ----- Client management -----
 
     def _update_client_object_list(self, uid, names):
         if names is not None:
@@ -545,157 +583,155 @@ class ObjectSharer(object):
             raise Exception('Unable to retrieve root object from %s' % uid)
         logger.debug('  root@%s.get_object_info() reply: %s', uid, root_info)
         self.clients[uid] = ObjectProxy(uid, root_info)
-        self.clients[uid].list_objects(callback=lambda reply, uid=uid:
-            self._update_client_object_list(uid, reply))
+        self.clients[uid].list_objects(
+            callback=lambda reply, uid=uid: self._update_client_object_list(uid, reply),
+        )
 
     def request_client_proxy(self, uid, async_=False):
+        """Fetch the remote ``root`` object and register the peer in ``clients``."""
         if not async_:
             info = self.call(uid, 'root', 'get_object_info', 'root')
             self._add_client_to_list(uid, info)
         else:
-            self.call(uid, 'root', 'get_object_info', 'root', callback=lambda reply, uid=uid:
-                self._add_client_to_list(uid, reply))
+            self.call(
+                uid, 'root', 'get_object_info', 'root',
+                callback=lambda reply, uid=uid: self._add_client_to_list(uid, reply),
+            )
 
-    #####################################
-    # Message processing
-    #####################################
+    # ----- Incoming message dispatch -----
 
     def process_message(self, from_uid, info, bufs, waiting=False):
-        '''
-        Process a remote message.
-        <from_uid> identifies the client that sent the message
-        <info> is the message tuple
-        <bufs> contains extra buffers used to unwrap numpy arrays
+        """
+        Dispatch one decoded wire message.
 
-        If <waiting> is True it indicates a main loop is waiting for something,
-        in which case signals get queued.
-        '''
-
-#        logger.debug('Msg from %s: %s', from_uid, info)
-
-        if info[0] == OS_CALL:
-            # In a try statement to postpone checks
-            obj = None
-            func = None
-            try:
-                (callid, objid, funcname, args, kwargs) = info[1:6]
-                sig = kwargs.get(OS_SIGNAL, False)
-
-                # Store signals if waiting a reply or event
-                if waiting and sig:
-                    self._signal_queue.append((from_uid, info, bufs))
-                    return
-
-                # Unwrap arguments
-                args, bufs = _unwrap_ars_sobjs(args, bufs, from_uid)
-                kwargs, bufs = _unwrap_ars_sobjs(kwargs, bufs, from_uid)
-
-                logger.debug('  Processing call %s: %s.%s(%s,%s)', callid, objid, funcname, args, kwargs)
-
-                # Call function
-                obj = self.get_object(objid)
-                func = getattr(obj, funcname, None)
-                ret = func(*args, **kwargs)
-
-                # If a signal, no need to return anything to caller
-                if sig:
-                    return
-
-                # Wrap return value
-                ret, bufs = _wrap_ars_sobjs(ret)
-                logger.debug('  Returning for call %s: %s', callid, lambda:ellipsize(str(ret)))
-
-            # Handle errors
-            except Exception as e:
-                if len(info) < 6:
-                    logger.error('Invalid call msg: %s', info)
-                    ret = RemoteException('Invalid call msg')
-                elif 'obj' not in locals() or obj is None:
-                    ret = RemoteException('Object %s not available' % objid)
-                elif 'func' not in locals() or func is None:
-                    ret = RemoteException('Object %s does not have function %s' % (objid, funcname))
-                else:
-                    tb = traceback.format_exc(15)
-                    ret = RemoteException('%s\n%s' % (e, tb))
-
-            # Prepare return packet
-            try:
-                msg = pickle.dumps((OS_RETURN, callid, ret))
-            except:
-                ret = RemoteException('Unable to pickle return %s' % str(ret))
-                msg = pickle.dumps((OS_RETURN, callid, ret))
-                bufs = None
-            self.backend.send_to(from_uid, msg, bufs)
-
-        elif info[0] == OS_RETURN:
-            if len(info) < 3:
-                logger.debug('Invalid call msg')
-                return Exception('Invalid return msg')
-
-            # Get call id and unwrap return value
-            callid, ret = info[1:3]
-            ret, bufs = _unwrap_ars_sobjs(ret, bufs, from_uid)
-
-#            logger.debug('  Processing return for %s', callid)
-            if callid in self.reply_objects:
-                self.reply_objects[callid].set(ret)
-                # We should not keep track of the reply object
-                del self.reply_objects[callid]
-            else:
-                raise Exception('Reply for unkown call %s', callid)
-
-        elif info[0] == 'hello_from':
-            logger.debug('Client %s connected from %s', from_uid, info[1])
-            self.backend.connect_from(info[1], from_uid)
-            if not self.backend.connected_to(from_uid):
-                logger.debug('Initiating reverse connection...')
-                self.backend.connect_to(info[1])
-                self.request_client_proxy(from_uid, async_=True)
-            return
-
-        if info[0] == 'goodbye_from':
-            logger.debug('Goodbye client %s from %s', from_uid, info[1])
-            forget_uid = self.backend.get_uid_for_addr(info[1])
-            if forget_uid in self.clients:
-                del self.clients[forget_uid]
-                logger.debug('deleting client %s', forget_uid)
-            self.backend.forget_connection(info[1], remote=False)
-            if from_uid in self.clients:
-                del self.clients[from_uid]
-                logger.debug('deleting client %s', from_uid)
-            return
-
-        # Ping - pong to check alive
-        if info[0] == 'ping':
-            logger.debug('PING')
-            msg = pickle.pickle(('pong',))
-            self.backend.send_to(from_uid, msg)
-        elif info[0] == 'pong':
+        When *waiting* is True (main loop blocked on an RPC reply), incoming
+        signals are queued rather than handled inline to avoid re-entrancy.
+        """
+        msg_type = info[0]
+        if msg_type == OS_CALL:
+            self._handle_call(from_uid, info, bufs, waiting)
+        elif msg_type == OS_RETURN:
+            self._handle_return(from_uid, info, bufs)
+        elif msg_type == 'hello_from':
+            self._handle_hello(from_uid, info)
+        elif msg_type == 'goodbye_from':
+            self._handle_goodbye(from_uid, info)
+        elif msg_type == 'ping':
+            self._handle_ping(from_uid)
+        elif msg_type == 'pong':
             logger.debug('PONG')
-
         else:
             logger.debug('Unknown msg: %s', info)
 
+    def _handle_call(self, from_uid, info, bufs, waiting):
+        obj = None
+        func = None
+        objid = funcname = None
+        callid = info[1] if len(info) > 1 else None
+        try:
+            callid, objid, funcname, args, kwargs = info[1:6]
+            sig = kwargs.get(OS_SIGNAL, False)
+
+            # Defer signal delivery while a synchronous RPC is in flight.
+            if waiting and sig:
+                self._signal_queue.append((from_uid, info, bufs))
+                return
+
+            args, bufs = _unwrap_ars_sobjs(args, bufs, from_uid)
+            kwargs, bufs = _unwrap_ars_sobjs(kwargs, bufs, from_uid)
+
+            logger.debug('  Processing call %s: %s.%s(%s,%s)', callid, objid, funcname, args, kwargs)
+
+            obj = self.get_object(objid)
+            func = getattr(obj, funcname, None)
+            ret = func(*args, **kwargs)
+
+            if sig:
+                return
+
+            ret, bufs = _wrap_ars_sobjs(ret)
+            logger.debug('  Returning for call %s: %s', callid, ellipsize(str(ret)))
+
+        except Exception as e:
+            if len(info) < 6:
+                logger.error('Invalid call msg: %s', info)
+                ret = RemoteException('Invalid call msg')
+            elif obj is None:
+                ret = RemoteException('Object %s not available' % objid)
+            elif func is None:
+                ret = RemoteException('Object %s does not have function %s' % (objid, funcname))
+            else:
+                ret = RemoteException('%s\n%s' % (e, traceback.format_exc(15)))
+
+        try:
+            msg = pickle.dumps((OS_RETURN, callid, ret))
+        except Exception:
+            ret = RemoteException('Unable to pickle return %s' % str(ret))
+            msg = pickle.dumps((OS_RETURN, callid, ret))
+            bufs = None
+        self.backend.send_to(from_uid, msg, bufs)
+
+    def _handle_return(self, from_uid, info, bufs):
+        if len(info) < 3:
+            logger.error('Invalid return msg: %s', info)
+            return
+
+        callid, ret = info[1:3]
+        ret, bufs = _unwrap_ars_sobjs(ret, bufs, from_uid)
+
+        if callid in self.reply_objects:
+            self.reply_objects[callid].set(ret)
+            del self.reply_objects[callid]
+        else:
+            raise Exception('Reply for unknown call %s' % callid)
+
+    def _handle_hello(self, from_uid, info):
+        """
+        Complete bidirectional handshake: map peer address to uid and open
+        reverse DEALER connection if we are not already connected.
+        """
+        logger.debug('Client %s connected from %s', from_uid, info[1])
+        self.backend.connect_from(info[1], from_uid)
+        if not self.backend.connected_to(from_uid):
+            logger.debug('Initiating reverse connection...')
+            self.backend.connect_to(info[1])
+            self.request_client_proxy(from_uid, async_=True)
+
+    def _handle_goodbye(self, from_uid, info):
+        logger.debug('Goodbye client %s from %s', from_uid, info[1])
+        forget_uid = self.backend.get_uid_for_addr(info[1])
+        if forget_uid in self.clients:
+            del self.clients[forget_uid]
+            logger.debug('deleting client %s', forget_uid)
+        self.backend.forget_connection(info[1], remote=False)
+        if from_uid in self.clients:
+            del self.clients[from_uid]
+            logger.debug('deleting client %s', from_uid)
+
+    def _handle_ping(self, from_uid):
+        logger.debug('PING')
+        self.backend.send_to(from_uid, pickle.dumps(('pong',)))
+
     def flush_queue(self, nmax=5):
-        '''
-        Process a maximum on <nmax> queued signals.
-        Return True if signal queue empty when returning.
-        '''
+        """Process up to *nmax* deferred signals. Returns True if queue is empty."""
         i = 0
-        while i < nmax and len(self._signal_queue) > 0:
+        while i < nmax and self._signal_queue:
             from_uid, info, bufs = self._signal_queue.pop(0)
             self.process_message(from_uid, info, bufs)
             i += 1
-        return (len(self._signal_queue) == 0)
+        return len(self._signal_queue) == 0
+
+
+# ---------------------------------------------------------------------------
+# Root object, proxy call wrapper, and client-side proxy
+# ---------------------------------------------------------------------------
 
 class RootObject(object):
-    '''
-    Every program using shared objects should have an instance of RootObject.
-    This object exposes functions of the ObjectSharer instance called helper.
-    '''
+    """
+    Well-known object registered as ``root`` on every ObjectSharer instance.
 
-    def __init__(self):
-        pass
+    Remote peers use it to list objects and fetch introspection metadata.
+    """
 
     def hello_world(self):
         return 'Hello world!'
@@ -715,108 +751,86 @@ class RootObject(object):
     def receive_signal(self, uid, signame, *args, **kwargs):
         helper.receive_signal(uid, signame, *args, **kwargs)
 
-class _FunctionCall():
+
+class _FunctionCall(object):
+    """Callable stand-in for one remote method on an ``ObjectProxy``."""
 
     def __init__(self, client, objname, funcname, share_options):
         self._client = client
         self._objname = objname
         self._funcname = funcname
+        self._share_options = share_options or {}
+        self._cached_result = None
 
-        if share_options is None:
-            self._share_options = {}
-        else:
-            self._share_options = share_options
-
-        # Setup doc string, including remote function name and parameters
-        doc = funcname
-        argspec = self._share_options.get('__argspec__', None)
-        if argspec:
-            doc += inspect.formatargspec(*argspec) + '\n'
-        else:
-            doc += '()\n'
-
+        doc = funcname + _format_argspec_for_doc(self._share_options.get('__argspec__')) + '\n'
         docstr = self._share_options.get('__doc__', '')
         if docstr:
             doc += docstr
-        setattr(self, '__doc__', doc)
-
-        self._cached_result = None
+        self.__doc__ = doc
 
     def __call__(self, *args, **kwargs):
-        cache = self._share_options.get('cache_result', False)
-        if cache and self._cached_result is not None:
+        if self._share_options.get('cache_result') and self._cached_result is not None:
             return self._cached_result
-
         ret = helper.call(self._client, self._objname, self._funcname, *args, **kwargs)
-        if cache:
+        if self._share_options.get('cache_result'):
             self._cached_result = ret
-
         return ret
 
+
 class ObjectProxy(object):
-    '''
-    Client side object proxy.
+    """
+    Client-side proxy for a remote shared object.
 
-    Based on the info dictionary this object will be populated with functions
-    and properties that are available on the remote object.
-    '''
+    Populated from introspection metadata: methods become ``_FunctionCall``
+    instances; properties are placeholders until remote property reads exist.
+    """
 
-    PROXY_CACHE = {}
-    def __new__TODO(cls, client, uid, info=None, newinst=False):
-        if info is None:
-            return None
-        if info['uid'] in ObjectProxy.PROXY_CACHE:
-            return ObjectProxy.PROXY_CACHE[info['uid']]
-        else:
-            return super(ObjectProxy, cls).__new__(client, uid, info, newinst)
+    _INDEXING_SPECIALS = frozenset(('__getitem__', '__setitem__', '__delitem__'))
 
     def __init__(self, client, info):
         self._OS_UID = info['uid']
         self._OS_SRV_ID = client
         self._OS_SRV_ADDR = helper.backend.get_addr_for_uid(client)
-        self.__new_hid = 1
         self._specials = {}
-        self.__initialize(info)
+        self._initialize(info)
+
+    def _call_special(self, name, *args):
+        func = self._specials.get(name)
+        if func is None:
+            if name in self._INDEXING_SPECIALS:
+                raise Exception('Object does not support indexing')
+            if name == '__contains__':
+                raise Exception('Object does not implement __contains__')
+            raise Exception('Object does not support %s' % name)
+        return func(*args)
 
     def __getitem__(self, key):
-        func = self._specials.get('__getitem__', None)
-        if func is None:
-            raise Exception('Object does not support indexing')
-        return func(key)
+        return self._call_special('__getitem__', key)
 
     def __setitem__(self, key, val):
-        func = self._specials.get('__setitem__', None)
-        if func is None:
-            raise Exception('Object does not support indexing')
-        return func(key, val)
+        return self._call_special('__setitem__', key, val)
 
-    def __delitem__(self, key): #TODO: make this less copy/paste
-        func = self._specials.get('__delitem__', None)
-        if func is None:
-            raise Exception('Object does not support indexing')
-        return func(key)
+    def __delitem__(self, key):
+        return self._call_special('__delitem__', key)
 
     def __contains__(self, key):
-        func = self._specials.get('__contains__', None)
-        if func is None:
-            raise Exception('Object does not implement __contains__')
-        return func(key)
+        return self._call_special('__contains__', key)
 
     def __str__(self):
         s = 'ObjectProxy for %s @ %s (address %s)' % (self._OS_UID, self._OS_SRV_ID, self._OS_SRV_ADDR)
-        func = self._specials.get('__str__', None)
+        func = self._specials.get('__str__')
         if func:
             s += '\nRemote info:\n%s' % (func(),)
         return s
 
     def __repr__(self):
-        func = self._specials.get('__str__', None)
+        func = self._specials.get('__str__')
         s = 'ObjectProxy(%s)' % (self._OS_UID,)
         if func:
-            s += ': %s' % (func(), )
+            s += ': %s' % (func(),)
         return s
 
-    def __initialize(self, info):
+    def _initialize(self, info):
         if info is None:
             return
 
@@ -827,6 +841,7 @@ class ObjectProxy(object):
             else:
                 setattr(self, funcname, func)
 
+        # Placeholder: remote property values are not fetched automatically.
         for propname in info['properties']:
             setattr(self, propname, 'blaat')
 
@@ -842,6 +857,8 @@ class ObjectProxy(object):
     def os_get_uid(self):
         return self._OS_UID
 
+
+# Module-level singleton used throughout the lab codebase.
 helper = ObjectSharer()
 register = helper.register
 find_object = helper.find_object
@@ -849,24 +866,28 @@ find_object = helper.find_object
 root = RootObject()
 register(root, name='root')
 
-# To integrate with Qt, run this loop in a separate thread.
-# However, we might want to call process_message through a Qt.Queue something
-# to make sure it is executed in the main thread. That way the objects can
-# properly manipulate GUI elements.
 
-import zmq
+# ---------------------------------------------------------------------------
+# ZMQ backend and event loop
+# ---------------------------------------------------------------------------
 
 class ZMQBackend(object):
+    """
+    ZeroMQ transport for ObjectSharer.
+
+    One ROUTER socket receives all inbound traffic; each peer gets a DEALER
+    socket. The main loop polls ROUTER and dispatches to ``helper.process_message``.
+    """
 
     def __init__(self):
         self.ctx = zmq.Context()
         self.srv = None
-        self.uid = None
         self.addr = None
         self.port = None
         self.timer = None
         self.addr_to_sock_map = {}
         self.addr_to_uid_map = {}
+        self.uid_to_addr_map = {}
         self.uid_to_sock_map = {}
         helper.set_backend(self)
         self._timeouts = {}
@@ -874,54 +895,39 @@ class ZMQBackend(object):
         self._last_timeout_id = 0
 
     def get_addr(self):
-        '''
-        Return the ZMQ end point that this instance can be reached on.
-        '''
-
+        """Return the tcp endpoint this instance listens on."""
         if self.addr == '*':
             return 'tcp://127.0.0.1:%d' % self.port
-        else:
-            return 'tcp://%s:%d' % (self.addr, self.port)
+        return 'tcp://%s:%d' % (self.addr, self.port)
 
     def start_server(self, addr='*', port=None):
-        '''
-        Start ZMQ server listening on IP address <addr> and <port>.
-        '''
-
+        """Bind the ROUTER socket on *addr*:*port* (random port if port is None)."""
         self.addr = addr
         self.port = port
-
         self.srv = self.ctx.socket(zmq.ROUTER)
         if port is None:
-            self.port = self.srv.bind_to_random_port('tcp://%s'%addr, min_port=50000, max_port=60000, max_tries=100)
+            self.port = self.srv.bind_to_random_port(
+                'tcp://%s' % addr, min_port=50000, max_port=60000, max_tries=100,
+            )
         else:
             self.srv.bind('tcp://%s:%d' % (addr, port))
-
         logger.debug('ObjectSharer listening at %s', self.get_addr())
 
     def connect_from(self, addr, uid):
-        '''
-        Should be called when a connection is made to associate
-        <uid> with <addr>
-        '''
+        """Associate peer *addr* with ZMQ identity *uid* after handshake."""
         self.addr_to_uid_map[addr] = uid
+        self.uid_to_addr_map[uid] = addr
         if addr in self.addr_to_sock_map:
             self.uid_to_sock_map[uid] = self.addr_to_sock_map[addr]
 
     def connected_to(self, uid):
-        '''
-        Return whether we are connected to client identified by <uid>.
-        '''
         return uid in self.uid_to_sock_map
 
     def get_uid_for_addr(self, addr):
-        return self.addr_to_uid_map.get(addr, None)
+        return self.addr_to_uid_map.get(addr)
 
     def get_addr_for_uid(self, uid):
-        for k, v in self.addr_to_uid_map.items():
-            if v == uid:
-                return k
-        return None
+        return self.uid_to_addr_map.get(uid)
 
     def refresh_connection(self, addr):
         self.forget_connection(addr)
@@ -931,70 +937,60 @@ class ZMQBackend(object):
     def forget_connection(self, addr, remote=True):
         logger.debug('Forgetting connection: %s', addr)
         msg = ('goodbye_from', 'tcp://%s:%d' % (self.addr, self.port))
-        if addr not in self.addr_to_sock_map: # Open up socket so we can tell remote to forget it
+        if addr not in self.addr_to_sock_map:
             if remote:
                 sock = self.ctx.socket(zmq.DEALER)
                 sock.connect(addr)
                 sock.send(pickle.dumps(msg))
                 sock.close()
-            else:
-                return
-        else:
-            if remote:
-                sock = self.addr_to_sock_map[addr]
-                sock.send(pickle.dumps(msg))
-                sock.close()
+            return
 
-            del self.addr_to_sock_map[addr]
+        if remote:
+            sock = self.addr_to_sock_map[addr]
+            sock.send(pickle.dumps(msg))
+            sock.close()
 
-            if addr in self.addr_to_uid_map:
-                uid = self.addr_to_uid_map.pop(addr)
-                if uid in self.uid_to_sock_map:
-                    del self.uid_to_sock_map[uid]
+        del self.addr_to_sock_map[addr]
+        if addr in self.addr_to_uid_map:
+            uid = self.addr_to_uid_map.pop(addr)
+            self.uid_to_addr_map.pop(uid, None)
+            self.uid_to_sock_map.pop(uid, None)
 
     def _generate_id(self):
-        '''
-        Generate a unique id.
-        '''
-        chars = 'abcdefghijklmnopqrstuvwxyz'
-        chars += chars.upper()
+        chars = 'abcdefghijklmnopqrstuvwxyz' + 'abcdefghijklmnopqrstuvwxyz'.upper()
         idstr = 'p%d_' % os.getpid()
-        for i in range(6):
-            idstr += chars[random.randint(0, len(chars)-1)]
+        for _ in range(6):
+            idstr += chars[random.randint(0, len(chars) - 1)]
         return idstr
 
     def connect_to(self, addr, delay=1000, async_=False, uid=None):
-        '''
-        Connect to a remote ObjectSharer at <addr>.
-        If <uid> is specified it is associated with the client at <addr>.
-        If <async> is False (default), wait for a reply.
-        '''
+        """
+        Open a DEALER connection to a remote ObjectSharer and complete handshake.
+
+        Sends ``hello_from`` with our listen address; the peer opens a reverse
+        connection. The initiator waits for uid resolution via ``AsyncHelloReply``.
+        """
         logger.debug('Connecting to %s', addr)
         if addr in self.addr_to_sock_map:
-            logger.warning('Already connected to %s' % addr)
+            logger.warning('Already connected to %s', addr)
             return
         if uid is not None:
-            if uid in list(self.addr_to_uid_map.values()):
-                logger.warning('Client %s already present at different address')
+            if uid in self.uid_to_addr_map:
+                logger.warning('Client %s already present at different address', uid)
                 return
             self.addr_to_uid_map[addr] = uid
+            self.uid_to_addr_map[uid] = addr
 
         sock = self.ctx.socket(zmq.DEALER)
         sock.setsockopt_string(zmq.IDENTITY, self._generate_id())
-
         sock.connect(addr)
         self.addr_to_sock_map[addr] = sock
-        uid = self.addr_to_uid_map.get(addr, None)
-        if uid is not None:
-            self.uid_to_sock_map[uid] = sock
+        resolved_uid = self.addr_to_uid_map.get(addr)
+        if resolved_uid is not None:
+            self.uid_to_sock_map[resolved_uid] = sock
 
-        # Identify ourselves
-        msg = ('hello_from', 'tcp://%s:%d' % (self.addr, self.port))
-        sock.send(pickle.dumps(msg))
+        sock.send(pickle.dumps(('hello_from', 'tcp://%s:%d' % (self.addr, self.port))))
 
-        # Wait for the server to reply.
-        # On the server, which received the hello_from first, this should
-        # never have to wait.
         if addr not in self.addr_to_uid_map:
             logger.debug('Waiting for hello reply from server...')
             hello = AsyncHelloReply(addr)
@@ -1007,303 +1003,185 @@ class ZMQBackend(object):
         helper.request_client_proxy(self.addr_to_uid_map[addr], async_=async_)
 
     def send_to(self, dest, msg, bufs=None):
-        '''
-        Send <msg> to client <dest> (a uid).
-        '''
-
+        """Send pickled *msg* (and optional numpy frames) to peer *dest* (uid)."""
         logger.debug('Sending %d bytes to %s', len(msg), dest)
-        sock = self.uid_to_sock_map.get(dest, None)
+        sock = self.uid_to_sock_map.get(dest)
         if sock is None:
             raise Exception('Unable to resolve destination %s' % dest)
 
         if bufs is None:
             sock.send(msg)
         else:
-            msg = [msg, ]
-            msg.extend(bufs)
-            sock.send_multipart(msg)
+            sock.send_multipart([msg] + list(bufs))
 
-        # This somehow reduces the latency.
-        # My guess is it has to do with thread scheduling and/or the GIL.
-        # It probably gets us higher in hierarchy as an I/O bound thread.
         if REDUCE_LATENCY:
-            for i in range(10):
+            for _ in range(10):
                 os.getcwd()
 
     def timeout_add(self, delay, func, *args):
-        '''
-        Schedule a callback within the ZBE mainloop. If the function returns
-        True it will be rescheduled to occur periodically. If it returns False
-        it gets called only once.
-
-        <delay> in msec.
-        '''
+        """
+        Schedule *func* in the main loop. Return True from *func* to repeat
+        every *delay* milliseconds.
+        """
         self._last_timeout_id += 1
         start = time.time()
         self._timeouts[self._last_timeout_id] = dict(
-            start=start,
-            delay=delay/1000.0,
-            func=func,
-            args=args
+            start=start, delay=delay / 1000.0, func=func, args=args,
         )
-        bisect.insort(self._scheduled_timeouts, (start+delay/1000.0, self._last_timeout_id))
+        bisect.insort(self._scheduled_timeouts, (start + delay / 1000.0, self._last_timeout_id))
         return self._last_timeout_id
 
     def timeout_remove(self, t_id):
-        if t_id in self._timeouts:
-            del self._timeouts[t_id]
+        self._timeouts.pop(t_id, None)
 
     def _run_timeouts(self):
         now = time.time()
-        while len(self._scheduled_timeouts) > 0 and self._scheduled_timeouts[0][0] < now:
+        while self._scheduled_timeouts and self._scheduled_timeouts[0][0] < now:
             t, t_id = self._scheduled_timeouts.pop(0)
-            info = self._timeouts.get(t_id, None)
+            info = self._timeouts.get(t_id)
             if info is None:
                 continue
-
             try:
-                ret = info['func'](*info['args'])
-
-                # Only reschedule if returning True
-                if not ret:
+                if not info['func'](*info['args']):
                     self.timeout_remove(t_id)
                     continue
-
-                # Reschedule
                 now2 = time.time()
                 delta = (now2 - t) % info['delay']
                 t_new = now2 + info['delay'] - delta
-                logger.debug('Rescheduling timeout %d for %s', t_id, t_new - now2)
                 bisect.insort(self._scheduled_timeouts, (t_new, t_id))
             except Exception as e:
                 logger.error('Timeout call %d failed: %s', t_id, str(e))
                 self.timeout_remove(t_id)
 
+    @staticmethod
+    def _normalize_wait_for(wait_for):
+        if wait_for is None:
+            return None
+        if isinstance(wait_for, (tuple, list)):
+            return list(wait_for)
+        return [wait_for]
+
+    def _compute_poll_delay(self, endtime):
+        if endtime is not None:
+            curdelay = endtime - time.time()
+        else:
+            curdelay = 10000.0
+        if self._scheduled_timeouts:
+            to_delay = max(0.0, (self._scheduled_timeouts[0][0] - time.time()) * 1000.0)
+            curdelay = min(curdelay, to_delay)
+        return curdelay
+
+    def _decode_message(self, msgs):
+        try:
+            return pickle.loads(msgs[1])
+        except Exception as e:
+            payload = msgs[1]
+            if isinstance(payload, bytes):
+                try:
+                    preview = payload.decode('unicode-escape')
+                except Exception:
+                    preview = repr(payload)
+            else:
+                preview = repr(payload)
+            logger.warning('Unable to decode object: %s %s', str(e), preview)
+            return None
+
+    @staticmethod
+    def _wait_for_complete(wait_for):
+        i = 0
+        while i < len(wait_for):
+            if wait_for[i].is_valid():
+                del wait_for[i]
+            else:
+                i += 1
+        return len(wait_for) == 0
+
+    def _main_loop(self, delay=None, wait_for=None, origin=0, poll_zmq=True):
+        """
+        Core receive loop.
+
+        *origin* is a debug tag identifying which caller entered the loop
+        (used when tracing timeout issues with Alazar hardware).
+
+        When *poll_zmq* is False (``main_loop_alz``), ZMQ polling is skipped so
+        timeouts still run without blocking on socket recv — an Alazar workaround.
+        """
+        start = time.time()
+        endtime = None if delay is None else start + delay / 1000.0
+        wait_for = self._normalize_wait_for(wait_for)
+
+        if wait_for is None:
+            helper.flush_queue()
+
+        poller = zmq.Poller()
+        poller.register(self.srv, flags=zmq.POLLIN)
+
+        while True:
+            curdelay = self._compute_poll_delay(endtime)
+            socks = poller.poll(curdelay) if poll_zmq else []
+
+            if not socks:
+                self._run_timeouts()
+                if endtime is not None and time.time() >= endtime:
+                    return False
+                continue
+
+            msgs = self.srv.recv_multipart()
+            client = msgs[0]
+            info = self._decode_message(msgs)
+            if info is None:
+                return
+
+            try:
+                logger.debug('Starting Message processing %s', str(info))
+                helper.process_message(client, info, msgs[2:], waiting=(wait_for is not None))
+            except Exception as e:
+                logger.warning('Failed to process message: %s\n%s', str(e), traceback.format_exc())
+            finally:
+                logger.debug('Message processed %s', str(info))
+
+            if wait_for is not None and self._wait_for_complete(wait_for):
+                return True
+
+            if endtime is not None and time.time() >= endtime:
+                return False
+
     def main_loop(self, delay=None, wait_for=None, origin=0):
-        '''
-        Run the receiving main loop for a maximum of <delay> msec.
+        """
+        Run the receiving main loop for at most *delay* msec.
 
-        If <wait_for> is specified (a single object or a list), the loop will
-        terminate once all objects return True from is_valid().
-        '''
-        
-        '''
-        Something is resetting delay while alazar is running. 
-        This ruins the loop for alazar. Use 'origin' to figure out where its coming from.
-        '''
-        
-        start = time.time()
-        if delay is None:
-            endtime = None
-        else:
-            endtime = start + delay / 1000.0
-            
-#        print("inside main_loop(), delay = " + str(delay) + "\n start = " 
-#              + str(start) + ", endtime = " + str(endtime) + ", origin = " + str(origin))
+        If *wait_for* is set, return True once every object in the list reports
+        valid via ``is_valid()``, or False on timeout.
+        """
+        return self._main_loop(delay=delay, wait_for=wait_for, origin=origin, poll_zmq=True)
 
-            
-        # Convert wait_for to a list
-        if wait_for is not None:
-            if type(wait_for) in (tuple, list):
-                wait_for = list(wait_for)
-            else:
-                wait_for = [wait_for,]
-
-        # If nothing to wait for, flush signal queue
-        else:
-            helper.flush_queue()
-
-        poller = zmq.Poller()
-        poller.register(self.srv, flags=zmq.POLLIN)
-        
-        while True:
-#            print("at top of while loop")
-            # Set curdelay based on end time
-            if endtime is not None:
-                curdelay = endtime - time.time()
-            else:
-                curdelay = 10000
-
-            # Adjust curdelay if we have scheduled timeouts
-            if len(self._scheduled_timeouts) > 0:
-                to_delay = (self._scheduled_timeouts[0][0] - time.time()) * 1000.0
-                to_delay = max(0, to_delay)
-                curdelay = min(curdelay, to_delay)
-
-            # Poll
-            socks = poller.poll(curdelay)
-            if len(socks) == 0:
-                self._run_timeouts()
-                if endtime is not None and time.time() >= endtime:
-                    return False
-                # Poll again
-                continue
-
-            # Receive message
-            msgs = self.srv.recv_multipart()
-            client = msgs[0]
-
-            # Decode message
-            try:
-                info = pickle.loads(msgs[1])
-            except Exception as e:
-                logger.warning('Unable to decode object: %s %s', str(e), msgs[1].decode('unicode-escape'))
-
-                return
-
-            # Process
-            try:
-                logger.debug('Starting Message processing %s', str(info))
-                waiting = (wait_for is not None)
-                helper.process_message(client, info, msgs[2:], waiting=waiting)
-            except Exception as e:
-                logger.warning('Failed to process message: %s\n%s', str(e), traceback.format_exc())
-            finally:
-                logger.debug('Message processed %s', str(info))
-
-            # If we are waiting for call results and have them, return
-            if wait_for is not None:
-                i = 0
-                while i < len(wait_for):
-                    if wait_for[i].is_valid():
-                        del wait_for[i]
-                    else:
-                        i += 1
-                if len(wait_for) == 0:
-                    return True
-
-            # Check whether we timed out
-            logger.debug('Bottom of while loop, checking for timeouts: %s %s', str(endtime), str(time.time())) #DARIO 5/24/19 debugging "hanging" alazar crash
-            if endtime is not None and time.time() >= endtime:
-                return False
-                
     def main_loop_alz(self, delay=None, wait_for=None, origin=0):
-        '''
-        Run the receiving main loop for a maximum of <delay> msec.
+        """
+        Alazar-specific main loop: same as ``main_loop`` but without ZMQ polling.
 
-        If <wait_for> is specified (a single object or a list), the loop will
-        terminate once all objects return True from is_valid().
-        '''
-        
-        '''
-        Something is resetting delay while alazar is running. 
-        This ruins the loop for alazar. Use 'origin' to figure out where its coming from.
-        '''
-        
-        start = time.time()
-        if delay is None:
-            endtime = None
-        else:
-            endtime = start + delay / 1000.0
-            
-#        print("inside main_loop_alz(), delay = " + str(delay) + "\n start = " 
-#              + str(start) + ", endtime = " + str(endtime))
-
-            
-        # Convert wait_for to a list
-        if wait_for is not None:
-            if type(wait_for) in (tuple, list):
-                wait_for = list(wait_for)
-            else:
-                wait_for = [wait_for,]
-
-        # If nothing to wait for, flush signal queue
-        else:
-            helper.flush_queue()
-
-        poller = zmq.Poller()
-        poller.register(self.srv, flags=zmq.POLLIN)
-        
-        while True:
-#            print("at top of while loop")
-
-            # Set curdelay based on end time
-            if endtime is not None:
-                curdelay = endtime - time.time()
-            else:
-                curdelay = 10000
-
-            # Adjust curdelay if we have scheduled timeouts
-            if len(self._scheduled_timeouts) > 0:
-                to_delay = (self._scheduled_timeouts[0][0] - time.time()) * 1000.0
-                to_delay = max(0, to_delay)
-                curdelay = min(curdelay, to_delay)
-                
-            # Poll
-            """ 
-            this line is not returning inside of the alazar calls
-            i need to find out how it works and why its hanging
-            for now i'm overriding it in the alazar calls
-            """
-            #socks = poller.poll(curdelay)
-            socks = []
-            if len(socks) == 0:
-                self._run_timeouts()
-                if endtime is not None and time.time() >= endtime:
-                    return False
-                # Poll again
-                continue
-            
-            # Receive message
-            msgs = self.srv.recv_multipart()
-            client = msgs[0]
-
-            # Decode message
-            try:
-                info = pickle.loads(msgs[1])
-            except Exception as e:
-
-                print((msgs[1]))
-                logger.warning('Unable to decode object: %s %r', str(e), msgs[1])
-                logger.warning(msgs[1])
-
-                return
-
-            # Process
-            try:
-                logger.debug('Starting Message processing %s', str(info))
-                waiting = (wait_for is not None)
-                helper.process_message(client, info, msgs[2:], waiting=waiting)
-            except Exception as e:
-                logger.warning('Failed to process message: %s\n%s', str(e), traceback.format_exc())
-            finally:
-                logger.debug('Message processed %s', str(info))
-
-            # If we are waiting for call results and have them, return
-            if wait_for is not None:
-                i = 0
-                while i < len(wait_for):
-                    if wait_for[i].is_valid():
-                        del wait_for[i]
-                    else:
-                        i += 1
-                if len(wait_for) == 0:
-                    return True
-
-            # Check whether we timed out
-            if endtime is not None and time.time() >= endtime:
-                return False
+        Kept for API compatibility; ZMQ recv was hanging inside Alazar calls.
+        """
+        return self._main_loop(delay=delay, wait_for=wait_for, origin=origin, poll_zmq=False)
 
     def _qt_timer(self):
         self.main_loop(delay=0)
         return True
 
     def add_qt_timer(self, interval=20):
-        '''
-        Install a callback timer at <interval> msec to integrate ZMQ message
-        processing into the Qt4 main loop.
-        '''
-
+        """
+        Install a QTimer so ZMQ messages are processed inside the Qt event loop.
+        """
         if self.timer is not None:
             logger.warning('Timer already installed')
             return False
 
-        from PyQt4 import QtCore, QtGui
-        _app = QtGui.QApplication.instance()
+        from PyQt6 import QtCore
+        from PyQt6.QtWidgets import QApplication
+        app = QApplication.instance()
+        if app is None:
+            logger.warning('No QApplication instance; create one before add_qt_timer()')
+            return False
         self.timer = QtCore.QTimer()
-        QtCore.QObject.connect(self.timer, QtCore.SIGNAL('timeout()'), self._qt_timer)
-#        self.timer.start(interval)
-        self.timer.start()
-
+        self.timer.timeout.connect(self._qt_timer)
+        self.timer.start(interval)
         return True
-

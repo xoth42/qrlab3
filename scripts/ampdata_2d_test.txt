@@ -1,3 +1,0 @@
-ObjectProxy for 41e5da0d-9718-46b4-bdc8-2aaac9637f3d @ p10168_jmtYWf (address tcp://127.0.0.1:55556)
-Remote info:
-<__main__.DataSet object at 0x0000000004FC72B0>

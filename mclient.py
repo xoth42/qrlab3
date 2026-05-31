@@ -16,12 +16,9 @@ for modname in 'objectsharer', 'pulseseq':
 
 import time
 import objectsharer as objsh
-#JOSH
-#sequencer seems to depend on matplotlib, which depends on pyqt5 even though
-# pyqt4 is installed. Probably a version of matplotlib that is too recent.
+
 from pulseseq import sequencer, pulselib
-#reload(sequencer)
-#reload(pulselib)
+
 import numpy as np
 import types
 

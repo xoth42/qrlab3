@@ -82,5 +82,5 @@ message type:
 
 Extra message parts are provided in the following order:
 - Tuples are traversed depth-first.
-- Dictionaries are traversed through iteritems, which should result in same-
+- Dictionaries are traversed through items(), which should result in same-
 ordered traversion for the same elements.
