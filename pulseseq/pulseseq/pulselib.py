@@ -33,7 +33,7 @@ class Gaussian(Pulse):
     '''
 
     def __init__(self, s, a, chan=1, chop=4.):
-        blockwidth = np.round(chop*s)
+        blockwidth = int(np.round(chop*s))
         ts = np.linspace(-blockwidth/2, blockwidth/2, blockwidth, endpoint=True)
         ys = a * np.exp(-ts**2/(2 * s**2))
 #        ys[-1] = 0.         # JEFF added to solve t2 echo stitching problem
@@ -56,7 +56,7 @@ class Lorentzian(Pulse):
     '''
 
     def __init__(self, w, a, chan=1, chop=3.):
-        blockwidth = np.ceil(chop*w)
+        blockwidth = int(np.ceil(chop*w))
         ts = np.linspace(-blockwidth/2, blockwidth/2, blockwidth+1, endpoint=True)
         ys = a * (w/2)**2 / (ts**2 + (w/2.0)**2)
         name = 'lorentz(%.2f,%.5f)' % (w, a)
@@ -70,7 +70,7 @@ class Square(Pulse):
     '''
 
     def __init__(self, w, a, pad=2, chan=1):
-        blockwidth = np.ceil(w+2*pad)
+        blockwidth = int(np.ceil(w+2*pad))
         ts = np.linspace(-blockwidth/2, blockwidth/2, blockwidth, endpoint=True)
         ys = np.zeros_like(ts)
         ys[(ts>=-w/2)&(ts<=w/2)] = a
@@ -94,7 +94,7 @@ class Triangle(Pulse):
     '''
 
     def __init__(self, w, a, chan=1):
-        blockwidth = np.ceil(2*w)
+        blockwidth = int(np.ceil(2*w))
         ts = np.linspace(-blockwidth/2, blockwidth/2, blockwidth, endpoint=True)
         ys = np.zeros_like(ts)
         ys = a * np.maximum(0, 1 - np.abs(ts)/w)
@@ -111,7 +111,7 @@ class GaussSquare(Pulse):
     '''
 
     def __init__(self, w, a, sigma, chan=1, chop=4):
-        blockwidth = np.ceil(w+chop*sigma)
+        blockwidth = int(np.ceil(w+chop*sigma))
         ts = np.linspace(-blockwidth/2, blockwidth/2, blockwidth, endpoint=True)
         ys = np.zeros_like(ts)
         ys[(ts>-w/2)&(ts<w/2)] = a
@@ -130,7 +130,7 @@ class Sinc(Pulse):
     '''
 
     def __init__(self, w, a, chan=1, chop=4):
-        blockwidth = np.ceil(chop*w)
+        blockwidth = int(np.ceil(chop*w))
         ts = np.linspace(-blockwidth/2, blockwidth/2, blockwidth, endpoint=True)
         ys = a * np.sinc(ts / (0.5 * w))
         name = 'sinc(%.2f,%.5f)' % (w, a)
@@ -192,11 +192,11 @@ class GSRotation(object):
         if self.chirp:
             p1 = Chirp(p1, self.chirp, chan=self.chans[0])
             p2 = Chirp(p2, self.chirp, chan=self.chans[1])
-        elif drag:
-            p1d = p1.data + drag * derivative(p2.data)
-            p2d = p2.data - drag * derivative(p1.data)
-            p1 = Pulse('dragI(%s,%.5f)'%(p1.name, drag), p1d, chan=self.chans[0])
-            p2 = Pulse('dragQ(%s,%.5f)'%(p2.name, drag), p2d, chan=self.chans[1])
+        elif self.drag:
+            p1d = p1.data + self.drag * derivative(p2.data)
+            p2d = p2.data - self.drag * derivative(p1.data)
+            p1 = Pulse('dragI(%s,%.5f)'%(p1.name, self.drag), p1d, chan=self.chans[0])
+            p2 = Pulse('dragQ(%s,%.5f)'%(p2.name, self.drag), p2d, chan=self.chans[1])
 
         # no need for pulses
         if a1 == 0 and a2 == 0:
@@ -566,8 +566,8 @@ class Slepian(Pulse):
 
     def __init__(self, w, a, bw=0.3, chan=1):
         name = 'slepian(%.3f,%.1f,%.5f)' % (bw, w, a)
-        w = np.ceil(w)
-        ys = a * scipy.signal.slepian(w, bw)
+        w = int(np.ceil(w))
+        ys = a * scipy.signal.windows.dpss(w, w * bw / 2)
         super(Slepian, self).__init__(name, ys, chan=chan)
 
 class Kaiser(Pulse):
@@ -577,7 +577,7 @@ class Kaiser(Pulse):
 
     def __init__(self, w, a, alpha=2, chan=1):
         name = 'kaiser(%.3f,%.1f,%.5f)' % (alpha, w, a)
-        w = np.ceil(w)
+        w = int(np.ceil(w))
         xs = np.arange(w)
         ys = a * scipy.special.i0(np.pi * alpha * np.sqrt(1 - (2.0 * xs / (w - 1) - 1)**2))
         ys /= scipy.special.i0(np.pi * alpha)

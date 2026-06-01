@@ -8,8 +8,6 @@ AWG_SLOT = 7
 DIG_SLOT = 8
 
 
-
-
 # CREATE AND OPEN MODULES
 awg = key.SD_AOU()
 aouID = awg.openWithSlot(AWG_PRODUCT, CHASSIS, AWG_SLOT)

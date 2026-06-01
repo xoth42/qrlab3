@@ -7,6 +7,7 @@ from .sequencer import Combined, Sequence, Sequencer, Delay, Pulse, Instruction,
 from .pulselib import CSVPulse, DetunedGaussSquare, DataPulse
 import mclient
 import numpy as np
+import os
 
 
 
@@ -25,7 +26,7 @@ class octlib(object):
         self.decode_info = decode_info
 
     def fock_state(self, end_state, phase = 0):
-        combined_path = self.filepath + '\state_transfer_' + end_state
+        combined_path = os.path.join(self.filepath, 'state_transfer_' + end_state)
         data = self.cav_amp * np.loadtxt(combined_path + '_cavity_1000ns.csv') - 1.0j* self.cav_amp * np.loadtxt(combined_path + '_cavity_q_1000ns.csv')
         data *= np.exp(-1.0j*phase)
         cav_i = np.real(data)
@@ -44,7 +45,7 @@ class octlib(object):
                          ])
 
     def fock_state_two_file(self, end_state, start_state='0'):
-        combined_path = self.filepath + '\envelope_fock_' + start_state + '_' + end_state
+        combined_path = os.path.join(self.filepath, 'envelope_fock_' + start_state + '_' + end_state)
         return Combined([Join([CSVPulse(combined_path + '_transmon_1000ns.csv', self.qt_amp, chan=self.qubit_info.sideband_channels[0]),
                                Constant(self.time_shift, 0, chan=self.qubit_info.sideband_channels[0])]),
                          Join([Constant(self.time_shift, 0, chan=self.cav_info.sideband_channels[0]),
@@ -53,7 +54,7 @@ class octlib(object):
     
     
     def mod4_prep(self, state, phase = 0):
-        combined_path = self.filepath + '\state_transfer_' + state
+        combined_path = os.path.join(self.filepath, 'state_transfer_' + state)
         data = self.cav_amp * np.loadtxt(combined_path + '_cavity_1000ns.csv') - 1.0j* self.cav_amp * np.loadtxt(combined_path + '_cavity_q_1000ns.csv')
         data *= np.exp(-1.0j*phase)
         cav_i = np.real(data)
@@ -72,7 +73,7 @@ class octlib(object):
                          ])
 
     def mod4_encode(self):
-        combined_path = self.filepath + '\encoding_unitary'
+        combined_path = os.path.join(self.filepath, 'encoding_unitary')
         return Combined([Join([CSVPulse(combined_path + '_transmon_1000ns.csv', self.qt_amp, chan=self.qubit_info.sideband_channels[0]),
                                Constant(self.time_shift, 0, chan=self.qubit_info.sideband_channels[0])]),
                          Join([CSVPulse(combined_path + '_transmon_q_1000ns.csv', self.qt_amp, chan=self.qubit_info.sideband_channels[1]),
@@ -88,7 +89,7 @@ class octlib(object):
         dt_pi = '2000'
         
         
-        combined_path = self.filepath + '\decoding_unitary'
+        combined_path = os.path.join(self.filepath, 'decoding_unitary')
         if secondary:
             data = (self.cav_amp * np.loadtxt(combined_path + '_cavity_' + dt_pi + 'ns_pi.csv') 
                     - 1.0j* self.cav_amp * np.loadtxt(combined_path + '_cavity_q_' + dt_pi + 'ns_pi.csv'))
@@ -138,7 +139,7 @@ class octlib(object):
                              ])
     
     def mod4_decode2(self, phase = 0, secondary = False): # just the secondary decoding
-        combined_path = self.filepath + '\decoding_unitary'
+        combined_path = os.path.join(self.filepath, 'decoding_unitary')
 #        if secondary:
         data = self.cav_amp * np.loadtxt(combined_path + '_cavity_2000ns_pi.csv') - 1.0j* self.cav_amp * np.loadtxt(combined_path + '_cavity_q_2000ns_pi.csv')
 #        else:
@@ -171,7 +172,7 @@ class octlib(object):
 #                             ])
     
     def fock01_encode(self, phase = 0):
-        combined_path = self.filepath + '\simple_unitary'
+        combined_path = os.path.join(self.filepath, 'simple_unitary')
         data = self.cav_amp * np.loadtxt(combined_path + '_cavity_1000ns.csv') - 1.0j* self.cav_amp * np.loadtxt(combined_path + '_cavity_q_1000ns.csv')
         data *= np.exp(-1.0j*phase)
         cav_i = np.real(data)

@@ -10,9 +10,9 @@ import matplotlib.pyplot as plt
 
 mpl.rcParams['legend.fontsize'] = 8
 N = 12
-cmap = mpl.cm.get_cmap(name='spectral')
+cmap = mpl.colormaps['Spectral']
 colors = [cmap(i) for i in np.linspace(0, 1.0, N)]
-mpl.rcParams['axes.color_cycle'] = colors
+mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=colors)
 mpl.rcParams['lines.linewidth'] = 1.5
 
 NORM = True         # Whether to normalize power spectrum
@@ -66,4 +66,3 @@ else:
 plt.yscale('log')
 plt.legend()
 plt.xlabel('Frequency [MHz]')
-

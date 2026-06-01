@@ -32,7 +32,7 @@ The most convenient way to run the examples is in IPython:
 
 then execute:
 
-    execfile('examples/t2echo.py')
+    exec(open('examples/t2echo.py').read())
 
 
 
@@ -63,4 +63,3 @@ Approach
 The pulse rendering sequence follows a two-step approach:
 - resolving: figure out the timing of all the pulses
 - generating: render the actual pulses
-

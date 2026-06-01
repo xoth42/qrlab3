@@ -39,7 +39,7 @@ PAD_CENTER    = 2
     TODO: make this shit dynamic so it doesn't need to be reset
 '''
 
-MINLEN        =2000
+MINLEN        = 2000
 
 IGNORE        = 0
 WARN          = 1
@@ -944,7 +944,7 @@ class Sequence(Instruction):
 
                 # Determine new repeat count
                 n_to_unroll = int(np.ceil(float(minlen) / len(el.data)))
-                new_repeat_count = (el.repeat / n_to_unroll)
+                new_repeat_count = el.repeat // n_to_unroll
                 remainder = (el.repeat % n_to_unroll)
                 if remainder != 0:
                     new_repeat_count -= 1
@@ -2012,4 +2012,3 @@ def map_pulse_names(names):
 
 if __name__ == '__main__':
     print('Please use testsequencer.py to test')
-

@@ -186,10 +186,14 @@ def cache_result(f):
 def _walk_objects(obj, func, *args):
     """Recursively apply *func* to *obj* and nested list/tuple/dict contents."""
     if type(obj) in (list, tuple):
+        # Copy containers so we can rewrite nested values without mutating the
+        # original tuple/list object that may still be referenced by callers.
         obj = list(obj)
         for i, v in enumerate(obj):
             obj[i] = _walk_objects(v, func, *args)
     if type(obj) is dict:
+        # Sort keys for deterministic traversal; this keeps serialization and
+        # debugging output stable across Python versions.
         for k in sorted(obj):
             obj[k] = _walk_objects(obj[k], func, *args)
     return func(obj, *args)
@@ -199,12 +203,16 @@ def _wrap_ars_sobjs(obj, arlist=None):
     """Replace numpy arrays and shared objects with wire-serializable markers."""
     def replace(o):
         if isinstance(o, np.ndarray):
+            # Send array metadata in the pickle payload and the raw bytes in a
+            # separate ZeroMQ frame so large arrays do not get copied twice.
             if not o.flags['C_CONTIGUOUS']:
                 o = np.ascontiguousarray(o)
             assert o.flags['C_CONTIGUOUS']
             arlist.append(o)
             return dict(OS_AR=True, shape=o.shape, dtype=o.dtype)
         if hasattr(o, '_OS_UID'):
+            # Shared objects become lightweight references. The receiver can
+            # turn these back into proxies if it knows the owner uid/address.
             ret = dict(OS_UID=o._OS_UID)
             if hasattr(o, '_OS_SRV_ID'):
                 ret['OS_SRV_ID'] = o._OS_SRV_ID
@@ -226,11 +234,14 @@ def _unwrap_ars_sobjs(obj, bufs, client=None):
     def replace(o):
         if type(o) is dict:
             if 'OS_AR' in o:
+                # Rebuild arrays from the next raw frame in the multipart message.
                 if len(bufs) == 0:
                     raise ValueError('No buffer!')
                 ar = np.frombuffer(bufs.pop(0), dtype=o['dtype'])
                 return ar.reshape(o['shape'])
             if 'OS_UID' in o:
+                # Prefer the explicit server address if it came back in the
+                # payload; otherwise resolve via the client that sent the frame.
                 if 'OS_SRV_ID' in o and 'OS_SRV_ADDR' in o:
                     return helper.get_object_from(o['OS_UID'], o['OS_SRV_ID'], o['OS_SRV_ADDR'])
                 return helper.get_object_from(o['OS_UID'], client)
@@ -307,7 +318,9 @@ class ObjectSharer(object):
         self.objects = {}
         self.name_map = {}
 
-        # Remote peers and cached proxies.
+        # Remote peers and cached proxies. `_proxy_cache` avoids rebuilding the
+        # same ObjectProxy repeatedly, and `_client_object_list_cache` lets us
+        # resolve names without querying every peer.
         self.clients = {}
         self._proxy_cache = {}
         self._client_object_list_cache = {}
@@ -346,6 +359,8 @@ class ObjectSharer(object):
             ellipsize(str(args)), ellipsize(str(kwargs)), async_,
         )
 
+        # Wrap arrays/shared objects before pickling so the main message stays
+        # small and the heavy binary payload can ride in separate frames.
         args, arlist = _wrap_ars_sobjs(args)
         kwargs, arlist = _wrap_ars_sobjs(kwargs, arlist)
         msg = (OS_CALL, callid, obj_name, func_name, args, kwargs)
@@ -381,11 +396,16 @@ class ObjectSharer(object):
         props = []
         funcs = []
         for key, val in inspect.getmembers(obj):
+            # Keep the proxy surface focused: hide private members, but preserve
+            # a few dunder methods that are meant to be invoked remotely.
             if key.startswith('_') and key not in SPECIAL_FUNCTIONS:
                 continue
+            # 'connect' is reserved locally for signal wiring on proxies.
             if key == 'connect':
                 continue
             if callable(val):
+                # Capture docs and signatures so remote proxies can synthesize
+                # useful method wrappers and introspection strings.
                 opts = val._share_options if hasattr(val, '_share_options') else {}
                 opts = dict(opts)
                 opts['__doc__'] = getattr(val, '__doc__', None)
@@ -485,6 +505,9 @@ class ObjectSharer(object):
                 raise Exception('Object %s already defined' % name)
             self.name_map[name] = obj._OS_UID
 
+        # Monkey-patch the object so its signal API transparently routes through
+        # ObjectSharer. Existing emit/connect callers do not need to know about
+        # the networking layer.
         obj._OS_emit = getattr(obj, 'emit', None)
         obj.emit = lambda signal, *a, **kw: self.emit_signal(obj._OS_UID, signal, *a, **kw)
         obj.connect = lambda signame, callback, *a, **kw: self.connect_signal(
@@ -543,6 +566,8 @@ class ObjectSharer(object):
             'Emitting %s(%r, %r) for %s to %d clients',
             signame, args, kwargs, uid, len(self.clients),
         )
+        # Signals are just RPC calls with a special marker; remote peers and
+        # local callbacks both see the same event payload.
         kwargs[OS_SIGNAL] = True
         for client in self.clients.values():
             client.receive_signal(uid, signame, *args, **kwargs)
@@ -555,6 +580,8 @@ class ObjectSharer(object):
         ncalls = 0
         start = time.time()
         name = '%s__%s' % (uid, signame)
+        # Each callback can add its own positional/keyword extras that are
+        # appended here before invocation.
         for info in self._callbacks_name.get(name, []):
             ncalls += 1
             try:
@@ -589,6 +616,8 @@ class ObjectSharer(object):
 
     def request_client_proxy(self, uid, async_=False):
         """Fetch the remote ``root`` object and register the peer in ``clients``."""
+        # Every peer publishes a well-known `root` object. We fetch that first,
+        # then ask root for its object list so the proxy cache can be populated.
         if not async_:
             info = self.call(uid, 'root', 'get_object_info', 'root')
             self._add_client_to_list(uid, info)
@@ -607,6 +636,8 @@ class ObjectSharer(object):
         When *waiting* is True (main loop blocked on an RPC reply), incoming
         signals are queued rather than handled inline to avoid re-entrancy.
         """
+        # The first tuple entry is the message type; everything else is routed
+        # to a specialized handler.
         msg_type = info[0]
         if msg_type == OS_CALL:
             self._handle_call(from_uid, info, bufs, waiting)
@@ -634,9 +665,12 @@ class ObjectSharer(object):
 
             # Defer signal delivery while a synchronous RPC is in flight.
             if waiting and sig:
+                # This keeps signal callbacks from re-entering the call stack
+                # while we are blocked waiting for a reply message.
                 self._signal_queue.append((from_uid, info, bufs))
                 return
 
+            # Rehydrate arrays/shared objects before invoking the real method.
             args, bufs = _unwrap_ars_sobjs(args, bufs, from_uid)
             kwargs, bufs = _unwrap_ars_sobjs(kwargs, bufs, from_uid)
 
@@ -835,6 +869,9 @@ class ObjectProxy(object):
             return
 
         for funcname, share_options in info['functions']:
+            # Each remote method becomes a local callable wrapper. Special
+            # functions are kept in `_specials` so Python protocols like
+            # __getitem__ can still work through normal syntax.
             func = _FunctionCall(self._OS_SRV_ID, self._OS_UID, funcname, share_options)
             if funcname in SPECIAL_FUNCTIONS:
                 self._specials[funcname] = func
@@ -842,6 +879,8 @@ class ObjectProxy(object):
                 setattr(self, funcname, func)
 
         # Placeholder: remote property values are not fetched automatically.
+        # The object advertises names so attribute access feels natural even
+        # though the actual values are still owned by the remote peer.
         for propname in info['properties']:
             setattr(self, propname, 'blaat')
 
@@ -978,6 +1017,8 @@ class ZMQBackend(object):
             if uid in self.uid_to_addr_map:
                 logger.warning('Client %s already present at different address', uid)
                 return
+            # If the caller already knows the peer uid, seed both lookup tables
+            # before the hello handshake finishes.
             self.addr_to_uid_map[addr] = uid
             self.uid_to_addr_map[uid] = addr
 
@@ -989,6 +1030,8 @@ class ZMQBackend(object):
         if resolved_uid is not None:
             self.uid_to_sock_map[resolved_uid] = sock
 
+        # First message on the new channel announces our listening address.
+        # The peer uses that to connect back, giving us bidirectional traffic.
         sock.send(pickle.dumps(('hello_from', 'tcp://%s:%d' % (self.addr, self.port))))
 
         if addr not in self.addr_to_uid_map:
@@ -1111,12 +1154,15 @@ class ZMQBackend(object):
         wait_for = self._normalize_wait_for(wait_for)
 
         if wait_for is None:
+            # If no caller is waiting for a specific reply, process any queued
+            # signals before entering the poll loop.
             helper.flush_queue()
 
         poller = zmq.Poller()
         poller.register(self.srv, flags=zmq.POLLIN)
 
         while True:
+            # Poll duration is driven by the soonest timeout or caller deadline.
             curdelay = self._compute_poll_delay(endtime)
             socks = poller.poll(curdelay) if poll_zmq else []
 
@@ -1141,6 +1187,8 @@ class ZMQBackend(object):
                 logger.debug('Message processed %s', str(info))
 
             if wait_for is not None and self._wait_for_complete(wait_for):
+                # Synchronous call path: return as soon as the awaited reply has
+                # been marked valid by _handle_return().
                 return True
 
             if endtime is not None and time.time() >= endtime:

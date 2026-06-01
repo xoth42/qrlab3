@@ -16,7 +16,6 @@ for modname in 'objectsharer', 'pulseseq':
 
 import time
 import objectsharer as objsh
-
 from pulseseq import sequencer, pulselib
 
 import numpy as np
@@ -45,7 +44,6 @@ for addr in ('tcp://127.0.0.1:55555', 'tcp://127.0.0.1:55556'):
 
 instruments = objsh.helper.find_object('instruments')
 datasrv = objsh.helper.find_object('dataserver')
-##datafile = datasrv.get_file(config.datafilename)
 
 
 def parse_chans(chans):
@@ -60,6 +58,12 @@ def parse_chans(chans):
         except:
             ret.append(chan)
     return ret
+
+def _normalize_text(value):
+    """Return a text string for config-backed values that may arrive as bytes."""
+    if isinstance(value, bytes):
+        return value.decode()
+    return value
 
 class Container(object):
     pass
@@ -114,7 +118,7 @@ def get_qubit_info(name, detune=None):
 
     # Setup rotation
     r = ret.rotation
-    # if type(r) is bytes:
+    r = _normalize_text(r)
     r = r.upper()
     if r == 'GAUSSIAN':
         ret.rotate = pulselib.AmplitudeRotation(pulselib.Gaussian, ret.w, ret.pi_amp, drag=ret.drag, pi2_amp=ret.pi2_amp, chans=ret.sideband_channels)
@@ -136,8 +140,8 @@ def get_qubit_info(name, detune=None):
     
     # Setup rotation selective
     r = ret.rotation_selective
-    if type(r) is bytes:
-        r = r.upper()
+    r = _normalize_text(r)
+    r = r.upper()
     if r == 'GAUSSIAN':
         ret.rotate_selective = pulselib.AmplitudeRotation(pulselib.Gaussian, ret.w_selective, ret.pi_amp_selective, pi2_amp=ret.pi2_amp_selective, chans=ret.sideband_channels)
     elif r == 'GAUSSIANSQUARE':
@@ -157,8 +161,8 @@ def get_qubit_info(name, detune=None):
 
     # Setup rotation quasi-selective
     r = ret.rotation_quasilective
-    if type(r) is bytes:
-        r = r.upper()
+    r = _normalize_text(r)
+    r = r.upper()
     if r == 'GAUSSIAN':
         ret.rotate_quasilective = pulselib.AmplitudeRotation(pulselib.Gaussian, ret.w_quasilective, ret.pi_amp_quasilective, pi2_amp=ret.pi2_amp_quasilective, chans=ret.sideband_channels)
     elif r == 'GAUSSIANSQUARE':
