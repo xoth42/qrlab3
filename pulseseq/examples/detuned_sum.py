@@ -28,4 +28,3 @@ s = Sequencer(seq)
 seqs = s.render()
 s.plot_seqs(seqs)
 s.print_seqs(seqs)
-

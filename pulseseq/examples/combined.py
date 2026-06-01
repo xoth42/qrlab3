@@ -5,7 +5,7 @@ import numpy as np
 from pulseseq.sequencer import *
 from pulseseq.pulselib import *
 
-r = GSRotation(40, 5, 10, 0, 1.0, chans=(1,2))
+r = GSRotation(40, 5, 10, 0, 1.0, chans=(1, 2))
 
 seq = Sequence()
 seq.append(Combined([
@@ -28,4 +28,3 @@ s = Sequencer(seq)
 seqs = s.render(debug=True)
 s.plot_seqs(seqs)
 s.print_seqs(seqs)
-

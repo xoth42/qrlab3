@@ -1,4 +1,4 @@
-pulseseq, a python pulse sequencing library
+pulseseq, a Python pulse sequencing library
 Reinier Heeres, 2013
 
 
@@ -18,21 +18,33 @@ for all the channels involved and plotted for inspection.
 
 Installing
 
-To install, run:
+This checkout is designed to be used directly from the repository root. Add
+the repo to your `PYTHONPATH`, or install it into your environment using your
+own packaging workflow if you prefer.
 
-    python setup.py install
+For example:
+
+    export PYTHONPATH="$PWD:$PYTHONPATH"
+
+Once the repo is on the path, imports such as `from pulseseq import sequencer`
+should work normally under Python 3.
 
 
 
 Examples
 
-The most convenient way to run the examples is in IPython:
+The most convenient way to run the examples is in IPython or a notebook-like
+shell:
 
     ipython --pylab=qt
 
 then execute:
 
     exec(open('examples/t2echo.py').read())
+
+You can also run a script directly from the repository root:
+
+    python3 examples/t2echo.py
 
 
 
@@ -54,7 +66,7 @@ Now you can call this object to generate the proper pulses:
 
 It is now very easy to change the actual rotation type:
 
-    r = AmplitudeRotation(Square, 15, chans=(1,2)
+    r = AmplitudeRotation(Square, 15, chans=(1,2))
 
 
 

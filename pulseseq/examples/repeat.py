@@ -22,4 +22,3 @@ s = Sequencer(seq)
 seqs = s.render(debug=True)
 s.plot_seqs(seqs)
 s.print_seqs(seqs)
-

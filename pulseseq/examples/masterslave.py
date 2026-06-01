@@ -16,11 +16,10 @@ seq.append(Gaussian(20, 0.5, chan=2))
 seq.append(Gaussian(50, 0.5, chan=5))
 
 s = Sequencer(seq)
-s.add_master_channel([1,2])
+s.add_master_channel([1, 2])
 s.add_slave_trigger('1m1', 200)
 s.add_slave_trigger('1m2', 100)
 
 seqs = s.render(debug=True)
 s.plot_seqs(seqs)
 s.print_seqs(seqs)
-

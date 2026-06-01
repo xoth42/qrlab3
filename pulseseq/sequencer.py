@@ -22,34 +22,35 @@ mpl.rcParams['axes.titlesize'] = 'small'
 # Constants
 #########################################
 
-CHAN_ANY    = -1
+CHAN_ANY = -1
 
-ALIGN_LEFT    = 0
-ALIGN_RIGHT   = 1
-ALIGN_CENTER  = 2
+ALIGN_LEFT = 0
+ALIGN_RIGHT = 1
+ALIGN_CENTER = 2
 
-PAD_LEFT      = 0
-PAD_RIGHT     = 1
-PAD_BOTH      = 2
-PAD_CENTER    = 2
+PAD_LEFT = 0
+PAD_RIGHT = 1
+PAD_BOTH = 2
+PAD_CENTER = 2
 
 ''' JEFF: default value for Tektronix is 250. Keysight requires a higher value.
     Try 1000 and look for error messages asking for a longer or shorter pulse length.
-    
+
     TODO: make this shit dynamic so it doesn't need to be reset
 '''
 
-MINLEN        = 2000
+MINLEN = 2000
 
-IGNORE        = 0
-WARN          = 1
-RAISE         = 2
+IGNORE = 0
+WARN = 1
+RAISE = 2
 
-DEBUG         = False
+DEBUG = False
 
 #########################################
 # Helper functions
 #########################################
+
 
 def merge_arrays(ar1, ar2):
     for i in ar2:
@@ -57,21 +58,25 @@ def merge_arrays(ar1, ar2):
             ar1.append(i)
     return ar1
 
+
 def chars_in_str(chars, s):
     for ch in chars:
         if ch in s:
             return True
     return False
 
+
 def is_delay(el):
     if isinstance(el, Pulse) and el.name.startswith('delay'):
         return True
     return False
 
+
 def is_delay1(el):
     if isinstance(el, Pulse) and el.name == 'delay1':
         return True
     return False
+
 
 class Sequencer:
     '''
@@ -127,7 +132,14 @@ class Sequencer:
         '''
         self._req_chans.append(chan)
 
-    def add_marker(self, markchan, activechan, pre=8, post=0, ofs=None, bufwidth=None):
+    def add_marker(
+            self,
+            markchan,
+            activechan,
+            pre=8,
+            post=0,
+            ofs=None,
+            bufwidth=None):
         '''
         Add a marker channel <markchan> that is to be generated upon activity
         on <activechan>. <pre> and <post> respectively indicate how many
@@ -143,7 +155,8 @@ class Sequencer:
             ofs = round((post - pre) / 2.0)
 
         if markchan not in self._marker_chans:
-            self._marker_chans[markchan] = dict(channels=[], ofs=ofs, bufwidth=bufwidth)
+            self._marker_chans[markchan] = dict(
+                channels=[], ofs=ofs, bufwidth=bufwidth)
         if activechan not in self._marker_chans[markchan]:
             self._marker_chans[markchan]['channels'].append(activechan)
 
@@ -199,7 +212,11 @@ class Sequencer:
                 while iend < len(s) and not s[iend].get_trigger():
                     iend += 1
                 seq = Sequence(s[istart:iend])
-                ret.append(Combined(seq, ch_align=self.ch_align, ch_delays=self._delays))
+                ret.append(
+                    Combined(
+                        seq,
+                        ch_align=self.ch_align,
+                        ch_delays=self._delays))
                 istart = iend
         return ret
 
@@ -212,9 +229,8 @@ class Sequencer:
         if len(self._slave_triggers) == 0 and len(self._master_chans) == 0:
             return
 
-        # Determine max delay, we add 100 ns because the Tektronix AWGs seem
-        # to play garbage if a marker channel is thrown high at the start of
-        # a sequence.
+        # Determine max delay. The 100 ns cushion is a hardware workaround:
+        # some AWGs glitch if a marker goes high on the first sample.
         delays = np.array([delay for chan, delay in self._slave_triggers])
         trigchans = [chan for chan, delay in self._slave_triggers]
         maxdelay = np.max(delays) + 100
@@ -230,16 +246,25 @@ class Sequencer:
             if chan not in seqs:
                 seqs[chan] = seqs[refchan].aligned_empty_sequence(chan=chan)
             data = np.zeros(maxdelay)
-            data[maxdelay-delay:] = 1
-            p = Pulse('trig(%d,%d)'%(delay,maxdelay), data=data, trigger=True)
+            data[maxdelay - delay:] = 1
+            p = Pulse(
+                'trig(%d,%d)' %
+                (delay, maxdelay), data=data, trigger=True)
             seqs[chan].seq[0].trigger = False
             seqs[chan].prepend(p)
 
-        # Add delay on master channels
+        # Master channels get the same alignment delay without a trigger pulse
+        # of their own so the slave can start late without drifting out of
+        # sync.
         for chan, seq in seqs.items():
             if chan in self._master_chans and chan not in trigchans:
                 seqs[chan].seq[0].trigger = False
-                seq.prepend(Delay(maxdelay, fixed=True, unroll=False, trigger=True))
+                seq.prepend(
+                    Delay(
+                        maxdelay,
+                        fixed=True,
+                        unroll=False,
+                        trigger=True))
 
     def render_subseq(self, ss, chs, debug=False):
         '''
@@ -249,11 +274,15 @@ class Sequencer:
         if debug:
             print('Rendering: %s' % (ss, ))
 
+        # Resolve the abstract instruction stream first so we can see the time
+        # structure before any waveform generation happens.
         seqs = {}
         for ch in ss.get_channels():
             seqs[ch] = ss.resolve(0, ch)
         self.debug_seqs(seqs, 'after resolve()', debug)
 
+        # Generate hardware-facing pulse blocks for each channel we need to
+        # emit. This is the point where abstract instructions become data.
         seqs = {}
         for ch in chs:
             seqs[ch] = ss.generate(0, ch)
@@ -264,16 +293,18 @@ class Sequencer:
             seq.sanitize_delays(self.minlen)
         self.debug_seqs(seqs, 'after sanitizing delays', debug)
 
-        # Make sure each pulse is at least <minlen> long
+        # Merge adjacent items until each block meets the hardware minimum
+        # length. This keeps the final waveform acceptable to the AWG.
         for chan, seq in seqs.items():
             seq.join_small_elements(self.minlen)
         self.debug_seqs(seqs, 'after join_small_elements', debug)
 
-        # Perform sideband modulation
+        # Apply sideband modulation after timing has been stabilized.
         for ssb in self._ssb_list:
             ssb.modulate(seqs)
 
-        # Generate marker channels
+        # Marker channels are derived from the activity pattern of the main
+        # channels and inserted as additional sequences.
         for mchan, info in self._marker_chans.items():
             seqs[mchan] = self.generate_marker(mchan, seqs, info)
         self.debug_seqs(seqs, 'after generate_marker', debug)
@@ -288,7 +319,7 @@ class Sequencer:
 
         return seqs
 
-    #TODO: double-check order of delay / sideband modulation
+    # TODO: double-check order of delay / sideband modulation
     def render(self, debug=False):
         chs = self.get_channels()
         ss = self.split_at_trigger()    # Get sub-sequences
@@ -333,7 +364,7 @@ class Sequencer:
         chans = self.get_sorted_chans(seqs)
         for i, ch in enumerate(chans):
             seq = seqs[ch]
-            seq.plot_seq(fig=f, subplot=(len(seqs),1,i+1))
+            seq.plot_seq(fig=f, subplot=(len(seqs), 1, i + 1))
 
     def extract_repeat(self, seqs, i_el, side, N=1):
         '''
@@ -367,7 +398,12 @@ class Sequencer:
         data = (data > 0).astype(int)
 
         # Set sequence element
-        outseq.seq[i_el] = Pulse(name, data, repeat=seqel.repeat, trigger=seqel.trigger, chan=seqel.chan)
+        outseq.seq[i_el] = Pulse(
+            name,
+            data,
+            repeat=seqel.repeat,
+            trigger=seqel.trigger,
+            chan=seqel.chan)
 
         return ret
 
@@ -381,7 +417,7 @@ class Sequencer:
         ofs = info['ofs']
         bufwidth = info['bufwidth']
         outseq = None
-        win = np.ones([2*bufwidth,])
+        win = np.ones([2 * bufwidth,])
 
         # At which offsets in the convolved data the current pulse starts and
         # ends, and at which side of the current pulse it should be added.
@@ -415,31 +451,38 @@ class Sequencer:
                 # Put in previous pulse
                 if pulse_start != 0 and np.count_nonzero(prev_pulse) > 0:
                     if i_el == 0:
-                        logging.warning('Unable to extend marker before sequence start')
+                        logging.warning(
+                            'Unable to extend marker before sequence start')
                     else:
-                        if outseq.seq[i_el-1].repeat > 1:
-                            self.extract_repeat(seqs, i_el-1, 'right')
+                        if outseq.seq[i_el - 1].repeat > 1:
+                            self.extract_repeat(seqs, i_el - 1, 'right')
                             i_el += 1
-                        i_pulse += self.add_to_marker(outseq, i_el-1, i_pulse, prev_pulse, 'right')
+                        i_pulse += self.add_to_marker(
+                            outseq, i_el - 1, i_pulse, prev_pulse, 'right')
 
                 # Put in current pulse
                 if np.count_nonzero(cur_pulse) > 0:
-                    i_pulse += self.add_to_marker(outseq, i_el, i_pulse, cur_pulse, pulse_side)
+                    i_pulse += self.add_to_marker(outseq,
+                                                  i_el, i_pulse, cur_pulse, pulse_side)
 
                 # Put in next pulse
                 if pulse_end != -1 and np.count_nonzero(next_pulse) > 0:
                     if i_el + 1 == len(outseq.seq):
-                        logging.warning('Unable to extend marker after sequence end')
-                    elif outseq.seq[i_el+1].get_trigger():
-                        logging.warning('Unable to extend marker to right due to trigger, add Delay')
+                        logging.warning(
+                            'Unable to extend marker after sequence end')
+                    elif outseq.seq[i_el + 1].get_trigger():
+                        logging.warning(
+                            'Unable to extend marker to right due to trigger, add Delay')
                     else:
-                        if outseq.seq[i_el+1].repeat > 1:
-                            self.extract_repeat(seqs, i_el+1, 'left')
-                        i_pulse += self.add_to_marker(outseq, i_el+1, i_pulse, next_pulse, 'left')
+                        if outseq.seq[i_el + 1].repeat > 1:
+                            self.extract_repeat(seqs, i_el + 1, 'left')
+                        i_pulse += self.add_to_marker(outseq,
+                                                      i_el + 1, i_pulse, next_pulse, 'left')
 
                 i_el += 1
 
         return outseq
+
 
 class Instruction(object):
     '''
@@ -500,6 +543,7 @@ class Instruction(object):
     def get_used_pulses(self):
         return {}
 
+
 class Program:
     '''
     The program class contains a collection of several Instruction sequences.
@@ -514,6 +558,7 @@ class Program:
 #######################################
 # Core instructions
 #######################################
+
 
 class Sequence(Instruction):
     '''
@@ -534,13 +579,19 @@ class Sequence(Instruction):
     Instructions or Sequences by combining them in a MultiChannelPulse.
     '''
 
-    def __init__(self, seq=None, chan=None, trigger=False, join=False, repeat=1):
+    def __init__(
+            self,
+            seq=None,
+            chan=None,
+            trigger=False,
+            join=False,
+            repeat=1):
         self.channel_map = {}
 
         # Propagate trigger to this sequence
         try:
             trigger |= seq.get_trigger()
-        except:
+        except BaseException:
             pass
 
         if isinstance(seq, Sequence):
@@ -571,7 +622,10 @@ class Sequence(Instruction):
             if isinstance(el, Sequence):
                 el.join_sequences()
 
-            if isinstance(el, Sequence) and (self.join or self.join == el.join or len(el.seq) == 1):
+            if isinstance(
+                el, Sequence) and (
+                self.join or self.join == el.join or len(
+                    el.seq) == 1):
                 del self.seq[i]
                 for el2 in el.seq:
                     self.seq.insert(i, el2)
@@ -585,7 +639,7 @@ class Sequence(Instruction):
             raise Exception('Sequence should be a tuple or list')
         i = 0
         while i < len(seq):
-            if seq[i] == None:
+            if seq[i] is None:
                 del seq[i]
                 print('Warning: removing None element from sequence')
             else:
@@ -633,17 +687,19 @@ class Sequence(Instruction):
             if i != 0:
                 name += ','
             if hasattr(el, 'repeat') and el.repeat > 1:
-                name += ('%d'%el.repeat) + el.get_name()
+                name += ('%d' % el.repeat) + el.get_name()
             else:
                 name += el.get_name()
         name += ')'
         return name
 
     def __str__(self):
-        return 'Sequence(join=%s, chan=%s, name=%s, trigger=%s)' % (self.join, self.chan, self.get_name(), self.get_trigger())
+        return 'Sequence(join=%s, chan=%s, name=%s, trigger=%s)' % (
+            self.join, self.chan, self.get_name(), self.get_trigger())
 
     def get_trigger(self):
-        return self.trigger or (len(self.seq) > 0 and self.seq[0].get_trigger())
+        return self.trigger or (
+            len(self.seq) > 0 and self.seq[0].get_trigger())
 
     def __iadd__(self, rval):
         self.append(rval)
@@ -687,7 +743,13 @@ class Sequence(Instruction):
         for i in range(len(self.seq)):
             if self.seq[i].get_length() != other.seq[i].get_length():
                 return False
-            if getattr(self.seq[i], 'repeat', 1) != getattr(other.seq[i], 'repeat', 1):
+            if getattr(
+                    self.seq[i],
+                    'repeat',
+                    1) != getattr(
+                    other.seq[i],
+                    'repeat',
+                    1):
                 return False
         return True
 
@@ -704,7 +766,10 @@ class Sequence(Instruction):
         '''
         Return a new Sequence object for this particular channel.
         '''
-        seq_out = Sequence(chan=chan, join=self.join, trigger=self.get_trigger())
+        seq_out = Sequence(
+            chan=chan,
+            join=self.join,
+            trigger=self.get_trigger())
         bufs = []
         for p in self.seq:
             seq_add = p.generate(now, chan)
@@ -716,7 +781,11 @@ class Sequence(Instruction):
         if self.join:
             buf_out = np.concatenate(bufs)
             if seq_out.delays_only() or np.count_nonzero(buf_out) == 0:
-                p = Delay(len(buf_out), unroll=False, fixed=True, trigger=self.get_trigger())
+                p = Delay(
+                    len(buf_out),
+                    unroll=False,
+                    fixed=True,
+                    trigger=self.get_trigger())
             else:
                 name = seq_out.get_name()
                 p = Pulse(name, buf_out, chan=chan, trigger=self.get_trigger())
@@ -745,8 +814,12 @@ class Sequence(Instruction):
         seqout = []
         for el in self.seq:
             if is_delay(el):
-                if len(seqout) == 0 or not is_delay(seqout[-1]) or el.get_trigger() :
-                    seqout.append(Delay(el.get_length(), trigger=el.get_trigger()))
+                if len(seqout) == 0 or not is_delay(
+                        seqout[-1]) or el.get_trigger():
+                    seqout.append(
+                        Delay(
+                            el.get_length(),
+                            trigger=el.get_trigger()))
                 elif not el.get_trigger():
                     seqout[-1].repeat += el.get_length()
             else:
@@ -760,10 +833,10 @@ class Sequence(Instruction):
         i = 1
         while i < len(self.seq):
             el = self.seq[i]
-            if is_delay1(el) and is_delay1(self.seq[i-1]) and \
-                    not (self.seq[i-1].get_trigger() or el.get_trigger()):
+            if is_delay1(el) and is_delay1(self.seq[i - 1]) and \
+                    not (self.seq[i - 1].get_trigger() or el.get_trigger()):
                 del self.seq[i]
-                self.seq[i-1].repeat += el.repeat
+                self.seq[i - 1].repeat += el.repeat
             else:
                 i += 1
 
@@ -785,7 +858,9 @@ class Sequence(Instruction):
         while idx < len(self.seq):
             dt = self.seq[idx].get_length()
             if tgt_t >= t and tgt_t <= t + dt:
-                if isinstance(self.seq[idx], Pulse) and self.seq[idx].name == 'delay1':
+                if isinstance(
+                        self.seq[idx],
+                        Pulse) and self.seq[idx].name == 'delay1':
                     return 0
                 else:
                     return (t + dt - tgt_t)
@@ -811,13 +886,20 @@ class Sequence(Instruction):
             self.trigger = False
             self.seq[0].trigger = False
 
-            if isinstance(self.seq[0], Pulse) and self.seq[0].name == 'delay1' and t + plen >= tgt_t:
+            if isinstance(
+                    self.seq[0],
+                    Pulse) and self.seq[0].name == 'delay1' and t + plen >= tgt_t:
                 dt = tgt_t - t
                 self.seq[0].repeat -= dt
                 if self.seq[0].repeat == 0:
                     del self.seq[0]
                 if dt > 0:
-                    ret.append(Delay(dt, unroll=unroll, fixed=fixed, trigger=trig))
+                    ret.append(
+                        Delay(
+                            dt,
+                            unroll=unroll,
+                            fixed=fixed,
+                            trigger=trig))
 #                print '  remaining: %s, ret: %s' % (self.seq, ret)
                 return ret
 
@@ -825,10 +907,16 @@ class Sequence(Instruction):
             # non-delay pulses
             else:
                 t += plen
-                if isinstance(self.seq[0], Pulse) and self.seq[0].name == 'delay1':
-                    ret.append(Delay(plen, unroll=unroll, fixed=fixed, trigger=self.seq[0].get_trigger()))
+                if isinstance(self.seq[0],
+                              Pulse) and self.seq[0].name == 'delay1':
+                    ret.append(
+                        Delay(
+                            plen,
+                            unroll=unroll,
+                            fixed=fixed,
+                            trigger=self.seq[0].get_trigger()))
                 else:
-#                    print 'Copying %s, %s' % (self.seq[0], self.seq[0].name)
+                    # print 'Copying %s, %s' % (self.seq[0], self.seq[0].name)
                     ret.append(self.seq[0])
                 del self.seq[0]
 
@@ -857,12 +945,23 @@ class Sequence(Instruction):
             else:
                 plen = 0
 
-            print(layout % (mark, t, flags, t+el.repeat*plen-1, el.repeat, plen, el.name))
+            print(
+                layout %
+                (mark,
+                 t,
+                 flags,
+                 t +
+                 el.repeat *
+                 plen -
+                 1,
+                 el.repeat,
+                 plen,
+                 el.name))
             t += el.repeat * len(Pulse.pulse_data[el.name])
 
         print(layout % ('', '', '', '', '', '', 'done.'))
 
-    def plot_seq(self, style='ks', fig=None, subplot=(1,1,1)):
+    def plot_seq(self, style='ks', fig=None, subplot=(1, 1, 1)):
         if fig is None:
             fig = plt.figure()
         ax = fig.add_subplot(*subplot)
@@ -878,10 +977,11 @@ class Sequence(Instruction):
                 dt = 100
             if not el.name.startswith('delay'):
                 for i in range(el.repeat):
-                    plt.plot(np.arange(t+i*dt,t+(i+1)*dt), Pulse.pulse_data[el.name])
+                    plt.plot(np.arange(t + i * dt, t + (i + 1) * dt),
+                             Pulse.pulse_data[el.name])
             t += el.repeat * dt
 
-        ax.set_xlim(-2, t+2)
+        ax.set_xlim(-2, t + 2)
         ax.set_ylim(-1.05, 1.05)
         return ax
 
@@ -890,7 +990,7 @@ class Sequence(Instruction):
         for el in self.seq:
             try:
                 ret.update(el.get_used_pulses())
-            except:
+            except BaseException:
                 pass
         return ret
 
@@ -914,13 +1014,24 @@ class Sequence(Instruction):
 
                 # Do not repeat a delay with a trigger
                 if nrep > 0 and trig:
-                    seq_out.append(Delay(minlen, unroll=False, repeat=1, trigger=True))
+                    seq_out.append(
+                        Delay(
+                            minlen,
+                            unroll=False,
+                            repeat=1,
+                            trigger=True))
                     nrep -= 1
                     trig = False
 
-                # Remaining minlen unit delays (should never have to trigger here)
+                # Remaining minlen unit delays (should never have to trigger
+                # here)
                 if nrep > 0:
-                    seq_out.append(Delay(minlen, unroll=False, repeat=nrep, trigger=False))
+                    seq_out.append(
+                        Delay(
+                            minlen,
+                            unroll=False,
+                            repeat=nrep,
+                            trigger=False))
 
                 # Remaining minlen + something delay
                 if nremain > 0:
@@ -953,26 +1064,32 @@ class Sequence(Instruction):
                 if new_repeat_count > 0:
                     repeatdata = np.tile(el.data, n_to_unroll)
                     if np.count_nonzero(repeatdata) == 0:
-                        repeatpulse = Delay(len(repeatdata), repeat=new_repeat_count, unroll=False, fixed=True)
+                        repeatpulse = Delay(
+                            len(repeatdata),
+                            repeat=new_repeat_count,
+                            unroll=False,
+                            fixed=True)
                     else:
                         repeatname = "%dx%s" % (n_to_unroll, el.name)
-                        repeatpulse = Pulse(repeatname, repeatdata, repeat=new_repeat_count)
-                    seqout[i+j] = repeatpulse
+                        repeatpulse = Pulse(
+                            repeatname, repeatdata, repeat=new_repeat_count)
+                    seqout[i + j] = repeatpulse
 
                 # Delete original pulse
                 else:
-                    del seqout[i+j]
+                    del seqout[i + j]
                     j -= 1
 
                 if remainder != 0:
                     remaindata = np.tile(el.data, remainder)
                     if np.count_nonzero(remaindata) == 0:
-                        remainpulse = Delay(len(remaindata), repeat=1, unroll=False, fixed=True)
+                        remainpulse = Delay(
+                            len(remaindata), repeat=1, unroll=False, fixed=True)
                     else:
                         remainname = "%dx%s" % (remainder, el.name)
                         remainpulse = Pulse(remainname, remaindata)
                     j += 1
-                    seqout.insert(i+j, remainpulse)
+                    seqout.insert(i + j, remainpulse)
 
         self.seq = seqout
 
@@ -999,14 +1116,18 @@ class Sequence(Instruction):
 
                 while curlen < minlen:
                     # Try on left (if no trigger in this element)
-                    if i > 0 and not self.seq[i].get_trigger() and (allow_unroll or self.seq[i-1].repeat == 1):
-                        prevlen = self.seq[i-1].get_length() / self.seq[i-1].repeat
+                    if i > 0 and not self.seq[i].get_trigger() and (
+                            allow_unroll or self.seq[i - 1].repeat == 1):
+                        prevlen = self.seq[i - 1].get_length() / \
+                            self.seq[i - 1].repeat
                     else:
                         prevlen = 0
 
                     # Try on right (if not trigger on next element)
-                    if j < len(self.seq)-1 and not self.seq[j+1].get_trigger() and (allow_unroll or self.seq[j+1].repeat == 1):
-                        nextlen = self.seq[j+1].get_length() / self.seq[j+1].repeat
+                    if j < len(self.seq) - 1 and not self.seq[j + 1].get_trigger() and (
+                            allow_unroll or self.seq[j + 1].repeat == 1):
+                        nextlen = self.seq[j + 1].get_length() / \
+                            self.seq[j + 1].repeat
                     else:
                         nextlen = 0
 
@@ -1022,18 +1143,22 @@ class Sequence(Instruction):
 
                     # Only possible to extend before
                     if prevlen != 0 and nextlen == 0:
-                        Nneeded = int(np.ceil((minlen - curlen) / float(prevlen)))
-                        if Nneeded >= self.seq[i-1].repeat:
+                        Nneeded = int(
+                            np.ceil(
+                                (minlen - curlen) / float(prevlen)))
+                        if Nneeded >= self.seq[i - 1].repeat:
                             i -= 1
                         else:
-                            self.extract_repeat(i-1, 'right', N=Nneeded)
+                            self.extract_repeat(i - 1, 'right', N=Nneeded)
                         curlen += self.seq[i].get_length()
 
                     # Only possible to extend after
                     elif prevlen == 0 and nextlen != 0:
-                        Nneeded = int(np.ceil((minlen - curlen) / float(nextlen)))
-                        if Nneeded < self.seq[j+1].repeat:
-                            self.extract_repeat(j+1, 'left', N=Nneeded)
+                        Nneeded = int(
+                            np.ceil(
+                                (minlen - curlen) / float(nextlen)))
+                        if Nneeded < self.seq[j + 1].repeat:
+                            self.extract_repeat(j + 1, 'left', N=Nneeded)
                         j += 1
                         curlen += self.seq[j].get_length()
 
@@ -1048,11 +1173,13 @@ class Sequence(Instruction):
             # This is a problem
             if curlen < minlen:
                 print((self.seq))
-                raise Exception("Unable to make each element longer than %d. %d available from index %d - %d" % (minlen, curlen, i, j))
+                raise Exception(
+                    "Unable to make each element longer than %d. %d available from index %d - %d" %
+                    (minlen, curlen, i, j))
 
             # Perform the actual join
-            self.seq[i] = Join(self.seq[i:j+1], chan=self.chan)
-            del self.seq[i+1:j+1]
+            self.seq[i] = Join(self.seq[i:j + 1], chan=self.chan)
+            del self.seq[i + 1:j + 1]
 
         self.seq = self.generate(0, self.chan).seq
 
@@ -1065,7 +1192,14 @@ class Sequence(Instruction):
         '''
         s = Sequence(chan=chan)
         for i_el, el in enumerate(self.seq):
-            s.append(Delay(el.get_length()/el.repeat, unroll=False, fixed=True, repeat=el.repeat, trigger=el.get_trigger()))
+            s.append(
+                Delay(
+                    el.get_length() /
+                    el.repeat,
+                    unroll=False,
+                    fixed=True,
+                    repeat=el.repeat,
+                    trigger=el.get_trigger()))
         return s
 
     def extract_repeat(self, i_el, side, N=1):
@@ -1075,16 +1209,19 @@ class Sequence(Instruction):
         '''
 
         if self.seq[i_el].repeat <= N:
-            raise Exception('Unable to extract %d repeats from element %d' % (N, i_el))
+            raise Exception(
+                'Unable to extract %d repeats from element %d' %
+                (N, i_el))
 
         self.seq[i_el] = copy.deepcopy(self.seq[i_el])
         self.seq.insert(i_el, copy.deepcopy(self.seq[i_el]))
         if side == 'left':
             self.seq[i_el].repeat = N
-            self.seq[i_el+1].repeat -= N
+            self.seq[i_el + 1].repeat -= N
         else:
-            self.seq[i_el+1].repeat = N
+            self.seq[i_el + 1].repeat = N
             self.seq[i_el].repeat -= N
+
 
 class Pulse(Instruction):
 
@@ -1092,12 +1229,20 @@ class Pulse(Instruction):
     pulse_data = {}
     RANGE_ACTION = RAISE
 
-    def __init__(self, name, data, chan=0, overwrite=True, trigger=False, repeat=1, convdelay=False):
-#        if convdelay and (data is not None) and not name.startswith('delay') and np.count_nonzero(data) == 0:
-#            print 'Converting %s of length %s' % (name, len(data))
-#            name = 'delay1'
-#            repeat *= len(data)
-#            data = np.array([0,])
+    def __init__(
+            self,
+            name,
+            data,
+            chan=0,
+            overwrite=True,
+            trigger=False,
+            repeat=1,
+            convdelay=False):
+        #        if convdelay and (data is not None) and not name.startswith('delay') and np.count_nonzero(data) == 0:
+        #            print 'Converting %s of length %s' % (name, len(data))
+        #            name = 'delay1'
+        #            repeat *= len(data)
+        #            data = np.array([0,])
         self.name = name
         self.data = data
         self.chan = chan
@@ -1119,19 +1264,19 @@ class Pulse(Instruction):
             # Only check range if pulse not defined yet
             self.check_range(data)
 
-        
-
     def check_range(self, data):
         if np.count_nonzero(np.abs(data) > 1) != 0:
             val = data[np.argmax(np.abs(data))]
-            msg = 'Pulse ' + self.name + ' contains value larger than +-1: ' + str(val)
+            msg = 'Pulse ' + self.name + \
+                ' contains value larger than +-1: ' + str(val)
             if Pulse.RANGE_ACTION == WARN:
                 print(msg)
             elif Pulse.RANGE_ACTION == RAISE:
                 raise Exception(msg)
 
     def __str__(self):
-        return 'Pulse(%s, chan=%s, repeat=%s, trigger=%s)' % (self.name, self.chan, self.repeat, self.trigger)
+        return 'Pulse(%s, chan=%s, repeat=%s, trigger=%s)' % (
+            self.name, self.chan, self.repeat, self.trigger)
 
     def get_channels(self):
         if self.chan != CHAN_ANY:
@@ -1158,7 +1303,12 @@ class Pulse(Instruction):
 
         # Create pulse for this channel in particular
         if chan == self.chan or self.chan == CHAN_ANY:
-            p = Pulse(self.name, self.data, repeat=self.repeat, chan=self.chan, trigger=self.trigger)
+            p = Pulse(
+                self.name,
+                self.data,
+                repeat=self.repeat,
+                chan=self.chan,
+                trigger=self.trigger)
             return Sequence([p,], chan=chan)
 
         else:
@@ -1171,9 +1321,9 @@ class Pulse(Instruction):
         if n == 1:
             return Pulse.pulse_data[name]
         p = Pulse.pulse_data[name]
-        d = np.zeros([n*len(p),])
+        d = np.zeros([n * len(p),])
         for i in range(n):
-            d[i*len(p):(i+1)*len(p)] = p
+            d[i * len(p):(i + 1) * len(p)] = p
         return d
 
     @staticmethod
@@ -1183,7 +1333,15 @@ class Pulse(Instruction):
     def get_used_pulses(self):
         return {self.name: self}
 
-def Delay(dt, chan=CHAN_ANY, unroll=True, repeat=1, trigger=False, fixed=False, **kwargs):
+
+def Delay(
+        dt,
+        chan=CHAN_ANY,
+        unroll=True,
+        repeat=1,
+        trigger=False,
+        fixed=False,
+        **kwargs):
     '''
     A fixed length delay.
     Comes in 3 flavours:
@@ -1194,29 +1352,68 @@ def Delay(dt, chan=CHAN_ANY, unroll=True, repeat=1, trigger=False, fixed=False, 
 
     try:
         float(dt)
-    except:
+    except BaseException:
         raise ValueError('Delay time should be a value, not %s' % dt)
     dt = int(round(dt))
     if dt == 0:
         return None
 
     if unroll:
-        return Pulse('delay1', np.zeros(1), repeat=repeat*dt, chan=chan, trigger=trigger, **kwargs)
+        return Pulse(
+            'delay1',
+            np.zeros(1),
+            repeat=repeat * dt,
+            chan=chan,
+            trigger=trigger,
+            **kwargs)
 
     if fixed:
-        return Pulse('delay%d'%dt, np.zeros(dt), chan=chan, trigger=trigger, repeat=repeat, **kwargs)
+        return Pulse(
+            'delay%d' %
+            dt,
+            np.zeros(dt),
+            chan=chan,
+            trigger=trigger,
+            repeat=repeat,
+            **kwargs)
 
     if dt >= 2 * MINLEN:
         s = Sequence(repeat=repeat)
         name = 'delay%d' % MINLEN
-        s.append(Pulse('delay%d'%MINLEN, np.zeros(MINLEN), repeat=int(np.floor(dt/MINLEN)), chan=chan, trigger=trigger, **kwargs))
+        s.append(
+            Pulse(
+                'delay%d' %
+                MINLEN,
+                np.zeros(MINLEN),
+                repeat=int(
+                    np.floor(
+                        dt /
+                        MINLEN)),
+                chan=chan,
+                trigger=trigger,
+                **kwargs))
         remain = dt % MINLEN
         if remain > 0:
-            s.append(Pulse('delay%d'%remain, np.zeros(remain), repeat=1, chan=chan, **kwargs))
+            s.append(
+                Pulse(
+                    'delay%d' %
+                    remain,
+                    np.zeros(remain),
+                    repeat=1,
+                    chan=chan,
+                    **kwargs))
         return s
 
     else:
-        return Pulse('delay%d'%dt, np.zeros(dt), repeat=repeat, chan=chan, trigger=trigger, **kwargs)
+        return Pulse(
+            'delay%d' %
+            dt,
+            np.zeros(dt),
+            repeat=repeat,
+            chan=chan,
+            trigger=trigger,
+            **kwargs)
+
 
 def Trigger(dt=1, **kwargs):
     '''
@@ -1226,12 +1423,14 @@ def Trigger(dt=1, **kwargs):
     kwargs['trigger'] = True
     return Delay(dt, **kwargs)
 
+
 class Label(Instruction):
     '''
     An instruction to label a particular time in a sequence.
     '''
 
     LABELS = {}
+
     def __init__(self, name):
         self.name = name
         if name in Label.LABELS:
@@ -1244,6 +1443,7 @@ class Label(Instruction):
             Label.LABELS[self.name] = now
             Label.UPDATED = True
         return Sequence(chan=chan)
+
 
 class DelayTo(Instruction):
     '''
@@ -1258,13 +1458,17 @@ class DelayTo(Instruction):
         return 'DelayTo(%s)' % self.t
 
     def get_tgt_time(self, now):
-        if type(self.t) is bytes:
-            if self.t not in Label.LABELS:
+        if isinstance(self.t, bytes):
+            # Legacy byte labels can show up when older config data is loaded.
+            # Normalize them before lookup so Python 3 doesn't treat them as
+            # distinct keys from the text labels defined in the sequence.
+            label = self.t.decode()
+            if label not in Label.LABELS:
                 raise ValueError('Label not defined')
-            elif Label.LABELS[self.t] is None:
-                print('Warning: Label %s has not been resolved yet.' % self.t)
+            elif Label.LABELS[label] is None:
+                print('Warning: Label %s has not been resolved yet.' % label)
                 return now
-            return Label.LABELS[self.t]
+            return Label.LABELS[label]
         else:
             return self.t
 
@@ -1283,6 +1487,7 @@ class DelayTo(Instruction):
         delay = Delay(dt)
         return delay.generate(now, chan)
 
+
 class CombineChanInfo:
     def __init__(self, seq):
         self.t = 0
@@ -1292,6 +1497,7 @@ class CombineChanInfo:
         self.seq_out = Sequence(chan=seq.chan)
         self.dt = 0
         self.is_delay = False
+
 
 class Combined(Instruction):
     '''
@@ -1313,7 +1519,7 @@ class Combined(Instruction):
         self.align = align
         self.ch_align = ch_align
         self.ch_delays = ch_delays
-        if type(items) is dict:
+        if isinstance(items, dict):
             self.items = list(items.values())
         elif type(items) in (list, tuple):
             self.items = items
@@ -1353,7 +1559,8 @@ class Combined(Instruction):
         mlen = 0
         item = None
         for el in self.items:
-            if hasattr(el, 'name') and el.name.startswith('delay') and not include_delays:
+            if hasattr(el, 'name') and el.name.startswith(
+                    'delay') and not include_delays:
                 continue
             mlen = max(mlen, el.get_length(now))
             if mlen == el.get_length(now):
@@ -1370,11 +1577,11 @@ class Combined(Instruction):
             return
 
         maxpos = 0
-        if len(all_delays[all_delays>0]) > 0:
+        if len(all_delays[all_delays > 0]) > 0:
             maxpos = np.max(all_delays)
 
         maxneg = 0
-        if len(all_delays[all_delays<0]) > 0:
+        if len(all_delays[all_delays < 0]) > 0:
             maxneg = -np.min(all_delays)
 
         for ch in list(self.seqs.keys()):
@@ -1411,7 +1618,9 @@ class Combined(Instruction):
         while len(l_chinfo[0].seq):
             if DEBUG:
                 for ch, info in chinfo.items():
-                    print('  ch%s: idx=%d (len %d, trig %s) --> %s' % (ch, info.idx, info.seq.get_length(), info.seq.seq[0].get_trigger(), info.seq))
+                    print(
+                        '  ch%s: idx=%d (len %d, trig %s) --> %s' %
+                        (ch, info.idx, info.seq.get_length(), info.seq.seq[0].get_trigger(), info.seq))
 
             # Get some information about the channels
             max_nondelay = 0
@@ -1427,7 +1636,9 @@ class Combined(Instruction):
                     max_nondelay = info.dt
 
             if DEBUG:
-                print('    max_nondelay: %s, mindelay %s, ndel_ch %s' % (max_nondelay, min_delay, ndel_ch))
+                print(
+                    '    max_nondelay: %s, mindelay %s, ndel_ch %s' %
+                    (max_nondelay, min_delay, ndel_ch))
             if min_delay < 0:
                 raise ValueError('Negative delay!')
 
@@ -1457,7 +1668,9 @@ class Combined(Instruction):
                 for ch, info in chinfo.items():
                     add = info.seq.consume_up_to(to_time)
                     if DEBUG:
-                        print('      Activity, adding to ch %s: %s' % (ch, add,))
+                        print(
+                            '      Activity, adding to ch %s: %s' %
+                            (ch, add,))
                     info.seq_out.append(add)
 
         for ch, info in chinfo.items():
@@ -1476,8 +1689,11 @@ class Combined(Instruction):
             return self.get_chan_seq(chan)
         self.nresolved += 1
 
-        # Regenerate all combined items
-        # TODO: do this until timing doesn't change (i.e. after resolving DelayTo)
+        # Combined instructions resolve in two passes: first each child
+        # contributes to every channel, then the merged sequences are padded
+        # and aligned.
+        # TODO: do this until timing doesn't change (i.e. after resolving
+        # DelayTo)
 
         self.seqs = {}
         chans = self.get_channels()
@@ -1493,7 +1709,10 @@ class Combined(Instruction):
                 elif addseq.delays_only():
                     pass
                 else:
-                    raise ValueError('Conflicting channel content: %s and %s (current item %s [%d])' % (planadd, addseq, self.items, len(self.items)))
+                    raise ValueError(
+                        'Conflicting channel content: %s and %s (current item %s [%d])' %
+                        (planadd, addseq, self.items, len(
+                            self.items)))
 
             self.seqs[ch] = planadd
 
@@ -1502,11 +1721,11 @@ class Combined(Instruction):
             self.seqs[ch].join_sequences()
             self.maxlen = max(self.maxlen, self.seqs[ch].get_length())
 
-        # If the channels are already aligned there is no need to run through
-        # the alignement code.
+        # If everything is already aligned, we can skip the padding pass.
         aligned = True
         for ch in list(self.seqs.keys())[1:]:
-            if not self.seqs[list(self.seqs.keys())[0]].is_aligned(self.seqs[ch]):
+            if not self.seqs[list(self.seqs.keys())[0]
+                             ].is_aligned(self.seqs[ch]):
                 aligned = False
         if aligned:
             if chan in self.seqs:
@@ -1526,7 +1745,7 @@ class Combined(Instruction):
                 elif self.align == ALIGN_RIGHT:
                     self.seqs[ch].prepend(Delay(delta))
                 else:
-                    d1 = int(np.round(delta/2))
+                    d1 = int(np.round(delta / 2))
                     d2 = delta - d1
                     self.seqs[ch].prepend(Delay(d1))
                     self.seqs[ch].append(Delay(d2))
@@ -1551,15 +1770,28 @@ class Combined(Instruction):
             s.append(Delay(self.get_length(), trigger=self.get_trigger()))
             return s
 
+        # Mirror the reference channel's timing skeleton so an "empty" channel
+        # still lines up with every segment boundary in the rendered result.
         refseq = self.seqs[list(self.seqs.keys())[0]]
         for i_el, el in enumerate(refseq.seq):
             repeat = getattr(el, 'repeat', 1)
             trig = el.get_trigger()
             ellen = el.get_length() / repeat
             if repeat == 1 and not self.ch_align:
-                new_el = Delay(ellen, chan=chan, trigger=trig, unroll=True, repeat=repeat)
+                new_el = Delay(
+                    ellen,
+                    chan=chan,
+                    trigger=trig,
+                    unroll=True,
+                    repeat=repeat)
             else:   # Try to preserve repeats
-                new_el = Delay(ellen, chan=chan, trigger=trig, unroll=False, fixed=True, repeat=repeat)
+                new_el = Delay(
+                    ellen,
+                    chan=chan,
+                    trigger=trig,
+                    unroll=False,
+                    fixed=True,
+                    repeat=repeat)
             s.append(new_el)
 
         if DEBUG:
@@ -1576,14 +1808,15 @@ class Combined(Instruction):
         else:
             return self.seqs[chan].generate(now, chan)
 
+
 def AlignRight(seqs, t=None, tabs=None):
     '''
     Align an instruction or sequence to the right (i.e. end), either
     up to time <tabs> (can be a label) or making this block total length <t>.
     '''
-    if type(seqs) is tuple:
+    if isinstance(seqs, tuple):
         seqs = list(seqs)
-    if type(seqs) is not list:
+    if not isinstance(seqs, list):
         seqs = [seqs,]
 
     m = Combined(seqs, align=ALIGN_RIGHT)
@@ -1594,10 +1827,12 @@ def AlignRight(seqs, t=None, tabs=None):
 
     return m
 
+
 def Join(els, **kwargs):
     seq = Sequence(els, join=True, **kwargs)
     seq.join_sequences()
     return seq
+
 
 class Constant(Pulse):
     '''
@@ -1610,9 +1845,10 @@ class Constant(Pulse):
         if a == 0:
             name = 'delay%d' % (w,)
         else:
-            name = 'const(%03d,%03d)' % (w, round(a*1000))
+            name = 'const(%03d,%03d)' % (w, round(a * 1000))
             kwargs['convdelay'] = False
         super(Constant, self).__init__(name, ys, **kwargs)
+
 
 def Pad(ins, rlen, pad=PAD_BOTH, err=IGNORE):
     '''
@@ -1637,9 +1873,10 @@ def Pad(ins, rlen, pad=PAD_BOTH, err=IGNORE):
     elif pad == PAD_LEFT:
         return Join([Delay(delta, unroll=False), ins])
     else:
-        d1 = int(np.round(delta/2))
+        d1 = int(np.round(delta / 2))
         d2 = delta - d1
         return Join([Delay(d1, unroll=False), ins, Delay(d2, unroll=False)])
+
 
 class Repeat(Instruction):
     '''
@@ -1686,7 +1923,8 @@ class Repeat(Instruction):
 
             # Do not unroll delays for repeat blocks
             if plist.seq[0].name == 'delay1':
-                plist.seq[0] = Delay(plist.seq[0].repeat, unroll=False, fixed=True)
+                plist.seq[0] = Delay(
+                    plist.seq[0].repeat, unroll=False, fixed=True)
                 plist.seq[0].repeat = self.n
 
             # Simple repeat
@@ -1711,6 +1949,7 @@ class Repeat(Instruction):
         plist = self.instruction.generate(now, chan)
         return self._repeat(plist)
 
+
 class Jump(Instruction):
     def __init__(self, to):
         self.to = to
@@ -1721,6 +1960,7 @@ class Jump(Instruction):
 #######################################
 # Operations
 #######################################
+
 
 class SequenceOperation(object):
     '''
@@ -1738,7 +1978,6 @@ class SequenceOperation(object):
         self.inplace = inplace
         self.ttr = ttr
 
-
     def func(self, el, now):
         if self._ext_func:
             return self._ext_func(el, now)
@@ -1752,7 +1991,7 @@ class SequenceOperation(object):
         seq_out = []
         now = 0
         for el in s.seq:
-#            print s.seq
+            #            print s.seq
             # Reset time when trigger occurs
             if self.ttr and el.get_trigger():
                 now = 0
@@ -1769,6 +2008,7 @@ class SequenceOperation(object):
         else:
             return Sequence(seq_out)
 
+
 class CleanSeqNames(SequenceOperation):
 
     def __init__(self):
@@ -1777,9 +2017,14 @@ class CleanSeqNames(SequenceOperation):
     def func(self, el, now):
         if len(el.name) > 64 or chars_in_str('(),', el.name):
             newname = hashlib.md5(el.name).hexdigest()
-            return Pulse(newname, el.data, repeat=el.repeat, trigger=el.trigger)
+            return Pulse(
+                newname,
+                el.data,
+                repeat=el.repeat,
+                trigger=el.trigger)
         else:
             return el
+
 
 def clean_names(seqs):
     cleaner = CleanSeqNames()
@@ -1788,13 +2033,14 @@ def clean_names(seqs):
         seqs_out[name] = cleaner.apply(seq)
     return seqs_out
 
+
 class ModulateSequence(SequenceOperation):
     '''
     Operation to modulate a sequence, i.e. multiply by a cosine wave with
     period <if_period> and additional phase <phase> (-pi/2 gives a sine wave).
     '''
 
-    def __init__(self, if_period, phase, amp=1.0, fixed_phase = None):
+    def __init__(self, if_period, phase, amp=1.0, fixed_phase=None):
         self.if_period = if_period
         self.phase = phase
         self.amp = amp
@@ -1809,16 +2055,31 @@ class ModulateSequence(SequenceOperation):
 #        if el.repeat > 1 and np.abs(len(el.get_data()) % self.if_period) > 1e-4:  EBRU COMMENTED THIS OUT
 #            raise ValueError('Unable to modulate repeated blocks not a multiple of if_period')
         if self.fixed_phase is None:
-            phi0 = float(now % self.if_period) / self.if_period * 2 * np.pi + self.phase
+            phi0 = float(now % self.if_period) / \
+                self.if_period * 2 * np.pi + self.phase
 #            print 'with now, phi0 is : %s, now:%s'%(phi0,now)
         else:
             phi0 = self.fixed_phase + self.phase
 #            print 'with fixed phase, phi0 is : %s'%(phi0)
-        phis = np.linspace(0, 2*np.pi*len(data)/self.if_period, len(data), endpoint=False)
+        phis = np.linspace(
+            0,
+            2 *
+            np.pi *
+            len(data) /
+            self.if_period,
+            len(data),
+            endpoint=False)
         data = data * self.amp * np.cos(phis + phi0)
-        deg = np.rad2deg(phi0 % 2*np.pi)
-        name = 'mod(%d,%d,%d,%s)' % (int(10*self.if_period), int(10*deg), int(1000*self.amp), el.get_name())
-        return Pulse(name, data, repeat=el.repeat, chan=el.chan, trigger=el.get_trigger())
+        deg = np.rad2deg(phi0 % 2 * np.pi)
+        name = 'mod(%d,%d,%d,%s)' % (int(10 * self.if_period),
+                                     int(10 * deg), int(1000 * self.amp), el.get_name())
+        return Pulse(
+            name,
+            data,
+            repeat=el.repeat,
+            chan=el.chan,
+            trigger=el.get_trigger())
+
 
 class DifferentiateSequence(SequenceOperation):
     '''
@@ -1838,8 +2099,14 @@ class DifferentiateSequence(SequenceOperation):
         data[-1] = (data[-1] - data[-2])
         data[1:-1] = diff
         data *= self.amp
-        name= 'diff(%.03f,%s)' % (self.amp, el.get_name(),)
-        return Pulse(name, data, repeat=el.repeat, chan=el.chan, trigger=el.get_trigger())
+        name = 'diff(%.03f,%s)' % (self.amp, el.get_name(),)
+        return Pulse(
+            name,
+            data,
+            repeat=el.repeat,
+            chan=el.chan,
+            trigger=el.get_trigger())
+
 
 class SequencePairOperation(object):
     '''
@@ -1864,7 +2131,11 @@ class SequencePairOperation(object):
         Apply operation to a completely rendered sequence.
         '''
         if len(s1.seq) != len(s2.seq):
-            raise ValueError('Incompatible sequences! Channel %s has %d and channel %s %d items' % (s1.chan, len(s1.seq), s2.chan, len(s2.seq)))
+            raise ValueError(
+                'Incompatible sequences! Channel %s has %d and channel %s %d items' %
+                (s1.chan, len(
+                    s1.seq), s2.chan, len(
+                    s2.seq)))
 
         seq_out = []
         now = 0
@@ -1880,6 +2151,7 @@ class SequencePairOperation(object):
         s = Sequence(seq_out, chan=self.name)
         return s
 
+
 class SequenceAdd(SequencePairOperation):
     def __init__(self, name='add'):
         super(SequenceAdd, self).__init__(name=name)
@@ -1893,7 +2165,13 @@ class SequenceAdd(SequencePairOperation):
             return el1
         data = data1 + data2
         name = 'add(%s,%s)' % (el1.get_name(), el2.get_name())
-        return Pulse(name, data, repeat=el1.repeat, chan=el1.chan, trigger=el1.get_trigger())
+        return Pulse(
+            name,
+            data,
+            repeat=el1.repeat,
+            chan=el1.chan,
+            trigger=el1.get_trigger())
+
 
 class SequenceSub(SequencePairOperation):
     def __init__(self, name='sub'):
@@ -1907,16 +2185,29 @@ class SequenceSub(SequencePairOperation):
         if np.count_nonzero(data1) == 0:
             name = 'minus(%s)' % (el2.get_name())
             data = -data2
-            return Pulse(name, data, repeat=el1.repeat, chan=el1.chan, trigger=el1.get_trigger())
+            return Pulse(
+                name,
+                data,
+                repeat=el1.repeat,
+                chan=el1.chan,
+                trigger=el1.get_trigger())
         data = data1 - data2
         name = 'sub(%s,%s)' % (el1.get_name(), el2.get_name())
-        return Pulse(name, data, repeat=el1.repeat, chan=el1.chan, trigger=el1.get_trigger())
+        return Pulse(
+            name,
+            data,
+            repeat=el1.repeat,
+            chan=el1.chan,
+            trigger=el1.get_trigger())
+
 
 def add_sequences(s1, s2, name='add'):
     return SequenceAdd(name).apply(s1, s2)
 
+
 def sub_sequences(s1, s2, name='sub'):
     return SequenceSub(name).apply(s1, s2)
+
 
 class SSB:
     '''
@@ -1934,7 +2225,7 @@ class SSB:
     period should be negative.
     '''
 
-    def __init__(self, if_period, chans, dphi, outchans=None, amps=(1.0, 1.0), 
+    def __init__(self, if_period, chans, dphi, outchans=None, amps=(1.0, 1.0),
                  replace=None, fixed_phase=None):
         self.if_period = if_period
         self.chans = chans
@@ -1949,22 +2240,28 @@ class SSB:
         self.replace = replace
         self.fixed_phase = fixed_phase
 
-
     def modulate(self, seqs):
         # From I channel to I/Q outputs
         if self.chans[0] in seqs:
-            m0 = ModulateSequence(self.if_period, 0, self.amps[0], fixed_phase = self.fixed_phase)
-            m1 = ModulateSequence(self.if_period, np.pi/2 + self.dphi, self.amps[1], 
-                                  fixed_phase = self.fixed_phase)
+            m0 = ModulateSequence(
+                self.if_period,
+                0,
+                self.amps[0],
+                fixed_phase=self.fixed_phase)
+            m1 = ModulateSequence(
+                self.if_period,
+                np.pi / 2 + self.dphi,
+                self.amps[1],
+                fixed_phase=self.fixed_phase)
             c0m0 = m0.apply(seqs[self.chans[0]])
             c0m1 = m1.apply(seqs[self.chans[0]])
 
         # From Q channel to I/Q outputs
         if self.chans[1] in seqs:
-            m0 = ModulateSequence(self.if_period, -np.pi/2, self.amps[0], 
-                                  fixed_phase = self.fixed_phase)
-            m1 = ModulateSequence(self.if_period, self.dphi, self.amps[1], 
-                                  fixed_phase = self.fixed_phase)
+            m0 = ModulateSequence(self.if_period, -np.pi / 2, self.amps[0],
+                                  fixed_phase=self.fixed_phase)
+            m1 = ModulateSequence(self.if_period, self.dphi, self.amps[1],
+                                  fixed_phase=self.fixed_phase)
             c1m0 = m0.apply(seqs[self.chans[1]])
             c1m1 = m1.apply(seqs[self.chans[1]])
 
@@ -1994,21 +2291,25 @@ class SSB:
         tmp1.chan = outchans[1]
 
         if outchans[0] in seqs and not self.replace:
-            seqs[outchans[0]] = add_sequences(seqs[outchans[0]], tmp0, outchans[0])
+            seqs[outchans[0]] = add_sequences(
+                seqs[outchans[0]], tmp0, outchans[0])
         else:
             seqs[outchans[0]] = tmp0
         if outchans[1] in seqs and not self.replace:
-            seqs[outchans[1]] = add_sequences(seqs[outchans[1]], tmp1, outchans[1])
+            seqs[outchans[1]] = add_sequences(
+                seqs[outchans[1]], tmp1, outchans[1])
         else:
             seqs[outchans[1]] = tmp1
 
         return seqs
+
 
 def map_pulse_names(names):
     ret = {}
     for name in names:
         ret[name] = hashlib.md5(name).hexdigest()
     return ret
+
 
 if __name__ == '__main__':
     print('Please use testsequencer.py to test')

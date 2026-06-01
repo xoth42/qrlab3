@@ -20,4 +20,3 @@ s.add_marker('1m1', 3)
 seqs = s.render(debug=True)
 s.plot_seqs(seqs)
 s.print_seqs(seqs)
-

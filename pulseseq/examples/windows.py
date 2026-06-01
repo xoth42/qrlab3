@@ -28,9 +28,9 @@ TABLE = [
     ('Kaiser1.5', Kaiser(W, 0.5, alpha=1.5)),
     ('Kaiser2', Kaiser(W, 0.5, alpha=2)),
     ('Kaiser3', Kaiser(W, 0.5, alpha=3)),
-    ('Slepian0.15', Slepian(W, 0.5, bw=0.15/SLEPSCALE)),
-    ('Slepian0.2', Slepian(W, 0.5, bw=0.2/SLEPSCALE)),
-    ('Slepian0.3', Slepian(W, 0.5, bw=0.3/SLEPSCALE)),
+    ('Slepian0.15', Slepian(W, 0.5, bw=0.15 / SLEPSCALE)),
+    ('Slepian0.2', Slepian(W, 0.5, bw=0.2 / SLEPSCALE)),
+    ('Slepian0.3', Slepian(W, 0.5, bw=0.3 / SLEPSCALE)),
     ('FlatTop', FlatTop(W, 0.5)),
 ]
 
@@ -52,7 +52,7 @@ plt.figure()
 for ch, (name, pulse) in enumerate(TABLE):
     ys = seqs[ch].get_data()
     F = np.abs(np.fft.fft(ys))**2
-    F = F[:round(len(F)/4)]
+    F = F[:round(len(F) / 4)]
     X = np.arange(len(F)) * 1.0 / len(ys) * 1e3
     if NORM:
         F /= np.max(F)
