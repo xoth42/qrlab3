@@ -1,13 +1,15 @@
 import warnings
 import time
 
-from PyQt4 import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtWidgets import (QFrame, QLabel, QLineEdit, QPushButton, QCheckBox, 
+                             QRadioButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout, 
+                             QHBoxLayout, QWidget, QSlider, QSizePolicy)
+from PyQt5.QtGui import QFont
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 import pyqtgraph.dockarea
 import numpy as np
-
-from .window import WindowMultiPlot
 
 class MyDockArea(pg.dockarea.DockArea):
     def __init__(self, *args, **kwargs):
@@ -27,7 +29,7 @@ class MyDockArea(pg.dockarea.DockArea):
 
         dock.label.hide()
 
-        if len(dock._container.children()) is 0 and dock._container is not self.topContainer:
+        if len(dock._container.children()) == 0 and dock._container is not self.topContainer:
             dock._container.setParent(None)
 
         if self.insert_location == 'bottom':
@@ -70,37 +72,37 @@ class MyDockArea(pg.dockarea.DockArea):
             if d is not dock:
                 self.remove_dock(d)
 
-class NodeEditWidget(Qt.QFrame):
+class NodeEditWidget(QFrame):
     def __init__(self, path, attrs):
-        Qt.QFrame.__init__(self)
-        self.setFrameStyle(Qt.QFrame.Panel)
+        QFrame.__init__(self)
+        self.setFrameStyle(QFrame.Panel)
         self.path = path
         self.spin_widgets = {}
         self.proxy = None
 
-        self.setLayout(Qt.QVBoxLayout())
-        self.layout().addWidget(Qt.QLabel('Editing ' + '/'.join(self.path)))
+        self.setLayout(QVBoxLayout())
+        self.layout().addWidget(QLabel('Editing ' + '/'.join(self.path)))
 
-        self.attr_list = Qt.QTreeWidget()
+        self.attr_list = QTreeWidget()
         self.attr_list.setRootIsDecorated(False)
         self.attr_list.setColumnCount(2)
         self.attr_list.setHeaderLabels(['Name', 'Value', 'Type'])
 
         for attr, value in list(attrs.items()):
-            self.attr_list.addTopLevelItem(Qt.QTreeWidgetItem([attr, self.repr_value(value), str(type(value))]))
+            self.attr_list.addTopLevelItem(QTreeWidgetItem([attr, self.repr_value(value), str(type(value))]))
 
-        add_attr_box = Qt.QWidget()
-        add_attr_box.setLayout(Qt.QHBoxLayout())
-        self.attr_name_edit = Qt.QLineEdit()
-        self.attr_value_edit = Qt.QLineEdit()
+        add_attr_box = QWidget()
+        add_attr_box.setLayout(QHBoxLayout())
+        self.attr_name_edit = QLineEdit()
+        self.attr_value_edit = QLineEdit()
         self.attr_value_edit.returnPressed.connect(self.add_attribute)
         self.attr_list.itemClicked.connect(self.attr_clicked)
-        self.add_attr_button = Qt.QPushButton('Add Attribute')
-        self.add_attr_button = Qt.QPushButton('Add Attribute')
+        self.add_attr_button = QPushButton('Add Attribute')
+        self.add_attr_button = QPushButton('Add Attribute')
         self.add_attr_button.clicked.connect(self.add_attribute)
-        add_attr_box.layout().addWidget(Qt.QLabel('name'))
+        add_attr_box.layout().addWidget(QLabel('name'))
         add_attr_box.layout().addWidget(self.attr_name_edit)
-        add_attr_box.layout().addWidget(Qt.QLabel('value'))
+        add_attr_box.layout().addWidget(QLabel('value'))
         add_attr_box.layout().addWidget(self.attr_value_edit)
         add_attr_box.layout().addWidget(self.add_attr_button)
 
@@ -123,7 +125,7 @@ class NodeEditWidget(Qt.QFrame):
     def update_attrs(self, attrs):
         for k, v in list(attrs.items()):
             if k not in self.attr_list_items:
-                item = Qt.QTreeWidgetItem([k, self.repr_value(v), str(type(v))])
+                item = QTreeWidgetItem([k, self.repr_value(v), str(type(v))])
                 self.attr_list_items[k] = item
                 self.attr_list.addTopLevelItem(item)
             else:
@@ -131,7 +133,7 @@ class NodeEditWidget(Qt.QFrame):
                 self.attr_list_items[k].setText(2, str(type(v)))
 
     def check_attr_name(self, name):
-        if any(i.text(0) == name for i in self.attr_list.findItems("", Qt.Qt.MatchContains)):
+        if any(i.text(0) == name for i in self.attr_list.findItems("", Qt.MatchContains)):
             if self.new_attr:
                 self.new_attr = False
                 self.add_attr_button.setText('Update Attribute')
@@ -166,9 +168,9 @@ class NodeEditWidget(Qt.QFrame):
             self.proxy.set_attrs(**{name: value})
         else:
             if self.new_attr:
-                self.attr_list.addTopLevelItem(Qt.QTreeWidgetItem([name, self.repr_value(value), str(type(value))]))
+                self.attr_list.addTopLevelItem(QTreeWidgetItem([name, self.repr_value(value), str(type(value))]))
             else:
-                i = self.attr_list.findItems(name, Qt.Qt.MatchExactly, 0)[0]
+                i = self.attr_list.findItems(name, Qt.MatchExactly, 0)[0]
                 i.setText(1, str(value))
             self.attr_name_edit.setText("")
             self.attr_value_edit.setText("")
@@ -195,23 +197,23 @@ class ItemWidget(pg.dockarea.Dock):
 
         pg.dockarea.Dock.__init__(self, label_text)
         self.timestamp = time.time()
-        self.label.setFont(Qt.QFont('Helvetica', pointSize=pointSize))
+        self.label.setFont(QFont('Helvetica', pointSize=pointSize))
         self.ident = ident
         self.window_item = item
 
-        self.plots_widget = Qt.QWidget()
-        self.plots_widget.setLayout(Qt.QVBoxLayout())
+        self.plots_widget = QWidget()
+        self.plots_widget.setLayout(QVBoxLayout())
         self.addWidget(self.plots_widget)
 
         self.add_plot_widget(**kwargs)
 
-        self.buttons_widget = Qt.QWidget() #QHBoxWidget()
-        self.buttons_widget.setLayout(Qt.QHBoxLayout())
-        self.remove_button = Qt.QPushButton('Hide')
+        self.buttons_widget = QWidget() #QHBoxWidget()
+        self.buttons_widget.setLayout(QHBoxLayout())
+        self.remove_button = QPushButton('Hide')
         self.remove_button.clicked.connect(self.toggle_hide)
-        self.maximize_button = Qt.QPushButton('Maximize')
+        self.maximize_button = QPushButton('Maximize')
         self.maximize_button.clicked.connect(lambda: self.dock_area.hide_all_but(self))
-        self.update_toggle = Qt.QCheckBox('Update')
+        self.update_toggle = QCheckBox('Update')
         self.update_toggle.setChecked(True)
 
 
@@ -220,7 +222,7 @@ class ItemWidget(pg.dockarea.Dock):
         self.buttons_widget.layout().addWidget(self.update_toggle)
         self.buttons_widget.setContentsMargins(0, 0, 0, 0)
         self.buttons_widget.layout().setContentsMargins(0, 0, 0, 0)
-        self.buttons_widget.layout().setAlignment(Qt.Qt.AlignLeft)
+        self.buttons_widget.layout().setAlignment(Qt.AlignLeft)
         self.plots_widget.setContentsMargins(0, 0, 0, 0)
         self.plots_widget.layout().setContentsMargins(0, 0, 0, 0)
 
@@ -281,7 +283,7 @@ class Rank1ItemWidget(ItemWidget):
         plot_args = attrs.get("plot_args", {})
 
 
-        if data is None or data.shape[0] is 0:
+        if data is None or data.shape[0] == 0:
             self.clear_plot()
             return
 
@@ -327,7 +329,7 @@ class ParametricItemWidget(Rank1ItemWidget):
         Rank1ItemWidget.__init__(self, item, **kwargs)
         self.path1, self.path2 = [i.path for i in item.sources]
         self.datas = {self.path1: [], self.path2: []}
-        self.transpose_toggle = Qt.QCheckBox('Transpose')
+        self.transpose_toggle = QCheckBox('Transpose')
         self.transpose_toggle.stateChanged.connect(lambda s: self.refresh_plot())
         self.buttons_widget.layout().addWidget(self.transpose_toggle)
 
@@ -359,24 +361,24 @@ class Rank2ItemWidget(Rank1ItemWidget):
     def __init__(self, item, **kwargs):
         Rank1ItemWidget.__init__(self, item, **kwargs)
 
-        self.histogram_check = Qt.QCheckBox('Histogram')
+        self.histogram_check = QCheckBox('Histogram')
         self.histogram_check.stateChanged.connect(self.img_view.set_histogram)
-        self.autolevels_check = Qt.QCheckBox('Autolevels')
+        self.autolevels_check = QCheckBox('Autolevels')
         self.autolevels_check.setChecked(True)
         self.autolevels_check.stateChanged.connect(lambda s: self.update_plot(self.cur_data, self.cur_attrs))
         self.img_widgets = [self.histogram_check, self.autolevels_check]
-        self.most_recent_check = Qt.QCheckBox('Most Recent')
+        self.most_recent_check = QCheckBox('Most Recent')
         self.most_recent_check.setChecked(True)
-        self.line_scrubber = Qt.QSlider(Qt.Qt.Horizontal)
+        self.line_scrubber = QSlider(Qt.Horizontal)
         self.line_scrubber.valueChanged.connect(self.set_line)
         self.line_widgets = [self.most_recent_check, self.line_scrubber]
 
-        img_radio = Qt.QRadioButton("Image")
+        img_radio = QRadioButton("Image")
         img_radio.clicked.connect(self.show_img_plot)
         img_radio.setChecked(True)
-        gl_radio = Qt.QRadioButton("Surface")
+        gl_radio = QRadioButton("Surface")
         gl_radio.clicked.connect(self.show_gl_plot)
-        line_radio = Qt.QRadioButton("Last Line")
+        line_radio = QRadioButton("Last Line")
         line_radio.clicked.connect(self.show_line_plot)
 
         for widget in self.img_widgets + self.line_widgets:
@@ -416,7 +418,7 @@ class Rank2ItemWidget(Rank1ItemWidget):
 
         if self.gl_view is None:
             self.gl_view = gl.GLViewWidget()
-            self.gl_view.setSizePolicy(Qt.QSizePolicy.Expanding, Qt.QSizePolicy.Expanding)
+            self.gl_view.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
             self.plots_widget.layout().addWidget(self.gl_view)
             if self.img_view.image is not None:
                 self.update_plot(self.img_view.image)
@@ -647,7 +649,8 @@ class CrossSectionWidget(pg.ImageView):
     def set_histogram(self, visible):
         self.ui.histogram.setVisible(visible)
         self.ui.roiBtn.setVisible(visible)
-        self.ui.normBtn.setVisible(visible)
+        if hasattr(self.ui, 'normBtn'):
+            self.ui.normBtn.setVisible(visible)
 
     def add_cross_section(self):
         if self.imageItem.image is not None:

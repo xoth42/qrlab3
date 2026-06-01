@@ -1,6 +1,11 @@
 import time
 import os
-from PyQt4 import Qt
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QSplitter, QWidget, QVBoxLayout,
+                             QHBoxLayout, QLabel, QSpinBox, QTreeWidget, QTreeWidgetItem,
+                             QAction, QInputDialog, QFileDialog, QMessageBox, QTextEdit,
+                             QAbstractItemView, QSizePolicy, QLineEdit)
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal
+from PyQt5.QtGui import QFont
 from .widgets import *
 import objectsharer as objsh
 import pickle
@@ -101,12 +106,12 @@ class WindowItem(object):
         del WindowItem.registry[self.path]
 
 
-class DataTreeWidgetItem(Qt.QTreeWidgetItem):
+class DataTreeWidgetItem(QTreeWidgetItem):
     """
     Subclass QTreeWidgetItem to give it a globally recognized identifier
     """
     def __init__(self, path, *args, **kwargs):
-        Qt.QTreeWidgetItem.__init__(self, *args, **kwargs)
+        QTreeWidgetItem.__init__(self, *args, **kwargs)
         self.path = path
         self.strpath = '/'.join(self.path)
 
@@ -203,7 +208,7 @@ class WindowPlot(WindowItem):
             'xlabel': 'X',
             'ylabel': 'Y',
         }
-        if self.rank is 2:
+        if self.rank == 2:
             default_attrs.update({
                 'y0': 0,
                 'yscale': 1,
@@ -215,9 +220,9 @@ class WindowPlot(WindowItem):
         )
 
         if self.plot is None:
-            if self.rank is 1:
+            if self.rank == 1:
                 self.plot = Rank1ItemWidget(self)
-            elif self.rank is 2:
+            elif self.rank == 2:
                 if self.is_parametric():
                     self.plot = Rank2ParametricWidget(self)
                 else:
@@ -346,21 +351,21 @@ class WindowInterface:
         sys.exit()
 
 
-class PlotWindow(Qt.QMainWindow):
+class PlotWindow(QMainWindow):
     """
     A window for viewing and plotting DataSets and DataGroups shared by a DataServer
     """
     def __init__(self):
-        Qt.QMainWindow.__init__(self)
+        QMainWindow.__init__(self)
         self.setup_ui()
         #self.data_groups = {}
         self.setup_server()
 
     def setup_ui(self):
         # Sidebar / Dockarea
-        self.setCentralWidget(Qt.QSplitter())
-        self.sidebar = Qt.QWidget()
-        self.sidebar.setLayout(Qt.QVBoxLayout())
+        self.setCentralWidget(QSplitter())
+        self.sidebar = QWidget()
+        self.sidebar.setLayout(QVBoxLayout())
         self.dock_area = MyDockArea()
         ItemWidget.dock_area = self.dock_area
         self.centralWidget().addWidget(self.sidebar)
@@ -368,26 +373,26 @@ class PlotWindow(Qt.QMainWindow):
         self.centralWidget().setSizes([250, 1000])
 
         # Spinner setting number of plots to display simultaneously by default
-        self.max_plots_spinner = Qt.QSpinBox()
-        self.max_plots_spinner.setValue(4)
+        self.max_plots_spinner = QSpinBox()
+        self.max_plots_spinner.setValue(1)
         self.max_plots_spinner.valueChanged.connect(self.dock_area.set_max_plots)
-        max_plots_widget = Qt.QWidget()
-        max_plots_widget.setLayout(Qt.QHBoxLayout())
-        max_plots_widget.layout().addWidget(Qt.QLabel('Maximum Plot Count'))
+        max_plots_widget = QWidget()
+        max_plots_widget.setLayout(QHBoxLayout())
+        max_plots_widget.layout().addWidget(QLabel('Maximum Plot Count'))
         max_plots_widget.layout().addWidget(self.max_plots_spinner)
         self.sidebar.layout().addWidget(max_plots_widget)
 
         # Structure Tree
-        sidebar_splitter = Qt.QSplitter(Qt.Qt.Vertical)
+        sidebar_splitter = QSplitter(Qt.Vertical)
         self.sidebar.layout().addWidget(sidebar_splitter)
 
-        self.data_tree_widget = Qt.QTreeWidget()
+        self.data_tree_widget = QTreeWidget()
         self.data_tree_widget.setColumnCount(3)
         self.data_tree_widget.setHeaderLabels(['Name', 'Shape', 'Visible?'])
         self.data_tree_widget.itemSelectionChanged.connect(self.change_edit_widget)
         self.data_tree_widget.itemDoubleClicked.connect(self.toggle_item)
         self.data_tree_widget.itemSelectionChanged.connect(self.configure_tree_actions)
-        self.data_tree_widget.setSelectionMode(Qt.QAbstractItemView.ExtendedSelection)
+        self.data_tree_widget.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.data_tree_widget.setColumnWidth(0, 150)
         self.data_tree_widget.setColumnWidth(1, 50)
         self.data_tree_widget.setColumnWidth(2, 50)
@@ -396,62 +401,62 @@ class PlotWindow(Qt.QMainWindow):
         sidebar_splitter.addWidget(self.data_tree_widget)
 
         # Structure Tree Context Menu
-        self.multiplot_action = Qt.QAction('Create Multiplot', self)
+        self.multiplot_action = QAction('Create Multiplot', self)
         self.multiplot_action.triggered.connect(self.add_multiplot)
         self.data_tree_widget.addAction(self.multiplot_action)
 
-        self.parametric_action = Qt.QAction('Plot Pair Parametrically', self)
+        self.parametric_action = QAction('Plot Pair Parametrically', self)
         self.parametric_action.triggered.connect(lambda: self.add_multiplot(True))
         self.data_tree_widget.addAction(self.parametric_action)
 
-        self.show_subtree_action = Qt.QAction('Show Subtree', self)
+        self.show_subtree_action = QAction('Show Subtree', self)
         self.show_subtree_action.triggered.connect(lambda: self.toggle_selection(show=True))
         self.data_tree_widget.addAction(self.show_subtree_action)
 
-        self.hide_subtree_action = Qt.QAction('Hide Subtree', self)
+        self.hide_subtree_action = QAction('Hide Subtree', self)
         self.hide_subtree_action.triggered.connect(lambda: self.toggle_selection(show=False))
         self.data_tree_widget.addAction(self.hide_subtree_action)
 
-        self.delete_item_action = Qt.QAction('Delete item', self)
+        self.delete_item_action = QAction('Delete item', self)
         self.delete_item_action.triggered.connect(lambda: self.delete_item())
         self.data_tree_widget.addAction(self.delete_item_action)
 
-        self.close_item_action = Qt.QAction('Close file', self)
+        self.close_item_action = QAction('Close file', self)
         self.close_item_action.triggered.connect(lambda: self.delete_item())
         self.data_tree_widget.addAction(self.close_item_action)
 
-        self.rename_item_action = Qt.QAction('Rename item', self)
+        self.rename_item_action = QAction('Rename item', self)
         self.rename_item_action.triggered.connect(self.rename_item)
         self.data_tree_widget.addAction(self.rename_item_action)
 
-        self.data_tree_widget.setContextMenuPolicy(Qt.Qt.ActionsContextMenu)
+        self.data_tree_widget.setContextMenuPolicy(Qt.ActionsContextMenu)
         self.data_tree_widget.itemCollapsed.connect(lambda: self.data_tree_widget.resizeColumnToContents(0))
         self.data_tree_widget.itemExpanded.connect(lambda: self.data_tree_widget.resizeColumnToContents(0))
 
 
         # Attribute Editor Area
-        attrs_widget_box = Qt.QWidget()
-        attrs_widget_box.setLayout(Qt.QVBoxLayout())
+        attrs_widget_box = QWidget()
+        attrs_widget_box.setLayout(QVBoxLayout())
         WindowItem.attrs_widget_layout = attrs_widget_box.layout()
         self.current_edit_widget = None
         sidebar_splitter.addWidget(attrs_widget_box)
 
         # Status Bar
-        self.connected_status = Qt.QLabel('Not Connected')
+        self.connected_status = QLabel('Not Connected')
         #self.view_status = Qt.QLabel('Empty')
         self.current_files = None
         self.statusBar().addWidget(self.connected_status)
         #self.statusBar().addWidget(self.view_status)
 
-        self.connection_checker = Qt.QTimer()
+        self.connection_checker = QTimer()
         self.connection_checker.timeout.connect(self.check_connection_status)
 
         # Menu bar
         file_menu = self.menuBar().addMenu('File')
-        self.connect_to_server_action = Qt.QAction('Connect to Dataserver', self)
+        self.connect_to_server_action = QAction('Connect to Dataserver', self)
         self.connect_to_server_action.triggered.connect(lambda checked: self.connect_dataserver())
         file_menu.addAction(self.connect_to_server_action)
-        self.load_file_action = Qt.QAction('Load File', self)
+        self.load_file_action = QAction('Load File', self)
         self.load_file_action.triggered.connect(lambda checked: self.load_file())
         file_menu.addAction(self.load_file_action)
 
@@ -460,29 +465,39 @@ class PlotWindow(Qt.QMainWindow):
     #######################
 
     def setup_server(self):
-        self.zbe = objsh.ZMQBackend()
-        self.zbe.start_server('127.0.0.1', 55563)
+        # Use the working dataserver_client approach instead of manual ZMQ setup
+        from dataserver import dataserver_client
         try:
             self.connect_dataserver()
-        except objsh.TimeoutError:
-            logger.warning('Could not connect to dataserver on startup')
-        self.public_interface = WindowInterface(self)
-        self.zbe.add_qt_timer()
+        except Exception as e:
+            logger.warning('Could not connect to dataserver on startup: %s' % e)
+        # Add back the WindowInterface for real-time updates and remote control
+        try:
+            self.public_interface = WindowInterface(self)
+        except Exception as e:
+            logger.warning('Could not initialize WindowInterface: %s' % e)
 
-    def connect_dataserver(self):#, addr='127.0.0.1', port=55556):
-        addr = '127.0.0.1'
-        port = 55556
-        self.zbe.refresh_connection('tcp://%s:%d' % (addr, port))
-        self.dataserver = objsh.helper.find_object('dataserver', no_cache=True)
-        self.dataserver.connect('file-added', self.add_file)
-        WindowDataSet.load = False
-        for filename, proxy in list(self.dataserver.list_files(names_only=False).items()):
-            self.add_file(filename, proxy)
-        WindowDataSet.load = True
-        self.connected_status.setText('Connected to tcp://%s:%d' % (addr, port))
-        self.connect_to_server_action.setEnabled(False)
-        self.load_file_action.setEnabled(True)
-        self.connection_checker.start(5000)
+    def connect_dataserver(self):
+        from dataserver import dataserver_client
+        self.dataserver = dataserver_client()
+        if self.dataserver:
+            # Connect to file-added signal if available
+            if hasattr(self.dataserver, 'connect'):
+                self.dataserver.connect('file-added', self.add_file)
+
+            WindowDataSet.load = False
+            files = self.dataserver.list_files()
+            for filename in files:
+                proxy = self.dataserver.get_file(filename)
+                self.add_file(filename, proxy)
+            WindowDataSet.load = True
+
+            self.connected_status.setText('Connected to dataserver')
+            self.connect_to_server_action.setEnabled(False)
+            self.load_file_action.setEnabled(True)
+            self.connection_checker.start(5000)
+        else:
+            raise Exception("Could not connect to dataserver")
 
     def check_connection_status(self):
         try:
@@ -518,8 +533,7 @@ class PlotWindow(Qt.QMainWindow):
     def rename_item(self):
         item = self.data_tree_widget.selectedItems()[0]
         item = WindowItem.registry[item.path]
-        new_name, ok = Qt.QInputDialog.getText(self, "Renaming %s" % item.name, "New Name", Qt.QLineEdit.Normal, item.name)
-        new_name = str(new_name)
+        new_name, ok = QInputDialog.getText(self, "Renaming %s" % item.name, "New Name", QLineEdit.Normal, item.name)
         if ok and new_name and (new_name != item.name):
             if item.parent is not None:
                 item.parent.proxy[new_name] = item.proxy
@@ -551,13 +565,13 @@ class PlotWindow(Qt.QMainWindow):
     ################
 
     def load_file(self):
-        filename = str(Qt.QFileDialog().getOpenFileName(self, 'Load HDF5 file', h5file_directory, h5file_filter))
+        filename, _ = QFileDialog.getOpenFileName(self, 'Load HDF5 file', h5file_directory, h5file_filter)
         if not filename:
             return
         self.dataserver.get_file(filename)
 
     def save_view(self): # TODO
-        filename = str(Qt.QFileDialog().getSaveFileName(self, 'Save View file'))
+        filename, _ = QFileDialog.getSaveFileName(self, 'Save View file')
         open_plots = []
         for group in list(self.data_groups.values()):
             if group.plot.parent() is not None:
@@ -633,31 +647,31 @@ class PlotWindow(Qt.QMainWindow):
             for child in item.get_children():
                 self.toggle_item(child, col, show)
             WindowItem.registry[item.path].check_expand_state()
-        Qt.QApplication.instance().processEvents()
+        QApplication.instance().processEvents()
 
 
 #See http://stackoverflow.com/questions/2655354/how-to-allow-resizing-of-qmessagebox-in-pyqt4
-class ResizeableMessageBox(Qt.QMessageBox):
+class ResizeableMessageBox(QMessageBox):
     def __init__(self):
-        Qt.QMessageBox.__init__(self)
+        QMessageBox.__init__(self)
         self.setSizeGripEnabled(True)
 
     def event(self, e):
-        result = Qt.QMessageBox.event(self, e)
+        result = QMessageBox.event(self, e)
 
         self.setMinimumHeight(0)
         self.setMaximumHeight(16777215)
         self.setMinimumWidth(0)
         self.setMaximumWidth(16777215)
-        self.setSizePolicy(Qt.QSizePolicy.Expanding, Qt.QSizePolicy.Expanding)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-        textEdit = self.findChild(Qt.QTextEdit)
+        textEdit = self.findChild(QTextEdit)
         if textEdit != None :
             textEdit.setMinimumHeight(0)
             textEdit.setMaximumHeight(16777215)
             textEdit.setMinimumWidth(0)
             textEdit.setMaximumWidth(16777215)
-            textEdit.setSizePolicy(Qt.QSizePolicy.Expanding, Qt.QSizePolicy.Expanding)
+            textEdit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         return result
 
@@ -671,12 +685,12 @@ def excepthook(error, instance, tb):
 
 def run_plotwindow():
     sys.excepthook = excepthook
-    app = Qt.QApplication([])
+    app = QApplication([])
     win = PlotWindow()
     win.show()
     #win.showMaximized()
     win.setMinimumSize(700, 500)
-    app.connect(app, Qt.SIGNAL("lastWindowClosed()"), win, Qt.SIGNAL("lastWindowClosed()"))
+    app.lastWindowClosed.connect(win.close)
     return app.exec_()
 
 

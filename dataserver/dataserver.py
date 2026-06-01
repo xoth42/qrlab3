@@ -26,7 +26,7 @@ import h5py
 import numpy as np
 import types
 
-#NOTE: the emit functions are provided by objectsharer after calling register()
+# NOTE: the emit functions are provided by objectsharer after calling register()
 
 class DataSet(object):
     '''
