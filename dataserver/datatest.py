@@ -24,7 +24,7 @@ ZS = np.sin(XS) * np.cos(YS) * np.sin(XS + YS)
 
 start = time.time()
 f = dataserver.get_file("test.hdf5")
-g = f.create_group("data%s" % time.strftime("%Y%m%d_%H%M%S", time.localtime()))
+g = f.create_group(f"data{time.strftime('%Y%m%d_%H%M%S', time.localtime())}")
 g.set_attrs(instruments=("abc", "def"))
 g.create_dataset("xs", data=xs)
 g.create_dataset("ys", data=ys)
@@ -33,7 +33,7 @@ g["xs2"] = xs**2
 data = g.create_dataset("averaged", shape=(1001, 1001), dtype=np.float64)
 data[:] = ZS
 end = time.time()
-print("Sent in %.03f sec" % (end - start,))
+print(f"Sent in {end - start:.3f} sec")
 data.set_attrs(done=True)
 
 aslice = data[0, :]

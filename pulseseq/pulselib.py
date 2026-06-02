@@ -1,8 +1,9 @@
-from sequencer import Combined, Sequence, Sequencer, Delay, Pulse, Instruction, Constant
+from .sequencer import Combined, Sequence, Pulse, Constant
+from . import ampgen
+
 import numpy as np
 import scipy.special
 import scipy.signal
-import ampgen
 
 #########################################
 # Constants
@@ -40,7 +41,7 @@ class Gaussian(Pulse):
                          2, blockwidth, endpoint=True)
         ys = a * np.exp(-ts**2 / (2 * s**2))
 #        ys[-1] = 0.         # JEFF added to solve t2 echo stitching problem
-        name = 'gauss(%.2f,%.5f)' % (s, a)
+        name = f'gauss({s:.2f},{a:.5f})'
         super(Gaussian, self).__init__(name, ys, chan=chan)
 
     def get_area(self, s, a):
@@ -64,7 +65,7 @@ class Lorentzian(Pulse):
         ts = np.linspace(-blockwidth / 2, blockwidth / 2,
                          blockwidth + 1, endpoint=True)
         ys = a * (w / 2)**2 / (ts**2 + (w / 2.0)**2)
-        name = 'lorentz(%.2f,%.5f)' % (w, a)
+        name = f'lorentz({w:.2f},{a:.5f})'
         super(Lorentzian, self).__init__(name, ys, chan=chan)
 
 
@@ -81,7 +82,7 @@ class Square(Pulse):
                          2, blockwidth, endpoint=True)
         ys = np.zeros_like(ts)
         ys[(ts >= -w / 2) & (ts <= w / 2)] = a
-        name = 'square(%.1f,%.5f)' % (w, a)
+        name = f'square({w:.1f},{a:.5f})'
         super(Square, self).__init__(name, ys, chan=chan)
 
     def get_area(self, w, a):
@@ -107,7 +108,7 @@ class Triangle(Pulse):
                          2, blockwidth, endpoint=True)
         ys = np.zeros_like(ts)
         ys = a * np.maximum(0, 1 - np.abs(ts) / w)
-        name = 'tri(%.2f,%.5f)' % (w, a)
+        name = f'tri({w:.2f},{a:.5f})'
         super(Triangle, self).__init__(name, ys, chan=chan)
 
     def get_area(self, w, a):
@@ -130,7 +131,7 @@ class GaussSquare(Pulse):
         ys[mask] = a * np.exp(-((ts[mask] + w / 2) / sigma)**2)
         mask = (ts >= w / 2)
         ys[mask] = a * np.exp(-((ts[mask] - w / 2) / sigma)**2)
-        name = 'gsquare(%.2f,%.5f,%.2f)' % (w, a, sigma)
+        name = f'gsquare({w:.2f},{a:.5f},{sigma:.2f})'
         super(GaussSquare, self).__init__(name, ys, chan=chan)
 
 
@@ -146,7 +147,7 @@ class Sinc(Pulse):
         ts = np.linspace(-blockwidth / 2, blockwidth /
                          2, blockwidth, endpoint=True)
         ys = a * np.sinc(ts / (0.5 * w))
-        name = 'sinc(%.2f,%.5f)' % (w, a)
+        name = f'sinc({w:.2f},{a:.5f})'
         super(Sinc, self).__init__(name, ys, chan=chan)
 
 #########################################
@@ -224,11 +225,9 @@ class GSRotation(object):
             p1d = p1.data + self.drag * derivative(p2.data)
             p2d = p2.data - self.drag * derivative(p1.data)
             p1 = Pulse(
-                'dragI(%s,%.5f)' %
-                (p1.name, self.drag), p1d, chan=self.chans[0])
+                f'dragI({p1.name},{self.drag:.5f})', p1d, chan=self.chans[0])
             p2 = Pulse(
-                'dragQ(%s,%.5f)' %
-                (p2.name, self.drag), p2d, chan=self.chans[1])
+                f'dragQ({p2.name},{self.drag:.5f})', p2d, chan=self.chans[1])
 
         # no need for pulses
         if a1 == 0 and a2 == 0:
@@ -328,17 +327,13 @@ class CombinedGSRotation(object):
             p3d = p3.data + drag * derivative(p4.data)
             p4d = p4.data - drag * derivative(p3.data)
             p1 = Pulse(
-                'dragI(%s,%.5f)' %
-                (p1.name, drag), p1d, chan=self.chans[0])
+                f'dragI({p1.name},{drag:.5f})', p1d, chan=self.chans[0])
             p2 = Pulse(
-                'dragQ(%s,%.5f)' %
-                (p2.name, drag), p2d, chan=self.chans[1])
+                f'dragQ({p2.name},{drag:.5f})', p2d, chan=self.chans[1])
             p3 = Pulse(
-                'dragI(%s,%.5f)' %
-                (p3.name, drag), p3d, chan=self.chans2[0])
+                f'dragI({p3.name},{drag:.5f})', p3d, chan=self.chans2[0])
             p4 = Pulse(
-                'dragQ(%s,%.5f)' %
-                (p4.name, drag), p4d, chan=self.chans2[1])
+                f'dragQ({p4.name},{drag:.5f})', p4d, chan=self.chans2[1])
 
 #        if self.switch is True:
 #            switchMarker = Constant((4*sigma+ws+8), 1, chan = self.switch_channel)
@@ -409,11 +404,9 @@ class AmplitudeRotation(object):
             p0d = p0.data + drag * derivative(p1.data)
             p1d = p1.data - drag * derivative(p0.data)
             p0 = Pulse(
-                'dragI(%s,%.5f)' %
-                (p0.name, drag), p0d, chan=self.chans[0])
+                f'dragI({p0.name},{drag:.5f})', p0d, chan=self.chans[0])
             p1 = Pulse(
-                'dragQ(%s,%.5f)' %
-                (p1.name, drag), p1d, chan=self.chans[1])
+                f'dragQ({p1.name},{drag:.5f})', p1d, chan=self.chans[1])
 
         return Combined([p0, p1])
 
@@ -501,17 +494,13 @@ class CombinedAmplitudeRotation(object):
             p2d = p2.data + drag * derivative(p3.data)
             p3d = p3.data - drag * derivative(p2.data)
             p0 = Pulse(
-                'dragI(%s,%.5f)' %
-                (p0.name, drag), p0d, chan=self.chans[0])
+                f'dragI({p0.name},{drag:.5f})', p0d, chan=self.chans[0])
             p1 = Pulse(
-                'dragQ(%s,%.5f)' %
-                (p1.name, drag), p1d, chan=self.chans[1])
+                f'dragQ({p1.name},{drag:.5f})', p1d, chan=self.chans[1])
             p2 = Pulse(
-                'dragI(%s,%.5f)' %
-                (p2.name, drag), p2d, chan=self.chans2[0])
+                f'dragI({p2.name},{drag:.5f})', p2d, chan=self.chans2[0])
             p3 = Pulse(
-                'dragQ(%s,%.5f)' %
-                (p3.name, drag), p3d, chan=self.chans2[1])
+                f'dragQ({p3.name},{drag:.5f})', p3d, chan=self.chans2[1])
 
         return Combined([p0, p1, p2, p3])
 
@@ -633,7 +622,7 @@ class DetunedSum(object):
 
         items = []
         for ichan, chan in enumerate(self.chans):
-            name = 'detsum%d_ch%s' % (DetunedSum.LAST_ID, chan)
+            name = f'detsum{int(DetunedSum.LAST_ID)}_ch{chan}'
             items.append(Pulse(name, bufs[chan], chan=chan))
 
         DetunedSum.LAST_ID += 1
@@ -704,7 +693,7 @@ class DetunedGaussSquare(object):  # JEFF
 
         items = []
         for ichan, chan in enumerate(self.chans):
-            name = 'detGaussSquare%d_ch%s' % (DetunedGaussSquare.LAST_ID, chan)
+            name = f'detGaussSquare{int(DetunedGaussSquare.LAST_ID)}_ch{chan}'
             items.append(Pulse(name, bufs[chan], chan=chan))
 
         DetunedGaussSquare.LAST_ID += 1
@@ -724,7 +713,7 @@ class Chirp(Pulse):
     '''
 
     def __init__(self, p, deltaf, chan):
-        name = 'chirp(%03d,%s)' % (round(deltaf * 1000), p.get_name(),)
+        name = f'chirp({int(round(deltaf * 1000)):03},{p.get_name()})'
         ys = p.get_data()
         xs = np.arange(len(ys))
         alpha = deltaf * 2 * np.pi / len(ys)
@@ -742,7 +731,7 @@ class Slepian(Pulse):
     '''
 
     def __init__(self, w, a, bw=0.3, chan=1):
-        name = 'slepian(%.3f,%.1f,%.5f)' % (bw, w, a)
+        name = f'slepian({bw:.3f},{w:.1f},{a:.5f})'
         w = int(np.ceil(w))
         # Modern SciPy exposes the Slepian window through DPSS. The old API
         # took a bandwidth-style parameter, so we map it to the equivalent NW.
@@ -756,7 +745,7 @@ class Kaiser(Pulse):
     '''
 
     def __init__(self, w, a, alpha=2, chan=1):
-        name = 'kaiser(%.3f,%.1f,%.5f)' % (alpha, w, a)
+        name = f'kaiser({alpha:.3f},{w:.1f},{a:.5f})'
         w = int(np.ceil(w))
         xs = np.arange(w)
         ys = a * scipy.special.i0(np.pi * alpha *
@@ -786,7 +775,7 @@ class Hanning(CosinePulse):
     '''
 
     def __init__(self, w, a, chan=1):
-        name = 'hanning(%.1f,%.5f)' % (w, a)
+        name = f'hanning({w:.1f},{a:.5f})'
         T = [0.5, -0.5]
         super(Hanning, self).__init__(name, w, a, T, chan=chan)
 
@@ -797,7 +786,7 @@ class Blackman(CosinePulse):
     '''
 
     def __init__(self, w, a, alpha=0.16, chan=1):
-        name = 'blackman(%.5f,%.1f,%.5f)' % (alpha, w, a)
+        name = f'blackman({alpha:.5f},{w:.1f},{a:.5f})'
         T = [(1 - alpha) / 2.0, -0.5, alpha / 2.0]
         super(Blackman, self).__init__(name, w, a, T, chan=chan)
 
@@ -808,7 +797,7 @@ class BlackmanNutall(CosinePulse):
     '''
 
     def __init__(self, w, a, chan=1):
-        name = 'blackmannutall(%.1f,%.5f)' % (w, a)
+        name = f'blackmannutall({w:.1f},{a:.5f})'
         T = [0.3635819, -0.4891775, 0.1365995, -0.0106411]
         super(BlackmanNutall, self).__init__(name, w, a, T, chan=chan)
 
@@ -819,7 +808,7 @@ class BlackmanHarris(CosinePulse):
     '''
 
     def __init__(self, w, a, chan=1):
-        name = 'blackmanharris(%.1f,%.5f)' % (w, a)
+        name = f'blackmanharris({w:.1f},{a:.5f})'
         T = [0.35875, -0.48829, 0.14128, -0.01168]
         super(BlackmanHarris, self).__init__(name, w, a, T, chan=chan)
 
@@ -831,7 +820,7 @@ class FlatTop(CosinePulse):
     '''
 
     def __init__(self, w, a, chan=1):
-        name = 'flattop(%.1f,%.5f)' % (w, a)
+        name = f'flattop({w:.1f},{a:.5f})'
         T = [1, -1.93, 1.29, -0.388, 0.028]
         super(FlatTop, self).__init__(name, w, a, T, chan=chan)
 
@@ -846,7 +835,7 @@ class UburpPulse(CosinePulse):
     )
 
     def __init__(self, w, h, chan=1):
-        name = 'uburp(%.1f,%.5f)' % (w, h)
+        name = f'uburp({w:.1f},{h:.5f})'
         CosinePulse.__init__(self, name, w, h, self.TABLE, chan=chan)
 
 
@@ -886,7 +875,7 @@ class SQPulse(CosinePulse):
     }
 
     def __init__(self, w, h, ptype, npi_2, chan=1, norm=None):
-        name = 'SQ(%s,%d,%.1f,%.5f)' % (ptype, npi_2, w, h)
+        name = f'SQ({ptype},{int(npi_2)},{w:.1f},{h:.5f})'
         table = self.TABLE[ptype][npi_2]
         CosinePulse.__init__(self, name, w, h, table, chan=chan, norm=norm)
 
@@ -921,8 +910,7 @@ class SQRotation:
             npi_2 = 2
         else:
             raise ValueError(
-                'Unable to do SQ rotation with angle %s*pi' %
-                (alpha / np.pi,))
+                f'Unable to do SQ rotation with angle {alpha / np.pi}*pi')
         p0 = SQPulse(
             w,
             sign *
@@ -975,7 +963,7 @@ class CSVPulse(Pulse):  # JEFF added to do grape pulses
         ys = amp * np.loadtxt(filename)
         YS = np.concatenate((np.zeros(pre_delay), ys, np.zeros(post_delay)))
         YS[-1] = 0.
-        name = 'csv(%s,%.5f)' % (filename, amp)
+        name = f'csv({filename},{amp:.5f})'
         super(CSVPulse, self).__init__(name, YS, chan=chan)
 
 
@@ -986,7 +974,7 @@ class DataPulse(Pulse):  # JEFF added to do grape pulses
         # consistent.
         ys = data
         ys[-1] = 0.
-        name = 'data(%s,%.5f,%.5f)' % (filename, amp, phase)
+        name = f'data({filename},{amp:.5f},{phase:.5f})'
         super(DataPulse, self).__init__(name, ys, chan=chan)
 
 #########################################

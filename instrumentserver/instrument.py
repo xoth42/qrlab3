@@ -58,7 +58,7 @@ class Instrument(object):
     # FLAGS are used to to set extra properties on a parameter.
 
     FLAG_GET = 0x01             # Parameter is gettable
-    FLAG_SET = 0x02             # {arameter is settable
+    FLAG_SET = 0x02             # Parameter is settable
     FLAG_GETSET = 0x03          # Shortcut for GET and SET
     FLAG_GET_AFTER_SET = 0x04   # perform a 'get' after a 'set'
     FLAG_SOFTGET = 0x08         # 'get' operation is simulated in software,
@@ -100,7 +100,7 @@ class Instrument(object):
         self._aux_info = dict()
 
     def __str__(self):
-        return "Instrument '%s'" % (self.get_name())
+        return f"Instrument '{self.get_name()}'"
 
     # Note that in python there is no guarantee that this will be called!
     def __del__(self):
@@ -168,11 +168,11 @@ class Instrument(object):
         if 'option_list' in options:
             doc += '\n\nAllowed parameters:\n'
             for fmtval in options['option_list']:
-                doc += '    %s\n' % str(fmtval)
+                doc += f'    {str(fmtval)}\n'
         if 'format_map' in options:
             doc += '\n\nAllowed parameters:\n'
             for fmtkey, fmtval in options['format_map'].items():
-                doc += '    %s or %s\n' % (fmtkey, fmtval)
+                doc += f'    {fmtkey} or {fmtval}\n'
 
         if doc != '':
             options['doc'] = doc
@@ -215,11 +215,11 @@ class Instrument(object):
         '''
 
         if name in self._parameters:
-            logging.error('Parameter %s already exists.', name)
+            logging.error(f'Parameter {name} already exists.', )
             return
         elif name in self.RESERVED_NAMES:
-            logging.error("'%s' is a reserved name, not adding parameter",
-                    name)
+            logging.error(f"'{name}' is a reserved name, not adding parameter",
+                    )
             return
 
         options = kwargs
@@ -247,7 +247,7 @@ class Instrument(object):
                 if 'channel_prefix' in options:
                     var_name = options['channel_prefix'] % i + name
                 else:
-                    var_name = '%s%s' % (name, i)
+                    var_name = f'{name}{i}'
 
                 self.add_parameter(var_name, **chopt)
 
@@ -271,21 +271,21 @@ class Instrument(object):
                     self.get(name, query=query, **lopts)
 
             self._add_options_to_doc(options)
-            func.__doc__ = 'Get variable %s' % name
+            func.__doc__ = f'Get variable {name}'
             if 'doc' in options:
-                func.__doc__ += '\n%s' % options['doc']
+                func.__doc__ += f"\n{options['doc']}"
 
-            setattr(self, 'get_%s' % name,  func)
-            self._added_methods.append('get_%s' % name)
+            setattr(self, f'get_{name}',  func)
+            self._added_methods.append(f'get_{name}')
 
             # Set function to do_get_%s or _do_get_%s, whichever is available
             # (if no function specified)
             if 'get_func' not in options:
-                options['get_func'] = getattr(self, 'do_get_%s' % base_name, \
-                    getattr(self, '_do_get_%s' % base_name, None))
+                options['get_func'] = getattr(self, f'do_get_{base_name}', \
+                    getattr(self, f'_do_get_{base_name}', None))
             if options['get_func'] is not None:
                 if options['get_func'].__doc__ is not None:
-                    func.__doc__ += '\n%s' % options['get_func'].__doc__
+                    func.__doc__ += f"\n{options['get_func'].__doc__}"
             else:
                 options['get_func'] = lambda *a, **kw: \
                     self._get_not_implemented(base_name)
@@ -299,9 +299,9 @@ class Instrument(object):
                 func = lambda query=True, **lopts: \
                     self.get(name, query=False, **lopts)
 
-            func.__doc__ = 'Get variable %s (internal stored value)' % name
-            setattr(self, 'get_%s' % name,  func)
-            self._added_methods.append('get_%s' % name)
+            func.__doc__ = f'Get variable {name} (internal stored value)'
+            setattr(self, f'get_{name}',  func)
+            self._added_methods.append(f'get_{name}')
 
         if options['flags'] & Instrument.FLAG_SET:
             if ch is not None:
@@ -309,20 +309,20 @@ class Instrument(object):
             else:
                 func = lambda val, **lopts: self.set(name, val, **lopts)
 
-            func.__doc__ = 'Set variable %s' % name
+            func.__doc__ = f'Set variable {name}'
             if 'doc' in options:
-                func.__doc__ += '\n%s' % options['doc']
-            setattr(self, 'set_%s' % name, func)
-            self._added_methods.append('set_%s' % name)
+                func.__doc__ += f"\n{options['doc']}"
+            setattr(self, f'set_{name}', func)
+            self._added_methods.append(f'set_{name}')
 
             # Set function to do_set_%s or _do_set_%s, whichever is available
             # (if no function specified)
             if 'set_func' not in options:
-                options['set_func'] = getattr(self, 'do_set_%s' % base_name, \
-                    getattr(self, '_do_set_%s' % base_name, None))
+                options['set_func'] = getattr(self, f'do_set_{base_name}', \
+                    getattr(self, f'_do_set_{base_name}', None))
             if options['set_func'] is not None:
                 if options['set_func'].__doc__ is not None:
-                    func.__doc__ += '\n%s' % options['set_func'].__doc__
+                    func.__doc__ += f"\n{options['set_func'].__doc__}"
             else:
                 if not options['flags'] & Instrument.FLAG_SOFTGET:
                     options['set_func'] = lambda *a, **kw: \
@@ -332,7 +332,7 @@ class Instrument(object):
                     options['set_func'] = lambda *a, **kw: None
 
         if options['flags'] & self.FLAG_PERSIST:
-            val = config.get('persist_%s_%s' % (self._name, name))
+            val = config.get(f'persist_{self._name}_{name}')
             options['value'] = val
         elif 'value' not in options:
             options['value'] = None
@@ -366,7 +366,7 @@ class Instrument(object):
         if name not in self._parameters:
             return
 
-        for func in ('get_%s' % name, 'set_%s' % name):
+        for func in (f'get_{name}', f'set_{name}'):
             if hasattr(self, func):
                 delattr(self, func)
 
@@ -476,7 +476,7 @@ class Instrument(object):
         if 'channel_prefix' in opts:
             var_name = opts['channel_prefix'] % channel + name
         else:
-            var_name = '%s%d' % (name, channel)
+            var_name = f'{name}{int(channel)}'
 
         self.set_parameter_options(var_name, minval=minval, maxval=maxval)
 
@@ -572,10 +572,10 @@ class Instrument(object):
                     first = True
                     for k in list(val.keys()):
                         if first:
-                            fmt += '%s: %s' % (k, format)
+                            fmt += f'{k}: {format}'
                             first = False
                         else:
-                            fmt += ', %s: %s' % (k, format)
+                            fmt += f', {k}: {format}'
                     format = fmt
                     val = tuple(val.values())
 
@@ -588,11 +588,11 @@ class Instrument(object):
             valstr = str(val)
 
         if 'units' in opt:
-            unitstr = ' %s' % opt['units']
+            unitstr = f" {opt['units']}"
         else:
             unitstr = ''
 
-        return '%s%s' % (valstr, unitstr)
+        return f'{valstr}{unitstr}'
 
     def format_range(self, param):
         '''
@@ -626,9 +626,9 @@ class Instrument(object):
         popts = self.get_parameter_options(param)
         text = ''
         if 'maxstep' in popts and popts['maxstep'] is not None:
-            text += '%s' % popts['maxstep']
+            text += f"{popts['maxstep']}"
             if 'stepdelay' in popts and popts['stepdelay'] is not None:
-                text += ' / %sms' % popts['stepdelay']
+                text += f" / {popts['stepdelay']}ms"
             else:
                 text += ' / 100ms'
 
@@ -696,7 +696,7 @@ class Instrument(object):
                 elif p['type'] == np.ndarray:
                     value = np.array(value)
             except:
-                logging.warning('Unable to cast value "%s" to %s', value, p['type'])
+                logging.warning(f"Unable to cast value \"{value}\" to {p['type']}", )
 
         p['value'] = value
         return value
@@ -796,7 +796,7 @@ class Instrument(object):
         if matches == 1:
             return match
         else:
-            logging.warning('Multiple matches for option %s', value)
+            logging.warning(f'Multiple matches for option {value}', )
             return None
 
     def _val_from_option_dict(self, opts, value):
@@ -843,25 +843,25 @@ class Instrument(object):
             elif isinstance(value, Instrument) or isinstance(value, objsh.ObjectProxy):
                 return value
             else:
-                raise ValueError('Unable to convert %s to an Instrument' % value)
+                raise ValueError(f'Unable to convert {value} to an Instrument')
 
         if ttype in (list, tuple) and type(value) is bytes:
             try:
                 value = eval(value)
             except:
-                logging.warning('Conversion of %r to tuple failed', value)
+                logging.warning(f'Conversion of {value!r} to tuple failed', )
 
         if ttype not in self._CONVERT_MAP:
-            logging.warning('Unsupported type %s', ttype)
-            raise ValueError('Unsupported type %s' % ttype)
+            logging.warning(f'Unsupported type {ttype}', )
+            raise ValueError(f'Unsupported type {ttype}')
 
         try:
             func = self._CONVERT_MAP[ttype]
             value = func(value)
         except:
-            logging.warning('Conversion of %r to type %s failed',
-                    value, ttype)
-            raise ValueError('Conversion of %r to type %s failed' % (value, ttype))
+            logging.warning(f'Conversion of {value!r} to type {ttype} failed',
+                    )
+            raise ValueError(f'Conversion of {value!r} to type {ttype} failed')
 
 
         return value
@@ -893,8 +893,8 @@ class Instrument(object):
         if 'format_map' in p:
             newval = self._val_from_option_dict(p['format_map'], value)
             if newval is None:
-                logging.error('Value %s is not a valid option for "%s", valid options: %r',
-                    value, name, repr(p['format_map']))
+                logging.error(f"Value {value} is not a valid option for \"{name}\", valid options: {repr(p['format_map'])!r}",
+                    )
                 return
             value = newval
 
@@ -902,8 +902,8 @@ class Instrument(object):
         if 'option_list' in p:
             newval = self._val_from_option_list(p['option_list'], value)
             if newval is None:
-                logging.error('Value %s is not a valid option for "%s", valid: %r',
-                    value, name, repr(p['option_list']))
+                logging.error(f"Value {value} is not a valid option for \"{name}\", valid: {repr(p['option_list'])!r}",
+                    )
                 return
             value = newval
 
@@ -914,10 +914,10 @@ class Instrument(object):
                 return None
 
         if 'minval' in p and value < p['minval']:
-            raise Exception('Instrument %s: trying to set too small value for %s: %s' % (self._name, name, value))
+            raise Exception(f'Instrument {self._name}: trying to set too small value for {name}: {value}')
 
         if 'maxval' in p and value > p['maxval']:
-            raise Exception('Instrument %s: trying to set too large value for %s: %s' % (self._name, name, value))
+            raise Exception(f'Instrument {self._name}: trying to set too large value for {name}: {value}')
 
         if 'base_name' in p:
             base_name = p['base_name']
@@ -965,7 +965,7 @@ class Instrument(object):
             value = self._get_value(name, **kwargs)
 
         if p['flags'] & self.FLAG_PERSIST:
-            config.set('persist_%s_%s' % (self._name, name), value)
+            config.set(f'persist_{self._name}_{name}', value)
             config.save()
 
         p['value'] = value
@@ -991,8 +991,8 @@ class Instrument(object):
         '''
 
         if self._locked:
-            logging.warning('Trying to set value of locked instrument (%s)',
-                    self.get_name())
+            logging.warning(f'Trying to set value of locked instrument ({self.get_name()})',
+                    )
             return False
 
         if Instrument.USE_ACCESS_LOCK:
@@ -1066,7 +1066,7 @@ class Instrument(object):
         '''
 
         if not hasattr(self, name):
-            logging.warning('Instrument does not implement function %s', name)
+            logging.warning(f'Instrument does not implement function {name}', )
 
         f = getattr(self, name)
         if hasattr(f, '__doc__'):
@@ -1164,12 +1164,10 @@ class Instrument(object):
         self._default_write_var = name
 
     def _get_not_implemented(self, name):
-        logging.warning('Get not implemented for %s.%s' % \
-            (Instrument.get_type(self), name))
+        logging.warning(f'Get not implemented for {Instrument.get_type(self)}.{name}')
 
     def _set_not_implemented(self, name):
-        logging.warning('Set not implemented for %s.%s' % \
-            (Instrument.get_type(self), name))
+        logging.warning(f'Set not implemented for {Instrument.get_type(self)}.{name}')
 
     def _listen_parameter_changed_cb(self, sender, changed, \
             listen_param, update_func):
@@ -1231,7 +1229,7 @@ class Instrument(object):
         whole idea is to store the relevant settings for this Qubit.
         '''
         if alias is None:
-            alias = '%s_%s' % (insname, param)
+            alias = f'{insname}_{param}'
 
         srv = self.get_instruments()
         ins = srv.get(insname)

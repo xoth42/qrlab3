@@ -187,7 +187,7 @@ class Sequencer:
     def debug_seqs(self, seqs, msg, debug):
         if not debug:
             return
-        print('Sequence %s' % (msg,))
+        print(f'Sequence {msg}')
         for seq in list(seqs.values()):
             seq.print_seq()
 
@@ -253,8 +253,7 @@ class Sequencer:
             data = np.zeros(maxdelay)
             data[maxdelay - delay:] = 1
             p = Pulse(
-                'trig(%d,%d)' %
-                (delay, maxdelay), data=data, trigger=True)
+                f'trig({int(delay)},{int(maxdelay)})', data=data, trigger=True)
             seqs[chan].seq[0].trigger = False
             seqs[chan].prepend(p)
 
@@ -277,7 +276,7 @@ class Sequencer:
         '''
 
         if debug:
-            print('Rendering: %s' % (ss, ))
+            print(f'Rendering: {ss}')
 
         # Resolve the abstract instruction stream first so we can see the time
         # structure before any waveform generation happens.
@@ -386,7 +385,7 @@ class Sequencer:
         seqel = outseq.seq[i_el]
         if seqel.name.startswith('delay'):
             data = np.zeros([len(seqel.data),])
-            name = '%s_p%d' % (outseq.chan, i_pulse)
+            name = f'{outseq.chan}_p{int(i_pulse)}'
             ret = 1
         else:
             data = seqel.data
@@ -504,7 +503,7 @@ class Instruction(object):
         self.label = label
 
     def __str__(self):
-        return 'Instruction %s' % self.__class__
+        return f'Instruction {self.__class__}'
 
     def __repr__(self):
         return self.__str__()
@@ -681,7 +680,7 @@ class Sequence(Instruction):
             if getattr(self.seq[0], 'repeat', 1) == 1:
                 return self.seq[0].get_name()
             else:
-                return '%d%s' % (self.seq[0].repeat, self.seq[0].get_name())
+                return f'{int(self.seq[0].repeat)}{self.seq[0].get_name()}'
         if self.join:
             name = 'join('
         else:
@@ -690,15 +689,14 @@ class Sequence(Instruction):
             if i != 0:
                 name += ','
             if hasattr(el, 'repeat') and el.repeat > 1:
-                name += ('%d' % el.repeat) + el.get_name()
+                name += f'{int(el.repeat)}' + el.get_name()
             else:
                 name += el.get_name()
         name += ')'
         return name
 
     def __str__(self):
-        return 'Sequence(join=%s, chan=%s, name=%s, trigger=%s)' % (
-            self.join, self.chan, self.get_name(), self.get_trigger())
+        return f'Sequence(join={self.join}, chan={self.chan}, name={self.get_name()}, trigger={self.get_trigger()})'
 
     def get_trigger(self):
         return self.trigger or (
@@ -927,7 +925,7 @@ class Sequence(Instruction):
         return ret
 
     def print_seq(self):
-        print('Channel %s' % (self.chan,))
+        print(f'Channel {self.chan}')
         layout = '%1s%6s%2s    %6s  %4s   %4s   %s'
         print(layout % ('', 'start', '', 'end', 'n', 'len', 'name'))
         t = 0
@@ -941,7 +939,7 @@ class Sequence(Instruction):
             if hasattr(el, 'unroll') and not el.unroll:
                 flags += 'U'
             if not hasattr(el, 'name'):
-                print(layout % (mark, t, flags, t, 1, 0, '?: %s' % el))
+                print(layout % (mark, t, flags, t, 1, 0, f'?: {el}'))
                 continue
             if el.name in Pulse.pulse_data:
                 plen = len(Pulse.pulse_data[el.name])
@@ -968,7 +966,7 @@ class Sequence(Instruction):
         if fig is None:
             fig = plt.figure()
         ax = fig.add_subplot(*subplot)
-        ax.set_title('Channel %s' % self.chan)
+        ax.set_title(f'Channel {self.chan}')
         t = 0
         for el in self.seq:
             if el.get_trigger():
@@ -1073,7 +1071,7 @@ class Sequence(Instruction):
                             unroll=False,
                             fixed=True)
                     else:
-                        repeatname = "%dx%s" % (n_to_unroll, el.name)
+                        repeatname = f"{int(n_to_unroll)}x{el.name}"
                         repeatpulse = Pulse(
                             repeatname, repeatdata, repeat=new_repeat_count)
                     seqout[i + j] = repeatpulse
@@ -1089,7 +1087,7 @@ class Sequence(Instruction):
                         remainpulse = Delay(
                             len(remaindata), repeat=1, unroll=False, fixed=True)
                     else:
-                        remainname = "%dx%s" % (remainder, el.name)
+                        remainname = f"{int(remainder)}x{el.name}"
                         remainpulse = Pulse(remainname, remaindata)
                     j += 1
                     seqout.insert(i + j, remainpulse)
@@ -1181,8 +1179,8 @@ class Sequence(Instruction):
             if curlen < minlen:
                 print((self.seq))
                 raise Exception(
-                    "Unable to make each element longer than %d. %d available from index %d - %d" %
-                    (minlen, curlen, i, j))
+                    f"Unable to make each element longer than {int(minlen):d}. {int(curlen):d} "
+                    f"available from index {int(i):d} - {int(j):d}")
 
             # Perform the actual join
             self.seq[i] = Join(self.seq[i:j + 1], chan=self.chan)
@@ -1220,8 +1218,7 @@ class Sequence(Instruction):
 
         if self.seq[i_el].repeat <= N:
             raise Exception(
-                'Unable to extract %d repeats from element %d' %
-                (N, i_el))
+                f'Unable to extract {int(N)} repeats from element {int(i_el)}')
 
         self.seq[i_el] = copy.deepcopy(self.seq[i_el])
         self.seq.insert(i_el, copy.deepcopy(self.seq[i_el]))
@@ -1263,10 +1260,10 @@ class Pulse(Instruction):
             elif overwrite:
                 Pulse.pulse_data[name] = data
             elif not (Pulse.pulse_data == data).all():
-                raise ValueError('Pulse %s already defined differently' % name)
+                raise ValueError(f'Pulse {name} already defined differently')
         else:
             if data is None:
-                logging.warning('Creating empty pulse %s', name)
+                logging.warning(f'Creating empty pulse {name}', )
             Pulse.pulse_data[name] = data
 
             # Only check range if pulse not defined yet
@@ -1283,8 +1280,7 @@ class Pulse(Instruction):
                 raise Exception(msg)
 
     def __str__(self):
-        return 'Pulse(%s, chan=%s, repeat=%s, trigger=%s)' % (
-            self.name, self.chan, self.repeat, self.trigger)
+        return f'Pulse({self.name}, chan={self.chan}, repeat={self.repeat}, trigger={self.trigger})'
 
     def get_channels(self):
         if self.chan != CHAN_ANY:
@@ -1361,7 +1357,7 @@ def Delay(
     try:
         float(dt)
     except BaseException:
-        raise ValueError('Delay time should be a value, not %s' % dt)
+        raise ValueError(f'Delay time should be a value, not {dt}')
     dt = int(round(dt))
     if dt == 0:
         return None
@@ -1377,8 +1373,7 @@ def Delay(
 
     if fixed:
         return Pulse(
-            'delay%d' %
-            dt,
+            f'delay{int(dt)}',
             np.zeros(dt),
             chan=chan,
             trigger=trigger,
@@ -1387,11 +1382,10 @@ def Delay(
 
     if dt >= 2 * MINLEN:
         s = Sequence(repeat=repeat)
-        name = 'delay%d' % MINLEN
+        name = f'delay{int(MINLEN)}'
         s.append(
             Pulse(
-                'delay%d' %
-                MINLEN,
+                f'delay{int(MINLEN)}',
                 np.zeros(MINLEN),
                 repeat=int(
                     np.floor(
@@ -1404,8 +1398,7 @@ def Delay(
         if remain > 0:
             s.append(
                 Pulse(
-                    'delay%d' %
-                    remain,
+                    f'delay{int(remain)}',
                     np.zeros(remain),
                     repeat=1,
                     chan=chan,
@@ -1414,8 +1407,7 @@ def Delay(
 
     else:
         return Pulse(
-            'delay%d' %
-            dt,
+            f'delay{int(dt)}',
             np.zeros(dt),
             repeat=repeat,
             chan=chan,
@@ -1447,7 +1439,7 @@ class Label(Instruction):
 
     def generate(self, now, chan):
         if Label.LABELS[self.name] != now:
-            print('Setting label %s to %s' % (self.name, now))
+            print(f'Setting label {self.name} to {now}')
             Label.LABELS[self.name] = now
             Label.UPDATED = True
         return Sequence(chan=chan)
@@ -1463,7 +1455,7 @@ class DelayTo(Instruction):
         super(DelayTo, self).__init__()
 
     def __str__(self):
-        return 'DelayTo(%s)' % self.t
+        return f'DelayTo({self.t})'
 
     def get_tgt_time(self, now):
         if isinstance(self.t, bytes):
@@ -1474,7 +1466,7 @@ class DelayTo(Instruction):
             if label not in Label.LABELS:
                 raise ValueError('Label not defined')
             elif Label.LABELS[label] is None:
-                print('Warning: Label %s has not been resolved yet.' % label)
+                print(f'Warning: Label {label} has not been resolved yet.')
                 return now
             return Label.LABELS[label]
         else:
@@ -1534,13 +1526,13 @@ class Combined(Instruction):
         elif isinstance(items, Instruction):
             self.items = [items]
         else:
-            raise ValueError('Invalid items to combine: %s' % (items, ))
+            raise ValueError(f'Invalid items to combine: {items}')
 
         # Number of times this sequence has been resolved
         self.nresolved = 0
 
     def __str__(self):
-        return 'Combined(%s)' % (self.items,)
+        return f'Combined({self.items})'
 
     def get_name(self):
         names = [i.get_name() for i in self.items]
@@ -1632,8 +1624,8 @@ class Combined(Instruction):
             if DEBUG:
                 for ch, info in chinfo.items():
                     print(
-                        '  ch%s: idx=%d (len %d, trig %s) --> %s' %
-                        (ch, info.idx, info.seq.get_length(), info.seq.seq[0].get_trigger(), info.seq))
+                        f'  ch{ch}: idx={int(info.idx):d} (len {int(info.seq.get_length()):d}, '
+                        f'trig {info.seq.seq[0].get_trigger()}) --> {info.seq}')
 
             # Get some information about the channels
             max_nondelay = 0
@@ -1650,8 +1642,7 @@ class Combined(Instruction):
 
             if DEBUG:
                 print(
-                    '    max_nondelay: %s, mindelay %s, ndel_ch %s' %
-                    (max_nondelay, min_delay, ndel_ch))
+                    f'    max_nondelay: {max_nondelay}, mindelay {min_delay}, ndel_ch {ndel_ch}')
             if min_delay < 0:
                 raise ValueError('Negative delay!')
 
@@ -1661,7 +1652,7 @@ class Combined(Instruction):
                 for ch, info in chinfo.items():
                     add = info.seq.consume_up_to(min_delay, unroll=True)
                     if DEBUG:
-                        print('      All delays, adding %s' % (add,))
+                        print(f'      All delays, adding {add}')
                     info.seq_out.append(add)
 
             # At least one channel is active.
@@ -1686,8 +1677,7 @@ class Combined(Instruction):
                     add = info.seq.consume_up_to(to_time)
                     if DEBUG:
                         print(
-                            '      Activity, adding to ch %s: %s' %
-                            (ch, add,))
+                            f'      Activity, adding to ch {ch}: {add}')
                     info.seq_out.append(add)
         else:
             if len(l_chinfo[0].seq):
@@ -1696,7 +1686,7 @@ class Combined(Instruction):
         for ch, info in chinfo.items():
             self.seqs[ch] = info.seq_out
             if DEBUG:
-                print('Merged channel %s into %s' % (ch, info.seq_out))
+                print(f'Merged channel {ch} into {info.seq_out}')
 
     def get_chan_seq(self, chan):
         if chan in self.seqs:
@@ -1730,9 +1720,8 @@ class Combined(Instruction):
                     pass
                 else:
                     raise ValueError(
-                        'Conflicting channel content: %s and %s (current item %s [%d])' %
-                        (planadd, addseq, self.items, len(
-                            self.items)))
+                        f'Conflicting channel content: {planadd} and {addseq} '
+                        f'(current item {self.items} [{len(self.items):d}])')
 
             self.seqs[ch] = planadd
 
@@ -1815,7 +1804,7 @@ class Combined(Instruction):
             s.append(new_el)
 
         if DEBUG:
-            print('Aligned seq ch%s: %s' % (chan, s))
+            print(f'Aligned seq ch{chan}: {s}')
 
         return s
 
@@ -1863,9 +1852,9 @@ class Constant(Pulse):
         blockwidth = int(round(w))
         ys = a * np.ones([w,])
         if a == 0:
-            name = 'delay%d' % (w,)
+            name = f'delay{int(w)}'
         else:
-            name = 'const(%03d,%03d)' % (w, round(a * 1000))
+            name = f'const({int(w):03},{int(round(a * 1000)):03})'
             kwargs['convdelay'] = False
         super(Constant, self).__init__(name, ys, **kwargs)
 
@@ -1880,7 +1869,7 @@ def Pad(ins, rlen, pad=PAD_BOTH, err=IGNORE):
 
     l = ins.get_length()
     if l > rlen:
-        msg = 'Unable to pad, instruction %s too long' % ins
+        msg = f'Unable to pad, instruction {ins} too long'
         if err == WARN:
             print(msg)
         elif err == RAISE:
@@ -1916,7 +1905,7 @@ class Repeat(Instruction):
         Instruction.__init__(self)
 
     def get_name(self):
-        return '%d%s' % (self.n, self.instruction.get_name())
+        return f'{int(self.n)}{self.instruction.get_name()}'
 
     def get_length(self, now=None):
         return self.n * self.instruction.get_length(now)
@@ -2086,8 +2075,10 @@ class ModulateSequence(SequenceOperation):
             endpoint=False)
         data = data * self.amp * np.cos(phis + phi0)
         deg = np.rad2deg(phi0 % 2 * np.pi)
-        name = 'mod(%d,%d,%d,%s)' % (int(10 * self.if_period),
-                                     int(10 * deg), int(1000 * self.amp), el.get_name())
+        name = (
+            f'mod({int(10 * self.if_period):d},{int(10 * deg):d},'
+            f'{int(1000 * self.amp):d},{el.get_name()})'
+        )
         return Pulse(
             name,
             data,
@@ -2114,7 +2105,7 @@ class DifferentiateSequence(SequenceOperation):
         data[-1] = (data[-1] - data[-2])
         data[1:-1] = diff
         data *= self.amp
-        name = 'diff(%.03f,%s)' % (self.amp, el.get_name(),)
+        name = f'diff({self.amp:.3f},{el.get_name()})'
         return Pulse(
             name,
             data,
@@ -2147,10 +2138,8 @@ class SequencePairOperation(object):
         '''
         if len(s1.seq) != len(s2.seq):
             raise ValueError(
-                'Incompatible sequences! Channel %s has %d and channel %s %d items' %
-                (s1.chan, len(
-                    s1.seq), s2.chan, len(
-                    s2.seq)))
+                f'Incompatible sequences! Channel {s1.chan} has {len(s1.seq):d} '
+                f'and channel {s2.chan} {len(s2.seq):d} items')
 
         seq_out = []
         now = 0
@@ -2179,7 +2168,7 @@ class SequenceAdd(SequencePairOperation):
         if np.count_nonzero(data2) == 0:
             return el1
         data = data1 + data2
-        name = 'add(%s,%s)' % (el1.get_name(), el2.get_name())
+        name = f'add({el1.get_name()},{el2.get_name()})'
         return Pulse(
             name,
             data,
@@ -2198,7 +2187,7 @@ class SequenceSub(SequencePairOperation):
         if np.count_nonzero(data2) == 0:
             return el1
         if np.count_nonzero(data1) == 0:
-            name = 'minus(%s)' % (el2.get_name())
+            name = f'minus({el2.get_name()})'
             data = -data2
             return Pulse(
                 name,
@@ -2207,7 +2196,7 @@ class SequenceSub(SequencePairOperation):
                 chan=el1.chan,
                 trigger=el1.get_trigger())
         data = data1 - data2
-        name = 'sub(%s,%s)' % (el1.get_name(), el2.get_name())
+        name = f'sub({el1.get_name()},{el2.get_name()})'
         return Pulse(
             name,
             data,

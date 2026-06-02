@@ -34,7 +34,7 @@ class Instruments(object):
         uid = ins.os_get_uid()
         name = ins.get_name()
         server = ins.os_get_client()
-        logging.info('New instrument connected: %s (UID %s) @ %s' % (name, uid, server))
+        logging.info(f'New instrument connected: {name} (UID {uid}) @ {server}')
         self._instruments[name] = ins
         self.emit('instrument-added', name)
 
@@ -60,7 +60,7 @@ class Instruments(object):
 
     def type_exists(self, typename):
         for d in self.get_instrument_dirs():
-            driverfn = os.path.join(d, '%s.py' % typename)
+            driverfn = os.path.join(d, f'{typename}.py')
             if os.path.exists(driverfn):
                 return True
         return False
@@ -105,7 +105,7 @@ class Instruments(object):
         return params
 
     def start_instrument_instance(self, name, instype, **kwargs):
-        logging.debug('Starting subprocess for instrument %s of type %s' % (name, instype))
+        logging.debug(f'Starting subprocess for instrument {name} of type {instype}')
         print('start instrument instance')
         pid = pythonprocess.start_python_process('instrument_server.py',
                 insname=name, instype=instype, kwargs=kwargs)
@@ -126,13 +126,13 @@ class Instruments(object):
         print('type exists test')
 
         if not self.type_exists(instype):
-            logging.error('Instrument type %s not supported', instype)
+            logging.error(f'Instrument type {instype} not supported', )
             return None
 
         print('name test')
             
         if name in self._instruments:
-            logging.warning('Instrument "%s" already exists', name)
+            logging.warning(f'Instrument "{name}" already exists', )
             return self._instruments[name]
 
         print('create parameters')
@@ -151,7 +151,7 @@ class Instruments(object):
         end = time.time()
         if not ins.is_valid():
             raise Exception('Timed out')
-        logging.debug('Should be created, returning: %s', self._instruments[name])
+        logging.debug(f'Should be created, returning: {self._instruments[name]}', )
         return self._instruments.get(name, None)
 
     def reload(self, ins, **kwargs):
@@ -165,7 +165,7 @@ class Instruments(object):
             ins = ins.get_name()
 
         if ins not in self._create_parameters:
-            raise Exception('Create parameters for instrument %s not available' % ins)
+            raise Exception(f'Create parameters for instrument {ins} not available')
         instype, waittime, oldkwargs = self._create_parameters[ins]
         oldkwargs.update(kwargs)
 
@@ -196,7 +196,7 @@ class Instruments(object):
             module.detect_instruments()
             return True
         except e:
-            logging.error('Failed to detect instruments: %s', str(e))
+            logging.error(f'Failed to detect instruments: {e!s}', )
             return False
 
     def save_instruments(self, fn):
@@ -249,16 +249,22 @@ class Instruments(object):
                 ins.set(str(key), val)
 
 
-logging.info('Starting instruments server...')
+def init_instruments_server():
+    """
+    Initialize the instruments server.
+    """
+    logging.info('Starting instruments server...')
+    instruments = Instruments()
+    objsh.register(instruments, name='instruments')
 
-instruments = Instruments()
-objsh.register(instruments, name='instruments')
+    if hasattr(objsh, 'ZMQBackend'):
+        backend = objsh.ZMQBackend()
+    else:
+        backend = objsh.backend
 
-if hasattr(objsh, 'ZMQBackend'):
-    backend = objsh.ZMQBackend()
-else:
-    backend = objsh.backend
+    backend.start_server(addr='127.0.0.1', port=55555)
+    backend.main_loop(origin=4)
 
-backend.start_server(addr='127.0.0.1', port=55555)
-backend.main_loop(origin=4)
 
+if __name__ == "__main__":
+    init_instruments_server()

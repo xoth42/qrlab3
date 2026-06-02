@@ -41,7 +41,7 @@ class Config(object):
     def load_userconfig(self):
         filename = os.path.join(get_execdir(), 'userconfig.py')
         if os.path.exists(filename):
-            logging.debug('Loading userconfig from %s', filename)
+            logging.debug(f'Loading userconfig from {filename}', )
             with open(filename, 'r', encoding='utf-8') as handle:
                 source = handle.read()
             exec(compile(source, filename, 'exec'), {'config': self})
@@ -74,7 +74,7 @@ class Config(object):
 
         try:
             filename = self._get_filename()
-            logging.debug('Loading settings from %s', filename)
+            logging.debug(f'Loading settings from {filename}', )
             with open(filename, 'r', encoding='utf-8') as handle:
                 self._config = json.load(handle)
         except Exception:
@@ -113,7 +113,7 @@ class Config(object):
         self._save_hid = None
         try:
             filename = self._get_filename()
-            logging.debug('Saving settings to %s', filename)
+            logging.debug(f'Saving settings to {filename}', )
             with open(filename, 'w', encoding='utf-8') as handle:
                 json.dump(self._config, handle, indent=4, sort_keys=True)
         except Exception:

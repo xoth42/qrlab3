@@ -293,7 +293,7 @@ class InstrumentInputItem:
         parameter_type = self.option_dict[self.key]["type"]
         if new_value[0:3] == "P: ":
             new_value = eval(new_value[3:])
-        LOGGER.debug("Parameter %s expects %s", self.key, parameter_type)
+        LOGGER.debug(f"Parameter {self.key} expects {parameter_type}", )
         new_value = _coerce_value(parameter_type, new_value)
         instr[self.instrument_name].set(self.key, new_value)
 

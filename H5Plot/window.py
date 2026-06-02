@@ -127,7 +127,7 @@ class WindowDataGroup(WindowItem):
     """
     def __init__(self, name, parent, proxy=None, **kwargs):
         super(WindowDataGroup, self).__init__(name, parent, **kwargs)
-        logger.debug('Initializing WindowDataGroup %s' % self.strpath)
+        logger.debug(f'Initializing WindowDataGroup {self.strpath}')
 
         if proxy is None:
             if parent is None:
@@ -292,7 +292,7 @@ class WindowDataSet(WindowDataGroup, WindowPlot):
     """
     def __init__(self, name, parent, load=None, **kwargs):
         super(WindowDataSet, self).__init__(name, parent, **kwargs)
-        logger.debug('Initializing WindowDataSet %s' % self.strpath)
+        logger.debug(f'Initializing WindowDataSet {self.strpath}')
         if load is not None:
             self.load = load
         self.proxy.connect('resize', self.resize_data)
@@ -300,7 +300,7 @@ class WindowDataSet(WindowDataGroup, WindowPlot):
 
     def update_data(self, slice=None):
         if self.load: # This is disabled on startup
-            logger.debug('Updating data at %s' % self.strpath)
+            logger.debug(f'Updating data at {self.strpath}')
             print('update', self.strpath)
             if self.data is None or slice is None:
                 self.data = self.proxy[:]
@@ -467,12 +467,12 @@ class PlotWindow(QMainWindow):
         try:
             self.connect_dataserver()
         except Exception as e:
-            logger.warning('Could not connect to dataserver on startup: %s' % e)
+            logger.warning(f'Could not connect to dataserver on startup: {e}')
         # Add back the WindowInterface for real-time updates and remote control
         try:
             self.public_interface = WindowInterface(self)
         except Exception as e:
-            logger.warning('Could not initialize WindowInterface: %s' % e)
+            logger.warning(f'Could not initialize WindowInterface: {e}')
 
     def connect_dataserver(self):
         from dataserver import dataserver_client
@@ -530,7 +530,7 @@ class PlotWindow(QMainWindow):
     def rename_item(self):
         item = self.data_tree_widget.selectedItems()[0]
         item = WindowItem.registry[item.path]
-        new_name, ok = QInputDialog.getText(self, "Renaming %s" % item.name, "New Name", QLineEdit.Normal, item.name)
+        new_name, ok = QInputDialog.getText(self, f"Renaming {item.name}", "New Name", QLineEdit.Normal, item.name)
         if ok and new_name and (new_name != item.name):
             if item.parent is not None:
                 item.parent.proxy[new_name] = item.proxy
@@ -549,7 +549,7 @@ class PlotWindow(QMainWindow):
                 return
             item = items[0]
 
-        logger.debug('Changing edit widget to %s' % item.strpath)
+        logger.debug(f'Changing edit widget to {item.strpath}')
         if self.current_edit_widget is not None:
             self.current_edit_widget.hide()
 

@@ -157,7 +157,7 @@ class Measurement(object):
         ts = time.localtime()
         tstr = time.strftime("%Y%m%d/%H%M%S", ts)
         self._timestamp_str = tstr
-        self._groupname = "%s_%s" % (tstr, name)
+        self._groupname = f"{tstr}_{name}"
         self.data = self.datafile.create_group(self._groupname)
         self.data.set_attrs(title=self.title, comment=self.comment)
 
@@ -175,7 +175,7 @@ class Measurement(object):
         # Each physical AWG contributes four logical channels in sequence.
         base_channel = 1
         for awg_index in range(1, 5):
-            awg = self.instruments["AWG%d" % awg_index]
+            awg = self.instruments[f"AWG{int(awg_index)}"]
             if awg:
                 chanmap = {
                     1: base_channel,
@@ -183,7 +183,7 @@ class Measurement(object):
                     3: base_channel + 2,
                     4: base_channel + 3,
                 }
-                logging.info("Adding AWG%d, channel map: %s", awg_index, chanmap)
+                logging.info(f"Adding AWG{int(awg_index)}, channel map: {chanmap}", )
                 loader.add_awg(awg, chanmap)
                 base_channel += 4
 
@@ -213,7 +213,7 @@ class Measurement(object):
             else:
                 stedata = None
 
-            logging.info("Dropping data group %s" % self._groupname)
+            logging.info(f"Dropping data group {self._groupname}")
             del self.datafile[self._groupname]
             mclient.remove_temp_file()
             self.data = None
@@ -224,7 +224,7 @@ class Measurement(object):
             self.ste_data = stedata
 
         except Exception as e:
-            logging.warning("Unable to remove data: %s" % str(e))
+            logging.warning(f"Unable to remove data: {str(e)}")
 
     def set_parameters(self, **kwargs):
         self.data.set_attrs(kwargs)
@@ -269,12 +269,12 @@ class Measurement(object):
         if hasattr(config, "slave_triggers"):
             slave_chan = int(config.slave_triggers[0][0].split("m")[0])
             master_awg = ((slave_chan - 1) / 4) + 1
-            logging.info("AWG %d seems to be the master" % master_awg)
+            logging.info(f"AWG {int(master_awg)} seems to be the master")
             for i in range(4):
                 ch = 4 * (master_awg - 1) + i + 1
                 s.add_master_channel(ch)
-                s.add_master_channel("%dm1" % ch)
-                s.add_master_channel("%dm2" % ch)
+                s.add_master_channel(f"{int(ch)}m1")
+                s.add_master_channel(f"{int(ch)}m2")
 
             for chan, delay in config.slave_triggers:
                 s.add_slave_trigger(chan, delay)
@@ -292,7 +292,7 @@ class Measurement(object):
             for ch, path in config.channel_convolutions:
                 kernel = np.loadtxt(path)
                 s.add_convolution(ch, kernel)
-                logging.info("adding convolution channel: %d" % ch)
+                logging.info(f"adding convolution channel: {int(ch)}")
 
         return s
 
@@ -330,7 +330,7 @@ class Measurement(object):
                 loader.load(seqs)
                 break
             except Exception as exc:
-                logging.warning("Loading failed (%s), retrying", exc)
+                logging.warning(f"Loading failed ({exc}), retrying", )
                 time.sleep(1)
         if run:
             self.start_awgs()
@@ -348,10 +348,8 @@ class Measurement(object):
     def start_awgs(self):
         loader = self.get_awg_loader()
         logging.info(
-            "Starting AWGs: %s (active: %s)",
-            loader.get_awgs(),
-            loader.get_active_awgs(),
-        )
+            f"Starting AWGs: {loader.get_awgs()} (active: {loader.get_active_awgs()})",
+            )
         loader.run()
 
     def stop_funcgen(self):
@@ -374,7 +372,7 @@ class Measurement(object):
 
     def _capture_progress_cb(self, navg):
         if self.print_progress:
-            logging.info("%d averages done", navg)
+            logging.info(f"{int(navg)} averages done", )
 
     def update(self, avg_data):
         """
@@ -389,7 +387,7 @@ class Measurement(object):
         try:
             self.update(avg_data)
         except Exception as exc:
-            logging.exception("Plot update failed: %s", exc)
+            logging.exception(f"Plot update failed: {exc}", )
 
     def _ctrlc_cb(self, *args):
         self._interrupted = True
@@ -477,7 +475,7 @@ class Measurement(object):
         except Exception as exc:
             logging.info("CTRL-C Caught or error, stopping Alazar")
             alz.set_interrupt(True)
-            logging.exception("Acquisition failed: %s", exc)
+            logging.exception(f"Acquisition failed: {exc}", )
         finally:
             alz.disconnect(progress_hid)
             self.data.disconnect(dataupd_hid)
@@ -496,7 +494,7 @@ class Measurement(object):
 
         settings = mclient.instruments.get_all_parameters()
         if fn is None and self._timestamp_str != "":
-            fn = os.path.join(config.datadir, "settings/%s.set" % self._timestamp_str)
+            fn = os.path.join(config.datadir, f"settings/{self._timestamp_str}.set")
         fdir = os.path.split(fn)[0]
         if not os.path.isdir(fdir):
             os.makedirs(fdir)
@@ -666,7 +664,7 @@ class Measurement(object):
 
         txt = "Done"
         if self.data:
-            txt += "; in data group: %s" % self.data.get_fullname()
+            txt += f"; in data group: {self.data.get_fullname()}"
         logging.info(txt)
 
         if self._interrupted:
@@ -690,7 +688,7 @@ class Measurement(object):
         progress_hid = dig.connect("capture-progress", self._capture_progress_cb)
         dataupd_hid = self.data.connect("changed", self._data_changed_cb)
 
-        logging.info("Cycle length is %s", self.cyclelen)
+        logging.info(f"Cycle length is {self.cyclelen}", )
 
         dig.stop_hvi()
         if self.histogram:
@@ -736,7 +734,7 @@ class Measurement(object):
         except Exception as exc:
             logging.info("CTRL-C Caught or error, stopping Alazar")
             dig.set_interrupt(True)
-            logging.exception("Acquisition failed: %s", exc)
+            logging.exception(f"Acquisition failed: {exc}", )
         finally:
             dig.disconnect(progress_hid)
             self.data.disconnect(dataupd_hid)
@@ -872,7 +870,7 @@ class Measurement(object):
 
         txt = "Done"
         if self.data:
-            txt += "; in data group: %s" % self.data.get_fullname()
+            txt += f"; in data group: {self.data.get_fullname()}"
         logging.info(txt)
 
         if self._interrupted:
@@ -910,7 +908,7 @@ class Measurement(object):
         self.fig = plt.figure()
         title = self.title
         if self.data:
-            title += " data in %s" % self.data.get_fullname()
+            title += f" data in {self.data.get_fullname()}"
         self.fig.suptitle(title)
         if not self.residuals:
             self.fig.add_subplot(111)
@@ -927,7 +925,7 @@ class Measurement(object):
     def get_figure(self):
         if self.fig:
             return self.fig
-        logging.info("Creating a new figure for %s", self.name)
+        logging.info(f"Creating a new figure for {self.name}", )
         return self.create_figure()
 
     def complex_to_real(self, ys):
@@ -1010,7 +1008,7 @@ class Measurement(object):
                     eb[i] = np.arcsin(eb[i] / np.abs(self.avg_data[i])) * 180 / np.pi
         else:
             eb = data
-        logging.debug("Computed error bars: %s", eb)
+        logging.debug(f"Computed error bars: {eb}", )
         return eb
 
     def get_naverages(self):
@@ -1078,7 +1076,7 @@ class Measurement(object):
         if fn is None:
             fn = os.path.join(
                 config.datadir,
-                "images/%s_%s.%s" % (self._timestamp_str, self.name, self.imagetype),
+                f"images/{self._timestamp_str}_{self.name}.{self.imagetype}",
             )
         fdir = os.path.split(fn)[0]
         if not os.path.isdir(fdir):
@@ -1092,7 +1090,7 @@ class Measurement(object):
     def plot_histogram(self, data):
         fig = self.get_figure()
         avg = np.average(data)
-        logging.info("Histogram data shape: %s", np.shape(data))
+        logging.info(f"Histogram data shape: {np.shape(data)}", )
         datasets = [data]
         if self.cyclelen == 2:
             data1 = data[::2]
@@ -1103,7 +1101,7 @@ class Measurement(object):
             data2 = data[1::3]
             data3 = data[2::3]
             datasets = [data1, data2, data3]
-        logging.info("Average I,Q is: %s", avg)
+        logging.info(f"Average I,Q is: {avg}", )
 
         if self.cyclelen == 3:
             cmap_names = ["Blues", "Reds", "Greens"]
@@ -1113,7 +1111,7 @@ class Measurement(object):
                 )
         else:
             fig.axes[0].hexbin(
-                np.real(data), np.imag(data), label="avg=%s" % (avg,), cmap=mpl.cm.hot
+                np.real(data), np.imag(data), label=f"avg={avg}", cmap=mpl.cm.hot
             )
 
         if self.residuals:
@@ -1176,10 +1174,7 @@ class Measurement1D(Measurement):
         self.fit_params = p
         minmax = "max" if (p[0] < 0) else "min"
         minmaxpos = -p[1] / 2 / p[0]
-        txt = "Fit, %s at %.06f" % (
-            minmax,
-            minmaxpos,
-        )
+        txt = f"Fit, {minmax} at {minmaxpos:.6f}"
         fig.axes[0].plot(xs, ys, "ks", ms=3)
         fig.axes[0].plot(xs, xs**2 * p[0] + xs * p[1] + p[2], label=txt)
         fig.axes[0].set_ylabel(ylabel)
@@ -1230,7 +1225,7 @@ class Measurement2D(Measurement):
                 fig.canvas.draw()
             else:
                 for i_y, y in enumerate(ys):
-                    fig.axes[0].plot(xs, zs[:, i_y], label="%.03f" % y)
+                    fig.axes[0].plot(xs, zs[:, i_y], label=f"{y:.3f}")
                 fig.axes[0].legend(loc=0)
         else:
             logging.warning("Unable to plot 2D array without xs and ys")

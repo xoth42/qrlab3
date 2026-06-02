@@ -129,7 +129,7 @@ class DataSet(object):
                 new_shape[i + 1] = s
 
         assert all(i == j for i, j in zip(new_shape[1:], data.shape[1:])), (
-            "incompatible shapes %s, %s" % (self._h5f.shape, data.shape)
+            f"incompatible shapes {self._h5f.shape}, {data.shape}"
         )
 
         self._h5f.resize(new_shape)
@@ -170,7 +170,7 @@ class DataGroup(object):
         elif isinstance(val, h5py.Dataset):
             val = DataSet(val, self)
         else:
-            raise Exception("Unknown HDF5 type: %s" % (val,))
+            raise Exception(f"Unknown HDF5 type: {val}")
 
         return val
 
@@ -382,10 +382,6 @@ class DataServer(object):
         return "hello"
 
 
-logging.info("Starting data server...")
-dataserv = DataServer()
-objsh.register(dataserv, name="dataserver")
-
 
 def start(qt=False):
     zbe = objsh.ZMQBackend()
@@ -400,12 +396,21 @@ def start(qt=False):
         zbe.main_loop(origin=6)
 
 
-if __name__ == "__main__":
-    import os
+def init_data_server(DATA_DIRECTORY = r"C:\_Data", qt=False):
+    """
+    Initialize the data server. 
 
-    try:
-        from .dataserver_helpers import DATA_DIRECTORY
-    except ImportError:
-        from dataserver_helpers import DATA_DIRECTORY
+    :param regexp DATA_DIRECTORY: defaults to r"C:\_Data"
+    :param bool qt: defaults to False
+    """
+    logging.info("Starting data server...")
+    dataserv = DataServer()
+    objsh.register(dataserv, name="dataserver")
+    
     os.chdir(DATA_DIRECTORY)
-    start()
+    start(qt=qt)
+
+
+
+if __name__ == "__main__":
+    init_data_server()

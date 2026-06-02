@@ -42,7 +42,7 @@ class SerialDevice:
         if dtype is bool:
             ret = int(ret)
             if ret not in (0, 1):
-                raise ValueError('Invalid return value \'{}\' for type bool.'.format(ret))
+                raise ValueError(f'Invalid return value \'{ret}\' for type bool.')
         return dtype(ret)
 
     def _write(self, data):

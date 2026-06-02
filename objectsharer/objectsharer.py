@@ -129,11 +129,11 @@ def _argspec_to_parts(args, defaults, varargs, varkw, kwonlyargs=None, kwonlydef
     offset = len(args) - len(defaults)
     for i, name in enumerate(args):
         if i >= offset:
-            parts.append('%s=%r' % (name, defaults[i - offset]))
+            parts.append(f'{name}={defaults[i - offset]!r}')
         else:
             parts.append(name)
     if varargs:
-        parts.append('*%s' % varargs)
+        parts.append(f'*{varargs}')
     kwonly = kwonlyargs or ()
     if kwonly:
         if not varargs:
@@ -141,12 +141,12 @@ def _argspec_to_parts(args, defaults, varargs, varkw, kwonlyargs=None, kwonlydef
         kwdefaults = kwonlydefaults or {}
         for name in kwonly:
             if name in kwdefaults:
-                parts.append('%s=%r' % (name, kwdefaults[name]))
+                parts.append(f'{name}={kwdefaults[name]!r}')
             else:
                 parts.append(name)
     if varkw:
-        parts.append('**%s' % varkw)
-    return '(%s)' % ', '.join(parts)
+        parts.append(f'**{varkw}')
+    return f"({', '.join(parts)})"
 
 
 def _format_argspec_for_doc(argspec):
@@ -154,7 +154,7 @@ def _format_argspec_for_doc(argspec):
     if argspec is None:
         return '()'
     if isinstance(argspec, str):
-        return argspec if argspec.startswith('(') else '(%s)' % argspec
+        return argspec if argspec.startswith('(') else f'({argspec})'
 
     if isinstance(argspec, inspect.FullArgSpec):
         return _argspec_to_parts(
@@ -272,7 +272,7 @@ class AsyncReply(object):
         self.val = val
         self.val_valid = True
         if self.callback is not None:
-            logger.debug('Performing callback for call id %d', self._callid)
+            logger.debug(f'Performing callback for call id {int(self._callid)}', )
             self.callback(val)
 
     def get(self, block=False, delay=DEFAULT_TIMEOUT, do_raise=True):
@@ -354,10 +354,8 @@ class ObjectSharer(object):
         async_reply = AsyncReply(callid, callback=callback)
         self.reply_objects[callid] = async_reply
         logger.debug(
-            'Sending call %d to %s: %s.%s(%s,%s), async=%s',
-            callid, client, obj_name, func_name,
-            ellipsize(str(args)), ellipsize(str(kwargs)), async_,
-        )
+            f'Sending call {int(callid)} to {client}: {obj_name}.{func_name}({ellipsize(str(args))},{ellipsize(str(kwargs))}), async={async_}',
+            )
 
         # Wrap arrays/shared objects before pickling so the main message stays
         # small and the heavy binary payload can ride in separate frames.
@@ -367,7 +365,7 @@ class ObjectSharer(object):
         try:
             msg = pickle.dumps(msg)
         except Exception:
-            raise Exception('Unable to pickle function call: %s' % str(msg))
+            raise Exception(f'Unable to pickle function call: {str(msg)}')
         self.backend.send_to(client, msg, arlist)
 
         if async_:
@@ -433,9 +431,8 @@ class ObjectSharer(object):
                 logger.warning('Object from unknown client requested')
                 return None
             logger.info(
-                'Object %s requested from unconnected client %s @ %s, connecting...',
-                objname, client_id, client_addr,
-            )
+                f'Object {objname} requested from unconnected client {client_id} @ {client_addr}, connecting...',
+                )
             self.backend.connect_to(client_addr, uid=client_id)
 
         if client_id not in self.clients:
@@ -445,7 +442,7 @@ class ObjectSharer(object):
         try:
             return self.clients[client_id].get_object_info(objname)
         except TimeoutError:
-            logger.warning('Client %s unresponsive: Removing from connected', client_id)
+            logger.warning(f'Client {client_id} unresponsive: Removing from connected', )
             del self.clients[client_id]
             return None
 
@@ -496,13 +493,13 @@ class ObjectSharer(object):
         if obj is None:
             return
         if hasattr(obj, '_OS_UID') and obj._OS_UID is not None:
-            logger.warning('Object %s already registered', obj._OS_UID)
+            logger.warning(f'Object {obj._OS_UID} already registered', )
             return
 
         obj._OS_UID = str(uuid.uuid4())
         if name is not None:
             if name in self.name_map:
-                raise Exception('Object %s already defined' % name)
+                raise Exception(f'Object {name} already defined')
             self.name_map[name] = obj._OS_UID
 
         # Monkey-patch the object so its signal API transparently routes through
@@ -547,7 +544,7 @@ class ObjectSharer(object):
             'kwargs': kwargs,
         }
         self._callbacks_hid[self._last_hid] = info
-        name = '%s__%s' % (uid, signame)
+        name = f'{uid}__{signame}'
         self._callbacks_name.setdefault(name, []).append(info)
         return self._last_hid
 
@@ -563,9 +560,8 @@ class ObjectSharer(object):
     def emit_signal(self, uid, signame, *args, **kwargs):
         """Broadcast a signal to all connected peers and local callbacks."""
         logger.debug(
-            'Emitting %s(%r, %r) for %s to %d clients',
-            signame, args, kwargs, uid, len(self.clients),
-        )
+            f'Emitting {signame}({args!r}, {kwargs!r}) for {uid} to {len(self.clients)} clients',
+            )
         # Signals are just RPC calls with a special marker; remote peers and
         # local callbacks both see the same event payload.
         kwargs[OS_SIGNAL] = True
@@ -575,11 +571,11 @@ class ObjectSharer(object):
 
     def receive_signal(self, uid, signame, *args, **kwargs):
         kwargs.pop(OS_SIGNAL, None)
-        logger.debug('Received signal %s(%r, %r) from %s', signame, args, kwargs, uid)
+        logger.debug(f'Received signal {signame}({args!r}, {kwargs!r}) from {uid}', )
 
         ncalls = 0
         start = time.time()
-        name = '%s__%s' % (uid, signame)
+        name = f'{uid}__{signame}'
         # Each callback can add its own positional/keyword extras that are
         # appended here before invocation.
         for info in self._callbacks_name.get(name, []):
@@ -592,12 +588,11 @@ class ObjectSharer(object):
                 info['callback'](*fargs, **fkwargs)
             except Exception as e:
                 logger.warning(
-                    'Callback to %s failed for %s.%s: %s\n%s',
-                    info.get('callback', None), uid, signame, str(e), traceback.format_exc(),
-                )
+                    f"Callback to {info.get('callback', None)} failed for {uid}.{signame}: {e!s}\n{traceback.format_exc()}",
+                    )
 
         elapsed_ms = (time.time() - start) * 1000
-        logger.debug('Did %d callbacks in %.03fms for sig %s', ncalls, elapsed_ms, signame)
+        logger.debug(f'Did {int(ncalls)} callbacks in {elapsed_ms:.03f}ms for sig {signame}', )
 
     # ----- Client management -----
 
@@ -607,8 +602,8 @@ class ObjectSharer(object):
 
     def _add_client_to_list(self, uid, root_info):
         if root_info is None:
-            raise Exception('Unable to retrieve root object from %s' % uid)
-        logger.debug('  root@%s.get_object_info() reply: %s', uid, root_info)
+            raise Exception(f'Unable to retrieve root object from {uid}')
+        logger.debug(f'  root@{uid}.get_object_info() reply: {root_info}', )
         self.clients[uid] = ObjectProxy(uid, root_info)
         self.clients[uid].list_objects(
             callback=lambda reply, uid=uid: self._update_client_object_list(uid, reply),
@@ -652,7 +647,7 @@ class ObjectSharer(object):
         elif msg_type == 'pong':
             logger.debug('PONG')
         else:
-            logger.debug('Unknown msg: %s', info)
+            logger.debug(f'Unknown msg: {info}', )
 
     def _handle_call(self, from_uid, info, bufs, waiting):
         obj = None
@@ -674,7 +669,7 @@ class ObjectSharer(object):
             args, bufs = _unwrap_ars_sobjs(args, bufs, from_uid)
             kwargs, bufs = _unwrap_ars_sobjs(kwargs, bufs, from_uid)
 
-            logger.debug('  Processing call %s: %s.%s(%s,%s)', callid, objid, funcname, args, kwargs)
+            logger.debug(f'  Processing call {callid}: {objid}.{funcname}({args},{kwargs})', )
 
             obj = self.get_object(objid)
             func = getattr(obj, funcname, None)
@@ -684,30 +679,30 @@ class ObjectSharer(object):
                 return
 
             ret, bufs = _wrap_ars_sobjs(ret)
-            logger.debug('  Returning for call %s: %s', callid, ellipsize(str(ret)))
+            logger.debug(f'  Returning for call {callid}: {ellipsize(str(ret))}', )
 
         except Exception as e:
             if len(info) < 6:
-                logger.error('Invalid call msg: %s', info)
+                logger.error(f'Invalid call msg: {info}', )
                 ret = RemoteException('Invalid call msg')
             elif obj is None:
-                ret = RemoteException('Object %s not available' % objid)
+                ret = RemoteException(f'Object {objid} not available')
             elif func is None:
-                ret = RemoteException('Object %s does not have function %s' % (objid, funcname))
+                ret = RemoteException(f'Object {objid} does not have function {funcname}')
             else:
-                ret = RemoteException('%s\n%s' % (e, traceback.format_exc(15)))
+                ret = RemoteException(f'{e}\n{traceback.format_exc(15)}')
 
         try:
             msg = pickle.dumps((OS_RETURN, callid, ret))
         except Exception:
-            ret = RemoteException('Unable to pickle return %s' % str(ret))
+            ret = RemoteException(f'Unable to pickle return {str(ret)}')
             msg = pickle.dumps((OS_RETURN, callid, ret))
             bufs = None
         self.backend.send_to(from_uid, msg, bufs)
 
     def _handle_return(self, from_uid, info, bufs):
         if len(info) < 3:
-            logger.error('Invalid return msg: %s', info)
+            logger.error(f'Invalid return msg: {info}', )
             return
 
         callid, ret = info[1:3]
@@ -717,14 +712,14 @@ class ObjectSharer(object):
             self.reply_objects[callid].set(ret)
             del self.reply_objects[callid]
         else:
-            raise Exception('Reply for unknown call %s' % callid)
+            raise Exception(f'Reply for unknown call {callid}')
 
     def _handle_hello(self, from_uid, info):
         """
         Complete bidirectional handshake: map peer address to uid and open
         reverse DEALER connection if we are not already connected.
         """
-        logger.debug('Client %s connected from %s', from_uid, info[1])
+        logger.debug(f'Client {from_uid} connected from {info[1]}', )
         self.backend.connect_from(info[1], from_uid)
         if not self.backend.connected_to(from_uid):
             logger.debug('Initiating reverse connection...')
@@ -732,15 +727,15 @@ class ObjectSharer(object):
             self.request_client_proxy(from_uid, async_=True)
 
     def _handle_goodbye(self, from_uid, info):
-        logger.debug('Goodbye client %s from %s', from_uid, info[1])
+        logger.debug(f'Goodbye client {from_uid} from {info[1]}', )
         forget_uid = self.backend.get_uid_for_addr(info[1])
         if forget_uid in self.clients:
             del self.clients[forget_uid]
-            logger.debug('deleting client %s', forget_uid)
+            logger.debug(f'deleting client {forget_uid}', )
         self.backend.forget_connection(info[1], remote=False)
         if from_uid in self.clients:
             del self.clients[from_uid]
-            logger.debug('deleting client %s', from_uid)
+            logger.debug(f'deleting client {from_uid}', )
 
     def _handle_ping(self, from_uid):
         logger.debug('PING')
@@ -835,7 +830,7 @@ class ObjectProxy(object):
                 raise Exception('Object does not support indexing')
             if name == '__contains__':
                 raise Exception('Object does not implement __contains__')
-            raise Exception('Object does not support %s' % name)
+            raise Exception(f'Object does not support {name}')
         return func(*args)
 
     def __getitem__(self, key):
@@ -851,17 +846,17 @@ class ObjectProxy(object):
         return self._call_special('__contains__', key)
 
     def __str__(self):
-        s = 'ObjectProxy for %s @ %s (address %s)' % (self._OS_UID, self._OS_SRV_ID, self._OS_SRV_ADDR)
+        s = f'ObjectProxy for {self._OS_UID} @ {self._OS_SRV_ID} (address {self._OS_SRV_ADDR})'
         func = self._specials.get('__str__')
         if func:
-            s += '\nRemote info:\n%s' % (func(),)
+            s += f'\nRemote info:\n{func()}'
         return s
 
     def __repr__(self):
         func = self._specials.get('__str__')
-        s = 'ObjectProxy(%s)' % (self._OS_UID,)
+        s = f'ObjectProxy({self._OS_UID})'
         if func:
-            s += ': %s' % (func(),)
+            s += f': {func()}'
         return s
 
     def _initialize(self, info):
@@ -936,8 +931,8 @@ class ZMQBackend(object):
     def get_addr(self):
         """Return the tcp endpoint this instance listens on."""
         if self.addr == '*':
-            return 'tcp://127.0.0.1:%d' % self.port
-        return 'tcp://%s:%d' % (self.addr, self.port)
+            return f'tcp://127.0.0.1:{int(self.port)}'
+        return f'tcp://{self.addr}:{int(self.port)}'
 
     def start_server(self, addr='*', port=None):
         """Bind the ROUTER socket on *addr*:*port* (random port if port is None)."""
@@ -946,11 +941,11 @@ class ZMQBackend(object):
         self.srv = self.ctx.socket(zmq.ROUTER)
         if port is None:
             self.port = self.srv.bind_to_random_port(
-                'tcp://%s' % addr, min_port=50000, max_port=60000, max_tries=100,
+                f'tcp://{addr}', min_port=50000, max_port=60000, max_tries=100,
             )
         else:
-            self.srv.bind('tcp://%s:%d' % (addr, port))
-        logger.debug('ObjectSharer listening at %s', self.get_addr())
+            self.srv.bind(f'tcp://{addr}:{int(port)}')
+        logger.debug(f'ObjectSharer listening at {self.get_addr()}', )
 
     def connect_from(self, addr, uid):
         """Associate peer *addr* with ZMQ identity *uid* after handshake."""
@@ -974,8 +969,8 @@ class ZMQBackend(object):
         self.connect_to(addr)
 
     def forget_connection(self, addr, remote=True):
-        logger.debug('Forgetting connection: %s', addr)
-        msg = ('goodbye_from', 'tcp://%s:%d' % (self.addr, self.port))
+        logger.debug(f'Forgetting connection: {addr}', )
+        msg = ('goodbye_from', f'tcp://{self.addr}:{int(self.port)}')
         if addr not in self.addr_to_sock_map:
             if remote:
                 sock = self.ctx.socket(zmq.DEALER)
@@ -997,7 +992,7 @@ class ZMQBackend(object):
 
     def _generate_id(self):
         chars = 'abcdefghijklmnopqrstuvwxyz' + 'abcdefghijklmnopqrstuvwxyz'.upper()
-        idstr = 'p%d_' % os.getpid()
+        idstr = f'p{int(os.getpid())}_'
         for _ in range(6):
             idstr += chars[random.randint(0, len(chars) - 1)]
         return idstr
@@ -1009,13 +1004,13 @@ class ZMQBackend(object):
         Sends ``hello_from`` with our listen address; the peer opens a reverse
         connection. The initiator waits for uid resolution via ``AsyncHelloReply``.
         """
-        logger.debug('Connecting to %s', addr)
+        logger.debug(f'Connecting to {addr}', )
         if addr in self.addr_to_sock_map:
-            logger.warning('Already connected to %s', addr)
+            logger.warning(f'Already connected to {addr}', )
             return
         if uid is not None:
             if uid in self.uid_to_addr_map:
-                logger.warning('Client %s already present at different address', uid)
+                logger.warning(f'Client {uid} already present at different address', )
                 return
             # If the caller already knows the peer uid, seed both lookup tables
             # before the hello handshake finishes.
@@ -1032,14 +1027,14 @@ class ZMQBackend(object):
 
         # First message on the new channel announces our listening address.
         # The peer uses that to connect back, giving us bidirectional traffic.
-        sock.send(pickle.dumps(('hello_from', 'tcp://%s:%d' % (self.addr, self.port))))
+        sock.send(pickle.dumps(('hello_from', f'tcp://{self.addr}:{int(self.port)}')))
 
         if addr not in self.addr_to_uid_map:
             logger.debug('Waiting for hello reply from server...')
             hello = AsyncHelloReply(addr)
             self.main_loop(delay=delay, wait_for=hello, origin=7)
             if not hello.is_valid():
-                raise TimeoutError('Connection to %s timed out; no reply received' % addr)
+                raise TimeoutError(f'Connection to {addr} timed out; no reply received')
 
         if addr not in self.addr_to_uid_map:
             raise Exception('UID not resolved!')
@@ -1047,10 +1042,10 @@ class ZMQBackend(object):
 
     def send_to(self, dest, msg, bufs=None):
         """Send pickled *msg* (and optional numpy frames) to peer *dest* (uid)."""
-        logger.debug('Sending %d bytes to %s', len(msg), dest)
+        logger.debug(f'Sending {len(msg)} bytes to {dest}', )
         sock = self.uid_to_sock_map.get(dest)
         if sock is None:
-            raise Exception('Unable to resolve destination %s' % dest)
+            raise Exception(f'Unable to resolve destination {dest}')
 
         if bufs is None:
             sock.send(msg)
@@ -1095,7 +1090,7 @@ class ZMQBackend(object):
                 t_new = now2 + info['delay'] - delta
                 bisect.insort(self._scheduled_timeouts, (t_new, t_id))
             except Exception as e:
-                logger.error('Timeout call %d failed: %s', t_id, str(e))
+                logger.error(f'Timeout call {int(t_id)} failed: {e!s}', )
                 self.timeout_remove(t_id)
 
     @staticmethod
@@ -1128,7 +1123,7 @@ class ZMQBackend(object):
                     preview = repr(payload)
             else:
                 preview = repr(payload)
-            logger.warning('Unable to decode object: %s %s', str(e), preview)
+            logger.warning(f'Unable to decode object: {e!s} {preview}', )
             return None
 
     @staticmethod
@@ -1183,12 +1178,12 @@ class ZMQBackend(object):
                 return
 
             try:
-                logger.debug('Starting Message processing %s', str(info))
+                logger.debug(f'Starting Message processing {info!s}', )
                 helper.process_message(client, info, msgs[2:], waiting=(wait_for is not None))
             except Exception as e:
-                logger.warning('Failed to process message: %s\n%s', str(e), traceback.format_exc())
+                logger.warning(f'Failed to process message: {e!s}\n{traceback.format_exc()}', )
             finally:
-                logger.debug('Message processed %s', str(info))
+                logger.debug(f'Message processed {info!s}', )
 
             if wait_for is not None and self._wait_for_complete(wait_for):
                 # Synchronous call path: return as soon as the awaited reply has

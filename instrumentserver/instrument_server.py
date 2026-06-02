@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     if insname is None or instype is None:
         raise ValueError('Instrument name and type required')
-    logging.info('  Creating instrument %s of type %s' % (insname, instype))
+    logging.info(f'  Creating instrument {insname} of type {instype}')
 
     sys.path.append('instrument_plugins')
     sys.path.append('user_instruments')
@@ -54,9 +54,9 @@ if __name__ == '__main__':
     if insclass is None:
         raise ValueError('Instrument module does not contain instrument class')
     end = time.time()
-    logging.debug('Loading instrument module %.03f sec', end - start)
+    logging.debug(f'Loading instrument module {end:.03f} sec' - start, )
 
-    logging.debug('Starting sharing server and connecting to %s' % isrv)
+    logging.debug(f'Starting sharing server and connecting to {isrv}')
     if hasattr(objsh, 'ZMQBackend'):
         backend = objsh.ZMQBackend()
     else:
@@ -64,12 +64,12 @@ if __name__ == '__main__':
     backend.start_server(addr='127.0.0.1')
     backend.connect_to(isrv)
 
-    logging.debug('Creating instrument, name %s, kwargs %s' % (insname, kwargs))
+    logging.debug(f'Creating instrument, name {insname}, kwargs {kwargs}')
     start = time.time()
     ins = insclass(insname, **kwargs)
     ins.set_remove_cb(close)
     end = time.time()
-    logging.debug('Creating instrument took %.03f sec', end - start)
+    logging.debug(f'Creating instrument took {end:.03f} sec' - start, )
 
     objsh.register(ins, name=insname)
 

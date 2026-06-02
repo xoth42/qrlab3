@@ -64,7 +64,7 @@ class VisaInstrument(Instrument):
             self._ins.read_termination = term_chars
 
     def open(self):
-        logging.debug('Opening visa instrument at address %s, term_chars=%r', self._address, self._term_chars)
+        logging.debug(f'Opening visa instrument at address {self._address}, term_chars={self._term_chars!r}', )
         try:
             self._ins = self._resource_manager.open_resource(self._address)
             if self._term_chars is not None:
@@ -73,7 +73,7 @@ class VisaInstrument(Instrument):
             self._ins.timeout = self._timeout
 
         except Exception:
-            msg = 'Unable to open instrument %s' % (self._address,)
+            msg = f'Unable to open instrument {self._address}'
             logging.error(msg)
             raise
 
@@ -98,7 +98,7 @@ class VisaInstrument(Instrument):
         try:
             for _ in range(max(1, self._timeout * 10)):
                 if time.monotonic() >= deadline:
-                    raise Exception("Instrument read timed out (timeout=%s)" % self._timeout)
+                    raise Exception(f"Instrument read timed out (timeout={self._timeout})")
                 try:
                     ret = self._ins.read()
                     break
@@ -107,7 +107,7 @@ class VisaInstrument(Instrument):
                         raise e
                 objsh.backend.main_loop(0)
             else:
-                raise Exception("Instrument read timed out (timeout=%s)" % self._timeout)
+                raise Exception(f"Instrument read timed out (timeout={self._timeout})")
             if self._interrupted:
                 self._interrupted = False
                 raise Exception("Interrupted")

@@ -16,6 +16,9 @@ importlib.reload(config)
 
 mpl.rcParams["legend.fontsize"] = 9
 
+# * Highlight
+filename = 'c:/_data/test.hdf5'
+
 # Set long call timeout because some AWG functions are slow
 objsh.DEFAULT_TIMEOUT = 120000
 
@@ -34,7 +37,6 @@ for addr in ("tcp://127.0.0.1:55555", "tcp://127.0.0.1:55556"):
 instruments = objsh.helper.find_object("instruments")
 datasrv = objsh.helper.find_object("dataserver")
 
-filename = 'c:/_data/04222021cooldown_circulator.hdf5'
 datafile = datasrv.get_file(filename)
 
 
@@ -380,7 +382,7 @@ def remove_temp_file():
         tmp.close()
         os.remove(config.tempfilename)
     except Exception as exc:
-        logging.warning("Failed to remove temporary file: %s", exc)
+        logging.warning(f"Failed to remove temporary file: {exc}", )
 
 
 def save_instruments(fn=config.ins_store_fn):

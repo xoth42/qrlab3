@@ -9,7 +9,7 @@ def dataserver_client(serveraddr="127.0.0.1", serverport=55556, localaddr="127.0
     if objsh.helper.backend is None:
         zbe = objsh.ZMQBackend()
         zbe.start_server(addr=localaddr)
-        zbe.connect_to("tcp://%s:%d" % (serveraddr, serverport))  # Data server
+        zbe.connect_to(f"tcp://{serveraddr}:{int(serverport)}")  # Data server
     return objsh.helper.find_object("dataserver")
 
 

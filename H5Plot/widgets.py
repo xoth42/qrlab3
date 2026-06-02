@@ -116,7 +116,7 @@ class NodeEditWidget(QFrame):
 
     def repr_value(self, v):
         if isinstance(v, float) and v > 1e4:
-            return '%.2e' % v
+            return f'{v:.2e}'
         else:
             return str(v)
 
@@ -574,7 +574,7 @@ class CrosshairPlotWidget(pg.PlotWidget):
             (pt_x, pt_y), _ = min(best_guesses, key=lambda x: x[1])
             self.v_line.setPos(pt_x)
             self.h_line.setPos(pt_y)
-            self.label.setText("x=%.2e, y=%.2e" % (pt_x, pt_y))
+            self.label.setText(f"x={pt_x:.2e}, y={pt_y:.2e}")
 
     def add_cross_hair(self):
         self.h_line = pg.InfiniteLine(angle=0, movable=False)
@@ -716,7 +716,7 @@ class CrossSectionWidget(pg.ImageView):
             self.x_cross_index = max(min(int(item_x), max_x-1), 0)
             self.y_cross_index = max(min(int(item_y), max_y-1), 0)
             self.update_cross_section()
-            self.label.setText("x=%.2e, y=%.2e" % (view_x, view_y))
+            self.label.setText(f"x={view_x:.2e}, y={view_y:.2e}")
 
     def update_cross_section(self):
         nx, ny = self.imageItem.image.shape

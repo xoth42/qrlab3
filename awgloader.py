@@ -59,8 +59,8 @@ class AWGLoader:
             seqs_to_load = {}
             for dst_ch, src_ch in ch_map.items():
                 if src_ch in seqs:
-                    m1seq = seqs.get('%sm1'%src_ch, None)
-                    m2seq = seqs.get('%sm2'%src_ch, None)
+                    m1seq = seqs.get(f'{src_ch}m1', None)
+                    m2seq = seqs.get(f'{src_ch}m2', None)
                     seqs_to_load[dst_ch] = seqs[src_ch]
                     seqs_to_load[f"{dst_ch}m1"] = m1seq
                     seqs_to_load[f"{dst_ch}m2"] = m2seq
@@ -72,7 +72,7 @@ class AWGLoader:
             awgld.load_seqs(delay_override=delay_override)
 
             dt = time.perf_counter() - start
-            LOGGER.info("Loaded %s in %.03f sec", awg.get_name(), dt)
+            LOGGER.info(f"Loaded {awg.get_name()} in {dt:.03f} sec", )
 
     def load_direct(self, seqs):
         for awg, ch_map in self._awgs.items():
@@ -83,7 +83,7 @@ class AWGLoader:
                     break
             if seqlen is None:
                 continue
-            LOGGER.info("Sequence length is %d", seqlen)
+            LOGGER.info(f"Sequence length is {int(seqlen)}", )
 
             # Clearing the AWG first can take a while on large waveform sets.
             awg.delete_all_waveforms(timeout=AWG_TIMEOUT)
@@ -92,8 +92,8 @@ class AWGLoader:
 
             for dst_ch, src_ch in ch_map.items():
                 if src_ch in seqs:
-                    m1seq = seqs.get('%sm1'%src_ch, None)
-                    m2seq = seqs.get('%sm2'%src_ch, None)
+                    m1seq = seqs.get(f'{src_ch}m1', None)
+                    m2seq = seqs.get(f'{src_ch}m2', None)
                     self.load_channel_sequence(awg, dst_ch, seqs[src_ch], m1seq, m2seq)
                     awg.wait_done(timeout=AWG_TIMEOUT_SHORT)
                     self._mark_active(awg)
@@ -125,7 +125,7 @@ class AWGLoader:
         """
 
         for awg in self._active_awgs:
-            LOGGER.info("Starting %s", awg.get_name())
+            LOGGER.info(f"Starting {awg.get_name()}", )
             LOGGER.info("...turning on channels")
             awg.all_on()
 
@@ -142,14 +142,14 @@ class AWGLoader:
                 try:
                     state = awg.get_runstate()
                 except Exception as exc:
-                    LOGGER.info("%s (%d): %s", awg_name, tries, exc)
+                    LOGGER.info(f"{awg_name} ({int(tries)}): {exc}", )
                     time.sleep(2)
             if state == 0:
-                err_msg = "AWG %s did not run." % (awg.get_name(),)
+                err_msg = f"AWG {awg.get_name()} did not run."
                 LOGGER.error(err_msg)
                 raise Exception(err_msg)
 
-            LOGGER.info("...took %d tries to get ready.", tries)
+            LOGGER.info(f"...took {int(tries)} tries to get ready.", )
 
         LOGGER.info("...waiting for trigger")
 
@@ -169,11 +169,11 @@ class AWGLoader:
         m2 = None
         if m1seq and np.count_nonzero(m1seq.seq[i_seq].data) > 0:
             m1 = m1seq.seq[i_seq]
-            wname += "_m1%s" % m1.name
+            wname += f"_m1{m1.name}"
             m1 = m1.data
         if m2seq and np.count_nonzero(m2seq.seq[i_seq].data) > 0:
             m2 = m2seq.seq[i_seq]
-            wname += "_m2%s" % m2.name
+            wname += f"_m2{m2.name}"
             m2 = m2.data
         if self._is_hashable_wname(wname):
             wname = hashlib.md5(wname.encode()).hexdigest()
@@ -190,18 +190,14 @@ class AWGLoader:
         Load sequence for a particular channel.
         """
         LOGGER.info(
-            "Loading sequence with %d elements to channel %s on %s",
-            len(seq.seq),
-            chan,
-            awg.get_name(),
-        )
+            f"Loading sequence with {len(seq.seq)} elements to channel {chan} on {awg.get_name()}",
+            )
 
         for i_seq, p in enumerate(seq.seq):
             load, wname, m1, m2 = self._get_wname_m1m2(p, m1seq, m2seq, i_seq)
             if load:
                 LOGGER.info(
-                    "Loading waveform %s (%d bytes)", wname, len(p.data)
-                )
+                    f"Loading waveform {wname} ({len(p.data)} bytes)", )
                 awg.add_waveform(wname, p.data, m1=m1, m2=m2, replace=True)
                 self._loaded_wforms.append(wname)
 
@@ -213,7 +209,7 @@ class AWGLoader:
                 p.trigger,
                 timeout=AWG_TIMEOUT,
             )
-        LOGGER.info("Completed channel %s on %s", chan, awg.get_name())
+        LOGGER.info(f"Completed channel {chan} on {awg.get_name()}", )
 
     def load_channel_sequence_bulk(
         self, awg, chan, seq, m1seq=None, m2seq=None
@@ -222,11 +218,8 @@ class AWGLoader:
         Load sequence for a particular channel.
         """
         LOGGER.info(
-            "Bulk loading sequence with %d elements to channel %s on %s",
-            len(seq.seq),
-            chan,
-            awg.get_name(),
-        )
+            f"Bulk loading sequence with {len(seq.seq)} elements to channel {chan} on {awg.get_name()}",
+            )
 
         bulk_wforms = []
         bulk_wform_len = 0

@@ -55,7 +55,7 @@ class AWGCalibrator:
         f = fit.Polynomial(vs, ps, order=2)
         p0 = [np.min(ps), 0, 1]
         p = f.fit(p0)
-        LOGGER.info("Fit parameters: %s", p)
+        LOGGER.info(f"Fit parameters: {p}", )
         center = -p[1] / 2.0 / p[2]
 
         if plot:
@@ -70,8 +70,7 @@ class AWGCalibrator:
 
         imin = np.argmin(ps)
         LOGGER.info(
-            "Minimum power at %s = %.03f, fit = %.03f", chan, vs[imin], center
-        )
+            f"Minimum power at {chan} = {vs[imin]:.03f}, fit = {center:.03f}", )
 
         self.awg.set(f"ch{chan}_offset", vs[imin])
         return vs[imin]
@@ -143,7 +142,7 @@ class AWGCalibrator:
             time.sleep(0.2)
             p1 = self.sa.get_power_at(f1)
             p2 = self.sa.get_power_at(f2)
-            LOGGER.info("Phi %.03f, p1 = %.03f, p2 = %.03f", phi, p1, p2)
+            LOGGER.info(f"Phi {phi:.03f}, p1 = {p1:.03f}, p2 = {p2:.03f}", )
             rs.append(p1 - p2)
             rs2.append(p2)
 
@@ -164,7 +163,7 @@ class AWGCalibrator:
             time.sleep(self.delay)
             p1 = self.sa.get_power_at(f1)
             p2 = self.sa.get_power_at(f2)
-            LOGGER.info("Amp %.03f, p1 = %.03f, p2 = %.03f", amp, p1, p2)
+            LOGGER.info(f"Amp {amp:.03f}, p1 = {p1:.03f}, p2 = {p2:.03f}", )
             rs.append(p1 - p2)
             rs2.append(p2)
 
@@ -196,8 +195,7 @@ class AWGCalibrator:
         # f1 = self.sa.find_peak(f1, 5e6, 41, plot=False)
         # f2 = self.sa.find_peak(f2, 5e6, 41, plot=False)
         LOGGER.info(
-            "Sidebands @ f1 = %.03f MHz, f2 = %.03f MHz", f1 / 1e6, f2 / 1e6
-        )
+            f"Sidebands @ f1 = {f1 / 1000000.0:.03f} MHz, f2 = {f2 / 1000000.0:.03f} MHz", )
 
         # Check whether the requested sideband needs a pi phase shift on the
         # first channel.
@@ -226,7 +224,7 @@ class AWGCalibrator:
         # Starting parameters
         t0 = 0
         trange = 4000
-        amp0 = self.awg.get("ch%s_amplitude" % chan)
+        amp0 = self.awg.get(f"ch{chan}_amplitude")
         amprange = 0.25 * amp0
 
         for i in range(3):
@@ -234,7 +232,7 @@ class AWGCalibrator:
             amp0 = self.optimize_amplitude(
                 chan, amp0, amprange, f1, f2, ax=ax_amp
             )
-            LOGGER.info("Optimized t = %s, amp = %.03f", t0, amp0)
+            LOGGER.info(f"Optimized t = {t0}, amp = {amp0:.03f}", )
 
             trange /= 2
             amprange /= 2
@@ -276,8 +274,7 @@ class AWGCalibrator:
             f1 = self.sa.find_peak(f1, freqrange=500e3, N=21)
             f2 = self.sa.find_peak(f2, freqrange=500e3, N=21)
         LOGGER.info(
-            "Sidebands @ f1 = %.03f MHz, f2 = %.03f MHz", f1 / 1e6, f2 / 1e6
-        )
+            f"Sidebands @ f1 = {f1 / 1000000.0:.03f} MHz, f2 = {f2 / 1000000.0:.03f} MHz", )
 
         self.sa.set_rf_on(True)
 
@@ -302,7 +299,7 @@ class AWGCalibrator:
             amp0 = self.optimize_amplitude(
                 chans[0], amp0, amprange, f1, f2, ax=ax_amp, N=15
             )
-            LOGGER.info("Optimized phi = %s, amp = %.03f", phi0, amp0)
+            LOGGER.info(f"Optimized phi = {phi0}, amp = {amp0:.03f}", )
 
             phirange /= divide
             amprange /= divide
@@ -321,10 +318,10 @@ class AWGCalibrator:
         ts = np.linspace(t0 - trange, t0 + trange, N)
         rs = []
         for t in ts:
-            self.awg.set("ch%s_skew" % chan, t)
+            self.awg.set(f"ch{chan}_skew", t)
             rs.append(self.sa.get_power_at(f))
 
         if ax:
-            ax.plot(ts, rs, label="T +- %d ps" % (trange,))
+            ax.plot(ts, rs, label=f"T +- {int(trange)} ps")
 
         return np.array(ts), np.array(rs)

@@ -30,7 +30,7 @@ class ArgParser(object):
     def __getattr__(self, name):
         if name in self._kwargs:
             return self._kwargs[name]
-        raise ValueError('Option %s not set' % (name,))
+        raise ValueError(f'Option {name} not set')
 
     def add_option(self, name, type=str, default=None, help=None):
         if name.startswith('--'):

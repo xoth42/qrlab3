@@ -35,7 +35,7 @@ class ClientServerTestCase(unittest.TestCase):
         c2 = ds.dataserver_client()
         f2 = c2.get_file(filename)
         for name, f in [("primary", f1), ("secondary", f2)]:
-            assert all(data == f["data"][:]), "data failed to match from %s file" % name
+            assert all(data == f["data"][:]), f"data failed to match from {name} file"
         f1.close()
         f3 = h5py.File(os.path.join(ds.DATA_DIRECTORY, filename), "r")
         assert all(data == f3["data"][:]), "data failed to match from %s h5py file"
@@ -49,10 +49,7 @@ class ClientServerTestCase(unittest.TestCase):
         data = np.random.normal(size=(5,))
         for pt in data:
             f1["data"].append(pt)
-        assert all(data == f1["data"][:]), "data %s doesn't match filedata %s" % (
-            data,
-            f1["data"][:],
-        )
+        assert all(data == f1["data"][:]), f"data {data} doesn't match filedata {f1['data'][:]}"
 
 
 if __name__ == "__main__":
