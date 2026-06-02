@@ -3,7 +3,7 @@ import time
 
 import objectsharer as objsh
 
-zbe = objsh.helper.backend
+# zbe = objsh.helper.backend
 if zbe is None:
     zbe = objsh.ZMQBackend()
     zbe.start_server(addr="127.0.0.1")

@@ -1,8 +1,5 @@
-# Instruments server
-
 import os
 import logging
-import types
 from lib import jsonext
 import importlib
 

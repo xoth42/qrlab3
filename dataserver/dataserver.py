@@ -381,20 +381,17 @@ class DataServer(object):
     def hello(self):
         return "hello"
 
-
-
-def start(qt=False):
-    zbe = objsh.ZMQBackend()
-    zbe.start_server(addr="127.0.0.1", port=55556)
-    if qt:
-        zbe.add_qt_timer(10)
-    else:
-        import signal
-
-        for sig in (signal.SIGABRT, signal.SIGINT, signal.SIGTERM):
-            signal.signal(sig, lambda *args: dataserv.quit())
-        zbe.main_loop(origin=6)
-
+# def start(qt=False):
+#     zbe = objsh.ZMQBackend()
+#     zbe.start_server(addr="127.0.0.1", port=55556)
+#     if qt:
+#         zbe.add_qt_timer(10)
+#     else:
+#         import signal
+#
+#         for sig in (signal.SIGABRT, signal.SIGINT, signal.SIGTERM):
+#             signal.signal(sig, lambda *args: dataserv.quit())
+#         zbe.main_loop(origin=6)
 
 def init_data_server(DATA_DIRECTORY = r"C:\_Data", qt=False):
     """
@@ -408,9 +405,17 @@ def init_data_server(DATA_DIRECTORY = r"C:\_Data", qt=False):
     objsh.register(dataserv, name="dataserver")
     
     os.chdir(DATA_DIRECTORY)
-    start(qt=qt)
 
+    zbe = objsh.ZMQBackend()
+    zbe.start_server(addr="127.0.0.1", port=55556)
+    if qt:
+        zbe.add_qt_timer(10)
+    else:
+        import signal
 
+        for sig in (signal.SIGABRT, signal.SIGINT, signal.SIGTERM):
+            signal.signal(sig, lambda *args: dataserv.quit())
+        zbe.main_loop(origin=6)
 
 if __name__ == "__main__":
     init_data_server()
