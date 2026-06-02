@@ -174,11 +174,11 @@ class Agilent_E5071C(SCPI_Instrument):
 
     def save_state(self):
         if self._instrument_state_file:
-            self.write('MMEM:STOR "%s.sta"' % self._instrument_state_file) # maybe want " or "" around %s
+            self.write(f'MMEM:STOR "{self._instrument_state_file}.sta"') # maybe want " or "" around %s
 
     def load_state(self):
         if self._instrument_state_file:
-            self.write('MMEM:LOAD "%s.sta"' % self._instrument_state_file)
+            self.write(f'MMEM:LOAD "{self._instrument_state_file}.sta"')
         self.get_all()
 
     def autoscale(self):
@@ -186,20 +186,20 @@ class Agilent_E5071C(SCPI_Instrument):
 
     def load_segment_table(self, table, transpose=False):
         # table should be of the form (array of starts, array of stops, array of points)
-        header = '6,0,0,0,0,0,0,%d,'%(np.size(table[0]))
-        starts = ['%.1f'%i for i in table[0]]
-        stops = ['%.1f'%i for i in table[1]]
-        points = ['%i'%i for i in table[2]]
+        header = f'6,0,0,0,0,0,0,{int(np.size(table[0]))},'
+        starts = [f'{i:.1f}' for i in table[0]]
+        stops = [f'{i:.1f}' for i in table[1]]
+        points = [f'{int(i)}' for i in table[2]]
         if transpose:
             indata = (starts,stops,points)
         else:
             indata = list(zip(*(starts,stops,points)))
         flat = [a for b in indata for a in b]
         data = ','.join(flat)
-        self.write('SENS:SEGM:DATA %s%s' % (header,data))
+        self.write(f'SENS:SEGM:DATA {header}{data}')
 
     def set_s_param(self, sij):
-        self.write(':CALC1:PAR1:DEF %s' % (sij))
+        self.write(f':CALC1:PAR1:DEF {sij}')
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.DEBUG)
     Instrument.test(Agilent_E5071C)

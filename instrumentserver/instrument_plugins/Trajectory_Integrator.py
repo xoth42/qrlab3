@@ -97,12 +97,12 @@ class Trajectory_Integrator(Instrument):
         if path is None:
             path = self.get_weight_func()
 #        path = self.get_weight_func()
-        logging.info('Loading weight array from: %s' % path)
+        logging.info(f'Loading weight array from: {path}')
         if path is None or path == '':
             self._Iweight = np.ones(if_len, dtype=np.float32)/if_len
 #            self._Qweight = np.ones(if_len, dtype=np.float32)/if_len
             self._Qweight = np.zeros(if_len, dtype=np.float32)/if_len # 150519: if no weight is used, only use I's (see integrate)
-            logging.warning('No weight func specified, reverting to flat window of length %d' % (if_len))
+            logging.warning(f'No weight func specified, reverting to flat window of length {int(if_len)}')
         else:
             ext = os.path.splitext(path)[1]
             if ext == '.npy':
@@ -110,8 +110,8 @@ class Trajectory_Integrator(Instrument):
             elif ext in ('.txt', '.gz', '.bz2'):
                 data = np.loads(path)
             else:
-                logging.warning('Unable to load file %s' % path)
-                raise ValueError('Unable to load file %s' % path)
+                logging.warning(f'Unable to load file {path}')
+                raise ValueError(f'Unable to load file {path}')
 
 #            if len(data) != if_len:
 #                raise ValueError('Weight func not of right length: %s vs %s' % (len(data), if_len))
@@ -134,7 +134,7 @@ class Trajectory_Integrator(Instrument):
 
 #        if self.if_len != len(IQA[0,:self.if_len]):
         if if_len != len(IQA[0,:if_len]):
-            raise ValueError('Trajector_Integrator got IQA of wrong length: expected if len = %d; got = %d' % (if_len, len(IQA[0,:if_len])))
+            raise ValueError(f'Trajector_Integrator got IQA of wrong length: expected if len = {int(if_len)}; got = {len(IQA[0, :if_len])}')
 
 #        IQ_weight = np.real(IQA) * Iweight[np.newaxis,:] + \
 #                     np.imag(IQA) * Qweight[np.newaxis,:] + \
@@ -165,7 +165,6 @@ class Trajectory_Integrator(Instrument):
 
         method = self.get_c2r_method()
 
-#        print 'Using method %s' % method
         if method == 'IQeIQg':
             if IQe is None:
                 IQe = self.get_IQe()
@@ -182,7 +181,7 @@ class Trajectory_Integrator(Instrument):
             return np.angle(data).real
 
         else:
-            raise ValueError('Method: %s is unknown' % method)
+            raise ValueError(f'Method: {method} is unknown')
 
     def remove_nans(self, data):
         return data[np.logical_not(np.isnan(data))]
@@ -198,14 +197,14 @@ class Trajectory_Integrator(Instrument):
 #        start_time = time.clock()
         IQ_pts = self.integrate(IQA, **kwargs)
 #        logging.info('ti.integrate: %0.3f ms' % (1e3*(time.clock() - start_time)))
-#        print 'Integrated IQ pts shape: %s' % IQ_pts.shape
-#        print 'Integrated IQ pts: %s' % IQ_pts
+
+
 
 #        start_time = time.clock()
         real_pts = self.c2r(IQ_pts,)
 #        logging.info('ti.c2r: %0.3f ms' % (1e3*(time.clock() - start_time)))
-#        print 'Real pts shape: %s' % real_pts.shape
-#        print 'Real pts: %s' % real_pts
+
+
 
 #        start_time = time.clock()
         if self.get_use_threshold():

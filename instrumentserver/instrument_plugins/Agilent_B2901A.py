@@ -112,7 +112,7 @@ class Agilent_B2901A(Instrument):
         '''
 
 
-        a= self._visainstrument.write(':OUTP:STAT %s' %(value))
+        a= self._visainstrument.write(f':OUTP:STAT {value}')
 
     def do_get_status(self):
         '''
@@ -138,14 +138,14 @@ class Agilent_B2901A(Instrument):
         self._visainstrument.query(':OUTP OFF;*OPC?')
         self._visainstrument.query(':SOUR:FUNC CURR;*OPC?')
         self._visainstrument.query(':SENS:FUNC "VOLT";*OPC?')
-        self._visainstrument.query(':SOUR:CURR:LEV %s;*OPC?' % str(I))
+        self._visainstrument.query(f':SOUR:CURR:LEV {str(I)};*OPC?')
         self._visainstrument.query(':OUTP ON;*OPC?')
         
 #        self._ramp_current(I)
 
     def do_set_curr_limit(self,Imax):
         ## set current limit for a voltage source
-        self._visainstrument.write(':SENS:CURR:PROT:LEV %s' % Imax)
+        self._visainstrument.write(f':SENS:CURR:PROT:LEV {Imax}')
         
     def do_get_curr_limit(self):
         ## set current limit for a voltage source
@@ -174,15 +174,14 @@ class Agilent_B2901A(Instrument):
         n_steps = abs(int(dI/Ires))
 
         for k in range(n_steps):
-            self._visainstrument.write(':SOUR:CURR:LEV %s A' % (1.*k)/n_steps*dI+cur_val)
+            self._visainstrument.write(f':SOUR:CURR:LEV {1.0 * k} A'/n_steps*dI+cur_val)
             qt.msleep(Ires/ramp_speed)
             if(int(self._visainstrument.query(':SENS:VOLT:PROT:TRIP?')) == 0):
-                print('Compliance limit of %s reached, stopping ramp \n' % self._visainstrument.query(':SENS:VOLT:PROT:TRIP?'))
-                self._visainstrument.write(':SOUR:CURR:LEV %s A' % 0.0)
+                print(f"Compliance limit of {self._visainstrument.query(':SENS:VOLT:PROT:TRIP?')} reached, stopping ramp \n")
+                self._visainstrument.write(f':SOUR:CURR:LEV {0.0} A')
                 break
 
-        return 'A current of %s Amps has been set' \
-            %(self.do_get_current())
+        return f'A current of {self.do_get_current()} Amps has been set'
 
 
 
@@ -197,14 +196,14 @@ class Agilent_B2901A(Instrument):
         self._visainstrument.query(':OUTP OFF;*OPC?')
         self._visainstrument.query(':SOUR:FUNC VOLT;*OPC?')
         self._visainstrument.query(':SENS:FUNC "CURR";*OPC?')
-        self._visainstrument.query(':SOUR:VOLT:LEV %s;*OPC?' % str(V))
+        self._visainstrument.query(f':SOUR:VOLT:LEV {str(V)};*OPC?')
         self._visainstrument.query(':OUTP ON;*OPC?')
         
 #        self._ramp_voltage(V)
 
     def do_set_volt_limit(self,Vmax):
         ## Set the maximum voltage for current source
-        self._visainstrument.write('SENS:VOLT:PROT:LEV %s' % Vmax)
+        self._visainstrument.write(f'SENS:VOLT:PROT:LEV {Vmax}')
     
     def do_get_voltage(self):
         '''
@@ -224,15 +223,14 @@ class Agilent_B2901A(Instrument):
         n_steps = abs(int(dV/Vres))
 
         for k in range(n_steps):
-            self._visainstrument.write(':SOUR:VOLT:LEV %s V' % (1.*k)/n_steps*dV+cur_val)
+            self._visainstrument.write(f':SOUR:VOLT:LEV {1.0 * k} V'/n_steps*dV+cur_val)
             qt.msleep(Vres/ramp_speed)
             if(int(self._visainstrument.query(':SENS:CURR:PROT:TRIP?')) == 0):
-                print('Compliance limit of %s reached, stopping ramp \n' % self._visainstrument.query(':SENS:CURR:PROT:TRIP?'))
-                self._visainstrument.write(':SOUR:VOLT:LEV %s V' % 0.0)
+                print(f"Compliance limit of {self._visainstrument.query(':SENS:CURR:PROT:TRIP?')} reached, stopping ramp \n")
+                self._visainstrument.write(f':SOUR:VOLT:LEV {0.0} V')
                 break
 
-        return 'A voltage of %s Volts has been set' \
-            %(self.do_get_voltage())
+        return f'A voltage of {self.do_get_voltage()} Volts has been set'
 
     def read_data(self):
         return self._visainstrument.query(':MEAS?').strip().split(',')

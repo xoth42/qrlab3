@@ -172,7 +172,7 @@ class LeCroy_ArbStudio1104(Instrument):
         '''
         logging.info(__name__ + ' : Reading all data from instrument')
         for i in range(1,5):
-            self.get('ch%d_status' % i)
+            self.get(f'ch{int(i)}_status')
 
     def clear_waveforms(self):
         '''
@@ -202,7 +202,7 @@ class LeCroy_ArbStudio1104(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__  +' : Set trigger mode on channel %s to %s' % (channel, mode))
+        logging.debug(__name__  +f' : Set trigger mode on channel {channel} to {mode}')
         if (mode.upper() == "SINGLE"):
             self._device.GetChannel(channel-1).SetTriggerMode(TriggerMode.Single)
         elif (mode.upper() == "CONTINUOUS"):
@@ -254,12 +254,12 @@ class LeCroy_ArbStudio1104(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__  + ' : Trigger set: Channel: %s Source: %s Edge: %s Action: %s ' %(channel, source, action, edge))
+        logging.debug(__name__  + f' : Trigger set: Channel: {channel} Source: {source} Edge: {action} Action: {edge} ')
 
         # error checking
         if (source.upper() not in ['BNC', 'DC']):
-            logging.debug(__name__ + ' : error - source %s' %source)
-            return "error: source - %s" % source
+            logging.debug(__name__ + f' : error - source {source}')
+            return f"error: source - {source}"
         else:
             if (source.upper() == 'BNC'):
                 source = TriggerSource.FPTriggerIN
@@ -267,8 +267,8 @@ class LeCroy_ArbStudio1104(Instrument):
                 source = TriggerSource.DCTriggerIN
 
         if (action.upper() not in ['START', 'STOP']):
-            logging.debug(__name__ + ' : error - action %s' %action)
-            return "error: action - %s" % action
+            logging.debug(__name__ + f' : error - action {action}')
+            return f"error: action - {action}"
         else:
             if (action.upper() == 'START'):
                 action = TriggerAction.TriggerStart
@@ -276,8 +276,8 @@ class LeCroy_ArbStudio1104(Instrument):
                 action = TriggerAction.TriggerStop
 
         if (edge.upper() not in ['RISING', 'FALLING']):
-            logging.debug(__name__ + ' : error - edge %s' %edge)
-            return "error: edge - %s" % edge
+            logging.debug(__name__ + f' : error - edge {edge}')
+            return f"error: edge - {edge}"
         else:
             if (edge.upper() == 'RISING'):
                 edge = SensitivityEdge.RisingEdge
@@ -300,13 +300,13 @@ class LeCroy_ArbStudio1104(Instrument):
         '''
         sourceClass = []
         edgeClass = []
-        logging.debug(__name__  + ' : Trigger out: Channel: %s Source: %s Edge: %s ' %(channel, sources, edge))
+        logging.debug(__name__  + f' : Trigger out: Channel: {channel} Source: {sources} Edge: {edge} ')
         for oneSource in sources:
             if (oneSource.upper() not in ['NONE', 'STOP', 'START', 'EVENT_MARKER', 'DCTRIGGERIN', 'FPTRIGGERIN']):
-                logging.debug(__name__ + ' : error - source %s' %oneSource)
-                print("error: source - %s" % oneSource)
+                logging.debug(__name__ + f' : error - source {oneSource}')
+                print(f"error: source - {oneSource}")
             elif(oneSource.upper() == 'NONE'):
-                sourceClass.append(TriggerSource.None)
+                sourceClass.append(getattr(TriggerSource, 'None'))
             elif(oneSource.upper() == 'STOP'):
                 sourceClass.append(TriggerSource.Stop)
             elif(oneSource.upper() == 'START'):
@@ -319,8 +319,8 @@ class LeCroy_ArbStudio1104(Instrument):
                 sourceClass.append(TriggerSource.FPTriggerIN)
 
         if (edge.upper() not in ['RISING', 'FALLING']):
-            logging.debug(__name__ + ' : error - edge %s' %edge)
-            print("error: edge - %s" % edge)
+            logging.debug(__name__ + f' : error - edge {edge}')
+            print(f"error: edge - {edge}")
         else:
             if (edge.upper() == 'RISINGEDGE'):
                 edgeClass = SensitivityEdge.RisingEdge
@@ -339,7 +339,7 @@ class LeCroy_ArbStudio1104(Instrument):
         Output:
             'ILDE' or 'BUSY'
         '''
-        logging.debug(__name__ + ' : Get status of channel %s' %channel)
+        logging.debug(__name__ + f' : Get status of channel {channel}')
         if (self._device != None):
             val = self._device.GetChannel(channel-1).IsChannelIdle()
 
@@ -361,7 +361,7 @@ class LeCroy_ArbStudio1104(Instrument):
         logging.debug(__name__ + ' : Get error message')
 
         if (self._device != None):
-            return "Source: %s Description: %s" % (self._device.ErrorResult.ErrorSource, self._device.ErrorResult.ErrorDescription)
+            return f"Source: {self._device.ErrorResult.ErrorSource} Description: {self._device.ErrorResult.ErrorDescription}"
         else:
             return None
 
@@ -377,15 +377,15 @@ class LeCroy_ArbStudio1104(Instrument):
         Output:
             error (string) : current error message (if any)
         '''
-        logging.debug(__name__ + ' : Set interpolation to %s on channel pair %s' % (factor, channel))
+        logging.debug(__name__ + f' : Set interpolation to {factor} on channel pair {channel}')
 
         if (channel < 1 or channel > 4):
-            logging.debug(__name__ + ' : Invalid channel %s' % channel)
-            print(__name__ + ' : Invalid channel %s' % channel)
+            logging.debug(__name__ + f' : Invalid channel {channel}')
+            print(__name__ + f' : Invalid channel {channel}')
 
         if (factor not in [1,2,4]):
-            logging.debug(__name__ + ' : Invalid factor %s' % factor)
-            print(__name__ + ' : Invalid factor %s' % factor)
+            logging.debug(__name__ + f' : Invalid factor {factor}')
+            print(__name__ + f' : Invalid factor {factor}')
 
         if (self._device != None):
             if (channel == 1 or channel == 2):
@@ -460,7 +460,7 @@ class LeCroy_ArbStudio1104(Instrument):
 
             return True
         else:
-            logging.debug(__name__ + ' : Could not get channel %s' % channel)
+            logging.debug(__name__ + f' : Could not get channel {channel}')
             print("Error getting channel!")
             return False
 
@@ -490,7 +490,7 @@ class LeCroy_ArbStudio1104(Instrument):
         listByte = List[Byte]()
         for c in channellist:
             listByte.Add(c) # No -1 here because LeCroy changed conventions mid code.
-        logging.debug(__name__ + ' : Force stop on channel %s' %(channellist))
+        logging.debug(__name__ + f' : Force stop on channel {channellist}')
         self._device.ForceStop(listByte.ToArray())
 
     def run(self, channellist):
@@ -505,7 +505,7 @@ class LeCroy_ArbStudio1104(Instrument):
         listByte = List[Byte]()
         for c in channellist:
             listByte.Add(c) # No -1 here because LeCroy changed conventions mid code.
-        logging.debug(__name__ + ' : run on channel %s' %(channellist))
+        logging.debug(__name__ + f' : run on channel {channellist}')
         self._device.RUN(listByte.ToArray())
 
     def stop(self):
@@ -532,5 +532,5 @@ class LeCroy_ArbStudio1104(Instrument):
         listByte = List[Byte]()
         for c in channellist:
             listByte.Add(c) # No -1 here because LeCroy changed conventions mid code.
-        logging.debug(__name__ + ' : Force trigger on channel %s' %(channellist))
+        logging.debug(__name__ + f' : Force trigger on channel {channellist}')
         self._device.ForceTrigger(listByte.ToArray())

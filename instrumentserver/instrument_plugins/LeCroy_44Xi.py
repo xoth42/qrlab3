@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from .instrument import Instrument
-import visa
+import pyvisa
 import types
 import logging
 
@@ -48,7 +48,7 @@ class LeCroy_44Xi(Instrument):
 
 
         self._address = address
-        self._visainstrument = visa.instrument(self._address)
+        self._visainstrument = pyvisa.ResourceManager().open_resource(self._address)
         self._values = {}
 
         # Add parameters
@@ -142,8 +142,8 @@ class LeCroy_44Xi(Instrument):
         Output:
             None
         '''
-        logging.info(__name__ + ' : Set timebase setting to %s' % value)
-        self._visainstrument.write('TDIV %s' % value)
+        logging.info(__name__ + f' : Set timebase setting to {value}')
+        self._visainstrument.write(f'TDIV {value}')
 
     def do_get_timebase(self):
         '''
@@ -156,7 +156,7 @@ class LeCroy_44Xi(Instrument):
             value (str) : Timebase in S
         '''
         logging.info(__name__ + ' : Get timebase setting')
-        result = self._visainstrument.ask('TDIV?')
+        result = self._visainstrument.query('TDIV?')
         result = result.replace('TDIV ','')
         result = result.replace(' S','')
         return float(result)
@@ -174,8 +174,8 @@ class LeCroy_44Xi(Instrument):
         Output:
             None
         '''
-        logging.info(__name__ + ' : Set vertical base setting of channel %s to %s' % (channel,value))
-        self._visainstrument.write('C%s:VDIV %s' % (channel,value))
+        logging.info(__name__ + f' : Set vertical base setting of channel {channel} to {value}')
+        self._visainstrument.write(f'C{channel}:VDIV {value}')
 
     def do_get_vertical(self, channel):
         '''
@@ -187,9 +187,9 @@ class LeCroy_44Xi(Instrument):
         Output:
             value (str) : Vertical base in V.
         '''
-        logging.info(__name__ + ' : Get vertical base setting of channel %s' % channel)
-        result = self._visainstrument.ask('C%s:VDIV?' % channel)
-        result = result.replace('C%s:VDIV ' % channel,'')
+        logging.info(__name__ + f' : Get vertical base setting of channel {channel}')
+        result = self._visainstrument.query(f'C{channel}:VDIV?')
+        result = result.replace(f'C{channel}:VDIV ','')
         result = result.replace(' V','')
         return float(result)
 
@@ -208,8 +208,8 @@ class LeCroy_44Xi(Instrument):
         Output:
             None
         '''
-        logging.info(__name__ + ' : Take a screenshot with filename %s, type %s and save on harddisk %s' % (file, type, dir))
-        self._visainstrument.write('HCSU DEV, %s, BCKG, %s, DEST, FILE, DIR, %s, FILE, %s, AREA, %s; SCDP' % (type, background, dir, file, area))
+        logging.info(__name__ + f' : Take a screenshot with filename {file}, type {type} and save on harddisk {dir}')
+        self._visainstrument.write(f'HCSU DEV, {type}, BCKG, {background}, DEST, FILE, DIR, {dir}, FILE, {file}, AREA, {area}; SCDP')
 
     def _do_save_data(self, channel):
         '''
@@ -221,8 +221,8 @@ class LeCroy_44Xi(Instrument):
         Output:
             None
         '''
-        logging.info(__name__ + ' : Save data for channel %s' % channel)
-        self._visainstrument.write('STST C%s,HDD,AUTO,OFF,FORMAT,ASCII; STO' % channel)
+        logging.info(__name__ + f' : Save data for channel {channel}')
+        self._visainstrument.write(f'STST C{channel},HDD,AUTO,OFF,FORMAT,ASCII; STO')
 
     def _add_save_data_func(self, channel):
         '''
@@ -230,7 +230,7 @@ class LeCroy_44Xi(Instrument):
         n = (1,2,3,4) for 4 channels.
         '''
         func = lambda: self._do_save_data(channel)
-        setattr(self, 'save_ch%s_data' % channel, func)
+        setattr(self, f'save_ch{channel}_data', func)
 
     def sequence(self, segments, max_size):
         '''
@@ -242,8 +242,8 @@ class LeCroy_44Xi(Instrument):
         Output:
             None
         '''
-        logging.info(__name__ + ' : Set the sequence mode settings. Segments: %s, Maximum memory size: %s' % (segments, max_size))
-        self._visainstrument.write('SEQ ON, %s, %s' % (segments, max_size))
+        logging.info(__name__ + f' : Set the sequence mode settings. Segments: {segments}, Maximum memory size: {max_size}')
+        self._visainstrument.write(f'SEQ ON, {segments}, {max_size}')
 
     def do_set_msize(self, msize):
         '''
@@ -253,8 +253,8 @@ class LeCroy_44Xi(Instrument):
         Output:
             None
         '''
-        logging.info(__name__ + ' : Set maximum memory length to %s' % msize)
-        self._visainstrument.write('MSIZ %s' % msize)
+        logging.info(__name__ + f' : Set maximum memory length to {msize}')
+        self._visainstrument.write(f'MSIZ {msize}')
 
     def do_get_msize(self):
         '''
@@ -265,7 +265,7 @@ class LeCroy_44Xi(Instrument):
             result(float) : maximum memory size in Samples
         '''
         logging.info(__name__ + ' : Get maximum memory length')
-        result = self._visainstrument.ask('MSIZ?')
+        result = self._visainstrument.query('MSIZ?')
         result = result.replace('MSIZ ', '')
         result = result.replace(' SAMPLE', '')
         return float(result)

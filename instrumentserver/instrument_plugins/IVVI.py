@@ -19,10 +19,10 @@
 
 from .instrument import Instrument
 import types
-import pyvisa.vpp43 as vpp43
 from time import sleep
 import logging
 import numpy
+import pyvisa
 from lib import visafunc
 
 class IVVI(Instrument):
@@ -76,7 +76,7 @@ class IVVI(Instrument):
         # Add parameters
         self.add_parameter('pol_dacrack',
             type=bytes,
-            channels=(1, self._numdacs/4),
+            channels=(1, self._numdacs // 4),
             flags=Instrument.FLAG_SET)
         self.add_parameter('dac',
             type=float,
@@ -89,8 +89,8 @@ class IVVI(Instrument):
         self._open_serial_connection()
 
         # get_all calls are performed below (in reset or get_all)
-        for j in range(numdacs / 4):
-            self.set('pol_dacrack%d' % (j+1), polarity[j], getall=False)
+        for j in range(numdacs // 4):
+            self.set(f'pol_dacrack{int(j + 1)}', polarity[j], getall=False)
 
         if reset:
             self.reset()
@@ -123,17 +123,14 @@ class IVVI(Instrument):
             None
         '''
         logging.debug('Opening serial connection')
-        self._session = vpp43.open_default_resource_manager()
-        self._vi = vpp43.open(self._session, self._address)
-
-        vpp43.set_attribute(self._vi, vpp43.VI_ATTR_ASRL_BAUD, 115200)
-        vpp43.set_attribute(self._vi, vpp43.VI_ATTR_ASRL_DATA_BITS, 8)
-        vpp43.set_attribute(self._vi, vpp43.VI_ATTR_ASRL_STOP_BITS,
-            vpp43.VI_ASRL_STOP_ONE)
-        vpp43.set_attribute(self._vi, vpp43.VI_ATTR_ASRL_PARITY,
-            vpp43.VI_ASRL_PAR_ODD)
-        vpp43.set_attribute(self._vi, vpp43.VI_ATTR_ASRL_END_IN,
-            vpp43.VI_ASRL_END_NONE)
+        self._vi = pyvisa.ResourceManager().open_resource(self._address)
+        self._vi.baud_rate = 115200
+        self._vi.data_bits = 8
+        self._vi.stop_bits = pyvisa.constants.StopBits.one
+        self._vi.parity = pyvisa.constants.Parity.odd
+        self._vi.read_termination = None
+        self._vi.write_termination = None
+        self._vi.send_end = False
 
     # close serial connection
     def _close_serial_connection(self):
@@ -147,7 +144,7 @@ class IVVI(Instrument):
             None
         '''
         logging.debug('Closing serial connection')
-        vpp43.close(self._vi)
+        self._vi.close()
 
     def reset(self):
         '''
@@ -176,11 +173,11 @@ class IVVI(Instrument):
         '''
         logging.info('Get all')
         for i in range(self._numdacs):
-            self.get('dac%d' % (i+1))
+            self.get(f'dac{int(i + 1)}')
 
     def set_dacs_zero(self):
         for i in range(self._numdacs):
-            self.set('dac%d' % (i+1), 0)
+            self.set(f'dac{int(i + 1)}', 0)
 
     # Conversion of data
     def _mvoltage_to_bytes(self, mvoltage):
@@ -220,7 +217,7 @@ class IVVI(Instrument):
         Output:
             voltage (float) : dacvalue in mV
         '''
-        logging.debug('Reading dac%s', channel)
+        logging.debug(f'Reading dac{channel}', )
         mvoltages = self._get_dacs()
         return mvoltages[channel - 1]
 
@@ -235,9 +232,9 @@ class IVVI(Instrument):
         Output:
             reply (string) : errormessage
         '''
-        logging.debug('Setting dac%s to %.02f mV', channel, mvoltage)
+        logging.debug(f'Setting dac{channel} to {mvoltage:.02f} mV', )
         (DataH, DataL) = self._mvoltage_to_bytes(mvoltage - self.pol_num[channel-1])
-        message = "%c%c%c%c%c%c%c" % (7, 0, 2, 1, channel, DataH, DataL)
+        message = f"{7:c}{0:c}{2:c}{1:c}{channel:c}{DataH:c}{DataL:c}"
         reply = self._send_and_read(message)
         return reply
 
@@ -252,7 +249,7 @@ class IVVI(Instrument):
             voltages (float[]) : list containing all dacvoltages (in mV)
         '''
         logging.debug('Getting dac voltages from instrument')
-        message = "%c%c%c%c" % (4, 0, self._numdacs*2+2, 2)
+        message = f"{4:c}{0:c}{self._numdacs * 2 + 2:c}{2:c}"
         reply = self._send_and_read(message)
         mvoltages = self._numbers_to_mvoltages(reply)
         return mvoltages
@@ -269,7 +266,7 @@ class IVVI(Instrument):
         Output:
             data_out_numbers (int[]) : return message
         '''
-        logging.debug('Sending %r', message)
+        logging.debug(f'Sending {message!r}', )
 
         def _to_int_list(data):
             if isinstance(data, (bytes, bytearray)):
@@ -278,7 +275,7 @@ class IVVI(Instrument):
 
         # clear input buffer
         visafunc.read_all(self._vi)
-        vpp43.write(self._vi, message)
+        self._vi.write_raw(message.encode('latin1'))
 
 # In stead of blocking, we could also poll, but it's a bit slower
 
@@ -291,7 +288,7 @@ class IVVI(Instrument):
 
         # 0 = no error, 32 = watchdog reset
         if data1[1] not in (0, 32):
-            logging.error('Error while reading: %s', data1)
+            logging.error(f'Error while reading: {data1}', )
 
         data2 = visafunc.readn(self._vi, data1[0] - 2)
         data2 = _to_int_list(data2)
@@ -312,14 +309,14 @@ class IVVI(Instrument):
         '''
         flagmap = {'NEG': -4000, 'BIP': -2000, 'POS': 0}
         if flag.upper() not in flagmap:
-            logging.error('Tried to set invalid dac polarity %s', flag)
+            logging.error(f'Tried to set invalid dac polarity {flag}', )
             return
 
-        logging.debug('Setting polarity of rack %d to %s', channel, flag)
+        logging.debug(f'Setting polarity of rack {int(channel)} to {flag}', )
         val = flagmap[flag.upper()]
         for i in range(4*(channel-1),4*(channel)):
             self.pol_num[i] = val
-            self.set_parameter_bounds('dac%d' % (i+1), val, val + 4000.0)
+            self.set_parameter_bounds(f'dac{int(i + 1)}', val, val + 4000.0)
 
         if getall:
             self.get_all()
@@ -334,7 +331,7 @@ class IVVI(Instrument):
         Output:
             polarity (string) : 'BIP', 'POS' or 'NEG'
         '''
-        logging.debug('Getting polarity of dac %d' % dacnr)
+        logging.debug(f'Getting polarity of dac {int(dacnr)}')
         val = self.pol_num[dacnr-1]
 
         if (val == -4000):

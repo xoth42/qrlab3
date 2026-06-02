@@ -212,7 +212,7 @@ class Function(object):
         print(f'\tRandom par: {params}')
         s = ''
         for val, err in zip(p, self.get_fit_errors()):
-            s += ' %f (+-%f)' % (val, err)
+            s += f' {val:f} (+-{err:f})'
         print(f'\tResult:{s}')
 
         import matplotlib.pyplot as plt

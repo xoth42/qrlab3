@@ -14,11 +14,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-import pyvisa.vpp43 as vpp43
 from time import sleep
 import types
 import logging
+import pyvisa
 from .instrument import Instrument
+from lib import visafunc
 
 
 class OPTO(Instrument):
@@ -38,22 +39,20 @@ class OPTO(Instrument):
 
     def _open_serial_connection(self):
         logging.debug(__name__+':Opening serial connection')
-        self._session = vpp43.open_default_resource_manager()
-        self._vi = vpp43.open(self._session, self._address)
-        vpp43.set_attribute(self._vi, vpp43.VI_ATTR_ASRL_BAUD, 115200)
-        vpp43.set_attribute(self._vi, vpp43.VI_ATTR_ASRL_DATA_BITS, 8)
-        vpp43.set_attribute(self._vi, vpp43.VI_ATTR_ASRL_STOP_BITS,
-                            vpp43.VI_ASRL_STOP_ONE)
-        vpp43.set_attribute(self._vi, vpp43.VI_ATTR_ASRL_PARITY,
-                            vpp43.VI_ASRL_PAR_ODD)
-        vpp43.set_attribute(self._vi, vpp43.VI_ATTR_ASRL_END_IN,
-                            vpp43.VI_ASRL_END_NONE)
+        self._vi = pyvisa.ResourceManager().open_resource(self._address)
+        self._vi.baud_rate = 115200
+        self._vi.data_bits = 8
+        self._vi.stop_bits = pyvisa.constants.StopBits.one
+        self._vi.parity = pyvisa.constants.Parity.odd
+        self._vi.read_termination = None
+        self._vi.write_termination = None
+        self._vi.send_end = False
 
     def _close_serial_connection(self):
-        vpp43.close(self._vi)
+        self._vi.close()
 
     def _send_message(self, message):
-        vpp43.write(self._vi, message)
+        self._vi.write_raw(message.encode('latin1'))
         sleep(self._sleeptime)
 
     def _dac_voltage_to_message(self, dac, voltage):
@@ -63,13 +62,15 @@ class OPTO(Instrument):
         bytedac=128
         for _ in range(max(0, dac - 1)):
             bytedac = int(bytedac / 2)
-        message="%c%c%c%c%c%c%c" % (7, 0, 3, 10, bytedac, dataH, dataL)
+        message=f"{7:c}{0:c}{3:c}{10:c}{bytedac:c}{dataH:c}{dataL:c}"
         return message
 
     def _read_buffer(self):
-        response=vpp43.read(self._vi, vpp43.get_attribute(self._vi,
-                            vpp43.VI_ATTR_ASRL_AVAIL_NUM))
+        navail = visafunc.get_navail(self._vi)
+        response = visafunc.readn(self._vi, navail)
         sleep(self._sleeptime)
+        if isinstance(response, (bytes, bytearray)):
+            response = response.decode('latin1')
         return response
 
     def do_set_dac(self, mvoltage, channel):
@@ -78,7 +79,7 @@ class OPTO(Instrument):
         message=self._dac_voltage_to_message(channel, voltage)
         self._send_message(message)
         r=self._read_buffer()
-        czero='%c'%0
+        czero=f'{0:c}'
         if (r!=''):
             if (r[1]!=czero):
                 logging.debug(__name__+' possible error in optodac' + r)

@@ -244,7 +244,7 @@ class SC5413A(Instrument):
             raise Exception("IQ must be 'I' or 'Q'")
             
         if level > self._linDacMax or level < self._linDacMin:
-            raise Exception('level must be in the %s-%s range' % (self._linDacMin, self._linDacMax))
+            raise Exception(f'level must be in the {self._linDacMin}-{self._linDacMax} range')
         
         return lb_dll.sc5413a_SetLinearityDac(self._handle, ctypes.c_char(IQ), ctypes.c_short(level))
         

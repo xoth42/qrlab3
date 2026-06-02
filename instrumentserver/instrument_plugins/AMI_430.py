@@ -53,7 +53,7 @@ class AMI_430(Instrument):
         self.field = field
         if self.field > 0.1:
             raise ValueError('setting field larger than 0.1T')
-        self.ser.write('CONFigure:FIELD:TARGet %s;'%(field)) #sets field target
+        self.ser.write(f'CONFigure:FIELD:TARGet {field};') #sets field target
         self.ser.write('RAMP;') #tells magnet to go to the target
 #        try:
 #            while not abs(float(self.do_get_field()) - field) < 0.0005:
@@ -61,7 +61,7 @@ class AMI_430(Instrument):
 #                objsh.helper.backend.main_loop(100)
 #
 #        except:
-#            print 'error in ramping field'
+
     
     def do_get_current(self):
         self.ser.write('CURRent:MAGnet?;')
@@ -70,7 +70,7 @@ class AMI_430(Instrument):
         
     def do_set_current(self, current):
         self.current = current
-        self.ser.write('CONFigure:CURRent:TARGet %s;'%(current)) #sets current target
+        self.ser.write(f'CONFigure:CURRent:TARGet {current};') #sets current target
         self.ser.write('RAMP;') #tells magnet to go to the target
     
     def do_pause(self):
@@ -80,7 +80,7 @@ class AMI_430(Instrument):
         self.ser.write('ZERO;') #puts the programmer into zeroing current mode'''
         
     def do_set_PSwitch(self,state):
-        self.ser.write('PSwitch %s;'%(state))
+        self.ser.write(f'PSwitch {state};')
 #        self.ser.write('CONFigure:PSwitch:INSTalled?;')
 #        self.PSwitch = self.ser.read(size=20) #size TBD
 #

@@ -40,12 +40,12 @@ class example_tcpip(Instrument):
         return float(ret)
 
     def do_set_position(self, pos):
-        self.send('POS %f' % pos)
+        self.send(f'POS {pos:f}')
 
     def reset(self):
         pass
 
     def step(self, channel, stepsie=0.1):
         '''Step channel <channel>'''
-        print('Stepping channel %d by %f' % (channel, stepsize))
+        print(f'Stepping channel {int(channel)} by {stepsize:f}')
 

@@ -66,11 +66,7 @@ MXG = instruments.create('MXGbob', 'Agilent_Generator', address = 'USB0::0x0957:
 15-17: cav reset stuff
 20: FWM
 >100: All cav number dependant qubits
-
-
-
 '''
-
 
 readout_IQ = instruments.create('readout_IQ', 'Readout_IQ_Info', IQe=(1.0), IQg=(0.1),
                                 IQe_radius= 1 ,
@@ -84,8 +80,6 @@ readout_IQ = instruments.create('readout_IQ', 'Readout_IQ_Info', IQe=(1.0), IQg=
                                 amp=.4,
                                 fixed_phase=0,
                                 )
-
-
 
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                               deltaf=-100e6,
@@ -113,17 +107,6 @@ qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
                             sideband_channels='I2,Q2',
                             sideband_phase=0)
 
-#qubit1fh = instruments.create('qubit1fh', 'Qubit_Info',
-#                            deltaf=-301.220e6,
-#                            pi_amp=0.306,
-#                            pi_amp_selective= 0.00587,
-#                            rotation='Gaussian',
-#                            w=10,
-#                            w_selective=500,
-#                            channels='5,6',
-#                            sideband_channels='I3,Q3',
-#                            sideband_phase=0)
-
 cavityA = instruments.create('cavityA', 'Qubit_Info',
                             deltaf=40e6,
                             pi_amp=.848,
@@ -136,7 +119,6 @@ cavityA = instruments.create('cavityA', 'Qubit_Info',
                             w_selective=500,
                             marker_bufwidth=250,
                             marker_ofs=0)
-
 
 cavityB = instruments.create('cavityB', 'Qubit_Info',
                             deltaf=60e6,
@@ -151,10 +133,6 @@ cavityB = instruments.create('cavityB', 'Qubit_Info',
                             marker_bufwidth=250,
                             marker_ofs=0)
 
-
-
-
-
 cavityR = instruments.create('cavityR', 'Qubit_Info',
                             deltaf=50e6,#16.9e3,
                             pi_amp=1,
@@ -168,10 +146,6 @@ cavityR = instruments.create('cavityR', 'Qubit_Info',
                             w_selective=400,
                             marker_bufwidth=250,
                             marker_ofs=0)
-
-
-
-
 
 fwm_info = instruments.create('fwm_info', 'Qubit_Info',
                               deltaf=50e6,
@@ -190,24 +164,6 @@ fwm_info = instruments.create('fwm_info', 'Qubit_Info',
                               sideband_phase=3.14,
                               marker_bufwidth=1500,
                               marker_ofs=0)
-
-#fwm_info_static = instruments.create('fwm_info_static', 'Qubit_Info',
-#                              deltaf=-41.9e6,
-#                              pi_amp=0.642,
-#                              pi2_amp=0,
-#                              drag=0,
-#                              pi_amp_quasilective=0.0102,
-#                              pi_amp_selective=0.014,
-#                              rotation='SQUARE',
-#                              rotation_selective = 'SQUARE',
-#                              w=5,
-#                              w_quasilective=100,
-#                              w_selective=300,
-#                              channels='3,4',
-#                              sideband_channels='I21,Q21',
-#                              sideband_phase=3.14,
-#                              marker_bufwidth=1500,
-#                              marker_ofs=0)
 
 
 '''
@@ -278,58 +234,50 @@ cavityRreset = instruments.create('cavRreset', 'Qubit_Info',
                             w_selective=400,
                             marker_bufwidth=250,
                             marker_ofs=0)
-
-
 '''
 
 
-
-# Some code to generate all the cavity number dependant qubit info objects easily
-# Calculate generic dfreqs
-N = 3
-chi_a = 1.97e6
-chi_b = 5.95e6
-dfreqs = np.zeros((N, N))
-#for i, j in itertools.product(range(N), range(N)):
-#    dfreqs[i, j] = -100e6 - chi_a * i - chi_b * j
+# # Some code to generate all the cavity number dependant qubit info objects easily
+# # Calculate generic dfreqs
+# N = 3
+# chi_a = 1.97e6
+# chi_b = 5.95e6
+# dfreqs = np.zeros((N, N))
+# #for i, j in itertools.product(range(N), range(N)):
+# #    dfreqs[i, j] = -100e6 - chi_a * i - chi_b * j
     
 
-# Setting specific frequencies to correct errors
-dfreqs[1, 1] = -107.44e6
-dfreqs[2, 2] = -114.45e6
-#dfreqs[3, 3] = -120.89e6
+# # Setting specific frequencies to correct errors
+# dfreqs[1, 1] = -107.44e6
+# dfreqs[2, 2] = -114.45e6
+# #dfreqs[3, 3] = -120.89e6
 
-#delta =1
-dfreqs[1, 0] = -101.97e6
-dfreqs[2, 1] = -108.73e6
-#dfreqs[3, 2] = -115.6e6
-
-
-#delta=-1
-dfreqs[0, 1] = -105.95e6
-dfreqs[1, 2] = -112.41e6
-#dfreqs[2, 3] = -118.75e6
-
-#dfreqs[4, 4] = -127.5e6
-
-for i, j in itertools.product(list(range(N)), list(range(N))):
-    if dfreqs[i,j] != 0:
-        instruments.create('_qubit_a' + str(i) + 'b' + str(j), 'Qubit_Info',
-                           deltaf = dfreqs[i, j],
-                           sideband_channels='I1' + str(100+10*i+j) + ',Q1' + str(100+10*i+j),
-                           pi_amp=0.885,
-                           pi2_amp=.411,
-                           drag=0,
-                           pi_amp_quasilective=.068,
-                           pi_amp_selective=0.016,
-                           rotation='Gaussian',
-                           w=8,
-                           w_quasilective=80,
-                           w_selective=400,
-                           channels='5,6',
-                           sideband_phase=0)
-        
+# #delta =1
+# dfreqs[1, 0] = -101.97e6
+# dfreqs[2, 1] = -108.73e6
+# #dfreqs[3, 2] = -115.6e6
 
 
+# #delta=-1
+# dfreqs[0, 1] = -105.95e6
+# dfreqs[1, 2] = -112.41e6
+# #dfreqs[2, 3] = -118.75e6
 
+# #dfreqs[4, 4] = -127.5e6
 
+# for i, j in itertools.product(list(range(N)), list(range(N))):
+#     if dfreqs[i,j] != 0:
+#         instruments.create('_qubit_a' + str(i) + 'b' + str(j), 'Qubit_Info',
+#                            deltaf = dfreqs[i, j],
+#                            sideband_channels='I1' + str(100+10*i+j) + ',Q1' + str(100+10*i+j),
+#                            pi_amp=0.885,
+#                            pi2_amp=.411,
+#                            drag=0,
+#                            pi_amp_quasilective=.068,
+#                            pi_amp_selective=0.016,
+#                            rotation='Gaussian',
+#                            w=8,
+#                            w_quasilective=80,
+#                            w_selective=400,
+#                            channels='5,6',
+#                            sideband_phase=0)

@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from .instrument import Instrument
-import visa
+import pyvisa
 import types
 import logging
 
@@ -35,7 +35,7 @@ class SR_400(Instrument):
         Instrument.__init__(self, name)
 
         self._address = address
-        self._visa = visa.instrument(self._address)
+        self._visa = pyvisa.ResourceManager().open_resource(self._address)
 
         self.add_parameter('identification',
             flags=Instrument.FLAG_GET)
@@ -147,30 +147,30 @@ class SR_400(Instrument):
         self.get_mode()
         self.get_periods()
         for chan in 'A', 'B':
-            self.get('counter%s' % chan)
-            self.get('counter_input%s' % chan)
-            self.get('disc_level%s' % chan)
-            self.get('disc_slope%s' % chan)
+            self.get(f'counter{chan}')
+            self.get(f'counter_input{chan}')
+            self.get(f'disc_level{chan}')
+            self.get(f'disc_slope{chan}')
 
         self.get('counter_presetB')
         self.get('counter_presetT')
 
     def do_get_identification(self):
-        return self._visa.ask('*IDN?')
+        return self._visa.query('*IDN?')
 
     def do_get_mode(self):
-        ans = self._visa.ask('CM')
+        ans = self._visa.query('CM')
         return ans
 
     def do_set_mode(self, mode):
-        self._visa.write('CM %d' % mode)
+        self._visa.write(f'CM {int(mode)}')
 
     def do_get_counter(self, channel):
-        ans = self._visa.ask('Q%s' % channel)
+        ans = self._visa.query(f'Q{channel}')
         return int(ans)
 
     def do_get_count(self, channel):
-        ans = self._visa.ask('CR; F%s' % channel)
+        ans = self._visa.query(f'CR; F{channel}')
         if channel == 'T':
             ans2 = self._visa.read()
             return int(ans), int(ans2)
@@ -178,45 +178,45 @@ class SR_400(Instrument):
             return int(ans)
 
     def do_get_counter_input(self, channel):
-        ans = self._visa.ask('CI %d' % self._counter_num(channel))
+        ans = self._visa.query(f'CI {int(self._counter_num(channel))}')
         return int(ans)
 
     def do_set_counter_input(self, val, channel):
-        self._visa.write('CI %d,%d' % (self._counter_num(channel), val))
+        self._visa.write(f'CI {int(self._counter_num(channel))},{int(val)}')
 
     def do_get_counter_preset(self, channel):
-        ret = self._visa.ask('CP %d' % self._counter_num(channel))
+        ret = self._visa.query(f'CP {int(self._counter_num(channel))}')
         return float(ret)
 
     def do_set_counter_preset(self, val, channel):
-        self._visa.write('CP %d,%d' % (self._counter_num(channel), val))
+        self._visa.write(f'CP {int(self._counter_num(channel))},{int(val)}')
 
     def do_get_periods(self):
-        ans = self._visa.ask('NP')
+        ans = self._visa.query('NP')
         return ans
 
     def do_set_periods(self, val):
-        self._visa.write('NP %d' % val)
+        self._visa.write(f'NP {int(val)}')
 
     def do_get_disc_slope(self, channel):
-        ans = self._visa.ask('DS %d' % self._counter_num(channel))
+        ans = self._visa.query(f'DS {int(self._counter_num(channel))}')
         return ans
 
     def do_set_disc_slope(self, val, channel):
-        self._visa.write('DS %d,%d' % (self._counter_num(channel), val))
+        self._visa.write(f'DS {int(self._counter_num(channel))},{int(val)}')
 
     def do_get_disc_level(self, channel):
-        ans = self._visa.ask('DL %d' % self._counter_num(channel))
+        ans = self._visa.query(f'DL {int(self._counter_num(channel))}')
         return ans
 
     def do_set_disc_level(self, val, channel):
-        self._visa.write('DL %d,%f' % (self._counter_num(channel), val))
+        self._visa.write(f'DL {int(self._counter_num(channel))},{val:f}')
 
     def do_set_periods(self, val):
-        self._visa.write('NP %d' % val)
+        self._visa.write(f'NP {int(val)}')
 
     def do_get_current_period(self):
-        ans = self._visa.ask('NN')
+        ans = self._visa.query('NN')
         return int(ans)
 
     def start(self):

@@ -75,14 +75,14 @@ class sauron(Instrument):
         self._socket.send(data+'\r\n')
 
     def ask(self, data, bufsize=1024):
-        # print "Beginning to query the fridge"
+
         self.send(data)
         return self._socket.recv(bufsize).rstrip()
 
     def do_get_temperature(self):
         channel = self.TEMPCHANNEL
-        ret = self.ask('%s:READ:DEV:T%s:TEMP:SIG:TEMP'%(self._fridge,channel))
-        # print "Got %s from fridge"%(ret,)
+        ret = self.ask(f'{self._fridge}:READ:DEV:T{channel}:TEMP:SIG:TEMP')
+
         try:
             match = re.search(":TEMP:SIG:TEMP:(.+)K",ret).group(1)
         except:
@@ -92,7 +92,7 @@ class sauron(Instrument):
 
     def do_get_temperature_setpoint(self):
         channel = self.TEMPCHANNEL
-        ret = self.ask('%s:READ:DEV:T%s:TEMP:LOOP:TSET'%(self._fridge,channel))
+        ret = self.ask(f'{self._fridge}:READ:DEV:T{channel}:TEMP:LOOP:TSET')
         try:
             match = re.search(":TEMP:LOOP:TSET:(.+)K",ret).group(1)
         except:
@@ -101,7 +101,7 @@ class sauron(Instrument):
 
     def do_get_temperature_ramp_rate(self):
         channel = self.TEMPCHANNEL
-        ret = self.ask('%s:READ:DEV:T%s:TEMP:LOOP:RAMP:RATE'%(self._fridge,channel))
+        ret = self.ask(f'{self._fridge}:READ:DEV:T{channel}:TEMP:LOOP:RAMP:RATE')
         try:
             match = re.search(":TEMP:LOOP:RAMP:RATE:(.+)K",ret).group(1)
         except:
@@ -110,7 +110,7 @@ class sauron(Instrument):
 
     def do_get_still_heater_power(self):
         channel = self.STILLHEATCHANNEL
-        ret = self.ask('%s:READ:DEV:H%s:HTR:SIG:POWR'%(self._fridge,channel))
+        ret = self.ask(f'{self._fridge}:READ:DEV:H{channel}:HTR:SIG:POWR')
         try:
             match = re.search(":SIG:POWR:(.+)uW",ret).group(1)
         except:
@@ -119,7 +119,7 @@ class sauron(Instrument):
 
     def do_get_heater_limit(self):
         channel = self.TEMPCHANNEL
-        ret = self.ask('%s:READ:DEV:T%s:TEMP:LOOP:RANGE'%(self._fridge,channel))
+        ret = self.ask(f'{self._fridge}:READ:DEV:T{channel}:TEMP:LOOP:RANGE')
         try:
             match = re.search(":TEMP:LOOP:RANGE:(.+)mA",ret).group(1)
         except:
@@ -128,7 +128,7 @@ class sauron(Instrument):
 
     def do_get_heater_power(self):
         channel = self.HEATCHANNEL
-        ret = self.ask('%s:READ:DEV:H%s:HTR:SIG:POWR'%(self._fridge,channel))
+        ret = self.ask(f'{self._fridge}:READ:DEV:H{channel}:HTR:SIG:POWR')
         try:
             match = re.search(":SIG:POWR:(.+)uW",ret).group(1)
         except:
@@ -137,8 +137,8 @@ class sauron(Instrument):
 
     def do_get_pulse_tube(self):
         channel = self.PTCCHANNEL
-        ret = self.ask('%s:READ:DEV:C%s:PTC:SIG:STATE'%(self._fridge,channel))
-        # print "Got %s from fridge"%(ret,)
+        ret = self.ask(f'{self._fridge}:READ:DEV:C{channel}:PTC:SIG:STATE')
+
         try:
             match = re.search(":STATE:(.+)",ret).group(1)
         except Exception as e:
@@ -147,8 +147,8 @@ class sauron(Instrument):
 
     def do_get_turbo(self):
         channel = self.TURBOCHANNEL
-        ret = self.ask('%s:READ:DEV:TURB%s:PUMP:SIG:STATE'%(self._fridge,channel))
-        # print "Got %s from fridge"%(ret,)
+        ret = self.ask(f'{self._fridge}:READ:DEV:TURB{channel}:PUMP:SIG:STATE')
+
         try:
             match = re.search(":STATE:(.+)",ret).group(1)
         except Exception as e:
@@ -157,8 +157,8 @@ class sauron(Instrument):
 
     def do_get_temperature_ramp_enable(self):
         channel = self.TEMPCHANNEL
-        ret = self.ask('%s:READ:DEV:T%s:TEMP:LOOP:RAMP:ENAB'%(self._fridge,channel))
-        # print "Got %s from fridge"%(ret,)
+        ret = self.ask(f'{self._fridge}:READ:DEV:T{channel}:TEMP:LOOP:RAMP:ENAB')
+
         try:
             match = re.search(":ENAB:(.+)",ret).group(1)
         except Exception as e:
@@ -167,8 +167,8 @@ class sauron(Instrument):
 
     def do_get_closed_loop_active(self):
         channel = self.TEMPCHANNEL
-        ret = self.ask('%s:READ:DEV:T%s:TEMP:LOOP:MODE'%(self._fridge,channel))
-        # print "Got %s from fridge"%(ret,)
+        ret = self.ask(f'{self._fridge}:READ:DEV:T{channel}:TEMP:LOOP:MODE')
+
         try:
             match = re.search(":MODE:(.+)",ret).group(1)
         except Exception as e:
@@ -177,56 +177,56 @@ class sauron(Instrument):
 
     def do_set_pulse_tube(self, state):
         channel = self.PTCCHANNEL
-        reply = self.ask('%s:SET:DEV:C%s:PTC:SIG:STATE:%s'%(self._fridge,channel,state))
-        print("Reply from Sauron:%s"%(reply,))
+        reply = self.ask(f'{self._fridge}:SET:DEV:C{channel}:PTC:SIG:STATE:{state}')
+        print(f"Reply from Sauron:{reply}")
         return state
 
     def do_set_turbo(self, state):
         channel = self.TURBOCHANNEL
-        reply = self.ask('%s:SET:DEV:TURB%s:PUMP:SIG:STATE:%s'%(self._fridge,channel,state))
-        print("Reply from Sauron:%s"%(reply,))
+        reply = self.ask(f'{self._fridge}:SET:DEV:TURB{channel}:PUMP:SIG:STATE:{state}')
+        print(f"Reply from Sauron:{reply}")
         return state
 
     def do_set_closed_loop_active(self, state):
         channel = self.TEMPCHANNEL
-        reply = self.ask('%s:SET:DEV:T%s:TEMP:LOOP:MODE:%s'%(self._fridge,channel,state))
-        print("Reply from Sauron:%s"%(reply,))
+        reply = self.ask(f'{self._fridge}:SET:DEV:T{channel}:TEMP:LOOP:MODE:{state}')
+        print(f"Reply from Sauron:{reply}")
         return state
 
     def do_set_temperature_ramp_enable(self, state):
         channel = self.TEMPCHANNEL
-        reply = self.ask('%s:SET:DEV:T%s:TEMP:LOOP:RAMP:ENAB:%s'%(self._fridge,channel,state))
-        print("Reply from Sauron:%s"%(reply,))
+        reply = self.ask(f'{self._fridge}:SET:DEV:T{channel}:TEMP:LOOP:RAMP:ENAB:{state}')
+        print(f"Reply from Sauron:{reply}")
         return state
 
     def do_set_temperature_setpoint(self, temperature):
         channel = self.TEMPCHANNEL
-        reply = self.ask('%s:SET:DEV:T%s:TEMP:LOOP:TSET:%f'%(self._fridge,channel,temperature))
-        print("Reply from Sauron:%s"%(reply,))
+        reply = self.ask(f'{self._fridge}:SET:DEV:T{channel}:TEMP:LOOP:TSET:{temperature:f}')
+        print(f"Reply from Sauron:{reply}")
         return temperature
 
     def do_set_temperature_ramp_rate(self, rate):
         channel = self.TEMPCHANNEL
-        reply = self.ask('%s:SET:DEV:T%s:TEMP:LOOP:RAMP:RATE:%f'%(self._fridge,channel,rate))
-        print("Reply from Sauron:%s"%(reply,))
+        reply = self.ask(f'{self._fridge}:SET:DEV:T{channel}:TEMP:LOOP:RAMP:RATE:{rate:f}')
+        print(f"Reply from Sauron:{reply}")
         return rate
 
     def do_set_heater_limit(self, current):
         channel = self.TEMPCHANNEL
-        reply = self.ask('%s:SET:DEV:T%s:TEMP:LOOP:RANGE:%f'%(self._fridge,channel,current))
-        print("Reply from Sauron:%s"%(reply,))
+        reply = self.ask(f'{self._fridge}:SET:DEV:T{channel}:TEMP:LOOP:RANGE:{current:f}')
+        print(f"Reply from Sauron:{reply}")
         return current
 
     def do_set_still_heater_power(self, power):
         channel = self.STILLHEATCHANNEL
-        reply = self.ask('%s:SET:DEV:H%s:HTR:SIG:POWR:%f'%(self._fridge,channel,power))
-        print("Reply from Sauron:%s"%(reply,))
+        reply = self.ask(f'{self._fridge}:SET:DEV:H{channel}:HTR:SIG:POWR:{power:f}')
+        print(f"Reply from Sauron:{reply}")
         return power
 
     def do_set_heater_power(self, power):
         channel = self.HEATCHANNEL
-        reply = self.ask('%s:SET:DEV:H%s:HTR:SIG:POWR:%f'%(self._fridge,channel,power))
-        print("Reply from Sauron:%s"%(reply,))
+        reply = self.ask(f'{self._fridge}:SET:DEV:H{channel}:HTR:SIG:POWR:{power:f}')
+        print(f"Reply from Sauron:{reply}")
         return power
 
     def reset(self):

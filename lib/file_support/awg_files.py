@@ -130,22 +130,22 @@ class Dot_AWG_Load():
         pulse_data = pulse.get_data()
         pulse_trigger = pulse.get_trigger()
 
-        m1_chan = '%dm1' % chan
+        m1_chan = f'{int(chan)}m1'
         if m1_chan in self.seqs and self.seqs[m1_chan] is not None:
             m1 = self.seqs[m1_chan][idx]
             m1_name = m1.get_name()
             m1_data = m1.get_data()
         else:
-            m1_name = 'delay%d' % pulse_len
+            m1_name = f'delay{int(pulse_len)}'
             m1_data = np.zeros(pulse_len)
 
-        m2_chan = '%dm2' % chan
+        m2_chan = f'{int(chan)}m2'
         if m2_chan in self.seqs and self.seqs[m2_chan] is not None:
             m2 = self.seqs[m2_chan][idx]
             m2_name = m2.get_name()
             m2_data = m2.get_data()
         else:
-            m2_name = 'delay%d' % pulse_len
+            m2_name = f'delay{int(pulse_len)}'
             m2_data = np.zeros(pulse_len)
 
         idx += 1 #AWG indexing starts at 1
@@ -157,20 +157,20 @@ class Dot_AWG_Load():
             n_wf = len(self.loaded_wfs)+1 #unique waveform #
 
             '''each new waveform takes 5 records'''
-            self.rl.append(['WAVEFORM_NAME_%d' % n_wf,
+            self.rl.append([f'WAVEFORM_NAME_{int(n_wf)}',
                             waveform_name])
-            self.rl.append(['WAVEFORM_TYPE_%d' % n_wf,
+            self.rl.append([f'WAVEFORM_TYPE_{int(n_wf)}',
                             np.array([1], dtype=np.uint16)])
-            self.rl.append(['WAVEFORM_LENGTH_%d' % n_wf,
+            self.rl.append([f'WAVEFORM_LENGTH_{int(n_wf)}',
                             np.array([pulse_len], dtype=np.uint32)])
-            self.rl.append(['WAVEFORM_TIMESTAMP_%d' % n_wf,
+            self.rl.append([f'WAVEFORM_TIMESTAMP_{int(n_wf)}',
                             self.make_timestamp()])
 
             '''Combine the analog and marker data into 16 bit words'''
             pulse_data_processed =  self.awg.get_bindata(pulse_data,
                                                      m1=m1_data,
                                                      m2=m2_data)
-            self.rl.append(['WAVEFORM_DATA_%d' % n_wf,
+            self.rl.append([f'WAVEFORM_DATA_{int(n_wf)}',
                             pulse_data_processed])
 
             self.loaded_wfs.append(waveform_name)
@@ -179,23 +179,23 @@ class Dot_AWG_Load():
                 raise ValueError('Too many waveforms!  32000 wf limit.')
 
         '''element by element sequencing'''
-        self.rl.append(['SEQUENCE_WAVEFORM_NAME_CH_%d_%d' % (chan,idx),
+        self.rl.append([f'SEQUENCE_WAVEFORM_NAME_CH_{int(chan)}_{int(idx)}',
                         waveform_name])
 
         if self.admin_duty:
             '''It's important that these are only written once, otherwise
             the awg fails'''
             goto_idx = int(idx == len(self.seqs[chan].seq))
-            self.rl.append(['SEQUENCE_GOTO_%d' % (idx),
+            self.rl.append([f'SEQUENCE_GOTO_{int(idx)}',
                             np.array([goto_idx],dtype='<u2')])
 
-            self.rl.append(['SEQUENCE_WAIT_%d' % (idx),
+            self.rl.append([f'SEQUENCE_WAIT_{int(idx)}',
                             np.array([pulse_trigger],dtype='<u2')])
 
-            self.rl.append(['SEQUENCE_JUMP_%d' % (idx),
+            self.rl.append([f'SEQUENCE_JUMP_{int(idx)}',
                             np.array([0],dtype='<u2')])
 
-            self.rl.append(['SEQUENCE_LOOP_%d' % (idx),
+            self.rl.append([f'SEQUENCE_LOOP_{int(idx)}',
                             np.array([pulse_repeat],dtype='<u4')])
 
     def compose_record(self,name, data):
@@ -216,7 +216,7 @@ class Dot_AWG_Load():
             data = np.concatenate([data, np.array([0], dtype=np.uint8)])
         data_bytes = data.tobytes()
         data_len = len(data_bytes)
-        fmt_string = '<II' + '%ds%ds' % (name_len, data_len)
+        fmt_string = '<II' + f'{int(name_len)}s{int(data_len)}s'
 
         return struct.pack(fmt_string, name_len, data_len, name, data_bytes)
 

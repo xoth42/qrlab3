@@ -25,12 +25,13 @@
 
 from .instrument import Instrument
 import types
-import pyvisa.vpp43 as vpp43
 from time import sleep
 import logging
 import pickle
 import config
 import os
+import pyvisa
+from lib import visafunc
 
 class SMS(Instrument):
     '''
@@ -93,7 +94,7 @@ class SMS(Instrument):
         self.add_parameter('pol_dacrack',
                 type=bytes,
                 flags=Instrument.FLAG_GET,
-                channels=(1, self._numdacs/4))
+                channels=(1, self._numdacs // 4))
         self.add_parameter('dac',
                 type=float,
                 flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
@@ -107,8 +108,8 @@ class SMS(Instrument):
 
         self._open_serial_connection()
 
-        for j in range(numdacs/4):
-            self.get('pol_dacrack%d' % (j+1), getdacs=False)
+        for j in range(numdacs // 4):
+            self.get(f'pol_dacrack{int(j + 1)}', getdacs=False)
 
         if reset:
             self.reset()
@@ -142,17 +143,14 @@ class SMS(Instrument):
             None
         '''
         logging.debug(__name__ + ' : opening connection')
-        self._session = vpp43.open_default_resource_manager()
-        self._vi = vpp43.open(self._session, self._address)
-
-        vpp43.set_attribute(self._vi, vpp43.VI_ATTR_ASRL_BAUD, 19200)
-        vpp43.set_attribute(self._vi, vpp43.VI_ATTR_ASRL_DATA_BITS, 8)
-        vpp43.set_attribute(self._vi, vpp43.VI_ATTR_ASRL_STOP_BITS,
-            vpp43.VI_ASRL_STOP_ONE)
-        vpp43.set_attribute(self._vi, vpp43.VI_ATTR_ASRL_PARITY,
-            vpp43.VI_ASRL_PAR_EVEN)
-        vpp43.set_attribute(self._vi, vpp43.VI_ATTR_ASRL_END_IN,
-            vpp43.VI_ASRL_END_NONE)
+        self._vi = pyvisa.ResourceManager().open_resource(self._address)
+        self._vi.baud_rate = 19200
+        self._vi.data_bits = 8
+        self._vi.stop_bits = pyvisa.constants.StopBits.one
+        self._vi.parity = pyvisa.constants.Parity.even
+        self._vi.read_termination = None
+        self._vi.write_termination = None
+        self._vi.send_end = False
 
     # close serial connection
     def _close_serial_connection(self):
@@ -166,7 +164,7 @@ class SMS(Instrument):
             None
         '''
         logging.debug(__name__ + ' : closing connection')
-        vpp43.close(self._vi)
+        self._vi.close()
 
     # Wrapper functions
     def reset(self):
@@ -197,11 +195,11 @@ class SMS(Instrument):
             None
         '''
         for i in range(self._numdacs):
-            self.get('dac%d' % (i+1))
+            self.get(f'dac{int(i + 1)}')
 
     def set_dacs_zero(self):
         for i in range(self._numdacs):
-            self.set('dac%d' % (i+1), 0)
+            self.set(f'dac{int(i + 1)}', 0)
 
     # functions
     def measure_adc_on(self):
@@ -267,8 +265,8 @@ class SMS(Instrument):
         Output:
             voltage (float) : dacvalue in Volts
         '''
-        logging.debug(__name__ + ' : reading and converting to \
-            voltage from memory for dac%s' % (channel))
+        logging.debug(__name__ + f' : reading and converting to \
+            voltage from memory for dac{channel}')
 
         byteval = self.dac_byte[channel-1]
         voltage = self._bytevalue_to_voltage(byteval) + self.pol_num[channel-1]
@@ -285,8 +283,8 @@ class SMS(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : setting voltage of dac%s to \
-            %s Volts' % (channel, voltage))
+        logging.debug(__name__ + f' : setting voltage of dac{channel} to \
+            {voltage} Volts')
 
         bytevalue = self._voltage_to_bytevalue(voltage - self.pol_num[channel-1])
         numtekst = '00'
@@ -311,11 +309,11 @@ class SMS(Instrument):
         Output:
             polarity (string) : 'BIP', 'POS' or 'NEG'
         '''
-        logging.debug(__name__ + ' :  getting polarity of rack %d' % channel)
+        logging.debug(__name__ + f' :  getting polarity of rack {int(channel)}')
 
-        self._write_to_instrument('POLD%d' % channel + ';')
+        self._write_to_instrument(f'POLD{int(channel)}' + ';')
         val = self._read_buffer()
-        logging.debug(__name__ + ' : received %s' % val)
+        logging.debug(__name__ + f' : received {val}')
         if (val == '-4V ...  0V'):
             polarity = 'NEG'
             correction = -4.0
@@ -326,13 +324,13 @@ class SMS(Instrument):
             polarity = 'POS'
             correction = 0.0
         else:
-            logging.error(__name__ + ' : Received invalid polarity : %s' % val)
+            logging.error(__name__ + f' : Received invalid polarity : {val}')
             logging.error(__name__ + ' : Possibly caused by low battery.')
-            raise ValueError('Received invalid polarity: %s' % val)
+            raise ValueError(f'Received invalid polarity: {val}')
 
         for i in range(4*(channel-1),4*(channel)):
             self.pol_num[i] = correction
-            self.set_parameter_bounds('dac%d' % (i+1),
+            self.set_parameter_bounds(f'dac{int(i + 1)}',
                     self.pol_num[i], self.pol_num[i] + 4.0)
 
         if getdacs:
@@ -386,9 +384,11 @@ class SMS(Instrument):
             buffer (string) : data in buffer
         '''
         logging.debug(__name__ + ' : Reading buffer')
-        tekst = vpp43.read(self._vi,vpp43.get_attribute(self._vi,
-            vpp43.VI_ATTR_ASRL_AVAIL_NUM))
+        tekst = visafunc.read_all(self._vi)
         sleep(0.05)
+
+        if isinstance(tekst, (bytes, bytearray)):
+            tekst = tekst.decode('latin1')
 
         if (tekst==''):
             return tekst
@@ -418,7 +418,7 @@ class SMS(Instrument):
             logging.error(__name__ + ' : Buffer contained unread data : ' +
                 restbuffer)
         logging.debug(__name__ + ' : writing to vpp43')
-        vpp43.write(self._vi, tekst)
+        self._vi.write_raw(tekst.encode('latin1'))
         sleep(0.05)
 
     # Save data
@@ -471,7 +471,7 @@ class SMS(Instrument):
         Output:
             byevalue (int) : the 16-bits bytevalue
         '''
-        logging.debug(__name__ + ' : Converting %f volts to bytes' % voltage)
+        logging.debug(__name__ + f' : Converting {voltage:f} volts to bytes')
         bytevalue = int(round(voltage/4.0*65535))
         return bytevalue
 
@@ -485,6 +485,6 @@ class SMS(Instrument):
         Output:
             voltage (float) : a voltage in the 0V-4V range
         '''
-        logging.debug(__name__ + ' : Converting byte %i' % bytevalue)
+        logging.debug(__name__ + f' : Converting byte {int(bytevalue)}')
         value = 4.0*(bytevalue/65535.0)
         return value

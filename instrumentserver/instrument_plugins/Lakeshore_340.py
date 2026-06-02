@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from .instrument import Instrument
-import visa
+import pyvisa
 import types
 import logging
 import re
@@ -29,7 +29,7 @@ class Lakeshore_340(Instrument):
         Instrument.__init__(self, name)
 
         self._address = address
-        self._visa = visa.instrument(self._address)
+        self._visa = pyvisa.ResourceManager().open_resource(self._address)
         self._channels = ('A', 'B', 'C', 'D')
 
         self.add_parameter('identification',
@@ -94,33 +94,33 @@ class Lakeshore_340(Instrument):
         self.get_mode()
 
     def do_get_identification(self):
-        return self._visa.ask('*IDN?')
+        return self._visa.query('*IDN?')
 
     def do_get_kelvin(self, channel):
-        ans = self._visa.ask('KRDG? %s' % channel)
+        ans = self._visa.query(f'KRDG? {channel}')
         return float(ans)
 
     def do_get_sensor(self, channel):
-        ans = self._visa.ask('SRDG? %s' % channel)
+        ans = self._visa.query(f'SRDG? {channel}')
         return float(ans)
 
     def do_get_heater_range(self):
-        ans = self._visa.ask('RANGE?')
+        ans = self._visa.query('RANGE?')
         return ans
 
     def do_set_heater_range(self, val):
-        self._visa.write('RANGE %d' % val)
+        self._visa.write(f'RANGE {int(val)}')
 
     def do_get_heater_output(self):
-        ans = self._visa.ask('HTR?')
+        ans = self._visa.query('HTR?')
         return ans
 
     def do_get_mode(self):
-        ans = self._visa.ask('MODE?')
+        ans = self._visa.query('MODE?')
         return int(ans)
 
     def do_set_mode(self, mode):
-        self._visa.write('MODE %d' % mode)
+        self._visa.write(f'MODE {int(mode)}')
 
     def local(self):
         self.set_mode(1)
@@ -129,7 +129,7 @@ class Lakeshore_340(Instrument):
         self.set_mode(2)
 
     def do_get_pid(self, channel):
-        ans = self._visa.ask('PID? %d' % channel)
+        ans = self._visa.query(f'PID? {int(channel)}')
         fields = ans.split(',')
         if len(fields) != 3:
             return None
@@ -140,8 +140,8 @@ class Lakeshore_340(Instrument):
         pass
 
     def do_get_setpoint(self, channel):
-        ans = self._visa.ask('SETP? %s' % channel)
+        ans = self._visa.query(f'SETP? {channel}')
         return float(ans)
 
     def do_set_setpoint(self, val, channel):
-        self._visa.write('SETP %s, %f' % (channel, val))
+        self._visa.write(f'SETP {channel}, {val:f}')

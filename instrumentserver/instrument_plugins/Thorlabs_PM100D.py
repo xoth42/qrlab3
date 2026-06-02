@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from .instrument import Instrument
-import visa
+import pyvisa
 import types
 import logging
 import re
@@ -28,7 +28,7 @@ class Thorlabs_PM100D(Instrument):
         Instrument.__init__(self, name)
 
         self._address = address
-        self._visa = visa.instrument(self._address)
+        self._visa = pyvisa.ResourceManager().open_resource(self._address)
 
         self.add_parameter('identification',
             flags=Instrument.FLAG_GET)
@@ -61,20 +61,20 @@ class Thorlabs_PM100D(Instrument):
         self.get_wavelength()
 
     def do_get_identification(self):
-        return self._visa.ask('*IDN?')
+        return self._visa.query('*IDN?')
 
     def do_get_power(self):
-        ans = self._visa.ask('MEAS:POW?')
+        ans = self._visa.query('MEAS:POW?')
         return float(ans)
 
     def do_get_head_info(self):
-        ans = self._visa.ask('SYST:SENS:IDN?')
+        ans = self._visa.query('SYST:SENS:IDN?')
         return ans
 
     def do_get_wavelength(self):
-        ans = self._visa.ask('CORR:WAV?')
+        ans = self._visa.query('CORR:WAV?')
         return float(ans)
 
     def do_set_wavelength(self, val):
-        self._visa.write('CORR:WAV %e' % val)
+        self._visa.write(f'CORR:WAV {val:e}')
 

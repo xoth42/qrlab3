@@ -17,7 +17,7 @@
 
 from .instrument import Instrument
 import types
-import visa
+import pyvisa
 
 class Keithley_199(Instrument):
 
@@ -25,7 +25,7 @@ class Keithley_199(Instrument):
         Instrument.__init__(self, name, tags=['measure'])
 
         self._address = address
-        self._visains = visa.instrument(address)
+        self._visains = pyvisa.ResourceManager().open_resource(address)
 
         self.add_parameter('function', type=int,
                 flags=Instrument.FLAG_SET | Instrument.FLAG_SOFTGET,
@@ -117,64 +117,64 @@ class Keithley_199(Instrument):
 
     def do_set_function(self, func):
         '''Set the measurement function.'''
-        self._visains.write('F%dX' % func)
+        self._visains.write(f'F{int(func)}X')
         return True
 
     def do_set_range(self, range):
         '''Set the measurement range.'''
-        self._visains.write('R%dX' % range)
+        self._visains.write(f'R{int(range)}X')
         return True
 
     def do_set_zero(self, zero):
         '''Set whether to use zero calibration.'''
-        self._visains.write('Z%dX' % zero)
+        self._visains.write(f'Z{int(zero)}X')
         return True
 
     def do_get_zero_value(self):
-        return self._visains.ask('U4')
+        return self._visains.query('U4')
 
     def do_set_zero_value(self, val):
         '''Set the zero calibration value.'''
-        self._visains.write('V%EX' % val)
+        self._visains.write(f'V{val:E}X')
 
     def do_set_rate(self, rate):
         '''Set the rate and precision.'''
-        self._visains.write('R%dX' % rate)
+        self._visains.write(f'R{int(rate)}X')
         return True
 
     def do_set_filter(self, val):
         '''Set filter type.'''
-        self._visains.write('P%dX' % val)
+        self._visains.write(f'P{int(val)}X')
         return True
 
     def do_set_trigger(self, val):
         '''Set trigger source.'''
-        self._visains.write('T%dX' % val)
+        self._visains.write(f'T{int(val)}X')
         return True
 
     def do_set_delay(self, val):
         '''Set delay after trigger before taking a measurement.'''
-        self._visains.write('W%dX' % val)
+        self._visains.write(f'W{int(val)}X')
         return True
 
     def do_set_interval(self, val):
         '''Set trigger interval.'''
-        self._visains.write('Q%d' % val)
+        self._visains.write(f'Q{int(val)}')
         return True
 
     def do_get_error(self):
         '''Read the error condition.'''
-        return self._visains.ask('U1X')
+        return self._visains.query('U1X')
 
     def read(self):
         '''Read a value if not in external trigger mode.'''
         mode = self.get_trigger(query=False)
         if mode in (0, 1):
-            ret = self._visains.ask('')
+            ret = self._visains.query('')
         elif mode in (2, 3):
-            ret = self._visains.ask('X')
+            ret = self._visains.query('X')
         elif mode in (4, 5):
-            ret = self._visains.ask('GET')
+            ret = self._visains.query('GET')
         return float(ret)
 
     def do_get_value(self):

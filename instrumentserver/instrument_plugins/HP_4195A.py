@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from .instrument import Instrument
-import visa
+import pyvisa
 import types
 import logging
 from time import sleep
@@ -55,9 +55,9 @@ class HP_4195A(Instrument):
         Instrument.__init__(self, name)
 
         self._address = address
-        self._visainstrument = visa.instrument(self._address)
+        self._visainstrument = pyvisa.ResourceManager().open_resource(self._address)
 
-        self._visainstrument.timeout = 30
+        self._visainstrument.timeout = 30000
         # BEWARE! in case of low IFWB, it might be
         # necessary to add additional delay
         # ( ~ numpoints / IFBW ) yourself!
@@ -136,7 +136,6 @@ class HP_4195A(Instrument):
         self.set_trigger_single()
         sleep(sl)
 
-#        print 'set format logm'
 #        self.set_format_logm()
 #        sleep(sl)
         print('set measurement S21')
@@ -232,7 +231,7 @@ class HP_4195A(Instrument):
             data (int)  : list of data points
         '''
 
-        data = self._visainstrument.ask('FMT2;A?')
+        data = self._visainstrument.query('FMT2;A?')
 
         d = [struct.unpack('>d', data[i:i+8])[0] for i in range(4, len(data),8)]
         return d
@@ -261,7 +260,7 @@ class HP_4195A(Instrument):
         sweep_time = self.get_sweep_time(query=False)
 
         print('sending trigger to network analyzer, and wait to finish')
-        print('estimated waiting time: %.2f s' % sweep_time)
+        print(f'estimated waiting time: {sweep_time:.2f} s')
         self.send_trigger()
         qt.msleep(sweep_time)
 
@@ -511,7 +510,7 @@ class HP_4195A(Instrument):
         '''
         Get sweep time from device
         '''
-        return float(self._visainstrument.ask('FMT1;ST?'))
+        return float(self._visainstrument.query('FMT1;ST?'))
 
     def do_set_resbw(self, bw):
         '''
@@ -524,7 +523,7 @@ class HP_4195A(Instrument):
         Output:
             None
         '''
-        self._visainstrument.write('RBW=%f' %bw)
+        self._visainstrument.write(f'RBW={bw:f}')
         self.get_sweep_time()
 
     def do_get_resbw(self):
@@ -537,7 +536,7 @@ class HP_4195A(Instrument):
         Output:
             bandwidth (float)   : Resolution bandwidth
         '''
-        return int(float(self._visainstrument.ask('FMT1;RBW?')))
+        return int(float(self._visainstrument.query('FMT1;RBW?')))
 
     def do_set_numpoints(self, numpts):
         '''
@@ -550,7 +549,7 @@ class HP_4195A(Instrument):
         Output:
             None
         '''
-        self._visainstrument.write('NOP=%f' %numpts)
+        self._visainstrument.write(f'NOP={numpts:f}')
         self.get_sweep_time()
 
     def do_get_numpoints(self):
@@ -563,7 +562,7 @@ class HP_4195A(Instrument):
         Output:
             numpoints (int) : Number of points in trace
         '''
-        return int(float(self._visainstrument.ask('FMT1;NOP?')))
+        return int(float(self._visainstrument.query('FMT1;NOP?')))
 
     def do_set_start_freq(self, freq):
         '''
@@ -575,7 +574,7 @@ class HP_4195A(Instrument):
         Output:
             None
         '''
-        self._visainstrument.write('START=%f' %freq)
+        self._visainstrument.write(f'START={freq:f}')
 
     def do_get_start_freq(self):
         '''
@@ -587,7 +586,7 @@ class HP_4195A(Instrument):
         Output:
             freq (float)    : Start frequency
         '''
-        return float(self._visainstrument.ask('FMT1;START?'))
+        return float(self._visainstrument.query('FMT1;START?'))
 
     def do_set_stop_freq(self, freq):
         '''
@@ -599,7 +598,7 @@ class HP_4195A(Instrument):
         Output:
             None
         '''
-        self._visainstrument.write('STOP=%f' %freq)
+        self._visainstrument.write(f'STOP={freq:f}')
 
     def do_get_stop_freq(self):
         '''
@@ -611,7 +610,7 @@ class HP_4195A(Instrument):
         Output:
             freq (float)    : Stop frequency
         '''
-        return float(self._visainstrument.ask('FMT1;STOP?'))
+        return float(self._visainstrument.query('FMT1;STOP?'))
 
 
     def do_set_center_freq(self, freq):
@@ -624,7 +623,7 @@ class HP_4195A(Instrument):
         Output:
             None
         '''
-        self._visainstrument.write('CENTER=%f' %freq)
+        self._visainstrument.write(f'CENTER={freq:f}')
 
     def do_get_center_freq(self):
         '''
@@ -636,7 +635,7 @@ class HP_4195A(Instrument):
         Output:
             freq (float) : Center Frequency
         '''
-        return float(self._visainstrument.ask('FMT1;CENTER?'))
+        return float(self._visainstrument.query('FMT1;CENTER?'))
 
     def do_set_span_freq(self, freq):
         '''
@@ -648,7 +647,7 @@ class HP_4195A(Instrument):
         Output:
             None
         '''
-        self._visainstrument.write('SPAN=%f' %freq)
+        self._visainstrument.write(f'SPAN={freq:f}')
 
     def do_get_span_freq(self):
         '''
@@ -660,7 +659,7 @@ class HP_4195A(Instrument):
         Output:
             freq (float) : Span frequency
         '''
-        return float(self._visainstrument.ask('FMT1;SPAN?'))
+        return float(self._visainstrument.query('FMT1;SPAN?'))
 
     def do_set_power(self, pow):
         '''
@@ -672,7 +671,7 @@ class HP_4195A(Instrument):
         Output:
             None
         '''
-        self._visainstrument.write('OSC1=%f' % pow)
+        self._visainstrument.write(f'OSC1={pow:f}')
 
     def do_get_power(self):
         '''
@@ -684,7 +683,7 @@ class HP_4195A(Instrument):
         Output:
             pow (float) : Power
         '''
-        return float(self._visainstrument.ask('FMT1;OSC1?'))
+        return float(self._visainstrument.query('FMT1;OSC1?'))
 
     def do_set_att_r1(self,att):
         '''
@@ -697,7 +696,7 @@ class HP_4195A(Instrument):
         Output:
             None
         '''
-        self._visainstrument.write('ATR1=%f' %att)
+        self._visainstrument.write(f'ATR1={att:f}')
 
     def do_get_att_r1(self):
         '''
@@ -709,7 +708,7 @@ class HP_4195A(Instrument):
         Output:
             att (dB): port r1 attenuation
         '''
-        return int(float(self._visainstrument.ask('FMT1;ATR1?')))
+        return int(float(self._visainstrument.query('FMT1;ATR1?')))
 
     def do_set_att_t1(self,att):
         '''
@@ -722,7 +721,7 @@ class HP_4195A(Instrument):
         Output:
             None
         '''
-        self._visainstrument.write('ATT1=%f' %att)
+        self._visainstrument.write(f'ATT1={att:f}')
 
     def do_get_att_t1(self):
         '''
@@ -734,7 +733,6 @@ class HP_4195A(Instrument):
         Output:
             att (dB): port t1 attenuation
         '''
-        return int(float(self._visainstrument.ask('FMT1;ATT1?')))
-
+        return int(float(self._visainstrument.query('FMT1;ATT1?')))
 
 

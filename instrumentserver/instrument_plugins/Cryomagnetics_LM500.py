@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from .instrument import Instrument
-import visa
+import pyvisa
 import types
 import logging
 import re
@@ -31,7 +31,7 @@ class Cryomagnetics_LM500(Instrument):
         Instrument.__init__(self, name)
 
         self._address = address
-        self._visa = visa.instrument(self._address)
+        self._visa = pyvisa.ResourceManager().open_resource(self._address)
 
         self.add_parameter('identification',
             flags=Instrument.FLAG_GET)
@@ -87,7 +87,7 @@ class Cryomagnetics_LM500(Instrument):
         self.get_lastval()
 
     def do_get_identification(self):
-        return self._visa.ask('*IDN?')
+        return self._visa.query('*IDN?')
 
     def _update_units(self, unit):
         params = ('length', 'alarmlim', 'lastval')
@@ -95,40 +95,40 @@ class Cryomagnetics_LM500(Instrument):
             self.set_parameter_options(p, units=unit)
 
     def do_get_units(self):
-        ans = self._visa.ask('UNITS?')
+        ans = self._visa.query('UNITS?')
         self._update_units(ans)
         return ans.upper()
 
     def do_set_units(self, unit):
         unit = unit.upper()
         if unit not in self.UNITS:
-            logging.error('Trying to set invalid unit: %s', unit)
+            logging.error(f'Trying to set invalid unit: {unit}', )
             return False
-        self._visa.write('UNITS %s' % unit)
+        self._visa.write(f'UNITS {unit}')
         self._update_units(unit)
 
     def do_get_mode(self):
-        return self._visa.ask('MODE?')
+        return self._visa.query('MODE?')
 
     def do_set_mode(self, mode):
-        self._visa.write('MODE %s' % mode)
+        self._visa.write(f'MODE {mode}')
 
     def _check_ans_unit(self, ans):
         try:
             val, unit = ans.split(' ')
         except:
-            logging.warning('Unable to parse answer: %s', ans)
+            logging.warning(f'Unable to parse answer: {ans}', )
             return False
 
         set_unit = self.get_units(query=False)
         if unit.upper() != set_unit:
-            logging.warning('Returned units (%s) differ from set units (%s)!',
-                unit, set_unit)
+            logging.warning(f'Returned units ({unit}) differ from set units ({set_unit})!',
+                )
 
         return float(val)
 
     def do_get_interval(self):
-        ans = self._visa.ask('INTVL?')
+        ans = self._visa.query('INTVL?')
         fields = ans.split(':')
         if len(fields) == 3:
             fields = [int(i) for i in fields]
@@ -139,25 +139,25 @@ class Cryomagnetics_LM500(Instrument):
         h = math.floor(interval / 3600)
         m = math.floor((interval - h * 3600) / 60)
         s = math.floor(interval - h * 3600 - m * 60)
-        self._visa.write('INTVL %02d:%02d:%02d' % (h, m, s))
+        self._visa.write(f'INTVL {int(h):02}:{int(m):02}:{int(s):02}')
 
     def do_get_length(self):
-        ans = self._visa.ask('LNGTH?')
+        ans = self._visa.query('LNGTH?')
         return self._check_ans_unit(ans)
 
     def do_get_lastval(self):
-        ans = self._visa.ask('MEAS?')
+        ans = self._visa.query('MEAS?')
         return self._check_ans_unit(ans)
 
     def do_set_alarmlim(self, val):
-        self._visa.write('ALARM %f' % val)
+        self._visa.write(f'ALARM {val:f}')
 
     def do_get_alarmlim(self):
-        ans = self._visa.ask('ALARM?')
+        ans = self._visa.query('ALARM?')
         return self._check_ans_unit(ans)
 
     def do_set_alarmlim(self, val):
-        self._visa.write('ALARM %f' % val)
+        self._visa.write(f'ALARM {val:f}')
 
     def local(self):
         self._visa.write('LOCAL')
@@ -168,5 +168,5 @@ class Cryomagnetics_LM500(Instrument):
     def measure(self):
         self._visa.write('MEAS')
         time.sleep(0.1)
-        ans = self._visa.ask('MEAS?')
+        ans = self._visa.query('MEAS?')
         return self._check_ans_unit(ans)

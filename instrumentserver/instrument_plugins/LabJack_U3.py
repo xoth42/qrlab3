@@ -16,9 +16,8 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  US
 #
 #
-from .instrument import Instrument
+from instrument import Instrument
 
-from measurement.hardware.Labjack.src import u3, LabJackPython #python commands for LJ, you should download this from labjack.com
 import struct
 import types
 import logging
@@ -146,7 +145,7 @@ class LabJack_U3(Instrument):
     def do_set_bipolar_dac(self, voltage, channel):
         module =  self.dac_modules['LJTDAC'+str(int(channel/2.0))]
         try:
-            #print [48+channel%2, int(((voltage*module['aSlope'])+module['aOffset'])/256),
+
                          #int(((voltage*module['aSlope'])+module['aOffset'])%256)]
             self._LJ.i2c(self.DAC_ADDRESS,
                      [48+channel%2, int(((voltage*module['aSlope'])+module['aOffset'])/256),

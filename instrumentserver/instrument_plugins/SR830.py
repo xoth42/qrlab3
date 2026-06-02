@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from .instrument import Instrument
-import visa
+import pyvisa
 import types
 import logging
 import time
@@ -46,7 +46,7 @@ class SR830(Instrument):
         logging.info(__name__ + ' : Initializing instrument')
         Instrument.__init__(self, name, tags=['physical'])
         self._address = address
-        self._visainstrument = visa.instrument(self._address)
+        self._visainstrument = pyvisa.ResourceManager().open_resource(self._address)
 
         self.add_parameter('mode',
            flags=Instrument.FLAG_SET,
@@ -276,12 +276,12 @@ class SR830(Instrument):
         }
         self.direct_output()
         if parameters.__contains__(output):
-            logging.info(__name__ + ' : Reading parameter from instrument: %s ' %parameters.get(output))
+            logging.info(__name__ + f' : Reading parameter from instrument: {parameters.get(output)} ')
             if ovl:
                 self.get_input_overload()
                 self.get_time_constant_overload()
                 self.get_output_overload()
-            readvalue = float(self._visainstrument.ask('OUTP?%s' %output))
+            readvalue = float(self._visainstrument.query(f'OUTP?{output}'))
         else:
             print('Wrong output requested.')
         return readvalue
@@ -324,8 +324,8 @@ class SR830(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : setting frequency to %s Hz' % frequency)
-        self._visainstrument.write('FREQ %e' % frequency)
+        logging.debug(__name__ + f' : setting frequency to {frequency} Hz')
+        self._visainstrument.write(f'FREQ {frequency:e}')
 
 
     def do_get_frequency(self):
@@ -340,7 +340,7 @@ class SR830(Instrument):
         '''
         self.direct_output()
         logging.debug(__name__ + ' : reading frequency from instrument')
-        return float(self._visainstrument.ask('FREQ?'))
+        return float(self._visainstrument.query('FREQ?'))
 
     def do_get_amplitude(self):
         '''
@@ -354,11 +354,11 @@ class SR830(Instrument):
         '''
         self.direct_output()
         logging.debug(__name__ + ' : reading frequency from instrument')
-        return float(self._visainstrument.ask('SLVL?'))
+        return float(self._visainstrument.query('SLVL?'))
 
     def do_set_mode(self,val):
         logging.debug(__name__ + ' : Setting Reference mode to external' )
-        self._visainstrument.write('FMOD %d' %val)
+        self._visainstrument.write(f'FMOD {int(val)}')
 
 
     def do_set_amplitude(self, amplitude):
@@ -371,8 +371,8 @@ class SR830(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : setting amplitude to %s V' % amplitude)
-        self._visainstrument.write('SLVL %e' % amplitude)
+        logging.debug(__name__ + f' : setting amplitude to {amplitude} V')
+        self._visainstrument.write(f'SLVL {amplitude:e}')
 
 
     def do_set_tau(self,timeconstant):
@@ -387,8 +387,8 @@ class SR830(Instrument):
         '''
 
         self.direct_output()
-        logging.debug(__name__ + ' : setting time constant on instrument to %s'%(timeconstant))
-        self._visainstrument.write('OFLT %s' % timeconstant)
+        logging.debug(__name__ + f' : setting time constant on instrument to {timeconstant}')
+        self._visainstrument.write(f'OFLT {timeconstant}')
 
     def do_get_tau(self):
         '''
@@ -402,7 +402,7 @@ class SR830(Instrument):
 
         self.direct_output()
         logging.debug(__name__ + ' : getting time constant on instrument')
-        return float(self._visainstrument.ask('OFLT?'))
+        return float(self._visainstrument.query('OFLT?'))
 
     def do_set_sensitivity(self, sens):
         '''
@@ -416,8 +416,8 @@ class SR830(Instrument):
         '''
 
         self.direct_output()
-        logging.debug(__name__ + ' : setting sensitivity on instrument to %s'%(sens))
-        self._visainstrument.write('SENS %d' % sens)
+        logging.debug(__name__ + f' : setting sensitivity on instrument to {sens}')
+        self._visainstrument.write(f'SENS {int(sens)}')
 
     def do_get_sensitivity(self):
         '''
@@ -427,7 +427,7 @@ class SR830(Instrument):
         '''
         self.direct_output()
         logging.debug(__name__ + ' : reading sensitivity from instrument')
-        return float(self._visainstrument.ask('SENS?'))
+        return float(self._visainstrument.query('SENS?'))
 
     def do_get_phase(self):
         '''
@@ -441,7 +441,7 @@ class SR830(Instrument):
         '''
         self.direct_output()
         logging.debug(__name__ + ' : reading frequency from instrument')
-        return float(self._visainstrument.ask('PHAS?'))
+        return float(self._visainstrument.query('PHAS?'))
 
 
     def do_set_phase(self, phase):
@@ -454,8 +454,8 @@ class SR830(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : setting the reference phase shift to %s degree' %phase)
-        self._visainstrument.write('PHAS %e' % phase)
+        logging.debug(__name__ + f' : setting the reference phase shift to {phase} degree')
+        self._visainstrument.write(f'PHAS {phase:e}')
 
     def set_aux(self, output, value):
         '''
@@ -466,8 +466,8 @@ class SR830(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : setting the output %(out)i to value %(val).3f' % {'out':output,'val': value})
-        self._visainstrument.write('AUXV %(out)i, %(val).3f' % {'out':output,'val':value})
+        logging.debug(__name__ + f' : setting the output {int(output)} to value {value:.3f}')
+        self._visainstrument.write(f'AUXV {int(output)}, {value:.3f}')
 
     def read_aux(self, output):
         '''
@@ -477,8 +477,8 @@ class SR830(Instrument):
         Output:
             voltage on the output D/A converter
         '''
-        logging.debug(__name__ + ' : reading the output %i' %output)
-        return float(self._visainstrument.ask('AUXV? %i' %output))
+        logging.debug(__name__ + f' : reading the output {int(output)}')
+        return float(self._visainstrument.query(f'AUXV? {int(output)}'))
 
     def get_oaux(self, value):
         '''
@@ -488,8 +488,8 @@ class SR830(Instrument):
         Output:
             voltage on the input A/D converter
         '''
-        logging.debug(__name__ + ' : reading the input %i' %value)
-        return float(self._visainstrument.ask('OAUX? %i' %value))
+        logging.debug(__name__ + f' : reading the input {int(value)}')
+        return float(self._visainstrument.query(f'OAUX? {int(value)}'))
 
     def do_set_out(self, value, channel):
         '''
@@ -513,7 +513,7 @@ class SR830(Instrument):
         '''
         Query reference input: internal (true,1) or external (false,0)
         '''
-        return int(self._visainstrument.ask('FMOD?'))==1
+        return int(self._visainstrument.query('FMOD?'))==1
 
     def do_set_ref_input(self, value):
         '''
@@ -528,7 +528,7 @@ class SR830(Instrument):
         '''
         Query trigger source for external reference: sine (0), TTL rising edge (1), TTL falling edge (2)
         '''
-        return int(self._visainstrument.ask('RSLP?'))
+        return int(self._visainstrument.query('RSLP?'))
 
     def do_set_ext_trigger(self, value):
         '''
@@ -540,7 +540,7 @@ class SR830(Instrument):
         '''
         Query sync filter. Note: only available below 200Hz
         '''
-        return int(self._visainstrument.ask('SYNC?'))==1
+        return int(self._visainstrument.query('SYNC?'))==1
 
     def do_set_sync_filter(self, value):
         '''
@@ -556,7 +556,7 @@ class SR830(Instrument):
         Query detection harmonic in the range of 1..19999.
         Note: frequency*harmonic<102kHz
         '''
-        return int(self._visainstrument.ask('HARM?'))
+        return int(self._visainstrument.query('HARM?'))
 
     def do_set_harmonic(self, value):
         '''
@@ -569,7 +569,7 @@ class SR830(Instrument):
         '''
         Query input configuration: A (0), A-B (1), CVC 1MOhm (2), CVC 100MOhm (3)
         '''
-        return int(self._visainstrument.ask('ISRC?'))
+        return int(self._visainstrument.query('ISRC?'))
 
     def do_set_input_config(self, value):
         '''
@@ -581,7 +581,7 @@ class SR830(Instrument):
         '''
         Query input shield: float (false,0), gnd (true,1)
         '''
-        return int(self._visainstrument.ask('IGND?'))==1
+        return int(self._visainstrument.query('IGND?'))==1
 
     def do_set_input_shield(self, value):
         '''
@@ -596,7 +596,7 @@ class SR830(Instrument):
         '''
         Query input coupling: AC (false,0), DC (true,1)
         '''
-        return int(self._visainstrument.ask('ICPL?'))==1
+        return int(self._visainstrument.query('ICPL?'))==1
 
     def do_set_input_coupling(self, value):
         '''
@@ -611,7 +611,7 @@ class SR830(Instrument):
         '''
         Query notch filter: none (0), 1xline (1), 2xline(2), both (3)
         '''
-        return int(self._visainstrument.ask('ILIN?'))
+        return int(self._visainstrument.query('ILIN?'))
 
     def do_set_notch_filter(self, value):
         '''
@@ -623,7 +623,7 @@ class SR830(Instrument):
         '''
         Query reserve: High reserve (0), Normal (1), Low noise (2)
         '''
-        return int(self._visainstrument.ask('RMOD?'))
+        return int(self._visainstrument.query('RMOD?'))
 
     def do_set_reserve(self, value):
         '''
@@ -635,7 +635,7 @@ class SR830(Instrument):
         '''
         Query filter slope: 6dB/oct. (0), 12dB/oct. (1), 18dB/oct. (2), 24dB/oct. (3)
         '''
-        return int(self._visainstrument.ask('OFSL?'))
+        return int(self._visainstrument.query('OFSL?'))
 
     def do_set_filter_slope(self, value):
         '''
@@ -649,9 +649,9 @@ class SR830(Instrument):
         Set update to True for querying present unlock situation, False for querying past events
         '''
         if update:
-           self._visainstrument.ask('LIAS? 3')     #for realtime detection we clear the bit by reading it
+           self._visainstrument.query('LIAS? 3')     #for realtime detection we clear the bit by reading it
            time.sleep(0.02)                        #and wait for a little while so that it can be set
-        return int(self._visainstrument.ask('LIAS? 3'))==1
+        return int(self._visainstrument.query('LIAS? 3'))==1
 
     def do_get_input_overload(self, update=True):
         '''
@@ -660,9 +660,9 @@ class SR830(Instrument):
         Set update to True for querying present overload, False for querying past events
         '''
         if update:
-            self._visainstrument.ask('LIAS? 0')     #for realtime detection we clear the bit by reading it
+            self._visainstrument.query('LIAS? 0')     #for realtime detection we clear the bit by reading it
             time.sleep(0.02)                        #and wait for a little while so that it can be set again
-        return int(self._visainstrument.ask('LIAS? 0'))==1
+        return int(self._visainstrument.query('LIAS? 0'))==1
 
     def do_get_time_constant_overload(self, update=True):
         '''
@@ -671,9 +671,9 @@ class SR830(Instrument):
         Set update to True for querying present overload, False for querying past events
         '''
         if update:
-            self._visainstrument.ask('LIAS? 1')     #for realtime detection we clear the bit by reading it
+            self._visainstrument.query('LIAS? 1')     #for realtime detection we clear the bit by reading it
             time.sleep(0.02)                        #and wait for a little while so that it can be set again
-        return int(self._visainstrument.ask('LIAS? 1'))==1
+        return int(self._visainstrument.query('LIAS? 1'))==1
 
     def do_get_output_overload(self, update=True):
         '''
@@ -682,6 +682,6 @@ class SR830(Instrument):
         Set update to True for querying present overload, False for querying past events
         '''
         if update:
-            self._visainstrument.ask('LIAS? 2')     #for realtime detection we clear the bit by reading it
+            self._visainstrument.query('LIAS? 2')     #for realtime detection we clear the bit by reading it
             time.sleep(0.02)                        #and wait for a little while so that it can be set again
-        return int(self._visainstrument.ask('LIAS? 2'))==1
+        return int(self._visainstrument.query('LIAS? 2'))==1

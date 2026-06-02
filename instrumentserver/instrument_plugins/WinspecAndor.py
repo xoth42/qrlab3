@@ -49,7 +49,7 @@ class WinspecAndor(Instrument):
         for i in range(winspec.get_ngratings()):
             gr = winspec.get_grating_grooves(grbase + i + 1)
             name = winspec.get_grating_name(grbase + i + 1)
-            gratings[i+1] = '%s (%s)' % (gr, name)
+            gratings[i+1] = f'{gr} ({name})'
 
         self.add_parameter('grating', type=int,
                 flags=Instrument.FLAG_GETSET,

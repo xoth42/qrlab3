@@ -121,7 +121,7 @@ class Constants:
 def CHK(ret):
 
     if ret != 512:
-        raise ValueError("Alazar error %s: %s" % (ret, get_error(ret)))
+        raise ValueError(f"Alazar error {ret}: {get_error(ret)}")
 
 def get_error(errcode):
     ats.AlazarErrorToText.restype = ctypes.c_char_p

@@ -18,7 +18,7 @@
 
 from .instrument import Instrument
 import types
-import visa
+import pyvisa
 import logging
 import re
 
@@ -60,10 +60,14 @@ class SP_Millenia(Instrument):
     def _open_serial_connection(self):
         logging.debug(__name__ + ' : Opening serial connection')
 
-        self._visa = visa.SerialInstrument(self._address,
-                baud_rate=9600, data_bits=8, stop_bits=1,
-                parity=visa.no_parity, term_chars="",
-                send_end=False)
+        self._visa = pyvisa.ResourceManager().open_resource(self._address)
+        self._visa.baud_rate = 9600
+        self._visa.data_bits = 8
+        self._visa.stop_bits = pyvisa.constants.StopBits.one
+        self._visa.parity = pyvisa.constants.Parity.none
+        self._visa.read_termination = None
+        self._visa.write_termination = None
+        self._visa.send_end = False
 
     # Close serial connection
     def _close_serial_connection(self):
@@ -81,10 +85,10 @@ class SP_Millenia(Instrument):
         pass
 
     def do_get_id(self):
-        return self._visa.ask('?IDN\r')
+        return self._visa.query('?IDN\r')
 
     def do_get_power(self):
-        ret = self._visa.ask('?P\r')
+        ret = self._visa.query('?P\r')
         m = re.search('([0123456789\.]+)W', ret)
         if m:
             return float(m.group(1))
@@ -92,7 +96,7 @@ class SP_Millenia(Instrument):
             return 0
 
     def do_set_power(self, val):
-        self._visa.write('P:%.02f\r' % val)
+        self._visa.write(f'P:{val:.2f}\r')
         return True
 
     def on(self):
@@ -100,4 +104,3 @@ class SP_Millenia(Instrument):
 
     def off(self):
         self._visa.write('OFF\r')
-

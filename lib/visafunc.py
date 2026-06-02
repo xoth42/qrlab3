@@ -17,54 +17,78 @@
 
 import time
 import logging
-try:
-    from pyvisa.visa import *
-    from pyvisa import vpp43
-except:
-    logging.warning('VISA not available')
+
+from pyvisa import constants
+
+
+def _get_bytes_available(visains):
+    """Return the number of bytes currently waiting in the input buffer."""
+    if hasattr(visains, 'bytes_in_buffer'):
+        return int(visains.bytes_in_buffer)
+
+    if hasattr(visains, 'get_visa_attribute'):
+        try:
+            return int(visains.get_visa_attribute(constants.VI_ATTR_ASRL_AVAIL_NUM))
+        except Exception:
+            pass
+
+    if hasattr(visains, 'in_waiting'):
+        return int(visains.in_waiting)
+
+    raise RuntimeError('Could not determine how many bytes are available')
+
+
+def _read_bytes(visains, nbytes):
+    """Read exactly ``nbytes`` from a VISA resource and return bytes."""
+    if hasattr(visains, 'read_bytes'):
+        data = visains.read_bytes(nbytes)
+    elif hasattr(visains, 'read_raw'):
+        data = visains.read_raw()
+        data = data[:nbytes]
+    else:
+        data = visains.read(nbytes)
+
+    if isinstance(data, str):
+        data = data.encode('latin1')
+    return data
 
 def get_navail(visains):
     '''
     Return number of bytes available to read from visains.
     '''
-    return vpp43.get_attribute(visains, vpp43.VI_ATTR_ASRL_AVAIL_NUM)
+
+    return _get_bytes_available(visains)
 
 def wait_data(visains, nbytes=1, maxdelay=1.0):
     '''
     Wait for maxdelay seconds for data available to read from visains.
     The loop consist of 1msec delays.
     '''
-    start = exact_time()
-    while exact_time() - start < maxdelay:
+    deadline = time.monotonic() + maxdelay
+    for _ in range(int(maxdelay * 1000) + 1):
         if get_navail(visains) >= nbytes:
             return True
+        if time.monotonic() >= deadline:
+            break
         time.sleep(0.001)
     return False
 
 def readn(visains, n):
-    return vpp43.read(visains, n)
+    return _read_bytes(visains, n)
 
-_added_filter = False
+
 def read_all(visains):
     """
-    Read all available data from the input buffer of visins.
+    Read all available data from the input buffer of visains.
     """
 
-    global _added_filter
-
-    if not _added_filter:
-        warnings.filterwarnings("ignore", "VI_SUCCESS_MAX_CNT")
-        _added_filter = True
-
+    buf = bytearray()
     try:
-        buf = ""
-        blen = get_navail(visains)
-        while blen > 0:
-            chunk = vpp43.read(visains, blen)
-            buf += chunk
-            blen = get_navail(visains)
-    except:
-        pass
+        for blen in iter(lambda: get_navail(visains), 0):
+            buf.extend(_read_bytes(visains, blen))
+    except Exception:
+        # Preserve the historical behavior of returning partial data instead of
+        # failing the whole read when the resource reports an unexpected state.
+        logging.exception("Exception occurred while reading all available data from visains")
 
-    return buf
-
+    return bytes(buf)

@@ -18,7 +18,7 @@
 
 from .instrument import Instrument
 from time import time, sleep
-import visa
+import pyvisa
 import types
 import logging
 
@@ -56,9 +56,9 @@ class OxfordInstruments_IPS120(Instrument):
 
         self._address = address
         self._number = number
-        self._visainstrument = visa.SerialInstrument(self._address)
+        self._visainstrument = pyvisa.ResourceManager().open_resource(self._address)
         self._values = {}
-        self._visainstrument.stop_bits = 2
+        self._visainstrument.stop_bits = pyvisa.constants.StopBits.two
 
         #Add parameters
         self.add_parameter('mode', type=int,
@@ -216,12 +216,12 @@ class OxfordInstruments_IPS120(Instrument):
         Output:
             None
         '''
-        logging.info(__name__ + ' : Send the following command to the device: %s' % message)
-        self._visainstrument.write('@%s%s' % (self._number, message))
+        logging.info(__name__ + f' : Send the following command to the device: {message}')
+        self._visainstrument.write(f'@{self._number}{message}')
         sleep(20e-3) # wait for the device to be able to respond
         result = self._visainstrument.read()
         if result.find('?') >= 0:
-            print("Error: Command %s not recognized" % message)
+            print(f"Error: Command {message} not recognized")
         else:
             return result
 
@@ -337,10 +337,10 @@ class OxfordInstruments_IPS120(Instrument):
         3 : "Remote and unlocked",
         }
         if status.__contains__(mode):
-            logging.info(__name__ + ' : Setting remote control status to %s' % status.get(mode,"Unknown"))
-            self._execute('C%s' % mode)
+            logging.info(__name__ + f" : Setting remote control status to {status.get(mode, 'Unknown')}")
+            self._execute(f'C{mode}')
         else:
-            print('Invalid mode inserted: %s' % mode)
+            print(f'Invalid mode inserted: {mode}')
 
     def do_get_system_status(self):
         '''
@@ -445,8 +445,8 @@ class OxfordInstruments_IPS120(Instrument):
         Output:
             None
         '''
-        logging.info(__name__ + ' : Setting target current to %s' % current)
-        self._execute('I%s' % current)
+        logging.info(__name__ + f' : Setting target current to {current}')
+        self._execute(f'I{current}')
         self.get_field_setpoint() # Update field setpoint
 
     def do_get_sweeprate_current(self):
@@ -473,8 +473,8 @@ class OxfordInstruments_IPS120(Instrument):
         Output:
             None
         '''
-        logging.info(__name__ + ' : Set sweep rate (current) to %s Amps/min' % sweeprate)
-        self._execute('S%s' % sweeprate)
+        logging.info(__name__ + f' : Set sweep rate (current) to {sweeprate} Amps/min')
+        self._execute(f'S{sweeprate}')
         self.get_sweeprate_field() # Update sweeprate_field
 
     def do_get_field(self):
@@ -514,8 +514,8 @@ class OxfordInstruments_IPS120(Instrument):
         Output:
             None
         '''
-        logging.info(__name__ + ' : Setting target field to %s' % field)
-        self._execute('J%s' % field)
+        logging.info(__name__ + f' : Setting target field to {field}')
+        self._execute(f'J{field}')
         self.get_current_setpoint() #Update current setpoint
 
     def do_get_sweeprate_field(self):
@@ -542,8 +542,8 @@ class OxfordInstruments_IPS120(Instrument):
         Output:
             None
         '''
-        logging.info(__name__ + ' : Set sweep rate (field) to %s Tesla/min' % sweeprate)
-        self._execute('T%s' % sweeprate)
+        logging.info(__name__ + f' : Set sweep rate (field) to {sweeprate} Tesla/min')
+        self._execute(f'T{sweeprate}')
         self.get_sweeprate_current() # Update sweeprate_current
 
     def do_get_voltage_limit(self):
@@ -722,8 +722,8 @@ class OxfordInstruments_IPS120(Instrument):
         2 : "To zero"
         }
         if status.__contains__(mode):
-            logging.info(__name__ + ' : Setting magnet activity to %s' % status.get(mode, "Unknown"))
-            self._execute('A%s' % mode)
+            logging.info(__name__ + f" : Setting magnet activity to {status.get(mode, 'Unknown')}")
+            self._execute(f'A{mode}')
         else:
             print('Invalid mode inserted.')
 
@@ -793,8 +793,8 @@ class OxfordInstruments_IPS120(Instrument):
         1 : "On, if PSU = Magnet"
         }
         if status.__contains__(mode):
-            logging.info(__name__ + ' : Setting switch heater to %s' % status.get(mode, "Unknown"))
-            self._execute('H%s' % mode)
+            logging.info(__name__ + f" : Setting switch heater to {status.get(mode, 'Unknown')}")
+            self._execute(f'H{mode}')
             print("Setting switch heater... (wait 20s)")
             sleep(20)
         else:
@@ -877,8 +877,8 @@ class OxfordInstruments_IPS120(Instrument):
         9 : "Tesla, (Magnet sweep: unaffected)"
         }
         if status.__contains__(mode):
-            logging.info(__name__ + ' : Setting device mode to %s' % status.get(mode, "Unknown"))
-            self._execute('M%s' % mode)
+            logging.info(__name__ + f" : Setting device mode to {status.get(mode, 'Unknown')}")
+            self._execute(f'M{mode}')
         else:
             print('Invalid mode inserted.')
 

@@ -218,7 +218,7 @@ class Spectrum_M2i2030(Instrument):
         Output:
             '0' or errormessage (string)
         '''
-        logging.debug(__name__ + ' : Set reg %s to %s' %(regnum, regval))
+        logging.debug(__name__ + f' : Set reg {regnum} to {regval}')
         err = self._spcm_win32.SetParam32(self._spcm_win32.handel, regnum, regval)
         if (err==0):
             return 0
@@ -226,7 +226,7 @@ class Spectrum_M2i2030(Instrument):
             logging.error(__name__ + ' : Timeout')
             return 263
         else:
-            logging.error(__name__ + ' : Error %s while setting reg %s to %s' % (err, regnum, regval))
+            logging.error(__name__ + f' : Error {err} while setting reg {regnum} to {regval}')
             self._get_error()
             raise ValueError('Error communicating with device')
 
@@ -246,7 +246,7 @@ class Spectrum_M2i2030(Instrument):
             or
             error (string)  : Error message
         '''
-        logging.debug(__name__ + ' : Reading Reg %s' %(regnum))
+        logging.debug(__name__ + f' : Reading Reg {regnum}')
 
         val = c_int()
         p_antw = pointer(val)
@@ -255,7 +255,7 @@ class Spectrum_M2i2030(Instrument):
         if (err==0):
             return p_antw.contents.value
         else:
-            logging.error(__name__ + ' : Error %s while getting reg %s' %(err,regnum))
+            logging.error(__name__ + f' : Error {err} while getting reg {regnum}')
             self._get_error()
             raise ValueError('Error communicating with device')
 
@@ -275,7 +275,7 @@ class Spectrum_M2i2030(Instrument):
         if (err==0):
             return 0
         else:
-            logging.error(__name__ + ' : Error %s while setting reg %s to %s' % (err, regnum, regval))
+            logging.error(__name__ + f' : Error {err} while setting reg {regnum} to {regval}')
             self._get_error()
             raise ValueError('Error communicating with device')
 
@@ -992,7 +992,7 @@ class Spectrum_M2i2030(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : Set trigger pulsewidth to %i' % width)
+        logging.debug(__name__ + f' : Set trigger pulsewidth to {int(width)}')
         self._set_param(_spcm_regs.SPC_TRIG_EXT0_PULSEWIDTH, width)
 
 ### set trigger mask
@@ -1144,7 +1144,7 @@ class Spectrum_M2i2030(Instrument):
         err = self._spcm_win32.SetParam32(self._spcm_win32.handel, _spcm_regs.SPC_M2CMD,
             _spcm_regs.M2CMD_DATA_STARTDMA | _spcm_regs.M2CMD_DATA_WAITDMA)
         if (err!=0):
-            logging.error(__name__ + ' : Error during read, error nr: %i' % err)
+            logging.error(__name__ + f' : Error during read, error nr: {int(err)}')
             self._get_error()
             raise ValueError('Error communicating with device')
 
@@ -1302,7 +1302,7 @@ class Spectrum_M2i2030(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : Set timeout to %s' % timeout)
+        logging.debug(__name__ + f' : Set timeout to {timeout}')
         self._set_param(_spcm_regs.SPC_TIMEOUT, timeout)
 
     def do_get_timeout(self):
@@ -1330,7 +1330,7 @@ class Spectrum_M2i2030(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : Set trigger delay to %s' % nums)
+        logging.debug(__name__ + f' : Set trigger delay to {nums}')
         self._set_param(_spcm_regs.SPC_TRIG_DELAY, nums)
 
     def do_get_trigger_delay(self):
@@ -1357,7 +1357,7 @@ class Spectrum_M2i2030(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : Set segment size to %s' % lSegsize)
+        logging.debug(__name__ + f' : Set segment size to {lSegsize}')
         self._set_param(_spcm_regs.SPC_SEGMENTSIZE, lSegsize)
 
     def do_get_segmentsize(self):
@@ -1385,7 +1385,7 @@ class Spectrum_M2i2030(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : Set post trigger to %s' % posttrigger)
+        logging.debug(__name__ + f' : Set post trigger to {posttrigger}')
         self._set_param( _spcm_regs.SPC_POSTTRIGGER, posttrigger)
 
     def do_get_post_trigger(self):
@@ -1414,7 +1414,7 @@ class Spectrum_M2i2030(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : Set memsize to %s' % lMemzise)
+        logging.debug(__name__ + f' : Set memsize to {lMemzise}')
         self._set_param(_spcm_regs.SPC_MEMSIZE, lMemsize)
 
     def do_get_memsize(self):
@@ -1443,7 +1443,7 @@ class Spectrum_M2i2030(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : Setting input amp0 to %s' % amp)
+        logging.debug(__name__ + f' : Setting input amp0 to {amp}')
         self._set_param(_spcm_regs.SPC_AMP0, amp)
 
     def do_set_input_amp_ch1(self, amp):
@@ -1457,7 +1457,7 @@ class Spectrum_M2i2030(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : Setting input amp1 to %s' % amp)
+        logging.debug(__name__ + f' : Setting input amp1 to {amp}')
         self._set_param(_spcm_regs.SPC_AMP1, amp)
 
     def do_set_input_offset_ch0(self, offset):
@@ -1471,7 +1471,7 @@ class Spectrum_M2i2030(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : Setting input offset0 to %s' % offset)
+        logging.debug(__name__ + f' : Setting input offset0 to {offset}')
         self._set_param(_spcm_regs.SPC_OFFS0, offset)
 
     def do_set_input_offset_ch1(self, offset):
@@ -1485,7 +1485,7 @@ class Spectrum_M2i2030(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : Setting input offset1 to %s' % offset)
+        logging.debug(__name__ + f' : Setting input offset1 to {offset}')
         self._set_param(_spcm_regs.SPC_OFFS1, offset)
 
     def do_get_input_amp_ch0(self):
@@ -1557,7 +1557,7 @@ class Spectrum_M2i2030(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : Set spc samplerate to %s' % rate)
+        logging.debug(__name__ + f' : Set spc samplerate to {rate}')
         rate = int(rate)
         self._set_param(_spcm_regs.SPC_SAMPLERATE, rate)
 
@@ -1585,7 +1585,7 @@ class Spectrum_M2i2030(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : Set reference clock freq to %s' % freq)
+        logging.debug(__name__ + f' : Set reference clock freq to {freq}')
         self._set_param(_spcm_regs.SPC_REFERENCECLOCK, freq)
 
     def do_get_reference_clock(self):

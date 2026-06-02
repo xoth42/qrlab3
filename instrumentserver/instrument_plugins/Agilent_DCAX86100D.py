@@ -1,4 +1,4 @@
-import visa
+import pyvisa
 import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,7 +17,10 @@ NO_ERROR = '0,"No error"'
 class FastScope:
 
     def __init__(self, address):
-        self.ins = visa.instrument(address, timeout=5, term_chars='\n')
+        self.ins = pyvisa.ResourceManager().open_resource(address)
+        self.ins.timeout = 5000
+        self.ins.read_termination = '\n'
+        self.ins.write_termination = '\n'
         self.reset()
         self.set_oscilloscope_mode()
         self.set_num_pts_manual()
@@ -33,7 +36,7 @@ class FastScope:
             return self.error_check()
 
     def ask(self,command,bypass=False):
-        ret = self.ins.ask(command+'?\n')
+        ret = self.ins.query(command+'?\n')
         if debug and not bypass:
             ''' The bypass command makes sure that error querying (an ask)
             doesn't lead to infinite recursion'''
@@ -62,14 +65,14 @@ class FastScope:
         self.wr('TRIG:SOUR FRUN')
 
     def set_trig_level(self,trig_lev):
-        self.wr('TRIG:LEV %f' % trig_lev)
+        self.wr(f'TRIG:LEV {trig_lev:f}')
 
     def error_query(self):
         return self.ask('SYSTEM:ERROR',bypass=True)
 
     def report_error(self,error):
         if error != NO_ERROR:
-            print('\tERROR: %s' % error)
+            print(f'\tERROR: {error}')
 
     def error_check(self):
         ret = self.error_query()
@@ -99,21 +102,21 @@ class FastScope:
 
     def set_num_pts(self,num_pts):
         '''Requires being in manual num pts mode'''
-        self.wr('ACQ:RLEN %d' % num_pts)
+        self.wr(f'ACQ:RLEN {int(num_pts)}')
 
     def set_time_range(self,full_range_in_seconds):
-        return self.wr(':TIM:RANG %f' %  full_range_in_seconds)
+        return self.wr(f':TIM:RANG {full_range_in_seconds:f}')
 
     def set_averaging(self, num_avg):
         if num_avg == 0:
             self.wr('ACQ:SMO NONE')
         else:
             self.wr('ACQ:SMO AVER')
-            self.wr('ACQ:ECO %d' % num_avg)
+            self.wr(f'ACQ:ECO {int(num_avg)}')
 
     def set_time_offset(self,offset_in_seconds):
         #minimum 24ns
-        self.wr(':TIM:POS %f' %  offset_in_seconds)
+        self.wr(f':TIM:POS {offset_in_seconds:f}')
 
     def take_trace(self):
         x = self.ask('WAV:XYF:ASC:XDAT')
@@ -129,11 +132,11 @@ class FastScope:
 
     def set_voltage_range(self,voltage):
         '''set voltage in volts'''
-        cmd = 'CHAN1:YSC %f' % (voltage/8.0,) #8 for 8 divs
+        cmd = f'CHAN1:YSC {voltage/8.0:f}' #8 for 8 divs
         self.wr(cmd)
 
     def set_voltage_offset(self,offs):
-        cmd = 'CHAN1:YOFF %f' % offs
+        cmd = f'CHAN1:YOFF {offs:f}'
         self.wr(cmd)
 
 
@@ -146,9 +149,9 @@ class FastScope:
         This command takes over until the FS has taken the specified number
         of averages'''
         self.wr('LTESt:ACQuire:STATe ON')
-        self.wr('LTESt:ACQuire:CTYPe:WAVeforms %d' % num_avg)
+        self.wr(f'LTESt:ACQuire:CTYPe:WAVeforms {int(num_avg)}')
         self.wr('ACQuire:SMOothing AVERage')
-        self.wr('ACQuire:ECOunt %d' % num_avg)
+        self.wr(f'ACQuire:ECOunt {int(num_avg)}')
         self.wr('ACQuire:CDISplay')
         self.wr(':ACQuire:RUN')
 

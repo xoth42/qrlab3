@@ -1,6 +1,6 @@
 import time
 import types
-import visa
+import pyvisa
 from visainstrument import VisaInstrument, Instrument
 
 class BNC_FuncGen645(VisaInstrument):
@@ -55,7 +55,7 @@ class BNC_FuncGen645(VisaInstrument):
         return float(val)
 
     def do_set_Vhigh(self, val):
-        self.write('VOLT:HIGH %.06f\n' % val)
+        self.write(f'VOLT:HIGH {val:.6f}\n')
         self.get_amplitude()
         self.get_offset()
 
@@ -64,12 +64,12 @@ class BNC_FuncGen645(VisaInstrument):
         return float(val)
 
     def do_set_Vlow(self, val):
-        self.write('VOLT:HIGH %.06f\n' % val)
+        self.write(f'VOLT:HIGH {val:.6f}\n')
         self.get_amplitude()
         self.get_offset()
 
     def do_set_offset(self, val):
-        self.write('VOLT:HIGH %.06f\n' % val)
+        self.write(f'VOLT:HIGH {val:.6f}\n')
         self.get_Vlow()
         self.get_Vhigh()
 
@@ -78,7 +78,7 @@ class BNC_FuncGen645(VisaInstrument):
         return float(val)
 
     def do_set_amplitude(self, val):
-        self.write('VOLT:HIGH %.06f\n' % val)
+        self.write(f'VOLT:HIGH {val:.6f}\n')
         self.get_Vlow()
         self.get_Vhigh()
 

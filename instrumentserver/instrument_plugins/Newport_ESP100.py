@@ -18,7 +18,7 @@
 from .instrument import Instrument
 import types
 import logging
-import visa
+import pyvisa
 import time
 
 class Newport_ESP100(Instrument):
@@ -38,7 +38,7 @@ class Newport_ESP100(Instrument):
     Instrument.__init__(self, name, tags=['physical'])
 
     self._address = address
-    self._visainstrument = visa.instrument(self._address)
+    self._visainstrument = pyvisa.ResourceManager().open_resource(self._address)
 
     # Add functions
     self.add_function('init_default')
@@ -84,16 +84,16 @@ class Newport_ESP100(Instrument):
     self.get_position()
 
   def do_get_position(self):
-    return self._visainstrument.ask('1PA?\r')
+    return self._visainstrument.query('1PA?\r')
 
   def define_home(self, position=0.0):
-    self._visainstrument.write('1DH%f;WS\r'%position)
+    self._visainstrument.write(f'1DH{position:f};WS\r')
 
   def do_set_position(self, position):
-    self._visainstrument.write('1PA+%f;WS\r'%position)
+    self._visainstrument.write(f'1PA+{position:f};WS\r')
 
   def do_get_ismoving(self):
-    return not self._visainstrument.ask('1MD?').strip() == '1'
+    return not self._visainstrument.query('1MD?').strip() == '1'
 
   def move_1000mu_p(self):
     self._visainstrument.write('1PR+1')

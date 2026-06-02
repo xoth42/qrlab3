@@ -17,17 +17,18 @@
 
 from .instrument import Instrument
 import types
-import pyvisa.vpp43 as vpp43
 import time
 import logging
+import pyvisa
 from lib import visafunc
 
 class Coincidence(Instrument):
     '''
     '''
 
-    def __init__(self, name, address):
+    def __init__(self, name, address, reset=False):
         Instrument.__init__(self, name, tags=['physical'])
+        self._address = address
 
         # Add parameters
         self.add_parameter('measurement_time',
@@ -47,20 +48,17 @@ class Coincidence(Instrument):
         self._close_serial_connection()
 
     def _open_serial_connection(self):
-        self._session = vpp43.open_default_resource_manager()
-        self._vi = vpp43.open(self._session, self._address)
-
-        vpp43.set_attribute(self._vi, vpp43.VI_ATTR_ASRL_BAUD, 115200)
-        vpp43.set_attribute(self._vi, vpp43.VI_ATTR_ASRL_DATA_BITS, 8)
-        vpp43.set_attribute(self._vi, vpp43.VI_ATTR_ASRL_STOP_BITS,
-            vpp43.VI_ASRL_STOP_ONE)
-        vpp43.set_attribute(self._vi, vpp43.VI_ATTR_ASRL_PARITY,
-            vpp43.VI_ASRL_PAR_ODD)
-        vpp43.set_attribute(self._vi, vpp43.VI_ATTR_ASRL_END_IN,
-            vpp43.VI_ASRL_END_NONE)
+        self._vi = pyvisa.ResourceManager().open_resource(self._address)
+        self._vi.baud_rate = 115200
+        self._vi.data_bits = 8
+        self._vi.stop_bits = pyvisa.constants.StopBits.one
+        self._vi.parity = pyvisa.constants.Parity.odd
+        self._vi.read_termination = None
+        self._vi.write_termination = None
+        self._vi.send_end = False
 
     def _close_serial_connection(self):
-        vpp43.close(self._vi)
+        self._vi.close()
 
     def reset(self):
         self.set_measurement_time(0)
@@ -68,15 +66,15 @@ class Coincidence(Instrument):
         self.set_measurement_time(1)
         time.sleep(0.1)
 
-    def _short_to_bytes(self, ):
+    def _short_to_bytes(self, bytevalue):
         dataH = int(bytevalue/256)
         dataL = bytevalue - dataH*256
         return (dataH, dataL)
 
     def do_set_measurement_time(self, dt):
         (DataH, DataL) = self._short_to_bytes(dt)
-        message = "%c%c" % (DataH, DataL)
-        vpp43.write(self._vi, message)
+        message = f"{DataH:c}{DataL:c}"
+        self._vi.write_raw(message.encode('latin1'))
 
     def start(self):
         mt = self.get_measurement_time()
@@ -86,9 +84,11 @@ class Coincidence(Instrument):
 
     def read(self):
         data = visafunc.read_all(self._vi)
+        # PyVISA may return either bytes or legacy text depending on version.
+        if isinstance(data, str):
+            data = data.encode('latin1')
         ret = ''
         for c in data:
-            ret += '%02x,' % c
-        print('Read %d bytes' % (len(data), ))
-        print('Data: %s' % (ret, ))
-
+            ret += f'{c:02x},'
+        print(f'Read {len(data)} bytes')
+        print(f'Data: {ret}')

@@ -107,7 +107,7 @@ class Meadowlark_LCVR(Instrument):
         return self.ask('ver:?\r')
 
     def do_get_voltage(self, channel):
-        reply = self.ask('ld:%d,?\r' % channel)
+        reply = self.ask(f'ld:{int(channel)},?\r')
         if reply.find(',') != -1:
             val = round(1000 * int(reply.split(',')[1]) / 6553.5)
             return val / 1000
@@ -115,7 +115,7 @@ class Meadowlark_LCVR(Instrument):
 
     def do_set_voltage(self, volts, channel):
         ii = round(volts * 6553.5)
-        return self.ask('ld:%d,%d\r' % (channel, ii))
+        return self.ask(f'ld:{int(channel)},{int(ii)}\r')
 
     def do_set_alias(self, name, val):
         if name not in self._alias_info:
@@ -125,7 +125,7 @@ class Meadowlark_LCVR(Instrument):
             logging.warning('LCVR: No such alias value')
             return False
         for ch, chval in self._alias_info[name][val]:
-            self.set('voltage%d' % ch, chval)
+            self.set(f'voltage{int(ch)}', chval)
         return True
 
     def add_alias(self, name, channel_info):
@@ -153,7 +153,7 @@ class Meadowlark_LCVR(Instrument):
 def detect_instruments():
     count = get_device_count()
     for id in range(count):
-        qt.instruments.create('LCVR%d' % id + 1,
+        qt.instruments.create(f'LCVR{int(id)}' + 1,
                 'Meadowlark_LCVR', devid=id + 1)
 
 # Apparently it differs whether windll or cdll is required

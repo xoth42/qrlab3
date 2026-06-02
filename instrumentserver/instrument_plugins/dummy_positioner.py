@@ -50,7 +50,7 @@ class dummy_positioner(Instrument):
         return True
 
     def do_set_speed(self, val):
-        print('Setting speed to %r' % (val, ))
+        print(f'Setting speed to {val!r}')
 
     def start(self):
         print('Starting')
@@ -59,7 +59,7 @@ class dummy_positioner(Instrument):
         print('Stopping')
 
     def step(self, chan, nsteps):
-        print('Stepping channel %d by %d' % (chan, nsteps))
+        print(f'Stepping channel {int(chan)} by {int(nsteps)}')
 
     def move_abs(self, pos, **kwargs):
-        print('Moving to %r' % (pos, ))
+        print(f'Moving to {pos!r}')

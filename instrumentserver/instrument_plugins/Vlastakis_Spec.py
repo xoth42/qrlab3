@@ -60,13 +60,13 @@ class Vlastakis_Spec(VisaInstrument):
         ins = self._get_ins()
         if ins:
             df0 = self.get_df0()
-            logging.debug('Setting RF source to %.03f MHz', (val+df0)/1e6)
+            logging.debug(f'Setting RF source to {val + df0:.03f} MHz'/1e6, )
             ins.set_frequency(val + df0)
             for _ in range(10):
                 val = ins.get_frequency()
                 if val is not None:
                     break
-            logging.debug('  Source @ %.03f MHz + df0', (val/1e6))
+            logging.debug(f'  Source @ {val / 1000000.0:.03f} MHz + df0', )
         else:
             logging.warning('RF Source not available')
 
@@ -118,7 +118,7 @@ class Vlastakis_Spec(VisaInstrument):
                 time.sleep(0.005)
         if n != 0:
             plevel = float(plevel) / n
-        logging.debug('Power %s, %d reads (%d tries)', plevel, i, n)
+        logging.debug(f'Power {plevel}, {int(i)} reads ({int(n)} tries)', )
         return plevel
 
     def get_power_at(self, f):

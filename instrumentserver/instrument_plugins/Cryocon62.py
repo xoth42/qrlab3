@@ -18,7 +18,7 @@
 
 from .instrument import Instrument
 import types
-import visa
+import pyvisa
 from time import sleep
 import logging
 
@@ -50,7 +50,7 @@ class Cryocon62(Instrument):
         Instrument.__init__(self, name, tags=['physical'])
 
         self._address = address
-        self._visainstrument = visa.instrument(self._address)
+        self._visainstrument = pyvisa.ResourceManager().open_resource(self._address)
 
         self.add_parameter('temperature', type=float,
             channel_prefix='ch%d_',
@@ -81,11 +81,11 @@ class Cryocon62(Instrument):
         Output:
             temperature (float) : Temperature in the specified units
         '''
-        logging.debug(__name__ + ' : get temperature for channel %i' % channel)
+        logging.debug(__name__ + f' : get temperature for channel {int(channel)}')
         if (channel==1):
-            value = self._visainstrument.ask('INPUT? A')
+            value = self._visainstrument.query('INPUT? A')
         elif (channel==2):
-            value = self._visainstrument.ask('INPUT? B')
+            value = self._visainstrument.query('INPUT? B')
         else:
             return 'Channel does not exist'
 
@@ -106,13 +106,13 @@ class Cryocon62(Instrument):
         Output:
             units (string) : units of temperature
         '''
-        logging.debug(__name__ + ' : get units for channel %i' % channel)
+        logging.debug(__name__ + f' : get units for channel {int(channel)}')
         if (channel==1):
-            return self._visainstrument.ask('INPUT A:UNITS?')
+            return self._visainstrument.query('INPUT A:UNITS?')
         elif (channel==2):
-            return self._visainstrument.ask('INPUT B:UNITS?')
+            return self._visainstrument.query('INPUT B:UNITS?')
         else:
-            raise ValueError('Channel %i does not exist' % channel)
+            raise ValueError(f'Channel {int(channel)} does not exist')
 
     def do_get_sensor_index(self, channel):
         '''
@@ -124,13 +124,13 @@ class Cryocon62(Instrument):
         Output:
             index (int) : Sensor index
         '''
-        logging.debug(__name__ + ' : get units for channel %i' % channel)
+        logging.debug(__name__ + f' : get units for channel {int(channel)}')
         if (channel==1):
-            return int(self._visainstrument.ask('INPUT A:SENIX?'))
+            return int(self._visainstrument.query('INPUT A:SENIX?'))
         elif (channel==2):
-            return int(self._visainstrument.ask('INPUT B:SENIX?'))
+            return int(self._visainstrument.query('INPUT B:SENIX?'))
         else:
-            raise ValueError('Channel %i does not exist' % channel)
+            raise ValueError(f'Channel {int(channel)} does not exist')
 
     def do_get_vbias(self, channel):
         '''
@@ -142,13 +142,13 @@ class Cryocon62(Instrument):
         Output:
             bias (string) : bias
         '''
-        logging.debug(__name__ + ' : get units for channel %i' % channel)
+        logging.debug(__name__ + f' : get units for channel {int(channel)}')
         if (channel==1):
-            return self._visainstrument.ask('INPUT A:VBIAS?')
+            return self._visainstrument.query('INPUT A:VBIAS?')
         elif (channel==2):
-            return self._visainstrument.ask('INPUT B:VBIAS?')
+            return self._visainstrument.query('INPUT B:VBIAS?')
         else:
-            raise ValueError('Channel %i does not exist' % channel)
+            raise ValueError(f'Channel {int(channel)} does not exist')
 
     def do_get_channel_name(self, channel):
         '''
@@ -161,11 +161,11 @@ class Cryocon62(Instrument):
             name (string) : Name of the device
         '''
         if (channel==1):
-            return self._visainstrument.ask('INPUT A:NAME?')
+            return self._visainstrument.query('INPUT A:NAME?')
         elif (channel==2):
-            return self._visainstrument.ask('INPUT B:NAME?')
+            return self._visainstrument.query('INPUT B:NAME?')
         else:
-            raise ValueError('Channel %i does not exist' % channel)
+            raise ValueError(f'Channel {int(channel)} does not exist')
 
     def do_get_sensor_name(self, channel):
         '''
@@ -179,9 +179,9 @@ class Cryocon62(Instrument):
         '''
         if (channel==1):
             sensor_index = self.get_ch1_sensor_index()
-            return self._visainstrument.ask('SENTYPE %i:NAME?' % sensor_index)
+            return self._visainstrument.query(f'SENTYPE {int(sensor_index)}:NAME?')
         elif (channel==2):
             sensor_index = self.get_ch2_sensor_index()
-            return self._visainstrument.ask('SENTYPE %i:NAME?' % sensor_index)
+            return self._visainstrument.query(f'SENTYPE {int(sensor_index)}:NAME?')
         else:
-            raise ValueError('Channel %i does not exist' % channel)
+            raise ValueError(f'Channel {int(channel)} does not exist')

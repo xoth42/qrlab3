@@ -17,8 +17,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from .instrument import Instrument
-import visa
-from visa import vpp43
+import pyvisa
 from lib import visafunc
 import types
 import logging
@@ -54,9 +53,13 @@ class SMC100(Instrument):
         Instrument.__init__(self, name)
 
         self._address = address
-        self._visa = visa.instrument(self._address,
-                        baud_rate=57600, data_bits=8, stop_bits=1,
-                        parity=visa.no_parity, term_chars='\r\n')
+        self._visa = pyvisa.ResourceManager().open_resource(self._address)
+        self._visa.baud_rate = 57600
+        self._visa.data_bits = 8
+        self._visa.stop_bits = pyvisa.constants.StopBits.one
+        self._visa.parity = pyvisa.constants.Parity.none
+        self._visa.read_termination = '\r\n'
+        self._visa.write_termination = '\r\n'
         self._ctr_addr = ctr_addr
 
         self.add_parameter('position',
@@ -87,23 +90,13 @@ class SMC100(Instrument):
             self.get_all()
 
     def raw_read(self):
-        navail = visafunc.get_navail(self._visa.vi)
+        data = visafunc.read_all(self._visa)
+        if isinstance(data, (bytes, bytearray)):
+            text = data.decode('latin1', errors='ignore')
+        else:
+            text = data
 
-        BUFSIZE = 4192
-        ret = vpp43.ViUInt32()
-        b = vpp43.create_string_buffer(BUFSIZE)
-        try:
-            test = vpp43.visa_library().viRead(self._visa.vi, b, navail, vpp43.byref(ret))
-        except Exception as e:
-            pass   # This seems to happen almost always...
-
-
-# Weird: sometimes seems to start with NULL byte
-        ii = next((idx for idx in range(16) if b[idx] != '\x00'), 16)
-        jj = next((idx for idx in range(ii, BUFSIZE - 1) if b[idx] == '\x00'), BUFSIZE - 1)
-
-        s = str(b[ii:jj]).rstrip()
-        return s
+        return text.replace('\x00', '').rstrip()
 
     def reset(self):
         '''
@@ -138,14 +131,14 @@ class SMC100(Instrument):
             else:
                 return ret
         except Exception as e:
-            print('Error: %s' % (e, ))
+            print(f'Error: {e}')
             return False
 
     def write(self, command):
         '''
         Write a command to the device
         '''
-        cmd = '%d%s\r\n' % (self._ctr_addr, command)
+        cmd = f'{int(self._ctr_addr)}{command}\r\n'
 
         self._visa.write(cmd)
 
@@ -199,7 +192,7 @@ class SMC100(Instrument):
 #            self.set_state_ready()
 
         # Use maximum of 5 digits
-        self.write('PA%.5f' % val)
+        self.write(f'PA{val:.5f}')
 
     def do_get_velocity(self):
         '''
@@ -212,7 +205,7 @@ class SMC100(Instrument):
         Set the velocity (mm/s)
         '''
         self.set_state_disabled()
-        self.write('VA%.5f' % val)
+        self.write(f'VA{val:.5f}')
         self.set_state_ready()
 
     def stop_motion(self):

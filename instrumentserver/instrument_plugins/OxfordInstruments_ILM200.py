@@ -18,7 +18,7 @@
 
 from .instrument import Instrument
 from time import time, sleep
-import visa
+import pyvisa
 import types
 import logging
 
@@ -56,9 +56,9 @@ class OxfordInstruments_ILM200(Instrument):
 
         self._address = address
         self._number = number
-        self._visainstrument = visa.SerialInstrument(self._address)
+        self._visainstrument = pyvisa.ResourceManager().open_resource(self._address)
         self._values = {}
-        self._visainstrument.stop_bits = 2
+        self._visainstrument.stop_bits = pyvisa.constants.StopBits.two
 
         #Add parameters
         self.add_parameter('level', type=float,
@@ -96,12 +96,12 @@ class OxfordInstruments_ILM200(Instrument):
         Output:
             None
         '''
-        logging.info(__name__ + ' : Send the following command to the device: %s' % message)
-        self._visainstrument.write('@%s%s' %(self._number, message))
+        logging.info(__name__ + f' : Send the following command to the device: {message}')
+        self._visainstrument.write(f'@{self._number}{message}')
         sleep(20e-3) # wait for the device to be able to respond
         result = self._visainstrument.read()
         if result.find('?') >= 0:
-            print("Error: Command %s not recognized" %message)
+            print(f"Error: Command {message} not recognized")
         else:
             return result
 
@@ -164,8 +164,8 @@ class OxfordInstruments_ILM200(Instrument):
         2 : "Local and unlocked",
         3 : "Remote and unlocked",
         }
-        logging.info(__name__ + ' : Setting remote control status to %s' %status.get(mode,"Unknown"))
-        self._execute('C%s' %mode)
+        logging.info(__name__ + f" : Setting remote control status to {status.get(mode, 'Unknown')}")
+        self._execute(f'C{mode}')
 
     def do_get_level(self):
         '''

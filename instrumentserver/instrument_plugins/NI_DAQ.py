@@ -106,11 +106,11 @@ class NI_DAQ(Instrument):
         return nidaq.get_physical_counter_channels(self._id)
 
     def do_get_input(self, channel):
-        devchan = '%s/%s' % (self._id, channel)
+        devchan = f'{self._id}/{channel}'
         return nidaq.read(devchan, config=self._chan_config)
 
     def do_set_output(self, val, channel):
-        devchan = '%s/%s' % (self._id, channel)
+        devchan = f'{self._id}/{channel}'
         return nidaq.write(devchan, val)
 
     def do_set_chan_config(self, val):
@@ -120,17 +120,17 @@ class NI_DAQ(Instrument):
         self._count_time = val
 
     def do_get_counter(self, channel):
-        devchan = '%s/%s' % (self._id, channel)
+        devchan = f'{self._id}/{channel}'
         src = self.get(channel + "_src")
         if src is not None and src != '':
-            src = '/%s/%s' % (self._id, src)
+            src = f'/{self._id}/{src}'
         return nidaq.read_counter(devchan, src=src, freq=1/self._count_time)
 
     def read_counters(self, channels):
         chans = []
         srcs = []
         for chan in channels:
-            chans.append('%s/%s' % (self._id, chan))
+            chans.append(f'{self._id}/{chan}')
             srcs.append(self.get(chan + "_src"))
         return nidaq.read_counters(chans, src=srcs, freq=1.0/self._count_time)
 
@@ -139,12 +139,12 @@ class NI_DAQ(Instrument):
         return True
 
     def digital_out(self, lines, val):
-        devchan = '%s/%s' % (self._id, lines)
+        devchan = f'{self._id}/{lines}'
         return nidaq.write_dig_port8(devchan, val)
 
 def detect_instruments():
     '''Refresh NI DAQ instrument list.'''
 
     for name in nidaq.get_device_names():
-        qt.instruments.create('NI%s' % name, 'NI_DAQ', id=name)
+        qt.instruments.create(f'NI{name}', 'NI_DAQ', id=name)
 

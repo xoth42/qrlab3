@@ -483,7 +483,7 @@ class Keysight_DIG(Instrument):
         self.set_interrupt(False)
         self.emit('start-capture')
         for i in range(self._ntransfers):
-            logging.info('%d/%d averages performed', (i)*self._naverages/self._ntransfers, self._naverages)
+            logging.info(f'{int(i * self._naverages / self._ntransfers)}/{int(self._naverages)} averages performed', )
             self.emit('capture-progress', (i)*self._naverages/self._ntransfers)
             
             if self._interrupt:
@@ -830,7 +830,7 @@ class Keysight_DIG(Instrument):
         self.emit('start-capture')
         for i in range(self._ntransfers):
 #            print('Acquiring %d/%d', i+1, self._ntransfers)
-            logging.info('%d/%d acquisitions performed', (i)*acq_per_transfer, self.nacquisitions)
+            logging.info(f'{int(i * acq_per_transfer)}/{int(self.nacquisitions)} acquisitions performed', )
             self.emit('capture-progress', (i)*acq_per_transfer)
             
             if self._interrupt:
@@ -888,7 +888,7 @@ class Keysight_DIG(Instrument):
         except Exception as e:
             print((IQ_sum.shape, n, avg_buf.shape))
             print((avg_buf[:].shape))
-            msg = 'Unable to store averages: %s' % str(e)
+            msg = f'Unable to store averages: {str(e)}'
             logging.warning(msg)
             raise Exception(msg)
    
@@ -899,7 +899,7 @@ class Keysight_DIG(Instrument):
         except Exception as e:
             print((cov.shape, n, cov.shape))
             print((cov_buf[:].shape))
-            msg = 'Unable to store standard errors: %s' % str(e)
+            msg = f'Unable to store standard errors: {str(e)}'
             logging.warning(msg)
             raise Exception(msg)
     

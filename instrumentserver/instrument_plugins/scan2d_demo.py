@@ -383,9 +383,8 @@ class scan2d_demo(Instrument):
         # self._current_line += 1
         # self.get_last_line_index()
 
-        # print some debug info
-        # print 'got new line: '
-        # print self._data[self._current_line-1,:]
+
+
 
         # if self._ins_linescan2d.get_is_running():
         #     return True

@@ -18,7 +18,7 @@
 
 from .instrument import Instrument
 from time import sleep
-import visa
+import pyvisa
 import types
 import logging
 
@@ -46,7 +46,7 @@ class AVS47IB(Instrument):
         Instrument.__init__(self, name, tags=['physical'])
 
         self._address = address
-        self._visainstrument = visa.instrument(self._address)
+        self._visainstrument = pyvisa.ResourceManager().open_resource(self._address)
 
         self.add_parameter('input', flags=Instrument.FLAG_GETSET, type=bytes)
         self.add_parameter('range', flags=Instrument.FLAG_GETSET, type=int)
@@ -111,7 +111,7 @@ class AVS47IB(Instrument):
         paramDic={'z':0,'m':1,'c':2}
         logging.debug(__name__ + ' : setting the input parameter for the instrument')
         self.connectToAVS()
-        self._visainstrument.write('INP%s' %paramDic[param.lower()])
+        self._visainstrument.write(f'INP{paramDic[param.lower()]}')
 
     def do_get_input(self):
         '''
@@ -129,7 +129,7 @@ class AVS47IB(Instrument):
         paramDic={0:'Zero',1:'Measure',2:'Calibrate'}
         logging.debug(__name__ + ' : getting the input parameter from the instrument')
         self.connectToAVS()
-        return paramDic[int(self._visainstrument.ask('INP?'))]
+        return paramDic[int(self._visainstrument.query('INP?'))]
 
     def do_set_range(self,param):
         '''
@@ -149,7 +149,7 @@ class AVS47IB(Instrument):
         '''
         logging.debug(__name__ + ' : setting the range parameter for the instrument')
         self.connectToAVS()
-        self._visainstrument.write('RAN%s' %param)
+        self._visainstrument.write(f'RAN{param}')
 
     def do_get_range(self):
         '''
@@ -170,7 +170,7 @@ class AVS47IB(Instrument):
         '''
         logging.debug(__name__ + ' : getting the range parameter for the instrument')
         self.connectToAVS()
-        return self._visainstrument.ask('RAN?')
+        return self._visainstrument.query('RAN?')
 
     def do_set_excitation(self,param):
         '''
@@ -190,7 +190,7 @@ class AVS47IB(Instrument):
         '''
         logging.debug(__name__ + ' : setting the excitation parameter for the instrument')
         self.connectToAVS()
-        self._visainstrument.write('EXC%s' %param)
+        self._visainstrument.write(f'EXC{param}')
 
     def do_get_excitation(self):
         '''
@@ -210,7 +210,7 @@ class AVS47IB(Instrument):
         '''
         logging.debug(__name__ + ' : setting the excitation parameter for the instrument')
         self.connectToAVS()
-        return self._visainstrument.ask('EXC?')
+        return self._visainstrument.query('EXC?')
 
     def do_set_remoteStatus(self,status=1):
         '''
@@ -225,7 +225,7 @@ class AVS47IB(Instrument):
 
         logging.debug(__name__ + ' : reading frequency from instrument')
         self.connectToAVS()
-        self._visainstrument.write('REM%s'%status)
+        self._visainstrument.write(f'REM{status}')
         return True
 
     def do_get_remoteStatus(self):
@@ -242,7 +242,7 @@ class AVS47IB(Instrument):
 
         logging.debug(__name__ + ' : reading remote status from instrument')
         self.connectToAVS()
-        return float(self._visainstrument.ask('REM?'))
+        return float(self._visainstrument.query('REM?'))
 
 
     def do_set_display(self,param=0):
@@ -260,7 +260,7 @@ class AVS47IB(Instrument):
         '''
         logging.debug(__name__ + ' : setting the display parameter for the instrument')
         self.connectToAVS()
-        self._visainstrument.write('DIS%s' %param)
+        self._visainstrument.write(f'DIS{param}')
 
     def do_get_display(self):
         '''
@@ -276,7 +276,7 @@ class AVS47IB(Instrument):
         '''
         logging.debug(__name__ + ' : getting the display parameter from the instrument')
         self.connectToAVS()
-        return self._visainstrument.ask('DIS?')
+        return self._visainstrument.query('DIS?')
 
     def do_set_channel(self,ch):
         '''
@@ -288,7 +288,7 @@ class AVS47IB(Instrument):
         '''
         logging.debug(__name__ + ' : setting the channel parameter from the instrument')
         self.connectToAVS()
-        return self._visainstrument.write('MUX%s'%ch)
+        return self._visainstrument.write(f'MUX{ch}')
 
     def do_get_channel(self):
         '''
@@ -301,7 +301,7 @@ class AVS47IB(Instrument):
         '''
         logging.debug(__name__ + ' : getting the current channel parameter from the instrument')
         self.connectToAVS()
-        return self._visainstrument.ask('MUX?')
+        return self._visainstrument.query('MUX?')
 
     def _do_get_resistance(self):
         '''
@@ -314,7 +314,7 @@ class AVS47IB(Instrument):
         logging.debug(__name__ + ' : reading frequency from instrument')
         self.connectToAVS()
         self._visainstrument.write('ADC' )
-        return float(self._visainstrument.ask('RES?'))
+        return float(self._visainstrument.query('RES?'))
 
     def connectToAVS(self):
         '''
@@ -324,6 +324,6 @@ class AVS47IB(Instrument):
         Output:
             None
         '''
-        if self._visainstrument.ask('REM?')=='0':
+        if self._visainstrument.query('REM?')=='0':
             self._visainstrument.write('REM1')
 

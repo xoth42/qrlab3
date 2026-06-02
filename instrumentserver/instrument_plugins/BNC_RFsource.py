@@ -1,6 +1,6 @@
 from .instrument import Instrument
 import time
-import visa
+import pyvisa
 import types
 import math
 
@@ -39,15 +39,18 @@ class BNC_RFsource(Instrument):
         self.set(kwargs)
 
     def open(self):
-        self._ins = visa.instrument(self._address, term_chars='\n', timeout=10)
+        self._ins = pyvisa.ResourceManager().open_resource(self._address)
+        self._ins.read_termination = '\n'
+        self._ins.write_termination = '\n'
+        self._ins.timeout = 10000
 
     def ask(self, q):
         try:
-            return self._ins.ask(q)
+            return self._ins.query(q)
         except:
             pass
         self.open()
-        return self._ins.ask(q)
+        return self._ins.query(q)
 
     def write(self, q):
         try:
@@ -70,21 +73,21 @@ class BNC_RFsource(Instrument):
         return bool(int(val))
 
     def do_set_rf_on(self, on):
-        self.write('OUTP %d\n' % bool(on))
+        self.write(f'OUTP {int(bool(on))}\n')
 
     def do_get_frequency(self):
         val = self.ask(':FREQ?\n')
         return float(val)
 
     def do_set_frequency(self, freq):
-        self.write(':FREQ %.06f\n' % freq)
+        self.write(f':FREQ {freq:.6f}\n')
 
     def do_get_phase(self):
         val = self.ask(':PHASE?\n')
         return float(val)
 
     def do_set_phase(self, phase):
-        self.write(':PHASE %.03f\n' % phase)
+        self.write(f':PHASE {phase:.3f}\n')
 
     def do_get_power(self):
         return 15
@@ -100,14 +103,14 @@ class BNC_RFsource(Instrument):
 
     def do_set_extref_freq(self, val=10e6):
         '''Set external reference frequency.'''
-        self.write(':ROSC:EXT:FREQ %.03f' % val)
+        self.write(f':ROSC:EXT:FREQ {val:.3f}')
 
     def do_get_lock_src(self):
         val = self.ask(':ROSC:SOUR?')
         return val
 
     def do_set_lock_src(self, val):
-        self.write(':ROSC:SOUR %s' % val)
+        self.write(f':ROSC:SOUR {val}')
 
     def lock(self, freq=10e6):
         self.set_extref_freq(freq)

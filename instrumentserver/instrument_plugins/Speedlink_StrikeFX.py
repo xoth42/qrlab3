@@ -21,7 +21,7 @@ from .instrument import Instrument
 import types
 import logging
 import numpy
-import visa
+import pyvisa
 import time as time
 import qt
 
@@ -88,7 +88,7 @@ class Speedlink_StrikeFX(Instrument):
 
         # Update qtlab
         for i in range(1,num+1):
-          getattr(self,'get_Axis%d_stepsize'%i)()
+          getattr(self,f'get_Axis{int(i)}_stepsize')()
 
     def pump(self):
         # Capture state of device
@@ -127,9 +127,9 @@ class Speedlink_StrikeFX(Instrument):
         # As 1 : hat 0
         if self.hats_changed[0] and self.hats[0][0] and self.numdevices>0:
           if (not self.buttons[4]) and (not self.buttons[6]):
-            self.position[0] = getattr(self.instrlist[0],'get_%s'%self.varlist[0])()
-            getattr(self.instrlist[0],'set_%s'%self.varlist[0])(self.position[0] + self.hats[0][0]*self.step[0])
-            print("Move axis 1 to %f" %(float(self.position[0]) + self.hats[0][0]*self.step[0]))
+            self.position[0] = getattr(self.instrlist[0],f'get_{self.varlist[0]}')()
+            getattr(self.instrlist[0],f'set_{self.varlist[0]}')(self.position[0] + self.hats[0][0]*self.step[0])
+            print(f"Move axis 1 to {float(self.position[0]) + self.hats[0][0] * self.step[0]:f}")
           else:
             if self.hats[0][0] == -1:
               self.set_Axis1_stepsize(self.step[0]/fact)
@@ -137,14 +137,14 @@ class Speedlink_StrikeFX(Instrument):
             if self.hats[0][0] == 1:
               self.set_Axis1_stepsize(self.step[0]*fact)
               self.get_Axis1_stepsize()
-            print("Step 1 changed to %f" %self.step[0])
+            print(f"Step 1 changed to {self.step[0]:f}")
 
         # As 2 : hat 0
         if self.hats_changed[0] and self.hats[0][1] and self.numdevices>1:
           if (not self.buttons[4]) and (not self.buttons[6]):
-            self.position[1] = getattr(self.instrlist[1],'get_%s'%self.varlist[1])()
-            getattr(self.instrlist[1],'set_%s'%self.varlist[1])(self.position[1] + self.hats[0][1]*self.step[1])
-            print("Move axis 2 to %f" %(float(self.position[1])+ self.hats[0][1]*self.step[1]))
+            self.position[1] = getattr(self.instrlist[1],f'get_{self.varlist[1]}')()
+            getattr(self.instrlist[1],f'set_{self.varlist[1]}')(self.position[1] + self.hats[0][1]*self.step[1])
+            print(f"Move axis 2 to {float(self.position[1]) + self.hats[0][1] * self.step[1]:f}")
           else:
             if self.hats[0][1] == -1:
               self.set_Axis2_stepsize(self.step[1]/fact)
@@ -152,14 +152,14 @@ class Speedlink_StrikeFX(Instrument):
             if self.hats[0][1] == 1:
               self.set_Axis2_stepsize(self.step[1]*fact)
               self.get_Axis2_stepsize()
-            print("Step 2 changed to %f" %self.step[1])
+            print(f"Step 2 changed to {self.step[1]:f}")
 
         # As 3 : axis 0
         if self.axes_changed[0] and self.axes[0] and self.numdevices>2:
           if (not self.buttons[4]) and (not self.buttons[6]):
-           self.position[2] = getattr(self.instrlist[2],'get_%s'%self.varlist[2])()
-           getattr(self.instrlist[2],'set_%s'%self.varlist[2])(self.position[2] + self.axes[0]*self.step[2])
-           print("Move axis 3 to %f" %(float(self.position[2]) + self.axes[0]*self.step[2]))
+           self.position[2] = getattr(self.instrlist[2],f'get_{self.varlist[2]}')()
+           getattr(self.instrlist[2],f'set_{self.varlist[2]}')(self.position[2] + self.axes[0]*self.step[2])
+           print(f"Move axis 3 to {float(self.position[2]) + self.axes[0] * self.step[2]:f}")
           else:
             if self.axes[0] == -1:
               self.set_Axis3_stepsize(self.step[2]/fact)
@@ -167,14 +167,14 @@ class Speedlink_StrikeFX(Instrument):
             if self.axes[0] == 1:
               self.set_Axis3_stepsize(self.step[2]*fact)
               self.get_Axis3_stepsize()
-            print("Step 3 changed to %f" %self.step[2])
+            print(f"Step 3 changed to {self.step[2]:f}")
 
         # As 4 : axis 1
         if self.axes_changed[1] and self.axes[1] and self.numdevices>3:
           if (not self.buttons[4]) and (not self.buttons[6]):
-            self.position[3] = getattr(self.instrlist[3],'get_%s'%self.varlist[3])()
-            getattr(self.instrlist[3],'set_%s'%self.varlist[3])(self.position[3] + self.axes[1]*self.step[3])
-            print("Move axis 4 to %f" %(float(self.position[3]) + self.axes[1]*self.step[3]))
+            self.position[3] = getattr(self.instrlist[3],f'get_{self.varlist[3]}')()
+            getattr(self.instrlist[3],f'set_{self.varlist[3]}')(self.position[3] + self.axes[1]*self.step[3])
+            print(f"Move axis 4 to {float(self.position[3]) + self.axes[1] * self.step[3]:f}")
           else:
             if self.axes[1] == -1:
               self.set_Axis4_stepsize(self.step[3]/fact)
@@ -182,7 +182,7 @@ class Speedlink_StrikeFX(Instrument):
             if self.axes[1] == 1:
               self.set_Axis4_stepsize(self.step[3]*fact)
               self.get_Axis4_stepsize()
-            print("Step 4 changed to %f" %self.step[3])
+            print(f"Step 4 changed to {self.step[3]:f}")
 
         # Change factor for right
         fact = 1.0
@@ -194,9 +194,9 @@ class Speedlink_StrikeFX(Instrument):
         # As 5 : axis 2
         if self.axes_changed[2] and self.axes[2] and self.numdevices>4:
           if (not self.buttons[5]) and (not self.buttons[7]):
-            self.position[4] = getattr(self.instrlist[4],'get_%s'%self.varlist[4])()
-            getattr(self.instrlist[4],'set_%s'%self.varlist[4])(self.position[4] + self.axes[2]*self.step[4])
-            print("Move axis 5 to %f" %(float(self.position[4]) + self.axes[2]*self.step[4]))
+            self.position[4] = getattr(self.instrlist[4],f'get_{self.varlist[4]}')()
+            getattr(self.instrlist[4],f'set_{self.varlist[4]}')(self.position[4] + self.axes[2]*self.step[4])
+            print(f"Move axis 5 to {float(self.position[4]) + self.axes[2] * self.step[4]:f}")
           else:
             if self.axes[2] == -1:
               self.set_Axis5_stepsize(self.step[4]/fact)
@@ -204,15 +204,15 @@ class Speedlink_StrikeFX(Instrument):
             if self.axes[2] == 1:
               self.set_Axis5_stepsize(self.step[4]*fact)
               self.get_Axis5_stepsize()
-            print("Step 5 changed to %f" %self.step[4])
+            print(f"Step 5 changed to {self.step[4]:f}")
 
         # As 6 : axis 3
         if self.axes_changed[3] and self.axes[3] and self.numdevices>5:
           if (not self.buttons[5]) and (not self.buttons[7]):
 #            self.position[5] = self.position[5] + self.axes[3]*self.step[5]
-            self.position[5] = getattr(self.instrlist[5],'get_%s'%self.varlist[5])
-            setattr(self.instrlist[5],'set_%s'%self.varlist[5],self.position[5] + self.axes[3]*self.step[5])
-            print("Move axis 6 to %f" %self.position[5]+ self.axes[3]*self.step[5])
+            self.position[5] = getattr(self.instrlist[5],f'get_{self.varlist[5]}')
+            setattr(self.instrlist[5],f'set_{self.varlist[5]}',self.position[5] + self.axes[3]*self.step[5])
+            print(f"Move axis 6 to {self.position[5]:f}"+ self.axes[3]*self.step[5])
           else:
             if self.axes[3] == -1:
               self.set_Axis6_stepsize(self.step[5]/fact)
@@ -220,48 +220,48 @@ class Speedlink_StrikeFX(Instrument):
             if self.axes[3] == 1:
               self.set_Axis6_stepsize(self.step[5]*fact)
               self.get_Axis6_stepsize()
-            print("Step 6 changed to %f" %self.step[5])
+            print(f"Step 6 changed to {self.step[5]:f}")
 
         # As 7 : buttons 3 1
         if self.buttons_changed[3] and self.buttons[3] and self.numdevices>6:
           if (not self.buttons[5]) and (not self.buttons[7]):
-            self.position[6] = getattr(self.instrlist[6],'get_%s'%self.varlist[6])()
-            getattr(self.instrlist[6],'set_%s'%self.varlist[6])(self.position[6] -self.step[6])
-            print("Move axis 7 to %f" %(float(self.position[6])-self.step[6]))
+            self.position[6] = getattr(self.instrlist[6],f'get_{self.varlist[6]}')()
+            getattr(self.instrlist[6],f'set_{self.varlist[6]}')(self.position[6] -self.step[6])
+            print(f"Move axis 7 to {float(self.position[6]) - self.step[6]:f}")
           else:
               self.set_Axis7_stepsize(self.step[6]/fact)
               self.get_Axis7_stepsize()
-              print("Step 7 changed to %f" %self.step[6])
+              print(f"Step 7 changed to {self.step[6]:f}")
 
         if self.buttons_changed[1] and self.buttons[1]:
           if (not self.buttons[5]) and (not self.buttons[7]):
-            self.position[6] = getattr(self.instrlist[6],'get_%s'%self.varlist[6])()
-            getattr(self.instrlist[6],'set_%s'%self.varlist[6])(self.position[6] + self.step[6])
-            print("Move axis 7 to %f" %(float(self.position[6])+ self.step[6]))
+            self.position[6] = getattr(self.instrlist[6],f'get_{self.varlist[6]}')()
+            getattr(self.instrlist[6],f'set_{self.varlist[6]}')(self.position[6] + self.step[6])
+            print(f"Move axis 7 to {float(self.position[6]) + self.step[6]:f}")
           else:
               self.set_Axis7_stepsize(self.step[6]*fact)
               self.get_Axis7_stepsize()
-              print("Step 7 changed to %f" %self.step[6])
+              print(f"Step 7 changed to {self.step[6]:f}")
 
         # As 8 : buttons 2 0
         if self.buttons_changed[2] and self.buttons[2] and self.numdevices>7:
           if (not self.buttons[5]) and (not self.buttons[7]):
-            self.position[7] = getattr(self.instrlist[7],'get_%s'%self.varlist[7])()
-            getattr(self.instrlist[7],'set_%s'%self.varlist[7])(self.position[7] -self.step[7])
-            print("Move axis 8 to %f" %(float(self.position[7])-self.step[7]))
+            self.position[7] = getattr(self.instrlist[7],f'get_{self.varlist[7]}')()
+            getattr(self.instrlist[7],f'set_{self.varlist[7]}')(self.position[7] -self.step[7])
+            print(f"Move axis 8 to {float(self.position[7]) - self.step[7]:f}")
           else:
               self.set_Axis8_stepsize(self.step[7]/fact)
               self.get_Axis8_stepsize()
-              print("Step 8 changed to %f" %self.step[7])
+              print(f"Step 8 changed to {self.step[7]:f}")
         if self.buttons_changed[0] and self.buttons[0]:
           if (not self.buttons[5]) and (not self.buttons[7]):
-            self.position[7] = getattr(self.instrlist[7],'get_%s'%self.varlist[7])()
-            getattr(self.instrlist[7],'set_%s'%self.varlist[7])(self.position[7] + self.step[7])
-            print("Move axis 8 to %f" %(float(self.position[7])+ self.step[7]))
+            self.position[7] = getattr(self.instrlist[7],f'get_{self.varlist[7]}')()
+            getattr(self.instrlist[7],f'set_{self.varlist[7]}')(self.position[7] + self.step[7])
+            print(f"Move axis 8 to {float(self.position[7]) + self.step[7]:f}")
           else:
               self.set_Axis8_stepsize(self.step[7]*fact)
               self.get_Axis8_stepsize()
-              print("Step 8 changed to %f" %self.step[7])
+              print(f"Step 8 changed to {self.step[7]:f}")
 
     def run(self):
         qt.mstart()

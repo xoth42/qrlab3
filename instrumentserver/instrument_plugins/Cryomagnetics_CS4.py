@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from .instrument import Instrument
-import visa
+import pyvisa
 import types
 import logging
 import re
@@ -32,7 +32,7 @@ class Cryomagnetics_CS4(Instrument):
         Instrument.__init__(self, name)
 
         self._address = address
-        self._visa = visa.instrument(self._address)
+        self._visa = pyvisa.ResourceManager().open_resource(self._address)
 
         self.add_parameter('identification',
             flags=Instrument.FLAG_GET)
@@ -108,7 +108,7 @@ class Cryomagnetics_CS4(Instrument):
         self.get_field()
 
     def do_get_identification(self):
-        return self._visa.ask('*IDN?')
+        return self._visa.query('*IDN?')
 
     def _update_units(self, unit):
         self.set_parameter_options('magnetout', units=unit)
@@ -117,42 +117,42 @@ class Cryomagnetics_CS4(Instrument):
         self.set_parameter_options('uplim', units=unit)
 
     def do_get_units(self):
-        ans = self._visa.ask('UNITS?')
+        ans = self._visa.query('UNITS?')
         self._update_units(ans)
         return ans
 
     def do_set_units(self, unit):
         if unit not in self.UNITS:
-            logging.error('Trying to set invalid unit: %s', unit)
+            logging.error(f'Trying to set invalid unit: {unit}', )
             return False
-        self._visa.write('UNITS %s' % unit)
+        self._visa.write(f'UNITS {unit}')
         self._update_units(unit)
 
     def _check_ans_unit(self, ans):
         try:
             val, unit = ans.split(' ')
         except:
-            logging.warning('Unable to parse answer: %s', ans)
+            logging.warning(f'Unable to parse answer: {ans}', )
             return False
 
         set_unit = self.get_units(query=False)
         if unit != set_unit:
-            logging.warning('Returned units (%s) differ from set units (%s)!',
-                unit, set_unit)
+            logging.warning(f'Returned units ({unit}) differ from set units ({set_unit})!',
+                )
             return False
 
         return float(val)
 
     #FIXME: allow all 4 parameter ranges
     def do_get_rate(self):
-        ans = self._visa.ask('RATE? 0')
+        ans = self._visa.query('RATE? 0')
         return float(ans)
 
     def do_set_rate(self, rate):
-        self._visa.write('RATE 0 %.03f' % rate)
+        self._visa.write(f'RATE 0 {rate:.3f}')
 
     def do_get_heater(self):
-        ans = self._visa.ask('PSHTR?')
+        ans = self._visa.query('PSHTR?')
         if len(ans) > 0 and ans[0] == '1':
             return True
         else:
@@ -164,7 +164,7 @@ class Cryomagnetics_CS4(Instrument):
         else:
             text = 'OFF'
 
-        self._visa.write('PSHTR %s' % text)
+        self._visa.write(f'PSHTR {text}')
 
     def local(self):
         self._visa.write('LOCAL')
@@ -173,15 +173,15 @@ class Cryomagnetics_CS4(Instrument):
         self._visa.write('REMOTE')
 
     def do_get_magnetout(self):
-        ans = self._visa.ask('IMAG?')
+        ans = self._visa.query('IMAG?')
         return self._check_ans_unit(ans)
 
     def do_get_supplyout(self):
-        ans = self._visa.ask('IMAG?')
+        ans = self._visa.query('IMAG?')
         return self._check_ans_unit(ans)
 
     def do_get_sweep(self):
-        ans = self._visa.ask('SWEEP?')
+        ans = self._visa.query('SWEEP?')
         if len(ans) > 6:
             return ans[6:]
         else:
@@ -192,7 +192,7 @@ class Cryomagnetics_CS4(Instrument):
         if val not in ['UP', 'UP FAST', 'DOWN', 'DOWN FAST']:
             logging.warning('Invalid sweep mode selected')
             return False
-        self._visa.write('SWEEP %s' % val)
+        self._visa.write(f'SWEEP {val}')
 
     def sweep_up(self, fast=False):
         if fast:
@@ -207,18 +207,18 @@ class Cryomagnetics_CS4(Instrument):
             return self.set_sweep('DOWN')
 
     def do_get_lowlim(self):
-        ans = self._visa.ask('LLIM?')
+        ans = self._visa.query('LLIM?')
         return self._check_ans_unit(ans)
 
     def do_set_lowlim(self, val):
-        self._visa.write('LLIM %f' % val)
+        self._visa.write(f'LLIM {val:f}')
 
     def do_get_uplim(self):
-        ans = self._visa.ask('ULIM?')
+        ans = self._visa.query('ULIM?')
         return self._check_ans_unit(ans)
 
     def do_set_uplim(self, val):
-        self._visa.write('ULIM %f' % val)
+        self._visa.write(f'ULIM {val:f}')
 
     def do_set_field(self, val, wait=True):
         units = self.get_units(query=False)
@@ -233,7 +233,7 @@ class Cryomagnetics_CS4(Instrument):
         cur_magnet = self.get_magnetout()
         cur_supply = self.get_supplyout()
         if math.fabs(cur_magnet - cur_supply) > self.MARGIN:
-            logging.warning('Unable to set field when magnet (%f) and supply (%f) not equal!', cur_magnet, cur_supply)
+            logging.warning(f'Unable to set field when magnet ({cur_magnet:f}) and supply ({cur_supply:f}) not equal!', )
             return False
 
         valtesla = val / 1000.0
@@ -245,8 +245,12 @@ class Cryomagnetics_CS4(Instrument):
             self.sweep_down()
 
         if wait:
-            while math.fabs(valtesla - self.get_magnetout()) > self.MARGIN:
+            for _ in range(72_000):
+                if math.fabs(valtesla - self.get_magnetout()) <= self.MARGIN:
+                    break
                 time.sleep(0.050)
+            else:
+                raise IOError('Timed out waiting one hour for magnet sweep')
 
         return True
 
@@ -258,4 +262,3 @@ class Cryomagnetics_CS4(Instrument):
 
         magnet_field = self.get_magnetout()
         return magnet_field * 1000.0
-

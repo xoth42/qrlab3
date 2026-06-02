@@ -18,7 +18,7 @@
 from .instrument import Instrument
 import types
 import logging
-import visa
+import pyvisa
 
 class Fluke_PM5138A(Instrument):
   '''
@@ -33,7 +33,7 @@ class Fluke_PM5138A(Instrument):
     Instrument.__init__(self, name, tags=['physical'])
 
     self._address = address
-    self._visainstrument = visa.instrument(self._address)
+    self._visainstrument = pyvisa.ResourceManager().open_resource(self._address)
 
     # Add functions
     self.add_function('init_default')
@@ -58,7 +58,7 @@ class Fluke_PM5138A(Instrument):
     self._visainstrument.write(letter)
 
   def _ask(self, question):
-    return self._visainstrument.ask(question)
+    return self._visainstrument.query(question)
 
   def init_default(self):
     self._write("POSPUL")
@@ -76,16 +76,16 @@ class Fluke_PM5138A(Instrument):
     self.get_dutycycle()
 
   def do_set_frequency(self, frequency):
-    self._write("FREQ %f"%frequency )
+    self._write(f"FREQ {frequency:f}" )
 
   def do_set_ac_amplitude(self, ac):
-    self._write("AMPLT %f"%ac)
+    self._write(f"AMPLT {ac:f}")
 
   def do_set_dc_amplitude(self, dc):
-    self._write("DCOFFS %f"%dc)
+    self._write(f"DCOFFS {dc:f}")
 
   def do_set_dutycycle(self, dutycycle):
-    self._write("DUTYC %f"%dutycycle)
+    self._write(f"DUTYC {dutycycle:f}")
 
   def do_get_frequency(self):
     stringval = self._ask("FREQ?")

@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from .instrument import Instrument
-import visa
+import pyvisa
 import types
 import logging
 import re
@@ -39,9 +39,13 @@ class Thorlabs_PM100(Instrument):
         Instrument.__init__(self, name)
 
         self._address = address
-        self._visa = visa.instrument(self._address,
-                        baud_rate=115200, data_bits=8, stop_bits=1,
-                        parity=visa.no_parity, term_chars='\r\n')
+        self._visa = pyvisa.ResourceManager().open_resource(self._address)
+        self._visa.baud_rate = 115200
+        self._visa.data_bits = 8
+        self._visa.stop_bits = pyvisa.constants.StopBits.one
+        self._visa.parity = pyvisa.constants.Parity.none
+        self._visa.read_termination = '\r\n'
+        self._visa.write_termination = '\r\n'
 
         self.add_parameter('identification',
             flags=Instrument.FLAG_GET)
@@ -80,25 +84,25 @@ class Thorlabs_PM100(Instrument):
         self.get_filter_freq()
 
     def do_get_identification(self):
-        return self._visa.ask('*IDN?')
+        return self._visa.query('*IDN?')
 
     def do_get_power(self):
-        ans = self._visa.ask(':POWER?')
+        ans = self._visa.query(':POWER?')
         return float(ans)
 
     def do_get_head_info(self):
-        ans = self._visa.ask(':HEAD:INFO?')
+        ans = self._visa.query(':HEAD:INFO?')
         return ans
 
     def do_get_wavelength(self):
-        ans = self._visa.ask(':WAVELENGTH?')
+        ans = self._visa.query(':WAVELENGTH?')
         return float(ans)
 
     def do_set_wavelength(self, val):
-        self._visa.write(':WAVELENGTH %e' % val)
+        self._visa.write(f':WAVELENGTH {val:e}')
 
     def do_get_filter_freq(self):
-        ans = self._visa.ask(':FILTER?')
+        ans = self._visa.query(':FILTER?')
         m = self._RE_FREQ.match(ans)
         if m is not None:
             return float(m.group(1))
@@ -106,5 +110,4 @@ class Thorlabs_PM100(Instrument):
             return None
 
     def do_set_filter_freq(self, val):
-        self._visa.write(':FILTER %dHz' % val)
-
+        self._visa.write(f':FILTER {int(val)}Hz')

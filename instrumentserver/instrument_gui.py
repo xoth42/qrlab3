@@ -122,7 +122,9 @@ class SciWidget(QtGui.QLineEdit):
         '''
         digits = -self._multdigits
         order = 1.0
-        while abs(val) > EPSILON and digits < self._maxdigits:
+        for _ in range(self._maxdigits + self._multdigits):
+            if not (abs(val) > EPSILON and digits < self._maxdigits):
+                break
             val -= round(val / order) * order
             order /= 10**self._multdigits
             digits += self._multdigits
@@ -130,7 +132,9 @@ class SciWidget(QtGui.QLineEdit):
 
     def _add_spaces(self, valstr):
         idx = valstr.find('.')
-        while idx != -1 and (idx + 4) < len(valstr) and valstr[idx+4] not in ('e', 'E'):
+        for _ in range(len(valstr)):
+            if not (idx != -1 and (idx + 4) < len(valstr) and valstr[idx+4] not in ('e', 'E')):
+                break
             valstr = valstr[:idx+4] + ' ' + valstr[idx+4:]
             idx += 4
         return valstr
@@ -148,12 +152,11 @@ class SciWidget(QtGui.QLineEdit):
                 dispscale = int(3 * round(math.floor(math.log10(abs(val)) / 3.0)))
 
         val /= 10.0**dispscale
+        digits = self._count_digits(val)
         if dispscale == 0:
-            fmt = '%%.%02df' % (self._count_digits(val),)
-            return self._add_spaces(fmt % val)
+            return self._add_spaces(f'{val:.{digits}f}')
         else:
-            fmt = '%%.%02dfe%%d' % (self._count_digits(val),)
-            return self._add_spaces(fmt % (val, dispscale))
+            return self._add_spaces(f'{val:.{digits}f}e{dispscale:d}')
 
     def do_get(self, query=True, cb=None):
         self._ins.get(self._param, query=query, callback=lambda x: self.update(x, cb=cb))
@@ -423,12 +426,12 @@ class InstrumentsContainer(QtGui.QTabWidget):
                 self.instruments.load_settings_from_file(fn, inslist, create=create, async_=True)
 
     def _ins_added_cb(self, name):
-        logging.info('Instrument %s added', name)
+        logging.info(f'Instrument {name} added', )
         ins = self.instruments.get(name)
         if hasattr(ins, 'on_disconnect'):
             ins.on_disconnect(lambda: self._ins_removed_cb(name))
         if ins is None:
-            logging.error('Unable to get instrument %s', name)
+            logging.error(f'Unable to get instrument {name}', )
             return
         tab = InstrumentTab(name, ins)
         tab_scroll_area = QtGui.QScrollArea()
@@ -442,7 +445,7 @@ class InstrumentsContainer(QtGui.QTabWidget):
         self.addTab(tab_scroll_area, name)
 
     def _ins_removed_cb(self, name):
-        logging.info('Instrument %s removed', name)
+        logging.info(f'Instrument {name} removed', )
         if name in self._ins_widgets:
             tab = self._ins_widgets[name]
             idx = self.indexOf(tab)
@@ -469,10 +472,8 @@ class ColorPushButton(QtGui.QPushButton):
 
     def set_bg(self, color):
         self.setStyleSheet(
-            "QPushButton { background-color: %s }"
-            "QPushButton:pressed { background-color: %s }" % (
-            color.name(), color.light(125).name()
-            )
+            f"QPushButton {{ background-color: {color.name()} }}"
+            f"QPushButton:pressed {{ background-color: {color.light(125).name()} }}"
         )
 
     def _highlight(self, color=GREEN):
@@ -591,7 +592,7 @@ class InstrumentTab(QtGui.QWidget):
 
                 label = name
                 if 'units' in opts:
-                    label += ' [%s]' % (opts['units'],)
+                    label += f" [{opts['units']}]"
                 if 'doc' in opts or 'help' in opts:
                     label += ' [?]'
                 lbl = QtGui.QLabel(label)
@@ -682,12 +683,12 @@ class ListInstrumentsContainer(QtGui.QSplitter):
         self.current.show()
 
     def _ins_added_cb(self, name):
-        logging.info('Instrument %s added', name)
+        logging.info(f'Instrument {name} added', )
         ins = self.instruments.get(name)
         if hasattr(ins, 'on_disconnect'):
             ins.on_disconnect(lambda: self._ins_removed_cb(name))
         if ins is None:
-            logging.error('Unable to get instrument %s', name)
+            logging.error(f'Unable to get instrument {name}', )
             return
         tab = InstrumentTab(name, ins)
         tab_scroll_area = QtGui.QScrollArea()
@@ -707,7 +708,7 @@ class ListInstrumentsContainer(QtGui.QSplitter):
         # action.toggled.connect(lambda enabled: self.show_tab(name, enabled))
 
     def _ins_removed_cb(self, name):
-        logging.info('Instrument %s removed', name)
+        logging.info(f'Instrument {name} removed', )
         if name in self._ins_widgets:
             tab = self._ins_widgets[name]
             item = self._ins_items[name]
@@ -744,4 +745,3 @@ if __name__ == '__main__':
 
     backend.add_qt_timer(interval=20)
     sys.exit(app.exec_())
-

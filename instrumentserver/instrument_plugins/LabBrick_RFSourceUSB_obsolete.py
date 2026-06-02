@@ -37,7 +37,7 @@ class LabBrick_RFSource(Instrument):
         if serial:
             self._dev = find_serial_brick(serial)
             if self._dev is None:
-                raise Exception('Brick %s not found' % serial)
+                raise Exception(f'Brick {serial} not found')
         else:
             devs = find_labbricks()
             self._dev = devs[int(devid)]
@@ -49,7 +49,7 @@ class LabBrick_RFSource(Instrument):
 # TODO: fix problem reading these
         minfreq = self.do_get_min_frequency()
         maxfreq = self.do_get_max_frequency()
-        print('Min freq: %.03e, max freq: %.03e' % (minfreq, maxfreq))
+        print(f'Min freq: {minfreq:.3e}, max freq: {maxfreq:.3e}')
 
         self.add_parameter('serial', type=bytes,
             flags=Instrument.FLAG_GET)
@@ -77,14 +77,14 @@ class LabBrick_RFSource(Instrument):
         if (data[1] & 0xf) == 0xe:
             self._nstatus += 1
 #            if (self._nstatus % 100) == 0:
-#                print 'Ignored 100 reports'
+
             return
         nbytes = data[2]
         val = 0
         for i in range(nbytes):
             val <<= 8
             val += data[3+nbytes-1-i]
-#        print 'Got reply for %s, val %s, nbytes: %s: data %r' % (data[1], val, nbytes, data)
+
         self._last_replies[data[1]] = val
 
     def do_cmd(self, cmd, count=0, data=0, get_reply=True):
@@ -145,7 +145,7 @@ class LabBrick_RFSource(Instrument):
         '''Set output power in dBm.'''
         power -= MAX_POWER
         if power > 0:
-            raise ValueError('Power should be < %s' % MAX_POWER)
+            raise ValueError(f'Power should be < {MAX_POWER}')
         p = int(round(-power / 0.25))
         self.do_cmd(0x8D, 1, p)
         return MAX_POWER - p * 0.25

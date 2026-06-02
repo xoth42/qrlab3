@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from .instrument import Instrument
-import visa
+import pyvisa
 import types
 import logging
 from time import sleep
@@ -54,7 +54,7 @@ class HP_33120A(Instrument):
         Instrument.__init__(self, name, tags=['physical'])
 
         self._address = address
-        self._visainstrument = visa.instrument(self._address)
+        self._visainstrument = pyvisa.ResourceManager().open_resource(self._address)
 
         self.add_parameter('frequency',
                 type=float,
@@ -112,7 +112,7 @@ class HP_33120A(Instrument):
 
     def get_error(self):
         logging.debug(__name__ + ' : Getting one error from error list')
-        return self._visainstrument.ask('SYST:ERR?')
+        return self._visainstrument.query('SYST:ERR?')
 
 # Trigger
 
@@ -130,7 +130,7 @@ class HP_33120A(Instrument):
 
     def get_trigger_state(self):
         logging.debug(__name__ + ' : Getting trigger state')
-        return self._visainstrument.ask('TRIG:SOUR?')
+        return self._visainstrument.query('TRIG:SOUR?')
 
     def send_trigger(self):
         logging.debug(__name__ + ' : Sending Trigger')
@@ -140,25 +140,25 @@ class HP_33120A(Instrument):
 
     def do_set_burst_count(self, cnt):
         logging.debug(__name__ + ' : Setting burst count')
-        self._visainstrument.write('BM:NCYC %d' % cnt)
+        self._visainstrument.write(f'BM:NCYC {int(cnt)}')
 
     def do_get_burst_count(self):
         logging.debug(__name__ + ' : Getting burst count')
-        return float(self._visainstrument.ask('BM:NCYC?'))
+        return float(self._visainstrument.query('BM:NCYC?'))
 
     def do_set_burst_status(self, stat):
         '''
         stat: { ON OFF }
         '''
         logging.debug(__name__ + ' : Setting burst status')
-        self._visainstrument.write('BM:STAT %s' % stat)
+        self._visainstrument.write(f'BM:STAT {stat}')
 
     def do_get_burst_status(self):
         '''
         stat: { ON OFF }
         '''
         logging.debug(__name__ + ' : Getting burst status')
-        return self._visainstrument.ask('BM:STAT?')
+        return self._visainstrument.query('BM:STAT?')
 
 # Shape
 
@@ -167,35 +167,35 @@ class HP_33120A(Instrument):
         shape : { SIN, SQU, TRI, RAMP, NOIS, DC, USER }
         '''
         logging.debug(__name__ + ' : Sending Trigger')
-        self._visainstrument.write('SOUR:FUNC:SHAP %s' % shape)
+        self._visainstrument.write(f'SOUR:FUNC:SHAP {shape}')
 
     def get_function_shape(self):
         logging.debug(__name__ + ' : Getting function shape')
-        return self._visainstrument.ask('SOUR:FUNC:SHAP?')
+        return self._visainstrument.query('SOUR:FUNC:SHAP?')
 
 # Parameters
 
     def do_set_frequency(self, freq):
         logging.debug(__name__ + ' : Setting frequency')
-        self._visainstrument.write('SOUR:FREQ %f' % freq)
+        self._visainstrument.write(f'SOUR:FREQ {freq:f}')
 
     def do_get_frequency(self):
         logging.debug(__name__ + ' : Getting frequency')
-        return self._visainstrument.ask('SOUR:FREQ?')
+        return self._visainstrument.query('SOUR:FREQ?')
 
     def do_set_amplitude(self, amp):
         logging.debug(__name__ + ' : Setting amplitude')
-        self._visainstrument.write('SOUR:VOLT %f' % amp)
+        self._visainstrument.write(f'SOUR:VOLT {amp:f}')
 
     def do_get_amplitude(self):
         logging.debug(__name__ + ' : Getting amplitude')
-        return self._visainstrument.ask('SOUR:VOLT?')
+        return self._visainstrument.query('SOUR:VOLT?')
 
     def do_set_offset(self, offset):
         logging.debug(__name__ + ' : Setting offset')
-        self._visainstrument.write('SOUR:VOLT:OFFS %f' % offset)
+        self._visainstrument.write(f'SOUR:VOLT:OFFS {offset:f}')
 
     def do_get_offset(self):
         logging.debug(__name__ + ' : Getting offset')
-        return self._visainstrument.ask('SOUR:VOLT:OFFS?')
+        return self._visainstrument.query('SOUR:VOLT:OFFS?')
 

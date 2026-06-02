@@ -267,7 +267,7 @@ real part is applied to I and the imaginary part to Q.
 
     def setup_clock(self):
         logging.debug('Setting up clock')
-        logging.debug('src: %s, sr: %s, edge: %s', self.get_clock_source(), self.get_sample_rate(), self.get_clock_edge())
+        logging.debug(f'src: {self.get_clock_source()}, sr: {self.get_sample_rate()}, edge: {self.get_clock_edge()}', )
 
         err = alazar.ats.AlazarSetCaptureClock(self._card.handle,
                 self.get_clock_source(),
@@ -278,7 +278,7 @@ real part is applied to I and the imaginary part to Q.
 
     def setup_channels(self):
         logging.debug('Setting up channels')
-        logging.debug('ch1_range: %s, coupling: %s, impedance: %s', self.get_ch1_range(), self.get_ch1_coupling(), self.get_ch1_impedance())
+        logging.debug(f'ch1_range: {self.get_ch1_range()}, coupling: {self.get_ch1_coupling()}, impedance: {self.get_ch1_impedance()}', )
         self._card.set_capture_channels(self.get_channels())
         self._card.set_ch_props(
             AC.CHANNEL_A, self.get_ch1_range(),
@@ -291,14 +291,14 @@ real part is applied to I and the imaginary part to Q.
 
     def setup_trigger(self):
         logging.debug('Setting up trigger')
-        logging.debug('Op: %s, engj src: %s, slope %s, lvl %s', self.get_trig_op(), self.get_engJ_trig_src(), self.get_engJ_trig_slope(), self.get_engJ_trig_lvl())
+        logging.debug(f'Op: {self.get_trig_op()}, engj src: {self.get_engJ_trig_src()}, slope {self.get_engJ_trig_slope()}, lvl {self.get_engJ_trig_lvl()}', )
         err = alazar.ats.AlazarSetTriggerOperation(self._card.handle,
             self.get_trig_op(),
             AC.TRIG_ENGINE_J, self.get_engJ_trig_src(), self.get_engJ_trig_slope(), self.get_engJ_trig_lvl(),
             AC.TRIG_ENGINE_K, self.get_engK_trig_src(), self.get_engK_trig_slope(), self.get_engK_trig_lvl(),
         )
         alazar.CHK(err)
-        logging.debug('Ext coupl %s, ext range %s, delay %s', self.get_ext_trig_coupling(), self.get_ext_trig_range(), self.get_ext_trig_delay())
+        logging.debug(f'Ext coupl {self.get_ext_trig_coupling()}, ext range {self.get_ext_trig_range()}, delay {self.get_ext_trig_delay()}', )
         err = alazar.ats.AlazarSetExternalTrigger(self._card.handle,
             self.get_ext_trig_coupling(), self.get_ext_trig_range())
         alazar.CHK(err)
@@ -315,7 +315,7 @@ real part is applied to I and the imaginary part to Q.
         elif ext in ('.txt', '.gz', '.bz2'):
             data = np.loads(fn)
         else:
-            logging.warning('Unable to load file %s' % fn)
+            logging.warning(f'Unable to load file {fn}')
             return 1
 
         if len(data) != self.get_nsamples() / self.get_if_period():
@@ -397,7 +397,7 @@ real part is applied to I and the imaginary part to Q.
 #        self._bufs = [np.frombuffer(buf.get_obj(), dtype=np.dtype(np.uint8)) for buf in mpars]
 
     def prepare_capture(self):
-        print('Prepare capture: samples: %s, recperbuf: %s, total rec:%s' % (self.get_nsamples(), self.get_nrecperbuf(), self.get_ntotal_rec(),))
+        print(f'Prepare capture: samples: {self.get_nsamples()}, recperbuf: {self.get_nrecperbuf()}, total rec:{self.get_ntotal_rec()}')
         self._card.prepare_capture(self.get_nsamples(), self.get_nrecperbuf(), self.get_ntotal_rec(), self.get_ext_trig_delay(), 0)
 
     def arm(self):
@@ -415,7 +415,7 @@ real part is applied to I and the imaginary part to Q.
             blocksize = min(1500, np.ceil(10e6 / nsamples))
 
         nbufs = 1
-        logging.info('Alazar num. records, blocksize: %d,%d' % (N, blocksize))
+        logging.info(f'Alazar num. records, blocksize: {int(N)},{int(blocksize)}')
         max_factor_steps = max(1, int(N).bit_length())
         for _ in range(max_factor_steps):
             if N <= blocksize:
@@ -679,15 +679,15 @@ real part is applied to I and the imaginary part to Q.
             elif ((self._navg / cyclereps) % 5) == 0:
                 cyclereps *= 5
             else:
-                raise ValueError('Unable to make cyclelength > %d, please make number of averages divisible by 2 and 5' % min_recperbuf)
+                raise ValueError(f'Unable to make cyclelength > {int(min_recperbuf)}, please make number of averages divisible by 2 and 5')
         else:
             raise ValueError('Unable to reach the minimum records per buffer')
 
         totrec = cycles * self._navg
         recperbuf = cycles * cyclereps
         self._cyclereps = cyclereps
-        logging.info('Setup experiment: cycle repetitions %d, recs per buf %d, total records %d',
-                     cyclereps, recperbuf, totrec)
+        logging.info(f'Setup experiment: cycle repetitions {int(cyclereps)}, recs per buf {int(recperbuf)}, total records {int(totrec)}',
+                     )
 
         self.set_nrecperbuf(recperbuf)
         self.set_ntotal_rec(totrec)
@@ -705,7 +705,7 @@ real part is applied to I and the imaginary part to Q.
             avg_buf.set_attrs(averages=n)
         except Exception as e:
             self._card.end_capture()
-            msg = 'Unable to store averages: %s' % str(e)
+            msg = f'Unable to store averages: {str(e)}'
             logging.warning(msg)
             raise Exception(msg)
             
@@ -717,7 +717,7 @@ real part is applied to I and the imaginary part to Q.
             self._card.end_capture()
             print((cov.shape, n, cov.shape))
             print((cov_buf[:].shape))
-            msg = 'Unable to store standard errors: %s' % str(e)
+            msg = f'Unable to store standard errors: {str(e)}'
             logging.warning(msg)
             raise Exception(msg)
 
@@ -779,7 +779,7 @@ real part is applied to I and the imaginary part to Q.
         for i in range(int(numbufs)):
             avgs = i * cyclereps
             if avgs >= century_count * 100:
-                logging.info('Acquiring %d', avgs)
+                logging.info(f'Acquiring {int(avgs)}', )
                 self.emit('capture-progress', avgs)
                 update_averages = True
                 century_count += 1
@@ -867,10 +867,10 @@ real part is applied to I and the imaginary part to Q.
         <num_demods> is the number of demodulations/weights applied per measurement record, usually 1
         '''
         self.end_capture()
-        logging.info('%s, %s' % (N, self.get_nsamples()))
+        logging.info(f'{N}, {self.get_nsamples()}')
         nbufs, N = self.break_records(N, nsamples=self.get_nsamples())
         self.set_nrecperbuf(N)
-        logging.info('%s, %s' % (nbufs, N))
+        logging.info(f'{nbufs}, {N}')
         print(('nbufs, N:', nbufs, N))
         if nbufs != 1:
             self.set_nbuffers(min(4, nbufs))
@@ -882,7 +882,7 @@ real part is applied to I and the imaginary part to Q.
         self.set_demod(avg_periods=periods)
         self.prepare_capture()
         self._card.post_buffers(self._bufs)
-        logging.info('setup_hist: Preparing hist_buf, size = %s' % (nbufs*N*num_demods))
+        logging.info(f'setup_hist: Preparing hist_buf, size = {nbufs * N * num_demods}')
         if hist_buf is None:
 #            hist_buf = np.zeros((nbufs*N,), dtype=np.complex)
             hist_buf = np.ones((nbufs*N*num_demods,), dtype=np.complex) * np.nan
@@ -920,7 +920,7 @@ real part is applied to I and the imaginary part to Q.
         print(('cycles, ntot, nbufs:', cycles, ntot, nbufs))
         for i in range(int(nbufs)):
             if (i % 10) == 0:
-                logging.info('Acquiring %d', i*cycles)
+                logging.info(f'Acquiring {int(i)}'*cycles, )
                 self.emit('capture-progress', i*cycles)
                 # save data
                 if len(tmp_buf) != 0:

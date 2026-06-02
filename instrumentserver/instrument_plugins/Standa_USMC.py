@@ -157,8 +157,8 @@ def detect_instruments():
 
     devs = standa.USMC_Devices()
     standa.USMC_Init(ctypes.byref(devs))
-    logging.info('Standa_USMC: detected %d devices', devs.NOD)
+    logging.info(f'Standa_USMC: detected {int(devs.NOD)} devices', )
     for i in range(devs.NOD):
-        qt.instruments.create('Standa%d' % i, 'Standa_USMC', id=i, \
+        qt.instruments.create(f'Standa{int(i)}', 'Standa_USMC', id=i, \
                 serial=devs.Serial[i], version=devs.Version[i])
 

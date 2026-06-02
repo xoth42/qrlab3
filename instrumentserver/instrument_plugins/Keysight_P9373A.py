@@ -19,9 +19,6 @@ VOLTAGE_SCALE = 2.8
 
 
 class Keysight_P9373A(Instrument):
-
-
-
     def __init__(self, name, chassis=0, slot=3, DIG_PRODUCT = "P9373A", **kwargs):
         super(Keysight_P9373A, self).__init__(name)
         
@@ -29,10 +26,6 @@ class Keysight_P9373A(Instrument):
         self._chassis = chassis
         self._slot = slot
         self._DIG_PRODUCT = DIG_PRODUCT
-
-
-
-        
         self.set(kwargs)
         self.get_all()
 

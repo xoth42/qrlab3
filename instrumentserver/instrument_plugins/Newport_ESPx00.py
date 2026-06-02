@@ -19,7 +19,7 @@ from .instrument import Instrument
 import types
 import logging
 import numpy
-import visa
+import pyvisa
 import time as time
 
 # TODO: adapt for rotation stage, but keep compatible with delay stage
@@ -43,7 +43,7 @@ class Newport_ESPx00(Instrument):
 
     self._numaxes = numaxes
     self._address = address
-    self._visainstrument = visa.instrument(self._address)
+    self._visainstrument = pyvisa.ResourceManager().open_resource(self._address)
 
     # Add functions
     self.add_function('init_default')
@@ -83,17 +83,17 @@ class Newport_ESPx00(Instrument):
     self.get_position()
 
   def do_get_position(self, channel=1):
-    return self._visainstrument.ask('%dPA?\r'%(channel))
+    return self._visainstrument.query(f'{int(channel)}PA?\r')
 
   def define_home(self, position=0.0, channel=1):
-    self._visainstrument.write('%dDH%f;WS\r'%(channel, position))
+    self._visainstrument.write(f'{int(channel)}DH{position:f};WS\r')
 
   def do_set_position(self, position, channel=1):
-    self._visainstrument.write('%dPA+%f;WS\r'%(channel, position))
+    self._visainstrument.write(f'{int(channel)}PA+{position:f};WS\r')
 
   def do_get_ismoving(self, channel=1):
-    return not self._visainstrument.ask('%dMD?'%(channel)).strip() == '1'
+    return not self._visainstrument.query(f'{int(channel)}MD?').strip() == '1'
 
   def do_set_move_relative(self, position, channel=1):
-    self._visainstrument.write('%dPR+%f;WS\r'%(channel, position))
+    self._visainstrument.write(f'{int(channel)}PR+{position:f};WS\r')
     return self.get_position()

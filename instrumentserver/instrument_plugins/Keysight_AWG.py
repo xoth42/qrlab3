@@ -264,7 +264,7 @@ class Keysight_AWG(Instrument):
 #    def do_get_skew(self, channel):
 #        '''Get channel skew in ps.'''
 #        val = self.ask('SOURCE%d:SKEW?' % (channel,))
-#        print val
+
 #        return float(val) * 1e12
 
     def get_all(self):
@@ -314,7 +314,7 @@ class Keysight_AWG(Instrument):
     # add custom waveform as file, not correct
     def add_file(self, fn, data):
         bindata = self.get_bindata(data)
-        cmd = ('MMEM:DATA "%s",#6%06d'%(fn,2*len(data))) + bindata.tostring() + '\n'
+        cmd = f'MMEM:DATA "{fn}",#6{int(2 * len(data)):06}' + bindata.tostring() + '\n'
         self.write_raw(cmd)
 
     def add_waveform(self, wname, data, m1=None, m2=None, replace=True, return_cmd=False):

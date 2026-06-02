@@ -43,14 +43,14 @@ class Brick_Spec(Instrument):
         if (data[1] & 0xf) == 0xe:
             self._nstatus += 1
 #            if (self._nstatus % 100) == 0:
-#                print 'Ignored 100 reports'
+
             return
         nbytes = data[2]
         val = 0
         for i in range(nbytes):
             val <<= 8
             val += data[3+nbytes-1-i]
-#        print 'Got reply for %s, val %s, nbytes: %s: data %r' % (data[1], val, nbytes, data)
+
         self.last_replies[data[1]] = val
 
     def do_cmd(self, cmd, count=0, data=0, get_reply=True):

@@ -126,12 +126,12 @@ class Fianium_AOTF(Instrument):
         self.send_cmd(s)
 
     def do_set_wavelength(self, wlen):
-        s = 'dds f 0 #%d \r' % (wlen)
+        s = f'dds f 0 #{int(wlen)} \r'
         self.send_cmd(s)
 
     def do_set_power(self, pow):
         val = pow * self.MAX_POWER / 100
-        s = 'dds a 0 %d \r' % (val)
+        s = f'dds a 0 {int(val)} \r'
         self.send_cmd(s)
 
     def do_set_wlenopt(self, wlen):

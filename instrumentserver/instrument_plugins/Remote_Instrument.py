@@ -10,7 +10,7 @@ class Remote_Instrument(Instrument):
 
         self._remote_name = remote_name
         if inssrv is None:
-            inssrv = objsh.helper.find_object('%s:instrument_server' % server)
+            inssrv = objsh.helper.find_object(f'{server}:instrument_server')
         self._srv = inssrv
         params = self._srv.get_ins_parameters(remote_name)
         for name, info in params.items():
@@ -33,7 +33,7 @@ class Remote_Instrument(Instrument):
                 setattr(self, name, func)
                 self.add_function(name, **info)
             except Exception as e:
-                logging.warning('Failed to create function %s: %s', name, e)
+                logging.warning(f'Failed to create function {name}: {e}', )
 
     def _extend_args(self, args, add):
         if len(args) > 0:
@@ -43,7 +43,7 @@ class Remote_Instrument(Instrument):
 
     def create_lambda(self, funcname, argspec=None):
         if argspec is None:
-            codestr = 'lambda *args, **kwargs: self._call("%s", *args, **kwargs)' % funcname
+            codestr = f'lambda *args, **kwargs: self._call("{funcname}", *args, **kwargs)'
         else:
             if len(argspec['args']) < 1:
                 args = ''
@@ -51,15 +51,15 @@ class Remote_Instrument(Instrument):
                 args = ','.join(argspec['args'][1:])
 
             if argspec['varargs'] is not None:
-                args = self._extend_args(args, '*%s' % argspec['varargs'])
+                args = self._extend_args(args, f"*{argspec['varargs']}")
             if argspec['keywords'] is not None:
-                args = self._extend_args(args, '**%s' % argspec['keywords'])
+                args = self._extend_args(args, f"**{argspec['keywords']}")
             else:
                 args = self._extend_args(args, '**kwargs')
 
-            codestr = 'lambda %s: self._call("%s"' % (args, funcname)
+            codestr = f'lambda {args}: self._call("{funcname}"'
             if args != '':
-                codestr += ', %s' % args
+                codestr += f', {args}'
             codestr += ')'
 
         return eval(codestr, {'self': self})

@@ -36,7 +36,7 @@ class SignalHound_Spike(VisaInstrument):
         """
         Set marker X position (frequency, in Hz)
         """
-        self.write(':CALC:MARK:X %s' % X)
+        self.write(f':CALC:MARK:X {X}')
         
     def do_set_marker_peaktracing(self, peaktracing):
         if peaktracing:
@@ -44,7 +44,7 @@ class SignalHound_Spike(VisaInstrument):
         else:
             peaktracing = 'OFF'
         
-        self.write(':CALC:MARK:PKTR %s' % peaktracing)
+        self.write(f':CALC:MARK:PKTR {peaktracing}')
         
         
     def do_set_mode(self, mode):
@@ -55,7 +55,7 @@ class SignalHound_Spike(VisaInstrument):
        self.write(':INST:SEL ' + mode)
        
     def do_set_center_frequency(self, center):
-       self.write(':SENS:FREQ:CENTER %s' % center)
+       self.write(f':SENS:FREQ:CENTER {center}')
           
     
 if __name__ == '__main__':

@@ -92,7 +92,7 @@ class dummy_signal_generator(Instrument):
 
     def reset(self, arg):
         '''Reset signal generator.'''
-        print('Resetting: %s' % arg)
+        print(f'Resetting: {arg}')
         self._start_time = time.time()
 
     def generate_numpy_array(self, arsize):
@@ -101,7 +101,7 @@ class dummy_signal_generator(Instrument):
         start = time.time()
         self._ar = np.random.rand(arsize)
         end = time.time()
-        print('Generating took %.03f ms' % ((end - start)*1000,))
+        print(f'Generating took {(end - start)*1000:.3f} ms')
         return True
 
     def get_numpy_array(self):

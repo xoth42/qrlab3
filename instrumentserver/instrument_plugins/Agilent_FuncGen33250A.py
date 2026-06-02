@@ -1,6 +1,6 @@
 from visainstrument import VisaInstrument, Instrument
 import time
-import visa
+import pyvisa
 import types
 
 class Agilent_FuncGen33250A(VisaInstrument):
@@ -63,7 +63,7 @@ class Agilent_FuncGen33250A(VisaInstrument):
         return val
 
     def do_set_frequency(self, freq, update=False):
-        self.write('FREQ %.06f\n' % freq)
+        self.write(f'FREQ {freq:.6f}\n')
         self.get_period_us()
         time.sleep(0.05)
 
@@ -82,7 +82,7 @@ class Agilent_FuncGen33250A(VisaInstrument):
         vlow = self.get_Vlow()
         amp = vhigh - vlow
         ofs = (vhigh + vlow)/2.0
-        self.write('APPL:%s %s, %s, %s\n' % (val, freq, amp, ofs))
+        self.write(f'APPL:{val} {freq}, {amp}, {ofs}\n')
 
     def do_get_function(self):
         val = self.ask('APPL?')

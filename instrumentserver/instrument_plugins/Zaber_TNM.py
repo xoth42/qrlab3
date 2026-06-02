@@ -20,8 +20,8 @@
 
 from .instrument import Instrument
 import types
-import visa
-import pyvisa.vpp43 as vpp43
+import pyvisa
+from lib import visafunc
 import qt
 import logging
 import numpy
@@ -105,12 +105,15 @@ class Zaber_TNM(Instrument):
         '''
         logging.debug(__name__ + ' : Opening serial connection')
 
-        self._visa = visa.SerialInstrument(self._address,
-                baud_rate=9600, data_bits=8, stop_bits=1,
-                parity=visa.no_parity, term_chars="",
-                send_end=False, chunk_size=8)
-        vpp43.set_attribute(self._visa.vi, vpp43.VI_ATTR_ASRL_END_IN,
-                vpp43.VI_ASRL_END_NONE)
+        self._visa = pyvisa.ResourceManager().open_resource(self._address)
+        self._visa.baud_rate = 9600
+        self._visa.data_bits = 8
+        self._visa.stop_bits = pyvisa.constants.StopBits.one
+        self._visa.parity = pyvisa.constants.Parity.none
+        self._visa.read_termination = None
+        self._visa.write_termination = None
+        self._visa.send_end = False
+        self._visa.chunk_size = 8
 
     # Close serial connection
     def _close_serial_connection(self):
@@ -144,9 +147,9 @@ class Zaber_TNM(Instrument):
         return ret
 
     def _clear_buffer(self):
-        navail = vpp43.get_attribute(self._visa.vi, vpp43.VI_ATTR_ASRL_AVAIL_NUM)
+        navail = visafunc.get_navail(self._visa)
         if navail > 0:
-            reply = vpp43.read(self._visa.vi, navail)
+            reply = visafunc.readn(self._visa, navail)
 
     def _read_reply(self, max_sleeps=100):
         '''
@@ -156,10 +159,10 @@ class Zaber_TNM(Instrument):
         '''
 
         for i in range(max_sleeps):
-            navail = vpp43.get_attribute(self._visa.vi, vpp43.VI_ATTR_ASRL_AVAIL_NUM)
+            navail = visafunc.get_navail(self._visa)
             if navail >= 6:
-                reply = vpp43.read(self._visa.vi, navail)
-                reply = [ord(ch) for ch in reply]
+                reply = visafunc.readn(self._visa, navail)
+                reply = list(reply)
                 return reply
 
             time.sleep(0.05)
@@ -178,13 +181,13 @@ class Zaber_TNM(Instrument):
 
         self._clear_buffer()
 
-        tosend = "%c" % self._deviceid
+        tosend = f"{self._deviceid:c}"
         if len(data) != 5:
             print("Data should contain 5 elements")
         for ch in data:
-            tosend += "%c" % ch
+            tosend += f"{ch:c}"
 
-        self._visa.write(tosend)
+        self._visa.write_raw(tosend.encode('latin1'))
         time.sleep(0.01)
         if get_reply:
             return self._read_reply()
@@ -228,7 +231,7 @@ class Zaber_TNM(Instrument):
             return None
 
         reply = self.send_cmd(16, values)
-        print('Position stored at address %r' % reply)
+        print(f'Position stored at address {reply!r}')
 
     def return_store_pos(self, store_address):
         if store_address < 1 or store_address > 16:

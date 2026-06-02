@@ -88,7 +88,7 @@ class ThorlabsFTD2XX(Instrument):
 
 
 #  def __del__(self):
-#    print "Bye!!"
+
 #    self.g.close()
 #  Fixme: release handle
 
@@ -202,22 +202,30 @@ class ThorlabsFTD2XX(Instrument):
   def ReturnStatus(self):
     return self.status
 
-  def do_get_IsMoving(self):
-    self.ReadBuffer()
-    self.g.write('\x90\x04\x01\x00\x50\x01')
-    sleep(0.1)
-    while(self.g.getQueueStatus()==0): # This is dangerous!!
-      sleep(0.5)
-    stat = (self.StatusbytesToPosition(self.ReadBuffer()))
-    return (stat['Moving_CW'] or stat['Moving_CCW'])
+    def do_get_IsMoving(self):
+        self.ReadBuffer()
+        self.g.write('\x90\x04\x01\x00\x50\x01')
+        sleep(0.1)
+        for _ in range(20):
+          if self.g.getQueueStatus() != 0:
+            break
+          sleep(0.5)
+        else:
+          raise IOError('Timed out waiting 10 seconds for Thorlabs status')
+        stat = (self.StatusbytesToPosition(self.ReadBuffer()))
+        return (stat['Moving_CW'] or stat['Moving_CCW'])
 
-  def do_get_Position(self):
-    self.ReadBuffer()
-    self.g.write('\x90\x04\x01\x00\x50\x01')
-    sleep(0.1)
-    while(self.g.getQueueStatus()==0): # This is dangerous!!
-      sleep(0.5)
-    valold = (self.StatusbytesToPosition(self.ReadBuffer()))['pos']
+    def do_get_Position(self):
+        self.ReadBuffer()
+        self.g.write('\x90\x04\x01\x00\x50\x01')
+        sleep(0.1)
+        for _ in range(20):
+          if self.g.getQueueStatus() != 0:
+            break
+          sleep(0.5)
+        else:
+          raise IOError('Timed out waiting 10 seconds for Thorlabs position')
+        valold = (self.StatusbytesToPosition(self.ReadBuffer()))['pos']
     if valold >= 2147483648:
       val = (valold-4294967296)/1920.0
     else:

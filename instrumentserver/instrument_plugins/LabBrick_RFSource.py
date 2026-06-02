@@ -84,7 +84,7 @@ def get_lb_func(funcname, argtypes=[ctypes.c_uint32]):
     except:
         if funcname not in DECORATOR_MAP:
             raise ValueError(
-                'Decorated version of function %s not known' % funcname)
+                f'Decorated version of function {funcname} not known')
         f = getattr(lb_dll, DECORATOR_MAP[funcname])
 
     f.argtypes = argtypes
@@ -153,7 +153,7 @@ class LabBrick_RFSource(Instrument):
                     devid = did
                     break
         if devid is None:
-            raise Exception('Unable to find Labbrick with serial %s' % serial)
+            raise Exception(f'Unable to find Labbrick with serial {serial}')
 
         self._devid = devid
         self._serialno = do_get_serial_number(devid)
@@ -163,8 +163,7 @@ class LabBrick_RFSource(Instrument):
 
         val = self._init()
         if val is not SUCCESS:
-            print('labbrick (sn: %d) device already opened, reopening' % \
-                  (self._serialno))
+            print(f'labbrick (sn: {int(self._serialno):d}) device already opened, reopening')
             self._close()
             time.sleep(0.01)
             self._init()
@@ -172,10 +171,8 @@ class LabBrick_RFSource(Instrument):
         self._min_freq = self._get_min_freq()
         self._max_power = self._get_max_power()
         self._min_power = self._get_min_power()
-        logging.debug('Frequency range: %.03f - %.03f MHz' % (
-            self._min_freq / 1e6, self._max_freq / 1e6))
-        logging.debug('Power range: %.01f - %.01f dBm' % (
-            self._min_power, self._max_power))
+        logging.debug(f'Frequency range: {self._min_freq / 1e6:.3f} - {self._max_freq / 1e6:.3f} MHz')
+        logging.debug(f'Power range: {self._min_power:.1f} - {self._max_power:.1f} dBm')
         self.add_parameter('serial', type=int,
                            flags=Instrument.FLAG_GET, value=self._serialno)
         self.add_parameter('model', type=bytes,

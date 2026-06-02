@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from .instrument import Instrument
-import visa
+import pyvisa
 import types
 import logging
 import numpy
@@ -46,16 +46,17 @@ class Rigol_DP1308(Instrument):
             None
         '''
 
-	self._Ires = 0.01
+        self._Ires = 0.01
 
         logging.info(__name__ + ' : Initializing instrument')
         Instrument.__init__(self, name, tags=['physical'])
 
         self._address = address
-        self._visainstrument = visa.instrument(self._address, timeout = 2)
-        print(' Rigol timeout set to: %s s'%self._visainstrument.timeout)
+        self._visainstrument = pyvisa.ResourceManager().open_resource(self._address)
+        self._visainstrument.timeout = 2000
+        print(f' Rigol timeout set to: {self._visainstrument.timeout} s')
 
-	# add parameters
+        # add parameters
         self.add_parameter('channel', type=bytes,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET)
 
@@ -77,7 +78,7 @@ class Rigol_DP1308(Instrument):
             self.get_all()
 
 
-	    # add functions here to enable OVP and OCP
+            # add functions here to enable OVP and OCP
 
     def reset(self):
         '''
@@ -111,94 +112,92 @@ class Rigol_DP1308(Instrument):
         self.get_current()
 
     def do_set_channel(self,channel):
-	'''
-	selects an operating channel
-	input: P6V, P25V, N25V
-	output: None
-	'''
+        '''
+        selects an operating channel
+        input: P6V, P25V, N25V
+        output: None
+        '''
 
         if channel == 'P6V':
-	    self._visainstrument.write('INST:SELE P6V')
+            self._visainstrument.write('INST:SELE P6V')
         elif channel == 'P25V':
             self._visainstrument.write('INST:SELE P25V')
         elif channel == 'N25V':
             self._visainstrument.write('INST:SELE N25V')
         else:
-            raise ValueError('Channel %s does not exist' %channel)
+            raise ValueError(f'Channel {channel} does not exist')
 
 
     def do_get_channel(self):
-	'''
+        '''
         returns the operating channel
-	'''
+        '''
 
-	a= self._visainstrument.ask('INST:SELE?')
-	if a == 1:
-	    return 'P6V'
-	if a == 2:
-	    return 'P25V'
-	if a == 1:
-	    return 'N25V'
+        a= self._visainstrument.query('INST:SELE?')
+        if a == 1:
+            return 'P6V'
+        if a == 2:
+            return 'P25V'
+        if a == 1:
+            return 'N25V'
 
 
     def do_set_status(self,value):
-	'''
-	takes value = on/off
+        '''
+        takes value = on/off
         sets the status = on/off
-	for the operating channel
-	'''
+        for the operating channel
+        '''
 
-	channel = self.get_channel()
-        a= self._visainstrument.write('OUTP:STAT %s, %s' %(channel,value))
+        channel = self.get_channel()
+        a= self._visainstrument.write(f'OUTP:STAT {channel}, {value}')
 
     def do_get_status(self):
-	'''
-	returns the status = on/off
-	for the operating channel
-	'''
+        '''
+        returns the status = on/off
+        for the operating channel
+        '''
 
-	channel = self.get_channel()
-        return self._visainstrument.ask('OUTP:STAT? %s' %channel)
+        channel = self.get_channel()
+        return self._visainstrument.query(f'OUTP:STAT? {channel}')
 
 
 
     def get_visains(self):
-	return self._visainstrument
+        return self._visainstrument
 
 
     def do_set_current(self,I):
-	'''
-	sets the current on the selected channel
-	mind the max and min currents
+        '''
+        sets the current on the selected channel
+        mind the max and min currents
 
-	'''
-	self.ramp_current(I)
+        '''
+        self.ramp_current(I)
 
     def do_get_current(self,I):
-	'''
-	sets the current on the selected channel
-	mind the max and min currents
+        '''
+        sets the current on the selected channel
+        mind the max and min currents
 
-	'''
-	return self._visainstrument.ask('SOUR:CURR:LEV:IMM:AMPL ?')
+        '''
+        return self._visainstrument.query('SOUR:CURR:LEV:IMM:AMPL ?')
 
     def ramp_current(self, value, ramp_speed = 0.1):
         '''
         ramps the to value
         ramp_speed is rampspeed in Amps/second
         '''
-	cur_val = self.get_current()
+        cur_val = self.get_current()
         dI = 1.*value - cur_val
-	Ires = self._Ires
+        Ires = self._Ires
         n_steps = abs(int(dI/Ires))
 
         for k in range(n_steps):
-	    self._visainstrument.write('SOUR:CURR:LEV:IMM:AMPL %s' % (1.*k)/n_steps*dI+cur_val)
+            self._visainstrument.write(f'SOUR:CURR:LEV:IMM:AMPL {1.0 * k}'/n_steps*dI+cur_val)
             qt.msleep(Ires/ramp_speed)
 
-        return 'A current of %s Amps has been set on %s channel' \
-			%(self.get_current(),self.get_channel())
-
+        return f'A current of {self.get_current()} Amps has been set on {self.get_channel()} channel'
 
 
 

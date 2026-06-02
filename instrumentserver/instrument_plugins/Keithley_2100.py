@@ -21,7 +21,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from .instrument import Instrument
-import visa
+import pyvisa
 import types
 import logging
 import numpy
@@ -72,7 +72,7 @@ class Keithley_2100(Instrument):
 
         # Add some global constants
         self._address = address
-        self._visainstrument = visa.instrument(self._address)
+        self._visainstrument = pyvisa.ResourceManager().open_resource(self._address)
         self._modes = ['VOLT:AC', 'VOLT:DC', 'CURR:AC', 'CURR:DC', 'RES',
             'FRES', 'TEMP', 'FREQ']
         self._change_display = change_display
@@ -244,7 +244,7 @@ class Keithley_2100(Instrument):
 
         if self._trigger_sent:
             logging.debug('Fetching data')
-            reply = self._visainstrument.ask('FETCH?')
+            reply = self._visainstrument.query('FETCH?')
             self._trigger_sent = False
             return float(reply[0:15])
         else:
@@ -393,7 +393,7 @@ class Keithley_2100(Instrument):
         '''
         logging.debug('Read next value')
         #FIXME: correct for 2100?
-        text = self._visainstrument.ask('READ?')
+        text = self._visainstrument.query('READ?')
         return float(text[0:15])
 
     def do_set_range(self, val, mode=None):
@@ -408,7 +408,7 @@ class Keithley_2100(Instrument):
         Output:
             None
         '''
-        logging.debug('Set range to %s' % val)
+        logging.debug(f'Set range to {val}')
         self._set_func_par_value(mode, 'RANG', val)
 
     def do_get_range(self, mode=None):
@@ -437,9 +437,9 @@ class Keithley_2100(Instrument):
         Output:
             None
         '''
-        logging.debug('Set resolution to %s' % val)
+        logging.debug(f'Set resolution to {val}')
         mode = self._determine_mode(mode)
-        self._visainstrument.write('SENS:%s:RES %s' % (mode, val))
+        self._visainstrument.write(f'SENS:{mode}:RES {val}')
         return True
 
     def do_get_resolution(self, mode=None):
@@ -455,7 +455,7 @@ class Keithley_2100(Instrument):
         '''
         logging.debug('Getting resolution')
         mode = self._determine_mode(mode)
-        return self._visainstrument.ask('SENS:%s:RES?' % mode)
+        return self._visainstrument.query(f'SENS:{mode}:RES?')
 
     def do_set_nplc(self, val, mode=None, unit='APER'):
         '''
@@ -471,7 +471,7 @@ class Keithley_2100(Instrument):
         Output:
             None
         '''
-        logging.debug('Set integration time to %s PLC' % val)
+        logging.debug(f'Set integration time to {val} PLC')
         self._set_func_par_value(mode, 'NPLC', val)
 
     def do_get_nplc(self, mode=None, unit='APER'):
@@ -500,7 +500,7 @@ class Keithley_2100(Instrument):
         Output:
             None
         '''
-        logging.debug('Set trigger count to %s' % val)
+        logging.debug(f'Set trigger count to {val}')
         if val > 9999:
             val = 'INF'
         self._set_func_par_value('TRIG', 'COUN', val)
@@ -538,8 +538,8 @@ class Keithley_2100(Instrument):
             logging.debug('Set trigger delay to auto')
             self._set_func_par_value('TRIG', 'DEL:AUTO', 'OFF')
         else:
-            logging.debug('Set trigger delay to %s sec', val)
-            self._set_func_par_value('TRIG', 'DEL', '%s' % val)
+            logging.debug(f'Set trigger delay to {val} sec', )
+            self._set_func_par_value('TRIG', 'DEL', f'{val}')
 
     def do_get_trigger_delay(self):
         '''
@@ -568,7 +568,7 @@ class Keithley_2100(Instrument):
         Output:
             None
         '''
-        logging.debug('Set Trigger source to %s' % val)
+        logging.debug(f'Set Trigger source to {val}')
         self._set_func_par_value('TRIG', 'SOUR', val)
 
     def do_get_trigger_source(self):
@@ -595,9 +595,9 @@ class Keithley_2100(Instrument):
             None
         '''
 
-        logging.debug('Set mode to %s', mode)
+        logging.debug(f'Set mode to {mode}', )
         if mode in self._modes:
-            string = 'SENS:FUNC "%s"' % mode
+            string = f'SENS:FUNC "{mode}"'
             self._visainstrument.write(string)
 
             if mode.startswith('VOLT'):
@@ -610,7 +610,7 @@ class Keithley_2100(Instrument):
                 self._change_units('Hz')
 
         else:
-            logging.error('invalid mode %s' % mode)
+            logging.error(f'invalid mode {mode}')
 
         self.get_all()
             # Get all values again because some paramaters depend on mode
@@ -627,7 +627,7 @@ class Keithley_2100(Instrument):
         '''
         string = 'SENS:FUNC?'
         logging.debug('Getting mode')
-        ans = self._visainstrument.ask(string)
+        ans = self._visainstrument.query(string)
         ans = ans.strip('"')
         if ans == 'VOLT':
             ans = 'VOLT:DC'
@@ -647,7 +647,7 @@ class Keithley_2100(Instrument):
             False= Off
         '''
         logging.debug('Reading display from instrument')
-        reply = self._visainstrument.ask('DISP?')
+        reply = self._visainstrument.query('DISP?')
         return bool(int(reply))
 
     def do_set_display(self, val):
@@ -660,9 +660,9 @@ class Keithley_2100(Instrument):
         Output
 
         '''
-        logging.debug('Set display to %s' % val)
+        logging.debug(f'Set display to {val}')
         val = bool_to_str(val)
-        return self._visainstrument.write('DISP %s' % val)
+        return self._visainstrument.write(f'DISP {val}')
 
     def do_get_autozero(self):
         '''
@@ -675,7 +675,7 @@ class Keithley_2100(Instrument):
             reply (boolean) : Autozero status.
         '''
         logging.debug('Reading autozero status from instrument')
-        reply = self._visainstrument.ask(':ZERO:AUTO?')
+        reply = self._visainstrument.query(':ZERO:AUTO?')
         return bool(int(reply))
 
     def do_set_autozero(self, val):
@@ -688,9 +688,9 @@ class Keithley_2100(Instrument):
         Output
 
         '''
-        logging.debug('Set autozero to %s' % val)
+        logging.debug(f'Set autozero to {val}')
         val = bool_to_str(val)
-        return self._visainstrument.write('SENS:ZERO:AUTO %s' % val)
+        return self._visainstrument.write(f'SENS:ZERO:AUTO {val}')
 
     def do_set_averaging(self, val, mode=None):
         '''
@@ -704,9 +704,9 @@ class Keithley_2100(Instrument):
         Output:
             None
         '''
-        logging.debug('Set averaging to %s ' % val)
+        logging.debug(f'Set averaging to {val} ')
         val = bool_to_str(val)
-        self._visainstrument.write('SENS:AVER:STAT %s' % val)
+        self._visainstrument.write(f'SENS:AVER:STAT {val}')
 
     def do_get_averaging(self, mode=None):
         '''
@@ -720,7 +720,7 @@ class Keithley_2100(Instrument):
             result (boolean)
         '''
         logging.debug('Get averaging')
-        reply = self._visainstrument.ask('SENS:AVER:STAT?')
+        reply = self._visainstrument.query('SENS:AVER:STAT?')
         return bool(int(reply))
 
     def do_set_averaging_count(self, val, mode=None):
@@ -735,8 +735,8 @@ class Keithley_2100(Instrument):
         Output:
             None
         '''
-        logging.debug('Set averaging_count to %s ' % val)
-        self._visainstrument.write('SENS:AVER:COUN %d' % val)
+        logging.debug(f'Set averaging_count to {val} ')
+        self._visainstrument.write(f'SENS:AVER:COUN {int(val)}')
 
     def do_get_averaging_count(self, mode=None):
         '''
@@ -750,7 +750,7 @@ class Keithley_2100(Instrument):
             result (int) : Averaging count
         '''
         logging.debug('Get averaging count')
-        reply = self._visainstrument.ask('SENS:AVER:COUN?')
+        reply = self._visainstrument.query('SENS:AVER:COUN?')
         return int(float(reply))
 
     def do_set_autorange(self, val, mode=None):
@@ -765,7 +765,7 @@ class Keithley_2100(Instrument):
         Output:
             None
         '''
-        logging.debug('Set autorange to %s ' % val)
+        logging.debug(f'Set autorange to {val} ')
         val = bool_to_str(val)
         self._set_func_par_value(mode, 'RANG:AUTO', val)
 
@@ -798,16 +798,16 @@ class Keithley_2100(Instrument):
             None
         '''
 
-        logging.debug('Set averaging type to %s', type)
+        logging.debug(f'Set averaging type to {type}', )
         if type is 'moving':
             type='MOV'
         elif type is 'repeat':
             type='REP'
 
         if type in self._averaging_types:
-            self._visainstrument.write('SENS:AVER:TCON %s' % type)
+            self._visainstrument.write(f'SENS:AVER:TCON {type}')
         else:
-            logging.error('invalid type %s' % type)
+            logging.error(f'invalid type {type}')
 
     def do_get_averaging_type(self, mode=None):
         '''
@@ -821,7 +821,7 @@ class Keithley_2100(Instrument):
             type (string) : Current avering type for specified mode.
         '''
         logging.debug('Get averaging type')
-        ans = self._visainstrument.ask('SENS:AVER:TCON?')
+        ans = self._visainstrument.query('SENS:AVER:TCON?')
         if ans.startswith('REP'):
             ans='repeat'
         elif ans.startswith('MOV'):
@@ -839,11 +839,11 @@ class Keithley_2100(Instrument):
         Return the mode string to use.
         If mode is None it will return the currently selected mode.
         '''
-        logging.debug('Determine mode with mode=%s' % mode)
+        logging.debug(f'Determine mode with mode={mode}')
         if mode is None:
             mode = self.get_mode(query=False)
         if mode not in self._modes and mode not in ('INIT', 'TRIG', 'SYST', 'DISP'):
-            logging.warning('Invalid mode %s, assuming current' % mode)
+            logging.warning(f'Invalid mode {mode}, assuming current')
             mode = self.get_mode(query=False)
         return mode
 
@@ -861,8 +861,8 @@ class Keithley_2100(Instrument):
             None
         '''
         mode = self._determine_mode(mode)
-        string = ':%s:%s %s' % (mode, par, val)
-        logging.debug('Set instrument to %s' % string)
+        string = f':{mode}:{par} {val}'
+        logging.debug(f'Set instrument to {string}')
         self._visainstrument.write(string)
 
     def _get_func_par(self, mode, par):
@@ -879,10 +879,9 @@ class Keithley_2100(Instrument):
             val (string) :
         '''
         mode = self._determine_mode(mode)
-        string = ':%s:%s?' % (mode, par)
-        ans = self._visainstrument.ask(string)
-        logging.debug('ask instrument for %s (result %s)' % \
-            (string, ans))
+        string = f':{mode}:{par}?'
+        ans = self._visainstrument.query(string)
+        logging.debug(f'ask instrument for {string} (result {ans})')
         return ans
 
     def _measurement_start_cb(self, sender):

@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from .instrument import Instrument
-import visa
+import pyvisa
 import types
 import logging
 import numpy
@@ -59,7 +59,7 @@ class Tektronix_AWG520(Instrument):
 
 
         self._address = address
-        self._visainstrument = visa.instrument(self._address)
+        self._visainstrument = pyvisa.ResourceManager().open_resource(self._address)
         self._values = {}
         self._values['files'] = {}
         self._clock = clock
@@ -154,13 +154,13 @@ class Tektronix_AWG520(Instrument):
         self.get_clock()
 
         for i in range(1,3):
-            self.get('ch%d_amplitude' % i)
-            self.get('ch%d_offset' % i)
-            self.get('ch%d_marker1_low' % i)
-            self.get('ch%d_marker1_high' % i)
-            self.get('ch%d_marker2_low' % i)
-            self.get('ch%d_marker2_high' % i)
-            self.get('ch%d_status' % i)
+            self.get(f'ch{int(i)}_amplitude')
+            self.get(f'ch{int(i)}_offset')
+            self.get(f'ch{int(i)}_marker1_low')
+            self.get(f'ch{int(i)}_marker1_high')
+            self.get(f'ch{int(i)}_marker2_low')
+            self.get(f'ch{int(i)}_marker2_high')
+            self.get(f'ch{int(i)}_status')
 
     def clear_waveforms(self):
         '''
@@ -240,7 +240,7 @@ class Tektronix_AWG520(Instrument):
             mode (string) : 'Trig' or 'Cont' depending on the mode
         '''
         logging.debug(__name__  + ' : Get trigger mode from instrument')
-        return self._visainstrument.ask('AWGC:RMOD?')
+        return self._visainstrument.query('AWGC:RMOD?')
 
     def do_set_trigger_mode(self, mod):
         '''
@@ -257,7 +257,7 @@ class Tektronix_AWG520(Instrument):
         elif (mod.upper()=='CONT'):
             self.set_trigger_mode_off()
         else:
-            logging.error(__name__ + ' : Unable to set trigger mode to %s, expected "TRIG" or "CONT"' %mod)
+            logging.error(__name__ + f' : Unable to set trigger mode to {mod}, expected "TRIG" or "CONT"')
 
     def do_get_trigger_impedance(self):
         '''
@@ -270,7 +270,7 @@ class Tektronix_AWG520(Instrument):
             impedance (??) : 1e3 or 50 depending on the mode
         '''
         logging.debug(__name__  + ' : Get trigger impedance from instrument')
-        return self._visainstrument.ask('TRIG:IMP?')
+        return self._visainstrument.query('TRIG:IMP?')
 
     def do_set_trigger_impedance(self, mod):
         '''
@@ -287,7 +287,7 @@ class Tektronix_AWG520(Instrument):
         elif (mod==50):
             self.set_trigger_impedance_50()
         else:
-            logging.error(__name__ + ' : Unable to set trigger impedance to %s, expected "1e3" or "50"' %mod)
+            logging.error(__name__ + f' : Unable to set trigger impedance to {mod}, expected "1e3" or "50"')
 
     def do_get_trigger_level(self):
         '''
@@ -300,7 +300,7 @@ class Tektronix_AWG520(Instrument):
             None
         '''
         logging.debug(__name__  + ' : Get trigger level from instrument')
-        return float(self._visainstrument.ask('TRIG:LEV?'))
+        return float(self._visainstrument.query('TRIG:LEV?'))
 
     def do_set_trigger_level(self, level):
         '''
@@ -309,8 +309,8 @@ class Tektronix_AWG520(Instrument):
         Input:
             level (float) : trigger level in volts
         '''
-        logging.debug(__name__  + ' : Trigger level set to %.3f' %level)
-        self._visainstrument.write('TRIG:LEV %.3f' %level)
+        logging.debug(__name__  + f' : Trigger level set to {level:.3f}')
+        self._visainstrument.write(f'TRIG:LEV {level:.3f}')
 
     def do_get_numpoints(self):
         '''
@@ -335,13 +335,13 @@ class Tektronix_AWG520(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : Trying to set numpoints to %s' %numpts)
+        logging.debug(__name__ + f' : Trying to set numpoints to {numpts}')
         if numpts != self._numpoints:
             logging.warning(__name__ + ' : changing numpoints. This will clear all waveforms!')
 
         response = input('type "yes" to continue')
         if response is 'yes':
-            logging.debug(__name__ + ' : Setting numpoints to %s' %numpts)
+            logging.debug(__name__ + f' : Setting numpoints to {numpts}')
             self._numpoints = numpts
             self.clear_waveforms()
         else:
@@ -370,9 +370,9 @@ class Tektronix_AWG520(Instrument):
         Output:
             None
         '''
-        logging.warning(__name__ + ' : Clock set to %s. This is not fully functional yet. To avoid problems, it is better not to change the clock during operation' % clock)
+        logging.warning(__name__ + f' : Clock set to {clock}. This is not fully functional yet. To avoid problems, it is better not to change the clock during operation')
         self._clock = clock
-        self._visainstrument.write('SOUR:FREQ %f' % clock)
+        self._visainstrument.write(f'SOUR:FREQ {clock:f}')
 
     def do_set_filename(self, name, channel):
         '''
@@ -390,17 +390,17 @@ class Tektronix_AWG520(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__  + ' : Try to set %s on channel %s' %(name, channel))
+        logging.debug(__name__  + f' : Try to set {name} on channel {channel}')
         exists = False
         if name in self._values['files']:
             exists= True
             logging.debug(__name__  + ' : File exists in loacal memory')
-            self._values['recent_channel_%s' %channel] = self._values['files'][name]
-            self._values['recent_channel_%s' %channel]['filename'] = name
+            self._values[f'recent_channel_{channel}'] = self._values['files'][name]
+            self._values[f'recent_channel_{channel}']['filename'] = name
         else:
             logging.debug(__name__  + ' : File does not exist in memory, \
             reading from instrument')
-            lijst = self._visainstrument.ask('MMEM:CAT? "MAIN"')
+            lijst = self._visainstrument.query('MMEM:CAT? "MAIN"')
             bool = False
             bestand=""
             for i in range(len(lijst)):
@@ -413,7 +413,7 @@ class Tektronix_AWG520(Instrument):
                 elif bool:
                     bestand = bestand + lijst[i]
         if exists:
-            data = self._visainstrument.ask('MMEM:DATA? "%s"' %name)
+            data = self._visainstrument.query(f'MMEM:DATA? "{name}"')
             logging.debug(__name__  + ' : File exists on instrument, loading \
             into local memory')
             # string alsvolgt opgebouwd: '#' <lenlen1> <len> 'MAGIC 1000\r\n' '#' <len waveform> 'CLOCK ' <clockvalue>
@@ -443,17 +443,16 @@ class Tektronix_AWG520(Instrument):
             self._values['files'][name]['clock']=clock
             self._values['files'][name]['numpoints']=len(w)
 
-            self._values['recent_channel_%s' %channel] = self._values['files'][name]
-            self._values['recent_channel_%s' %channel]['filename'] = name
+            self._values[f'recent_channel_{channel}'] = self._values['files'][name]
+            self._values[f'recent_channel_{channel}']['filename'] = name
         else:
-            logging.error(__name__  + ' : Invalid filename specified %s' %name)
+            logging.error(__name__  + f' : Invalid filename specified {name}')
 
         if (self._numpoints==self._values['files'][name]['numpoints']):
-            logging.debug(__name__  + ' : Set file %s on channel %s' % (name, channel))
-            self._visainstrument.write('SOUR%s:FUNC:USER "%s","MAIN"' % (channel, name))
+            logging.debug(__name__  + f' : Set file {name} on channel {channel}')
+            self._visainstrument.write(f'SOUR{channel}:FUNC:USER "{name}","MAIN"')
         else:
-            logging.warning(__name__  + ' : Verkeerde lengte %s ipv %s'
-                %(self._values['files'][name]['numpoints'], self._numpoints))
+            logging.warning(__name__  + f" : Verkeerde lengte {self._values['files'][name]['numpoints']} ipv {self._numpoints}")
 
     def do_get_amplitude(self, channel):
         '''
@@ -465,9 +464,8 @@ class Tektronix_AWG520(Instrument):
         Output:
             amplitude (float) : the amplitude of the signal in Volts
         '''
-        logging.debug(__name__ + ' : Get amplitude of channel %s from instrument'
-            %channel)
-        return float(self._visainstrument.ask('SOUR%s:VOLT:LEV:IMM:AMPL?' % channel))
+        logging.debug(__name__ + f' : Get amplitude of channel {channel} from instrument')
+        return float(self._visainstrument.query(f'SOUR{channel}:VOLT:LEV:IMM:AMPL?'))
 
     def do_set_amplitude(self, amp, channel):
         '''
@@ -480,9 +478,8 @@ class Tektronix_AWG520(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : Set amplitude of channel %s to %.6f'
-            %(channel, amp))
-        self._visainstrument.write('SOUR%s:VOLT:LEV:IMM:AMPL %.6f' % (channel, amp))
+        logging.debug(__name__ + f' : Set amplitude of channel {channel} to {amp:.6f}')
+        self._visainstrument.write(f'SOUR{channel}:VOLT:LEV:IMM:AMPL {amp:.6f}')
 
     def do_get_offset(self, channel):
         '''
@@ -494,8 +491,8 @@ class Tektronix_AWG520(Instrument):
         Output:
             offset (float) : offset of designated channel in Volts
         '''
-        logging.debug(__name__ + ' : Get offset of channel %s' %channel)
-        return float(self._visainstrument.ask('SOUR%s:VOLT:LEV:IMM:OFFS?' % channel))
+        logging.debug(__name__ + f' : Get offset of channel {channel}')
+        return float(self._visainstrument.query(f'SOUR{channel}:VOLT:LEV:IMM:OFFS?'))
 
     def do_set_offset(self, offset, channel):
         '''
@@ -508,8 +505,8 @@ class Tektronix_AWG520(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : Set offset of channel %s to %.6f' %(channel, offset))
-        self._visainstrument.write('SOUR%s:VOLT:LEV:IMM:OFFS %.6f' % (channel, offset))
+        logging.debug(__name__ + f' : Set offset of channel {channel} to {offset:.6f}')
+        self._visainstrument.write(f'SOUR{channel}:VOLT:LEV:IMM:OFFS {offset:.6f}')
 
     def do_get_marker1_low(self, channel):
         '''
@@ -521,8 +518,8 @@ class Tektronix_AWG520(Instrument):
         Output:
             low (float) : low level in Volts
         '''
-        logging.debug(__name__ + ' : Get lower bound of marker1 of channel %s' %channel)
-        return float(self._visainstrument.ask('SOUR%s:MARK1:VOLT:LEV:IMM:LOW?' % channel))
+        logging.debug(__name__ + f' : Get lower bound of marker1 of channel {channel}')
+        return float(self._visainstrument.query(f'SOUR{channel}:MARK1:VOLT:LEV:IMM:LOW?'))
 
     def do_set_marker1_low(self, low, channel):
         '''
@@ -535,9 +532,8 @@ class Tektronix_AWG520(Instrument):
         Output:
             None
          '''
-        logging.debug(__name__ + ' : Set lower bound of marker1 of channel %s to %.3f'
-            %(channel, low))
-        self._visainstrument.write('SOUR%s:MARK1:VOLT:LEV:IMM:LOW %.3f' % (channel, low))
+        logging.debug(__name__ + f' : Set lower bound of marker1 of channel {channel} to {low:.3f}')
+        self._visainstrument.write(f'SOUR{channel}:MARK1:VOLT:LEV:IMM:LOW {low:.3f}')
 
     def do_get_marker1_high(self, channel):
         '''
@@ -549,8 +545,8 @@ class Tektronix_AWG520(Instrument):
         Output:
             high (float) : high level in Volts
         '''
-        logging.debug(__name__ + ' : Get upper bound of marker1 of channel %s' %channel)
-        return float(self._visainstrument.ask('SOUR%s:MARK1:VOLT:LEV:IMM:HIGH?' % channel))
+        logging.debug(__name__ + f' : Get upper bound of marker1 of channel {channel}')
+        return float(self._visainstrument.query(f'SOUR{channel}:MARK1:VOLT:LEV:IMM:HIGH?'))
 
     def do_set_marker1_high(self, high, channel):
         '''
@@ -563,9 +559,8 @@ class Tektronix_AWG520(Instrument):
         Output:
             None
          '''
-        logging.debug(__name__ + ' : Set upper bound of marker1 of channel %s to %.3f'
-            %(channel,high))
-        self._visainstrument.write('SOUR%s:MARK1:VOLT:LEV:IMM:HIGH %.3f' % (channel, high))
+        logging.debug(__name__ + f' : Set upper bound of marker1 of channel {channel} to {high:.3f}')
+        self._visainstrument.write(f'SOUR{channel}:MARK1:VOLT:LEV:IMM:HIGH {high:.3f}')
 
     def do_get_marker2_low(self, channel):
         '''
@@ -577,8 +572,8 @@ class Tektronix_AWG520(Instrument):
         Output:
             low (float) : low level in Volts
         '''
-        logging.debug(__name__ + ' : Get lower bound of marker2 of channel %s' %channel)
-        return float(self._visainstrument.ask('SOUR%s:MARK2:VOLT:LEV:IMM:LOW?' % channel))
+        logging.debug(__name__ + f' : Get lower bound of marker2 of channel {channel}')
+        return float(self._visainstrument.query(f'SOUR{channel}:MARK2:VOLT:LEV:IMM:LOW?'))
 
     def do_set_marker2_low(self, low, channel):
         '''
@@ -591,9 +586,8 @@ class Tektronix_AWG520(Instrument):
         Output:
             None
          '''
-        logging.debug(__name__ + ' : Set lower bound of marker2 of channel %s to %.3f'
-            %(channel, low))
-        self._visainstrument.write('SOUR%s:MARK2:VOLT:LEV:IMM:LOW %.3f' % (channel, low))
+        logging.debug(__name__ + f' : Set lower bound of marker2 of channel {channel} to {low:.3f}')
+        self._visainstrument.write(f'SOUR{channel}:MARK2:VOLT:LEV:IMM:LOW {low:.3f}')
 
     def do_get_marker2_high(self, channel):
         '''
@@ -605,8 +599,8 @@ class Tektronix_AWG520(Instrument):
         Output:
             high (float) : high level in Volts
         '''
-        logging.debug(__name__ + ' : Get upper bound of marker2 of channel %s' %channel)
-        return float(self._visainstrument.ask('SOUR%s:MARK2:VOLT:LEV:IMM:HIGH?' % channel))
+        logging.debug(__name__ + f' : Get upper bound of marker2 of channel {channel}')
+        return float(self._visainstrument.query(f'SOUR{channel}:MARK2:VOLT:LEV:IMM:HIGH?'))
 
     def do_set_marker2_high(self, high, channel):
         '''
@@ -619,9 +613,8 @@ class Tektronix_AWG520(Instrument):
         Output:
             None
          '''
-        logging.debug(__name__ + ' : Set upper bound of marker2 of channel %s to %.3f'
-            %(channel,high))
-        self._visainstrument.write('SOUR%s:MARK2:VOLT:LEV:IMM:HIGH %.3f' % (channel, high))
+        logging.debug(__name__ + f' : Set upper bound of marker2 of channel {channel} to {high:.3f}')
+        self._visainstrument.write(f'SOUR{channel}:MARK2:VOLT:LEV:IMM:HIGH {high:.3f}')
 
     def do_get_status(self, channel):
         '''
@@ -633,14 +626,14 @@ class Tektronix_AWG520(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : Get status of channel %s' %channel)
-        outp = self._visainstrument.ask('OUTP%s?' %channel)
+        logging.debug(__name__ + f' : Get status of channel {channel}')
+        outp = self._visainstrument.query(f'OUTP{channel}?')
         if (outp=='0'):
             return 'off'
         elif (outp=='1'):
             return 'on'
         else:
-            logging.debug(__name__ + ' : Read invalid status from instrument %s' %outp)
+            logging.debug(__name__ + f' : Read invalid status from instrument {outp}')
             return 'an error occurred while reading status from instrument'
 
     def do_set_status(self, status, channel):
@@ -654,20 +647,19 @@ class Tektronix_AWG520(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : Set status of channel %s to %s'
-            %(channel, status))
+        logging.debug(__name__ + f' : Set status of channel {channel} to {status}')
         if (status.upper()=='ON'):
-            self._visainstrument.write('OUTP%s ON' %channel)
+            self._visainstrument.write(f'OUTP{channel} ON')
         elif (status.upper()=='OFF'):
-            self._visainstrument.write('OUTP%s OFF' %channel)
+            self._visainstrument.write(f'OUTP{channel} OFF')
         else:
-            logging.debug(__name__ + ' : Try to set status to invalid value %s' % status)
-            print('Tried to set status to invalid value %s' %status)
+            logging.debug(__name__ + f' : Try to set status to invalid value {status}')
+            print(f'Tried to set status to invalid value {status}')
 
     #  Ask for string with filenames
     def get_filenames(self):
         logging.debug(__name__ + ' : Read filenames from instrument')
-        return self._visainstrument.ask('MMEM:CAT? "MAIN"')
+        return self._visainstrument.query('MMEM:CAT? "MAIN"')
 
     # Send waveform to the device
     def send_waveform(self,w,m1,m2,filename,clock):
@@ -685,7 +677,7 @@ class Tektronix_AWG520(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : Sending waveform %s to instrument' % filename)
+        logging.debug(__name__ + f' : Sending waveform {filename} to instrument')
         # Check for errors
         dim = len(w)
 
@@ -704,10 +696,10 @@ class Tektronix_AWG520(Instrument):
         for i in range(0,len(w)):
             ws.extend(struct.pack('<fB', w[i], int(m[i])))
 
-        s1 = 'MMEM:DATA "%s",' % filename
+        s1 = f'MMEM:DATA "{filename}",'
         s3 = 'MAGIC 1000\n'
         s5 = bytes(ws)
-        s6 = 'CLOCK %.10e\n' % clock
+        s6 = f'CLOCK {clock:.10e}\n'
 
         s4 = '#' + str(len(str(len(s5)))) + str(len(s5))
         lenlen = str(len(str(len(s6) + len(s5) + len(s4) + len(s3))))
@@ -734,18 +726,18 @@ class Tektronix_AWG520(Instrument):
         Output:
             None
         '''
-        filename = self._values['recent_channel_%s' %channel]['filename']
-        logging.debug(__name__ + ' : Resending %s to channel %s' % (filename, channel))
+        filename = self._values[f'recent_channel_{channel}']['filename']
+        logging.debug(__name__ + f' : Resending {filename} to channel {channel}')
 
 
         if (w==[]):
-            w = self._values['recent_channel_%s' %channel]['w']
+            w = self._values[f'recent_channel_{channel}']['w']
         if (m1==[]):
-            m1 = self._values['recent_channel_%s' %channel]['m1']
+            m1 = self._values[f'recent_channel_{channel}']['m1']
         if (m2==[]):
-            m2 = self._values['recent_channel_%s' %channel]['m2']
+            m2 = self._values[f'recent_channel_{channel}']['m2']
         if (clock==[]):
-            clock = self._values['recent_channel_%s' %channel]['clock']
+            clock = self._values[f'recent_channel_{channel}']['clock']
 
         if not ( (len(w) == self._numpoints) and (len(m1) == self._numpoints) and (len(m2) == self._numpoints)):
             logging.error(__name__ + ' : one (or more) lengths of waveforms do not match with numpoints')

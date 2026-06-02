@@ -36,9 +36,9 @@ class Fitter(object):
     def __init__(self, funcname):
         self.funcname = funcname
         try:
-            self.module = importlib.import_module('fit_funcs.%s' % funcname)
+            self.module = importlib.import_module(f'fit_funcs.{funcname}')
         except ImportError:
-            self.module = importlib.import_module('builtin_fit_funcs.%s' % funcname)
+            self.module = importlib.import_module(f'builtin_fit_funcs.{funcname}')
         if not hasattr(self.module, 'func'):
             raise Exception('Module %s does not contain a fit function (called "func")')
 
@@ -128,13 +128,13 @@ class Fitter(object):
             if len(params) != nargs:
                 raise Exception(
                     'guess() function did not return the right amount of '
-                    'parameters (expected %s, got %s)' % (nargs, len(params))
+                    f'parameters (expected {nargs}, got {len(params)})'
                 )
             return params
 
         defaults = self.fit_args.defaults or ()
         if len(defaults) != nargs:
-            raise Exception('Fit function %s does not specify enough default parameters' % self.funcname)
+            raise Exception(f'Fit function {self.funcname} does not specify enough default parameters')
 
         offset = 2 if self.is_2d else 1
         ret = {

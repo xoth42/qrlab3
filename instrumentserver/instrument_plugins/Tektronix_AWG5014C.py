@@ -157,10 +157,10 @@ class Tektronix_AWG5014C(VisaInstrument):
         return False
 
     def load_settings(self, fn):
-        self.write('AWGC:SLOAD "%s"' % fn)
+        self.write(f'AWGC:SLOAD "{fn}"')
 
     def save_settings(self, fn):
-        self.write('AWGC:SSAVE "%s"' % fn)
+        self.write(f'AWGC:SSAVE "{fn}"')
 
     ###############################################
     # Sequence management
@@ -187,71 +187,71 @@ class Tektronix_AWG5014C(VisaInstrument):
     ###############################################
 
     def do_get_output(self, channel):
-        outs = self.ask('OUTP%d?'%channel)
+        outs = self.ask(f'OUTP{int(channel)}?')
         return int(float(outs))
 
     def do_set_output(self, enable, channel):
-        cmd = 'OUTP%d %d' % (channel, enable)
+        cmd = f'OUTP{int(channel)} {int(enable)}'
         self.write(cmd)
 
     def all_on(self):
         for ch in (1, 2, 3, 4):
-            self.set('ch%d_output'%ch, True)
+            self.set(f'ch{int(ch)}_output', True)
 
     def all_off(self):
         for ch in (1, 2, 3, 4):
-            self.set('ch%d_output'%ch, False)
+            self.set(f'ch{int(ch)}_output', False)
 
     def do_set_amplitude(self, amp, channel):
-        self.write('SOURCE%d:VOLT:IMM:AMPL %.05f' % (channel, amp))
+        self.write(f'SOURCE{int(channel)}:VOLT:IMM:AMPL {amp:.05f}')
 
     def do_get_amplitude(self, channel):
-        val = self.ask('SOURCE%d:VOLT:AMPL?' % (channel,))
+        val = self.ask(f'SOURCE{int(channel)}:VOLT:AMPL?')
         return val
 
     def do_set_offset(self, ofs, channel):
-        self.write('SOUR%d:VOLT:LEV:IMM:OFFS %.04f' % (channel, ofs))
+        self.write(f'SOUR{int(channel)}:VOLT:LEV:IMM:OFFS {ofs:.04f}')
 
     def do_get_offset(self, channel):
-        val = self.ask('SOUR%d:VOLT:LEV:IMM:OFFS?' % (channel,))
+        val = self.ask(f'SOUR{int(channel)}:VOLT:LEV:IMM:OFFS?')
         return val
 
     def do_set_skew(self, skew, channel):
         '''Set channel skew in ps.'''
-        self.write('SOURCE%d:SKEW %dPS' % (channel, skew))
+        self.write(f'SOURCE{int(channel)}:SKEW {int(skew)}PS')
 
     def do_get_skew(self, channel):
         '''Get channel skew in ps.'''
-        val = self.ask('SOURCE%d:SKEW?' % (channel,))
+        val = self.ask(f'SOURCE{int(channel)}:SKEW?')
 
         return float(val) * 1e12
 
     def do_set_m1_low(self, val, channel):
-        self.write('SOUR%d:MARKER1:VOLT:LEV:IMM:LOW %.04f' % (channel, val))
+        self.write(f'SOUR{int(channel)}:MARKER1:VOLT:LEV:IMM:LOW {val:.04f}')
 
     def do_get_m1_low(self, channel):
-        val = self.ask('SOUR%d:MARKER1:VOLT:LEV:IMM:LOW?' % (channel,))
+        val = self.ask(f'SOUR{int(channel)}:MARKER1:VOLT:LEV:IMM:LOW?')
         return val
 
     def do_set_m1_high(self, val, channel):
-        self.write('SOUR%d:MARKER1:VOLT:LEV:IMM:HIGH %.04f' % (channel, val))
+        self.write(f'SOUR{int(channel)}:MARKER1:VOLT:LEV:IMM:HIGH {val:.04f}')
 
     def do_get_m1_high(self, channel):
-        val = self.ask('SOUR%d:MARKER1:VOLT:LEV:IMM:HIGH?' % (channel,))
+        val = self.ask(f'SOUR{int(channel)}:MARKER1:VOLT:LEV:IMM:HIGH?')
         return val
 
     def do_set_m2_low(self, val, channel):
-        self.write('SOUR%d:MARKER2:VOLT:LEV:IMM:LOW %.04f' % (channel, val))
+        self.write(f'SOUR{int(channel)}:MARKER2:VOLT:LEV:IMM:LOW {val:.04f}')
 
     def do_get_m2_low(self, channel):
-        val = self.ask('SOUR%d:MARKER2:VOLT:LEV:IMM:LOW?' % (channel,))
+        val = self.ask(f'SOUR{int(channel)}:MARKER2:VOLT:LEV:IMM:LOW?')
         return val
 
     def do_set_m2_high(self, val, channel):
-        self.write('SOUR%d:MARKER2:VOLT:LEV:IMM:HIGH %.04f' % (channel, val))
+        self.write(f'SOUR{int(channel)}:MARKER2:VOLT:LEV:IMM:HIGH {val:.04f}')
 
     def do_get_m2_high(self, channel):
-        val = self.ask('SOUR%d:MARKER2:VOLT:LEV:IMM:HIGH?' % (channel,))
+        val = self.ask(f'SOUR{int(channel)}:MARKER2:VOLT:LEV:IMM:HIGH?')
         return val
 
     ###############################################
@@ -287,7 +287,7 @@ class Tektronix_AWG5014C(VisaInstrument):
     # add custom waveform as file, not correct
     def add_file(self, fn, data):
         bindata = self.get_bindata(data)
-        cmd = ('MMEM:DATA "%s",#6%06d'%(fn,2*len(data))) + bindata.tostring() + '\n'
+        cmd = f'MMEM:DATA "{fn}",#6{int(2 * len(data)):06}' + bindata.tostring() + '\n'
         self.write_raw(cmd)
 
     def add_waveform(self, wname, data, m1=None, m2=None, replace=True, return_cmd=False):
@@ -297,7 +297,7 @@ class Tektronix_AWG5014C(VisaInstrument):
         '''
         if not replace and wname in self._loaded_waveforms:
             return None
-        logging.info('Adding waveform %s (%d bytes)', wname, len(data))
+        logging.info(f'Adding waveform {wname} ({len(data)} bytes)', )
         self._loaded_waveforms.append(wname)
         bindata = self.get_bindata(data, m1, m2)
         # bindata = np.array([8191, 8191, 8191, 8191, 8191, 8191], dtype= np.uint16)
@@ -305,9 +305,9 @@ class Tektronix_AWG5014C(VisaInstrument):
         # print(bindata.tostring().decode('cp1252'))
         # print(type(bindata.tostring().decode('cp1252')))
         # print("----------------------------------")
-        cmd = 'WLIST:WAV:DEL "%s";' % wname
-        cmd += ':WLIST:WAV:NEW "%s",%d,INT;' % (wname, len(data))
-        cmd += ':WLIST:WAV:DATA "%s",0,%d,#6%06d' % (wname, len(bindata), 2*len(bindata))
+        cmd = f'WLIST:WAV:DEL "{wname}";'
+        cmd += f':WLIST:WAV:NEW "{wname}",{len(data)},INT;'
+        cmd += f':WLIST:WAV:DATA "{wname}",0,{len(bindata)},#6{int(2 * len(bindata)):06}'
         cmd += bindata.tostring().decode('cp1252') + "\n"
         logging.info(self.get_error())
 
@@ -340,23 +340,23 @@ class Tektronix_AWG5014C(VisaInstrument):
         if reset:
             self.write('SEQ:LENG 0\n')
             self.wait_done()
-        self.write('SEQ:LENG %d\n' % n_el)
+        self.write(f'SEQ:LENG {int(n_el)}\n')
         self.wait_done()
 
         if loop:
-            self.write('SEQ:ELEM%d:GOTO:STATE ON' % n_el)
-            self.write('SEQ:ELEM%d:GOTO:INDEX 1' % n_el)
+            self.write(f'SEQ:ELEM{int(n_el)}:GOTO:STATE ON')
+            self.write(f'SEQ:ELEM{int(n_el)}:GOTO:INDEX 1')
 
     def set_seq_element(self, ch, el, wname, repeat=1, trig=False):
         print("---------------------------------")
         print(wname)
         print(type(wname))
         print("---------------------------------")
-        self.write('SEQ:ELEM%d:WAV%d "%s"' % (el, ch, wname))
+        self.write(f'SEQ:ELEM{int(el)}:WAV{int(ch)} "{wname}"')
         if repeat > 1:
-            self.write('SEQ:ELEM%d:LOOP:COUNT %d' % (el, repeat))
+            self.write(f'SEQ:ELEM{int(el)}:LOOP:COUNT {int(repeat)}')
         if trig:
-            self.write('SEQ:ELEM%d:TWAIT 1' % (el,))
+            self.write(f'SEQ:ELEM{int(el)}:TWAIT 1')
 
     ###############################################
     # Convenience functions to play simple waveforms
@@ -370,7 +370,7 @@ class Tektronix_AWG5014C(VisaInstrument):
         self.get_runstate()
         self.setup_sequence(1)
         for chan, wform in chan_wform:
-            cmd = 'SEQ:ELEM1:WAV%d "%s"\n' % (chan, wform)
+            cmd = f'SEQ:ELEM1:WAV{int(chan)} "{wform}"\n'
             self.write(cmd)
         if run:
             self.run()
@@ -400,7 +400,7 @@ class Tektronix_AWG5014C(VisaInstrument):
         if round(N*period) < 250:
             N *= np.ceil(250.0 / (N * period))
         npoints = round(N * period)
-        print('npoints: %s, period: %s, N: %s' % (npoints, period, N))
+        print(f'npoints: {npoints}, period: {period}, N: {N}')
 
         xs = np.arange(npoints)
         phase = 2 * np.pi * xs / period
@@ -420,7 +420,7 @@ class Tektronix_AWG5014C(VisaInstrument):
     def output_sqwave(self, period, chans=(1,2), amp=0.1, dcycle=0.5, run=True):
         sqwave = np.zeros([period,])
         sqwave[:int(round(period*dcycle))] = amp
-        name = 'sqwave%d'%period
+        name = f'sqwave{int(period)}'
         self.add_waveform(name, sqwave)
         chan_wform = []
         for chan in chans:
@@ -464,11 +464,11 @@ class Tektronix_AWG5014C(VisaInstrument):
 
         cmd = ''
         for idx, wname, repeat, trigger in seq:
-            cmd += ':SEQ:ELEM%d:WAV%d "%s";' % (idx, chan, wname)
+            cmd += f':SEQ:ELEM{int(idx)}:WAV{int(chan)} "{wname}";'
             if repeat > 1:
-                cmd += ':SEQ:ELEM%d:LOOP:COUNT %d;' % (idx, repeat)
+                cmd += f':SEQ:ELEM{int(idx)}:LOOP:COUNT {int(repeat)};'
             if trigger:
-                cmd += ':SEQ:ELEM%d:TWAIT 1;' % (idx,)
+                cmd += f':SEQ:ELEM{int(idx)}:TWAIT 1;'
 
         if len(cmd) > 0:
             cmd += ':OUTP?'
@@ -478,7 +478,7 @@ class Tektronix_AWG5014C(VisaInstrument):
         '''
         Save the AWG state to a .awg file.
         '''
-        self.write('AWGCONTROL:SSAVE "%s"\n' % path )
+        self.write(f'AWGCONTROL:SSAVE "{path}"\n' )
 #        msg = self.get_error()
 #        if msg != NO_ERROR:
 #            raise ValueError('pull_dot_awg() error: %s' (msg))
@@ -487,7 +487,7 @@ class Tektronix_AWG5014C(VisaInstrument):
         '''
         Load the AWG state from a .awg file.
         '''
-        self.write('AWGCONTROL:SRESTORE "%s"\n' % path )
+        self.write(f'AWGCONTROL:SRESTORE "{path}"\n' )
 
     def diagnostic(self):
         '''
@@ -495,7 +495,7 @@ class Tektronix_AWG5014C(VisaInstrument):
         know.  Running the diagnostics fixes it.
         '''
         for d in [1,2]:
-            self.write('DIAG:O%sA' % (d,))
+            self.write(f'DIAG:O{d}A')
             ret = self.ask('DIAG:IMM?')
             if ret != 0:
                 raise Exception('THE AWG HATES YOU.  Diagnostic failed')
@@ -508,7 +508,7 @@ class Tektronix_AWG5014C(VisaInstrument):
         return self.ask('SEQ:LENG?')
 
     def jump(self, pos=1):
-        cmd = 'SEQ:JUMP %d \n' % (pos)
+        cmd = f'SEQ:JUMP {int(pos)} \n'
         return self.write(cmd)
 
 if __name__ == '__main__':

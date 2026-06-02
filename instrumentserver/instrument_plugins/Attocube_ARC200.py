@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from .instrument import Instrument
-import visa
+import pyvisa
 import types
 import logging
 import re
@@ -29,10 +29,14 @@ class Attocube_ARC200(Instrument):
         Instrument.__init__(self, name, address=address, reset=reset, **kwargs)
 
         self._address = address
-        self._visa = visa.instrument(self._address,
-                        baud_rate=57600, data_bits=8, stop_bits=1,
-                        parity=visa.no_parity, term_chars='',
-                        timeout=2)
+        self._visa = pyvisa.ResourceManager().open_resource(self._address)
+        self._visa.baud_rate = 57600
+        self._visa.data_bits = 8
+        self._visa.stop_bits = pyvisa.constants.StopBits.one
+        self._visa.parity = pyvisa.constants.Parity.none
+        self._visa.read_termination = None
+        self._visa.write_termination = None
+        self._visa.timeout = 2000
 
         self.add_parameter('mode',
             flags=Instrument.FLAG_SET,
@@ -88,7 +92,7 @@ class Attocube_ARC200(Instrument):
             time.sleep(0.025)
 
     def write_line(self, query):
-        return self.write('%s\r' % query)
+        return self.write(f'{query}\r')
 
     def ask(self, query):
         try:
@@ -113,13 +117,13 @@ class Attocube_ARC200(Instrument):
         if int(mode) not in (0, 1):
             return False
 
-        logging.info('Setting mode %s' % mode)
+        logging.info(f'Setting mode {mode}')
 
-        self.write_line('SM%d' % mode)
+        self.write_line(f'SM{int(mode)}')
         self._visa.clear()
 
     def do_set_refvoltage(self, ref):
-        self.write_line('SRE %d' % ref)
+        self.write_line(f'SRE {int(ref)}')
 
     def do_get_position(self):
         reply = self.ask('C')
@@ -131,7 +135,7 @@ class Attocube_ARC200(Instrument):
             return None
 
     def do_set_channel_units(self, channel, units_id):
-        self.write_line('SU%d%d' % (channel, units_id))
+        self.write_line(f'SU{int(channel)}{int(units_id)}')
 
     def do_set_units(self, units_id):
         self.do_set_channel_units(1, units_id)

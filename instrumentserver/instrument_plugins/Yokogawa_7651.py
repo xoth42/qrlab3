@@ -2,13 +2,10 @@
 # Yokogawa 7651
 #==============================================================================
 
-import time
-import visa
 import re
 import numpy as np
 from visainstrument import VisaInstrument
-from .instrument import Instrument
-import types
+from instrument import Instrument
 import logging
 from time import sleep
 
@@ -97,7 +94,7 @@ class Yokogawa_7651(VisaInstrument):
         else:
             yokoRange = voltage
 
-        self.write( 'R%i;' % (yokoRange,) )
+        self.write( f'R{int(yokoRange)};' )
         self.trigger()
         self.do_get_voltage_range()
     
@@ -124,19 +121,19 @@ class Yokogawa_7651(VisaInstrument):
         else:
             yokoRange = current
 
-        self.write( 'R%i;' % (yokoRange,) )
+        self.write( f'R{int(yokoRange)};' )
         self.trigger()
         self.do_get_current_range()
 
     def do_set_voltage_limit(self,limit):
 
-        self.write( 'LV%i;' % (limit,) )
+        self.write( f'LV{int(limit)};' )
         self.trigger()
         self.do_get_voltage_limit()
 
     def do_set_current_limit(self,limit):
 
-        self.write( 'LA%i;' % (limit,) )
+        self.write( f'LA{int(limit)};' )
         self.trigger()
         self.do_get_current_limit()
 
@@ -148,7 +145,7 @@ class Yokogawa_7651(VisaInstrument):
         func = {VOLTAGE|CURRENT},string
         '''
 
-        self.write( 'F%i;' % (func,) )
+        self.write( f'F{int(func)};' )
         self.trigger()
         self.do_get_source_type()
         self.do_get_output_state()
@@ -162,7 +159,7 @@ class Yokogawa_7651(VisaInstrument):
         '''
 
         self.do_set_voltage_range(float(abs(voltage)))
-        self.write( 'S%f;' % (voltage,) )
+        self.write( f'S{voltage:f};' )
         self.trigger()
 #        self.do_set_polarity(voltage)
         self.do_get_voltage()
@@ -177,7 +174,7 @@ class Yokogawa_7651(VisaInstrument):
         
         absCurrent = float(np.abs(current))
         self.do_set_current_range(absCurrent)
-        self.write( 'S%f;' % (absCurrent,) )
+        self.write( f'S{absCurrent:f};' )
         self.trigger()
         self.do_set_polarity(current)
         self.do_get_current()
@@ -190,7 +187,7 @@ class Yokogawa_7651(VisaInstrument):
         setting = {0|1|OFF|ON},integer/string
         '''
         
-        self.write('O%i;' % (int(setting),))
+        self.write(f'O{int(setting)};')
         self.trigger()
         self.do_get_output_state()
         
@@ -206,7 +203,7 @@ class Yokogawa_7651(VisaInstrument):
         function = self.read()
         program = self.read()
         limits = self.read()
-        # print '\r\n'.join([model,function,program,limits])
+
         return (model,function,program,limits)
     
     def get_output_status(self):
@@ -227,7 +224,7 @@ class Yokogawa_7651(VisaInstrument):
     
     def do_get_output_state(self):
         code = self.get_output_status()
-        # print "Got output state: ",code[3]
+
         return int(code[3])
     
     def do_get_current_limit(self):
@@ -279,7 +276,7 @@ class Yokogawa_7651(VisaInstrument):
                 yokoPolarity = 1
         else:
             yokoPolarity = polarity
-        self.write('SG%i;' % (yokoPolarity,))
+        self.write(f'SG{int(yokoPolarity)};')
         self.trigger()
         
     def do_get_overload(self):

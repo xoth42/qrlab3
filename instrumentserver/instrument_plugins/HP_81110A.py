@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from .instrument import Instrument
-import visa
+import pyvisa
 import types
 import logging
 import time
@@ -50,7 +50,7 @@ class HP_81110A(Instrument):
         Instrument.__init__(self, name, tags=['physical'])
 
         self._address = address
-        self._visainstrument = visa.instrument(self._address)
+        self._visainstrument = pyvisa.ResourceManager().open_resource(self._address)
         self._channels = self._get_number_of_channels()
 
         self.add_parameter('delay', type=float,
@@ -114,11 +114,11 @@ class HP_81110A(Instrument):
         logging.info(__name__ + ' : reading all settings from instrument')
 
         for i in range(1,self._channels+1):
-            self.get('ch%d_delay' % i)
-            self.get('ch%d_width' % i)
-            self.get('ch%d_low' % i)
-            self.get('ch%d_high' % i)
-            self.get('ch%d_status' % i)
+            self.get(f'ch{int(i)}_delay')
+            self.get(f'ch{int(i)}_width')
+            self.get(f'ch{int(i)}_low')
+            self.get(f'ch{int(i)}_high')
+            self.get(f'ch{int(i)}_status')
 
         self.get_display()
 
@@ -133,8 +133,8 @@ class HP_81110A(Instrument):
         Output:
             delay (float) : delay in seconds
         '''
-        logging.debug(__name__ + ' : get delay for channel %d' % channel)
-        return float(self._visainstrument.ask(':PULS:DEL' + str(channel) + "?"))
+        logging.debug(__name__ + f' : get delay for channel {int(channel)}')
+        return float(self._visainstrument.query(':PULS:DEL' + str(channel) + "?"))
 
     def do_set_delay(self, val, channel):
         '''
@@ -147,7 +147,7 @@ class HP_81110A(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : set delay for channel %d to %f' % (channel, val))
+        logging.debug(__name__ + f' : set delay for channel {int(channel)} to {val:f}')
         self._visainstrument.write(':PULS:DEL' + str(channel) + " " + str(val) + "S")
 
     def do_get_width(self, channel):
@@ -160,8 +160,8 @@ class HP_81110A(Instrument):
         Output:
             width (float) : width in seconds
         '''
-        logging.debug(__name__ + ' : get width for channel %d' % channel)
-        return float(self._visainstrument.ask(':PULS:WIDT' + str(channel) + "?"))
+        logging.debug(__name__ + f' : get width for channel {int(channel)}')
+        return float(self._visainstrument.query(':PULS:WIDT' + str(channel) + "?"))
 
     def do_set_width(self, val, channel):
         '''
@@ -174,7 +174,7 @@ class HP_81110A(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : set width for channel %d to %f' % (channel, val))
+        logging.debug(__name__ + f' : set width for channel {int(channel)} to {val:f}')
         self._visainstrument.write(':PULS:WIDT' + str(channel) + " " + str(val) + "S")
 
     def do_get_high(self, channel):
@@ -187,8 +187,8 @@ class HP_81110A(Instrument):
         Output:
             val (float) : upper bound in Volts
         '''
-        logging.debug(__name__ + ' : get high for channel %d' % channel)
-        return float(self._visainstrument.ask(':VOLT' + str(channel) + ':HIGH?'))
+        logging.debug(__name__ + f' : get high for channel {int(channel)}')
+        return float(self._visainstrument.query(':VOLT' + str(channel) + ':HIGH?'))
 
     def do_set_high(self, val, channel):
         '''
@@ -201,7 +201,7 @@ class HP_81110A(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : set high for channel %d to %f' % (channel, val))
+        logging.debug(__name__ + f' : set high for channel {int(channel)} to {val:f}')
         self._visainstrument.write(':VOLT' + str(channel) + ":HIGH " + str(val) + "V")
 
     def do_get_low(self, channel):
@@ -214,8 +214,8 @@ class HP_81110A(Instrument):
         Output:
             val (float) : lower bound in Volts
         '''
-        logging.debug(__name__ + ' : get low for channel %d' % channel)
-        return float(self._visainstrument.ask(':VOLT' + str(channel) + ':LOW?'))
+        logging.debug(__name__ + f' : get low for channel {int(channel)}')
+        return float(self._visainstrument.query(':VOLT' + str(channel) + ':LOW?'))
 
     def do_set_low(self, val, channel):
         '''
@@ -228,7 +228,7 @@ class HP_81110A(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : set low for channel %d to %f' % (channel, val))
+        logging.debug(__name__ + f' : set low for channel {int(channel)} to {val:f}')
         self._visainstrument.write(':VOLT' + str(channel) + ":LOW " + str(val)        + "V")
 
     def do_get_status(self, channel):
@@ -241,8 +241,8 @@ class HP_81110A(Instrument):
         Output:
             status (string) : 'on' or 'off'
         '''
-        logging.debug(__name__ + ' : getting status for channel %d' % channel)
-        val = self._visainstrument.ask('OUTP' + str(channel) + '?')
+        logging.debug(__name__ + f' : getting status for channel {int(channel)}')
+        val = self._visainstrument.query('OUTP' + str(channel) + '?')
         if (val=='1'):
             return 'on'
         elif (val=='0'):
@@ -260,7 +260,7 @@ class HP_81110A(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : setting status for channel %d to %s' % (channel, val))
+        logging.debug(__name__ + f' : setting status for channel {int(channel)} to {val}')
         if ((val.upper()=='ON') | (val.upper()=='OFF')):
             self._visainstrument.write('OUTP' + str(channel) + " " + val)
         else:
@@ -277,7 +277,7 @@ class HP_81110A(Instrument):
             status (string) : 'on' or 'off'
         '''
         logging.debug(__name__ + ' : getting display status')
-        val = self._visainstrument.ask('DISP?')
+        val = self._visainstrument.query('DISP?')
         if (val=='1'):
             return 'on'
         elif (val=='0'):
@@ -294,7 +294,7 @@ class HP_81110A(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : setting display status to %s' % val)
+        logging.debug(__name__ + f' : setting display status to {val}')
         if ((val.upper()=='ON') | (val.upper()=='OFF')):
             self._visainstrument.write('DISP ' + val)
         else:
@@ -337,5 +337,5 @@ class HP_81110A(Instrument):
             Number of installed channels (int)
 
         '''
-        opt = self._visainstrument.ask('*OPT?').split()
+        opt = self._visainstrument.query('*OPT?').split()
         return int(len(opt)-opt.count(0))

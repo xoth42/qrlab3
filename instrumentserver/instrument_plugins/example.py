@@ -69,7 +69,7 @@ class example(Instrument):
         if address == None:
             raise ValueError('Example Instrument requires an address parameter')
         else:
-            print('Example Instrument  address %s' % address)
+            print(f'Example Instrument  address {address}')
 
         if reset:
             self.reset()
@@ -141,7 +141,7 @@ class example(Instrument):
         return self._dummy_output[channel]
 
     def do_set_output(self, val, channel, times2=False):
-        print('Set output: ch=%s, val=%s' % (channel, val))
+        print(f'Set output: ch={channel}, val={val}')
         if times2:
             val *= 2
         self._dummy_output[channel] = val
@@ -151,7 +151,7 @@ class example(Instrument):
 
     def step(self, channel, stepsize=0.1):
         '''Step channel <channel>'''
-        print('Stepping channel %s by %f' % (channel, stepsize))
-        cur = self.get('ch%s_output' % channel, query=False)
-        self.set('ch%s_output' % channel, cur + stepsize)
+        print(f'Stepping channel {channel} by {stepsize:f}')
+        cur = self.get(f'ch{channel}_output', query=False)
+        self.set(f'ch{channel}_output', cur + stepsize)
 

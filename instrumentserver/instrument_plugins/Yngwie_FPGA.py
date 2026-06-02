@@ -166,7 +166,7 @@ class Yngwie_FPGA(Instrument):
         fn = os.path.join(srcdir, 'yngwie_instrument.ini')
         self.write_ini_file(fn)
         self.yng = YngwieInterface.YngwieInterface(self._target, fn)
-        print('Setting dump path to %s' % (self.get_dump_path(),))
+        print(f'Setting dump path to {self.get_dump_path()}')
         self.yng.dump_path = self.get_dump_path()
 
         self.update_modes()
@@ -218,10 +218,10 @@ class Yngwie_FPGA(Instrument):
     def do_set_offset(self, v, channel=None):
         if len(v) != 2:
             raise ValueError('Offset should be specified as 2 integers')
-        setattr(self.yng.AnalogModes, 'offset%d' % channel, v)
+        setattr(self.yng.AnalogModes, f'offset{int(channel)}', v)
 
     def do_get_offset(self, channel=None):
-        return getattr(self.yng.AnalogModes, 'offset%d' % channel)
+        return getattr(self.yng.AnalogModes, f'offset{int(channel)}')
 
     def do_set_ssbfreq(self, v, channel=None):
         self._ssb_freq[channel] = v
@@ -254,7 +254,7 @@ class Yngwie_FPGA(Instrument):
         return self.yng.m_yng.WriteLogic(address, val, bitrange)
 
     def accept_stream(self, streamID, bytes_needed, file_size=None, first_file_size=None, stream_pattern=0xffffffff):
-        print('Accepting %s,%s,%s' % (streamID, bytes_needed, file_size))
+        print(f'Accepting {streamID},{bytes_needed},{file_size}')
         return self.yng.StreamRouter.accept(streamID, bytes_needed, file_size, first_file_size, stream_pattern)
 
     def do_set_buffer_gen_width(self, val):
@@ -305,13 +305,13 @@ class Yngwie_FPGA(Instrument):
         return self.yng.Delays.analog
 
     def do_set_delay_marker(self, v, channel=None):
-        setattr(self.yng.Delays, 'marker%d'%channel, v)
+        setattr(self.yng.Delays, f'marker{int(channel)}', v)
 
     def do_get_delay_marker(self, channel=None):
-        return getattr(self.yng.Delays, 'marker%d'%channel)
+        return getattr(self.yng.Delays, f'marker{int(channel)}')
 
     def load_tables(self, file_prefix):
-        print('Yngwie: Loading tables from %s' % (file_prefix,))
+        print(f'Yngwie: Loading tables from {file_prefix}')
         self.yng.regulation_enabled = True
         return self.yng.load_tables(file_prefix)
 

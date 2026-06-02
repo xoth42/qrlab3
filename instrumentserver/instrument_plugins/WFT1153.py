@@ -84,13 +84,4 @@ class WFT1153(Instrument):
         else:
             self.synth[index].enable=False
             return self.synth[index].enable
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
+  

@@ -4,7 +4,7 @@
 #==============================================================================
 
 import time
-import visa
+import pyvisa
 import numpy as np
 from visainstrument import VisaInstrument
 from .instrument import Instrument
@@ -57,13 +57,6 @@ class Yokogawa_GS200(VisaInstrument):
 
         #self.get_all()
 
-
-
-
-#==============================================================================
-        
-#==============================================================================
-
     def do_set_voltage(self, level, range='AUTO'):
         self.set_source_type('VOLT')
         self.set_source_level(level, range)
@@ -89,20 +82,13 @@ class Yokogawa_GS200(VisaInstrument):
 
     def set_interval(self, period):
         if period >= 0.0 and period <= 3600.0:
-            self.write('PROG:INT %s' % period)
+            self.write(f'PROG:INT {period}')
 
     def get_current_protection(self):
         return float(self.ask(':SOUR:PROT:CURR?'))
 
-
-
-#==============================================================================
-#
-#==============================================================================
-
-
     def do_set_source_range(self, range):
-        self.write(':SOUR:RANG %s\n' % range)
+        self.write(f':SOUR:RANG {range}\n')
 
     def do_get_source_range(self):
         return self.ask(':SOUR:RANG?')
@@ -123,10 +109,10 @@ class Yokogawa_GS200(VisaInstrument):
 #
 #        self.set_source_type('VOLT')
 #        self.set_source_range(range)
-#
-#    # range auto updates at val * 1.2 (i.e. 1.21 V is 10 V scale)
-#    # here for simplicity just change scales if value is above the
-#    # current scale
+
+    # range auto updates at val * 1.2 (i.e. 1.21 V is 10 V scale)
+    # here for simplicity just change scales if value is above the
+    # current scale
     def select_voltage_range(self, value):
         ranges = ['10E-3', '100E-3', '1E+0', '10E+0', '30E+0']
 
@@ -152,7 +138,7 @@ class Yokogawa_GS200(VisaInstrument):
 
     def set_source_level(self, level, range):
         if range=='AUTO' or range=='FIX':
-            self.write('SOUR:LEV:%s %s\n' % (range, level))
+            self.write(f'SOUR:LEV:{range} {level}\n')
 
     def find_ramp_time(self, initial, final, slew):
         '''
@@ -197,116 +183,3 @@ class Yokogawa_GS200(VisaInstrument):
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.DEBUG)
     ins = Instrument.test(Yokogawa_GS200)
-
-
-#yoko = Yokogawa_GS200('GPIB0::5')
-
-#yoko.set_voltage(0.0)
-#yoko.set_voltage_ramp(-5.0, slew=1)
-#time.sleep(3)
-#yoko.set_voltage_ramp(0, slew=1)
-
-#yoko.close()
-
-#yoko.set_output_state('ON')
-#yoko.set_output_state('OFF')
-#yoko.set_source_type('VOLT')
-#print yoko.get_output_state()
-#print yoko.get_source_type()
-#print yoko.get_source_range()
-#
-#print '----'
-#yoko.set_voltage_range('MIN')
-#print yoko.get_source_range()
-#yoko.set_voltage_range('UP')
-#print yoko.get_source_range()
-#yoko.set_voltage_range('UP')
-#print yoko.get_source_range()
-#yoko.set_voltage_range('UP')
-#print yoko.get_source_range()
-#print '----'
-#
-## check that set range does not return error if at limits
-#yoko.set_voltage_range('MAX')
-#yoko.set_voltage_range('UP')
-#
-#yoko.set_voltage(1.234, range='FasdfIX')
-#print yoko.get_source_level()
-#yoko.set_voltage(0.0)
-#
-#print '----'
-#print yoko.get_voltage_protection()
-#
-#print '----'
-#yoko.get_slope()
-
-#print '----'
-#time.sleep(2)
-#yoko.set_slope(50.0)
-#yoko.set_voltage(1.0)
-#time.sleep(1)
-#yoko.set_slope(10.0)
-#yoko.set_voltage(0.0)
-
-#print '---'
-#yoko.set_output_state('ON')
-#yoko.write('PROG:REP OFF')
-#time.sleep(1)
-#yoko.write('PROG:EDIT:STARt')
-#yoko.set_source_type('VOLTAGE')
-#yoko.set_slope(1000.0)
-#yoko.write(':PROG:INT 1.0')
-#yoko.set_voltage(5.0)
-#yoko.write('PROG:EDIT:END')
-#yoko.write('PROG:RUN')
-#
-#print yoko.ask('PROG:INT?')
-
-
-#print '--- attempt 2'
-#time.sleep(1)
-#yoko.set_voltage(-1.0)
-##time.sleep(1)
-#yoko.set_voltage_ramp(10.0)
-#yoko.set_voltage(0.0)
-#yoko.write(':PROG:RUN')
-#yoko.set_voltage_ramp(1.0)
-#yoko.set_voltage_ramp(5.0)
-#time.sleep(2)
-#yoko.set_voltage_ramp(1.0)
-
-#yoko.set_voltage_ramp(5, slew=5.0)
-#yoko.write(':PROG:MEM "1.0, 10, V\n"')
-
-
-#yoko.write(':PROG:LOAD "Prgm02.csv"')
-
-#yoko.write(':PROG:RUN')
-
-#yoko.write(':PROG:RUN')
-
-
-#yoko.write(':PROG:INT 5.0')
-
-
-#yoko.write(':PROG:RUN')
-
-
-#yoko.write(':PROG:REP OFF')
-#yoko.write(':PROG:INT 5.0')
-
-
-
-
-
-
-#print '--- attempt 3'
-#start = 0.0
-#end   = 5.0
-#dt = 100
-#steps = np.linspace(start, end, dt)
-#for val in steps:
-#    yoko.set_voltage(val)
-#    time.sleep(0.001)
-
-#yoko.close()

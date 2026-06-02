@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from .instrument import Instrument
-import visa
+import pyvisa
 import types
 import logging
 
@@ -47,7 +47,7 @@ class RS_Step_Attenuator(Instrument):
 
         # Add some global constants
         self._address = address
-        self._visainstrument = visa.instrument(self._address)
+        self._visainstrument = pyvisa.ResourceManager().open_resource(self._address)
 
         self.add_parameter('attenuation',
             flags=Instrument.FLAG_SET, units='dB', minval=1, maxval=139, type=int)
@@ -64,10 +64,10 @@ class RS_Step_Attenuator(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : Setting attenuation to %s dB' %dB)
+        logging.debug(__name__ + f' : Setting attenuation to {dB} dB')
         if (dB<10):
-            self._visainstrument.write('A00%s,' %dB)
+            self._visainstrument.write(f'A00{dB},')
         elif (dB<100):
-            self._visainstrument.write('A0%s,' %dB)
+            self._visainstrument.write(f'A0{dB},')
         else:
-            self._visainstrument.write('A%s,' %dB)
+            self._visainstrument.write(f'A{dB},')

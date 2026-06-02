@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from .instrument import Instrument
-import visa
+import pyvisa
 import types
 import logging
 
@@ -48,7 +48,7 @@ class RS_SMR40(Instrument):
         Instrument.__init__(self, name, tags=['physical'])
 
         self._address = address
-        self._visainstrument = visa.instrument(self._address)
+        self._visainstrument = pyvisa.ResourceManager().open_resource(self._address)
 
         self.add_parameter('frequency', type=float,
             flags=Instrument.FLAG_GETSET | Instrument.FLAG_GET_AFTER_SET,
@@ -114,7 +114,7 @@ class RS_SMR40(Instrument):
             frequency (float) : frequency in Hz
         '''
         logging.debug(__name__ + ' : reading frequency from instrument')
-        return float(self._visainstrument.ask('SOUR:FREQ?'))
+        return float(self._visainstrument.query('SOUR:FREQ?'))
 
     def do_set_frequency(self, frequency):
         '''
@@ -126,8 +126,8 @@ class RS_SMR40(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : setting frequency to %s GHz' % frequency)
-        self._visainstrument.write('SOUR:FREQ %e' % frequency)
+        logging.debug(__name__ + f' : setting frequency to {frequency} GHz')
+        self._visainstrument.write(f'SOUR:FREQ {frequency:e}')
 
     def do_get_power(self):
         '''
@@ -140,7 +140,7 @@ class RS_SMR40(Instrument):
             power (float) : output power in dBm
         '''
         logging.debug(__name__ + ' : reading power from instrument')
-        return float(self._visainstrument.ask('SOUR:POW?'))
+        return float(self._visainstrument.query('SOUR:POW?'))
 
     def do_set_power(self,power):
         '''
@@ -152,8 +152,8 @@ class RS_SMR40(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : setting power to %s dBm' % power)
-        self._visainstrument.write('SOUR:POW %e' % power)
+        logging.debug(__name__ + f' : setting power to {power} dBm')
+        self._visainstrument.write(f'SOUR:POW {power:e}')
 
     def do_get_status(self):
         '''
@@ -166,14 +166,14 @@ class RS_SMR40(Instrument):
             status (string) : 'on or 'off'
         '''
         logging.debug(__name__ + ' : reading status from instrument')
-        stat = self._visainstrument.ask(':OUTP:STAT?')
+        stat = self._visainstrument.query(':OUTP:STAT?')
 
         if stat == '1':
             return 'on'
         elif stat == '0':
             return 'off'
         else:
-            raise ValueError('Output status not specified : %s' % stat)
+            raise ValueError(f'Output status not specified : {stat}')
 
     def do_set_status(self,status):
         '''
@@ -185,12 +185,12 @@ class RS_SMR40(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : setting status to "%s"' % status)
+        logging.debug(__name__ + f' : setting status to "{status}"')
         if status.upper() in ('ON', 'OFF'):
             status = status.upper()
         else:
             raise ValueError('set_status(): can only set on or off')
-        self._visainstrument.write(':OUTP:STAT %s' % status)
+        self._visainstrument.write(f':OUTP:STAT {status}')
 
     # shortcuts
     def off(self):

@@ -74,7 +74,7 @@ class Alazar_Daemon_MultiIntegrators(Alazar_Daemon):
 #        cyclereps = MAX_BUFFER_SIZE / size_per_expt # approx # buffers
 #        cyclereps = np.ceil(cyclereps)
 
-        print('Cyclereps: %s' % cyclereps)
+        print(f'Cyclereps: {cyclereps}')
 
         assert cyclereps > 0
 
@@ -93,8 +93,8 @@ class Alazar_Daemon_MultiIntegrators(Alazar_Daemon):
 
         self.recperbuf = cyclereps * cycles
 
-        print('Recperbuf %s' % self.recperbuf)
-        print('number of buffers to fill %s ' % (self._num_buffers_to_fill))
+        print(f'Recperbuf {self.recperbuf}')
+        print(f'number of buffers to fill {self._num_buffers_to_fill} ')
 
     def setup_alazar(self, cycles):
         '''
@@ -111,9 +111,9 @@ class Alazar_Daemon_MultiIntegrators(Alazar_Daemon):
         self.set_nbuffers(50)
         self.allocate_buffers()
 
-        logging.info('number of buffers; %d' % self.get_nbuffers())
-        logging.info('Setup alazar: cycle repetitions %d, recs per buf %d, total records %d',
-                     self._cyclereps, self.recperbuf, self._num_buffers_to_fill * self.recperbuf)
+        logging.info(f'number of buffers; {int(self.get_nbuffers())}')
+        logging.info(f'Setup alazar: cycle repetitions {int(self._cyclereps)}, recs per buf {int(self.recperbuf)}, total records {int(self._num_buffers_to_fill * self.recperbuf)}',
+                     )
 
 #        periods = self.get_nsamples() / self.get_if_period()
 #        self.set_demod(avg_periods=periods)
@@ -218,7 +218,7 @@ class Alazar_Daemon_MultiIntegrators(Alazar_Daemon):
         intbuf_shape = (self.get_naverages(),
                         self._cycles,
                         self.excise_num,)
-        logging.info('%s' % (intbuf_shape,))
+        logging.info(f'{intbuf_shape}')
         if intbuf is None:
             logging.info('generating intbuf')
             self.intbuf = np.full(intbuf_shape,
@@ -259,7 +259,7 @@ class Alazar_Daemon_MultiIntegrators(Alazar_Daemon):
         update_interval = 5
         for i in range(self._num_buffers_to_fill):
             if (i % update_interval) == 0:
-                logging.info('Acquiring %d', i*self._cyclereps)
+                logging.info(f'Acquiring {int(i)}'*self._cyclereps, )
                 self.emit('capture-progress', i*self._cyclereps)
                 # save data
 
@@ -271,11 +271,11 @@ class Alazar_Daemon_MultiIntegrators(Alazar_Daemon):
             start = int(i*self._cyclereps)
             end = int(min((i+1)*self._cyclereps, self.get_naverages()))
             delta = end - start
-            logging.info('saving cycle average %d to %d, delta = %d' % (start, end, delta))
+            logging.info(f'saving cycle average {int(start)} to {int(end)}, delta = {int(delta)}')
 
             start_time = time.clock()
             iqraw_data = self.excisor.apply_excise_demod(bufA, bufB)[:delta]
-            logging.info('apply_excise_demod: %0.3f' % (1e6*(time.clock() - start_time)))
+            logging.info(f'apply_excise_demod: {1000000.0 * (time.clock() - start_time):0.3f}')
 
             self.IQraw[start:end,:,:,:] = iqraw_data
 
@@ -320,7 +320,7 @@ class Alazar_Daemon_MultiIntegrators(Alazar_Daemon):
         bufA = np.empty(multi_buf_shape, np.complex64)
         bufB = np.empty(multi_buf_shape, np.complex64)
 
-        logging.info('multi_buf_shape = %s' % (multi_buf_shape,))
+        logging.info(f'multi_buf_shape = {multi_buf_shape}')
 
         for i in range(self._num_buffers_to_fill):
             buf = self.get_next_buffer(acqtimeout)
@@ -332,11 +332,11 @@ class Alazar_Daemon_MultiIntegrators(Alazar_Daemon):
             bufA[nrecperbuf*order:nrecperbuf*(order+1),:] = A
             bufB[nrecperbuf*order:nrecperbuf*(order+1),:] = B
 
-            logging.info('filled temp buffer : %d, %d' % (i, order))
+            logging.info(f'filled temp buffer : {int(i)}, {int(order)}')
             self._card.post_buffers(buf)
 
             if (i % update_interval) == 0:
-                logging.info('Acquiring %d', i*self._cyclereps)
+                logging.info(f'Acquiring {int(i)}'*self._cyclereps, )
                 self.emit('capture-progress', i*self._cyclereps)
 
                 idx = (i/update_interval)-1
@@ -344,11 +344,11 @@ class Alazar_Daemon_MultiIntegrators(Alazar_Daemon):
                 end = int(min((idx+1)*update_interval*self._cyclereps,
                               self.get_naverages()))
                 delta = end - start
-                logging.info('processing cycle average %d to %d, delta = %d' % (start, end, delta))
+                logging.info(f'processing cycle average {int(start)} to {int(end)}, delta = {int(delta)}')
 
                 start_time = time.clock()
                 iqraw_data = self.excisor.apply_excise_demod(bufA, bufB)[:delta]
-                logging.info('apply_excise_demod: %0.3f ms' % (1e3*(time.clock() - start_time)))
+                logging.info(f'apply_excise_demod: {1000.0 * (time.clock() - start_time):0.3f} ms')
 #                logging.info('bufA.shape: %s' % ((bufA.shape,)))
 
                 self.IQraw[start:end,:,:,:] = iqraw_data
@@ -357,7 +357,7 @@ class Alazar_Daemon_MultiIntegrators(Alazar_Daemon):
                 if self.integrate:
     #                self.apply_integrators(iqraw_data, self.intbuf, start, end)
                     self.apply_integrators_cycle(iqraw_data, self.intbuf, start, end)
-                logging.info('apply_integrators: %0.3f ms' % (1e3*(time.clock() - start_time)))
+                logging.info(f'apply_integrators: {1000.0 * (time.clock() - start_time):0.3f} ms')
 
 #                start_time = time.clock()
 #                bufA *= np.nan
@@ -458,7 +458,6 @@ class Alazar_Daemon_MultiIntegrators(Alazar_Daemon):
 #            for eidx, excise_tuple in enumerate(cycle_tuple):
 #                for iidx, integrator in enumerate(excise_tuple):
 #                    ret = integrator.process_data(iqraw_data[:,cidx,eidx,:])#, totlen=self.excise_len)
-#                    #print ret.shape # Looks good up to here
 
 #                    outbuf[start:stop,cidx,eidx,iidx] = ret
 

@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from .instrument import Instrument
-import visa
+import pyvisa
 import types
 import logging
 from time import sleep
@@ -83,7 +83,7 @@ class HP_8657(Instrument):
         lim = HP_8657.LIMITS[type]
 
         self._address = address
-        self._visainstrument = visa.instrument(self._address)
+        self._visainstrument = pyvisa.ResourceManager().open_resource(self._address)
         sleep(1)
 
         # Implement parameters
@@ -140,9 +140,9 @@ class HP_8657(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : setting frequency to %s GHz' % frequency)
+        logging.debug(__name__ + f' : setting frequency to {frequency} GHz')
         # sending value to instrument
-        self._visainstrument.write('FR%.0fHZ' % frequency)
+        self._visainstrument.write(f'FR{frequency:.0f}HZ')
 
     def do_set_power(self,power):
         '''
@@ -154,9 +154,9 @@ class HP_8657(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : setting power to %s dBm' % power)
+        logging.debug(__name__ + f' : setting power to {power} dBm')
         # sending value to instrument
-        self._visainstrument.write('AP%.1fDM' % power)
+        self._visainstrument.write(f'AP{power:.1f}DM')
 
     def do_set_status(self,status):
         '''
@@ -168,7 +168,7 @@ class HP_8657(Instrument):
         Output:
             None
         '''
-        logging.debug(__name__ + ' : setting status to "%s"' % status)
+        logging.debug(__name__ + f' : setting status to "{status}"')
         if status.upper() == 'ON':
             self._visainstrument.write('R3')
         elif status.upper() == 'OFF':

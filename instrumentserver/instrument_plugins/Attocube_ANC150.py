@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from .instrument import Instrument
-import visa
+import pyvisa
 import types
 import logging
 import re
@@ -38,10 +38,14 @@ class Attocube_ANC150(Instrument):
         Instrument.__init__(self, name, address=address, reset=False, **kwargs)
 
         self._address = address
-        self._visa = visa.instrument(self._address,
-                        baud_rate=38400, data_bits=8, stop_bits=1,
-                        parity=visa.no_parity, term_chars='\r\n',
-                        timeout=2)
+        self._visa = pyvisa.ResourceManager().open_resource(self._address)
+        self._visa.baud_rate = 38400
+        self._visa.data_bits = 8
+        self._visa.stop_bits = pyvisa.constants.StopBits.one
+        self._visa.parity = pyvisa.constants.Parity.none
+        self._visa.read_termination = '\r\n'
+        self._visa.write_termination = '\r\n'
+        self._visa.timeout = 2000
         self._clear_buffer()
         self._last_error = ''
         self._last_ccon_warning = [0, 0, 0]
@@ -152,9 +156,9 @@ class Attocube_ANC150(Instrument):
     def get_all(self):
         '''Get all parameters.'''
         for ch in range(1, 4):
-            self.get('mode%d' % ch)
-            self.get('frequency%d' % ch)
-            self.get('voltage%d' % ch)
+            self.get(f'mode{int(ch)}')
+            self.get(f'frequency{int(ch)}')
+            self.get(f'voltage{int(ch)}')
 
     def do_get_version(self):
         reply = self._ask('ver')
@@ -162,40 +166,40 @@ class Attocube_ANC150(Instrument):
         return ver
 
     def do_get_mode(self, channel):
-        reply = self._ask('getm %d' % channel)
+        reply = self._ask(f'getm {int(channel)}')
         return self._parse(reply, self._RE_MODE)
 
     def do_set_mode(self, mode, channel):
-        ret = self._short_cmd('$M%d%s' % (channel, mode.upper()))
+        ret = self._short_cmd(f'$M{int(channel)}{mode.upper()}')
         if ret:
             return True
         else:
             # Warn about axis not being in computer control once per minute
-            ret = self.get('mode%d' % channel)
+            ret = self.get(f'mode{int(channel)}')
             if ret is None and self.get_last_error() == self._ERRMSG_AXIS and \
                     (time.time() - self._last_ccon_warning[channel - 1]) > 60:
                 self._last_ccon_warning[channel - 1] = time.time()
-                logging.warning('Axis %d not in computer control mode', channel)
+                logging.warning(f'Axis {int(channel)} not in computer control mode', )
             return ret
 
     def do_get_frequency(self, channel):
-        reply = self._ask('getf %d' % channel)
+        reply = self._ask(f'getf {int(channel)}')
         return self._parse(reply, self._RE_FREQ)
 
     def do_set_frequency(self, freq, channel):
-        reply = self._ask('setf %d %d' % (channel, freq))
+        reply = self._ask(f'setf {int(channel)} {int(freq)}')
         return (reply is not None)
 
     def do_get_voltage(self, channel):
-        reply = self._ask('getv %d' % channel)
+        reply = self._ask(f'getv {int(channel)}')
         return self._parse(reply, self._RE_VOLT)
 
     def do_set_voltage(self, volt, channel):
-        reply = self._ask('setv %d %d' % (channel, volt))
+        reply = self._ask(f'setv {int(channel)} {int(volt)}')
         return (reply is not None)
 
     def do_get_capacitance(self, channel):
-        reply = self._ask('getc %d' % channel)
+        reply = self._ask(f'getc {int(channel)}')
         return self._parse(reply, self._RE_CAP)
 
     def step(self, channel, steps, wait=True, cont=False):
@@ -228,20 +232,20 @@ class Attocube_ANC150(Instrument):
             steps = 'c'
             delay = 0
         else:
-            frequency = self.get('frequency%d' % channel, query=False)
+            frequency = self.get(f'frequency{int(channel)}', query=False)
             if frequency in (None, 0):
-                frequency = self.get('frequency%d' % channel)
+                frequency = self.get(f'frequency{int(channel)}')
             delay = 1.1 * steps / frequency
 
         if steps == 1 and not cont:
-            func = lambda: self._short_cmd('$S%d%s' % (channel, dir.upper()))
+            func = lambda: self._short_cmd(f'$S{int(channel)}{dir.upper()}')
         else:
-            func = lambda: self._ask('step%s %d %s' % (dir, channel, steps))
+            func = lambda: self._ask(f'step{dir} {int(channel)} {steps}')
 
         reply = func()
         if not reply:
-            logging.info('Axis %d problem, trying to set mode', channel)
-            self.set('mode%d' % channel, 's')
+            logging.info(f'Axis {int(channel)} problem, trying to set mode', )
+            self.set(f'mode{int(channel)}', 's')
             reply = func()
 
         if wait:
@@ -252,7 +256,7 @@ class Attocube_ANC150(Instrument):
     def do_set_speed(self, val):
         for i in range(len(self._speed)):
             if self._speed[i] != val[i]:
-                self.set('frequency%d' % (i + 1), int(abs(val[i])))
+                self.set(f'frequency{int(i + 1)}', int(abs(val[i])))
         self._speed = copy.copy(val)
 
     def start(self):
@@ -261,18 +265,18 @@ class Attocube_ANC150(Instrument):
         '''
 
         for i in range(len(self._speed)):
-            mode = self.get('mode%d' % (i + 1), query=False)
+            mode = self.get(f'mode{int(i + 1)}', query=False)
 
-            self.set('mode%d' % (i + 1), 'stp')
+            self.set(f'mode{int(i + 1)}', 'stp')
             if self._speed[i] > 0:
-                reply = self._ask('stepu %d c' % (i + 1))
+                reply = self._ask(f'stepu {int(i + 1)} c')
             elif self._speed[i] < 0:
-                reply = self._ask('stepd %d c' % (i + 1))
+                reply = self._ask(f'stepd {int(i + 1)} c')
             else:
                 reply = True
 
             if not reply:
-                logging.info('Problem setting axis %d', i + 1)
+                logging.info(f'Problem setting axis {int(i)}' + 1, )
 
     def stop(self, channel=None):
         '''
@@ -281,6 +285,6 @@ class Attocube_ANC150(Instrument):
         '''
         if channel is None:
             for i in range(len(self._speed)):
-                self._ask('stop %d' % (i + 1))
+                self._ask(f'stop {int(i + 1)}')
         else:
-            self._ask('stop %d' % channel)
+            self._ask(f'stop {int(channel)}')

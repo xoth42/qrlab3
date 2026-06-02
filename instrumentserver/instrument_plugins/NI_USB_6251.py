@@ -84,7 +84,7 @@ class NI_USB_6251(Instrument):
         self._numch = len(self._channellist)
         channelstr = ''
         for ch in self._channellist:
-          channelstr = '%s, THz_setup/ai%d' %(channelstr,ch)
+          channelstr = f'{channelstr}, THz_setup/ai{int(ch)}'
         self._channelstr = channelstr[2:]
         return self._channelstr
 
@@ -94,7 +94,7 @@ class NI_USB_6251(Instrument):
             buf_size = 100
             buf = ctypes.create_string_buffer('\000' * buf_size)
             self._nidaq.DAQmxGetErrorString(err,ctypes.byref(buf),buf_size)
-            raise RuntimeError('nidaq call failed with error %d: %s'%(err,repr(buf.value)))
+            raise RuntimeError(f'nidaq call failed with error {int(err)}: {buf.value!r}')
 
     def TestMeasure(self):
         numpts = 600
@@ -136,7 +136,7 @@ class NI_USB_6251(Instrument):
         self.CHK(self._nidaq.DAQmxReadAnalogF64(taskHandle,self._max_num_samples,self._float64(10.0),
                                      self._DAQmx_Val_GroupByChannel,data.ctypes.data,
                                      self._numch*self._max_num_samples,ctypes.byref(read),None))
-#        print "Acquired %d points"%(read.value)
+
 
         if taskHandle.value != 0:
             self._nidaq.DAQmxStopTask(taskHandle)

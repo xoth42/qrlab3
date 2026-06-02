@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from .instrument import Instrument
-import visa
+import pyvisa
 import types
 import logging
 from time import sleep
@@ -56,9 +56,9 @@ class HP_8753C(Instrument):
         Instrument.__init__(self, name)
 
         self._address = address
-        self._visainstrument = visa.instrument(self._address)
+        self._visainstrument = pyvisa.ResourceManager().open_resource(self._address)
 
-        self._visainstrument.timeout = 30
+        self._visainstrument.timeout = 30000
         # BEWARE! in case of low IFWB, it might be
         # necessary to add additional delay
         # ( ~ numpoints / IFBW ) yourself!
@@ -198,7 +198,7 @@ class HP_8753C(Instrument):
         Output:
             data (int)  : list of data points
         '''
-        data = self._visainstrument.ask('FORM2;DISPDATA;OUTPFORM;')
+        data = self._visainstrument.query('FORM2;DISPDATA;OUTPFORM;')
         d = [struct.unpack('>f', data[i:i+4])[0] for i in range(4, len(data),8)]
         return d
 
@@ -237,7 +237,7 @@ class HP_8753C(Instrument):
         sweep_time = numpoints / IF_Bandwidth
 
         print('sending trigger to network analyzer, and wait to finish')
-        print('estimated waiting time: %.2f s' % sweep_time)
+        print(f'estimated waiting time: {sweep_time:.2f} s')
         self.send_trigger()
         qt.msleep(sweep_time)
 
@@ -468,7 +468,7 @@ class HP_8753C(Instrument):
         Output:
             None
         '''
-        self._visainstrument.write('IFBW%d;' %bw)
+        self._visainstrument.write(f'IFBW{int(bw)};')
 
     def do_get_IF_Bandwidth(self):
         '''
@@ -480,7 +480,7 @@ class HP_8753C(Instrument):
         Output:
             bandwidth (float)   : IF bandwidth
         '''
-        return int(float(self._visainstrument.ask('IFBW?;')))
+        return int(float(self._visainstrument.query('IFBW?;')))
 
     def do_set_numpoints(self, numpts):
         '''
@@ -493,7 +493,7 @@ class HP_8753C(Instrument):
         Output:
             None
         '''
-        self._visainstrument.write('POIN%d;' %numpts)
+        self._visainstrument.write(f'POIN{int(numpts)};')
 
     def do_get_numpoints(self):
         '''
@@ -505,7 +505,7 @@ class HP_8753C(Instrument):
         Output:
             numpoints (int) : Number of points in trace
         '''
-        return int(float(self._visainstrument.ask('POIN?;')))
+        return int(float(self._visainstrument.query('POIN?;')))
 
     def do_set_start_freq(self, freq):
         '''
@@ -517,7 +517,7 @@ class HP_8753C(Instrument):
         Output:
             None
         '''
-        self._visainstrument.write('STAR%eHZ;' %freq)
+        self._visainstrument.write(f'STAR{freq:e}HZ;')
 
     def do_get_start_freq(self):
         '''
@@ -529,7 +529,7 @@ class HP_8753C(Instrument):
         Output:
             freq (float)    : Start frequency
         '''
-        return float(self._visainstrument.ask('STAR?;'))
+        return float(self._visainstrument.query('STAR?;'))
 
     def do_set_stop_freq(self, freq):
         '''
@@ -541,7 +541,7 @@ class HP_8753C(Instrument):
         Output:
             None
         '''
-        self._visainstrument.write('STOP%eHZ;' %freq)
+        self._visainstrument.write(f'STOP{freq:e}HZ;')
 
     def do_get_stop_freq(self):
         '''
@@ -553,7 +553,7 @@ class HP_8753C(Instrument):
         Output:
             freq (float)    : Stop frequency
         '''
-        return float(self._visainstrument.ask('STOP?;'))
+        return float(self._visainstrument.query('STOP?;'))
 
     def do_set_power(self, pow):
         '''
@@ -565,7 +565,7 @@ class HP_8753C(Instrument):
         Output:
             None
         '''
-        self._visainstrument.write('POWE%.3e;' % pow)
+        self._visainstrument.write(f'POWE{pow:.3e};')
 
     def do_get_power(self):
         '''
@@ -577,5 +577,4 @@ class HP_8753C(Instrument):
         Output:
             pow (float) : Power
         '''
-        return float(self._visainstrument.ask('POWE?;'))
-
+        return float(self._visainstrument.query('POWE?;'))
