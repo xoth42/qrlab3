@@ -1,6 +1,5 @@
 import numpy as np
 import time
-import matplotlib.pyplot as plt
 
 class Demodulator:
     def __init__(self, nsamples, period):
@@ -10,8 +9,10 @@ class Demodulator:
             raise ValueError('Number of samples should be a multiple of the IF period')
 
     def reserve_IQ(self, dtype):
-        self.I = np.zeros([self.nsamples/self.period,], dtype=dtype)
-        self.Q = np.zeros([self.nsamples/self.period,], dtype=dtype)
+        # Preallocate the I/Q buffers so subclasses can reuse them on each call.
+        npoints = self.nsamples // self.period
+        self.I = np.zeros([npoints], dtype=dtype)
+        self.Q = np.zeros([npoints], dtype=dtype)
 
     def demodulate(self, ar):
         pass
@@ -30,7 +31,7 @@ class DemodulatorInt(Demodulator):
         self.reserve_IQ(dtype=np.int32)
 
     def demodulate(self, ar):
-        ar2 = ar.reshape((len(ar) / self.period, self.period))
+        ar2 = ar.reshape((len(ar) // self.period, self.period))
         np.dot(ar2, self._cosphi, self.I[:len(ar2)])
         self.I /= self._norm
         np.dot(ar2, self._sinphi, self.Q[:len(ar2)])
@@ -46,7 +47,7 @@ class DemodulatorFloat(Demodulator):
         self.reserve_IQ(dtype=np.float32)
 
     def demodulate(self, ar):
-        ar2 = ar.reshape((len(ar) / self.period, self.period))
+        ar2 = ar.reshape((len(ar) // self.period, self.period))
         np.dot(ar2, self._cosphi, self.I[:len(ar2)])
         np.dot(ar2, self._sinphi, self.Q[:len(ar2)])
 
@@ -71,10 +72,10 @@ class DemodulatorComplex(Demodulator):
         phis = np.linspace(0, 2*np.pi * avg_periods, self.samples_per_point, endpoint=False)
         self._exp_iphi = np.exp(1j * phis) / avg_periods * weight_func
         self._exp_iphi = self._exp_iphi.astype(np.complex64)
-        self.IQ = np.zeros([int(self.nsamples/self.samples_per_point)], dtype=np.complex64)
+        self.IQ = np.zeros([self.nsamples // self.samples_per_point], dtype=np.complex64)
 
     def demodulate(self, ar):
-        ar2 = ar.reshape((len(ar) / self.samples_per_point, self.samples_per_point))
+        ar2 = ar.reshape((len(ar) // self.samples_per_point, self.samples_per_point))
         np.dot(ar2, self._exp_iphi, self.IQ[:len(ar2)])
         
 #    def demodulate_ref_freq(self, ar, ref_freq = 50, nsample = 1000):  #Yingying to modulate refrence signal of arbitrary freq
@@ -108,7 +109,7 @@ class DemodulatorComplex(Demodulator):
 #
 #
 #        phis = np.linspace(0, 2*np.pi * avg_periods *nsample/self.period * self.ref_freq/50,nsample,endpoint = False)
-#        print self.ref_freq
+
 #        self._exp_iphi = np.exp(1j * phis) / avg_periods * weight_func
 #        self._exp_iphi = self._exp_iphi.astype(np.complex64)
 #        self.IQ = np.zeros([self.nsamples/self.samples_per_point,], dtype=np.complex64)
@@ -139,7 +140,7 @@ class ArrayWindow:
         Return window from an array, optionally weighted.
         '''
         d = ar[self.start:self.start+self.length]
-        if self.weight:
+        if self.weight is not None:
             np.multiply(d, self.weight, d)
         return d
 
@@ -170,7 +171,7 @@ class ReferencedMeasurement:
         w1 = self.window1.get(ar)
         d1 = self.demod1(w1)
         w2 = self.window2.get(ar)
-        d2 = self.demod1(w2)
+        d2 = self.demod2(w2)
         rel = np.average(d1) / np.average(d2)
         self.summed[self.cur_index % self.cyclelen] += rel
         self.cur_index += 1
@@ -179,7 +180,7 @@ class ReferencedMeasurement:
 
     def done(self):
         self.summed /= self.robins
-        print('Averaged data: %s' % (self.summed, ))
+        print(f'Averaged data: {self.summed}')
 
 IF_PERIOD = 20
 DEMOD_MAP = {

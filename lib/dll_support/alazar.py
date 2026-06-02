@@ -12,7 +12,7 @@ _DLL_FILE = 'C:\\Windows\\System32\\ATSApi.dll'
 try:
     ats = ctypes.windll.LoadLibrary(_DLL_FILE)
     ats.AlazarGetStatus(0)
-except:
+except Exception:
     ats = ctypes.cdll.LoadLibrary(_DLL_FILE)
 
 class Constants:
@@ -124,7 +124,7 @@ class Constants:
     GET_CLOCK_SLOPE = 0x1000000D
 
 def CHK(ret):
-#    print ret, "\n"
+
     if ret != 512:
         raise ValueError("Alazar error %s: %s" % (ret, get_error(ret)))
 
@@ -185,7 +185,7 @@ class Alazar:
         CHK(err)
 
     def set_led(self, on=True):
-        ats.AlazarSetLED(self, self.handle, int(on))
+        ats.AlazarSetLED(self.handle, int(on))
 
     def prepare_capture(self, samples_per_rec, rec_per_buf, rec_per_acq, trig_delay=0, pre_trig_samples=0):
         '''
@@ -217,7 +217,7 @@ class Alazar:
             bufsize = len(buf)
             # ret = ats.AlazarPostAsyncBuffer(self.handle, buf.ctypes.data, bufsize)
             ret = ats.AlazarPostAsyncBuffer(self.handle, buf.ctypes.data_as(ctypes.c_void_p), bufsize)
-            print(ret)
+            print(f'{ret}')
             if ret == 512:
                 self._posted_buffers.append(buf)
             elif ret == 518:
@@ -229,7 +229,7 @@ class Alazar:
     def get_parameter(self, chan, p):
         ret = ctypes.c_long(0)
         ats.AlazarGetParameter(self.handle, ctypes.c_uint8(chan), p, ctypes.pointer(ret))
-        return ret
+        return ret.value
 
     def get_channel_info(self):
         bps = np.array([0], dtype=np.uint8)
@@ -238,9 +238,15 @@ class Alazar:
                 self.handle,
                 max_s.ctypes.data,
                 bps.ctypes.data)
+        CHK(success)
         bits_per_sample = bps[0]
         max_samples_per_record = max_s[0]
-        bytes_per_sample = (bps[0]+7)/8
+        bytes_per_sample = (bps[0] + 7) // 8
+        return {
+            'bits_per_sample': int(bits_per_sample),
+            'max_samples_per_record': int(max_samples_per_record),
+            'bytes_per_sample': int(bytes_per_sample),
+        }
 
     def start_capture(self):
         ret = ats.AlazarStartCapture(self.handle)
@@ -259,7 +265,7 @@ class Alazar:
         Wait for a buffer from the Alazar to become ready and return it.
         Timeout is in ms.
         '''
-#        print "we are in _card.get_next_buffer"
+
         if len(self._posted_buffers) == 0:
             return None
         buf = self._posted_buffers[0]
@@ -278,7 +284,9 @@ class Alazar:
             return None
 
     def wait_for_buffer(self, buf, timeout=200):
-        ret = ats.AlazarWaitAsyncBufferComplete(self.handle, buf.ctypes.data, int(timeout))
+        ret = ats.AlazarWaitAsyncBufferComplete(
+            self.handle, buf.ctypes.data_as(ctypes.c_void_p), int(timeout)
+        )
         if ret == 579:
             logging.warning('Warning: timed out!')
             return None
@@ -287,7 +295,9 @@ class Alazar:
         return buf
 
     def post_alaz_buffer(self, buf):
-        ret = ats.AlazarPostAsyncBuffer(self.handle, buf.ctypes.data, len(buf))
+        ret = ats.AlazarPostAsyncBuffer(
+            self.handle, buf.ctypes.data_as(ctypes.c_void_p), len(buf)
+        )
         CHK(ret)
 
     def test_alazar(self):
@@ -313,7 +323,7 @@ class Alazar:
             j += 1
             buf = self.get_next_buffer()
             if buf is not None:
-                print('Buf: %s' % (buf, ))
+                print(f'Buf: {buf}')
                 plt.figure()
                 plt.plot(buf)
                 plt.savefig('samples.png')

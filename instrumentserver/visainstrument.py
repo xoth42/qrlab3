@@ -1,28 +1,16 @@
 import time
 from instrument import Instrument
 import types
-import pyvisa
 import objectsharer as objsh
 import logging
 logging.getLogger().setLevel(logging.INFO)
 
-# OLD_VISA = True
-# if hasattr(pyvisa, '__version__'):
-#     print()
-#     if pyvisa.__version__ >= '1.6':
-#         OLD_VISA = False
-
-# if OLD_VISA:
-#     print("Using deprecated version of pyvisa")
-#     print("Please upgrade to pyvisa >= 1.6 at your nearest convenience")
-#     import pyvisa.visa
-#     from pyvisa.visa_exceptions import VisaIOError
-#     from pyvisa.visa_messages import VI_ERROR_TMO
-# else:
+import pyvisa
 from pyvisa.errors import VisaIOError
 from pyvisa.constants import StatusCode
 
 DEFAULT_TIMEOUT = 2000
+
 
 class VisaInstrument(Instrument):
 
@@ -45,7 +33,8 @@ class VisaInstrument(Instrument):
         if address:
             self.set_address(address)
 
-        self.clear()
+        if self._ins is not None:
+            self.clear()
         self.set(kwargs)
 
     def interrupt(self):
@@ -63,9 +52,6 @@ class VisaInstrument(Instrument):
     def do_set_timeout(self, val):
         self._timeout = val
         if self._ins:
-            # if OLD_VISA:
-            #     self._ins.timeout = val / 1000
-            # else:
             self._ins.timeout = val
 
 
@@ -80,16 +66,13 @@ class VisaInstrument(Instrument):
     def open(self):
         logging.debug('Opening visa instrument at address %s, term_chars=%r', self._address, self._term_chars)
         try:
-            # if OLD_VISA:
-            #     self._ins = pyvisa.visa.instrument(
-            #         self._address, term_chars=self._term_chars, timeout=self._timeout/1000.
-            #     )
-            # else:
             self._ins = self._resource_manager.open_resource(self._address)
-            self._ins.read_termination = self._term_chars
+            if self._term_chars is not None:
+                self._ins.read_termination = self._term_chars
+                self._ins.write_termination = self._term_chars
             self._ins.timeout = self._timeout
 
-        except Exception as e:
+        except Exception:
             msg = 'Unable to open instrument %s' % (self._address,)
             logging.error(msg)
             raise
@@ -109,24 +92,17 @@ class VisaInstrument(Instrument):
 
     def read(self):
         self._check_ins()
-        t0 = time.time()
+        deadline = time.monotonic() + (self._timeout / 1000.0)
         old_timeout = self._ins.timeout
         self._ins.timeout = 0
         try:
-            while time.time() - t0 < self._timeout:
+            while time.monotonic() < deadline:
                 try:
                     ret = self._ins.read()
                     break
                 except VisaIOError as e:
-                    # if OLD_VISA:
-                    #     print(e)
-                    #     if e.error_code != VI_ERROR_TMO:
-                    #         raise e
-                    # else:
-                    if e.error_code != StatusCode.error_timeout:
+                    if not self._is_timeout_error(e):
                         raise e
-#               Josh commented this line out on 7/30/18 to fix an error with the old yoko driver.            
-#                print objsh.backend
                 objsh.backend.main_loop(0)
             else:
                 raise Exception("Instrument read timed out (timeout=%s)" % self._timeout)
@@ -138,6 +114,11 @@ class VisaInstrument(Instrument):
 
         return ret
 
+    def _is_timeout_error(self, exc):
+        if getattr(exc, 'error_code', None) == StatusCode.error_timeout:
+            return True
+        return getattr(exc, 'error_code', None) in ('VI_ERROR_TMO', -1073807339)
+
     def read_raw(self):
         self._check_ins()
         return self._ins.read_raw()
@@ -147,20 +128,19 @@ class VisaInstrument(Instrument):
         return self._ins.write(cmd)
 
     def write_raw(self, cmd):
-        # if OLD_VISA:
-        #     self._ins.write(cmd)
-        # else:
-        print("inside write raw")
-        print(type(self._ins))
         self._ins.write_raw(cmd)
-        print("leaving write_raw")
 
     def ask(self, cmd, timeout=None):
         self._check_ins()
-        # if OLD_VISA:
-        #     self._ins.write(cmd)
-        #     return self._ins.read().strip()
-        return self._ins.query(cmd).strip()
+        if timeout is None:
+            return self._ins.query(cmd).strip()
+
+        old_timeout = self._ins.timeout
+        self._ins.timeout = timeout
+        try:
+            return self._ins.query(cmd).strip()
+        finally:
+            self._ins.timeout = old_timeout
 
     def clear(self):
         self._check_ins()
@@ -172,9 +152,9 @@ class VisaInstrument(Instrument):
 
     def set_visa_param(self, val, channel):
         p = self.get_parameter_options(channel)
-        ret = self.write(p['setfmt']%val)
+        self.write(p['setfmt'] % val)
         for name in p.get('updates', []):
-            print('updating', name)
+            print(f'updating {name}')
             self.get(name)
 
     def add_visa_parameter(self, name, getfmt, setfmt, **kwargs):

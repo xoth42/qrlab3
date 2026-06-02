@@ -1,12 +1,13 @@
-# -*- coding: utf-8 -*-
-from . import keysightSD1 as key
+import keysightSD1 as key
+
 def error_decorator(function):
     def wrapper(*args):
         result = function(*args)
         if (result < 0) and (result != -8038) and (result != -8031):
             raise ValueError("Error is " + str(result) + ' in function: ' + str(function.__name__))
     return wrapper
-        
+
+
 class CompiledHVI(object):
     def __init__(self, HVI_path_str, chassis, awg_list, *args, **kwargs):
         self.hvi = key.SD_HVI()
@@ -21,11 +22,9 @@ class CompiledHVI(object):
 #        self.assignHardware(1, 0, 10) #DARIO 1/17/19 changed for different slot arrangement on the third
 #                                                                   (digitizer-less) chassis
 #        self.assignHardware(2, 0, 10)
-            
 #        self.assignHardware(0, 1, 7)
 #        self.assignHardware(1, 1, 8) #DARIO changing something for PC8 4/8/21
         
-
         self.hvi.compile()
         self.hvi.load()
         

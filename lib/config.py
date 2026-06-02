@@ -17,12 +17,7 @@
 
 import os
 import sys
-
-# for backward compatibility to python 2.5
-try:
-    import json
-except:
-    import simplejson as json
+import json
 
 import logging
 
@@ -47,13 +42,15 @@ class Config(object):
         filename = os.path.join(get_execdir(), 'userconfig.py')
         if os.path.exists(filename):
             logging.debug('Loading userconfig from %s', filename)
-            exec(compile(open(filename, "rb").read(), filename, 'exec'), {'config': self})
+            with open(filename, 'r', encoding='utf-8') as handle:
+                source = handle.read()
+            exec(compile(source, filename, 'exec'), {'config': self})
 
     def setup_tempdir(self):
         '''Get directory for temporary files.'''
 
         tdir = self.get('tempdir', None)
-        if tdir == None or not os.path.exists(tdir):
+        if tdir is None or not os.path.exists(tdir):
             tdir = os.path.join(get_execdir(), 'tmp')
             self.set('tempdir', tdir)
         if not os.path.exists(tdir):
@@ -78,10 +75,9 @@ class Config(object):
         try:
             filename = self._get_filename()
             logging.debug('Loading settings from %s', filename)
-            f = file(self._get_filename(), 'r')
-            self._config = json.load(f)
-            f.close()
-        except Exception as e:
+            with open(filename, 'r', encoding='utf-8') as handle:
+                self._config = json.load(handle)
+        except Exception:
             logging.warning('Unable to load config file')
             self._config = {}
 
@@ -118,10 +114,9 @@ class Config(object):
         try:
             filename = self._get_filename()
             logging.debug('Saving settings to %s', filename)
-            f = file(filename, 'w+')
-            json.dump(self._config, f, indent=4, sort_keys=True)
-            f.close()
-        except Exception as e:
+            with open(filename, 'w', encoding='utf-8') as handle:
+                json.dump(self._config, handle, indent=4, sort_keys=True)
+        except Exception:
             logging.warning('Unable to save config file')
 
     def __getitem__(self, key):
@@ -197,4 +192,3 @@ def get_execdir():
     '''Get work directory we started in.'''
     global _execdir
     return _execdir
-

@@ -900,7 +900,7 @@ class Sequence(Instruction):
                             unroll=unroll,
                             fixed=fixed,
                             trigger=trig))
-#                print '  remaining: %s, ret: %s' % (self.seq, ret)
+
                 return ret
 
             # <tgt_t> should be chosen such that full copies can be made of
@@ -916,11 +916,10 @@ class Sequence(Instruction):
                             fixed=fixed,
                             trigger=self.seq[0].get_trigger()))
                 else:
-                    # print 'Copying %s, %s' % (self.seq[0], self.seq[0].name)
+
                     ret.append(self.seq[0])
                 del self.seq[0]
 
-#        print '  remaining: %s, ret: %s' % (self.seq, ret)
         return ret
 
     def print_seq(self):
@@ -1238,11 +1237,9 @@ class Pulse(Instruction):
             trigger=False,
             repeat=1,
             convdelay=False):
-        #        if convdelay and (data is not None) and not name.startswith('delay') and np.count_nonzero(data) == 0:
-        #            print 'Converting %s of length %s' % (name, len(data))
-        #            name = 'delay1'
-        #            repeat *= len(data)
-        #            data = np.array([0,])
+
+
+
         self.name = name
         self.data = data
         self.chan = chan
@@ -1991,7 +1988,7 @@ class SequenceOperation(object):
         seq_out = []
         now = 0
         for el in s.seq:
-            #            print s.seq
+
             # Reset time when trigger occurs
             if self.ttr and el.get_trigger():
                 now = 0
@@ -2051,16 +2048,11 @@ class ModulateSequence(SequenceOperation):
         data = el.get_data()
         if np.count_nonzero(data) == 0:
             return el
-
-#        if el.repeat > 1 and np.abs(len(el.get_data()) % self.if_period) > 1e-4:  EBRU COMMENTED THIS OUT
-#            raise ValueError('Unable to modulate repeated blocks not a multiple of if_period')
         if self.fixed_phase is None:
             phi0 = float(now % self.if_period) / \
                 self.if_period * 2 * np.pi + self.phase
-#            print 'with now, phi0 is : %s, now:%s'%(phi0,now)
         else:
             phi0 = self.fixed_phase + self.phase
-#            print 'with fixed phase, phi0 is : %s'%(phi0)
         phis = np.linspace(
             0,
             2 *

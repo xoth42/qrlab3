@@ -1,8 +1,8 @@
-from .sequencer import Combined, Sequence, Sequencer, Delay, Pulse, Instruction, Constant
+from sequencer import Combined, Sequence, Sequencer, Delay, Pulse, Instruction, Constant
 import numpy as np
 import scipy.special
 import scipy.signal
-from . import ampgen
+import ampgen
 
 #########################################
 # Constants
@@ -242,8 +242,6 @@ class GSRotation(object):
                 (4 * sigma + ws + 8), 1, chan=self.switch_channel)
             return Combined([p1, p2, switchMarker], align=1)
 
-# print 'Requested area: %.03f, actual areas: %.03f / %.03f' % (area,
-# p0.get_area(), p1.get_area())
         return Combined([p1, p2])
 
 
@@ -346,7 +344,6 @@ class CombinedGSRotation(object):
 #            switchMarker = Constant((4*sigma+ws+8), 1, chan = self.switch_channel)
 #            return Combined([p1, p2, switchMarker], align = 1)
 
-# print 'Requested area: %.03f, actual areas: %.03f / %.03f' % (area,
 # p0.get_area(), p1.get_area())
         return Combined([p1, p2, p3, p4])
 

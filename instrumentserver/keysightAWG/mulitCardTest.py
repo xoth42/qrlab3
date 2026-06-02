@@ -1,12 +1,8 @@
 import keysightSD1 as key
 import numpy as np
 
-
-
 AWG_PRODUCT = "M3202A"
 CHASSIS = 0
-
-
 
 trigger_data = np.concatenate((np.ones(10), np.zeros(90)))
 trigger = key.SD_Wave()

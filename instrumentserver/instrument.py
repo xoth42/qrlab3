@@ -415,7 +415,7 @@ class Instrument(object):
         Ouput:  None
         '''
         if name not in self._parameters:
-            print('Parameter %s not defined' % name)
+            print(f'Parameter {name} not defined')
             return None
 
         for key, val in kwargs.items():
@@ -647,7 +647,7 @@ class Instrument(object):
         try:
             p = self._parameters[name]
         except:
-            print('Could not retrieve options for parameter %s' % name)
+            print(f'Could not retrieve options for parameter {name}')
             return None
 
         if 'channel' in p and 'channel' not in kwargs:
@@ -666,7 +666,7 @@ class Instrument(object):
 
         # Check this here; getting of cached values should work
         if not flags & 1: #Instrument.FLAG_GET:
-            print('Instrument does not support getting of %s' % name)
+            print(f'Instrument does not support getting of {name}')
             return None
 
         if 'base_name' in p:
@@ -883,7 +883,7 @@ class Instrument(object):
             return None
 
         if not p['flags'] & Instrument.FLAG_SET:
-            print('Instrument does not support setting of %s' % name)
+            print(f'Instrument does not support setting of {name}')
             return None
 
         if 'channel' in p and 'channel' not in kwargs:
@@ -1198,12 +1198,12 @@ class Instrument(object):
         from . import pythonprocess
         ap = pythonprocess.ArgParser()
         args, kwargs = ap.parse_args()
-        print('Testing instrument with args %s, keyword args %s' % (args, kwargs))
+        print(f'Testing instrument with args {args}, keyword args {kwargs}')
         ins = insclass(*args, **kwargs)
         for p in ins.get_parameter_names():
-            print('Getting %s' % (p,))
+            print(f'Getting {p}')
             val = ins.get(p)
-            print('  Value %s' % (val,))
+            print(f'  Value {val}')
         return ins
 
     # Auxiliary parameter functions
@@ -1283,4 +1283,3 @@ class InvalidInstrument(Instrument):
 
     def get_create_kwargs(self):
         return self._kwargs
-

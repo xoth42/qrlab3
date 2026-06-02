@@ -1,32 +1,44 @@
 import mclient
 import config
-import types
 import time
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib import gridspec
 import logging
-logging.getLogger().setLevel(logging.INFO)
 import signal
 import objectsharer as objsh
 from lib import jsonext
 import os
-import pulseseq
 import awgloader
 
 from PyQt5 import QtWidgets
 from pulseseq import sequencer
 from pulseseq import pulselib
 
-STYLE_IMAGE = 'IMAGE'
-STYLE_LINES = 'LINES'
+logging.getLogger().setLevel(logging.INFO)
+
+STYLE_IMAGE = "IMAGE"
+STYLE_LINES = "LINES"
+
 
 def is_complex(ar):
-    return ar.dtype in (np.complex, np.complex64, np.complex128)
+    return ar.dtype in (complex, np.complex64, np.complex128)
+
+
+def _ensure_list(value):
+    """Normalize a value into a list without copying lists unnecessarily."""
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return value
+    if isinstance(value, tuple):
+        return list(value)
+    return [value]
+
 
 class Measurement(object):
-    '''
+    """
     Measurement class.
 
     Performs/provides several functions:
@@ -49,29 +61,36 @@ class Measurement(object):
     This last case sometimes gives weird results because some AWGs throw their
     marker channels high when starting. A function generator (using the sync
     output!) is strongly recommended.
-    '''
+    """
 
-    def __init__(self, cyclelen,
-                     readout='readout',
-                     keep_shots=False,
-                     name=None,
-                     histogram=False,
-                     singleshotbin=False,
-                     generate=True,
-                     fig=None, title='',
-                     residuals=True, res_vert=True,
-                     release_seqs=True, plot_seqs=False, print_seqs=False,
-                     keep_data=True,
-                     infos=None,
-                     extra_info=None,
-                     comment='',
-                     use_sync=True,
-                     real_signals=False,
-                     analysis_func=None,
-                     savefig=True,
-                     imagetype='png',
-                     print_progress=True,
-                     proj_func = 'amplitude'):
+    def __init__(
+        self,
+        cyclelen,
+        readout="readout",
+        keep_shots=False,
+        name=None,
+        histogram=False,
+        singleshotbin=False,
+        generate=True,
+        fig=None,
+        title="",
+        residuals=True,
+        res_vert=True,
+        release_seqs=True,
+        plot_seqs=False,
+        print_seqs=False,
+        keep_data=True,
+        infos=None,
+        extra_info=None,
+        comment="",
+        use_sync=True,
+        real_signals=False,
+        analysis_func=None,
+        savefig=True,
+        imagetype="png",
+        print_progress=True,
+        proj_func="amplitude",
+    ):
         if name is None:
             name = self.__class__.__name__
 
@@ -101,19 +120,12 @@ class Measurement(object):
         self.proj_func = proj_func
         self.readout = readout
 
-        # Build list of info objects
-        if infos is None:
-            infos = []
-        elif type(infos) is tuple:
-            infos = list(infos)
-        elif type(infos) is not list:
-            infos = [infos,]
+        # `infos` is used as a sequence of pulse metadata objects. Normalize
+        # scalars and tuples into a plain list so the rest of the code can
+        # iterate without special cases.
+        self.infos = _ensure_list(infos)
         if extra_info is not None:
-            if type(extra_info) in (list, tuple):
-                infos.extend(extra_info)
-            else:
-                infos.append(extra_info)
-        self.infos = infos
+            self.infos.extend(_ensure_list(extra_info))
 
         self.analysis_func = analysis_func
 
@@ -123,18 +135,17 @@ class Measurement(object):
         self.readout_info = mclient.get_readout_info(readout)
         self.readout_driver = mclient.instruments.get(readout)
 
-            
-        self._funcgen = mclient.instruments.get('funcgen')
+        self._funcgen = mclient.instruments.get("funcgen")
         self.use_sync = use_sync
-        
-        # Figure out the digitizor model
-        alz = mclient.instruments.get('alazar')
-        if alz is not None:
-            self.dig_type = 'alz'
-        else:
-            self.dig_type = 'key'
-        self._dig = mclient.instruments.get('dig') # Used for triggering if nothing else
 
+        # Cache which digitizer backend is available so later branches can stay
+        # short and readable.
+        alz = mclient.instruments.get("alazar")
+        if alz is not None:
+            self.dig_type = "alz"
+        else:
+            self.dig_type = "key"
+        self._dig = mclient.instruments.get("dig")  # Fallback trigger source.
 
     def setup_data(self, name):
         if self.keep_data:
@@ -143,20 +154,46 @@ class Measurement(object):
             self.datafile = mclient.get_temp_file()
 
         ts = time.localtime()
-        tstr = time.strftime('%Y%m%d/%H%M%S', ts)
+        tstr = time.strftime("%Y%m%d/%H%M%S", ts)
         self._timestamp_str = tstr
-        self._groupname = '%s_%s'  % (tstr, name)
+        self._groupname = "%s_%s" % (tstr, name)
         self.data = self.datafile.create_group(self._groupname)
-        self.data.set_attrs(
-            title=self.title,
-            comment=self.comment
+        self.data.set_attrs(title=self.title, comment=self.comment)
+
+    def _create_awg_loader(self, fileload=False, dot_awg_path=None):
+        """Create and cache the AWG loader with the standard 4-AWG mapping."""
+        if self._awgloader:
+            return self._awgloader
+
+        loader = awgloader.AWGLoader(
+            bulkload=config.awg_bulkload,
+            fileload=fileload,
+            dot_awg_path=dot_awg_path,
         )
 
+        # Each physical AWG contributes four logical channels in sequence.
+        base_channel = 1
+        for awg_index in range(1, 5):
+            awg = self.instruments["AWG%d" % awg_index]
+            if awg:
+                chanmap = {
+                    1: base_channel,
+                    2: base_channel + 1,
+                    3: base_channel + 2,
+                    4: base_channel + 3,
+                }
+                logging.info("Adding AWG%d, channel map: %s", awg_index, chanmap)
+                loader.add_awg(awg, chanmap)
+                base_channel += 4
+
+        self._awgloader = loader
+        return loader
+
     def drop_data(self):
-        '''
+        """
         Remove data from hdf5 file but keep arrays in memory.
         Remove temporary file.
-        '''
+        """
         try:
             if self.avg_data:
                 avgdata = np.array(self.avg_data[:])
@@ -175,7 +212,7 @@ class Measurement(object):
             else:
                 stedata = None
 
-            logging.info('Dropping data group %s' % self._groupname)
+            logging.info("Dropping data group %s" % self._groupname)
             del self.datafile[self._groupname]
             mclient.remove_temp_file()
             self.data = None
@@ -186,179 +223,140 @@ class Measurement(object):
             self.ste_data = stedata
 
         except Exception as e:
-            logging.warning('Unable to remove data: %s' % str(e))
+            logging.warning("Unable to remove data: %s" % str(e))
 
     def set_parameters(self, **kwargs):
         self.data.set_attrs(kwargs)
 
     def get_sequencer(self, seqs=None):
-        s = pulseseq.sequencer.Sequencer(seqs)
+        s = sequencer.Sequencer(seqs)
 
         for i in self.infos:
-            if hasattr(i, 'ssb_list'):
-               for ssb in i.ssb_list:
-                   s.add_ssb(ssb)
+            if hasattr(i, "ssb_list"):
+                for ssb in i.ssb_list:
+                    s.add_ssb(ssb)
             else:
                 if i.ssb:
                     s.add_ssb(i.ssb)
-            if i.marker and i.marker['channel'] != '':
-                s.add_marker(i.marker['channel'], i.channels[0],
-                             ofs=i.marker['ofs'], bufwidth=i.marker['bufwidth'])
-                s.add_marker(i.marker['channel'], i.channels[1],
-                             ofs=i.marker['ofs'], bufwidth=i.marker['bufwidth'])
+            if i.marker and i.marker["channel"] != "":
+                s.add_marker(
+                    i.marker["channel"],
+                    i.channels[0],
+                    ofs=i.marker["ofs"],
+                    bufwidth=i.marker["bufwidth"],
+                )
+                s.add_marker(
+                    i.marker["channel"],
+                    i.channels[1],
+                    ofs=i.marker["ofs"],
+                    bufwidth=i.marker["bufwidth"],
+                )
 
-        if hasattr(config, 'required_markers'):
+        if hasattr(config, "required_markers"):
             for marker_dict in config.required_markers:
-                 s.add_marker(marker_dict['out_chan'],
-                              marker_dict['in_chan'],
-                              ofs=marker_dict['ofs'],
-                              bufwidth=marker_dict['bufwidth'])
-
+                s.add_marker(
+                    marker_dict["out_chan"],
+                    marker_dict["in_chan"],
+                    ofs=marker_dict["ofs"],
+                    bufwidth=marker_dict["bufwidth"],
+                )
 
         for ch in config.required_channels:
             s.add_required_channel(ch)
 
         # Add master/slave settings to sequencer
-        if hasattr(config, 'slave_triggers'):
-            slave_chan = int(config.slave_triggers[0][0].split('m')[0])
+        if hasattr(config, "slave_triggers"):
+            slave_chan = int(config.slave_triggers[0][0].split("m")[0])
             master_awg = ((slave_chan - 1) / 4) + 1
-            logging.info('AWG %d seems to be the master' % master_awg)
+            logging.info("AWG %d seems to be the master" % master_awg)
             for i in range(4):
                 ch = 4 * (master_awg - 1) + i + 1
                 s.add_master_channel(ch)
-                s.add_master_channel('%dm1'%ch)
-                s.add_master_channel('%dm2'%ch)
+                s.add_master_channel("%dm1" % ch)
+                s.add_master_channel("%dm2" % ch)
 
             for chan, delay in config.slave_triggers:
                 s.add_slave_trigger(chan, delay)
 
         # Add channel delays settings to sequencer
-        if hasattr(config, 'channel_delays'):
+        if hasattr(config, "channel_delays"):
             for ch, delay in config.channel_delays:
                 s.add_channel_delay(ch, delay)
 
-        if hasattr(config, 'flatten_waveforms'):
+        if hasattr(config, "flatten_waveforms"):
             s.set_flatten(config.flatten_waveforms)
 
-        if hasattr(config, 'channel_convolutions'):
+        if hasattr(config, "channel_convolutions"):
             s.set_flatten(True)
             for ch, path in config.channel_convolutions:
                 kernel = np.loadtxt(path)
                 s.add_convolution(ch, kernel)
-                logging.info('adding convolution channel: %d' % ch)
+                logging.info("adding convolution channel: %d" % ch)
 
         return s
 
     def generate(self):
-        '''
+        """
         This function should generate the pulse sequence and return it.
-        '''
+        """
         return None
 
     def get_awg_loader_old(self):
-        '''
+        """
         Detect all AWGs and map channels:
         AWG1 gets channel 1-4, AWG2 5-8, etc.
-        '''
-        if self._awgloader:
-            return self._awgloader
-
-        l = awgloader.AWGLoader(bulkload=config.awg_bulkload)
-        base = 1
-        for i in range(1, 5):
-            awg = self.instruments['AWG%d'%i]
-            if awg:
-                chanmap = {1:base, 2:base+1, 3:base+2, 4:base+3}
-                logging.info('Adding AWG%d, channel map: %s', i, chanmap)
-                l.add_awg(awg, chanmap)
-                base += 4
-
-        self._awgloader = l
-        return l
+        """
+        return self._create_awg_loader()
 
     def get_awg_loader(self):
-        '''
+        """
         Detect all AWGs and map channels:
         AWG1 gets channel 1-4, AWG2 5-8, etc.
-        '''
-        if self._awgloader:
-            return self._awgloader
-
-        if hasattr(config,'awg_fileload') and hasattr(config,'dot_awg_path'):
-            fl = config.awg_fileload
-            fp = config.dot_awg_path
-        else:
-            fl = False
-            fp = None
-
-        l = awgloader.AWGLoader(bulkload=config.awg_bulkload,
-                                fileload=fl, dot_awg_path=fp)
-        base = 1
-        for i in range(1, 5):
-            awg = self.instruments['AWG%d'%i]
-            if awg:
-                chanmap = {1:base, 2:base+1, 3:base+2, 4:base+3}
-                logging.info('Adding AWG%d, channel map: %s', i, chanmap)
-                l.add_awg(awg, chanmap)
-                base += 4
-
-        self._awgloader = l
-        return l
+        """
+        fileload = getattr(config, "awg_fileload", False)
+        dot_awg_path = getattr(config, "dot_awg_path", None)
+        return self._create_awg_loader(fileload=fileload, dot_awg_path=dot_awg_path)
 
     def load(self, seqs, run=False, ntries=1):
-        '''
+        """
         Load sequences <seqs> to awgs.
         awgs are located from the instruments list and should be named
         AWG1, AWG2, ... (up to 4 currently).
-        '''
-        start = time.process_time()
-        l = self.get_awg_loader()
-        for i in range(ntries):
+        """
+        loader = self.get_awg_loader()
+        for _ in range(ntries):
             try:
-                l.load(seqs)
+                loader.load(seqs)
                 break
-            except Exception as e:
-                logging.warning('Loading failed (%s), retrying', str(e))
+            except Exception as exc:
+                logging.warning("Loading failed (%s), retrying", exc)
                 time.sleep(1)
-
-                
-#        ''' JEFF wait till all awgs active '''
-#        count = 1
-#        while not l.is_awg_running() and count < 30:
-#            print(count, 'tries to prime', l)
-#            time.sleep(1)
-#            count += 1
-#            
-#        ''' JEFF moved waveform load time from awgloader.py '''
-#        dt = time.clock() - start
-#        nloaded = len(l._loaded_wforms)
-#        if nloaded > 0:
-#            print 'Loaded %d waveforms in %.03f sec' % (nloaded, dt)
-            
         if run:
             self.start_awgs()
 
     def stop_awgs(self):
-        '''
+        """
         Stop AWGs
-        '''
-        logging.info('Stopping AWGs')
-        l = self.get_awg_loader()
-        for awg in l.get_awgs():
+        """
+        logging.info("Stopping AWGs")
+        loader = self.get_awg_loader()
+        for awg in loader.get_awgs():
             awg.all_off()
             awg.stop()
 
     def start_awgs(self):
-        l = self.get_awg_loader()
-        #JEFF trying to force all awgs to run
-#        l.set_all_awgs_active()
-        print(('starting awgs:', l.get_awgs(), l.get_active_awgs()))
-        l.run()
+        loader = self.get_awg_loader()
+        logging.info(
+            "Starting AWGs: %s (active: %s)",
+            loader.get_awgs(),
+            loader.get_active_awgs(),
+        )
+        loader.run()
 
     def stop_funcgen(self):
         if self._funcgen is None:
             return
-        logging.info('Turning off function generator')
+        logging.info("Turning off function generator")
         if self.use_sync:
             self._funcgen.set_sync_on(False)
         else:
@@ -367,7 +365,7 @@ class Measurement(object):
     def start_funcgen(self):
         if self._funcgen is None:
             return
-        logging.info('Turning on function generator')
+        logging.info("Turning on function generator")
         if self.use_sync:
             self._funcgen.set_sync_on(True)
         else:
@@ -375,12 +373,12 @@ class Measurement(object):
 
     def _capture_progress_cb(self, navg):
         if self.print_progress:
-            print('%d averages done' % navg)
+            logging.info("%d averages done", navg)
 
     def update(self, avg_data):
-        '''
+        """
         Override to update a plot
-        '''
+        """
         pass
 
     def _data_changed_cb(self, key, _slice=None):
@@ -389,8 +387,8 @@ class Measurement(object):
         avg_data = self.avg_data[:]
         try:
             self.update(avg_data)
-        except Exception as e:
-            print('Error: %s' % (str(e),))
+        except Exception as exc:
+            logging.exception("Plot update failed: %s", exc)
 
     def _ctrlc_cb(self, *args):
         self._interrupted = True
@@ -403,40 +401,42 @@ class Measurement(object):
         signal.signal(signal.SIGINT, self._old_signal)
 
     def acquisition_loop(self, alz, fast=False):
-        '''
+        """
         Acquisition loop, talk to alazar daemon.
         Also starts the measurement.
-        '''
-
-        # If we have a function generator, start AWGs before setting up alazar
+        """
+        # The function-generator path starts AWGs first because the generator
+        # often provides the final timing edge that arms the digitizer.
         if self._funcgen and not fast:
-            print('inside acquisiton_loop, seeing if funcgen is on')
+            logging.debug(
+                "Function generator present, starting AWGs before Alazar setup"
+            )
             self.start_awgs()
             time.sleep(1)
-        # Setup and arm alazar
+
+        # Configure the digitizer for histogram or averaged acquisition.
         if self.histogram:
             alz.setup_hist(self.cyclelen * alz.get_naverages(), self.shot_data)
         else:
             alz.setup_experiment(self.cyclelen)
 
         alz.set_interrupt(False)
-        # Estimate a capture timeout, mostly because the AWG is a bit slow...
+        # Estimate a generous timeout so slow AWG transfers do not abort early.
         timeout = min(10000 + 4000 * self.cyclelen, 600000)
         alz.set_timeout(timeout)
         time.sleep(1)
 
-
-        # Capture CTRL-C and connect callbacks
+        # Hook progress and data updates before the run starts.
         self.capture_ctrlc()
-        progress_hid = alz.connect('capture-progress', self._capture_progress_cb)
-        dataupd_hid = self.data.connect('changed', self._data_changed_cb)
+        progress_hid = alz.connect("capture-progress", self._capture_progress_cb)
+        dataupd_hid = self.data.connect("changed", self._data_changed_cb)
 
-        # Start measurement, either by starting the AWG or the function generator
+        # Start whichever hardware source is responsible for beginning the run.
         if not fast:
             if self._funcgen:
                 self.start_funcgen()
-            elif self._dig: #Dario
-                dig = self.instruments['dig']
+            elif self._dig:
+                dig = self.instruments["dig"]
                 dig.stop_hvi()
                 self.start_awgs()
                 dig.start_hvi()
@@ -444,49 +444,54 @@ class Measurement(object):
                 self.start_awgs()
 
         try:
-            take_ref = (self.readout != 'readout_IQ')
+            take_ref = self.readout != "readout_IQ"
             if self.histogram:
-                #TODO: implement take_ref=False for take_hist JEFF
+                # Histogram acquisition currently always keeps the reference
+                # decision simple because the backend API is limited here.
                 ret = alz.take_hist(async_=True, take_ref=take_ref)
             else:
-                ret = alz.take_experiment(avg_buf=self.avg_data, async_=True, singleshotbin=self.singleshotbin, cov_buf=self.cov_data,
-                                          shot_buf=self.shot_data, #Dario
-                                          IQ_e=self.readout_info.IQe, e_radius=self.readout_info.IQe_radius, proj_func=self.proj_func,
-                                          take_ref=take_ref)
+                ret = alz.take_experiment(
+                    avg_buf=self.avg_data,
+                    async_=True,
+                    singleshotbin=self.singleshotbin,
+                    cov_buf=self.cov_data,
+                    shot_buf=self.shot_data,
+                    IQ_e=self.readout_info.IQe,
+                    e_radius=self.readout_info.IQe_radius,
+                    proj_func=self.proj_func,
+                    take_ref=take_ref,
+                )
 
             if self.print_progress:
-                logging.info('Acquiring...')
+                logging.info("Acquiring...")
             while not ret.is_valid() and not self._interrupted:
-                objsh.helper.backend.main_loop(20, origin=0) #DARIO 4/2/19 testing stuff;Alazar crashing
-#                print 'before processEvents'
+                objsh.helper.backend.main_loop(20, origin=0)
                 QtWidgets.QApplication.processEvents()
-#                print(ret.is_valid(), time.time())
-#            print 'Done with take experiment'
             if self._interrupted:
                 alz.set_interrupt(True)
-        except Exception as e:
-            logging.info('CTRL-C Caught or error, stopping Alazar')
+        except Exception as exc:
+            logging.info("CTRL-C Caught or error, stopping Alazar")
             alz.set_interrupt(True)
-            logging.error(str(e))
+            logging.exception("Acquisition failed: %s", exc)
         finally:
             alz.disconnect(progress_hid)
             self.data.disconnect(dataupd_hid)
             self.release_ctrlc()
         # Final processing of data
         self.post_process()
-        
+
         return ret.get()
 
     def save_settings(self, fn=None):
-        '''
+        """
         Save settings. If <fn> is not specified, generate a file associated
         with the measurement data (in sub directory settings).
         Also save settings to the file config.ins_store_fn.
-        '''
+        """
 
         settings = mclient.instruments.get_all_parameters()
-        if fn is None and self._timestamp_str != '':
-            fn = os.path.join(config.datadir, 'settings/%s.set'%self._timestamp_str)
+        if fn is None and self._timestamp_str != "":
+            fn = os.path.join(config.datadir, "settings/%s.set" % self._timestamp_str)
         fdir = os.path.split(fn)[0]
         if not os.path.isdir(fdir):
             os.makedirs(fdir)
@@ -496,108 +501,157 @@ class Measurement(object):
         mclient.save_instruments()
 
     def setup_measurement(self):
-        '''
+        """
         - Stop AWGs / function generator
         - Generate sequence
         - Save settings
         - Arm alazar
-        '''
+        """
 
         self.stop_funcgen()
         self.stop_awgs()
-        alz = self.instruments['alazar']
+        alz = self.instruments["alazar"]
         if alz is None:
-            logging.error('Alazar instrument not found!')
+            logging.error("Alazar instrument not found!")
             return
 
         # Generate and load sequence
         if self.do_generate:
-            logging.info('Generating sequence...')
+            logging.info("Generating sequence...")
             seqs = self.generate()
             if self.plot_seqs:
-                s = pulseseq.sequencer.Sequencer()
+                s = sequencer.Sequencer()
                 s.plot_seqs(seqs)
             if self.print_seqs:
-                s = pulseseq.sequencer.Sequencer()
+                s = sequencer.Sequencer()
                 s.print_seqs(seqs)
-            
-            logging.info('Loading sequence...')
+
+            logging.info("Loading sequence...")
             self.load(seqs)
             if self.release_seqs:
                 self.seqs = None
-            
-        #If not generating, we guess that all AWGs are used
+
+        # If not generating, we guess that all AWGs are used
         else:
-            l = self.get_awg_loader()
-            l.set_all_awgs_active()
+            loader = self.get_awg_loader()
+            loader.set_all_awgs_active()
 
         self.save_settings()
-        
-#        alz.setup_clock() #DARIO 1/24/19 testing if this line of code is really needed
         alz.setup_channels()
         alz.setup_trigger()
-        alz.set_real_signals(self.real_signals)     # Doesn't do anything for histrograms
+        alz.set_real_signals(self.real_signals)
 
     def setup_measurement_data(self):
-        '''
+        """
         Create datasets to store measured and post-processed data.
-        '''
-        alz = self.instruments['alazar']
+        """
+        alz = self.instruments["alazar"]
         if self.histogram:
-            self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*alz.get_naverages()], dtype=np.complex)
+            self.shot_data = self.data.create_dataset(
+                "shots",
+                shape=[self.cyclelen * alz.get_naverages()],
+                dtype=np.complex128,
+            )
             self.avg_data = None
             self.pp_data = None
             self.std_i_data = None
             self.std_q_data = None
         elif self.singleshotbin:
             self.shot_data = None
-            self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
+            self.avg_data = self.data.create_dataset(
+                "avg",
+                [
+                    self.cyclelen,
+                ],
+                dtype=np.float64,
+            )
             self.pp_data = None
             self.ste_data = None
-            '''DARIO added 7/28/18 to keep all single shot data'''
+            # Keep the raw single-shot bin data alongside the averaged result.
         elif self.keep_shots:
-            self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*alz.get_naverages()], dtype=np.complex)
+            self.shot_data = self.data.create_dataset(
+                "shots",
+                shape=[self.cyclelen * alz.get_naverages()],
+                dtype=np.complex128,
+            )
             if not self.real_signals:
-                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.complex)
-                self.pp_data = self.data.create_dataset('avg_pp', [self.cyclelen,], dtype=np.float)
+                self.avg_data = self.data.create_dataset(
+                    "avg",
+                    [
+                        self.cyclelen,
+                    ],
+                    dtype=np.complex128,
+                )
+                self.pp_data = self.data.create_dataset(
+                    "avg_pp",
+                    [
+                        self.cyclelen,
+                    ],
+                    dtype=np.float64,
+                )
             else:
-                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
+                self.avg_data = self.data.create_dataset(
+                    "avg",
+                    [
+                        self.cyclelen,
+                    ],
+                    dtype=np.float64,
+                )
                 self.pp_data = None
         else:
             self.shot_data = None
             # If saving complex data, save both raw signal and post-processed version
             if not self.real_signals:
-                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.complex)
-                self.pp_data = self.data.create_dataset('avg_pp', [self.cyclelen,], dtype=np.float)
+                self.avg_data = self.data.create_dataset(
+                    "avg",
+                    [
+                        self.cyclelen,
+                    ],
+                    dtype=np.complex128,
+                )
+                self.pp_data = self.data.create_dataset(
+                    "avg_pp",
+                    [
+                        self.cyclelen,
+                    ],
+                    dtype=np.float64,
+                )
             else:
-                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
+                self.avg_data = self.data.create_dataset(
+                    "avg",
+                    [
+                        self.cyclelen,
+                    ],
+                    dtype=np.float64,
+                )
                 self.pp_data = None
-            self.cov_data = self.data.create_dataset('cov', [self.cyclelen,3], dtype=np.float)
+            self.cov_data = self.data.create_dataset(
+                "cov", [self.cyclelen, 3], dtype=np.float64
+            )
 
     def measure(self):
-        '''
+        """
         Perform a measurement.
 
         Requires existance of an instrument named 'alazar'.
 
         Sets up data sets, performs initialization and updates plots if the
         class has an 'update' function.
-        '''
-        if self.dig_type is 'key':
+        """
+        if self.dig_type == "key":
             return self.measure_keysight()
-            
+
         self.setup_measurement()
         self.setup_measurement_data()
 
-        alz = self.instruments['alazar']
+        alz = self.instruments["alazar"]
         if self.histogram:
-#            if self.cyclelen == 1:
+            #            if self.cyclelen == 1:
             ret = self.acquisition_loop(alz)
             self.plot_histogram(self.shot_data[:])
-  
+
         else:
-            avgs, cov = self.acquisition_loop(alz) # calls update function
-            print('after acquisition loop')
+            avgs, cov = self.acquisition_loop(alz)  # calls update function
             self.avg_data = avgs
             self.cov_data = cov
             ret = self.analyze(self.get_ys(), fig=self.get_figure())
@@ -605,177 +659,203 @@ class Measurement(object):
         if self.savefig:
             self.save_fig()
 
-        txt = 'Done'
+        txt = "Done"
         if self.data:
-            txt += '; in data group: %s' % self.data.get_fullname()
+            txt += "; in data group: %s" % self.data.get_fullname()
         logging.info(txt)
 
         if self._interrupted:
-            raise Exception('Measurement interrupted')
+            raise Exception("Measurement interrupted")
 
         # Remove pulse data to keep memory usage reasonable
-        pulseseq.sequencer.Pulse.clear_pulse_data()
- 
-#        print ret
+        sequencer.Pulse.clear_pulse_data()
+
         return ret
 
     def acquisition_loop_keysight(self, dig, fast=False):
-        '''
+        """
         JEFF: all methods with _keysight used with keysight digitizer instead of alazar
         Acquisition loop, talk to keysight dig.
         Also starts the measurement.
-        
+
         TODO: implement the interrupt like alazar has
-        '''
-        
+        """
+
         self.capture_ctrlc()
-        progress_hid = dig.connect('capture-progress', self._capture_progress_cb)
-        dataupd_hid = self.data.connect('changed', self._data_changed_cb)
-        
-        print(("Cycle length is %s"%(self.cyclelen)))
+        progress_hid = dig.connect("capture-progress", self._capture_progress_cb)
+        dataupd_hid = self.data.connect("changed", self._data_changed_cb)
+
+        logging.info("Cycle length is %s", self.cyclelen)
 
         dig.stop_hvi()
         if self.histogram:
-            dig.setup_hist(self.cyclelen * dig.get_naverages(), hist_buf = self.shot_data)
+            dig.setup_hist(self.cyclelen * dig.get_naverages(), hist_buf=self.shot_data)
         else:
-            dig.setup_experiment(self.cyclelen, ntransfers = None)
-        
+            dig.setup_experiment(self.cyclelen, ntransfers=None)
+
         dig.arm()
-        
+
         dig.set_interrupt(False)
 
         # Start measurement, either by starting the AWG or the function generator
         self.start_awgs()
         dig.start_hvi()
 
-#        ret = dig.take_experiment(avg_buf=self.avg_data, ste_buf=self.ste_data, 
-#                                  async_=True, IQ_e=self.readout_info.IQe, 
-#                                  e_radius=self.readout_info.IQe_radius) 
+        #        ret = dig.take_experiment(avg_buf=self.avg_data, ste_buf=self.ste_data,
+        #                                  async_=True, IQ_e=self.readout_info.IQe,
+        #                                  e_radius=self.readout_info.IQe_radius)
 
-        take_ref = (self.readout is not 'readout_IQ')
+        take_ref = self.readout != "readout_IQ"
         if self.histogram:
-            ret = dig.take_hist(async_=True, take_ref = take_ref)
+            ret = dig.take_hist(async_=True, take_ref=take_ref)
         else:
-            ret = dig.take_experiment(avg_buf=self.avg_data, cov_buf=self.cov_data,
-                                      async_=True, IQ_e=self.readout_info.IQe, 
-                                      e_radius=self.readout_info.IQe_radius,
-                                      take_ref=take_ref)#, proj_func=self.proj_func)
-        
+            ret = dig.take_experiment(
+                avg_buf=self.avg_data,
+                cov_buf=self.cov_data,
+                async_=True,
+                IQ_e=self.readout_info.IQe,
+                e_radius=self.readout_info.IQe_radius,
+                take_ref=take_ref,
+            )  # , proj_func=self.proj_func)
+
         try:
             while not ret.is_valid() and not self._interrupted:
                 objsh.helper.backend.main_loop(20)
-#                dig.do_set_timeout(2000)
-                #yingying
+                #                dig.do_set_timeout(2000)
+                # yingying
                 QtWidgets.QApplication.processEvents()
             if self._interrupted:
                 dig.set_interrupt(True)
-        except Exception as e:
-            logging.info('CTRL-C Caught or error, stopping Alazar')
+        except Exception as exc:
+            logging.info("CTRL-C Caught or error, stopping Alazar")
             dig.set_interrupt(True)
-            logging.error(str(e))
+            logging.exception("Acquisition failed: %s", exc)
         finally:
             dig.disconnect(progress_hid)
             self.data.disconnect(dataupd_hid)
             self.release_ctrlc()
-        
+
         # Final processing of data
         self.post_process()
-        
+
         dig.release_buf()
-        
+
         return ret.get()
 
-
     def setup_measurement_keysight(self):
-        '''
+        """
         - Stop AWGs / function generator
         - Generate sequence
         - Save settings
         - Arm digitizer
-        '''
+        """
 
         self.stop_funcgen()
         self.stop_awgs()
-        dig = self.instruments['dig']
+        dig = self.instruments["dig"]
         if dig is None:
-            logging.error('Digitizer not found!')
+            logging.error("Digitizer not found!")
             return
 
         # Generate and load sequence
         if self.do_generate:
-            logging.info('Generating sequence...')
+            logging.info("Generating sequence...")
             seqs = self.generate()
             if self.plot_seqs:
-                s = pulseseq.sequencer.Sequencer()
+                s = sequencer.Sequencer()
                 s.plot_seqs(seqs)
             if self.print_seqs:
-                s = pulseseq.sequencer.Sequencer()
+                s = sequencer.Sequencer()
                 s.print_seqs(seqs)
-            
-            logging.info('Loading sequence...') 
+
+            logging.info("Loading sequence...")
             self.load(seqs)
             if self.release_seqs:
                 self.seqs = None
-            
-        #If not generating, we guess that all AWGs are used
+
+        # If not generating, we guess that all AWGs are used
         else:
-            l = self.get_awg_loader()
-            l.set_all_awgs_active()
+            loader = self.get_awg_loader()
+            loader.set_all_awgs_active()
 
         self.save_settings()
 
-
     def setup_measurement_data_keysight(self):
-        '''
+        """
         Create datasets to store measured and post-processed data.
-        '''
-        dig = self.instruments['dig']
+        """
+        dig = self.instruments["dig"]
         if self.histogram:
-            self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*dig.do_get_naverages()], dtype=np.complex)
+            self.shot_data = self.data.create_dataset(
+                "shots",
+                shape=[self.cyclelen * dig.do_get_naverages()],
+                dtype=np.complex128,
+            )
             self.avg_data = None
             self.pp_data = None
             self.std_i_data = None
             self.std_q_data = None
         elif self.singleshotbin:
             self.shot_data = None
-            self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
+            self.avg_data = self.data.create_dataset(
+                "avg",
+                [
+                    self.cyclelen,
+                ],
+                dtype=np.float64,
+            )
             self.pp_data = None
             self.ste_data = None
         else:
             self.shot_data = None
             # If saving complex data, save both raw signal and post-processed version
             if not self.real_signals:
-                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.complex)
-                self.pp_data = self.data.create_dataset('avg_pp', [self.cyclelen,], dtype=np.float)
+                self.avg_data = self.data.create_dataset(
+                    "avg",
+                    [
+                        self.cyclelen,
+                    ],
+                    dtype=np.complex128,
+                )
+                self.pp_data = self.data.create_dataset(
+                    "avg_pp",
+                    [
+                        self.cyclelen,
+                    ],
+                    dtype=np.float64,
+                )
             else:
-                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
+                self.avg_data = self.data.create_dataset(
+                    "avg",
+                    [
+                        self.cyclelen,
+                    ],
+                    dtype=np.float64,
+                )
                 self.pp_data = None
-#            self.std_i_data = self.data.create_dataset('std_i', [self.cyclelen,], dtype=np.float)
-#            self.std_q_data = self.data.create_dataset('std_q', [self.cyclelen,], dtype=np.float)
-#            self.std_corr_data = self.data.create_dataset('std_corr', [self.cyclelen,], dtype=np.float)
-            self.cov_data = self.data.create_dataset('cov', [self.cyclelen,3], dtype=np.float)
+            self.cov_data = self.data.create_dataset(
+                "cov", [self.cyclelen, 3], dtype=np.float64
+            )
 
     def measure_keysight(self):
-        '''
+        """
         Perform a measurement.
 
         Sets up data sets, performs initialization and updates plots if the
         class has an 'update' function.
-        '''
+        """
 
         self.setup_measurement_keysight()
         self.setup_measurement_data_keysight()
 
-        dig = self._dig            
-        
+        dig = self._dig
 
         if self.histogram:
             ret = self.acquisition_loop_keysight(dig)
-            print(ret)
             if self.cyclelen == 1:
                 self.plot_histogram(ret)
         else:
-            avgs, cov = self.acquisition_loop_keysight(dig) # calls update function
+            avgs, cov = self.acquisition_loop_keysight(dig)  # calls update function
             self.avg_data = avgs
             self.cov_data = cov
             ret = self.analyze(self.get_ys(), fig=self.get_figure())
@@ -783,36 +863,35 @@ class Measurement(object):
         if self.savefig:
             self.save_fig()
 
-        txt = 'Done'
+        txt = "Done"
         if self.data:
-            txt += '; in data group: %s' % self.data.get_fullname()
+            txt += "; in data group: %s" % self.data.get_fullname()
         logging.info(txt)
 
         if self._interrupted:
-            raise Exception('Measurement interrupted')
+            raise Exception("Measurement interrupted")
 
         # Remove pulse data to keep memory usage reasonable
-        pulseseq.sequencer.Pulse.clear_pulse_data()
- 
-        print(ret)
+        sequencer.Pulse.clear_pulse_data()
+
         return ret
 
     def play_sequence(self, load=True):
-        '''
+        """
         Generate and play the sequence for this measurement without setting
         up data acquistion.
-        '''
+        """
         if load:
             self.load(self.generate())
         else:
-            l = self.get_awg_loader()
-            l.stop()
+            loader = self.get_awg_loader()
+            loader.stop()
 
         self.start_awgs()
         self.start_funcgen()
 
     def create_figure(self):
-        '''
+        """
         Create a figure associated with this measurement.
         If residuals is True it will have 2 axes objects, the first one
         for data, the second for fit residuals.
@@ -820,38 +899,36 @@ class Measurement(object):
         axes is smaller than the data axes.
         If vert is False they are of equal size and next to each other,
         useful for 2D measurements.
-        '''
+        """
         self.fig = plt.figure()
         title = self.title
         if self.data:
-            title += ' data in %s' % self.data.get_fullname()
+            title += " data in %s" % self.data.get_fullname()
         self.fig.suptitle(title)
         if not self.residuals:
             self.fig.add_subplot(111)
             return self.fig
 
         if self.res_vert:
-            gs = gridspec.GridSpec(2, 1, height_ratios=[3,1])
+            gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
         else:
-            gs = gridspec.GridSpec(1, 2, width_ratios=[1,1])
+            gs = gridspec.GridSpec(1, 2, width_ratios=[1, 1])
         self.fig.add_subplot(gs[0])
         self.fig.add_subplot(gs[1])
         return self.fig
 
     def get_figure(self):
         if self.fig:
-            #print "There already exists the figure"
             return self.fig
-        else:
-            print("Here we create a figure")
+        logging.info("Creating a new figure for %s", self.name)
         return self.create_figure()
 
     def complex_to_real(self, ys):
-        '''
+        """
         Convert complex IQ values to real values.
         If IQg/e are specified project on the line through those two points
         Otherwise fit a line through data in IQ space and project on that line.
-        '''
+        """
 
         if not is_complex(ys):
             return ys
@@ -860,82 +937,86 @@ class Measurement(object):
         IQe = self.readout_info.IQe
         if IQg is None or IQe is None or IQg == 0 or IQe == 0:
             p = np.polyfit(np.real(ys), np.imag(ys), 1)
-            vproj = 1 + 1j*p[0]
-#            return np.real(ys * np.exp(-1j * np.angle(np.average(ys))))
+            vproj = 1 + 1j * p[0]
+        #            return np.real(ys * np.exp(-1j * np.angle(np.average(ys))))
         else:
             vproj = IQe - IQg
 
         vproj /= np.abs(vproj)
 
-        if(self.proj_func is 'phase'):
-            return np.angle(ys, deg=True) # returns phase #DARIO 8/31 
-        elif(self.proj_func is 'projection'):
-            ys = ys - IQg #DARIO 8/31
-            return np.real(ys) * vproj.real  + np.imag(ys) * vproj.imag # returns projected amplitue
+        if self.proj_func == "phase":
+            return np.angle(ys, deg=True)
+        elif self.proj_func == "projection":
+            ys = ys - IQg
+            return np.real(ys) * vproj.real + np.imag(ys) * vproj.imag
         else:
-            return (np.real(ys)**2+np.imag(ys)**2)**0.5 # returns absolute amplitude
-        
-        
-        
+            return np.hypot(np.real(ys), np.imag(ys))
+
     def get_ys(self, data=None):
-        '''
+        """
         Return measured data.
         Can be overloaded for example if a background measurement is included
         in the sequence.
-        '''
+        """
         if data is None:
             ys = self.avg_data[:]
         else:
             ys = data
-        ''' CHEN/DARIO/JEFF fix for old error shifting first point to last point '''
-#        ys=np.concatenate((ys[1:], ys[:1]))
         return self.complex_to_real(ys)
 
     def get_errorbars(self, data=None):
-        '''
+        """
         Return measured standard errors
-        '''
+        """
         if data is None:
             naverages = self.get_naverages()
             values = self.avg_data[:]
-            
+
             # calculate amp based on projection type
-            if self.proj_func == 'amplitude':
+            if self.proj_func == "amplitude":
                 theta = -np.angle(values)
-            elif self.proj_func == 'phase':
-                theta = -np.angle(values) + np.pi/2
-            elif self.proj_func == 'projection':
+            elif self.proj_func == "phase":
+                theta = -np.angle(values) + np.pi / 2
+            elif self.proj_func == "projection":
                 IQg = self.readout_info.IQg
                 IQe = self.readout_info.IQe
                 vproj = IQe - IQg
                 theta = -np.angle(vproj) * np.ones_like(values)
-                
+
             eb = np.zeros_like(values)
             for i in range(len(values)):
-                m = np.array([[self.cov_data[i,0], self.cov_data[i,2]],
-                              [self.cov_data[i,2], self.cov_data[i,1]]]) # unpack cov matrix
-                r = np.array([[np.cos(theta[i]), -np.sin(theta[i])],
-                              [np.sin(theta[i]), np.cos(theta[i])]]) # rotation matrix
+                m = np.array(
+                    [
+                        [self.cov_data[i, 0], self.cov_data[i, 2]],
+                        [self.cov_data[i, 2], self.cov_data[i, 1]],
+                    ]
+                )
+                r = np.array(
+                    [
+                        [np.cos(theta[i]), -np.sin(theta[i])],
+                        [np.sin(theta[i]), np.cos(theta[i])],
+                    ]
+                )
                 m = np.matmul(r, m)
-                eb[i] = np.sqrt(np.abs(m[0,0]))/np.sqrt(naverages-1) # convert to std and then st error
-                if self.proj_func == 'phase':                       #Yingying, for phase errorbar
-                    eb[i] = np.arcsin(eb[i]/np.abs(self.avg_data[i])) * 180/np.pi
+                eb[i] = np.sqrt(np.abs(m[0, 0])) / np.sqrt(naverages - 1)
+                if self.proj_func == "phase":
+                    eb[i] = np.arcsin(eb[i] / np.abs(self.avg_data[i])) * 180 / np.pi
         else:
             eb = data
-        print(eb)
+        logging.debug("Computed error bars: %s", eb)
         return eb
 
     def get_naverages(self):
-        if self.dig_type is 'alz':
-            return self.instruments['alazar'].get_naverages()
+        if self.dig_type == "alz":
+            return self.instruments["alazar"].get_naverages()
         else:
             return self._dig.get_naverages()
 
     def post_process(self):
-        '''
+        """
         Post-process acquired data, i.e. convert complex IQ values to real
         numbers.
-        '''
+        """
         if not self.keep_data:
             self.drop_data()
 
@@ -944,9 +1025,9 @@ class Measurement(object):
         self.pp_data[:] = self.complex_to_real(self.avg_data[:])
 
     def get_ys_fig(self, data=None, fig=None):
-        '''
+        """
         Return a plottable Y data array and a figure object to plot in.
-        '''
+        """
         if fig is None:
             fig = self.get_figure()
         if data is None:
@@ -955,85 +1036,90 @@ class Measurement(object):
             return data, fig
 
     def analyze(self, data=None, fig=None):
-        '''
+        """
         Should be implemented in derived class.
         Best is to use a function that is defined outside of your measurement
         class so that you can reload a module and use the updated analysis
         function from an old measurement instance.
-        '''
+        """
         if not self.analysis_func:
-            raise Exception('Either overload analyze() or specify an analysis_func')
+            raise Exception("Either overload analyze() or specify an analysis_func")
         ret = self.analysis_func(self, data, fig)
-        if self.saveas:
+        if hasattr(self, "saveas") and self.saveas:
             self.fig.canvas.draw()
             self.fig.savefig(self.saveas)
         return ret
 
     def plot_dataset(self, xs, ys, *args, **kwargs):
-        kwargs['ls'] = 'None'
-        kwargs['marker'] = 's'
-        kwargs['ms'] = 3
+        kwargs["ls"] = "None"
+        kwargs["marker"] = "s"
+        kwargs["ms"] = 3
         ret = self.fig.axes[0].plot(xs, ys, *args, **kwargs)
         self._datacol = ret[0].get_c()
 
     def plot_fit(self, xs, ys, *args, **kwargs):
-        kwargs['ls'] = '-'
-        kwargs['dashes'] = (2,2)
-        kwargs['ms'] = 3
-        kwargs['color'] = self._datacol
+        kwargs["ls"] = "-"
+        kwargs["dashes"] = (2, 2)
+        kwargs["ms"] = 3
+        kwargs["color"] = self._datacol
         self.fig.axes[0].plot(xs, ys, *args, **kwargs)
 
     def save_fig(self, fn=None):
-        '''
+        """
         Save the figure belonging to this measurement.
-        '''
+        """
         if fn is None:
-            fn = os.path.join(config.datadir, 'images/%s_%s.%s'%(self._timestamp_str, self.name, self.imagetype))
+            fn = os.path.join(
+                config.datadir,
+                "images/%s_%s.%s" % (self._timestamp_str, self.name, self.imagetype),
+            )
         fdir = os.path.split(fn)[0]
         if not os.path.isdir(fdir):
             os.makedirs(fdir)
         kwargs = dict()
-        if self.imagetype == 'png':
-            kwargs['dpi'] = 200
+        if self.imagetype == "png":
+            kwargs["dpi"] = 200
         if self.fig:
             self.fig.savefig(fn, **kwargs)
 
     def plot_histogram(self, data):
         fig = self.get_figure()
         avg = np.average(data)
-        print((np.shape(data)))
+        logging.info("Histogram data shape: %s", np.shape(data))
+        datasets = [data]
         if self.cyclelen == 2:
             data1 = data[::2]
             data2 = data[1::2]
+            datasets = [data1, data2]
         elif self.cyclelen == 3:
             data1 = data[::3]
             data2 = data[1::3]
             data3 = data[2::3]
-        print('average I,Q is:', avg, '\n')
-        if 0:
-            fig.axes[0].scatter(np.real(data), np.imag(data), label='avg=%s'%(avg,))
+            datasets = [data1, data2, data3]
+        logging.info("Average I,Q is: %s", avg)
+
+        if self.cyclelen == 3:
+            cmap_names = ["Blues", "Reds", "Greens"]
+            for dataset, cmap_name in zip(datasets, cmap_names):
+                fig.axes[0].hexbin(
+                    np.real(dataset), np.imag(dataset), alpha=0.4, cmap=cmap_name
+                )
         else:
-            if self.cyclelen == 3:
-                fig.axes[0].hexbin(np.real(data1), np.imag(data1), alpha=0.4, cmap='Blues')
-                fig.axes[0].hexbin(np.real(data2), np.imag(data2), alpha=0.4, cmap='Reds')
-                fig.axes[0].hexbin(np.real(data3), np.imag(data3), alpha=0.4, cmap='Greens')
-            else:
-                fig.axes[0].hexbin(np.real(data), np.imag(data), label='avg=%s'%(avg,), cmap=mpl.cm.hot)
+            fig.axes[0].hexbin(
+                np.real(data), np.imag(data), label="avg=%s" % (avg,), cmap=mpl.cm.hot
+            )
+
         if self.residuals:
-            if self.cyclelen == 2:
-                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data1), bins=64)
-                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data2), bins=64)
-            elif self.cyclelen == 3:
-                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data1), bins=64)
-                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data2), bins=64, color='r')
-                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data3), bins=64)
-            else:
-                n, bins, patches = fig.axes[1].hist(self.complex_to_real(data), bins=64)
-#            ax2 = fig.axes[1].twinx()
-#            ax2.set_zorder(fig.axes[1].zorder+1)
-#            ax2.patch.set_visible(False)
-#            ax2.plot((bins[:-1]+bins[1:])/2, np.cumsum(n), 'k')
-#            ax2.plot((bins[:-1]+bins[1:])/2, np.sum(n) - np.cumsum(n), 'r')
+            colors = [None, "r", None]
+            for idx, dataset in enumerate(datasets):
+                color = colors[idx] if idx < len(colors) else None
+                fig.axes[1].hist(self.complex_to_real(dataset), bins=64, color=color)
+
+    #            ax2 = fig.axes[1].twinx()
+    #            ax2.set_zorder(fig.axes[1].zorder+1)
+    #            ax2.patch.set_visible(False)
+    #            ax2.plot((bins[:-1]+bins[1:])/2, np.cumsum(n), 'k')
+    #            ax2.plot((bins[:-1]+bins[1:])/2, np.sum(n) - np.cumsum(n), 'r')
 
     #########################################################
     # Sequencer helper functions
@@ -1043,69 +1129,82 @@ class Measurement(object):
         if pulse_len is None:
             pulse_len = self.readout_info.pulse_len
 
-        return sequencer.Combined([
-            pulselib.Constant(pulse_len, 1, chan=self.readout_info.readout_chan),
-            pulselib.Constant(pulse_len, 1, chan=self.readout_info.acq_chan),
-        ])
+        return sequencer.Combined(
+            [
+                pulselib.Constant(pulse_len, 1, 
+                                  chan=self.readout_info.readout_chan),
+                pulselib.Constant(pulse_len, 1, 
+                                  chan=self.readout_info.acq_chan),
+            ]
+        )
+
 
 class Measurement1D(Measurement):
-    '''
+    """
     Base class for 1D measurements such as T1 or T2.
-    '''
+    """
 
     def __init__(self, cyclelen, **kwargs):
-        super(Measurement1D, self).__init__(cyclelen, **kwargs)
+        super().__init__(cyclelen, **kwargs)
 
     def update(self, avg_data):
         ys = self.get_ys(avg_data)
         fig = self.get_figure()
         fig.axes[0].clear()
-        if hasattr(self, 'xs'):
+        if hasattr(self, "xs"):
             fig.axes[0].plot(self.xs, ys)
         else:
             fig.axes[0].plot(ys)
         fig.canvas.draw()
 
-    def analyze_parabola(self, data=None, fig=None, xlabel='', ylabel=''):
-        '''
+    def analyze_parabola(self, data=None, fig=None, xlabel="", ylabel=""):
+        """
         Standard analysis function to fit a parabola and return the extremum.
-        '''
+        """
 
         ys, fig = self.get_ys_fig(data, fig)
         xs = self.xs
 
         p = np.polyfit(xs, ys, 2)
         self.fit_params = p
-        minmax = 'max' if (p[0] < 0) else 'min'
-        minmaxpos = -p[1]/2/p[0]
-        txt = 'Fit, %s at %.06f' % (minmax, minmaxpos,)
-        fig.axes[0].plot(xs, ys, 'ks', ms=3)
-        fig.axes[0].plot(xs, xs**2*p[0]+xs*p[1]+p[2], label=txt)
+        minmax = "max" if (p[0] < 0) else "min"
+        minmaxpos = -p[1] / 2 / p[0]
+        txt = "Fit, %s at %.06f" % (
+            minmax,
+            minmaxpos,
+        )
+        fig.axes[0].plot(xs, ys, "ks", ms=3)
+        fig.axes[0].plot(xs, xs**2 * p[0] + xs * p[1] + p[2], label=txt)
         fig.axes[0].set_ylabel(ylabel)
         fig.axes[0].set_xlabel(xlabel)
         fig.axes[0].legend(loc=0)
         plt.legend()
 
-        fig.axes[1].plot(xs, ys - (xs**2*p[0] + xs*p[1] + p[2]), 'k', marker='s')
+        fig.axes[1].plot(xs, ys - (xs**2 * p[0] + xs * p[1] + p[2]), "k", marker="s")
         fig.canvas.draw()
 
         return minmaxpos
 
+
 class Measurement2D(Measurement):
-    '''
+    """
     Base class for 2D measurements such as Q- or Wigner functions.
-    '''
+    """
 
     def __init__(self, cyclelen, style=STYLE_IMAGE, **kwargs):
         self.style = style
-        super(Measurement2D, self).__init__(cyclelen, **kwargs)
+        super().__init__(cyclelen, **kwargs)
 
     def get_plotxsys(self):
         if self.style == STYLE_IMAGE:
-            dx = (self.xs[1] - self.xs[0]) / 2.
-            xs = np.linspace(np.min(self.xs)-dx, np.max(self.xs)+dx, len(self.xs)+1)
-            dy = (self.ys[1] - self.ys[0]) / 2.
-            ys = np.linspace(np.min(self.ys)-dy, np.max(self.ys)+dy, len(self.ys)+1)
+            dx = (self.xs[1] - self.xs[0]) / 2.0
+            xs = np.linspace(
+                np.min(self.xs) - dx, np.max(self.xs) + dx, len(self.xs) + 1
+            )
+            dy = (self.ys[1] - self.ys[0]) / 2.0
+            ys = np.linspace(
+                np.min(self.ys) - dy, np.max(self.ys) + dy, len(self.ys) + 1
+            )
             return xs, ys
         else:
             return self.xs, self.ys
@@ -1114,18 +1213,17 @@ class Measurement2D(Measurement):
         zs = self.get_ys(avg_data)
         fig = self.get_figure()
         fig.axes[0].clear()
-        if hasattr(self, 'xs') and hasattr(self, 'ys'):
+        if hasattr(self, "xs") and hasattr(self, "ys"):
             zs = zs.reshape((len(self.ys), len(self.xs)))
             xs, ys = self.get_plotxsys()
             if self.style == STYLE_IMAGE:
-                fig.axes[0].pcolormesh(xs, ys, zs, cmap=plt.get_cmap('RdBu'))
+                fig.axes[0].pcolormesh(xs, ys, zs, cmap=plt.get_cmap("RdBu"))
                 fig.axes[0].set_xlim(xs.min(), xs.max())
                 fig.axes[0].set_ylim(ys.min(), ys.max())
                 fig.canvas.draw()
             else:
                 for i_y, y in enumerate(ys):
-                    fig.axes[0].plot(xs, zs[:,i_y], label='%.03f'%y)
+                    fig.axes[0].plot(xs, zs[:, i_y], label="%.03f" % y)
                 fig.axes[0].legend(loc=0)
         else:
-            logging.warning('Unable to plot 2D array without xs and ys')
-
+            logging.warning("Unable to plot 2D array without xs and ys")

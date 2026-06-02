@@ -4,7 +4,6 @@ Jacob Blumoff 6/24/2014
 
 import numpy as np
 import struct
-import types
 import time
 import hashlib
 
@@ -14,25 +13,19 @@ import os
 
 import config
 
-def clear_dot_awgs(path=None, delete='all'):#r'Z:\_AWG\Stabilizer'):
+def clear_dot_awgs(path=None, delete='all'):
     #Todo:  Pull path from config, delete by date/time
-    if path == None:
-        (path, fn) = os.path.split(config.dot_awg_path)
+    if path is None:
+        path, _ = os.path.split(config.dot_awg_path)
 
-    key = os.path.join(path,'*.awg')
+    key = os.path.join(path, '*.awg')
     dalist = glob.glob(key)
     for idx,item in enumerate(dalist):
         marked_for_death = True
 
-#        if delete == 'all':
-#            marked_for_death == True
-#
-#        elif delete == 'before_today':
-#            pass
-
         if marked_for_death:
             os.remove(item)
-            print('Deleting (%d/%d): %s' % (idx+1,len(dalist),item))
+            print(f'Deleting ({idx + 1}/{len(dalist)}): {item}')
     pass
 
 NULL = chr(0)
@@ -47,7 +40,8 @@ class Dot_AWG_Load():
         '''
         self.awg = awg
         self.seqs = seqs
-        self.path = path[:-4]+str(int(time.time()*1000))+'.awg'
+        stem, _ = os.path.splitext(path)
+        self.path = stem + str(int(time.time() * 1000)) + '.awg'
 
         self.rl = [] #initial record list
         self.loaded_wfs = [] #List of names of loaded wfs
@@ -82,11 +76,11 @@ class Dot_AWG_Load():
 
             except Exception as e:
                 if load_attempt_no != MAX_ATTEMPTS - 1:
-                    msg =  'Failed AWG load (%s), big loop, retrying. (%d/%d) ' % (e, load_attempt_no, MAX_ATTEMPTS)
+                    msg = f'Failed AWG load ({e}), big loop, retrying. ({load_attempt_no}/{MAX_ATTEMPTS}) '
                     print(msg)
                 else:
                     print('ABORTING, LOAD FAILURE')
-                    print(e)
+                    print(f'{e}')
                     raise Exception('AWG load failed')
 
     def clear_awg_and_pull_data(self, delay):
@@ -116,12 +110,11 @@ class Dot_AWG_Load():
 
     def parse_seqs(self):
         '''Calls add waveform for each sequence element'''
-        ch = 0
-        for ch in self.seqs:
-            if type(ch) != int:
+        for chan in self.seqs:
+            if not isinstance(chan, int):
                 continue
-            for idx,_ in enumerate(self.seqs[ch]):
-                self.add_waveform(idx, ch)
+            for idx, _ in enumerate(self.seqs[chan]):
+                self.add_waveform(idx, chan)
             self.admin_duty = 0 #After the first channel
 
     def add_waveform(self, idx, chan):
@@ -133,12 +126,12 @@ class Dot_AWG_Load():
         pulse = self.seqs[chan][idx]
         pulse_name = pulse.get_name()
         pulse_repeat = pulse.repeat
-        pulse_len = pulse.get_length() / pulse_repeat
+        pulse_len = int(pulse.get_length() // pulse_repeat)
         pulse_data = pulse.get_data()
         pulse_trigger = pulse.get_trigger()
 
         m1_chan = '%dm1' % chan
-        if m1_chan in self.seqs and self.seqs[m1_chan] != None:
+        if m1_chan in self.seqs and self.seqs[m1_chan] is not None:
             m1 = self.seqs[m1_chan][idx]
             m1_name = m1.get_name()
             m1_data = m1.get_data()
@@ -147,7 +140,7 @@ class Dot_AWG_Load():
             m1_data = np.zeros(pulse_len)
 
         m2_chan = '%dm2' % chan
-        if m2_chan in self.seqs and self.seqs[m2_chan] != None:
+        if m2_chan in self.seqs and self.seqs[m2_chan] is not None:
             m2 = self.seqs[m2_chan][idx]
             m2_name = m2.get_name()
             m2_data = m2.get_data()
@@ -157,7 +150,8 @@ class Dot_AWG_Load():
 
         idx += 1 #AWG indexing starts at 1
         waveform_name = pulse_name+'_'+m1_name+'_'+m2_name
-        waveform_name = hashlib.md5(waveform_name).hexdigest() #optional
+        # Keep the on-disk AWG record name short and deterministic.
+        waveform_name = hashlib.md5(waveform_name.encode('utf-8')).hexdigest()
 
         if waveform_name not in self.loaded_wfs:
             n_wf = len(self.loaded_wfs)+1 #unique waveform #
@@ -215,12 +209,14 @@ class Dot_AWG_Load():
         name += NULL #The Record_Name ends in NULL
         name_len = len(name)
 
-        if type(data) is bytes:
-            data = np.fromstring(data, dtype=np.uint8)
-            data = np.concatenate([data,np.array([0,], dtype=np.uint8)])
-        data_bytes = data.tostring()
+        if isinstance(data, str):
+            data = data.encode('utf-8')
+        if isinstance(data, (bytes, bytearray, memoryview)):
+            data = np.frombuffer(data, dtype=np.uint8)
+            data = np.concatenate([data, np.array([0], dtype=np.uint8)])
+        data_bytes = data.tobytes()
         data_len = len(data_bytes)
-        fmt_string = '<II'+'%ds%ds'%(name_len,data_len)
+        fmt_string = '<II' + '%ds%ds' % (name_len, data_len)
 
         return struct.pack(fmt_string, name_len, data_len, name, data_bytes)
 
@@ -231,8 +227,8 @@ class Dot_AWG_Load():
 
         try:
             initial_file_size = os.path.getsize(self.path)
-            print('.AWG file init: %d bytes' % initial_file_size)
-        except:
+            print(f'.AWG file init: {initial_file_size} bytes')
+        except OSError:
             raise Exception('Failed at reading init filezise')
 
         with open(self.path,'ab') as f:
@@ -242,8 +238,8 @@ class Dot_AWG_Load():
 
         try:
             final_file_size = os.path.getsize(self.path)
-            print('.AWG file final: %d bytes' % final_file_size)
-        except:
+            print(f'.AWG file final: {final_file_size} bytes')
+        except OSError:
             raise Exception('Failed at reading final filezise')
 
     def write_wrapper(self):
@@ -251,16 +247,12 @@ class Dot_AWG_Load():
         self.write_attempt_no += 1
         try:
             self.write_dot_awg()
-#        except IOError:
-#            print 'AWG write failed'
-#            time.sleep(0.5)
-#            try:
-#                self.write_dot_awg()
-#            except:
-#                raise Exception('AWG writing failed twice.')
-        except:
+        except Exception:
             if self.write_attempt_no < MAX_ATTEMPTS:
-                print('Failed AWG write wrapper, retrying. (%d/%d) ' % (self.write_attempt_no, MAX_ATTEMPTS))
+                print(
+                    f'Failed AWG write wrapper, retrying. '
+                    f'({self.write_attempt_no}/{MAX_ATTEMPTS}) '
+                )
                 self.write_wrapper()
             else:
                 self.write_attempt_no = 0
@@ -273,28 +265,6 @@ class Dot_AWG_Load():
 
     def check_seq_length(self):
         val = int(self.awg.ask('SEQ:LENG?'))
-        print('NUM LOADED SEQS: %s' % (val,))
+        print(f'NUM LOADED SEQS: {val}')
         if val == 0:
             raise Exception('AWG is reporting seq len = 0')
-
-#if __name__ == '__main__':
-#    import sys
-#    sys.path.append(r"C:\pythonLab\pulseseq\pulseseq")
-#    import pulselib
-#    from sequencer import *
-#
-#
-#    r = pulselib.GaussianRotation(100,200,200,0,1)
-#    s = Sequence()
-#    for angle in np.linspace(-2*np.pi,2*np.pi,50):
-#        s.append(Trigger(250))
-#        s.append(Constant(250, 1, chan='2m2'))
-#        s.append(Repeat(Constant(250,1,chan=3),5))
-#        s.append(r(angle, 0.0))
-#    s = Sequencer(s)
-#    seqs = s.render()
-#
-#    a = Dot_AWG_Load(seqs, awg = awg1, path='Z:\\Jacob\\temp.awg')
-#    a.load_seqs()
-
-

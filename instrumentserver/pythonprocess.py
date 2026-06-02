@@ -84,6 +84,4 @@ if __name__ == '__main__':
             test=['an array', 'with', 'some', 'elements'],
             test2={'a': 'dictionary'})
     else:
-        print(('Arguments: ' + str(args) + ', Keyword arguments: ' + str(kwargs)))
-
-
+        print(f'Arguments: {args}, Keyword arguments: {kwargs}')

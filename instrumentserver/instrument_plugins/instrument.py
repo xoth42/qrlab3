@@ -1,4 +1,4 @@
-    # instrument.py, base class to implement instrument objects
+# instrument.py, base class to implement instrument objects
 # Reinier Heeres <reinier@heeres.eu>, 2008
 #
 # This program is free software; you can redistribute it and/or modify
@@ -1283,4 +1283,3 @@ class InvalidInstrument(Instrument):
 
     def get_create_kwargs(self):
         return self._kwargs
-

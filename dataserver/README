@@ -11,4 +11,3 @@ The main objects it provides are thin wrappers around the h5py library. In
 addition to the expected functionality they provide signals to integrate with
 interactive programs. For example a data group emits a 'changed' signal so
 that GUIs can re-process and plot data as wanted.
-

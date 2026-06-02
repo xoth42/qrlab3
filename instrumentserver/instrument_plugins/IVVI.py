@@ -271,25 +271,30 @@ class IVVI(Instrument):
         '''
         logging.debug('Sending %r', message)
 
+        def _to_int_list(data):
+            if isinstance(data, (bytes, bytearray)):
+                return list(data)
+            return [ord(s) for s in data]
+
         # clear input buffer
         visafunc.read_all(self._vi)
         vpp43.write(self._vi, message)
 
 # In stead of blocking, we could also poll, but it's a bit slower
-#        print visafunc.get_navail(self._vi)
+
 #        if not visafunc.wait_data(self._vi, 2, 0.5):
 #            logging.error('Failed to receive reply from IVVI rack')
 #            return False
 
         data1 = visafunc.readn(self._vi, 2)
-        data1 = [ord(s) for s in data1]
+        data1 = _to_int_list(data1)
 
         # 0 = no error, 32 = watchdog reset
         if data1[1] not in (0, 32):
             logging.error('Error while reading: %s', data1)
 
         data2 = visafunc.readn(self._vi, data1[0] - 2)
-        data2 = [ord(s) for s in data2]
+        data2 = _to_int_list(data2)
 
         return data1 + data2
 
