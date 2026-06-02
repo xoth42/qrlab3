@@ -397,7 +397,7 @@ def init_data_server(DATA_DIRECTORY = r"C:\_Data", qt=False):
     """
     Initialize the data server. 
 
-    :param regexp DATA_DIRECTORY: defaults to r"C:\_Data"
+    :param regexp DATA_DIRECTORY: defaults to C:_Data
     :param bool qt: defaults to False
     """
     logging.info("Starting data server...")
