@@ -1,12 +1,12 @@
-# Josh started this driver on 8/1/18 since the old driver didn't work at all
-# really.
-
 import time
 import pyvisa
 import numpy as np
 from instrument import Instrument
 import types
 import re
+
+# TODO: review
+
 
 currSource = 'none'
 

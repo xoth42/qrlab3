@@ -1,10 +1,11 @@
-import types
 import logging
 
 import numpy as np
 
-from .instrument import Instrument
-from visainstrument import SCPI_Instrument
+from instrumentserver.instrument import Instrument
+from instrumentserver.visainstrument import SCPI_Instrument
+
+# TODO: review
 
 
 class Agilent_E5071C(SCPI_Instrument):

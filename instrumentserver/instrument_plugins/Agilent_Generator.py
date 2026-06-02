@@ -1,6 +1,8 @@
-from visainstrument import VisaInstrument
+from instrumentserver.visainstrument import VisaInstrument
 import logging
 import numpy
+
+# TODO: review
 
 
 class Agilent_Generator(VisaInstrument):

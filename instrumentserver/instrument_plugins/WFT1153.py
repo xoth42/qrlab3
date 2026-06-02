@@ -13,6 +13,8 @@ from instrument import Instrument
 from windfreak import SynthHD
 
 # Please check what COM-port you have the windfreak connected to and then change self.synth in line 21
+# TODO: review
+
 
 class WFT1153(Instrument):
     

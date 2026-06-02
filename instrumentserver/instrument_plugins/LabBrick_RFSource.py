@@ -19,12 +19,14 @@ import numpy as np
 from instrument import Instrument
 import logging
 
+# TODO: review
+
 SUCCESS = 0
 NO_DEVICE = 0
 
 # LB_DLL = r'c:\qrlab-3\instrumentserver\vnx_fmsynth.dll'
 LB_DLL = 'C:\\qrlab-3\\instrumentserver\\vnx_fmsynth.dll'
-print(LB_DLL)
+
 try:
     lb_dll = ctypes.windll.LoadLibrary(LB_DLL)
     # lb_dll = ctypes.cdll.LoadLibrary(LB_DLL)

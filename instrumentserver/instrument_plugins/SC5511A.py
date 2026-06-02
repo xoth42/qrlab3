@@ -16,6 +16,9 @@ import numpy as np
 from .instrument import Instrument
 import logging
 
+# TODO: review
+
+
 SUCCESS = 0
 NO_DEVICE = 0
 
