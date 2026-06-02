@@ -146,15 +146,13 @@ class Tektronix_AWG5014C(VisaInstrument):
         return int(val)
 
     def wait_until_run(self):
-        i = 0
-        while i < 100:
+        for _ in range(100):
             try:
                 if self.get_runstate() == 1:
                     return True
             except:
                 pass
             time.sleep(0.5)
-            i += 1
         print('Timed out waiting for AWG to enter run state')
         return False
 
@@ -225,7 +223,7 @@ class Tektronix_AWG5014C(VisaInstrument):
     def do_get_skew(self, channel):
         '''Get channel skew in ps.'''
         val = self.ask('SOURCE%d:SKEW?' % (channel,))
-#        print val DR 3/21 (is this what was printing 0s over and over in instrumentserver?)
+
         return float(val) * 1e12
 
     def do_set_m1_low(self, val, channel):
@@ -316,8 +314,8 @@ class Tektronix_AWG5014C(VisaInstrument):
         if return_cmd:
             return cmd
 #        cmd += ':OUTP?'
-#        print "input command is: \n", cmd, "\n"
-#        print "bindata is: \n", bindata, "\n"
+
+
         print("before write_raw")
         self.write_raw(cmd.encode())
 #        self.read()

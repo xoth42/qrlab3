@@ -114,17 +114,18 @@ class Attocube_ANC150(Instrument):
 
     def _ask(self, query):
         self._visa.write(query)
-        try:
-            line, lastline = '', ''
-            while not (line.startswith('OK') or line.startswith('ERROR')):
-                lastline = line
-                line = self._visa.read()
-        finally:
-            if line.startswith('ERROR'):
-                self._last_error = lastline
-                return None
-            else:
-                return lastline
+        line, lastline = '', ''
+        for _ in range(100):
+            if line.startswith('OK') or line.startswith('ERROR'):
+                break
+            lastline = line
+            line = self._visa.read()
+        else:
+            raise IOError('ANC150 reply exceeded 100 lines')
+        if line.startswith('ERROR'):
+            self._last_error = lastline
+            return None
+        return lastline
 
     def _short_cmd(self, query):
         self._visa.write(query)
@@ -283,4 +284,3 @@ class Attocube_ANC150(Instrument):
                 self._ask('stop %d' % (i + 1))
         else:
             self._ask('stop %d' % channel)
-

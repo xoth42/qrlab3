@@ -20,6 +20,7 @@ logging.getLogger().setLevel(logging.INFO)
 
 STYLE_IMAGE = "IMAGE"
 STYLE_LINES = "LINES"
+MAX_ACQUISITION_POLLS = 1_000_000_000
 
 
 def is_complex(ar):
@@ -464,9 +465,13 @@ class Measurement(object):
 
             if self.print_progress:
                 logging.info("Acquiring...")
-            while not ret.is_valid() and not self._interrupted:
+            for _ in range(MAX_ACQUISITION_POLLS):
+                if ret.is_valid() or self._interrupted:
+                    break
                 objsh.helper.backend.main_loop(20, origin=0)
                 QtWidgets.QApplication.processEvents()
+            else:
+                raise TimeoutError(f"Acquisition timed out after {MAX_ACQUISITION_POLLS} loop steps")
             if self._interrupted:
                 alz.set_interrupt(True)
         except Exception as exc:
@@ -719,11 +724,13 @@ class Measurement(object):
             )  # , proj_func=self.proj_func)
 
         try:
-            while not ret.is_valid() and not self._interrupted:
+            for _ in range(MAX_ACQUISITION_POLLS):
+                if ret.is_valid() or self._interrupted:
+                    break
                 objsh.helper.backend.main_loop(20)
-                #                dig.do_set_timeout(2000)
-                # yingying
                 QtWidgets.QApplication.processEvents()
+            else:
+                raise TimeoutError(f"Acquisition timed out after {MAX_ACQUISITION_POLLS} loop steps")
             if self._interrupted:
                 dig.set_interrupt(True)
         except Exception as exc:

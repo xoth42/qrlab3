@@ -61,10 +61,8 @@ class OPTO(Instrument):
         dataH=int(bytevalue/256)
         dataL=bytevalue-dataH*256
         bytedac=128
-        tdac=dac
-        while (tdac>1):
-            tdac=tdac-1
-            bytedac=int(bytedac/2)
+        for _ in range(max(0, dac - 1)):
+            bytedac = int(bytedac / 2)
         message="%c%c%c%c%c%c%c" % (7, 0, 3, 10, bytedac, dataH, dataL)
         return message
 

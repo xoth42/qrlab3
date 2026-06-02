@@ -748,11 +748,11 @@ class ObjectSharer(object):
 
     def flush_queue(self, nmax=5):
         """Process up to *nmax* deferred signals. Returns True if queue is empty."""
-        i = 0
-        while i < nmax and self._signal_queue:
+        for _ in range(nmax):
+            if not self._signal_queue:
+                break
             from_uid, info, bufs = self._signal_queue.pop(0)
             self.process_message(from_uid, info, bufs)
-            i += 1
         return len(self._signal_queue) == 0
 
 
@@ -1078,8 +1078,10 @@ class ZMQBackend(object):
         self._timeouts.pop(t_id, None)
 
     def _run_timeouts(self):
-        now = time.time()
-        while self._scheduled_timeouts and self._scheduled_timeouts[0][0] < now:
+        for _ in range(len(self._scheduled_timeouts)):
+            now = time.time()
+            if not self._scheduled_timeouts or self._scheduled_timeouts[0][0] >= now:
+                break
             t, t_id = self._scheduled_timeouts.pop(0)
             info = self._timeouts.get(t_id)
             if info is None:
@@ -1131,12 +1133,14 @@ class ZMQBackend(object):
 
     @staticmethod
     def _wait_for_complete(wait_for):
-        i = 0
-        while i < len(wait_for):
-            if wait_for[i].is_valid():
-                del wait_for[i]
-            else:
-                i += 1
+        remaining = []
+
+        for item in wait_for:
+            if not item.is_valid():
+                remaining.append(item)
+
+        wait_for[:] = remaining
+
         return len(wait_for) == 0
 
     def _main_loop(self, delay=None, wait_for=None, origin=0, poll_zmq=True):
@@ -1223,8 +1227,8 @@ class ZMQBackend(object):
             logger.warning('Timer already installed')
             return False
 
-        from PyQt6 import QtCore
-        from PyQt6.QtWidgets import QApplication
+        from PyQt5 import QtCore
+        from PyQt5.QtWidgets import QApplication
         app = QApplication.instance()
         if app is None:
             logger.warning('No QApplication instance; create one before add_qt_timer()')

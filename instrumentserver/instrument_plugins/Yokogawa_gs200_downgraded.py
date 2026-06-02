@@ -236,12 +236,17 @@ class Yokogawa_gs200_downgraded(Instrument):
         vstep = .001
 #        bigger = np.max((abs(v),abs(vtarget)))
 #        self.do_set_voltage_range(bigger)
+        max_steps = int(np.ceil(abs(vtarget - v) / vstep))
         if (v < vtarget):   
-            while (v+vstep <= vtarget):
+            for _ in range(max_steps):
+                if not (v+vstep <= vtarget):
+                    break
                 self.range_value.send(v+vstep)
                 v = self.do_get_voltage()
         if (v > vtarget):
-            while (v-vstep >= vtarget):
+            for _ in range(max_steps):
+                if not (v-vstep >= vtarget):
+                    break
                 self.range_value.send(v-vstep)
                 v = self.do_get_voltage()
         self.do_set_voltage(vtarget)
@@ -321,12 +326,17 @@ class Yokogawa_gs200_downgraded(Instrument):
         i_step = .0005 / 1000 /2
 #        bigger = np.max((abs(i),abs(i_target)))
 #        self.do_set_current_range(bigger)
+        max_steps = int(np.ceil(abs(i_target / 1000 - i / 1000) / i_step))
         if (i/1000 < i_target /1000 ):   
-            while (i/1000+i_step <= i_target / 1000):
+            for _ in range(max_steps):
+                if not (i/1000+i_step <= i_target / 1000):
+                    break
                 self.range_value.send(i/1000+i_step)
                 i = self.do_get_current()
         if (i /1000> i_target / 1000):
-            while (i/1000-i_step >= i_target / 1000):
+            for _ in range(max_steps):
+                if not (i/1000-i_step >= i_target / 1000):
+                    break
                 self.range_value.send(i/1000-i_step)
                 i = self.do_get_current()                
         self.range_value.send(i_target/1000)

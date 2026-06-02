@@ -96,7 +96,9 @@ class VisaInstrument(Instrument):
         old_timeout = self._ins.timeout
         self._ins.timeout = 0
         try:
-            while time.monotonic() < deadline:
+            for _ in range(max(1, self._timeout * 10)):
+                if time.monotonic() >= deadline:
+                    raise Exception("Instrument read timed out (timeout=%s)" % self._timeout)
                 try:
                     ret = self._ins.read()
                     break

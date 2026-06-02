@@ -155,15 +155,13 @@ class Zaber_TNM(Instrument):
         100 for a maximum delay of 5 seconds.
         '''
 
-        i = 0
-        while i < max_sleeps:
+        for i in range(max_sleeps):
             navail = vpp43.get_attribute(self._visa.vi, vpp43.VI_ATTR_ASRL_AVAIL_NUM)
             if navail >= 6:
                 reply = vpp43.read(self._visa.vi, navail)
                 reply = [ord(ch) for ch in reply]
                 return reply
 
-            i += 1
             time.sleep(0.05)
 
         return None

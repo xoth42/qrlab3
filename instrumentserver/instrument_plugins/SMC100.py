@@ -88,7 +88,7 @@ class SMC100(Instrument):
 
     def raw_read(self):
         navail = visafunc.get_navail(self._visa.vi)
-#        print 'Avail: %s' % (navail, )
+
         BUFSIZE = 4192
         ret = vpp43.ViUInt32()
         b = vpp43.create_string_buffer(BUFSIZE)
@@ -96,15 +96,11 @@ class SMC100(Instrument):
             test = vpp43.visa_library().viRead(self._visa.vi, b, navail, vpp43.byref(ret))
         except Exception as e:
             pass   # This seems to happen almost always...
-#            print 'Error: %s' % (e, )
+
 
 # Weird: sometimes seems to start with NULL byte
-        ii = 0
-        while b[ii] == '\x00' and ii < 16:
-            ii += 1
-        jj = ii
-        while b[jj] != '\x00' and jj < BUFSIZE-1:
-            jj += 1
+        ii = next((idx for idx in range(16) if b[idx] != '\x00'), 16)
+        jj = next((idx for idx in range(ii, BUFSIZE - 1) if b[idx] == '\x00'), BUFSIZE - 1)
 
         s = str(b[ii:jj]).rstrip()
         return s
@@ -136,7 +132,7 @@ class SMC100(Instrument):
             self.write(command)
             time.sleep(0.020)
             ret = self.raw_read()
-#            print 'Read: %r' % (ret, )
+
             if len(ret) > len(command):
                 return ret[len(command)+1:]
             else:
@@ -150,7 +146,7 @@ class SMC100(Instrument):
         Write a command to the device
         '''
         cmd = '%d%s\r\n' % (self._ctr_addr, command)
-#        print 'Sending %r' % (cmd, )
+
         self._visa.write(cmd)
 
     def do_get_state(self):

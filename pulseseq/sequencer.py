@@ -207,10 +207,15 @@ class Sequencer:
         ret = []
         for s in self.slist:
             istart = 0
-            while istart < len(s):
+            for _ in range(len(s)):
+                if istart >= len(s):
+                    break
                 iend = istart + 1
-                while iend < len(s) and not s[iend].get_trigger():
-                    iend += 1
+                for iend in range(istart + 1, len(s)):
+                    if s[iend].get_trigger():
+                        break
+                else:
+                    iend = len(s)
                 seq = Sequence(s[istart:iend])
                 ret.append(
                     Combined(
@@ -436,7 +441,10 @@ class Sequencer:
                 seqs[mchan] = outseq
 
             i_el = 0
-            while i_el < len(seqs[ch]):
+            max_elements = sum(getattr(el, 'repeat', 1) for el in seqs[ch].seq) + len(seqs[ch])
+            for _ in range(max_elements):
+                if i_el >= len(seqs[ch]):
+                    break
 
                 # Determine activity and extend using window
                 el = seqs[ch].seq[i_el]
@@ -616,34 +624,29 @@ class Sequence(Instruction):
         '''
         Absorb sub-sequences directly in this sequence object (in place)
         '''
-        i = 0
-        while i < len(self.seq):
-            el = self.seq[i]
+        seq = []
+        for el in self.seq:
             if isinstance(el, Sequence):
                 el.join_sequences()
 
-            if isinstance(
-                el, Sequence) and (
-                self.join or self.join == el.join or len(
-                    el.seq) == 1):
-                del self.seq[i]
-                for el2 in el.seq:
-                    self.seq.insert(i, el2)
-                    i += 1
+            if isinstance(el, Sequence) and (
+                    self.join or self.join == el.join or len(el.seq) == 1):
+                seq.extend(el.seq)
             else:
-                i += 1
+                seq.append(el)
+        self.seq = seq
         self.merge_delays()
 
     def check_elements(self, seq):
         if type(seq) not in (list, tuple):
             raise Exception('Sequence should be a tuple or list')
-        i = 0
-        while i < len(seq):
-            if seq[i] is None:
-                del seq[i]
+        cleaned = []
+        for el in seq:
+            if el is None:
                 print('Warning: removing None element from sequence')
             else:
-                i += 1
+                cleaned.append(el)
+        seq[:] = cleaned
 
     def __len__(self):
         return len(self.seq)
@@ -830,15 +833,17 @@ class Sequence(Instruction):
         '''
         Merge neighboring unrolled delays (in place)
         '''
-        i = 1
-        while i < len(self.seq):
-            el = self.seq[i]
-            if is_delay1(el) and is_delay1(self.seq[i - 1]) and \
-                    not (self.seq[i - 1].get_trigger() or el.get_trigger()):
-                del self.seq[i]
-                self.seq[i - 1].repeat += el.repeat
+        if not self.seq:
+            return
+        merged = [self.seq[0]]
+        for el in self.seq[1:]:
+            prev = merged[-1]
+            if is_delay1(el) and is_delay1(prev) and \
+                    not (prev.get_trigger() or el.get_trigger()):
+                prev.repeat += el.repeat
             else:
-                i += 1
+                merged.append(el)
+        self.seq = merged
 
     ###################################################
     # Functions to manipulate single channel sequences
@@ -855,17 +860,14 @@ class Sequence(Instruction):
             return self.get_length() - tgt_t
 
         t = 0
-        while idx < len(self.seq):
-            dt = self.seq[idx].get_length()
+        for el in self.seq[idx:]:
+            dt = el.get_length()
             if tgt_t >= t and tgt_t <= t + dt:
-                if isinstance(
-                        self.seq[idx],
-                        Pulse) and self.seq[idx].name == 'delay1':
+                if isinstance(el, Pulse) and el.name == 'delay1':
                     return 0
                 else:
                     return (t + dt - tgt_t)
             t += dt
-            idx += 1
         return 0
 
     def consume_up_to(self, tgt_t, unroll=False, fixed=True):
@@ -877,7 +879,9 @@ class Sequence(Instruction):
         ret = Sequence(join=not unroll)
 
         t = 0
-        while len(self.seq) and t < tgt_t:
+        for _ in range(len(self.seq)):
+            if not self.seq or t >= tgt_t:
+                break
             plen = self.seq[0].get_length()
             if plen < 0:
                 raise ValueError('Negative delay!')
@@ -1098,7 +1102,10 @@ class Sequence(Instruction):
         <minlen>. In-place operation.
         '''
         i = 0
-        while i < len(self.seq):
+        max_joins = sum(getattr(el, 'repeat', 1) for el in self.seq) + len(self.seq)
+        for _ in range(max_joins):
+            if i >= len(self.seq):
+                break
             curlen = self.seq[i].get_length()
 
             # We're good
@@ -1112,8 +1119,9 @@ class Sequence(Instruction):
             # After this loop we want to join elements [i:j+1]
             j = i
             for allow_unroll in False, True:
-
-                while curlen < minlen:
+                for _ in range(max_joins):
+                    if curlen >= minlen:
+                        break
                     # Try on left (if no trigger in this element)
                     if i > 0 and not self.seq[i].get_trigger() and (
                             allow_unroll or self.seq[i - 1].repeat == 1):
@@ -1179,6 +1187,9 @@ class Sequence(Instruction):
             # Perform the actual join
             self.seq[i] = Join(self.seq[i:j + 1], chan=self.chan)
             del self.seq[i + 1:j + 1]
+        else:
+            if i < len(self.seq):
+                raise RuntimeError('Sequence join exceeded its calculated limit')
 
         self.seq = self.generate(0, self.chan).seq
 
@@ -1612,7 +1623,12 @@ class Combined(Instruction):
         # At the start of this loop we can always assume that the sequences
         # are synchronized, i.e. start at this point. That makes future time
         # calculations using time_action_at easy
-        while len(l_chinfo[0].seq):
+        max_segments = sum(
+            sum(getattr(el, 'repeat', 1) for el in info.seq.seq) + len(info.seq)
+            for info in l_chinfo)
+        for _ in range(max_segments):
+            if not len(l_chinfo[0].seq):
+                break
             if DEBUG:
                 for ch, info in chinfo.items():
                     print(
@@ -1654,11 +1670,15 @@ class Combined(Instruction):
                 # Find point up to which to consume
                 to_time = max_nondelay
                 dt = 1
-                while dt > 0:
+                for _ in range(max_segments):
+                    if dt <= 0:
+                        break
                     dt = 0
                     for ch, info in chinfo.items():
                         dt = max(dt, info.seq.time_action_at(to_time))
                     to_time += dt
+                else:
+                    raise RuntimeError('Unable to find a sequence merge point')
 
                 # Consume sequences up to merge point
                 # TODO: we might have to be smarter about repeated elements
@@ -1669,6 +1689,9 @@ class Combined(Instruction):
                             '      Activity, adding to ch %s: %s' %
                             (ch, add,))
                     info.seq_out.append(add)
+        else:
+            if len(l_chinfo[0].seq):
+                raise RuntimeError('Sequence merge exceeded its calculated limit')
 
         for ch, info in chinfo.items():
             self.seqs[ch] = info.seq_out

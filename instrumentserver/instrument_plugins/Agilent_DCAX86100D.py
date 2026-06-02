@@ -82,9 +82,13 @@ class FastScope:
 
     def print_error_queue(self):
         ret = self.error_query()
-        while ret != NO_ERROR:
+        for _ in range(100):
+            if ret == NO_ERROR:
+                break
             self.report_error(ret)
             ret = self.error_query()
+        else:
+            raise IOError('Error queue did not clear after 100 entries')
 
     def set_num_pts_manual(self):
         self.wr('ACQ:RLEN:AUT MAN')
@@ -148,13 +152,14 @@ class FastScope:
         self.wr('ACQuire:CDISplay')
         self.wr(':ACQuire:RUN')
 
-        done = False
-        while not done:
+        for _ in range(max(60, num_avg * 10)):
             ret = self.ask('*OPC')
             print(ret)
             if ret == '1':
-                done = True
+                break
             time.sleep(1)
+        else:
+            raise IOError('Timed out waiting for averages')
 
 #r = FastScope('TCPIP0::172.28.141.133::inst0::INSTR')
 #time.sleep(2)

@@ -295,9 +295,7 @@ class SMS(Instrument):
         elif (channel<100)&(channel>9):
             numtekst = str(channel)
 
-        bytestring = str(bytevalue)
-        while (len(bytestring)<5):
-            bytestring = '0' + bytestring
+        bytestring = str(bytevalue).zfill(5)
 
         self._write_to_instrument('D' + numtekst + ',' + bytestring + ';')
         self.dac_byte[channel-1] = bytevalue

@@ -942,7 +942,10 @@ class Instrument(object):
             else:
                 delay = 50
 
-            while math.fabs(delta) > 0:
+            if p['maxstep'] <= 0:
+                raise ValueError('maxstep must be positive')
+            nsteps = int(math.ceil(math.fabs(delta) / p['maxstep']))
+            for _ in range(nsteps):
                 if math.fabs(delta) > p['maxstep']:
                     curval += sign * p['maxstep']
                     delta += sign * p['maxstep']

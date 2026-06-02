@@ -62,8 +62,7 @@ class Vlastakis_Spec(VisaInstrument):
             df0 = self.get_df0()
             logging.debug('Setting RF source to %.03f MHz', (val+df0)/1e6)
             ins.set_frequency(val + df0)
-            i = 0
-            while i < 10:
+            for _ in range(10):
                 val = ins.get_frequency()
                 if val is not None:
                     break
@@ -107,16 +106,16 @@ class Vlastakis_Spec(VisaInstrument):
         self.clear()
         Navg = self.get_Navg()
         plevel = 0
-        i = 0
         n = 0
-        while n < Navg and i < 2 * Navg:
+        for i in range(2 * Navg):
+            if n >= Navg:
+                break
             try:
                 ret = int(self.ask('1'))
                 plevel += ret
                 n += 1
             except:
                 time.sleep(0.005)
-            i += 1
         if n != 0:
             plevel = float(plevel) / n
         logging.debug('Power %s, %d reads (%d tries)', plevel, i, n)

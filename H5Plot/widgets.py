@@ -56,7 +56,8 @@ class MyDockArea(pyqtgraph.dockarea.DockArea):
         if not dock.label.isVisible():
             dock.label.show()
         dock.timestamp = time.time()
-        while len(self._docks) > self.max_plot_count:
+        excess = len(self._docks) - self.max_plot_count
+        for _ in range(max(0, excess)):
             least_recently_edited = sorted(list(self._docks.values()), key=lambda d: d.timestamp)[0]
             self.remove_dock(least_recently_edited)
 

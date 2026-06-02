@@ -19,9 +19,6 @@ VOLTAGE_SCALE = 2.8
 
 
 class Keysight_DIG(Instrument):
-
-
-
     def __init__(self, name, chassis=0, slot=3, DIG_PRODUCT = "M3102A", trigger_period = 200, trigger_only = False, awg_list = [7, 8, 9, 10], 
                  nsamples=1000, naverages = 1000,if_period = 10, channel_delay = 0, **kwargs):
         super(Keysight_DIG, self).__init__(name)
@@ -39,8 +36,6 @@ class Keysight_DIG(Instrument):
         self._capturing = False
         self._awg_list = awg_list #DARIO 1/31 dynamic slot assignment
         self._trigger_only = trigger_only
-#        self._ref_freq = ref_freq
-        
         self._name = name
         self._chassis = chassis
         self._slot = slot
@@ -227,13 +222,10 @@ class Keysight_DIG(Instrument):
         return self.set(keys)
     
     def load_hvi(self):
-        num_slots = len(self._awg_list) #DARIO 1/31 dynamic slot assignment
+        num_slots = len(self._awg_list)
         HVI_location = 'C:/qrlab/instrumentserver/instrument_plugins/HVI/' + str(num_slots) + 'slot' + str(self._trigger_period) + 'us.HVI'
-#        HVI_location = r'C:\qrlab-3\instrumentserver\instrument_plugins\HVI\1slot' + str(self._trigger_period) + 'us.HVI'
-#        HVI_location = 'C:/qrlab/instrumentserver/instrument_plugins/HVI/2slot100us_Dariotesting_Teja.HVI'
 
-
-        self._hvi = CompiledHVI(HVI_location, self._chassis, self._awg_list) #DARIO 1/31 dynamic slot assignment
+        self._hvi = CompiledHVI(HVI_location, self._chassis, self._awg_list)
 
         self._hvi.stop()
         
@@ -271,45 +263,6 @@ class Keysight_DIG(Instrument):
 
     def set_DAQ(self, channel, pointsPerCycle, nCycles, triggerDelay, triggermode = key.SD_TriggerModes.EXTTRIG):
         self.dig.DAQconfig(self, channel, pointsPerCycle, nCycles, triggerDelay, triggermode)
-
-#    def do_set_triggerIO(self, direction = key.SD_TriggerDirections.AOU_TRG_IN):
-#        self._triggerIOconfig = direction
-#        self.dig.triggerIOconfig(direction)
-#                
-#    def do_get_triggerIO(self):
-#        return self._triggerIOconfig
-#    
-#    def do_set_DAQdigitalTrigger(self, channel, triggerSource = key.SD_TriggerExternalSources.TRIGGER_EXTERN, 
-#                                    triggerBehavior = key.SD_TriggerBehaviors.TRIGGER_HIGH):
-#        self.dig.DAQdigitalTriggerConfig(self, channel, triggerSource, triggerBehavior)
-
-#    def do_set_prescaler(self, channel, prescaler):
-#        self._prescaler = prescaler
-#        self.dig.channelPrescalerConfig(channel, prescaler)
-#        
-#    def do_set_fullScale(self, channel, fullScale):
-#        self._fullScale = fullScale
-#        self.dig.channelInputConfig(channel, fullScale, self._impedance, self._coupling)        
-#        
-#    def do_set_impedance(self, channel, impedance):
-#        self._impedance = impedance
-#        self.dig.channelInputConfig(channel, self._fullScale, impedance, self._coupling)
-#        
-#    def do_set_coupling(self, channel, coupling):
-#        self._coupling = coupling
-#        self.dig.channelInputConfig(channel, self._fullScale, self._impedance, coupling)
-#        
-#    def do_get_prescaler(self, channel):
-#        return self.dig.channelPrescaler(channel)
-#        
-#    def do_get_fullScale(self, channel):
-#        return self.dig.channelFullScale(channel)
-#        
-#    def do_get_impedance(self, channel):
-#        return self.dig.channelImpedance(channel)
-#        
-#    def do_get_coupling(self, channel):
-#        return self.dig.channelCoupling(channel)
     
     def do_get_nsamples(self):
         return self._nsamples
@@ -495,22 +448,6 @@ class Keysight_DIG(Instrument):
         else:
             print('not able to choose ntransfers or choice is incompatible with naverages')
             raise ValueError
-#        if ntransfers is None:    #Yingying, try more frequent update when number of points is large
-#            if self._naverages % 10 == 0:
-#                if num_points >= 200:
-#                    ntransfers = self._naverages/20                
-#                elif num_points >= 10:
-#                    ntransfers = self._naverages/100
-#                else:
-#                    ntransfers = self._naverages/2000  # May 2019: Less frequent update when number of points is small
-#            else:
-#                ntransfers = self._naverages
-#        if(self._naverages % ntransfers == 0):
-#                self._ntransfers = ntransfers
-#                print('ntransfers is %s'%( ntransfers))
-#        else:
-#            print('not able to choose ntransfers or choice is incompatible with naverages')
-#            raise ValueError
             
         self.release_buf()
             
@@ -546,7 +483,6 @@ class Keysight_DIG(Instrument):
         self.set_interrupt(False)
         self.emit('start-capture')
         for i in range(self._ntransfers):
-#            print('Acquiring %d/%d', i+1, self._ntransfers)
             logging.info('%d/%d averages performed', (i)*self._naverages/self._ntransfers, self._naverages)
             self.emit('capture-progress', (i)*self._naverages/self._ntransfers)
             
@@ -575,9 +511,6 @@ class Keysight_DIG(Instrument):
                 
             self._demodA.demodulate(signal)
             IQA = self._demodA.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
-#            refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
-#            if self._ref_freq <0:
-#               refs = np.exp(1j * np.angle(np.average(IQB, 1))) 
             
             if take_ref:
                 self._demodB.demodulate(ref)
@@ -593,18 +526,11 @@ class Keysight_DIG(Instrument):
             else:
                 refs = np.ones_like(np.average(IQA, 1))
             '''
-            
-            
-#            self._demodB.demodulate_ref_freq(ref, ref_freq = ref_freq, nsample = self._nsamples) #Yingying
 
-        
             for j in range(self._npoints):
                 for k in range(self._naverages / self._ntransfers):
                     if take_ref:
-
-                        temp = np.mean(IQA[j + k*self._npoints,:] * refs[j + k*self._npoints])## Yingying revert to old digitize function
-#                        temp = np.mean(IQA[j + k*self._npoints,:]
-#                                        * np.exp(-1j * np.angle(IQB[j + k*self._npoints,:])))
+                        temp = np.mean(IQA[j + k*self._npoints,:] * refs[j + k*self._npoints])
                     else:
                         temp =  np.mean(IQA[j + k*self._npoints,:])
                     avgs[j] += temp
@@ -616,9 +542,6 @@ class Keysight_DIG(Instrument):
         re = np.real(values)
         im = np.imag(values)
         cov = np.zeros((self._npoints, 3), dtype=float)
-#        std_i = np.std(re, axis = 1)
-#        std_q = np.std(im, axis = 1)
-#        std_corr = np.sqrt(np.mean((np.mean(re) - re)*(np.mean(im) - im)))
         for i in range(self._npoints):
             m = np.cov(re[i,:],im[i,:])
             cov[i] = np.array([m[0,0], m[1,1], m[1,0]])
@@ -659,7 +582,6 @@ class Keysight_DIG(Instrument):
         assert(naverages % ntransfers == 0)
         self.dig.DAQstartMultiple(3)
         self.start_hvi()
-    #    hvi.start()
 
         # Add code to either trigger digitizer or wait for first few cycles
         sums = np.zeros((npoints, nsamples), dtype = np.float64)
@@ -677,9 +599,9 @@ class Keysight_DIG(Instrument):
     
                     gc.collect()
             except:
-                pass# modulo shit ain't workin. its ok
+                pass  # modulo shit ain't workin. its ok
             temp = self.dig.DAQbufferGet(self._main_channel)
-#            temp = np.array(self.dig.DAQbufferGet(self._main_channel), dtype=np.complex64)
+
             print(temp)
             temp_ref  = self.dig.DAQbufferGet(self._ref_channel)
             
@@ -736,7 +658,7 @@ class Keysight_DIG(Instrument):
     #    return data
         averages_per_transfer = naverages / ntransfers
         temp = np.zeros(nsamples*npoints * averages_per_transfer, dtype = np.float64)
-#        print temp
+
         temp_ref = np.zeros_like(temp)
         for transfer in range(ntransfers):
             try:
@@ -828,8 +750,6 @@ class Keysight_DIG(Instrument):
             refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
         else:
             refs = np.ones(len(IQA))
-        
-        
         
 #        if self._ref_freq <0:
 #            refs = np.exp(1j * np.angle(np.average(IQB, 1)))

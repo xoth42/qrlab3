@@ -46,29 +46,28 @@ class ArgParser(object):
         if s is not None:
             return decode_kwargs(s)
 
-        i = 1
-        while i < len(sys.argv):
+        args = iter(sys.argv[1:])
+        for arg in args:
 
-            if sys.argv[i] == '--kwargs':
-                if not i < len(sys.argv):
+            if arg == '--kwargs':
+                try:
+                    self._kwargs.update(decode_kwargs(next(args)))
+                except StopIteration:
                     raise ValueError('Expecting argument')
-                self._kwargs.update(decode_kwargs(sys.argv[i+1]))
-                i += 2
 
-            elif sys.argv[i].startswith('--'):
-                if not i < len(sys.argv):
+            elif arg.startswith('--'):
+                try:
+                    val = next(args)
+                except StopIteration:
                     raise ValueError('Expecting argument')
-                name = sys.argv[i][2:]
-                val = sys.argv[i+1]
+                name = arg[2:]
                 if name in self._argtypes:
                     val = self._argtypes[name]['type'](val)
                 if name != '':
                     self._kwargs[name] = val
-                i += 2
 
             else:
-                self._args.append(sys.argv[i])
-                i += 1
+                self._args.append(arg)
 
         return self._args, self._kwargs
 

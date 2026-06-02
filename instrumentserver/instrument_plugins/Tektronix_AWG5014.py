@@ -668,11 +668,7 @@ class Tektronix_AWG5014(Instrument):
             # string alsvolgt opgebouwd: '#' <lenlen1> <len> 'MAGIC 1000\r\n' '#' <len waveform> 'CLOCK ' <clockvalue>
             len1=int(data[1])
             len2=int(data[2:2+len1])
-            i=len1
-            tekst = ""
-            while (tekst!='#'):
-                tekst=data[i]
-                i=i+1
+            i = data.find('#', len1) + 1
             len3=int(data[i])
             len4=int(data[i+1:i+1+len3])
 
@@ -1005,4 +1001,3 @@ class Tektronix_AWG5014(Instrument):
 
         self.send_waveform(w,m1,m2,filename,clock)
         self.do_set_filename(filename, channel)
-

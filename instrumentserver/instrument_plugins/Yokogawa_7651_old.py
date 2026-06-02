@@ -59,7 +59,7 @@ class VISACommand(object):
         '''
         result_list = [None]
         try:
-            while True:
+            for _ in range(1000):
                 query_string = self.command + '?;'
                 self.ins.write(query_string)
                 result = self.ins.read_raw()
@@ -69,6 +69,8 @@ class VISACommand(object):
                     result_list.append(result)
                 else:
                     break
+            else:
+                raise IOError('Yokogawa reply exceeded 1000 records')
         except pyvisa.errors.VisaIOError:
             raise IOError('There was problem communicating with the yoko.')
         return result_list[1:]

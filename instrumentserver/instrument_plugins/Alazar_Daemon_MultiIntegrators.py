@@ -257,8 +257,7 @@ class Alazar_Daemon_MultiIntegrators(Alazar_Daemon):
         nrecperbuf = self.get_nrecperbuf()
         buf_len = nrecperbuf * nsamples
         update_interval = 5
-        i = 0
-        while i < self._num_buffers_to_fill:
+        for i in range(self._num_buffers_to_fill):
             if (i % update_interval) == 0:
                 logging.info('Acquiring %d', i*self._cyclereps)
                 self.emit('capture-progress', i*self._cyclereps)
@@ -288,7 +287,6 @@ class Alazar_Daemon_MultiIntegrators(Alazar_Daemon):
 #            logging.info('apply_integrators: %0.3f' % (1e6*(time.clock() - start_time)))
 
             self._card.post_buffers(buf)
-            i += 1
 
 #        self._hist_buf[buf_index:buf_index+len(tmp_buf)] = tmp_buf
 
@@ -324,8 +322,7 @@ class Alazar_Daemon_MultiIntegrators(Alazar_Daemon):
 
         logging.info('multi_buf_shape = %s' % (multi_buf_shape,))
 
-        i = 0
-        while i < self._num_buffers_to_fill:
+        for i in range(self._num_buffers_to_fill):
             buf = self.get_next_buffer(acqtimeout)
 
             A = np.reshape(buf[:buf_len], (nrecperbuf, nsamples))
@@ -337,7 +334,6 @@ class Alazar_Daemon_MultiIntegrators(Alazar_Daemon):
 
             logging.info('filled temp buffer : %d, %d' % (i, order))
             self._card.post_buffers(buf)
-            i += 1
 
             if (i % update_interval) == 0:
                 logging.info('Acquiring %d', i*self._cyclereps)
@@ -401,8 +397,8 @@ class Alazar_Daemon_MultiIntegrators(Alazar_Daemon):
         for cidx, int_cycle in enumerate(self.integrator_schedule):
             for eidx, integrator in enumerate(int_cycle):
                 ret = integrator.process_data(iqraw_data[:,cidx,eidx,:])#, totlen=self.excise_len)
-#                print ret.shape # Looks good up to here
-#                print 'ret dtype %s' % ret.dtype
+
+
 #                outbuf[start:stop,cidx,eidx] = ret
                 local_buf[:,cidx,eidx] = ret
 
@@ -463,9 +459,9 @@ class Alazar_Daemon_MultiIntegrators(Alazar_Daemon):
 #                for iidx, integrator in enumerate(excise_tuple):
 #                    ret = integrator.process_data(iqraw_data[:,cidx,eidx,:])#, totlen=self.excise_len)
 #                    #print ret.shape # Looks good up to here
-##                    print 'ret dtype %s' % ret.dtype
+
 #                    outbuf[start:stop,cidx,eidx,iidx] = ret
-#                    print outbuf[start:stop,cidx,eidx,iidx] #Looks good here too
+
 
 #            self._demodA.demodulate(buf[:Nperbuf*nsamples])
 #            IQA = self._demodA.IQ.reshape([Nperbuf, periods])
@@ -488,6 +484,5 @@ class Alazar_Daemon_MultiIntegrators(Alazar_Daemon):
 #        self.end_capture()
 #
 #        return self.convert_signal(np.array(IQr))
-
 
 

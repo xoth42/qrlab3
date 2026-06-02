@@ -1,11 +1,6 @@
 import ctypes
 import numpy as np
-import types
-import time
 import logging
-
-import win32api
-import msvcrt
 
 # Load DLL, 64-bit seems to require windll, 32-bit cdll.
 _DLL_FILE = 'C:\\Windows\\System32\\ATSApi.dll'
@@ -229,7 +224,7 @@ class Alazar:
     def get_parameter(self, chan, p):
         ret = ctypes.c_long(0)
         ats.AlazarGetParameter(self.handle, ctypes.c_uint8(chan), p, ctypes.pointer(ret))
-        return ret.value
+        return ret
 
     def get_channel_info(self):
         bps = np.array([0], dtype=np.uint8)
@@ -318,9 +313,9 @@ class Alazar:
         self.post_buffers(ars)
         self.start_capture()
         i = 0
-        j = 0
-        while i < NBUF*BUFPERACQ and j < 20:
-            j += 1
+        for _ in range(20):
+            if i >= NBUF * BUFPERACQ:
+                break
             buf = self.get_next_buffer()
             if buf is not None:
                 print(f'Buf: {buf}')

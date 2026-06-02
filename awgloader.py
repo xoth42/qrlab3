@@ -135,16 +135,16 @@ class AWGLoader:
 
             # AWGs sometimes take a while to start running, especially for
             # long sequences. We allow for a delay for the AWG to catch up.
-            tries = 0
             state = 0
-            while tries < 10 and state == 0:
+            for tries in range(10):
+                if state != 0:
+                    break
                 try:
                     state = awg.get_runstate()
                 except Exception as exc:
                     LOGGER.info("%s (%d): %s", awg_name, tries, exc)
                     time.sleep(2)
-                tries += 1
-            if tries > 10:
+            if state == 0:
                 err_msg = "AWG %s did not run." % (awg.get_name(),)
                 LOGGER.error(err_msg)
                 raise Exception(err_msg)

@@ -267,7 +267,9 @@ class Speedlink_StrikeFX(Instrument):
         qt.mstart()
         self.Fire()
         qt.msleep(0.1)
-        while not self.buttons[8]:
+        for _ in range(36_000):
+            if self.buttons[8]:
+                break
             print("==============================")
             self.Fire()
             qt.msleep(0.1)

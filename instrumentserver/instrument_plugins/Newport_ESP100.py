@@ -72,9 +72,13 @@ class Newport_ESP100(Instrument):
     self._visainstrument.write('1MT-;WS\r')
 #    self._visainstrument.write('1PA-300;WS\r')
     print("Waiting for stage to have moved")
-    while self.do_get_ismoving():
+    for _ in range(600):
+      if not self.do_get_ismoving():
+        break
       print("  ... still moving ...")
       time.sleep(1)
+    else:
+      raise IOError('Timed out waiting 600 seconds for ESP100 stage')
     self._visainstrument.write('1DH;WS\r')
     print("Finished initialization ESP100")
     self.get_position()

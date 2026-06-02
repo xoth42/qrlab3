@@ -416,7 +416,10 @@ real part is applied to I and the imaginary part to Q.
 
         nbufs = 1
         logging.info('Alazar num. records, blocksize: %d,%d' % (N, blocksize))
-        while N > blocksize:
+        max_factor_steps = max(1, int(N).bit_length())
+        for _ in range(max_factor_steps):
+            if N <= blocksize:
+                break
             if (N % 5) == 0:
                 nbufs *= 5
                 N /= 5
@@ -430,6 +433,8 @@ real part is applied to I and the imaginary part to Q.
                 # This really needs to be more general.
                 # N is the cyclelen(inc. mult measurements) * num_avgs
                 raise ValueError('Please make sure ntotalrec can be factored into <x> * 2^y * 3^q * 5^z, with x < 200' )
+        else:
+            raise ValueError('Unable to reduce records below the block size')
         return nbufs, N
 
     def start_capture(self):
@@ -521,12 +526,10 @@ real part is applied to I and the imaginary part to Q.
         Nperbuf = self.get_nrecperbuf()
         nsamples = self.get_nsamples()
         periods = nsamples / self.get_if_period()
-        i = 0
-
         IQr = np.zeros([N, periods], dtype=np.complex)
-        while i < N:
+        for i in range(0, N, Nperbuf):
             buf = self.get_next_buffer(acqtimeout)
-#            print len(buf),"\n"
+
 
             self._demodA.demodulate(buf[:Nperbuf*nsamples])
             IQA = self._demodA.IQ.reshape([Nperbuf, periods])
@@ -544,7 +547,6 @@ real part is applied to I and the imaginary part to Q.
                 IQr[i:i+Nperbuf,:] = IQA
 
             self._card.post_buffers(buf)
-            i += Nperbuf
 
         self.end_capture()
 
@@ -579,12 +581,12 @@ real part is applied to I and the imaginary part to Q.
         '''
 
         N = 1
-        while timeout > 1000:
-            timeout /= 2
-            N *= 2
+        split_count = max(0, int(np.ceil(np.log2(max(1.0, timeout / 1000.0)))))
+        timeout /= 2 ** split_count
+        N *= 2 ** split_count
 
         for i in range(N):
-#            print "You have to get here, right?"
+
 #            if objsh.helper.backend:
 #                objsh.helper.backend.main_loop(0, origin=1) 
 #                objsh.helper.backend.main_loop_alz(0, origin=1) #DARIO 4/4 Alazar doesn't appear to need this call to the main loop
@@ -593,8 +595,7 @@ real part is applied to I and the imaginary part to Q.
                 self.end_capture()
                 logging.info('Capture interrupted')
                 raise Exception('Capture interrupted')
-                
-            #print "We are in get_next_buffer in Alazar_Daemon"
+
             buf = self._card.get_next_buffer(timeout=timeout)
             if buf is not None:
                 return buf
@@ -619,11 +620,10 @@ real part is applied to I and the imaginary part to Q.
         Nperbuf = self.get_nrecperbuf()
         nsamples = self.get_nsamples()
         periods = nsamples / self.get_if_period()
-        i = 0
         
 #        print(N, Nperbuf, nsamples)
 
-        while i < N:
+        for i in range(0, N, Nperbuf):
             buf = self.get_next_buffer(acqtimeout)
 
 
@@ -645,7 +645,6 @@ real part is applied to I and the imaginary part to Q.
                 else:
                     avg += IQA[j,:]
             self._card.post_buffers(buf)
-            i += Nperbuf
 
 
         self.end_capture()
@@ -670,13 +669,19 @@ real part is applied to I and the imaginary part to Q.
         # number of shots per buffer
         min_recperbuf = 50
         cyclereps = 1
-        while cycles * cyclereps < min_recperbuf:
+        max_repeat_steps = max(
+            1, int(np.ceil(np.log2(max(1.0, min_recperbuf / float(cycles))))) + 1)
+        for _ in range(max_repeat_steps):
+            if cycles * cyclereps >= min_recperbuf:
+                break
             if ((self._navg / cyclereps) % 2) == 0:
                 cyclereps *= 2
             elif ((self._navg / cyclereps) % 5) == 0:
                 cyclereps *= 5
             else:
                 raise ValueError('Unable to make cyclelength > %d, please make number of averages divisible by 2 and 5' % min_recperbuf)
+        else:
+            raise ValueError('Unable to reach the minimum records per buffer')
 
         totrec = cycles * self._navg
         recperbuf = cycles * cyclereps
@@ -766,13 +771,12 @@ real part is applied to I and the imaginary part to Q.
         numbufs = totrec / recperbuf
         temp_ste = np.zeros((cycles, numbufs), dtype=np.complex64)
 
-        i = 0
         century_count = 0
         update_averages = False
         if shot_buf: #Dario
             tmp_buf = [] #Dario
             buf_index = 0
-        while i < numbufs:
+        for i in range(int(numbufs)):
             avgs = i * cyclereps
             if avgs >= century_count * 100:
                 logging.info('Acquiring %d', avgs)
@@ -780,15 +784,13 @@ real part is applied to I and the imaginary part to Q.
                 update_averages = True
                 century_count += 1
 
-#            print "before get_next_buffer \n"
             buf = self.get_next_buffer(acqtimeout)
-#            print "after get_next_buffer \n"
 
-#            print 'buf: %s, cycle: %s, cyclereps: %s' % (buf.shape, cycles, cyclereps)
+
 
             IQ = self.get_IQ_rel(buf, cycles * cyclereps, take_ref)
             # performs a running average
-#            print "i=", i, "\n"
+
             if cyclereps > 1:
                 IQ = IQ.reshape([cyclereps, cycles*num_demod])
                 IQ = IQ.sum(axis=0)
@@ -808,7 +810,7 @@ real part is applied to I and the imaginary part to Q.
                 data_sum += data
             else:
                 data_sum = data
-#            print "data_sum for this iteration is", data_sum, i, "\n"
+
 
             self._card.post_buffers(buf)
             if avg_buf and update_averages:
@@ -822,10 +824,9 @@ real part is applied to I and the imaginary part to Q.
                     tmp_buf = []
                 tmp_buf.extend(IQ)
                 #self._card.post_buffers(buf) #Dario
-            i += 1
         if shot_buf:  #Dario
             shot_buf[buf_index:buf_index+len(tmp_buf)] = tmp_buf
-#            print 'shot_buf is', shot_buf, "\n"
+
 
         self.end_capture()
         if data_sum is None:
@@ -911,14 +912,13 @@ real part is applied to I and the imaginary part to Q.
         if acqtimeout is None:
             acqtimeout = self.get_timeout()
 
-        i = 0
         buf_index = 0
         cycles = self.get_nrecperbuf()
         ntot = self.get_ntotal_rec()
         nbufs = ntot / cycles
         tmp_buf = []
         print(('cycles, ntot, nbufs:', cycles, ntot, nbufs))
-        while i < nbufs:
+        for i in range(int(nbufs)):
             if (i % 10) == 0:
                 logging.info('Acquiring %d', i*cycles)
                 self.emit('capture-progress', i*cycles)
@@ -936,7 +936,6 @@ real part is applied to I and the imaginary part to Q.
 #            self._hist_buf[i*cycles*num_demod:(i+1)*cycles*num_demod] = IQ_buf
             tmp_buf.extend(IQ_buf)
             self._card.post_buffers(buf)
-            i += 1
 
         self._hist_buf[buf_index:buf_index+len(tmp_buf)] = tmp_buf
         print(('shape tmp_buf:', np.shape(tmp_buf)))

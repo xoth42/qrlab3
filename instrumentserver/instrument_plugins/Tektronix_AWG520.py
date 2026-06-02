@@ -419,11 +419,7 @@ class Tektronix_AWG520(Instrument):
             # string alsvolgt opgebouwd: '#' <lenlen1> <len> 'MAGIC 1000\r\n' '#' <len waveform> 'CLOCK ' <clockvalue>
             len1=int(data[1])
             len2=int(data[2:2+len1])
-            i=len1
-            tekst = ""
-            while (tekst!='#'):
-                tekst=data[i]
-                i=i+1
+            i = data.find('#', len1) + 1
             len3=int(data[i])
             len4=int(data[i+1:i+1+len3])
 
@@ -704,20 +700,20 @@ class Tektronix_AWG520(Instrument):
         self._values['files'][filename]['numpoints']=len(w)
 
         m = m1 + numpy.multiply(m2,2)
-        ws = ''
+        ws = bytearray()
         for i in range(0,len(w)):
-            ws = ws + struct.pack('<fB', w[i], int(m[i]))
+            ws.extend(struct.pack('<fB', w[i], int(m[i])))
 
         s1 = 'MMEM:DATA "%s",' % filename
         s3 = 'MAGIC 1000\n'
-        s5 = ws
+        s5 = bytes(ws)
         s6 = 'CLOCK %.10e\n' % clock
 
         s4 = '#' + str(len(str(len(s5)))) + str(len(s5))
-        lenlen=str(len(str(len(s6) + len(s5) + len(s4) + len(s3))))
+        lenlen = str(len(str(len(s6) + len(s5) + len(s4) + len(s3))))
         s2 = '#' + lenlen + str(len(s6) + len(s5) + len(s4) + len(s3))
 
-        mes = s1 + s2 + s3 + s4 + s5 + s6
+        mes = s1.encode('ascii') + s2.encode('ascii') + s3.encode('ascii') + s4.encode('ascii') + s5 + s6.encode('ascii')
 
         self._visainstrument.write(mes)
 
@@ -756,4 +752,3 @@ class Tektronix_AWG520(Instrument):
 
         self.send_waveform(w,m1,m2,filename,clock)
         self.do_set_filename(filename, channel)
-
