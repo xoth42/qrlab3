@@ -3,8 +3,8 @@ import time
 import types
 import ctypes
 import numpy as np
-from . import keysightSD1 as key
-from .instrument import Instrument
+import keysightSD1 as key
+from instrumentserver.instrument import Instrument
 import logging
 
 NO_ERROR = '0,"No error"'
@@ -255,7 +255,7 @@ class Keysight_AWG(Instrument):
         
     def do_set_timeout(self, timeout):
         self._timeout = timeout
-#
+
 #    def do_set_skew(self, skew, channel):
 #        0==0
 #        #TODO
@@ -264,7 +264,7 @@ class Keysight_AWG(Instrument):
 #    def do_get_skew(self, channel):
 #        '''Get channel skew in ps.'''
 #        val = self.ask('SOURCE%d:SKEW?' % (channel,))
-
+#
 #        return float(val) * 1e12
 
     def get_all(self):

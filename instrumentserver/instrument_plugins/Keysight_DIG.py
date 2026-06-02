@@ -3,12 +3,12 @@ import time
 import types
 import ctypes
 import numpy as np
-from . import keysightSD1 as key
-from .instrument import Instrument
+import keysightSD1 as key
+from instrumentserver.instrument import Instrument
 import logging
 from lib.math import demod
 import gc
-from .CompiledHVI import CompiledHVI
+from CompiledHVI import CompiledHVI
 
 
 NO_ERROR = '0,"No error"'
