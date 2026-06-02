@@ -1,4 +1,4 @@
-# fitter.py, fitting functino helper class
+# fitter.py, fitting function helper class
 # Reinier Heeres, 2014
 #
 # Uses python fitting functions in the fit_funcs sub-directory
@@ -6,15 +6,16 @@
 import numpy as np
 import importlib
 import inspect
-import lmfit
 import os
 
 # Make sure the dir we are in is in the path so we can find fit_funcs
-import inspect
 import sys
-SRCDIR = os.path.split(os.path.abspath(inspect.getsourcefile(lambda _: None)))[0]
+SRCDIR = os.path.dirname(os.path.abspath(__file__))
 if SRCDIR not in sys.path:
     sys.path.append(SRCDIR)
+
+import lmfit
+
 
 class Fitter(object):
     '''
@@ -35,17 +36,17 @@ class Fitter(object):
     def __init__(self, funcname):
         self.funcname = funcname
         try:
-            self.module = importlib.import_module('fit_funcs.%s'%funcname)
-        except:
-            self.module = importlib.import_module('builtin_fit_funcs.%s'%funcname)
+            self.module = importlib.import_module('fit_funcs.%s' % funcname)
+        except ImportError:
+            self.module = importlib.import_module('builtin_fit_funcs.%s' % funcname)
         if not hasattr(self.module, 'func'):
             raise Exception('Module %s does not contain a fit function (called "func")')
 
         self.fit_func = getattr(self.module, 'func')
-        self.fit_args = inspect.getargspec(self.fit_func)
-        if self.fit_args[0][0] != 'xs':
+        self.fit_args = inspect.getfullargspec(self.fit_func)
+        if self.fit_args.args[0] != 'xs':
             raise Exception('First argument of fit functions should be "xs"')
-        if len(self.fit_args[0]) > 1 and self.fit_args[0][1] == 'ys':
+        if len(self.fit_args.args) > 1 and self.fit_args.args[1] == 'ys':
             self.is_2d = True
         else:
             self.is_2d = False
@@ -65,7 +66,7 @@ class Fitter(object):
             est = self.fit_func(xs, **kwargs)
             residuals = ys - est
 
-        if self.stderrs == None:
+        if self.stderrs is None:
             return residuals
         else:
             return np.sqrt(residuals**2/self.stderrs**2)
@@ -110,7 +111,7 @@ class Fitter(object):
         return ret
 
     def get_nargs(self):
-        nargs = len(self.fit_args[0])
+        nargs = len(self.fit_args.args)
         if self.is_2d:
             return nargs - 2
         else:
@@ -125,13 +126,21 @@ class Fitter(object):
             else:
                 params = self.guess_func(xs, ys)
             if len(params) != nargs:
-                raise Exception('guess() function did not return the right amount of parameters (expected %s, got %s)' % (nargs, params))
+                raise Exception(
+                    'guess() function did not return the right amount of '
+                    'parameters (expected %s, got %s)' % (nargs, len(params))
+                )
             return params
 
-        if len(self.fit_args[3]) != nargs:
+        defaults = self.fit_args.defaults or ()
+        if len(defaults) != nargs:
             raise Exception('Fit function %s does not specify enough default parameters' % self.funcname)
 
-        ret = {self.fit_args[0][i+1]: self.fit_args[3][i] for i in range(nargs)}
+        offset = 2 if self.is_2d else 1
+        ret = {
+            self.fit_args.args[i + offset]: defaults[i]
+            for i in range(nargs)
+        }
         return ret
 
     def get_lmfit_parameters(self, xs, ys, zs=None):
@@ -147,7 +156,7 @@ class Fitter(object):
         '''
         return {k: self.fit_params[k].value for k in self.fit_params}
 
-    def perform_lmfit(self, xs, ys, zs=None, p=None, print_report=True, 
+    def perform_lmfit(self, xs, ys, zs=None, p=None, print_report=True,
         plot=False, plot_guess=True, stderrs=None, **kwargs):
         '''
         Perform fit using lmfit.
@@ -207,7 +216,7 @@ class Fitter(object):
     def test(self, **kwargs):
         xr = getattr(self.module, 'TEST_RANGE', (0, 1))
         xs = np.linspace(xr[0], xr[1], 101)
-        params = getattr(self.module, 'TEST_PARAMS', {})
+        params = dict(getattr(self.module, 'TEST_PARAMS', {}))
         params.update(kwargs)
         if self.is_2d:
             xs, ys = np.meshgrid(xs, xs)
@@ -228,13 +237,12 @@ class Fitter(object):
         return ret
 
 if __name__ == '__main__':
-    print('Available fitting functions: %s' % (Fitter.get_fit_functions(),))
+    print(f'Available fitting functions: {Fitter.get_fit_functions()}')
 
     for fn in Fitter.get_fit_functions():
-        print('Testing %s' % (fn,))
+        print(f'Testing {fn}')
         try:
             f = Fitter(fn)
             f.test()
         except Exception as e:
-            print('Function %s failed: %s' % (fn, e))
-
+            print(f'Function {fn} failed: {e}')

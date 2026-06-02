@@ -1,11 +1,9 @@
-import time
 import os
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QSplitter, QWidget, QVBoxLayout,
                              QHBoxLayout, QLabel, QSpinBox, QTreeWidget, QTreeWidgetItem,
                              QAction, QInputDialog, QFileDialog, QMessageBox, QTextEdit,
                              QAbstractItemView, QSizePolicy, QLineEdit)
-from PyQt5.QtCore import Qt, QTimer, pyqtSignal
-from PyQt5.QtGui import QFont
+from PyQt5.QtCore import Qt, QTimer
 from .widgets import *
 import objectsharer as objsh
 import pickle
@@ -466,7 +464,6 @@ class PlotWindow(QMainWindow):
 
     def setup_server(self):
         # Use the working dataserver_client approach instead of manual ZMQ setup
-        from dataserver import dataserver_client
         try:
             self.connect_dataserver()
         except Exception as e:

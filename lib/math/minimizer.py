@@ -28,12 +28,12 @@ class Minimizer:
     objects as it's first argument. It should return a scalar.
     """
 
-    def __init__(self, func, args=(), kwargs={},
+    def __init__(self, func, args=(), kwargs=None,
                  n_eval=6, n_it=5, range_div=2.5,
                  verbose=False, plot=False):
         self.func = func
         self.args = args
-        self.kwargs = kwargs
+        self.kwargs = {} if kwargs is None else dict(kwargs)
         self.params = {}
         self.n_eval = n_eval
         self.n_it = n_it
@@ -46,13 +46,17 @@ class Minimizer:
 
     def minimize(self, min_step=None):
         if self.plot:
-            fig, [axes_list, min_list] = plt.subplots(2, len(self.params),
-                                          sharex=False, sharey=False)
+
+            fig, (axes_list, min_list) = plt.subplots(
+                2, len(self.params), sharex=False, sharey=False
+            )
 
         for i_it in range(self.n_it):
             for i_p, (pname, p) in enumerate(self.params.items()):
                 p_val0 = p.value
-                p_vals = np.linspace(p_val0-p.vrange/2, p_val0+p.vrange/2, self.n_eval)
+                p_vals = np.linspace(
+                    p_val0 - p.vrange / 2, p_val0 + p.vrange / 2, self.n_eval
+                )
 
                 if np.abs(p_vals[1]-p_vals[0]) < p.minstep:
                     p_vals = np.arange(p_vals[0],p_vals[-1]+0.00001,p.minstep)
@@ -67,8 +71,10 @@ class Minimizer:
                 imin = np.argmin(vs)
                 p.value = p_vals[imin]
                 if self.verbose:
-                    print('It%d, p%s --> f(%.03f) = %.01f [delta: %.05f]' % \
-                        (i_it, pname, p.value, vs[imin], (p_vals[1]-p_vals[0])))
+                    print(
+                        f'It{i_it}, p{pname} --> f({p.value:.03f}) = '
+                        f'{vs[imin]:.01f} [delta: {(p_vals[1] - p_vals[0]):.05f}]'
+                    )
                 if self.plot:
                     axes_list[i_p].plot(p_vals, vs)
 

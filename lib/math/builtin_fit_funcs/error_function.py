@@ -1,7 +1,5 @@
 import numpy as np
 import scipy.special as special
-import matplotlib.pyplot as plt
-from . import common
 
 # The fitting function, should have "xs" as first parameter.
 # Each further parameter is interpreted as a fitting parameters. A default
@@ -21,5 +19,6 @@ def guess(xs, ys):
     )
 
 def guess_x0(xs, ys):
-	derivs = np.array([ys[i+1] - y[i] for i in np.arange(len(ys))])
-	return xs[np.argmax(np.abs(derivs))]
+    # The steepest slope is a good first guess for the center position.
+    derivs = np.array([ys[i + 1] - ys[i] for i in range(len(ys) - 1)])
+    return xs[np.argmax(np.abs(derivs))]

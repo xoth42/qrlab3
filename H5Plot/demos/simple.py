@@ -1,5 +1,5 @@
 from dataserver import get_file
-from demo_helpers import generate_rank1_data, generate_rank2_data
+from .demo_helpers import generate_rank1_data, generate_rank2_data
 
 f = get_file('simple_test.h5')
 f = f.get_group('simple group')

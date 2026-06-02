@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 # The fitting function, should have "xs" as first parameter.
 # Each further parameter is interpreted as a fitting parameters. A default
@@ -29,4 +28,3 @@ def guess(xs, ys):
 # will be set to the default values of the function.
 TEST_RANGE = 0, 100
 TEST_PARAMS = dict(A=10, dphi=np.pi/4, noise_amp=2.0)
-

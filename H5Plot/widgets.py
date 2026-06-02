@@ -1,7 +1,7 @@
 import warnings
 import time
 
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QFrame, QLabel, QLineEdit, QPushButton, QCheckBox, 
                              QRadioButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout, 
                              QHBoxLayout, QWidget, QSlider, QSizePolicy)
@@ -11,9 +11,9 @@ import pyqtgraph.opengl as gl
 import pyqtgraph.dockarea
 import numpy as np
 
-class MyDockArea(pg.dockarea.DockArea):
+class MyDockArea(pyqtgraph.dockarea.DockArea):
     def __init__(self, *args, **kwargs):
-        pg.dockarea.DockArea.__init__(self, *args, **kwargs)
+        pyqtgraph.dockarea.DockArea.__init__(self, *args, **kwargs)
         self.insert_location = 'bottom'
         self.last_dock, self.second_last_dock = None, None
         self._docks = {}
@@ -177,7 +177,7 @@ class NodeEditWidget(QFrame):
             return name, value
 
 
-class ItemWidget(pg.dockarea.Dock):
+class ItemWidget(pyqtgraph.dockarea.Dock):
     dock_area = None
     def __init__(self, item, **kwargs):
         ident = item.strpath
@@ -195,7 +195,7 @@ class ItemWidget(pg.dockarea.Dock):
 
         pointSize = 14 if len(label_text) < 30 else 12
 
-        pg.dockarea.Dock.__init__(self, label_text)
+        pyqtgraph.dockarea.Dock.__init__(self, label_text)
         self.timestamp = time.time()
         self.label.setFont(QFont('Helvetica', pointSize=pointSize))
         self.ident = ident

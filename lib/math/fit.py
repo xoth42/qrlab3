@@ -17,10 +17,12 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 import numpy as np
-from scipy.optimize import leastsq
 from numpy.random import rand
 import code
 import copy
+
+from scipy.optimize import leastsq
+
 
 WEIGHT_EQUAL    = 0
 WEIGHT_10PCT    = 1
@@ -124,12 +126,14 @@ class Function(object):
         residuals = np.abs(self._ydata - self.func(p)) / self._yerr
         return residuals
 
-    def fit(self, p0, fixed=[]):
+    def fit(self, p0, fixed=None):
         '''
         Fit the function using p0 as starting parameters.
 
         Fixed is a list of numbers specifying which parameter to keep fixed.
         '''
+        if fixed is None:
+            fixed = []
 
         self.set_nparams(len(p0))
 
@@ -205,11 +209,13 @@ class Function(object):
         self.set_data(x, y, yerr=yerr)
         p = self.fit(p0)
 
-        print('\tRandom par: %s' % (pr, ))
+        print(f'\tRandom par: {params}')
         s = ''
         for val, err in zip(p, self.get_fit_errors()):
             s += ' %f (+-%f)' % (val, err)
-        print('\tResult:%s' % (s, ))
+        print(f'\tResult:{s}')
+
+        import matplotlib.pyplot as plt
 
         yfit = self.func(p, x)
         plt.errorbar(x, y, yerr=self._yerr, fmt='ks')
@@ -452,7 +458,7 @@ class FunctionFit(Function):
         p, x = self.get_px(p, x)
         return self._func(p, x)
 
-def fit(f, xdata, ydata, p0, fixed=[], yerr=None, weight=WEIGHT_EQUAL):
+def fit(f, xdata, ydata, p0, fixed=None, yerr=None, weight=WEIGHT_EQUAL):
     '''
     Fit function 'f' using p0 as starting parameters. The function should
     take a parameter vector and an x data vector as input, e.g.:
@@ -505,18 +511,18 @@ if __name__ == "__main__":
     gauss = Gaussian(data[:,0], data[:,1], weight=WEIGHT_EQUAL)
     p0 = [-1, 10, 2, 0.7]
     p = gauss.fit(p0, fixed=(0,))
-    print('\tStart par: %s' % (p0, ))
+    print(f'\tStart par: {p0}')
     s = ''
     for val, err in zip(p, gauss.get_fit_errors()):
-        print('\t\t%e (+-%e)' % (val, err))
+        print(f'\t\t{val:e} (+-{err:e})')
 
     f = lambda p, x: p[0] + p[1] / p[3] / np.sqrt(np.pi / 2) * np.exp(-2*(x - p[2])**2 / p[3]**2)
     fc = fit(f, data[:,0], data[:,1], p0)
     p = fc.get_fit_params()
-    print('\tStart par: %s' % (p0, ))
+    print(f'\tStart par: {p0}')
     s = ''
     for val, err in zip(p, gauss.get_fit_errors()):
-        print('\t\t%e (+-%e)' % (val, err))
+        print(f'\t\t{val:e} (+-{err:e})')
 
     plt.errorbar(data[:,0], data[:,1], yerr=gauss._yerr, fmt='ks')
     plt.plot(data[:,0], gauss.func(p))
@@ -530,10 +536,10 @@ if __name__ == "__main__":
     p0 = [1e1, -1e-1, 5e-3, -1e-6, -5e-3, 1e-4, -1e-7]
     pa = [1.08e0,-1.23e-1,4.09e-3,-1.43e-6,-5.76e-3,2.41e-4,-1.23e-7]
     p = hahn.fit(p0)
-    print('\tStart par: %s' % (p0, ))
+    print(f'\tStart par: {p0}')
     s = ''
     for val, err in zip(p, hahn.get_fit_errors()):
-        print('\t\t%e (+-%e)' % (val, err))
+        print(f'\t\t{val:e} (+-{err:e})')
 
     plt.plot(data[:,1], data[:,0], 'ks')
     plt.plot(data[:,1], hahn.func(p), 'r+')
@@ -544,11 +550,10 @@ if __name__ == "__main__":
     gauss = NISTGauss(data[:,1], data[:,0])
     p0 = [9.7e1,9e-3,1e2,6.5e1,2e1,7e1,1.78e2,1.65e1]
     p = gauss.fit(p0)
-    print('\tStart par: %s' % (p0, ))
+    print(f'\tStart par: {p0}')
     s = ''
     for val, err in zip(p, gauss.get_fit_errors()):
-        print('\t\t%e (+-%e)' % (val, err))
+        print(f'\t\t{val:e} (+-{err:e})')
 
     plt.plot(data[:,1], data[:,0], 'ks')
     plt.plot(data[:,1], gauss.func(p), 'r+')
-
