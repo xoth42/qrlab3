@@ -197,7 +197,7 @@ class Yokogawa_7651_new(Instrument):
             return None
         strng = self.do_get_output()
         digit = re.findall("[-+]?[.]?[\d]+(?:,\d\d\d)*[\.]?\d*(?:[eE][-+]?\d+)?", strng)
-        digit = float(digit[0]) * 1000.0
+        digit = float(digit[0])
         return digit
         
     def do_set_voltage(self, voltage): # WARNING: Jumps right to voltage you set, as long as in voltage mode (-Alex S. 5/1/19)
@@ -304,7 +304,7 @@ class Yokogawa_7651_new(Instrument):
 #            raise CurrentError('Not in current mode')
 #            return               
         i = self.do_get_current()
-        i_step = .0005 / 1000
+        i_step = self.get_current_range()*0.0005 / 1000
 #        bigger = np.max((abs(i),abs(i_target)))
 #        self.do_set_current_range(bigger)
         if (i/1000 < i_target /1000 ):   
