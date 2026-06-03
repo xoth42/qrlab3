@@ -317,12 +317,11 @@ class ObjectSharer(object):
                     opts = {}
                 opts['__doc__'] = getattr(val, '__doc__', None)
                 try:
-                    # Python 3.10 still provides inspect.getargspec() and
-                    # inspect.formatargspec(), so keep the original metadata
-                    # format for compatibility with older ObjectSharer peers.
-                    opts['__argspec__'] = inspect.getargspec(val)
+                    # inspect.getargspec() was removed in Python 3.11.  Store a
+                    # string signature so the metadata remains pickle-friendly.
+                    opts['__signature__'] = str(inspect.signature(val))
                 except Exception:
-                    opts['__argspec__'] = None
+                    opts['__signature__'] = None
                 funcs.append((key, opts))
             else:
                 props.append(key)
@@ -733,12 +732,27 @@ class _FunctionCall():
 
         # Setup doc string, including remote function name and parameters
         doc = funcname
-        argspec = self._share_options.get('__argspec__', None)
-        if argspec:
-            # Python 3.10 still has inspect.formatargspec().
-            doc += inspect.formatargspec(*argspec) + '\n'
+        sig = self._share_options.get('__signature__', None)
+        if sig:
+            doc += sig + '\n'
         else:
-            doc += '()\n'
+            # Backward compatibility with older peers that still send
+            # ``__argspec__`` metadata.  inspect.formatargspec() was removed in
+            # Python 3.11, so do not call it here.
+            argspec = self._share_options.get('__argspec__', None)
+            if argspec:
+                try:
+                    args, varargs, varkw, defaults = argspec[:4]
+                    parts = list(args or [])
+                    if varargs:
+                        parts.append('*' + varargs)
+                    if varkw:
+                        parts.append('**' + varkw)
+                    doc += '(' + ', '.join(parts) + ')\n'
+                except Exception:
+                    doc += '()\n'
+            else:
+                doc += '()\n'
 
         docstr = self._share_options.get('__doc__', '')
         if docstr:
@@ -985,7 +999,7 @@ class ZMQBackend(object):
             self.addr_to_uid_map[addr] = uid
 
         sock = self.ctx.socket(zmq.DEALER)
-        sock.setsockopt_string(zmq.IDENTITY, self._generate_id())
+        sock.setsockopt(zmq.IDENTITY, self._generate_id().encode('ascii'))
 
         sock.connect(addr)
         self.addr_to_sock_map[addr] = sock
