@@ -24,8 +24,8 @@ import logging
 SUCCESS = 0
 NO_DEVICE = 0
 
-# LB_DLL = r'c:\qrlab-3\instrumentserver\vnx_fmsynth.dll'
-LB_DLL = 'C:\\qrlab-3\\instrumentserver\\vnx_fmsynth.dll'
+LB_DLL = r'c:/qrlab-3/instrumentserver/instruments_plugins/LabBrick/vnx_fmsynth.dll'
+# LB_DLL = 'C:\\qrlab-3\\instrumentserver\\vnx_fmsynth.dll'
 
 try:
     lb_dll = ctypes.windll.LoadLibrary(LB_DLL)

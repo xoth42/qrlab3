@@ -1,0 +1,106 @@
+# SP_Millenia.py class, qtlab driver for Spectra Physics Millennia pump laser
+#
+# Reinier Heeres <reinier@heeres.eu>, 2012
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+from .instrument import Instrument
+import types
+import pyvisa
+import logging
+import re
+
+class SP_Millenia(Instrument):
+
+    def __init__(self, name, address, reset=False):
+        '''
+        address = COM port
+        '''
+        logging.info(__name__ + ' : Initializing Spectra Physics Millenia')
+        Instrument.__init__(self, name, tags=['physical'])
+
+        # Set parameters
+        self._address = address
+
+        self.add_parameter('id',
+            flags=Instrument.FLAG_GET,
+            type=bytes)
+
+        self.add_parameter('power',
+            flags=Instrument.FLAG_GETSET,
+            format='%.02f',
+            type=float)
+
+        # Add functions
+        self.add_function('reset')
+        self.add_function('on')
+        self.add_function('off')
+        self.add_function('get_all')
+
+        self._open_serial_connection()
+
+        if reset:
+            self.reset()
+        else:
+            self.get_all()
+
+    # Open serial connection
+    def _open_serial_connection(self):
+        logging.debug(__name__ + ' : Opening serial connection')
+
+        self._visa = pyvisa.ResourceManager().open_resource(self._address)
+        self._visa.baud_rate = 9600
+        self._visa.data_bits = 8
+        self._visa.stop_bits = pyvisa.constants.StopBits.one
+        self._visa.parity = pyvisa.constants.Parity.none
+        self._visa.read_termination = None
+        self._visa.write_termination = None
+        self._visa.send_end = False
+
+    # Close serial connection
+    def _close_serial_connection(self):
+        '''
+        Closes the serial connection
+        '''
+        logging.debug(__name__ + ' : Closing serial connection')
+        self._visa.close()
+
+    def get_all(self):
+        self.get_id()
+        self.get_power()
+
+    def reset(self):
+        pass
+
+    def do_get_id(self):
+        return self._visa.query('?IDN\r')
+
+    def do_get_power(self):
+        ret = self._visa.query('?P\r')
+        m = re.search('([0123456789\.]+)W', ret)
+        if m:
+            return float(m.group(1))
+        else:
+            return 0
+
+    def do_set_power(self, val):
+        self._visa.write(f'P:{val:.2f}\r')
+        return True
+
+    def on(self):
+        self._visa.write('ON\r')
+
+    def off(self):
+        self._visa.write('OFF\r')

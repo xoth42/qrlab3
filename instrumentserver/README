@@ -34,4 +34,3 @@ section like this at the end:
 
 This will automatically call all of the 'get' functions to see if they are
 working properly.
-
