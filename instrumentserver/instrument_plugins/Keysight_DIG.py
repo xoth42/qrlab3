@@ -2,13 +2,15 @@ import sys
 import time
 import types
 import ctypes
+
+import os
 import numpy as np
-from . import keysightSD1 as key
-from .instrument import Instrument
+import keysightSD1 as key
+from instrument import Instrument
 import logging
 from lib.math import demod
 import gc
-from .CompiledHVI import CompiledHVI
+from CompiledHVI import CompiledHVI
 
 
 NO_ERROR = '0,"No error"'
@@ -228,12 +230,18 @@ class Keysight_DIG(Instrument):
     
     def load_hvi(self):
         num_slots = len(self._awg_list) #DARIO 1/31 dynamic slot assignment
-        HVI_location = 'C:/qrlab/instrumentserver/instrument_plugins/HVI/' + str(num_slots) + 'slot' + str(self._trigger_period) + 'us.HVI'
+
+        file_folder = os.path.dirname(os.path.abspath(__file__))
+
+        HVI_filename = f"{num_slots}slot{self._trigger_period}us.HVI"
+        HVI_location = os.path.join(file_folder, "HVI", HVI_filename)
+
+        # HVI_location = 'C:/qrlab/instrumentserver/instrument_plugins/HVI/' + str(num_slots) + 'slot' + str(self._trigger_period) + 'us.HVI'
 #        HVI_location = r'C:\qrlab-3\instrumentserver\instrument_plugins\HVI\1slot' + str(self._trigger_period) + 'us.HVI'
 #        HVI_location = 'C:/qrlab/instrumentserver/instrument_plugins/HVI/2slot100us_Dariotesting_Teja.HVI'
 
 
-        self._hvi = CompiledHVI(HVI_location, self._chassis, self._awg_list) #DARIO 1/31 dynamic slot assignment
+        self._hvi = CompiledHVI(HVI_location, self._chassis, self._awg_list)
 
         self._hvi.stop()
         

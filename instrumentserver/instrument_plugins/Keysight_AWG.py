@@ -3,8 +3,8 @@ import time
 import types
 import ctypes
 import numpy as np
-from . import keysightSD1 as key
-from .instrument import Instrument
+import keysightSD1 as key
+from instrument import Instrument
 import logging
 
 NO_ERROR = '0,"No error"'

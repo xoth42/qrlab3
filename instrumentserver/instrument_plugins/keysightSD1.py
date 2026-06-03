@@ -4,6 +4,8 @@ from math import pow, log, ceil
 
 import numpy as np
 
+os.add_dll_directory(r"C:\Program Files\Keysight\SD1\shared")
+
 class SD_Object :
 	__core_dll = cdll.LoadLibrary("SD1core" if os.name == 'nt' else "libSD1core.so")
 
@@ -81,6 +83,15 @@ class SD_Error(SD_Object) :
 	INVALID_END = -8061;
 	INVALID_CYCLES = -8062;
 	HVI_INVALID_NUMBER_MODULES = -8063;
+	DAQ_P2P_ALREADY_RUNNING = -8064;
+	OPEN_DRAIN_NOT_SUPPORTED = -8065;
+	CHASSIS_PORTS_NOT_SUPPORTED = -8066;
+	CHASSIS_SETUP_NOT_SUPPORTED = -8067;
+	OPEN_DRAIN_FAILED = -8068;
+	CHASSIS_SETUP_FAILED = -8069;
+	INVALID_PART = -8070;
+	INVALID_SIZE = -8071;
+	INVALID_HANDLE = -8072;
 
 	@classmethod
 	def getErrorMessage(cls, errorNumber) :
@@ -105,6 +116,10 @@ class SD_Waveshapes :
 	AOU_DC = 5;
 	AOU_AWG = 6;
 	AOU_PARTNER = 8;
+
+class SD_DigitalFilterModes :
+	AOU_FILTER_OFF = 0;
+	AOU_FILTER_FLATNESS = 1;
 
 class SD_WaveformTypes :
 	WAVE_ANALOG = 0;
@@ -137,7 +152,6 @@ class SD_MarkerModes :
 	START = 1;
 	START_AFTER_DELAY = 2;
 	EVERY_CYCLE = 3;
-	END = 4;
 
 class SD_TriggerValue :
 	LOW = 0;
@@ -146,6 +160,10 @@ class SD_TriggerValue :
 class SD_SyncModes :
 	SYNC_NONE = 0;
 	SYNC_CLK10 = 1;
+
+class SD_QueueMode :
+	ONE_SHOT = 0;
+	CYCLIC = 1;
 
 class SD_ResetMode :
 	LOW = 0;
@@ -168,7 +186,7 @@ class SD_TriggerModes :
 	ANALOGTRIG = 3;
 	SWHVITRIG_CYCLE = 5;
 	EXTTRIG_CYCLE = 6;
-	ANALOGAUTOTRIG = 7;
+	ANALOGAUTOTRIG = 11;
 
 class SD_TriggerExternalSources :
 	TRIGGER_EXTERN = 0;
@@ -451,79 +469,109 @@ class SD_Module(SD_Object) :
 			result = SD_Error.MODULE_NOT_OPENED;
 
 		return result;
+		
+	def getTemperature(self) :
+		if self._SD_Object__handle > 0 :
+			self._SD_Object__core_dll.SD_Module_getTemperature.restype = c_double;
+			result = self._SD_Object__core_dll.SD_Module_getTemperature(self._SD_Object__handle);
+
+			if result < 0 :
+				return int(result);
+			else :
+				return result;
+		else :
+			return SD_Error.MODULE_NOT_OPENED;
 
 	##HVI Registers
-	def readRegisterByNumber(self, varNumber) :
+	def readRegisterByNumber(self, regNumber) :
 		varValue = 0;
 
 		if self._SD_Object__handle > 0 :
 			error = c_int32();
-			varValue = self._SD_Object__core_dll.SD_Module_readRegister(self._SD_Object__handle, varNumber, byref(error));
+			varValue = self._SD_Object__core_dll.SD_Module_readRegister(self._SD_Object__handle, regNumber, byref(error));
 			error = error.value;
 		else :
 			error = SD_Error.MODULE_NOT_OPENED;
 
 		return (error, varValue);
 
-	def readRegisterByName(self, varName) :
+	def readRegisterWithName(self, regName) :
+		return self.readRegisterByName(regName);
+
+	def readRegisterByName(self, regName) :
 		varValue = 0;
 
 		if self._SD_Object__handle > 0 :
 			error = c_int32();
-			varValue = self._SD_Object__core_dll.SD_Module_readRegisterWithName(self._SD_Object__handle, varName.encode(), byref(error));
+			varValue = self._SD_Object__core_dll.SD_Module_readRegisterWithName(self._SD_Object__handle, regName.encode(), byref(error));
 			error = error.value;
 		else :
 			error = SD_Error.MODULE_NOT_OPENED;
 
 		return (error, varValue);
 
-	def readRegisterDoubleByNumber(self, varNumber, unit) :
+	def readDoubleRegisterByNumber(self, regNumber, unit) :
+		return self.readRegisterDoubleByNumber(regNumber, unit);
+
+	def readRegisterDoubleByNumber(self, regNumber, unit) :
 		varValue = 0;
 
 		if self._SD_Object__handle > 0 :
 			error = c_int32();
 			self._SD_Object__core_dll.SD_Module_readDoubleRegister.restype = c_double;
-			varValue = self._SD_Object__core_dll.SD_Module_readDoubleRegister(self._SD_Object__handle, varNumber, unit.encode(), byref(error));
+			varValue = self._SD_Object__core_dll.SD_Module_readDoubleRegister(self._SD_Object__handle, regNumber, unit.encode(), byref(error));
 			error = error.value;
 		else :
 			error = SD_Error.MODULE_NOT_OPENED;
 
 		return (error, varValue);
 
-	def readRegisterDoubleByName(self, varName, unit) :
+	def readDoubleRegisterWithName(self, regName, unit) :
+		return self.readRegisterDoubleByName(regName, unit);
+
+	def readRegisterDoubleByName(self, regName, unit) :
 		varValue = 0;
 
 		if self._SD_Object__handle > 0 :
 			error = c_int32();
 			self._SD_Object__core_dll.SD_Module_readDoubleRegisterWithName.restype = c_double;
-			varValue = self._SD_Object__core_dll.SD_Module_readDoubleRegisterWithName(self._SD_Object__handle, varName.encode(), unit.encode(), byref(error));
+			varValue = self._SD_Object__core_dll.SD_Module_readDoubleRegisterWithName(self._SD_Object__handle, regName.encode(), unit.encode(), byref(error));
 			error = error.value;
 		else :
 			error = SD_Error.MODULE_NOT_OPENED;
 
 		return (error, varValue);
 
-	def writeRegisterByNumber(self, varNumber, varValue) :
+	def writeRegisterByNumber(self, regNumber, varValue) :
 		if self._SD_Object__handle > 0 :
-			return self._SD_Object__core_dll.SD_Module_writeRegister(self._SD_Object__handle, varNumber, varValue);
+			return self._SD_Object__core_dll.SD_Module_writeRegister(self._SD_Object__handle, regNumber, varValue);
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
-	def writeRegisterByName(self, varName, varValue) :
+	def writeRegisterWithName(self, regName, varValue) :
+		return self.writeRegisterByName(regName, varValue);
+
+	def writeRegisterByName(self, regName, varValue) :
 		if self._SD_Object__handle > 0 :
-			return self._SD_Object__core_dll.SD_Module_writeRegisterWithName(self._SD_Object__handle, varName.encode(), varValue);
+			return self._SD_Object__core_dll.SD_Module_writeRegisterWithName(self._SD_Object__handle, regName.encode(), varValue);
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
-	def writeRegisterDoubleByNumber(self, varNumber, value, unit) :
+	def writeDoubleRegisterByNumber(self, regNumber, value, unit) :
+		return self.writeRegisterDoubleByNumber(regNumber, value, unit);
+
+	def writeRegisterDoubleByNumber(self, regNumber, value, unit) :
 		if self._SD_Object__handle > 0 :
-			return self._SD_Object__core_dll.SD_Module_writeDoubleRegister(self._SD_Object__handle, varNumber, c_double(value), unit.encode());
+			return self._SD_Object__core_dll.SD_Module_writeDoubleRegister(self._SD_Object__handle, regNumber, c_double(value), unit.encode());
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
-	def writeRegisterDoubleByName(self, varName, value, unit) :
+	def writeDoubleRegisterWithName(self, regName, value, unit) :
+		return self.writeRegisterDoubleByName(regName, value, unit);
+
+	def writeRegisterDoubleByName(self, regName, value, unit) :
 		if self._SD_Object__handle > 0 :
-			return self._SD_Object__core_dll.SD_Module_writeDoubleRegisterWithName(self._SD_Object__handle, varName.encode(), c_double(value), unit.encode());
+			return self._SD_Object__core_dll.SD_Module_writeDoubleRegisterWithName(self._SD_Object__handle, regName.encode(), c_double(value), unit.encode());
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
@@ -557,13 +605,14 @@ class SD_Module(SD_Object) :
 	def FPGAreadPCport(self, port, nDW, address, addressMode, accessMode) :
 		if self._SD_Object__handle > 0 :
 			if nDW > 0 :
-				data = (c_int * int(nDW))()
+				nDW = int(nDW)
+				data = (c_int * nDW)()
 				error = self._SD_Object__core_dll.SD_Module_FPGAreadPCport(self._SD_Object__handle, port, data, nDW, address, addressMode, accessMode)
 
 				if error < 0 :
 					return error
 				else :
-					return np.array(data)
+					return np.array(cast(data, POINTER(c_int*nDW)).contents)
 			else :
 				return SD_Error.INVALID_VALUE
 		else :
@@ -697,6 +746,12 @@ class SD_AOU(SD_Module):
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
+	def setDigitalFilterMode(self, mode):
+		if self._SD_Object__handle > 0 :
+			return self._SD_Object__core_dll.SD_AOU_setDigitalFilterMode(self._SD_Object__handle, mode);
+		else :
+			return SD_Error.MODULE_NOT_OPENED;
+
 	def channelAmplitude(self, nChannel, amplitude):
 		if self._SD_Object__handle > 0:
 			return self._SD_Object__core_dll.SD_AOU_channelAmplitude(self._SD_Object__handle, nChannel, c_double(amplitude))
@@ -812,7 +867,7 @@ class SD_AOU(SD_Module):
 	def waveformLoadInt16(self, waveformType, dataRaw, waveformNumber, paddingMode = 0) :
 		if self._SD_Object__handle > 0 :
 			if len(dataRaw) > 0 :
-				dataC = (c_double * len(dataRaw))(*dataRaw);
+				dataC = (c_short * len(dataRaw))(*dataRaw);
 				return self._SD_Object__core_dll.SD_AOU_waveformLoadArrayInt16(self._SD_Object__handle, waveformType, dataC._length_, dataC, waveformNumber, paddingMode);
 			else :
 				return SD_Error.INVALID_VALUE;
@@ -858,6 +913,12 @@ class SD_AOU(SD_Module):
 	def AWGtriggerMultiple(self, AWGmask) :
 		if self._SD_Object__handle > 0 :
 			return self._SD_Object__core_dll.SD_AOU_AWGtriggerMultiple(self._SD_Object__handle, AWGmask);
+		else :
+			return SD_Error.MODULE_NOT_OPENED;
+
+	def AWGjumpNextWaveformMultiple(self, AWGmask) :
+		if self._SD_Object__handle > 0 :
+			return self._SD_Object__core_dll.SD_AOU_AWGjumpNextWaveformMultiple(self._SD_Object__handle, AWGmask);
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
@@ -1237,10 +1298,12 @@ class SD_DIO(SD_Module) :
 			if nPoints > 0 :
 				data = (c_short * nPoints)()
 
-				nPoints = self._SD_Object__core_dll.SD_DIO_DAQread(self._SD_Object__handle, nDAQ, data, nPoints, timeOut)
+				nPointsOrError = self._SD_Object__core_dll.SD_DIO_DAQread(self._SD_Object__handle, nDAQ, data, nPoints, timeOut)
 
-				if nPoints > 0 :
-					return np.array(data)
+				if nPointsOrError > 0 :
+					return np.array(cast(data, POINTER(c_short*nPointsOrError)).contents)
+				elif nPointsOrError < 0 :
+					return nPointsOrError
 				else :
 					return np.empty(0, dtype=np.short)
 			else :
@@ -1538,6 +1601,18 @@ class SD_AIN(SD_Module) :
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
+	def DAQpause(self, channel) :
+		if self._SD_Object__handle > 0 :
+			return self._SD_Object__core_dll.SD_AIN_DAQpause(self._SD_Object__handle, channel);
+		else :
+			return SD_Error.MODULE_NOT_OPENED;
+
+	def DAQresume(self, channel) :
+		if self._SD_Object__handle > 0 :
+			return self._SD_Object__core_dll.SD_AIN_DAQresume(self._SD_Object__handle, channel);
+		else :
+			return SD_Error.MODULE_NOT_OPENED;
+
 	def DAQstop(self, channel) :
 		if self._SD_Object__handle > 0 :
 			return self._SD_Object__core_dll.SD_AIN_DAQstop(self._SD_Object__handle, channel);
@@ -1559,6 +1634,18 @@ class SD_AIN(SD_Module) :
 	def DAQstartMultiple(self, channel) :
 		if self._SD_Object__handle > 0 :
 			return self._SD_Object__core_dll.SD_AIN_DAQstartMultiple(self._SD_Object__handle, channel);
+		else :
+			return SD_Error.MODULE_NOT_OPENED;
+
+	def DAQpauseMultiple(self, channel) :
+		if self._SD_Object__handle > 0 :
+			return self._SD_Object__core_dll.SD_AIN_DAQpauseMultiple(self._SD_Object__handle, channel);
+		else :
+			return SD_Error.MODULE_NOT_OPENED;
+
+	def DAQresumeMultiple(self, channel) :
+		if self._SD_Object__handle > 0 :
+			return self._SD_Object__core_dll.SD_AIN_DAQresumeMultiple(self._SD_Object__handle, channel);
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
@@ -1585,10 +1672,12 @@ class SD_AIN(SD_Module) :
 			if nPoints > 0 :
 				data = (c_short * nPoints)()
 
-				nPoints = self._SD_Object__core_dll.SD_AIN_DAQread(self._SD_Object__handle, nDAQ, data, nPoints, timeOut)
+				nPointsOrError = self._SD_Object__core_dll.SD_AIN_DAQread(self._SD_Object__handle, nDAQ, data, nPoints, timeOut)
 
-				if nPoints > 0 :
-					return np.array(data)
+				if nPointsOrError > 0 :
+					return np.array(cast(data, POINTER(c_short*nPointsOrError)).contents)
+				elif nPointsOrError < 0 :
+					return nPointsOrError
 				else :
 					return np.empty(0, dtype=np.short)
 			else :
@@ -1614,7 +1703,6 @@ class SD_AIN(SD_Module) :
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
-
 	def DAQbufferGet(self, nDAQ):
 		if self._SD_Object__handle > 0 :
 			self._SD_Object__core_dll.SD_AIN_DAQbufferGet.restype = POINTER(c_short)
@@ -1631,7 +1719,7 @@ class SD_AIN(SD_Module) :
 				if nPoints > 0 :
 					return np.ctypeslib.as_array((c_short*nPoints).from_address(addressof(data.contents)))
 				else :
-					return np.empty(0, dtype=np.short)					
+					return np.empty(0, dtype=np.short)
 		else :
 			return SD_Error.MODULE_NOT_OPENED
 
@@ -1663,6 +1751,24 @@ class SD_AIN(SD_Module) :
 
 		return error
 
+	def loadAdcCalibration(self, filepath, mode) :
+		if self._SD_Object__handle > 0 :
+			return self._SD_Object__core_dll.SD_AIN_loadAdcCalibration(self._SD_Object__handle, filepath.encode(), mode)
+		else :
+			return SD_Error.MODULE_NOT_OPENED
+
+	def saveAdcCalibration(self, filepath) :
+		if self._SD_Object__handle > 0 :
+			return self._SD_Object__core_dll.SD_AIN_saveAdcCalibration(self._SD_Object__handle, filepath.encode())
+		else :
+			return SD_Error.MODULE_NOT_OPENED
+
+	def runAdcCalibration(self, filepath, mode) :
+		if self._SD_Object__handle > 0 :
+			return self._SD_Object__core_dll.SD_AIN_runAdcCalibration(self._SD_Object__handle, mode)
+		else :
+			return SD_Error.MODULE_NOT_OPENED
+
 class SD_HVI(SD_Object) :
 	def isOpen(self) :
 		return (self._SD_Object__handle > 0);
@@ -1674,7 +1780,7 @@ class SD_HVI(SD_Object) :
 			status = self._SD_Object__handle = self._SD_Object__core_dll.SD_HVI_open(fileHVI.encode());
 
 			if status > 0 :
-				status = self._SD_Object__core_dll.SD_HVI_load(self._SD_Object__handle);
+				self._SD_Object__core_dll.SD_HVI_load(self._SD_Object__handle);
 
 		return status;
 
@@ -1682,7 +1788,7 @@ class SD_HVI(SD_Object) :
 		if self._SD_Object__handle > 0 :
 			self._SD_Object__handle = self._SD_Object__core_dll.SD_HVI_close(self._SD_Object__handle);
 
-		return self._SD_Object__core_dll;
+		return self._SD_Object__handle;
 
 	def getType(self) :
 		return SD_Object_Type.HVI;
@@ -1747,6 +1853,18 @@ class SD_HVI(SD_Object) :
 		else :
 			return SD_Error.HVI_NOT_OPENED;
 
+	def removeModuleWithIndex(self, index) :
+		if self._SD_Object__handle > 0 :
+			return self._SD_Object__core_dll.SD_HVI_removeModuleWithIndex(self._SD_Object__handle, index);
+		else :
+			return SD_Error.HVI_NOT_OPENED;
+
+	def removeModuleWithUserName(self, moduleUserName) :
+		if self._SD_Object__handle > 0 :
+			return self._SD_Object__core_dll.SD_HVI_removeModuleWithUserName(self._SD_Object__handle, moduleUserName.encode());
+		else :
+			return SD_Error.HVI_NOT_OPENED;
+
 	def start(self) :
 		if self._SD_Object__handle > 0 :
 			return self._SD_Object__core_dll.SD_HVI_start(self._SD_Object__handle);
@@ -1774,6 +1892,30 @@ class SD_HVI(SD_Object) :
 	def reset(self) :
 		if self._SD_Object__handle > 0 :
 			return self._SD_Object__core_dll.SD_HVI_reset(self._SD_Object__handle);
+		else :
+			return SD_Error.HVI_NOT_OPENED;
+
+	def releaseHW(self) :
+		if self._SD_Object__handle > 0 :
+			return self._SD_Object__core_dll.SD_HVI_releaseHW(self._SD_Object__handle);
+		else :
+			return SD_Error.HVI_NOT_OPENED;
+
+	def assignTriggers(self, triggerMask) :
+		if self._SD_Object__handle > 0 :
+			return self._SD_Object__core_dll.SD_HVI_assignTriggers(self._SD_Object__handle, triggerMask);
+		else :
+			return SD_Error.HVI_NOT_OPENED;
+
+	def getTriggersAssigned(self) :
+		if self._SD_Object__handle > 0 :
+			return self._SD_Object__core_dll.SD_HVI_getTriggersAssigned(self._SD_Object__handle);
+		else :
+			return SD_Error.HVI_NOT_OPENED;
+
+	def isTriggerAssigned(self, trigger) :
+		if self._SD_Object__handle > 0 :
+			return self._SD_Object__core_dll.SD_HVI_isTriggerAssigned(self._SD_Object__handle, trigger);
 		else :
 			return SD_Error.HVI_NOT_OPENED;
 
@@ -1816,12 +1958,13 @@ class SD_HVI(SD_Object) :
 ##					SD_Object_Type.AIO: SD_AIO(),
 				}
 
-				requestModule = switcher.get(SD_Module.getType(moduleHandle), "nothing");
+				requestModule = switcher.get(self._SD_Object__core_dll.SD_Module_getType(moduleHandle), "nothing");
 
 				if requestModule == "nothing" :
 					return SD_Error.MODULE_NOT_FOUND;
 				else :
 					requestModule._SD_Object__handle = moduleHandle;
+					return requestModule;
 			else :
 				return moduleHandle;
 		else :
@@ -1866,7 +2009,12 @@ class SD_HVI(SD_Object) :
 		if self._SD_Object__handle > 0 :
 			error = self._SD_Object__core_dll.SD_HVI_readDoubleConstantWithIndex(self._SD_Object__handle, moduleIndex, constantName.encode(), byref(value), byref(unit));
 
-		return (error, value.value, unit.value.decode());
+		if unit.value == None :
+			unit = '';
+		else :
+			unit = unit.value.decode();
+
+		return (error, value.value, unit);
 
 	def readDoubleConstantWithUserName(self, moduleUserName, constantName) :
 		value = c_double();
@@ -1876,7 +2024,12 @@ class SD_HVI(SD_Object) :
 		if self._SD_Object__handle > 0 :
 			error = self._SD_Object__core_dll.SD_HVI_readDoubleConstantWithUserName(self._SD_Object__handle, moduleUserName.encode(), constantName.encode(), byref(value), byref(unit));
 
-		return (error, value.value, unit.value.decode());
+		if unit.value == None :
+			unit = '';
+		else :
+			unit = unit.value.decode();
+
+		return (error, value.value, unit);
 
 	def writeDoubleConstantWithIndex(self, moduleIndex, constantName, value, unit) :
 		if self._SD_Object__handle > 0 :

@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
-from . import keysightSD1 as key
+import keysightSD1 as key
+
 def error_decorator(function):
     def wrapper(*args):
         result = function(*args)
