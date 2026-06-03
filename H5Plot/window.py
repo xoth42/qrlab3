@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QSplitter, QWidget, QVBo
                              QAction, QInputDialog, QFileDialog, QMessageBox, QTextEdit,
                              QAbstractItemView, QSizePolicy, QLineEdit)
 from PyQt5.QtCore import Qt, QTimer
-from .widgets import *
+from H5Plot.widgets import *
 import objectsharer as objsh
 import pickle
 import sys

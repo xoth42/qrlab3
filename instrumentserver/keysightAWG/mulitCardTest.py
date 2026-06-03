@@ -1,4 +1,4 @@
-import keysightSD1 as key
+from instrumentserver.keysightAWG import keysightSD1 as key
 import numpy as np
 
 AWG_PRODUCT = "M3202A"
@@ -41,4 +41,3 @@ for slot in [7, 8, 10]:
 #    error += [awg.AWGtriggerMultiple(15)]
 
     print(error)
-

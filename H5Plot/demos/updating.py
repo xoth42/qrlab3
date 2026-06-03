@@ -1,5 +1,5 @@
 from dataserver import get_file
-from .demo_helpers import *
+from H5Plot.demos.demo_helpers import *
 
 f = get_file('updating_test.h5').get_numbered_child()
 for _ in range(20):

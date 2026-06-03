@@ -11,12 +11,11 @@
 # Trying to reconnect to a brick when it is already playing prompts a timeout error.
 
 
-import sys
 import time
 import ctypes
-import types
+import os
 import numpy as np
-from instrument import Instrument
+from instrumentserver.instrument import Instrument
 import logging
 
 # TODO: review
@@ -24,12 +23,10 @@ import logging
 SUCCESS = 0
 NO_DEVICE = 0
 
-LB_DLL = r'c:/qrlab-3/instrumentserver/instruments_plugins/LabBrick/vnx_fmsynth.dll'
-# LB_DLL = 'C:\\qrlab-3\\instrumentserver\\vnx_fmsynth.dll'
+LB_DLL = os.path.join(os.path.dirname(__file__), 'LabBrick', 'vnx_fmsynth.dll')
 
 try:
     lb_dll = ctypes.windll.LoadLibrary(LB_DLL)
-    # lb_dll = ctypes.cdll.LoadLibrary(LB_DLL)
 
 except Exception as e:
     s = 'Unable to load LabBrick DLL, please put vnx_fmsynth.dll in instrumentserver directory ' + str(

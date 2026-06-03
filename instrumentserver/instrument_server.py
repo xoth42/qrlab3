@@ -1,11 +1,11 @@
 import sys
 import logging
 logging.getLogger().setLevel(logging.INFO)
+import importlib
 import time
 import sys
-import pickle
 import objectsharer as objsh
-import pythonprocess
+from instrumentserver import pythonprocess
 
 def close():
     logging.info('Closing instrument instance')
@@ -44,17 +44,21 @@ if __name__ == '__main__':
         raise ValueError('Instrument name and type required')
     logging.info(f'  Creating instrument {insname} of type {instype}')
 
-    sys.path.append('instrument_plugins')
-    sys.path.append('user_instruments')
-
     start = time.time()
-    insmod = __import__(instype)
+    module_name = f'instrumentserver.instrument_plugins.{instype}'
+    try:
+        insmod = importlib.import_module(module_name)
+    except ModuleNotFoundError as exc:
+        if exc.name != module_name:
+            raise
+        sys.path.append('user_instruments')
+        insmod = importlib.import_module(instype)
     insclass = getattr(insmod, instype, None)
     
     if insclass is None:
         raise ValueError('Instrument module does not contain instrument class')
     end = time.time()
-    logging.debug(f'Loading instrument module {end:.03f} sec' - start, )
+    logging.debug(f'Loading instrument module {end - start:.03f} sec')
 
     logging.debug(f'Starting sharing server and connecting to {isrv}')
     if hasattr(objsh, 'ZMQBackend'):
@@ -69,7 +73,7 @@ if __name__ == '__main__':
     ins = insclass(insname, **kwargs)
     ins.set_remove_cb(close)
     end = time.time()
-    logging.debug(f'Creating instrument took {end:.03f} sec' - start, )
+    logging.debug(f'Creating instrument took {end - start:.03f} sec')
 
     objsh.register(ins, name=insname)
 

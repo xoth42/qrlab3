@@ -1,4 +1,4 @@
-from .dataserver_helpers import run_dataserver, dataserver_client, DATA_DIRECTORY
+from dataserver.dataserver_helpers import run_dataserver, dataserver_client, DATA_DIRECTORY
 import time
 from PyQt5 import QtCore, QtWidgets
 import sys

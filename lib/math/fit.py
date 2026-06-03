@@ -18,7 +18,6 @@
 
 import numpy as np
 from numpy.random import rand
-import code
 import copy
 
 from scipy.optimize import leastsq

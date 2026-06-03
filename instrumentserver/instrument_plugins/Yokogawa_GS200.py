@@ -3,12 +3,9 @@
 # TODO: controller for 7651
 #==============================================================================
 
-import time
-import pyvisa
 import numpy as np
-from visainstrument import VisaInstrument
-from .instrument import Instrument
-import types
+from instrumentserver.visainstrument import VisaInstrument
+from instrumentserver.instrument import Instrument
 import logging
 class YokoException(Exception):
     pass

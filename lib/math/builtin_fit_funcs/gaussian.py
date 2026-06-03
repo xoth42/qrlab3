@@ -1,5 +1,5 @@
 import numpy as np
-from . import common
+from lib.math.builtin_fit_funcs import common
 
 def func(xs, ofs=0, area=10, x0=0, sigma=2):
     '''

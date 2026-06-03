@@ -1,12 +1,8 @@
-from instrument import Instrument
-import types
-#import numpy as np
-#import matplotlib.pyplot as plt
+from instrumentserver.instrument import Instrument
+
 from pulseseq.sequencer import *
 from pulseseq.pulselib import *
-#from lib.math import fit
-#from lmfit.models import LinearModel, LorentzianModel
-#from measurement import Measurement1D
+
 
 class Readout_Info(Instrument):
 

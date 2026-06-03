@@ -1,14 +1,10 @@
-import sys
-import time
-import types
-import ctypes
 import numpy as np
-import keysightSD1 as key
+from instrumentserver.instrument_plugins import keysightSD1 as key
 from instrumentserver.instrument import Instrument
 import logging
 from lib.math import demod
 import gc
-from CompiledHVI import CompiledHVI
+from instrumentserver.instrument_plugins.CompiledHVI import CompiledHVI
 
 
 NO_ERROR = '0,"No error"'

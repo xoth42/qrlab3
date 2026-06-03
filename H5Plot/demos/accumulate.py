@@ -1,6 +1,6 @@
 import numpy as np
 from dataserver import get_file
-from .demo_helpers import generate_rank1_data, generate_rank2_data
+from H5Plot.demos.demo_helpers import generate_rank1_data, generate_rank2_data
 
 f = get_file('accumulating_test.h5').get_numbered_child()
 

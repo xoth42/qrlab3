@@ -1,5 +1,4 @@
-from .instrument import Instrument
-import types
+from instrumentserver.instrument import Instrument
 
 class dummy_mw_src(Instrument):
     '''this is a dummy microwave source'''

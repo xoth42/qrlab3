@@ -1,5 +1,4 @@
-from .instrument import Instrument
-import types
+from instrumentserver.instrument import Instrument
 
 class manual_settings(Instrument):
 

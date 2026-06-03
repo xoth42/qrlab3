@@ -2,12 +2,9 @@
 ## by: Randy
 ## Added 04/27/2021
 
-from .instrument import Instrument
+from instrumentserver.instrument import Instrument
 import pyvisa
-import types
 import logging
-import numpy
-from time import sleep
 
 class Agilent_B2901A(Instrument):
     '''

@@ -1,5 +1,4 @@
-from .instrument import Instrument
-from lib.network import remote_instrument as ri
+from instrumentserver.instrument_plugins.instrument import Instrument
 from lib.network import object_sharer as objsh
 import logging
 

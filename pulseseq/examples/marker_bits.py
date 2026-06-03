@@ -1,7 +1,6 @@
 # Example for marker bit channels
 # Reinier Heeres, 2013
 
-import numpy as np
 from pulseseq.sequencer import *
 from pulseseq.pulselib import *
 

@@ -1,14 +1,13 @@
-# -*- coding: utf-8 -*-
 """
+SignalHound Spectrum Analyzer (Spike) driver for QRLab.
+
 Created on Sat May 29 18:42:12 2021
 
 @author: wanglab
 """
 
 
-import numpy as np
 from instrumentserver.visainstrument import VisaInstrument
-from .instrument import Instrument
 
 
 class SignalHound_Spike(VisaInstrument):

@@ -1,4 +1,4 @@
-from visainstrument import SCPI_Instrument
+from instrumentserver.visainstrument import SCPI_Instrument
 
 class Agilent_33250A(SCPI_Instrument):
     def __init__(self, name, address, **kwargs):

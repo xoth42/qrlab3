@@ -4,12 +4,12 @@ Driver for the fancy signal hound.
 By Josh, 5/29/18
 joshuacarey@umass.edu
 """
-from .instrument import Instrument
+from instrumentserver.instrument import Instrument
 import ctypes
-import types
+import os
 import numpy
 
-DLL_path = r'C:\\qrlab-3\\instrumentserver\\instrument_plugins\\SignalHound\\sm_api.dll'
+DLL_path = os.path.join(os.path.dirname(__file__), 'SignalHound', 'sm_api.dll')
 DLL_LIB = ctypes.windll.LoadLibrary(DLL_path)
 modes = {
     'swept': 1,
@@ -380,7 +380,6 @@ if __name__ == "__main__":
         ref=10,
         spur=False)
 #    a, b, c, d = test.realtime_frame()
-    import matplotlib.pyplot as plt
     a, b = test.sweep()
 #    plt.plot(a, b)
 #    from scipy.signal import find_peaks_cwt

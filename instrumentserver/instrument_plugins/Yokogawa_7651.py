@@ -4,10 +4,9 @@
 
 import re
 import numpy as np
-from visainstrument import VisaInstrument
-from instrument import Instrument
+from instrumentserver.visainstrument import VisaInstrument
+from instrumentserver.instrument import Instrument
 import logging
-from time import sleep
 
 class Yokogawa_7651(VisaInstrument):
 

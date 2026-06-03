@@ -1,5 +1,5 @@
-from .sequencer import Combined, Sequence, Pulse, Constant
-from . import ampgen
+from pulseseq.sequencer import Combined, Sequence, Pulse, Constant
+from pulseseq import ampgen
 
 import numpy as np
 import scipy.special

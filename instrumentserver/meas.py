@@ -1,6 +1,5 @@
 import logging
 logging.getLogger().setLevel(logging.INFO)
-import numpy as np
 import time
 
 import objectsharer as objsh

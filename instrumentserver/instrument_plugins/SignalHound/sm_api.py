@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
-
 from ctypes import *
 import numpy
-from scipy.signal import get_window
-import matplotlib.pyplot as plt
-import seaborn as sns; sns.set() # styling
+import os
+import seaborn as sns
 
-smlib = cdll.sm_api
+sns.set_theme() # styling
+
+smlib = cdll.LoadLibrary(os.path.join(os.path.dirname(__file__), 'sm_api.dll'))
 
 SM_FALSE = 0
 SM_TRUE = 1

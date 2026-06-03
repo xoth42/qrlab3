@@ -1,5 +1,4 @@
 import numpy as np
-import time
 
 class Demodulator:
     def __init__(self, nsamples, period):

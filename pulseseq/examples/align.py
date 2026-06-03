@@ -3,7 +3,6 @@
 
 from pulseseq.sequencer import *
 from pulseseq.pulselib import *
-import numpy as np
 
 # Create some Gaussian pulses, with different sigma and amplitude
 g1 = Gaussian(50, 0.7, chan=1)

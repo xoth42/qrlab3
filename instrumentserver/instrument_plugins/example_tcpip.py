@@ -1,8 +1,7 @@
 # QTLab example instrument communicating by TCP/IP
 # Reinier Heeres, 2009
 
-from .instrument import Instrument
-import types
+from instrumentserver.instrument import Instrument
 import socket
 
 class example_tcpip(Instrument):

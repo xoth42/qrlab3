@@ -1,4 +1,4 @@
-import keysightSD1 as key
+from instrumentserver.instrument_plugins import keysightSD1 as key
 
 def error_decorator(function):
     def wrapper(*args):

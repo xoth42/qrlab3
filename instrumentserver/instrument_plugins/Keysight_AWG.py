@@ -1,11 +1,7 @@
-import sys
 import time
-import types
-import ctypes
 import numpy as np
-import keysightSD1 as key
+from instrumentserver.instrument_plugins import keysightSD1 as key
 from instrumentserver.instrument import Instrument
-import logging
 
 NO_ERROR = '0,"No error"'
 

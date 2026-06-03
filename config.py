@@ -1,4 +1,3 @@
-import plotconfig
 
 datadir = r'c:\_Data'
 tempfilename = r'c:\_Data\temp.hdf5'

@@ -1,5 +1,5 @@
 import numpy as np
-from . import common
+from lib.math.builtin_fit_funcs import common
 
 def func(xs, A=1, tau=1, ofs=0):
     return A * np.exp(-xs / tau) + ofs

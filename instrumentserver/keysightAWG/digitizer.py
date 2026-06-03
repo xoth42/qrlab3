@@ -1,5 +1,4 @@
-import keysightSD1 as key
-import numpy as np
+from instrumentserver.keysightAWG import keysightSD1 as key
 
 AWG_PRODUCT = "M3202A"
 DIG_PRODUCT = "M3102A"

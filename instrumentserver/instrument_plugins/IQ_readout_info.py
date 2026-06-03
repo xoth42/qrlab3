@@ -5,9 +5,8 @@ Created on Wed Jul 22 15:41:47 2020
 @author: Wang_Lab
 """
 
-from .instrument import Instrument
-from .Pulse_Info import Pulse_Info
-import types
+from instrumentserver.instrument import Instrument
+from instrumentserver.instrument_plugins.Pulse_Info import Pulse_Info
 from pulseseq.sequencer import *
 from pulseseq.pulselib import *
 

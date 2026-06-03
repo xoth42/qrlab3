@@ -8,7 +8,6 @@
 # - Finish program class which contains instruction lists and resolves labels
 #   for jumps.
 
-import types
 import numpy as np
 import copy
 import hashlib

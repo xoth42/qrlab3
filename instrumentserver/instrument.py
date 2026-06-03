@@ -15,7 +15,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-import types
 import copy
 import time
 import math
@@ -1196,7 +1195,7 @@ class Instrument(object):
 
     @staticmethod
     def test(insclass):
-        from . import pythonprocess
+        from instrumentserver import pythonprocess
         ap = pythonprocess.ArgParser()
         args, kwargs = ap.parse_args()
         print(f'Testing instrument with args {args}, keyword args {kwargs}')

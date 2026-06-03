@@ -10,8 +10,8 @@ import logging
 
 import numpy as np
 
-from instrument import Instrument
-from visainstrument import SCPI_Instrument
+from instrumentserver.instrument import Instrument
+from instrumentserver.visainstrument import SCPI_Instrument
 
 
 # TODO: review

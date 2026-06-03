@@ -1,1 +1,1 @@
-from instruments_server import init_instruments_server
+from instrumentserver.instruments_server import init_instruments_server

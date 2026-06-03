@@ -1,20 +1,14 @@
-# -*- coding: utf-8 -*-
 """
+SignalCore SC5511A Vector Signal Generator driver for QRLab.
+
 Created on Mon Aug 21 09:12:40 2017
 
 @author: WangLab
 """
 
-# SignalCore RF Source DLL driver
-#
-
-import sys
-import time
 import ctypes
-import types
-import numpy as np
-from .instrument import Instrument
-import logging
+import os
+from instrumentserver.instrument import Instrument
 
 # TODO: review
 
@@ -22,11 +16,9 @@ import logging
 SUCCESS = 0
 NO_DEVICE = 0
 
-#LB_DLL = r'c:\qrlab-3\instrumentserver\vnx_fmsynth.dll'
-LB_DLL = 'C:\\qrlab-3\\instrumentserver\\SignalCore\\x64\\sc5511a.dll'
+LB_DLL = os.path.join(os.path.dirname(__file__), 'SignalCore', 'x64', 'sc5511a.dll')
 try:
     lb_dll = ctypes.windll.LoadLibrary(LB_DLL)
-    #lb_dll = ctypes.cdll.LoadLibrary(LB_DLL)
     
 except Exception as e:
     s = 'Unable to load SignalCore DLL, please put sc5511a.dll in instrumentserver directory ' + str(e)

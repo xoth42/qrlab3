@@ -1,6 +1,6 @@
 import numpy as np
 from dataserver import get_file
-from .demo_helpers import generate_rank1_data
+from H5Plot.demos.demo_helpers import generate_rank1_data
 
 # TODO, make scatter
 

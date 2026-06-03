@@ -1,6 +1,5 @@
-from .Pulse_Info import Pulse_Info
-from .instrument import Instrument
-import types
+from instrumentserver.instrument_plugins.Pulse_Info import Pulse_Info
+from instrumentserver.instrument import Instrument
 
 ROTATIONS = (
     'Gaussian',

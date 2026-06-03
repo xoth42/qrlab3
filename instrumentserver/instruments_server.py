@@ -6,9 +6,9 @@ import importlib
 logging.getLogger().setLevel(logging.INFO)
 import objectsharer as objsh
 import time
-import pythonprocess
+from instrumentserver import pythonprocess
 
-_insdir = 'instrument_plugins'
+_insdir = os.path.join(os.path.dirname(__file__), 'instrument_plugins')
 _user_insdir = None
 
 class WaitForInstrument(object):
@@ -104,7 +104,8 @@ class Instruments(object):
     def start_instrument_instance(self, name, instype, **kwargs):
         logging.debug(f'Starting subprocess for instrument {name} of type {instype}')
         print('start instrument instance')
-        pid = pythonprocess.start_python_process('instrument_server.py',
+        pyfile = os.path.join(os.path.dirname(__file__), 'instrument_server.py')
+        pid = pythonprocess.start_python_process(pyfile,
                 insname=name, instype=instype, kwargs=kwargs)
 
     def create(self, name, instype, waittime=5000, **kwargs):

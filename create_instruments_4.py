@@ -1,7 +1,5 @@
 
 import time
-import numpy as np
-import itertools
 
 
 if 1:
@@ -9,7 +7,7 @@ if 1:
     os.system(r'C:\qrlab-3\start.bat')
     time.sleep(1)
 
-from .mclient import instruments
+from mclient import instruments
 
 #yoko = instruments.create('yoko', 'Yokogawa_7651_old', address = 'GPIB0::3::INSTR')
 WF_ss = instruments.create('WF_ss', 'WFT1153', COM_adrs='COM3', serial = '1153')

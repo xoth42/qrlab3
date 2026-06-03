@@ -1,7 +1,6 @@
 # Stress test for the minimum pulse length feature
 # Reinier Heeres, 2013
 
-import numpy as np
 from pulseseq.sequencer import *
 from pulseseq.pulselib import *
 

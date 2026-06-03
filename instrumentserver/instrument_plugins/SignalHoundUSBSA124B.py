@@ -22,12 +22,12 @@
 # it under SPIKE in the settings menu.
 # TODO: Fix the signal clamping issue; VBW and RBW seem to get clamped regardless of their value.
 # TODO: Return a faster numpy array as the end result of the whole computation.
-from .instrument import Instrument
+from instrumentserver.instrument import Instrument
 import ctypes
-import types
+import os
 import numpy as np
 
-DLL_PATH = "C:\\qrlab-3\\instrumentserver\\instrument_plugins\\sa_api.dll"
+DLL_PATH = os.path.join(os.path.dirname(__file__), 'SignalHound', 'sa_api.dll')
 DLL_LIB = ctypes.windll.LoadLibrary(DLL_PATH)
 
 # A whole list of constants
@@ -238,5 +238,4 @@ class SignalHoundUSBSA124B(Instrument):
             return local_maxes, result
         else:
             return result
-
 

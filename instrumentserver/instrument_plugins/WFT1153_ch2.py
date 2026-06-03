@@ -1,15 +1,11 @@
-# -*- coding: utf-8 -*-
 """
 Created on Tue May 26 12:57:00 2020
 
 @author: Wang_Lab
 """
-import sys
-import time
-import types
 
 
-from instrument import Instrument
+from instrumentserver.instrument import Instrument
 from windfreak import SynthHD
 
 # Please check what COM-port you have the windfreak connected to and then change self.synth in line 21

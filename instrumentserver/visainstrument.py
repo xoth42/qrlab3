@@ -1,5 +1,5 @@
 import time
-from instrument import Instrument
+from instrumentserver.instrument import Instrument
 import objectsharer as objsh
 import logging
 logging.getLogger().setLevel(logging.INFO)

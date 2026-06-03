@@ -1,8 +1,6 @@
 # Some plotting defaults
 
 import matplotlib as mpl
-import matplotlib.cm
-import numpy as np
 
 mpl.rcParams['legend.fontsize'] = 9
 

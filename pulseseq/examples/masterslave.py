@@ -1,7 +1,6 @@
 # Example to use the master/slave feature
 # Reinier Heeres, 2014
 
-import numpy as np
 from pulseseq.sequencer import *
 from pulseseq.pulselib import *
 

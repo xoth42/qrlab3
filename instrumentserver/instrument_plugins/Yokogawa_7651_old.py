@@ -7,11 +7,8 @@
 
 
 
-import time
 import pyvisa
-import numpy as np
-from .instrument import Instrument
-import types
+from instrumentserver.instrument import Instrument
 
 
 # Some exceptions to make errors nicer.

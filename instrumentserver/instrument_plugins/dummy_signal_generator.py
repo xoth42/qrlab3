@@ -1,5 +1,4 @@
-from .instrument import Instrument
-import types
+from instrumentserver.instrument import Instrument
 
 import time
 import math
