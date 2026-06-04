@@ -5,9 +5,18 @@ if 1:
     os.system(r'C:\qrlab-3\start.bat')
     time.sleep(3)
 
-from .mclient import instruments
+from mclient import instruments
 
-#SC = instruments.create('SC', 'SC5511A', devid='100016B5')
+SC = instruments.create('SCtest', 'SC5511A', devid='10001C09')
+
+dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period = 100, trigger_only = False,
+                         naverages = 1000, nsamples = 2000, awg_list = [8, 9], channel_delay = 150)
+
+AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 8,  AWG_PRODUCT = "M3202A",
+                          amps = [1, 1, 1.5, 1.5], ofs = [0.02, 0.008, -0.01, -0.067])
+
+AWG3 = instruments.create('AWG3', 'Keysight_AWG', chassis = 0, slot = 9,  AWG_PRODUCT = "M3202A",
+                          amps = [1.5, 1.5, 1.5, 1.5], ofs = [-0.02, -0.0255, 0.046, 0.009])
 
 #Yoko = instruments.create('Yoko','Yokogawa_7651_new',address='GPIB1::6::INSTR')
 #print 'Yoko OK'
@@ -62,9 +71,9 @@ from .mclient import instruments
 #
 #
 
-readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
-                             IQe_radius= 1 , rfsource1='brick3', rfsource2='brick2',
-                             pulse_len=1000, readout_chan='3m1', acq_chan='4m2')
+# readout = instruments.create('readout', 'Readout_Info', IQe=(1.0), IQg=(0.1),
+#                              IQe_radius= 1 , rfsource1='brick3', rfsource2='brick2',
+#                              pulse_len=1000, readout_chan='3m1', acq_chan='4m2')
 
 '''
 #AWG2 = instruments.create('AWG2', 'Tektronix_AWG5014C', address='AWG2',

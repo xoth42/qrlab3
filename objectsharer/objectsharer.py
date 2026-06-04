@@ -1291,29 +1291,29 @@ class ZMQBackend(object):
             if endtime is not None and time.time() >= endtime:
                 return False
 
-    def _qt_timer(self):
-        self.main_loop(delay=0)
-        return True
-
-    def add_qt_timer(self, interval=20):
-        '''
-        Install a callback timer at <interval> msec to integrate ZMQ message
-        processing into the Qt main loop.
-        '''
-
-        if self.timer is not None:
-            logger.warning('Timer already installed')
-            return False
-
-        try:
-            from PyQt5 import QtCore, QtWidgets
-        except ImportError as exc:
-            raise ImportError('add_qt_timer requires PyQt5') from exc
-
-        _app = QtWidgets.QApplication.instance()
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self._qt_timer)
-        self.timer.start(interval)
-
-        return True
+    # def _qt_timer(self):
+    #     self.main_loop(delay=0)
+    #     return True
+    #
+    # def add_qt_timer(self, interval=20):
+    #     '''
+    #     Install a callback timer at <interval> msec to integrate ZMQ message
+    #     processing into the Qt main loop.
+    #     '''
+    #
+    #     if self.timer is not None:
+    #         logger.warning('Timer already installed')
+    #         return False
+    #
+    #     try:
+    #         from PyQt5 import QtCore, QtWidgets
+    #     except ImportError as exc:
+    #         raise ImportError('add_qt_timer requires PyQt5') from exc
+    #
+    #     _app = QtWidgets.QApplication.instance()
+    #     self.timer = QtCore.QTimer()
+    #     self.timer.timeout.connect(self._qt_timer)
+    #     self.timer.start(interval)
+    #
+    #     return True
 
