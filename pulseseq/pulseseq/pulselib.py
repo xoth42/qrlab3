@@ -2,7 +2,7 @@ from .sequencer import Combined, Sequence, Sequencer, Delay, Pulse, Instruction,
 import numpy as np
 import scipy.special
 import scipy.signal
-import ampgen
+import pulseseq.ampgen
 
 #########################################
 # Constants
