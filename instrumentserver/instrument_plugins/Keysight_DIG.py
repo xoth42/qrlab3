@@ -660,7 +660,7 @@ class Keysight_DIG(Instrument):
            errors += [self.dig.DAQflush(digChannels[i])]
            errors += [self.dig.channelInputConfig(digChannels[i], digScale, key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)]
            errors += [self.dig.DAQconfig(digChannels[i], nsamples, npoints * naverages, captureDelay, key.SD_TriggerModes.EXTTRIG)]
-           errors += [self.dig.DAQbufferPoolConfig(digChannels[i], nsamples * npoints * naverages / ntransfers, 100)]
+           errors += [self.dig.DAQbufferPoolConfig(digChannels[i], nsamples * npoints * naverages // ntransfers, 100)]
         if any(error < 0 for error in errors):
             print(('test_dig errors:', errors))
         
@@ -675,8 +675,8 @@ class Keysight_DIG(Instrument):
            
     #    return data
         averages_per_transfer = naverages / ntransfers
-        temp = np.zeros(nsamples*npoints * averages_per_transfer, dtype = np.float64)
-        print(temp)
+        temp = np.zeros(int(nsamples*npoints * averages_per_transfer), dtype = np.float64)
+        print(np.shape(temp))
         temp_ref = np.zeros_like(temp)
         for transfer in range(ntransfers):
             try:
