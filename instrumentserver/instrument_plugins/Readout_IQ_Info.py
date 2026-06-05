@@ -1,8 +1,8 @@
-from .instrument import Instrument
+from instrument import Instrument
 import types
 from pulseseq.sequencer import *
 from pulseseq.pulselib import *
-from .Pulse_Info import Pulse_Info
+from Pulse_Info import Pulse_Info
 import numpy as np
 
 
