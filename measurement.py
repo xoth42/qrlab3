@@ -583,7 +583,7 @@ class Measurement(object):
         Sets up data sets, performs initialization and updates plots if the
         class has an 'update' function.
         '''
-        if self.dig_type is 'key':
+        if self.dig_type == 'key':
             return self.measure_keysight()
             
         self.setup_measurement()
@@ -652,7 +652,7 @@ class Measurement(object):
 #                                  async_=True, IQ_e=self.readout_info.IQe, 
 #                                  e_radius=self.readout_info.IQe_radius) 
 
-        take_ref = (self.readout is not 'readout_IQ')
+        take_ref = (self.readout != 'readout_IQ')
         if self.histogram:
             ret = dig.take_hist(async_=True, take_ref = take_ref)
         else:
@@ -867,9 +867,9 @@ class Measurement(object):
 
         vproj /= np.abs(vproj)
 
-        if(self.proj_func is 'phase'):
+        if self.proj_func == 'phase':
             return np.angle(ys, deg=True) # returns phase #DARIO 8/31 
-        elif(self.proj_func is 'projection'):
+        elif self.proj_func == 'projection':
             ys = ys - IQg #DARIO 8/31
             return np.real(ys) * vproj.real  + np.imag(ys) * vproj.imag # returns projected amplitue
         else:
@@ -926,7 +926,7 @@ class Measurement(object):
         return eb
 
     def get_naverages(self):
-        if self.dig_type is 'alz':
+        if self.dig_type == 'alz':
             return self.instruments['alazar'].get_naverages()
         else:
             return self._dig.get_naverages()
