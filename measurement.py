@@ -544,35 +544,35 @@ class Measurement(object):
         '''
         alz = self.instruments['alazar']
         if self.histogram:
-            self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*alz.get_naverages()], dtype=np.complex)
+            self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*alz.get_naverages()], dtype=np.complex64)
             self.avg_data = None
             self.pp_data = None
             self.std_i_data = None
             self.std_q_data = None
         elif self.singleshotbin:
             self.shot_data = None
-            self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
+            self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float64)
             self.pp_data = None
             self.ste_data = None
             '''DARIO added 7/28/18 to keep all single shot data'''
         elif self.keep_shots:
-            self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*alz.get_naverages()], dtype=np.complex)
+            self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*alz.get_naverages()], dtype=np.complex64)
             if not self.real_signals:
-                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.complex)
-                self.pp_data = self.data.create_dataset('avg_pp', [self.cyclelen,], dtype=np.float)
+                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.complex64)
+                self.pp_data = self.data.create_dataset('avg_pp', [self.cyclelen,], dtype=np.float64)
             else:
-                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
+                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float64)
                 self.pp_data = None
         else:
             self.shot_data = None
             # If saving complex data, save both raw signal and post-processed version
             if not self.real_signals:
-                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.complex)
-                self.pp_data = self.data.create_dataset('avg_pp', [self.cyclelen,], dtype=np.float)
+                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.complex64)
+                self.pp_data = self.data.create_dataset('avg_pp', [self.cyclelen,], dtype=np.float64)
             else:
-                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
+                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float64)
                 self.pp_data = None
-            self.cov_data = self.data.create_dataset('cov', [self.cyclelen,3], dtype=np.float)
+            self.cov_data = self.data.create_dataset('cov', [self.cyclelen,3], dtype=np.float64)
 
     def measure(self):
         '''
@@ -731,29 +731,29 @@ class Measurement(object):
         '''
         dig = self.instruments['dig']
         if self.histogram:
-            self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*dig.do_get_naverages()], dtype=np.complex)
+            self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*dig.do_get_naverages()], dtype=np.complex64)
             self.avg_data = None
             self.pp_data = None
             self.std_i_data = None
             self.std_q_data = None
         elif self.singleshotbin:
             self.shot_data = None
-            self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
+            self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float64)
             self.pp_data = None
             self.ste_data = None
         else:
             self.shot_data = None
             # If saving complex data, save both raw signal and post-processed version
             if not self.real_signals:
-                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.complex)
-                self.pp_data = self.data.create_dataset('avg_pp', [self.cyclelen,], dtype=np.float)
+                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.complex64)
+                self.pp_data = self.data.create_dataset('avg_pp', [self.cyclelen,], dtype=np.float64)
             else:
-                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
+                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float64)
                 self.pp_data = None
-#            self.std_i_data = self.data.create_dataset('std_i', [self.cyclelen,], dtype=np.float)
-#            self.std_q_data = self.data.create_dataset('std_q', [self.cyclelen,], dtype=np.float)
-#            self.std_corr_data = self.data.create_dataset('std_corr', [self.cyclelen,], dtype=np.float)
-            self.cov_data = self.data.create_dataset('cov', [self.cyclelen,3], dtype=np.float)
+#            self.std_i_data = self.data.create_dataset('std_i', [self.cyclelen,], dtype=np.float64)
+#            self.std_q_data = self.data.create_dataset('std_q', [self.cyclelen,], dtype=np.float64)
+#            self.std_corr_data = self.data.create_dataset('std_corr', [self.cyclelen,], dtype=np.float64)
+            self.cov_data = self.data.create_dataset('cov', [self.cyclelen,3], dtype=np.float64)
 
     def measure_keysight(self):
         '''
