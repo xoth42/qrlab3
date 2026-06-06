@@ -7,23 +7,9 @@ import config
 import importlib
 importlib.reload(config)
 
-# Make sure we have our objectsharer and pulse sequencer in the path
-srcdir = os.path.split(os.path.abspath(inspect.getsourcefile(lambda _: None)))[0]
-for modname in 'objectsharer', 'pulseseq':
-    pathname = os.path.join(srcdir, modname)
-    if pathname not in sys.path:
-        sys.path.insert(0, pathname)
-
 import time
 import objectsharer as objsh
-#JOSH
-#sequencer seems to depend on matplotlib, which depends on pyqt5 even though
-# pyqt4 is installed. Probably a version of matplotlib that is too recent.
 from pulseseq import sequencer, pulselib
-#reload(sequencer)
-#reload(pulselib)
-import numpy as np
-import types
 
 import json
 import matplotlib as mpl
@@ -39,7 +25,6 @@ if objsh.helper.backend is None:
     sys.path.append(os.getcwd())
 
 logging.debug('Connecting to instrument/data server...')
-# 55555 = instrument, 55556 = data
 for addr in ('tcp://127.0.0.1:55555', 'tcp://127.0.0.1:55556'):
     if addr not in objsh.helper.backend.addr_to_sock_map:
         print('Connecting to %s' % (addr,))
@@ -48,7 +33,6 @@ for addr in ('tcp://127.0.0.1:55555', 'tcp://127.0.0.1:55556'):
 
 instruments = objsh.helper.find_object('instruments')
 datasrv = objsh.helper.find_object('dataserver')
-##datafile = datasrv.get_file(config.datafilename)
 
 
 def parse_chans(chans):
@@ -353,7 +337,7 @@ datadir = 'c:/_data'
 
 
 
-filename = 'c:/_data/04222021cooldown_circulator.hdf5'
+filename = 'c:/_data/test.hdf5'
 
 
 
