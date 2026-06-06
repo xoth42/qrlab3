@@ -68,7 +68,7 @@ class DemodulatorComplex(Demodulator):
         if (nsamples % self.samples_per_point) != 0:
             raise ValueError('Number of samples needs to be multiple of period and avg_cycles')
 
-        phis = np.linspace(0, 2*np.pi * avg_periods, self.samples_per_point, endpoint=False)
+        phis = np.linspace(0, 2*np.pi * avg_periods, int(self.samples_per_point), endpoint=False)
         self._exp_iphi = np.exp(1j * phis) / avg_periods * weight_func
         self._exp_iphi = self._exp_iphi.astype(np.complex64)
         self.IQ = np.zeros([int(self.nsamples/self.samples_per_point)], dtype=np.complex64)

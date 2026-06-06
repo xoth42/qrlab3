@@ -23,7 +23,7 @@ STYLE_IMAGE = 'IMAGE'
 STYLE_LINES = 'LINES'
 
 def is_complex(ar):
-    return ar.dtype in (np.complex, np.complex64, np.complex128)
+    return ar.dtype in (complex, np.complex64, np.complex128)
 
 class Measurement(object):
     '''
