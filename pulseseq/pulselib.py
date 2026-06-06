@@ -2,7 +2,7 @@ from .sequencer import Combined, Sequence, Sequencer, Delay, Pulse, Instruction,
 import numpy as np
 import scipy.special
 import scipy.signal
-import pulseseq.ampgen
+from . import ampgen
 
 #########################################
 # Constants
@@ -34,7 +34,7 @@ class Gaussian(Pulse):
 
     def __init__(self, s, a, chan=1, chop=4.):
         blockwidth = np.round(chop*s)
-        ts = np.linspace(-blockwidth/2, blockwidth/2, blockwidth, endpoint=True)
+        ts = np.linspace(-blockwidth/2, blockwidth/2, int(blockwidth), endpoint=True)
         ys = a * np.exp(-ts**2/(2 * s**2))
 #        ys[-1] = 0.         # JEFF added to solve t2 echo stitching problem
         name = 'gauss(%.2f,%.5f)' % (s, a)
