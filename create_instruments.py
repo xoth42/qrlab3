@@ -12,11 +12,45 @@ SC = instruments.create('SCtest', 'SC5511A', devid='10001C09')
 dig = instruments.create('dig', 'Keysight_DIG', chassis = 0, slot = 3, trigger_period = 100, trigger_only = False,
                          naverages = 1000, nsamples = 2000, awg_list = [8, 9], channel_delay = 150)
 
+alz = instruments.create('alazar', 'Alazar_Daemon')
+alz.set_ch1_range('200mV')
+alz.set_ch2_range('200mV')
+alz.set_nsamples(1600)
+alz.set_naverages(2000)
+alz.set_ch1_coupling('AC')
+alz.set_ch2_coupling('AC')
+alz.set_clock_source('EXT10M')
+#alz.set_clock_source('INT')
+alz.set_sample_rate('1GEXT10')
+alz.set_engJ_trig_src('EXT')
+alz.set_engJ_trig_lvl(128+5)
+alz.set_real_signals(False)
+alz.set_timeout(10e3)
+alz.setup_clock()
+alz.setup_channels()
+alz.setup_trigger()
+
 AWG2 = instruments.create('AWG2', 'Keysight_AWG', chassis = 0, slot = 8,  AWG_PRODUCT = "M3202A",
                           amps = [1, 1, 1.5, 1.5], ofs = [0.02, 0.008, -0.01, -0.067])
 
 AWG3 = instruments.create('AWG3', 'Keysight_AWG', chassis = 0, slot = 9,  AWG_PRODUCT = "M3202A",
                           amps = [1.5, 1.5, 1.5, 1.5], ofs = [-0.02, -0.0255, 0.046, 0.009])
+
+
+readout_IQ = instruments.create('readout_IQ', 'Readout_IQ_Info', IQe=(1.0), IQg=(0.1),
+                                IQe_radius= 1 ,
+                                rfsource='SCtest',
+                                acq_chan='1m1',
+                                deltaf=50e6,#16.9e3,
+                                channels='3,4',
+                                sideband_phase=0,
+                                pulse_width=4500,
+                                sigma=10,
+                                amp=.4,
+                                fixed_phase=0,
+                                )
+
+
 
 #Yoko = instruments.create('Yoko','Yokogawa_7651_new',address='GPIB1::6::INSTR')
 #print 'Yoko OK'
@@ -102,7 +136,7 @@ ag2 = instruments.create('ag2', 'Agilent_N5183A', address='GPIB1::22')
 #
 '''
 
-'''
+
 qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                             deltaf=-100e6,
                             pi_amp=0.06777,
@@ -113,10 +147,10 @@ qubit1ge = instruments.create('qubit1ge', 'Qubit_Info',
                             w=20,
                             w_quasilective=100,
                             w_selective=500,
-                            channels='3,4',
+                            channels='5,6',
                             sideband_channels='I1,Q1',
                             sideband_phase=0.106814)
-'''
+
 #qubit1ef = instruments.create('qubit1ef', 'Qubit_Info',
 #                            deltaf=-277.004e6,
 #                            pi_amp=0.4976,
