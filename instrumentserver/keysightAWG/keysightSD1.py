@@ -1,11 +1,28 @@
-import os;
+import os
 from ctypes import *
-from math import pow, log, ceil
+from math import ceil, log, pow
 
 import numpy as np
 
+"""
+Docs
+https://helpfiles.keysight.com/csg/m31xx_m33xxa_awg/Content/M3201A_M3202A_PXIe_AWG_Users_Guide/50%20Keysight%20SD1%20Command%20Reference.html
+https://spegroup.ru/upload/wikifiles/user_guide_M31xxA_M33xxA.pdf
+"""
+
+    
 class SD_Object :
-	__core_dll = cdll.LoadLibrary("SD1core" if os.name == 'nt' else "libSD1core.so")
+	# Load normally
+	try:
+		__core_dll = cdll.LoadLibrary("SD1core" if os.name == 'nt' else "libSD1core.so")
+	except OSError: # if it fails, try the fallback directory on Windows
+		if os.name == 'nt':
+			try:
+				__core_dll = cdll.LoadLibrary(r"C:\Program Files\Keysight\SD1\shared\SD1core.dll")
+			except OSError as e:
+				raise OSError(f"Could not load SD1core from PATH or fallback directory: {e}") from None
+		else:
+			raise 
 
 	def __init__(self) :
 		self.__handle = 0;
@@ -803,6 +820,7 @@ class SD_AOU(SD_Module):
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
+	# https://helpfiles.keysight.com/csg/m31xx_m33xxa_awg/Content/M3201A_M3202A_PXIe_AWG_Users_Guide/50%20Keysight%20SD1%20Command%20Reference.html#waveformLoad
 	def waveformLoad(self, waveformObject, waveformNumber, paddingMode = 0) :
 		if self._SD_Object__handle > 0 :
 			return self._SD_Object__core_dll.SD_AOU_waveformLoad(self._SD_Object__handle, waveformObject._SD_Object__handle, waveformNumber, paddingMode);
