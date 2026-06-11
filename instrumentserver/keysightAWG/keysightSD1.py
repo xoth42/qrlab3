@@ -671,6 +671,188 @@ class SD_Module(SD_Object) :
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
+	
+	@classmethod
+	def scan(cls):
+		"""
+		Scan the Keysight SD1 system and report the status of all discoverable modules.
+
+		This convenience method enumerates all SD1 modules currently visible to the SD1
+		driver, identifies their type (AWG, digitizer, DIO, etc.), opens each module
+		long enough to query basic health information, and then closes it again.
+
+		It is intended as a non-standard "probing" or "inventory" helper to give a
+		high-level view of the PXI(e) chassis configuration and module status.
+
+		Behavior
+		--------
+		1. Calls SD_Module.moduleCount() to determine how many SD1 modules are present.
+		If the result is negative, a RuntimeError is raised.
+
+		2. For each module index in range(nModules):
+		- Uses the static/class methods:
+		* SD_Module.getProductNameByIndex(index)
+		* SD_Module.getSerialNumberByIndex(index)
+		* SD_Module.getChassisByIndex(index)
+		* SD_Module.getSlotByIndex(index)
+		* SD_Module.getTypeByIndex(index)
+		to obtain identification and location information.
+
+		- Chooses an appropriate Python wrapper class based on the reported type:
+		* SD_Object_Type.AOU -> SD_AOU (AWG)
+		* SD_Object_Type.AIN -> SD_AIN (digitizer)
+		* SD_Object_Type.DIO -> SD_DIO (digital I/O)
+		* Any other / unknown type -> SD_Module (generic base class)
+
+		- Attempts to open the module using openWithSlot(productName, chassis, slot).
+
+		* If openWithSlot(...) returns <= 0, this value is recorded as
+		"open_status", and no further queries are attempted for that module.
+
+		* If open succeeds (> 0), the method:
+		- Calls getStatus() to query the module status.
+		- Calls getFirmwareVersion() and getHardwareVersion().
+		- Closes the module handle via close().
+
+		3. Collects the gathered information in a list (one entry per module) and returns
+		it to the caller.
+
+		Return value
+		------------
+		A list of dictionaries. Each dictionary describes one discovered module and has
+		the following keys:
+
+		- "index"       : int
+		SD1 module index in the range [0, nModules-1] as used by the SD_Module
+		static functions.
+
+		- "type_enum"   : int
+		Raw type enumeration as returned by SD_Module.getTypeByIndex(), typically
+		one of SD_Object_Type.AOU, SD_Object_Type.AIN, SD_Object_Type.DIO, etc.
+
+		- "type_name"   : str
+		Human-readable description of the module type, e.g.
+		"AWG (SD_AOU)", "Digitizer (SD_AIN)", "Digital I/O (SD_DIO)",
+		or "Unknown (<value>)" if the type_enum is not recognized.
+
+		- "product"     : str
+		Product name / part number for the module, e.g. "M3202A".
+
+		- "serial"      : str
+		Module serial number string as reported by SD_Module.getSerialNumberByIndex().
+
+		- "chassis"     : int
+		Chassis number in which the module resides, as reported by
+		SD_Module.getChassisByIndex().
+
+		- "slot"        : int
+		Slot number within the chassis, as reported by SD_Module.getSlotByIndex().
+
+		- "open_status" : int
+		Return value from openWithSlot(product, chassis, slot). A positive value
+		indicates a valid handle. A negative value is an SD_Error code.
+
+		- "status"      : int
+		If open_status > 0, this is the result of mod.getStatus() for that module.
+		If open_status <= 0, this field is set to open_status (i.e. the same error
+		code). Negative values are SD_Error codes.
+
+		- "fw_version"  : float or int or None
+		Firmware version reported by getFirmwareVersion() if the module was opened
+		successfully; None otherwise. Depending on the underlying API, this may be
+		a floating-point version number or a negative SD_Error code cast to int.
+
+		- "hw_version"  : float or int or None
+		Hardware version reported by getHardwareVersion() if the module was opened
+		successfully; None otherwise. Same conventions as for "fw_version".
+
+		Errors and diagnostics
+		----------------------
+		- If SD_Module.moduleCount() returns a negative value, a RuntimeError is raised
+		immediately.
+
+		- For individual modules, any negative "open_status" or "status" values are
+		error codes from the SD1 API (see SD_Error). You can map these to text using
+		SD_Error.getErrorMessage(code) in your own code if desired.
+
+		Side effects
+		------------
+		- Temporarily opens and then closes each discoverable module once during the
+		scan. It does not modify any configuration or start/stop any AWG/DAQ engines.
+
+		- Does not perform any HVI operations or synchronization; it is purely a
+		discovery / status query helper.
+
+		Typical usage
+		-------------
+		>>> modules = SD_Module.scan()
+		>>> for m in modules:
+		...     print(m["index"], m["type_name"], m["product"], m["serial"],
+		...           "@ chassis", m["chassis"], "slot", m["slot"],
+		...           "status", m["status"])
+
+		This function is non-standard (not part of the official Keysight SD1 API)
+		and is provided as a convenience for quickly inspecting the hardware
+		configuration in a lab environment.
+		"""
+
+		n = cls.moduleCount()
+		if n < 0:
+			raise RuntimeError(f"SD_Module.moduleCount() failed with error {n}")
+
+		TYPE_NAMES = {
+			SD_Object_Type.AOU: "AWG (SD_AOU)",
+			SD_Object_Type.AIN: "Digitizer (SD_AIN)",
+			SD_Object_Type.DIO: "Digital I/O (SD_DIO)",
+			SD_Object_Type.HVI: "HVI",
+		}
+
+		results = []
+
+		for idx in range(n):
+			prod   = cls.getProductNameByIndex(idx)
+			sn     = cls.getSerialNumberByIndex(idx)
+			ch     = cls.getChassisByIndex(idx)
+			slot   = cls.getSlotByIndex(idx)
+			mtype  = cls.getTypeByIndex(idx)
+
+			# Construct the right subclass
+			if mtype == SD_Object_Type.AOU:
+				mod = SD_AOU()
+			elif mtype == SD_Object_Type.AIN:
+				mod = SD_AIN()
+			elif mtype == SD_Object_Type.DIO:
+				mod = SD_DIO()
+			else:
+				mod = SD_Module()
+
+			open_status = mod.openWithSlot(prod, ch, slot)
+			if open_status <= 0:
+				status = open_status
+				fw_ver = hw_ver = None
+			else:
+				status = mod.getStatus()
+				fw_ver = mod.getFirmwareVersion()
+				hw_ver = mod.getHardwareVersion()
+				mod.close()
+
+			results.append({
+				"index": idx,
+				"type_enum": mtype,
+				"type_name": TYPE_NAMES.get(mtype, f"Unknown ({mtype})"),
+				"product": prod,
+				"serial": sn,
+				"chassis": ch,
+				"slot": slot,
+				"open_status": open_status,
+				"status": status,
+				"fw_version": fw_ver,
+				"hw_version": hw_ver,
+			})
+
+		return results
+
+
 class SD_AOU(SD_Module):
 	def clockGetFrequency(self) :
 		if self._SD_Object__handle > 0 :
