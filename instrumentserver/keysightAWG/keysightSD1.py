@@ -985,8 +985,8 @@ class SD_Module(SD_Object) :
 					# Check for self test issues
 					if isinstance(self_test, int) and self_test < 0:
 						logger.error(
-							"Module at index %d (product=%r, serial=%r) failed self-test with code %d: %s",
-							idx, prod, sn, self_test, SD_Error.getErrorMessage(self_test))
+							"%r Module at index %d (product=%r,chassis=%r, slot=%r, serial=%r) failed self-test with code %d: %s",
+							type_name, idx, prod, ch, slot, sn, self_test, SD_Error.getErrorMessage(self_test))
 					mod.close()
 
 			results.append({
