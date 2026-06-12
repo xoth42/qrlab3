@@ -13,10 +13,9 @@ except ModuleNotFoundError:
     import instrumentserver.keysightAWG.keysightSD1 as key
 
 
-    """E2E AWG test script to show sign of life on an awg slot and chassis. 
-    Starts with Chassis 0, Slot 8, waveform Gaussian.csv.
-    """
-
+"""E2E AWG test script to show sign of life on an awg slot and chassis. 
+Starts with Chassis 0, Slot 8, waveform Gaussian.csv.
+"""
 def AWG_test(product="M3202A", chassis=0, slot=8):
     m = key.SD_Module()
     rc = m.openWithSlot(product, chassis, slot)
@@ -232,6 +231,52 @@ def Example_4_2_3(
     logger.debug("AWG connection closed")
 
 
+"""
+Testing the 'AWGFromFile' 
+
+def AWGFromFile(self, nAWG, waveformFile, triggerMode, startDelay, cycles, prescaler, paddingMode = 0) :
+
+Provides a one-step method to load, queue, and start a single waveform in one of the
+module's AWGs. The waveform can be loaded from an array of points in memory or
+from a file.
+Step-by-Step Programming: This AWG function is equivalent to:
+1. creating a waveform with new on page 140
+2. calling waveformLoad on page 96
+3. followed by AWGqueueWaveform on page 104
+4. and then calling AWGstart on page 10
+"""
+def FromFile_Example(
+    AWG_PRODUCT = "M3202A", # Product's model number
+    CHASSIS = 0, # Chassis number holding product
+    AWG_SLOT = 8, # Slot number of product in chassis
+    CHANNEL = 2, # Channel being used
+    waveform_csv = r"C:\qrlab-3\instrumentserver\keysightAWG\waveforms\Gaussian.csv", # Path to your qrlab waveform file
+    triggermode = key.SD_TriggerModes.AUTOTRIG, # Trigger mode for the AWG. This example uses software trigger.
+    # Specify values for variables related to the AWG waveform
+    waveform_number = 1, # Numerical label of AWG waveform
+    cycles = 0,  # Number of times to play a waveform from same channel
+    start_delay = 0,    # Delay the start of the waveform playback
+    prescaler = 0,    # How much to scale the outgoing waveform
+  
+):
+    awg = key.SD_AOU()
+    aouID = awg.openWithSlot(AWG_PRODUCT, CHASSIS, AWG_SLOT)
+    print("openWithSlot ->", aouID)
+    if aouID < 0:
+        awg.close()
+        print("ERROR")
+        print("aouID:", aouID)
+        return aouID
+
+    # Use the AWGFromFile function to load, queue, and start the waveform in one step
+    rc = awg.AWGFromFile(CHANNEL, waveform_csv,triggermode,
+        start_delay, cycles, prescaler)
+    print("AWGFromFile returned:", rc)
+
+    is_running = awg.AWGisRunning(CHANNEL)
+    wf_playing = awg.AWGnWFplaying(CHANNEL)
+    print(f"Channel {CHANNEL} is running: {is_running}, playing waveform: {wf_playing}")
+    return awg
 
 
 
