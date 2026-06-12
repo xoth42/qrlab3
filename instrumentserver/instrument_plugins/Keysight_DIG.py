@@ -8,6 +8,9 @@ import numpy as np
 import keysightSD1 as key
 from instrument import Instrument
 import logging
+
+logger = logging.getLogger(__name__)
+
 from lib.math import demod
 import gc
 from CompiledHVI import CompiledHVI

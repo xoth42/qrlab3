@@ -7,6 +7,8 @@ import keysightSD1 as key
 from instrument import Instrument
 import logging
 
+logger = logging.getLogger(__name__)
+
 NO_ERROR = '0,"No error"'
 
 

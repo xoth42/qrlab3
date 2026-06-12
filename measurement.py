@@ -414,6 +414,11 @@ class Measurement(object):
             self.start_awgs()
             time.sleep(1)
         # Setup and arm alazar
+        if self.cyclelen == 0:
+            logging.warning(
+                'acquisition_loop: cyclelen=0 — zero-length experiment, '
+                'capture will likely produce no data'
+            )
         if self.histogram:
             alz.setup_hist(self.cyclelen * alz.get_naverages(), self.shot_data)
         else:
@@ -423,6 +428,10 @@ class Measurement(object):
         # Estimate a capture timeout, mostly because the AWG is a bit slow...
         timeout = min(10000 + 4000 * self.cyclelen, 600000)
         alz.set_timeout(timeout)
+        logging.info(
+            'acquisition_loop: cyclelen=%d, naverages=%d, timeout_ms=%d, histogram=%s',
+            self.cyclelen, alz.get_naverages(), timeout, self.histogram,
+        )
         time.sleep(1)
 
 
