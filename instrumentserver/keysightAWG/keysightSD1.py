@@ -13,7 +13,17 @@ https://helpfiles.keysight.com/csg/m31xx_m33xxa_awg/Content/M3201A_M3202A_PXIe_A
 https://spegroup.ru/upload/wikifiles/user_guide_M31xxA_M33xxA.pdf
 """
 
-    
+# Important versioning information to avoid silent errors. These are used in SD_Module.scan() to report incompatability
+SD1_VERSION = 2.01
+# as of 2026, 6/12, this is the SD1 2.x compatable AWG version
+M3202A_LATEST_FIRMWARE_SD1_2x = 3.77
+# Same for digitizer
+M3102A_LATEST_FIRMWARE_SD1_2x = 1.41 
+
+# If using SD1 3.x, you will need to update SD1_VERSION and fill these in:
+# M3202A_LATEST_FIRMWARE_SD1_3x = 4.03
+# M3102A_LATEST_FIRMWARE_SD1_3x = None
+
 class SD_Object :
 	# Load normally
 	try:
@@ -982,11 +992,28 @@ class SD_Module(SD_Object) :
 						idx, status, fw_ver, hw_ver, self_test
 					)
 
+					## Check for Firmware issues
+					# if we are on SD1 2.x:
+					if int(SD1_VERSION) == 2:
+						logger.debug("SD1 version is 2.x, checking firmware compatibility for index %d", idx)
+						# And we are using a M3202A, check for firmware newer than M3202A_LATEST_FIRMWARE_SD1_2x (incompatible with SD1 2.x)
+						if prod == "M3202A" and fw_ver > M3202A_LATEST_FIRMWARE_SD1_2x:
+							logger.critical(
+								"Module at index %d (product=%r,chassis=%r, slot=%r, serial=%r) has incompatible firmware %r, latest compatible is %r. Need to downgrade firmware. Use SD1 SFP app -> help -> hardware manager",
+								idx, prod, ch, slot, sn, fw_ver, M3202A_LATEST_FIRMWARE_SD1_2x
+							)
+						elif prod == "M3102A" and fw_ver > M3102A_LATEST_FIRMWARE_SD1_2x:
+							logger.critical(
+								"Module at index %d (product=%r,chassis=%r, slot=%r, serial=%r) has incompatible firmware %r, latest compatible is %r. Need to downgrade firmware. Use SD1 SFP app -> help -> hardware manager",
+								idx, prod, ch, slot, sn, fw_ver, M3102A_LATEST_FIRMWARE_SD1_2x
+							)
+					# SD1 3.x check is not implemented
+
 					# Check for self test issues
 					if isinstance(self_test, int) and self_test < 0:
-						logger.error(
-							"%r Module at index %d (product=%r,chassis=%r, slot=%r, serial=%r) failed self-test with code %d: %s",
-							type_name, idx, prod, ch, slot, sn, self_test, SD_Error.getErrorMessage(self_test))
+						logger.warning(
+							"Module at index %d (product=%r,chassis=%r, slot=%r, serial=%r) failed self-test with code %d: %s",
+							idx, prod, ch, slot, sn, self_test, SD_Error.getErrorMessage(self_test))
 					mod.close()
 
 			results.append({
@@ -1004,7 +1031,6 @@ class SD_Module(SD_Object) :
 				"self_test": self_test,
 			})
 
-		logger.debug("SD_Module.scan(): completed with %d entries", len(results))
 		return results
 
 
