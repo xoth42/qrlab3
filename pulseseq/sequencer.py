@@ -944,7 +944,7 @@ class Sequence(Instruction):
 
                 # Determine new repeat count
                 n_to_unroll = int(np.ceil(float(minlen) / len(el.data)))
-                new_repeat_count = (el.repeat / n_to_unroll)
+                new_repeat_count = (el.repeat / n_to_unroll)  # TODO Py3: may need // if repeat count must be int
                 remainder = (el.repeat % n_to_unroll)
                 if remainder != 0:
                     new_repeat_count -= 1

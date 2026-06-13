@@ -393,9 +393,14 @@ class Keysight_DIG(Instrument):
                                                    key.AIN_Coupling.AIN_COUPLING_DC)]
             errors += [self.dig.DAQconfig(channel, self._nsamples, self._naverages, 
                                           self._channel_delay, key.SD_TriggerModes.EXTTRIG)]
-            errors += [self.dig.DAQbufferPoolConfig(channel, self._nsamples * self._naverages / ntransfers, 
-                                                    self._timeout)]
-            self.set_demod(self._nsamples * self._naverages / ntransfers, avg_periods=1) #TODO: change avg_periods?
+            # nPoints (arg 4 of DAQbufferPoolConfig) is declared as C int.
+            # Python 3 '/' returns float; ctypes cannot auto-cast float→int.
+            # Use '//' (integer division) — ntransfers always divides evenly
+            # because it defaults to 1 and is only set by the caller to
+            # factors of naverages.
+            npoints = self._nsamples * self._naverages // ntransfers
+            errors += [self.dig.DAQbufferPoolConfig(channel, npoints, self._timeout)]
+            self.set_demod(npoints, avg_periods=1) #TODO: change avg_periods?
         
         if any(error < 0 for error in errors):
             print(('setup_avg_shot errors: ', errors))
@@ -447,13 +452,13 @@ class Keysight_DIG(Instrument):
             raise ValueError
         
         self._demodA.demodulate(signal)
-        IQA = self._demodA.IQ.reshape([self._naverages, self._nsamples / self._if_period])
+        IQA = self._demodA.IQ.reshape([self._naverages, self._nsamples // self._if_period])
 #        IQA = self._demodA.IQ
 
         # Calculate reference angles
         if take_ref:
             self._demodB.demodulate(ref)
-            IQB = self._demodB.IQ.reshape([self._naverages, self._nsamples / self._if_period])
+            IQB = self._demodB.IQ.reshape([self._naverages, self._nsamples // self._if_period])
             refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
         else:
             refs = np.ones(self._naverages)
@@ -585,21 +590,21 @@ class Keysight_DIG(Instrument):
             
                 
             self._demodA.demodulate(signal)
-            IQA = self._demodA.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
+            IQA = self._demodA.IQ.reshape([acq_per_transfer, self._nsamples // self._if_period])
 #            refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
 #            if self._ref_freq <0:
 #               refs = np.exp(1j * np.angle(np.average(IQB, 1))) 
             
             if take_ref:
                 self._demodB.demodulate(ref)
-                IQB = self._demodB.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
+                IQB = self._demodB.IQ.reshape([acq_per_transfer, self._nsamples // self._if_period])
                 refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
                 print(refs)
             
             '''
             if take_ref:
                 self._demodB.demodulate(ref)
-                IQB = self._demodB.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
+                IQB = self._demodB.IQ.reshape([acq_per_transfer, self._nsamples // self._if_period])
                 refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
             else:
                 refs = np.ones_like(np.average(IQA, 1))
@@ -831,11 +836,11 @@ class Keysight_DIG(Instrument):
       
         self.set_demod(naverages * nsamples)
         self._demodA.demodulate(signal)
-        IQA = self._demodA.IQ.reshape([naverages, nsamples / self._if_period])
+        IQA = self._demodA.IQ.reshape([naverages, nsamples // self._if_period])
         
         if take_ref:
             self._demodB.demodulate(ref)
-            IQB = self._demodB.IQ.reshape([naverages, nsamples / self._if_period])
+            IQB = self._demodB.IQ.reshape([naverages, nsamples // self._if_period])
             refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
         else:
             refs = np.ones(len(IQA))
@@ -951,10 +956,10 @@ class Keysight_DIG(Instrument):
             
             print((np.shape(self._demodA.IQ)))
             
-            IQA = self._demodA.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
+            IQA = self._demodA.IQ.reshape([acq_per_transfer, self._nsamples // self._if_period])
             if take_ref:
                 self._demodB.demodulate(ref)                
-                IQB = self._demodB.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
+                IQB = self._demodB.IQ.reshape([acq_per_transfer, self._nsamples // self._if_period])
                 refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
             else:
                 refs = np.ones(len(IQA))  
