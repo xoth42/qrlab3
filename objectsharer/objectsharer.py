@@ -15,17 +15,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-import logging
-import random
-import pickle as pickle
-import time
-import numpy as np
-import inspect
-import uuid
-import types
 import bisect
+import inspect
+import logging
 import os
+import pickle as pickle
+import random
+import time
 import traceback
+import uuid
+
+import numpy as np
 
 logger = logging.getLogger("Object Sharer")
 logger.setLevel(logging.INFO)
@@ -306,7 +306,7 @@ class ObjectSharer(object):
         props = []
         funcs = []
         for key, val in inspect.getmembers(obj):
-            if key.startswith('_') and not key in SPECIAL_FUNCTIONS:
+            if key.startswith('_') and key not in SPECIAL_FUNCTIONS:
                 continue
             if key == 'connect':
                 continue
@@ -832,8 +832,9 @@ class ObjectProxy(object):
             else:
                 setattr(self, funcname, func)
 
-        for propname in info['properties']:
-            setattr(self, propname, 'blaat')
+        # What on earth is this? TODO: Delete 
+        # for propname in info['properties']:
+        #     setattr(self, propname, 'blaat') # why?
 
     def connect(self, signame, func):
         return helper.connect_signal(self._OS_UID, signame, func)

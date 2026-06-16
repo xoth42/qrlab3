@@ -1,142 +1,141 @@
 # Readout acquisition window calibration for Keysight digitizer (M3102A).
 #
 # TRIGGER ARCHITECTURE IN THIS SETUP
-# ====================================
-# AWG2 (slot 8) channel 1 is wired physically to the Digitizer TRG I/O port.
-# The digitizer is configured with triggerIOconfig(AOU_TRG_IN) and
-# DAQtriggerExternalConfig(..., TRIGGER_EXTERN, TRIGGER_RISE, ...) so it
-# starts capturing on the rising edge of that physical line.
-#
-# The trigger pulse on AWG2 ch1 comes from acq_chan='1m1' inside
-# Readout_IQ_Info.do_get_sequence(). Specifically:
-#
-#   do_get_sequence() returns Combined([
-#       DataPulse(..., chan=3),          # IQ I output
-#       DataPulse(..., chan=4),          # IQ Q output
-#       Constant(pulse_total, 1, chan='1m1')  # <-- THIS is the trigger on ch1
-#   ])
-#
-# Combined means all three fire simultaneously. Therefore:
-#
+    # ====================================
+    # AWG2 (slot 8) channel 1 is wired physically to the Digitizer TRG I/O port.
+    # The digitizer is configured with triggerIOconfig(AOU_TRG_IN) and
+    # DAQtriggerExternalConfig(..., TRIGGER_EXTERN, TRIGGER_RISE, ...) so it
+    # starts capturing on the rising edge of that physical line.
+    #
+    # The trigger pulse on AWG2 ch1 comes from acq_chan='1m1' inside
+    # Readout_IQ_Info.do_get_sequence(). Specifically:
+    #
+    #   do_get_sequence() returns Combined([
+    #       DataPulse(..., chan=3),          # IQ I output
+    #       DataPulse(..., chan=4),          # IQ Q output
+    #       Constant(pulse_total, 1, chan='1m1')  # <-- THIS is the trigger on ch1
+    #   ])
+    #
+    # Combined means all three fire simultaneously. Therefore:
+    #
 #   THE TRIGGER AND THE IQ READOUT PULSE FIRE AT THE SAME MOMENT.
-#
-# The HVI backplane is still used to start the AWG cycle (SWHVITRIG for the
-# first waveform), but per-shot timing is set by AWG2 ch1 → DIG TRG port.
-#
-# CONSEQUENCE FOR THE DELAY SWEEP
-# =================================
-# The sequence in generate() is:
-#
-#   Trigger(250) → Delay(d) → do_get_sequence()
-#                                ├── ch3 IQ I  ─┐
-#                                ├── ch4 IQ Q   ├── all fire at t = 250 + d
-#                                └── ch1 trigger ┘
-#
-# Varying d shifts the trigger AND the IQ pulse together. The digitizer
-# always sees the pulse at position 0 of its capture window (offset by
-# channel_delay), regardless of d. The sweep produces flat amplitude —
-# it does NOT locate the pulse onset in the capture window.
-#
-# WHAT THE SWEEP ACTUALLY MEASURES HERE
-# =======================================
-# Because trigger == pulse onset, this sweep is useful for:
-#   - Confirming the system fires at all (non-zero amplitude)
-#   - Checking amplitude is stable across trigger timings (HVI cycle health)
-#   - Confirming nsamples is large enough (amplitude should not vary with d)
-#
-# It does NOT calibrate channel_delay in this co-fired configuration.
-#
-# CORRECT CALIBRATION FOR THIS TRIGGER SCHEME
-# =============================================
-# Two valid approaches:
-#
-#   Approach A — Sweep channel_delay on the DIG (simplest):
-#     Keep sequence fixed. Sweep dig.set_channel_delay(cd) for cd in range.
-#     Plot amplitude vs cd. Amplitude is low for cd=0 (capturing rising edge
-#     transient), peaks across the flat top, then drops after the pulse ends.
-#     → Set channel_delay to the rising-edge onset (skip the transient).
-#     → Set nsamples to cover flat_top at that channel_delay.
-#     See TODO below for ReadoutWindowChannelDelaySweep class.
-#
-#   Approach B — Separate trigger from IQ pulse:
-#     Fire a short trigger pulse on AWG2 ch1 at t=0 (BEFORE the delay sweep).
-#     Then sweep the IQ pulse delay independently. This requires NOT using
-#     do_get_sequence() directly (it always co-fires ch1 with ch3,4), and
-#     instead constructing the IQ waveform manually or modifying
-#     Readout_IQ_Info to accept include_acq_chan=False.
-#     See generate_separated() below for a skeleton.
-#
+###...
 # ASSUMPTIONS THAT MAY BE WRONG
-# ===============================
-# 1. '1m1' maps to AWG2 ch1 analog output via the awgloader channel map.
-#    Confirm: after a measurement, AWG2 ch1 should show a pulse on a scope
-#    that matches the readout timing.
-#
-# 2. AWG2 ch1 amplitude (1.5V from create_instruments.py) × pulse amplitude
-#    (1.0 in Constant) = 1.5V peak. The M3102A TRG input threshold is
-#    typically ~1V. This should trigger reliably, but verify on a scope.
-#    If trigger is unreliable: increase channel amplitude in create_instruments
-#    or reduce the threshold via dig.dig.triggerIOconfig().
-#
-# 3. Trigger(250) in the sequence is a no-op for this trigger path.
-#    Trigger() in pulseseq generates a pulse on "master channels" configured
-#    via config.slave_triggers. If config.slave_triggers is not set, Trigger()
-#    does nothing on the output side. The actual per-shot trigger is
-#    entirely from ch1 via acq_chan.
-#
-# 4. _SAMPLES_PER_US = 1000 assumes 1 GS/s AWG clock. Verify with
-#    AWG2.get_clock_freq() and dig.get_clock_freq() before trusting
-#    any timing calculations.
-#
-# 5. channel_delay=150 in create_instruments.py was set by hand. It skips
-#    ~150 ns of transient at the rising edge of the combined trigger+IQ pulse.
-#    Whether 150 is optimal has not been verified with data.
+    # ===============================
+    # 1. '1m1' maps to AWG2 ch1 analog output via the awgloader channel map.
+    #    Confirm: after a measurement, AWG2 ch1 should show a pulse on a scope
+    #    that matches the readout timing.
+
+    # 2. AWG2 ch1 amplitude (1.5V from create_instruments.py) × pulse amplitude
+    #    (1.0 in Constant) = 1.5V peak. The M3102A TRG input threshold is
+    #    typically ~1V. This should trigger reliably, but verify on a scope.
+    #    If trigger is unreliable: increase channel amplitude in create_instruments
+    #    or reduce the threshold via dig.dig.triggerIOconfig().
+
+    # 3. Trigger(250) in the sequence is a no-op for this trigger path.
+    #    Trigger() in pulseseq generates a pulse on "master channels" configured
+    #    via config.slave_triggers. If config.slave_triggers is not set, Trigger()
+    #    does nothing on the output side. The actual per-shot trigger is
+    #    entirely from ch1 via acq_chan.
+
+    # 4. _SAMPLES_PER_US = 1000 assumes 1 GS/s AWG clock. Verify with
+    #    AWG2.get_clock_freq() and dig.get_clock_freq() before trusting
+    #    any timing calculations.
+
+    # 5. channel_delay=150 in create_instruments.py was set by hand. It skips
+    #    ~1.5 µs of transient at the rising edge of the combined trigger+IQ pulse
+    #    (150 samples × 10 ns/sample at Fs=100 MS/s).
+    #    Whether 150 is optimal has not been verified with data at this sample rate.
 #
 # BEFORE RUNNING
-# ===============
-# - dig.set_nsamples() must be large enough: pulse_total + margin
-#   pulse_total = pulse_width + 4*sigma = 4500 + 40 = 4540 samples
-#   Minimum nsamples >= 4540 + channel_delay + ~200 margin ≈ 5000
-#   Current value (2000) is too small even for a fixed-delay single shot.
-#   Fix: dig.set_nsamples(5000) before calling measure().
-# - RF source (SCtest) must be on at the correct readout frequency.
-# - AWG2 and AWG3 must be initialized (create_instruments.py run).
-# - HVI file 2slot100us.HVI must be loaded (happens at DIG init).
+    # ===============
+    # - dig.set_nsamples() must be large enough: pulse_total + margin
+    #   pulse_total = pulse_width + 4*sigma = 4500 + 40 = 4540 samples
+    #   Minimum nsamples >= 4540 + channel_delay + ~200 margin ≈ 5000
+    #   Current value (2000) is too small even for a fixed-delay single shot.
+    #   Fix: dig.set_nsamples(5000) before calling measure().
+    # - RF source (SCtest) must be on at the correct readout frequency.
+    # - AWG2 and AWG3 must be initialized (create_instruments.py run).
+    # - HVI file 2slot100us.HVI must be loaded (happens at DIG init).
+
+import logging
+import os
+import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
 
+_REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+
 from measurement import Measurement1D
 from pulseseq.pulselib import *
 from pulseseq.sequencer import *  # provides Sequence, Trigger, Delay, Combined, etc.
+from pulseseq.sequencer import Sequence
 
 # Samples per µs at 1 GS/s AWG clock. Used to convert trigger_period (µs)
 # to samples for sequence length checks. Update if AWG clock differs.
 _SAMPLES_PER_US = 1000
 
+logger = logging.getLogger(__name__)
+
+
+def plot_iq_trace(ret, delay, if_period, naverages, SAMPLING_RATE=100e6, title=None):
+    """Plot demodulated I, Q, and magnitude vs time.
+
+    Args:
+        ret:        complex array of demodulated IQ values, one per if_period bin
+        delay:      channel_delay in samples; shown in default title
+        if_period:  samples per IF period; sets x-axis bin width
+        naverages:  number of averages used; shown in default title
+        title:      optional override for the plot title
+    """
+    logger.debug('Plotting IQ trace with delay=%d samples, if_period=%d samples, naverages=%d',
+        delay, if_period, naverages)
+    logger.debug('max |ret|: %f', np.max(np.abs(ret)))
+    logger.debug('max Re(ret): %f', np.max(np.real(ret)))
+    logger.debug('min Re(ret): %f', np.min(np.real(ret)))
+    logger.debug('max Im(ret): %f', np.max(np.imag(ret)))
+    logger.debug('min Im(ret): %f', np.min(np.imag(ret)))
+
+
+
+    xs_us = np.arange(len(ret)) * if_period / (SAMPLING_RATE / 1e6)
+    fig, ax = plt.subplots(figsize=(9, 5))
+    ax.plot(xs_us, np.real(ret), label='I value',   color='steelblue')
+    ax.plot(xs_us, np.imag(ret), label='Q value',   color='tomato')
+    ax.plot(xs_us, np.abs(ret),  label='magnitude', color='mediumseagreen')
+    ax.axhline(0, color='k', lw=0.5, ls='--')
+    ax.set_ylabel('amplitude [ADU]')
+    ax.set_xlabel('time [µs]')
+    ax.set_title(title or ('Readout pulse  delay=%d  (%d averages)' % (int(delay), naverages)))
+    ax.legend(fontsize=9)
+    plt.tight_layout()
+    plt.show()
+
 
 class ReadoutWindowDelaySweep(Measurement1D):
     """
-    Sweep the AWG delay before do_get_sequence() and measure IQ amplitude.
-
-    NOTE: In the current trigger scheme (trigger co-fired with IQ pulse via
-    acq_chan='1m1'), this sweep does NOT calibrate channel_delay. It produces
-    flat amplitude because trigger and pulse always arrive together.
-
-    It is still useful for:
-    - Confirming the full chain (AWG → microwave → DIG) is alive
-    - Verifying amplitude stability across HVI cycle positions
-    - Checking that nsamples is large enough (amplitude should not dip)
-
-    For actual channel_delay calibration, use ReadoutWindowChannelDelaySweep
-    (see TODO below) or Approach B (separated trigger).
-
-    Args:
-        delays:   1D array of delay values in samples (ns at 1 GS/s)
-        **kwargs: must include readout='readout_IQ'
+        TODO
+        Args:
+            delays:   1D array of delay values in samples (ns at 1 GS/s)
+            **kwargs: must include readout='readout_IQ'
     """
 
-    def __init__(self, delays, **kwargs):
+    def __init__(self, delays, pre_trigger_pad=250, post_readout_pad=2000, **kwargs):
+        """
+        pre_trigger_pad:  samples of Trigger() before the delay+pulse. Matches the
+                          lab-wide Trigger(250) convention used in Rabi and other
+                          sequences. No-op on the output for this trigger wiring
+                          (see assumption 3 in module docstring), but kept for
+                          consistency with the rest of the pulse stack.
+        post_readout_pad: samples of Delay() appended after do_get_sequence().
+                          Gives the cavity/electronics time to ring down before the
+                          HVI period repeats. Must be large enough that
+                          pre_trigger_pad + max(delays) + pulse_total + post_readout_pad
+                          fits within trigger_period (checked per-point in generate()).
+        """
         delays = np.asarray(delays, dtype=float)
 
         # --- Input validation ---
@@ -148,8 +147,12 @@ class ReadoutWindowDelaySweep(Measurement1D):
             "all delays must be >= 0; min given: %g" % delays.min()
         assert np.all(np.isfinite(delays)), \
             "delays contains NaN or Inf"
+        assert pre_trigger_pad >= 0, "pre_trigger_pad must be >= 0"
+        assert post_readout_pad >= 0, "post_readout_pad must be >= 0"
 
-        self.delays = delays
+        self.delays          = delays
+        self.pre_trigger_pad = int(pre_trigger_pad)
+        self.post_readout_pad = int(post_readout_pad)
 
         # cyclelen=1: using setup_avg_shot() (single-point, N averages), not
         # setup_experiment() (which expects cyclelen simultaneous points).
@@ -180,36 +183,85 @@ class ReadoutWindowDelaySweep(Measurement1D):
         # chop=4 is hard-coded in Readout_IQ_Info.do_get_sequence()
         return int(self.readout_driver.get_pulse_width()) + 4 * int(self.readout_driver.get_sigma())
 
-    def generate(self, delay):
-        # Sequence: Trigger(250) → Delay(d) → do_get_sequence()
-        #
-        # IMPORTANT: do_get_sequence() fires ch3 IQ + ch1 trigger simultaneously
-        # (Combined). Delay(d) shifts both together. The digitizer always sees
-        # the pulse at the same position in its window. See module docstring.
-        assert delay >= 0, "delay must be >= 0, got %g" % delay
+    def show_pulse(self, delay, window=None):
+        """Fire a single averaged shot and plot I, Q, and magnitude vs capture position.
 
-        # Total samples must fit within the HVI trigger_period.
-        # trigger_period is in µs; convert to samples at 1 GS/s.
+            Useful for visually confirming the pulse is arriving in the capture window,
+            checking the flat-top region, and picking a good channel_delay / nsamples.
+
+            Args:
+                delay:  channel_delay in samples — how many samples the digitizer skips
+                        after the trigger edge before it starts capturing.  Equivalent to
+                        dig.set_channel_delay(delay).  Sweep this to slide the capture
+                        window forward until the pulse flat-top is centred.
+                window: optional (start_sample, stop_sample) tuple to crop the x-axis.
+                        None shows the full capture window.
+        """
+        dig = self.instruments['dig']
+
+        # 1. Apply the requested channel_delay on the digitizer, then reload the
+        #    fixed AWG sequence.  The AWG waveform does not change between calls —
+        #    only the DIG capture offset changes.
+        logger.debug('Setting channel_delay to %d samples and reloading sequence', int(delay))
+        dig.set_channel_delay(int(delay))
+        self.stop_awgs()
+        self.load(self.generate())
+        self.start_awgs()
+
+        # 2. Arm the digitizer and fire one averaged acquisition.
+        #    setup_avg_shot() picks up the updated channel_delay set above and
+        #    re-programs the DAQ registers before arming.
+        logger.debug('Taking averaged shot with channel_delay=%d samples', int(delay))
+        dig.setup_avg_shot()
+        dig.arm()
+        dig.start_hvi()
+        ret = dig.take_avg_shot(take_ref=False)
+        dig.stop_hvi()
+        dig.release_buf()
+
+        # 3. Log bin count and hand off to the shared plotting helper.
+        if_period = dig.get_if_period()
+        logger.debug('Digitizer returned %d bins with if_period=%d samples', len(ret), if_period)
+        logger.debug('Plotting pulse with channel_delay=%d samples', int(delay))
+        plot_iq_trace(ret, delay, if_period, dig.get_naverages())
+
+
+    def generate(self):
+        """Build and return a rendered AWG sequence.
+
+            The sequence is fixed — it does not vary with channel_delay, which is a
+            digitizer-side parameter set via dig.set_channel_delay().  Sweeping
+            channel_delay slides the DIG capture window over the pulse without
+            touching the AWG waveform.
+
+            Sequence:
+                Trigger(pre_trigger_pad) → do_get_sequence() → Delay(post_readout_pad)
+
+            do_get_sequence() is a Combined pulse that fires ch3 (IQ I), ch4 (IQ Q),
+            and ch1 (DIG trigger) simultaneously.
+
+            Returns:
+                Rendered sequence dict suitable for passing to self.load().
+        """
         trigger_period_samples = self.instruments['dig'].get_trigger_period() * _SAMPLES_PER_US
-        seq_len = 250 + int(delay) + self._pulse_total_samples() + 2000
+        seq_len = self.pre_trigger_pad + self._pulse_total_samples() + self.post_readout_pad
         assert seq_len <= trigger_period_samples, (
             "sequence length %d samples exceeds trigger_period %d samples "
-            "(%d µs). Reduce max delay or increase trigger_period on the "
-            "digitizer." % (seq_len, trigger_period_samples,
-                            self.instruments['dig'].get_trigger_period())
+            "(%d µs). Increase post_readout_pad or trigger_period." % (
+                seq_len, trigger_period_samples,
+                self.instruments['dig'].get_trigger_period())
         )
 
         s = Sequence()
-        s.append(Trigger(250))       # likely no-op — see assumption 3 in module docstring
-        s.append(Delay(int(delay)))
+        s.append(Trigger(self.pre_trigger_pad))
         s.append(self.readout_driver.do_get_sequence())  # fires ch1 trigger + ch3,4 IQ together
-        s.append(Delay(2000))
+        s.append(Delay(self.post_readout_pad))
 
         s = self.get_sequencer(s)
         seqs = s.render()
 
         assert seqs is not None and len(seqs) > 0, \
-            "sequencer produced no output for delay=%d — check AWG channel mapping" % delay
+            "sequencer produced no output — check AWG channel mapping"
         return seqs
 
     def measure(self):
@@ -221,16 +273,19 @@ class ReadoutWindowDelaySweep(Measurement1D):
 
         pulse_total = self._pulse_total_samples()
 
-        # nsamples must cover the full pulse length even at delay=0.
-        # In the co-fired scheme the pulse always starts at the beginning of
-        # the capture window, so nsamples >= pulse_total + channel_delay + margin.
-        min_nsamples = pulse_total + dig.get_channel_delay() + 200
+        # nsamples must be large enough to capture the pulse at the maximum delay.
+        # At the largest channel_delay the capture window starts furthest into the
+        # pulse, so we need: nsamples >= pulse_total (to see the full flat-top).
+        # The trigger fires at the pulse onset, so the window must also extend at
+        # least pulse_total samples past the trigger.
+        max_delay = int(np.max(self.delays))
+        min_nsamples = pulse_total + max_delay + 200
         assert dig.get_nsamples() >= min_nsamples, (
             "dig.nsamples=%d too small. Need >= %d "
-            "(pulse_total=%d + channel_delay=%d + 200 margin). "
+            "(pulse_total=%d + max_delay=%d + 200 margin). "
             "Fix: dig.set_nsamples(%d)" % (
                 dig.get_nsamples(), min_nsamples,
-                pulse_total, dig.get_channel_delay(), min_nsamples)
+                pulse_total, max_delay, min_nsamples)
         )
 
         # nsamples must be divisible by if_period for the demodulator reshape.
@@ -242,15 +297,17 @@ class ReadoutWindowDelaySweep(Measurement1D):
 
         expected_iq_len = dig.get_nsamples() // dig.get_if_period()
 
+        # Load the fixed AWG sequence once — it does not change across delay points.
+        self.stop_awgs()
+        self.load(self.generate())
+        self.start_awgs()
+
         for i, delay in enumerate(self.delays):
-            print('Delay %d/%d: %d samples' % (i + 1, len(self.delays), delay))
+            print('channel_delay %d/%d: %d samples' % (i + 1, len(self.delays), delay))
 
-            # Reload every point — waveform changes each iteration.
-            # stop_awgs() → awg.all_off() → flushes waveform memory on the AWG.
-            self.stop_awgs()
-            self.load(self.generate(delay))
-            self.start_awgs()
-
+            # Update the digitizer capture offset for this delay point.
+            # setup_avg_shot() re-programs the DAQ registers with the new channel_delay.
+            dig.set_channel_delay(int(delay))
             dig.setup_avg_shot()
             dig.arm()
             dig.start_hvi()
@@ -383,9 +440,10 @@ if __name__ == '__main__':
     #   t = 250 + d        ch4 Q:            same, 90 deg phase shift
     #   t = 250 + d        ch1 trigger:      1.5V rectangular, 4540 ns → DIG TRG port rising edge
     #   t = 250 + d + 150  DIG captures:     5000 samples of IF @ 50 MHz (channel_delay=150)
-    #                      SW demod @ 20 samples/IF cycle → 250 complex IQ values
+    #                      SW demod @ 2 samples/IF cycle (Fs≈100 MS/s) → 2500 complex IQ values
     #                      np.average() → 1 complex value per shot
     #                      mean over naverages=1000 shots → 1 data point stored
+    #   NOTE: with if_period=2 the demod kernel is [1,-1] (purely real); Q≡0 by construction.
     #
     # EXPECTED RESULT: amplitude flat across all delays (trigger co-fires with pulse).
     # Any dip at large d → sequence overflowing trigger_period, or nsamples too small.
@@ -395,34 +453,89 @@ if __name__ == '__main__':
     # [ ] create_instruments.py run (dig, AWG2, readout_IQ live in mclient)
     # [ ] Signal Core (SCtest) ON at the LO frequency
     # [ ] All cables connected per diagram (BPFs, 4-way, 3-way, DIG ch1, trigger wire)
-    # [ ] nsamples set here matches a multiple of if_period=20 and >= 4890
+    # [ ] nsamples set here is a multiple of if_period=2 (any even number works)
     #
-    import mclient
+    import argparse
 
-    dig = mclient.instruments['dig']
+    from mclient import instruments
 
-    # if_period = 1 GS/s / deltaf = 1e9 / 50e6 = 20 samples per IF cycle
-    # nsamples must be a multiple of 20 and >= pulse_total + channel_delay + 200
-    #   pulse_total = 4500 + 4*10 = 4540,  channel_delay = 150
-    #   min = 4540 + 150 + 200 = 4890  →  round up to 5000 (= 250 * 20)
-    # nsamples: pulse_total + channel_delay + 200 margin, rounded up to multiple of if_period.
-    # Tighter window = fewer post-pulse noise bins diluting the average → smoother amplitude.
-    #   pulse_total=4540  channel_delay=150  margin=200  if_period=20
-    #   min = 4540+150+200 = 4890  →  ceil(4890/20)*20 = 4900
-    dig.set_nsamples(4900)
-
-    # naverages: more averages per point → lower shot-to-shot scatter.
-    # 1000 → 5000 reduces point-to-point noise by ~√5 ≈ 2.2×.
-    # dig.set_naverages(5000)
-    dig.set_naverages(10000)
-
-    # Delay sweep points
-    # delays = np.arange(0, 1201, 25)  # large sweep
-    # Tight sweep to look at oscillation
-    delays = np.linspace(0,40,100)
-
-    m = ReadoutWindowDelaySweep(
-        delays,
-        readout='readout_IQ',
+    parser = argparse.ArgumentParser(
+        description=(
+            'Readout window calibration.\n'
+            '  --delay X   : single-shot inspection at channel_delay=X (show_pulse only, no data saved).\n'
+            '  (no args)   : full sweep from channel_delay=0 to --max-delay.'
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    m.measure()
+    parser.add_argument(
+        '--debug', action='store_true',
+        help='Enable DEBUG-level logging (default is WARNING).',
+    )
+    parser.add_argument(
+        '--delay', type=int, default=None, metavar='SAMPLES',
+        help='channel_delay in samples: digitizer skips this many samples after the trigger '
+             'edge before capturing. Runs show_pulse() only.',
+    )
+    parser.add_argument(
+        '--max-delay', type=int, default=1200, metavar='SAMPLES',
+        help='Maximum channel_delay for the full sweep (min is always 0). Default: 1200.',
+    )
+    parser.add_argument(
+        '--npoints', type=int, default=25, metavar='N',
+        help='Number of evenly-spaced delay points in the full sweep. Default: 25.',
+    )
+    # nsamples: raw ADC samples per trigger.
+    # Must be a multiple of if_period (2 for 50 MHz IF at 100 MS/s) and
+    # >= pulse_total + max_delay + 200.
+    #   pulse_total and channel_delay are in DIG samples (10 ns each at Fs=100 MS/s).
+    parser.add_argument(
+        '--nsamples', type=int, default=None, metavar='SAMPLES',
+        help='Override dig.nsamples. Must be a multiple of if_period=2 and '
+             '>= pulse_total + max_delay + 200. Default: leave digitizer setting unchanged.',
+    )
+    # naverages: shots averaged per point. More → lower noise by sqrt(N).
+    parser.add_argument(
+        '--naverages', type=int, default=None, metavar='N',
+        help='Override dig.naverages. More averages reduce shot-to-shot noise by sqrt(N). '
+             'Default: leave digitizer setting unchanged.',
+    )
+    parser.add_argument(
+        '--raw', action='store_true',
+        help='Force naverages=1 before running --delay. With a single shot the pulse '
+             'envelope is visible as a clear high→low amplitude transition at bin ~226 '
+             '(pulse_width=4500, if_period=2). Flat amplitude to the window edge means '
+             'CW carrier leakthrough rather than a pulsed signal.',
+    )
+    args = parser.parse_args()
+
+    if args.debug:
+        logging.getLogger().setLevel(logging.DEBUG) 
+    # silence noisy third-party loggers
+    for _noisy in ('matplotlib',):
+        logging.getLogger(_noisy).setLevel(logging.WARNING)
+
+    import matplotlib
+    matplotlib.use('Qt5Agg')  # for interactive plots
+
+    dig = instruments['dig']
+    if args.nsamples is not None:
+        dig.set_nsamples(args.nsamples)
+    if args.naverages is not None:
+        dig.set_naverages(args.naverages)
+    if args.raw:
+        # Override naverages=1 so the pulse envelope is visible without phase averaging.
+        # Amplitude should be high for ~226 bins then drop; flat all the way means CW leakthrough.
+        dig.set_naverages(1)
+
+    if args.delay is not None:
+        # Single-shot inspection: show I/Q/amplitude at this channel_delay.
+        m = ReadoutWindowDelaySweep(
+            delays=np.array([0, 1]),  # dummy — show_pulse() doesn't iterate self.delays
+            readout='readout_IQ',
+        )
+        m.show_pulse(delay=args.delay)
+    else:
+        # Full sweep: channel_delay from 0 to max_delay across npoints.
+        delays = np.linspace(0, args.max_delay, args.npoints)
+        m = ReadoutWindowDelaySweep(delays=delays, readout='readout_IQ')
+        m.measure()
