@@ -54,7 +54,7 @@ class DemodulatorFloat(Demodulator):
 class DemodulatorComplex(Demodulator):
     '''
     Class to perform complex demodulation by calculating sig * exp(-i phi).
-    This class can directly average the IQ values over several perios of the
+    This class can directly average the IQ values over several periods of the
     IF frequency by specifying <avg_periods>.
     '''
 
@@ -65,7 +65,7 @@ class DemodulatorComplex(Demodulator):
         self.period = period
         self.weight_func = weight_func
         # Number of samples for one data point
-        self.samples_per_point = period * avg_periods
+        self.samples_per_point = int(period * avg_periods)
         if (nsamples % self.samples_per_point) != 0:
             raise ValueError('Number of samples needs to be multiple of period and avg_cycles')
 
