@@ -1,3 +1,42 @@
+# DAQ buffer pool findings (2026-06-19):
+#
+# SD_AIN.DAQbufferPoolConfig's C signature is:
+#   int SD_AIN_DAQbufferPoolConfig(int moduleID, int nDAQ, short* dataBuffer,
+#                                   int nPoints, int timeOut,
+#                                   callbackEventPtr callbackFunction, void *callbackUserObj);
+# Per Keysight's own docs, dataBuffer "has to be created and released by
+# user" -- it is real caller-owned memory, not an optional/auto-allocated
+# pointer. This wrapper was passing c_void_p(0) (NULL) for dataBuffer, so the
+# driver never had anywhere to write samples. DAQbufferGet's own doc text
+# ("Gets a filled buffer from the channel buffer pool. User has to call
+# DAQbufferAdd with this buffer...") confirms the pairing: nothing was ever
+# added to the pool, so every DAQbufferGet call legitimately returned
+# readPoints=0 with error=0 (no error -- the pool was just empty), regardless
+# of triggering/clock state. Fixed in DAQbufferPoolConfig/DAQbufferPoolRelease
+# below by allocating a real (c_short * nPoints)() buffer and keeping a
+# reference to it on the instance for as long as the pool is configured.
+#
+# Note for later: actively-maintained third-party SD1 drivers (e.g. the
+# QCoDeS Keysight digitizer driver) skip this buffer-pool API entirely and
+# use the simpler, fully-documented blocking SD_AIN_DAQread(channel, nPoints,
+# timeOut) call instead -- already implemented in this file's DAQread method.
+# We will likely migrate take_avg_shot/take_raw_shot etc. to DAQread.
+#
+# Trigger I/O findings (2026-06-19):
+#
+# SD_AIN.triggerIOconfig's C signature is:
+#   int SD_AIN_triggerIOconfig(int moduleID, int direction, int syncMode);
+# Per the M31/M33XXA digitizer manual, direction selects AOU_TRG_OUT(0)/
+# AOU_TRG_IN(1) and syncMode selects how the TRG line itself is sampled:
+# SYNC_NONE(0) = sampled with an internal 100 MHz clock, SYNC_CLK10(1) =
+# sampled using the PXI backplane CLK10 reference. This wrapper was calling
+# SD_AIN_triggerIOconfig(handle, direction) with only 2 of the 3 required
+# arguments -- ctypes does not validate argument count/types against the DLL
+# function's real signature, so syncMode was being read from whatever
+# register/stack slot happened to hold leftover data, not a real value.
+# Fixed by adding syncMode (defaulting to SYNC_NONE, matching the SYNC_NONE
+# already used in this file's DAQtriggerExternalConfig calls elsewhere).
+
 import os;
 from ctypes import *
 from math import pow, log, ceil
@@ -1547,9 +1586,9 @@ class SD_AIN(SD_Module) :
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
-	def triggerIOconfig(self, direction) :
+	def triggerIOconfig(self, direction, syncMode = SD_SyncModes.SYNC_NONE) :
 		if self._SD_Object__handle > 0 :
-			return self._SD_Object__core_dll.SD_AIN_triggerIOconfig(self._SD_Object__handle, direction);
+			return self._SD_Object__core_dll.SD_AIN_triggerIOconfig(self._SD_Object__handle, direction, syncMode);
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
@@ -1693,13 +1732,20 @@ class SD_AIN(SD_Module) :
 
 	def DAQbufferPoolConfig(self, nDAQ, nPoints, timeOut = 0):
 		if self._SD_Object__handle > 0 :
-			return self._SD_Object__core_dll.SD_AIN_DAQbufferPoolConfig(self._SD_Object__handle, nDAQ, c_void_p(0), nPoints, timeOut, c_void_p(0), c_void_p(0));
+			if not hasattr(self, '_daq_pool_buffers') :  # first call ever: create the per-channel buffer registry
+				self._daq_pool_buffers = {}  # maps channel -> the ctypes buffer the driver writes into
+			buf = (c_short * nPoints)()  # real short* buffer, owned by us, sized for the requested pool
+			self._daq_pool_buffers[nDAQ] = buf  # keep a reference so ctypes/gc doesn't free it while the driver still holds the pointer
+			return self._SD_Object__core_dll.SD_AIN_DAQbufferPoolConfig(self._SD_Object__handle, nDAQ, buf, nPoints, timeOut, c_void_p(0), c_void_p(0));  # pass the real buffer instead of NULL
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
 	def DAQbufferPoolRelease(self, nDAQ):
 		if self._SD_Object__handle > 0 :
-			return self._SD_Object__core_dll.SD_AIN_DAQbufferPoolRelease(self._SD_Object__handle, nDAQ);
+			result = self._SD_Object__core_dll.SD_AIN_DAQbufferPoolRelease(self._SD_Object__handle, nDAQ);  # tell the driver to release the pool first
+			if hasattr(self, '_daq_pool_buffers') :  # registry may not exist if PoolConfig was never called for this channel
+				self._daq_pool_buffers.pop(nDAQ, None)  # drop our reference now that the driver is done with the buffer
+			return result
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
