@@ -863,9 +863,9 @@ class SD_AOU(SD_Module):
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 
-	def triggerIOconfig(self, direction) :
+	def triggerIOconfig(self, direction, syncMode = SD_SyncModes.SYNC_NONE) :
 		if self._SD_Object__handle > 0 :
-			return self._SD_Object__core_dll.SD_AOU_triggerIOconfig(self._SD_Object__handle, direction);
+			return self._SD_Object__core_dll.SD_AOU_triggerIOconfig(self._SD_Object__handle, direction, syncMode);
 		else :
 			return SD_Error.MODULE_NOT_OPENED;
 

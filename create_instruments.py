@@ -24,19 +24,25 @@ SC = instruments.create("SCtest", "SC5511A", devid="10001C09")
 f = SC.do_get_frequency()
 # logger.info("Connected to signal source: %s" % SC.do_get_idn())
 
-TESTING_KEYSIGHT = True
-digitizer_ch = 1
+TESTING_KEYSIGHT = False
+TESTING_TRIGGER = True
+
+digitizer_ch = 3
 awgs_ch = "3,4"  # AWG2 channels 3,4. (AWG3 is 5-8)
 
-if TESTING_KEYSIGHT:
-    logger.info("Testing Keysight digitizer connection...")
-    digitizer_ch = 2
-    awgs_ch = "3,6"
 
+if TESTING_KEYSIGHT: # AWG3 (ch6) -> DIG ch2
+    digitizer_ch = 2
+    awgs_ch = "3,6" # 3 is ignored
+elif TESTING_TRIGGER: # AWG2 trigger -> DIG TRG I/O, AWG2 ch1 -> DIG Ch1
+    digitizer_ch = 1
+    awgs_ch = "1,2" # 2 is ignored
+
+    
+logger.info(f"[KEYSIGHT] DIGI:{digitizer_ch}\tAWGS:{awgs_ch}")
 
 # IF offset
 deltaf = 50e6
-# if_period = round(Fs / deltaf)  # period = Sample rate / demod
 
 dig = instruments.create(
     "dig",
@@ -47,7 +53,7 @@ dig = instruments.create(
     trigger_only=False,
     naverages=1000,
     # nsamples = 2000,
-    nsamples=5000,
+    nsamples=20000,
     awg_list=[8, 9],
     channel_delay=150,
     deltaf=deltaf,
@@ -66,6 +72,10 @@ AWG2 = instruments.create(
     AWG_PRODUCT="M3202A",
     amps=[1.5, 1.5, 1.5, 1.5],
     ofs=[0.0, 0.0, 0.0, 0.0],
+    # AWG2's own dedicated Trigger Out connector is wired directly into
+    # DIG Trigger In (TESTING_TRIGGER bench setup) -- drive it as an output
+    # instead of repurposing an analog channel as a pseudo-trigger.
+    trigger_io_mode="out" if TESTING_TRIGGER else None,
 )
 logger.info(f"Connected to AWG: {AWG2.do_get_part()}\nsample rate: {AWG2.do_get_clock_freq()/1e6:.1f} MS/s")
 AWG3 = instruments.create(
@@ -94,8 +104,8 @@ readout_IQ = instruments.create(
     sideband_phase=0,
     # width of pulse in microseconds
     # pulse_width=4500,
-    # pulse_width=10000,
-    pulse_width=4000, 
+    pulse_width=10000,
+    # pulse_width=4000, 
     sigma=10,
     # amp=.4,
     amp=1.0,

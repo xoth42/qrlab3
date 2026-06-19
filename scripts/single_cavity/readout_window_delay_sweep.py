@@ -2,6 +2,7 @@
 import logging
 import os
 import sys
+import time
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,14 +13,34 @@ if _REPO_ROOT not in sys.path:
 
 import config
 from measurement import Measurement1D
+from lib.server_support.uselogs import configure_logging
 from pulseseq.pulselib import *
 from pulseseq.sequencer import *  # provides Sequence, Trigger, Delay, Combined, etc.
 from pulseseq.sequencer import Sequence
 
+
+# What works and what dosen't is rather strange.
+# The following:
+# $ python scripts/single_cavity/readout_window_delay_sweep.py --trig --pulse-len 1122
+# and,
+#   nsamples=280 for awg_pulse_len=1122 samples, sample_rate=500000000.00 Hz, if_period=10 samples
+# show_pulse_trig(delay=0, nshots=10, awg_pulse_len=1122, nsamples=280, capture_channel=1)
+# however, this fails:
+# $ python scripts/single_cavity/readout_window_delay_sweep.py --trig --pulse-len 1120
+#  nsamples=280 for awg_pulse_len=1120 samples, sample_rate=500000000.00 Hz, if_period=10 samples
+# show_pulse_trig(delay=0, nshots=10, awg_pulse_len=1120, nsamples=280, capture_channel=1)
+# This also fails:
+#  nsamples=270 for awg_pulse_len=1100 samples, sample_rate=500000000.00 Hz, if_period=10 samples
+# show_pulse_trig(delay=0, nshots=10, awg_pulse_len=1100, nsamples=270, capture_channel=1)
+
+# The failure is that no pulses are detected
+
 # Samples per µs at 1 GS/s AWG clock. Used to convert trigger_period (µs)
 # to samples for sequence length checks. Update if AWG clock differs.
+
 _SAMPLES_PER_US = 1000
 
+configure_logging()
 logger = logging.getLogger(__name__)
 DIGITIZER_SAMPLING_RATE = 500e6 
 
@@ -84,6 +105,40 @@ def plot_raw_trace(raw, delay, SAMPLING_RATE=DIGITIZER_SAMPLING_RATE, title=None
     plt.show()
 
 
+def plot_triggered_shots(shots, delay, SAMPLING_RATE=DIGITIZER_SAMPLING_RATE, title=None):
+    """Overlay N EXTTRIG-triggered raw shots vs time.
+
+    Each AWG2 TRG-OUT marker edge triggers one capture window, so the shots
+    should overlay nearly on top of each other -- visually confirming the
+    trigger is landing the window on the same point of the pulse each time.
+
+    Args:
+        shots: 2D array (nshots, nsamples) of raw ADC samples, one row per trigger.
+        delay: channel_delay in samples; shown in default title.
+        SAMPLING_RATE: digitizer sample rate in Hz, sets the x-axis scale.
+        title: optional override for the plot title.
+    """
+    if len(shots) == 0 or shots.shape[1] == 0:
+        logger.error('No triggered shots captured; nothing to plot')
+        return
+
+    nshots, nsamples = shots.shape
+    logger.debug('Plotting %d triggered shots of %d samples each', nshots, nsamples)
+    xs_us = np.arange(nsamples) / (SAMPLING_RATE / 1e6)
+    fig, ax = plt.subplots(figsize=(9, 5))
+    for i, shot in enumerate(shots):
+        ax.plot(xs_us, shot, lw=0.8, alpha=0.6,
+                label='shot %d' % i if nshots <= 10 else None)
+    ax.axhline(0, color='k', lw=0.5, ls='--')
+    ax.set_ylabel('amplitude [ADU]')
+    ax.set_xlabel('time since trigger [µs]')
+    ax.set_title(title or ('%d EXTTRIG-triggered shots  delay=%d' % (nshots, int(delay))))
+    if nshots <= 10:
+        ax.legend(fontsize=8)
+    plt.tight_layout()
+    plt.show()
+
+
 class ReadoutWindowDelaySweep(Measurement1D):
     """
         TODO
@@ -92,7 +147,7 @@ class ReadoutWindowDelaySweep(Measurement1D):
             **kwargs: must include readout='readout_IQ'
     """
 
-    def __init__(self, delays, pre_trigger_pad=1, post_readout_pad=10, no_error=False, shots_per_average=2, sequencer_minlen=1, **kwargs):
+    def __init__(self, delays, pre_trigger_pad=1, post_readout_pad=10, no_error=False, shots_per_average=2, sequencer_minlen=1, nsamples=None, **kwargs):
         """
         pre_trigger_pad:  samples of Trigger() before the delay+pulse. Matches the
                           lab-wide Trigger(250) convention used in Rabi and other
@@ -125,6 +180,7 @@ class ReadoutWindowDelaySweep(Measurement1D):
         self.no_error = no_error
         self.shots_per_average = shots_per_average
         self.sequencer_minlen = int(sequencer_minlen)
+        self.nsamples = nsamples
         # cyclelen=1: using setup_avg_shot() (single-point, N averages), not
         # setup_experiment() (which expects cyclelen simultaneous points).
         # infos=[]: Readout_IQ_Info.do_get_sequence() performs inline IQ
@@ -254,6 +310,82 @@ class ReadoutWindowDelaySweep(Measurement1D):
         logger.debug('Digitizer returned %d bins with if_period=%d samples, and sampling_rate=%.2f Hz', len(ret), if_period, sampling_rate)
         logger.debug('Plotting pulse with channel_delay=%d samples', int(delay))
         plot_iq_trace(ret, delay, if_period, dig.get_naverages(), SAMPLING_RATE=sampling_rate,)
+
+
+    def show_pulse_trig(self, delay, nshots=10, awg_pulse_len=4000, amp=0.9):
+        """Trigger-to-trigger sampling: AWG2 self-triggers the digitizer.
+
+            Instead of the HVI distributing the digitizer trigger, AWG2 ch1
+            free-runs a pulse and emits a synchronized front-panel trigger on
+            each pulse (AWGqueueMarkerConfig markerMode=2). The digitizer
+            captures <nshots> EXTTRIG-triggered shots, which are overlaid.
+
+            Mirrors test_awg2_triggered_pulses. Bench wiring required:
+            AWG2 ch1 -> DIG ch1 (signal) and AWG2 TRG OUT -> DIG TRG IN
+            (trigger). No HVI / SWHVITRIG gating involved.
+
+            Args:
+                delay:         channel_delay in samples (digitizer skips this
+                               many samples after the trigger edge).
+                nshots:        number of EXTTRIG-triggered shots to capture.
+                awg_pulse_len: AWG2 ch1 square-pulse length in samples (1 GS/s);
+                               the loop period, so the DIG window is sized to
+                               ~half of it.
+                amp:           AWG2 ch1 pulse amplitude (0-1 of full scale).
+        """
+        dig = self.instruments['dig']
+        awg2 = self.instruments['AWG2']
+
+        capture_channel = dig.get_main_channel()
+        sample_rate = dig.get_sample_rate()
+        if_period = dig.get_if_period()
+        # Window ~half the AWG loop period so each shot fits one iteration.
+        calc_nsamples = int(0.5 * awg_pulse_len * 1e-9 * sample_rate)
+        calc_nsamples -= calc_nsamples % if_period  # DAQconfig needs nsamples % if_period == 0
+        logger.debug(
+            "Calculated nsamples=%d for awg_pulse_len=%d samples, sample_rate=%.2f Hz, if_period=%d samples",
+            calc_nsamples, awg_pulse_len, sample_rate, if_period,
+        )
+        nsamples = self.nsamples
+        if nsamples is None:
+            nsamples = calc_nsamples
+
+
+        r = dig.set_nsamples(nsamples)
+        
+        logger.info(
+            'show_pulse_trig(delay=%d, nshots=%d, awg_pulse_len=%d, nsamples=%d, capture_channel=%s)',
+            int(delay), nshots, awg_pulse_len, dig.get_nsamples(), capture_channel,
+        )
+
+        dig.set_channel_delay(int(delay))
+        dig.set_naverages(nshots)
+
+        # AWG2 ch1 free-runs the pulse and pulses its TRG OUT on each one.
+        awg2.stop()
+        awg2.free_run_pulse(channel=1, length=awg_pulse_len, amp=amp, trigger_out=True)
+        time.sleep(0.1)  # let the free-running loop settle
+
+        # EXTTRIG (default): one captured shot per AWG2 TRG-OUT edge.
+        dig.setup_raw_shot(channel=capture_channel, naverages=nshots, ntransfers=1)
+        dig.arm()
+        raw = dig.take_raw_shot(channel=capture_channel)
+        dig.release_buf()
+        awg2.stop()
+
+        if len(raw) != nshots * nsamples:
+            logger.error(
+                'Expected %d triggered shots of %d samples (%d total), got %d '
+                '— fewer triggers arrived than requested (check AWG2 TRG OUT -> DIG TRG IN)',
+                nshots, nsamples, nshots * nsamples, len(raw),
+            )
+            if len(raw) == 0:
+                return
+
+        shots = raw.reshape(-1, nsamples)
+        spans = [float(s.max() - s.min()) for s in shots]
+        logger.debug('Per-shot peak-to-peak spans: %s', spans)
+        plot_triggered_shots(shots, delay, SAMPLING_RATE=sample_rate)
 
 
     def generate(self):
@@ -473,8 +605,8 @@ if __name__ == '__main__':
     # >= pulse_total + max_delay + 200.
     #   pulse_total and channel_delay are in DIG samples (10 ns each at Fs=100 MS/s).
     parser.add_argument(
-        '--nsamples', type=int, default=41440, metavar='SAMPLES',
-        help='Override dig.nsamples. Must be a multiple of if_period=2 and '
+        '--nsamples', type=int, default=None, metavar='SAMPLES',
+        help='Override dig.nsamples. Must be a multiple of if_period and'
              '>= pulse_total + max_delay + 200. Default: leave digitizer setting unchanged.',
     )
     # naverages: shots averaged per point. More → lower noise by sqrt(N).
@@ -500,6 +632,23 @@ if __name__ == '__main__':
         '--no-error', action='store_true',
         help='Do not plot error bars'
     )
+    parser.add_argument(
+        '--trig', action='store_true',
+        help='Trigger-to-trigger sampling: AWG2 ch1 free-runs a pulse and self-triggers '
+             'the digitizer via its front-panel TRG OUT marker (no HVI). Captures --nshots '
+             'EXTTRIG shots and overlays them. Requires AWG2 ch1 -> DIG ch1 and '
+             'AWG2 TRG OUT -> DIG TRG IN. Use with --delay. Mirrors test_awg2_triggered_pulses.',
+    )
+    parser.add_argument(
+        '--nshots', type=int, default=10, metavar='N',
+        help='Number of EXTTRIG-triggered shots to capture in --trig mode. Default: 10.',
+    )
+    parser.add_argument(
+        '--pulse-len', type=int, default=4000, metavar='SAMPLES',
+        help='AWG2 ch1 square-pulse length in samples (1 GS/s) for --trig mode. This is '
+             'the free-run loop period; the DIG capture window is sized to ~half of it. '
+             'Default: 4000 (4 us).',
+    )
 
     args = parser.parse_args()
 
@@ -521,9 +670,11 @@ if __name__ == '__main__':
     logger.info(dig.scan())
 
     if args.nsamples is not None:
-        dig.set_nsamples(args.nsamples)
+        ret = dig.set_nsamples(args.nsamples)
+        logger.info('Set dig.nsamples to %d (was %d)', args.nsamples, ret)
     if args.naverages is not None:
-        dig.set_naverages(args.naverages)
+        ret = dig.set_naverages(args.naverages)
+        logger.info('Set dig.naverages to %d (was %d)', args.naverages, ret)
     if args.raw:
         # Override naverages=1 so the pulse envelope is visible without phase averaging.
         # Amplitude should be high for ~226 bins then drop; flat all the way means CW leakthrough.
@@ -531,9 +682,17 @@ if __name__ == '__main__':
 
     
 
-    readoutargs = dict(readout='readout_IQ', no_error=args.no_error, shots_per_average=args.shots_per_average)
+    readoutargs = dict(readout='readout_IQ', no_error=args.no_error, shots_per_average=args.shots_per_average, nsamples=args.nsamples)
 
-    if args.delay is not None:
+    if args.trig:
+        # Trigger-to-trigger sampling: AWG2 self-triggers the digitizer.
+        # --delay still applies as the channel_delay; defaults to 0 if unset.
+        m = ReadoutWindowDelaySweep(
+            delays=np.array([0, 1]),  # dummy — show_pulse_trig() doesn't iterate self.delays
+            **readoutargs
+        )
+        m.show_pulse_trig(delay=args.delay or 0, nshots=args.nshots, awg_pulse_len=args.pulse_len)
+    elif args.delay is not None:
         # Single-shot inspection: show I/Q/amplitude at this channel_delay.
         m = ReadoutWindowDelaySweep(
             delays=np.array([0, 1]),  # dummy — show_pulse() doesn't iterate self.delays

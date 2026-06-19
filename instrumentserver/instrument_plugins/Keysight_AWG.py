@@ -24,6 +24,8 @@ class Keysight_AWG(Instrument):
         AWG_PRODUCT="M3202A",
         amps=[1, 1, 1, 1],
         ofs=[0, 0, 0, 0],
+        trigger_io_mode=None,  # 'out', 'in', or None (leave the module's own TRG connector unconfigured)
+        use_hvi=True,  # True: keep SWHVITRIG-gated elements (HVI drives timing). False: free-run.
     ):
         super(Keysight_AWG, self).__init__(name)
         #        self.set_timeout(120000)
@@ -39,6 +41,8 @@ class Keysight_AWG(Instrument):
         self._chassis = chassis
         self._slot = slot
         self._AWG_PRODUCT = AWG_PRODUCT
+        self._trigger_io_mode = trigger_io_mode
+        self._use_hvi = use_hvi
 
         self.awg = key.SD_AOU()
         awgID = self.awg.openWithSlot(AWG_PRODUCT, chassis, slot)
@@ -50,6 +54,9 @@ class Keysight_AWG(Instrument):
             print(("awgID:", awgID))
             self.awg.close()
             raise Exception("Shit don't work. Check the chassis and slot")
+
+        logger.debug("__init__ received trigger_io_mode=%r", trigger_io_mode)
+        self._configure_trigger_io(trigger_io_mode)
 
         self.add_parameter(
             "serial",
@@ -199,6 +206,36 @@ class Keysight_AWG(Instrument):
         print(("keysight get_runstate", self.awg.getStatus()))
         return self.awg.getStatus() == 0
 
+    def get_use_hvi(self):
+        return self._use_hvi
+
+    def set_use_hvi(self, val):
+        """Toggle HVI-gated (True) vs free-running AUTOTRIG (False) sequencing.
+
+        Takes effect on the next sequence load (set_seq_element), so reload the
+        sequence after changing this.
+        """
+        self._use_hvi = bool(val)
+
+    def _configure_trigger_io(self, mode):
+        """Configure this module's own dedicated Trigger In/Out connector
+        (separate from the 4 analog channel outputs).
+
+        mode: 'out' to drive it as an output -- e.g. wiring it directly to
+        another instrument's trigger input instead of repurposing an analog
+        channel as a pseudo-trigger -- 'in' to use it as an external trigger
+        input, or None (default) to leave it unconfigured, since most setups
+        don't use a module's own TRG connector at all.
+        """
+        if mode is None:
+            return
+        direction = {
+            "out": key.SD_TriggerDirections.AOU_TRG_OUT,
+            "in": key.SD_TriggerDirections.AOU_TRG_IN,
+        }[mode]
+        result = self.awg.triggerIOconfig(direction, key.SD_SyncModes.SYNC_NONE)
+        logger.debug("triggerIOconfig(mode=%s) -> %s", mode, result)
+
     def wait_done(self, delay=60000):
         print("keysight wait_done")
         self.set_timeout(delay)
@@ -236,6 +273,16 @@ class Keysight_AWG(Instrument):
             "run(): AWGstartMultiple(15) -> %s, AWGtriggerMultiple(15) -> %s",
             start_result, trigger_result,
         )
+
+    def software_trigger(self, mask=15):
+        """Fire a software (SWHVITRIG) trigger on the masked channels, advancing
+        their queues past any SWHVITRIG-gated element.
+
+        Exposed for timing-sensitive diagnostics: AWGtriggerMultiple in run()
+        fires once at start_awgs() time, long before a later AUTOTRIG digitizer
+        capture. To catch the pulse, arm the digitizer first, then call this.
+        """
+        return self.awg.AWGtriggerMultiple(mask)
 
     def stop(self):
         self.awg.AWGstopMultiple(15)
@@ -438,9 +485,15 @@ class Keysight_AWG(Instrument):
         """ maybe this should be adding to a queue. Need to figure out what n_el is. loop might be cyclic mode """
 
     def set_seq_element(self, ch, el, wname, repeat=1, trig=False):
+        # use_hvi=False forces every element to AUTOTRIG so the (cyclic)
+        # queue free-runs with no HVI trigger gating -- the pulse loops
+        # continuously instead of waiting at a SWHVITRIG-gated element for
+        # an HVI trigger that has to be distributed separately.
+        if not self._use_hvi:
+            trig = False
         logger.debug(
-            "set_seq_element(ch=%s, el=%s, wname=%s, repeat=%s, trig=%s) -> %s",
-            ch, el, wname, repeat, trig,
+            "set_seq_element(ch=%s, el=%s, wname=%s, repeat=%s, trig=%s, use_hvi=%s) -> %s",
+            ch, el, wname, repeat, trig, self._use_hvi,
             "SWHVITRIG" if trig else "AUTOTRIG",
         )
         if trig:
@@ -461,6 +514,64 @@ class Keysight_AWG(Instrument):
                 repeat,
                 0,
             )
+
+    def free_run_pulse(self, channel=1, length=2000, amp=0.9,
+                       trigger_out=False, marker_length=100):
+        """Diagnostic: continuously output a square pulse on <channel>, free
+        running with no trigger gating, so an AUTOTRIG digitizer capture is
+        guaranteed to catch it regardless of HVI/SWHVITRIG timing.
+
+        Half of <length> samples high at +<amp>, half at 0. Queued AUTOTRIG +
+        cyclic so it loops forever once started. Use this to test the analog
+        path (e.g. AWG ch -> DIG ch) end to end, isolated from the sequencer,
+        HVI, and any SWHVITRIG gating. Call stop()/clear_sequence() to undo.
+
+        If <trigger_out> is True, also drive this module's front-panel Trigger
+        I/O connector high at the start of every pulse (AWGqueueMarkerConfig,
+        markerMode=2 = on first sample of waveform). This emits a hardware
+        trigger edge synchronized to the ch pulse -- wire TRG OUT -> a
+        digitizer's TRG IN to capture each pulse with EXTTRIG. <marker_length>
+        sets the marker pulse width in units of TCLKsys*5 (~5 ns each at
+        1 GS/s).
+        """
+        data = np.zeros(int(length))
+        data[: int(length) // 2] = amp
+
+        self.awg.AWGstop(channel)
+        self.awg.AWGflush(channel)
+
+        wname = "free_run_pulse_%d" % channel
+        self.add_waveform(wname, data)
+        self.awg.AWGqueueConfig(channel, 1)  # 1 = cyclic, loop forever
+        self.awg.AWGqueueWaveform(
+            channel,
+            self._waveform_dict[wname],
+            key.SD_TriggerModes.AUTOTRIG,
+            0,
+            1,
+            0,
+        )
+
+        if trigger_out:
+            # Front-panel TRG connector must be an output for the marker to
+            # appear on it.
+            self._configure_trigger_io("out")
+            # markerMode=2: pulse at the first sample of every waveform play
+            # (i.e. the same moment the ch pulse starts). trgPXImask=0 (no PXI
+            # line), trgIOmask=1 (front-panel TRG IO, bit0), value=1 (active
+            # high), syncMode=0 (CLKsys), delay=0.
+            marker_result = self.awg.AWGqueueMarkerConfig(
+                channel, 2, 0, 1, 1, 0, int(marker_length), 0
+            )
+            logger.debug(
+                "free_run_pulse(channel=%s) AWGqueueMarkerConfig -> %s",
+                channel, marker_result,
+            )
+
+        result = self.awg.AWGstart(channel)
+        logger.debug("free_run_pulse(channel=%s, trigger_out=%s) AWGstart -> %s",
+                     channel, trigger_out, result)
+        return result
 
     ###############################################
     # Convenience functions to play simple waveforms
