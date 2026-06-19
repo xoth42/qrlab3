@@ -1,0 +1,950 @@
+{
+  "_comment": "Per-HVI metadata, keyed by HVI filename. 'sample_rate' (Hz) is the digitizer rate empirically calibrated via test/keysight_dig_fs_calibration.py. 'modules' is populated by build_hvi_info.py, which reads each module's compiled HVI constants (trigger_period, nCycles, nSamples, period, delay, ...) via keysightSD1.SD_HVI().",
+  "1slot100us.HVI": {
+    "sample_rate": 100000000.0,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      }
+    ]
+  },
+  "2slot100us.HVI": {
+    "sample_rate": 100000000.0,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      }
+    ]
+  },
+  "1000msTriggerChassis0.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "100usTrigger.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      }
+    ]
+  },
+  "100usTriggerChassis0.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "100usTrigger_Dario.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "10msTrigger.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      }
+    ]
+  },
+  "10msTriggerChassis0.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "10slot200us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      }
+    ]
+  },
+  "1600usTrigger.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      }
+    ]
+  },
+  "1sTrigger.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      }
+    ]
+  },
+  "1slot1000us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      }
+    ]
+  },
+  "1slot2000us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      }
+    ]
+  },
+  "1slot200us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      }
+    ]
+  },
+  "1slot400us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      }
+    ]
+  },
+  "200msTrigger.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      }
+    ]
+  },
+  "200msTriggerChassis0.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "200usTrigger.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      }
+    ]
+  },
+  "2slot100us_Dariotesting.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "2slot100us_Dariotesting_Teja.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      }
+    ]
+  },
+  "2slot10us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      }
+    ]
+  },
+  "2slot2000us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      }
+    ]
+  },
+  "2slot200us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      }
+    ]
+  },
+  "2slot4000us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      }
+    ]
+  },
+  "2slot400us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      }
+    ]
+  },
+  "2slot50us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      }
+    ]
+  },
+  "3slot10000us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "3slot1000us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "3slot100ms.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "3slot100us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "3slot10us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "3slot1s.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "3slot2000us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "3slot200us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "3slot20us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "3slot2500us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "3slot3000us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "3slot4000us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "3slot400us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "3slot5000us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "3slot500us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "3slot50us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "3slot7500us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "400usTrigger.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      }
+    ]
+  },
+  "4slot1000us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      },
+      {
+        "name": "Module 3",
+        "constants": {}
+      }
+    ]
+  },
+  "4slot100us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      },
+      {
+        "name": "Module 3",
+        "constants": {}
+      }
+    ]
+  },
+  "4slot2000us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      },
+      {
+        "name": "Module 3",
+        "constants": {}
+      }
+    ]
+  },
+  "4slot200us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      },
+      {
+        "name": "Module 3",
+        "constants": {}
+      }
+    ]
+  },
+  "4slot3000us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      },
+      {
+        "name": "Module 3",
+        "constants": {}
+      }
+    ]
+  },
+  "4slot4000us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      },
+      {
+        "name": "Module 3",
+        "constants": {}
+      }
+    ]
+  },
+  "4slot500us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      },
+      {
+        "name": "Module 3",
+        "constants": {}
+      }
+    ]
+  },
+  "500usTrigger.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      }
+    ]
+  },
+  "500usTriggerChassis0.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "50msTrigger.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      }
+    ]
+  },
+  "50usTrigger.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      }
+    ]
+  },
+  "50usTriggerChassis0.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "800usTrigger.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      }
+    ]
+  },
+  "9_6_HWmodule_yes.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "9_6_testHVI.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "c4_100usTrigger.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  },
+  "heralding_test_1slot100us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      }
+    ]
+  },
+  "heralding_test_1slot_100us.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      }
+    ]
+  },
+  "m100nsTrigger.HVI": {
+    "sample_rate": null,
+    "modules": [
+      {
+        "name": "Module 0",
+        "constants": {}
+      },
+      {
+        "name": "Module 1",
+        "constants": {}
+      },
+      {
+        "name": "Module 2",
+        "constants": {}
+      }
+    ]
+  }
+}
