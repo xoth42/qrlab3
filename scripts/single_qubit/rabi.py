@@ -131,14 +131,18 @@ class Rabi(Measurement1D):
             
         self.data.create_dataset('amps', data=amps)
 
+    """
+    Run power rabi
+    """
     def generate(self):  #That is the original generate function 
         s = Sequence()
+        delay_between_pulses=500
         for i, amp in enumerate(self.amps):
             s.append(self.seq)
             
             if self.heralding:
                 s.append(self.readout_driver.do_get_sequence(self.readout_qubit_info))
-                s.append(Delay(500))
+                s.append(Delay(delay_between_pulses))
             
             if self.cancel_info is not None:
                 for j in range(self.repeat_pulse):
