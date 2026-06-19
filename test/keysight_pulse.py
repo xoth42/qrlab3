@@ -9,74 +9,16 @@ import numpy as np
 """
 Isaac Pelenur - 2024-06-15
 
-TLDR: if_period = 2
-
-Loopback pulse test and digitizer demod calibration notes
-=========================================================
 
 This test was used to debug the Keysight M3102A digitizer + AWG2 readout chain
 using a direct loopback (AWG2 ch3 → DIG ch1), bypassing the cavity and mixers.
-The main goal was to verify that the AWG is really sending a 50 MHz tone into
-the digitizer and that the software demodulation (DemodulatorComplex) is
-correctly configured.
 
-Key findings:
+Important notes:
+Keysight AWG operates at a rate normally at 1000MS/s.
+Keysight DIG reads samples at max 500MS/s. But this occationally gets set to 100MS/s, likely due to HVI shenanigans. 
 
-- Raw loopback capture:
-  - Using the full qrlab stack (create_instruments, HVI, ReadoutWindowDelaySweep),
-    we captured raw ADC samples on the digitizer channel connected to AWG2 ch3.
-  - The time-domain trace looks like a clean sinusoidal pulse during the
-    readout window, confirming the AWG and cabling are OK.
+If all is well, then a pulse of 40000 Samples from AWG -> DIG should show a pulse of 20000 samples. 
 
-- FFT-based sample-rate inference:
-  - We took a single raw capture and computed an FFT over the pulse.
-  - Sweeping the assumed sampling rate (Fs_guess = 250, 500, 1000 MS/s) and
-    plotting the resulting frequency axis, the FFT peak always appeared at
-    exactly half of Fs_guess (for example, peak at 125 MHz for 250 MS/s,
-    250 MHz for 500 MS/s, etc.).
-  - This means the tone is at the Nyquist frequency: the normalized frequency
-    of the peak is 0.5, so the relationship is:
-        f_tone = 0.5 * Fs_actual
-    Given that the AWG is generating a 50 MHz readout tone, this implies:
-        Fs_actual ≈ 100 MS/s
-    for the M3102A under the current HVI configuration.
-
-- Demodulation period (if_period) correction:
-  - The software demodulator expects if_period to be:
-        if_period = Fs_actual / f_IF
-    where f_IF is the intermediate frequency (readout IF) in Hz.
-  - For an IF of 50 MHz and a digitizer sample rate of about 100 MS/s,
-    the correct if_period is 2 samples per IF cycle.
-  - Old Alazar-based assumptions used 1 GS/s sample rate and if_period = 20
-    for 50 MHz. Those values are not valid for the M3102A in this setup and
-    lead to a demod LO at the wrong frequency (and the observed "only edges,
-    no flat-top" behavior).
-
-- Trigger period coincidence:
-  - The HVI trigger period was configured as 100 microseconds, and the FFT
-    suggested a sample rate of approximately 100 MS/s. These numbers both
-    contain "100" but are conceptually independent:
-      * trigger_period is the time between shots (100 microseconds),
-      * Fs_actual is the ADC sampling rate (about 100 MS/s).
-  - The equality of the numeric value is just a design choice in the HVI
-    timing; it should not be used to infer the sample rate.
-
-Practical takeaway for this test:
-
-- Physically connect AWG2 ch3 (I channel) directly to the desired digitizer
-  input (e.g. DIG ch1).
-- Use the full qrlab path (create_instruments, ReadoutWindowDelaySweep,
-  Keysight_DIG) to:
-    1) load and run the standard readout pulse on AWG2,
-    2) capture raw ADC data on the loopback channel,
-    3) perform an FFT to verify that the tone is at 50 MHz and to infer the
-       effective digitizer sample rate.
-- Then set:
-    if_period = round(Fs_actual / 50e6)
-  and re-run the loopback test. With Fs_actual ≈ 100 MS/s, if_period should
-  be 2, not 10 or 20. Once this is set, the demodulated I/Q magnitude should
-  show a flat, high-amplitude plateau over the pulse flat-top instead of
-  only large spikes at the edges.
 """
 
 _REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -103,7 +45,7 @@ dig = instruments['dig']
 # dig.set_main_channel(2)       # AWG2 ch3 → DIG ch2
 
 # 2) Simple capture settings
-nsamples = 3000
+nsamples = 25000
 naverages = 1
 dig.set_nsamples(nsamples)        # you can bump this later
 dig.set_naverages(naverages)          # single shot, easier for FFT
@@ -121,10 +63,14 @@ m.stop_awgs()
 m.load(m.generate())
 m.start_awgs()
 
+
 # 5) Configure for raw single-shot capture (no demodulation)
 dig.setup_raw_shot(channel=dig.get_main_channel(), naverages=naverages)
 dig.arm()
 dig.start_hvi()
+
+
+logger.info(f"Connected to digitizer: {dig.do_get_part()}\nSample rate: {dig.do_get_clock_freq()/1e6:.1f} MS/s\nIF_period: {dig.do_get_if_period()} samples per IF cycle\nClock_sync_freq:{dig.do_get_clock_sync_freq()/1e6:.1f} MHz")
 
 # 6) Grab raw buffer via the proxy-safe method on Keysight_DIG
 raw = dig.DAQbufferGet(dig.get_main_channel())
