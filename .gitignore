@@ -14,3 +14,5 @@ ActiveResetSweep_g*/
 .vscode/
 
 .env
+
+log/*/*.log

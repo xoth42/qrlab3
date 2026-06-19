@@ -1,19 +1,25 @@
+import logging
 import os
 import sys
-import logging
 
 # Repo root, so `lib.server_support` is importable regardless of cwd (this
 # subprocess is normally launched with cwd=instrumentserver/, for the
 # relative 'instrument_plugins' sys.path entry added below).
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from lib.server_support.log_rotate import (INSTRUMENT_SERVER_LOG_ENV,
+                                           attach_log_from_env)
 from lib.server_support.uselogs import configure_logging
+
+attach_log_from_env(INSTRUMENT_SERVER_LOG_ENV)
 configure_logging()
 
-import time
 import sys
-import pickle
-import objectsharer as objsh
+import time
+
 import pythonprocess
+
+import objectsharer as objsh
+
 
 def close():
     logging.info('Closing instrument instance')
@@ -85,6 +91,10 @@ if __name__ == '__main__':
 
     instruments = objsh.helper.find_object('instruments')
     ins.set_instruments(instruments)
+    instruments.remove(insname)
+    instruments.register_instrument(ins)
+    backend.main_loop()
+    ins.close()
     instruments.remove(insname)
     instruments.register_instrument(ins)
     backend.main_loop()

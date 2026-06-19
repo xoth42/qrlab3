@@ -1,16 +1,21 @@
 # Instruments server
 
-import os
-import logging
-import types
-from lib import jsonext
-from lib.server_support.uselogs import configure_logging
 import importlib
+import logging
+import os
 
+from lib import jsonext
+from lib.server_support.log_rotate import (INSTRUMENT_SERVER_LOG_ENV,
+                                           init_log_rotation)
+from lib.server_support.uselogs import configure_logging
+
+init_log_rotation('instrument_server', child_env_var=INSTRUMENT_SERVER_LOG_ENV)
 configure_logging()
-import objectsharer as objsh
 import time
+
 import pythonprocess
+
+import objectsharer as objsh
 
 _insdir = 'instrument_plugins'
 _user_insdir = None

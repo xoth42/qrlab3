@@ -1,8 +1,10 @@
 import logging
 
 from lib.server_support.lifeline import clear_servers, start_servers
+from lib.server_support.log_rotate import init_log_rotation
 from lib.server_support.uselogs import configure_logging
 
+init_log_rotation('create_instruments')
 configure_logging()
 logger = logging.getLogger(__name__)
 

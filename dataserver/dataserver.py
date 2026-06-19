@@ -16,9 +16,17 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 import os
+import sys
 import logging
 from shutil import copyfile
 
+# Defensive fallback for when dataserver.py is run with cwd=dataserver/ and
+# without start.bat's PYTHONPATH (which normally puts the repo root on
+# sys.path already).
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from lib.server_support.log_rotate import init_log_rotation
+
+init_log_rotation('data_server')
 logging.getLogger().setLevel(logging.INFO)
 import objectsharer as objsh
 import time
