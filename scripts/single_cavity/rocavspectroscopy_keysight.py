@@ -218,7 +218,7 @@ class ROCavSpectroscopy_keysight(Measurement1D):
 
             for ifreq, freq in enumerate(self.freqs):
                 if self.readout is 'readout_IQ':
-#                    self.readout_info.rfsource.set_frequency(freq)
+                    #self.readout_info.rfsource.set_frequency(freq)
                     self.readout_info.rfsource.set_frequency(freq-self.readout_info.deltaf)#yingying change to readout freq
                 else:
                     self.readout_info.rfsource1.set_frequency(freq)
@@ -237,15 +237,15 @@ class ROCavSpectroscopy_keysight(Measurement1D):
 
                 dig.stop_hvi()
                 dig.release_buf()
-#                print('inside keysight measurment. ret:')
-#                print(ret)
-#                try:
-#                    while not ret.is_valid():
-#                        objsh.helper.backend.main_loop(100)
-#                except Exception, e:
-##                    alz.set_interrupt(True)
-#                    print 'Error: %s' % (str(e), )
-#                    return
+                # print('inside keysight measurment. ret:')
+                # print(ret)
+                # try:
+                #     while not ret.is_valid():
+                #         objsh.helper.backend.main_loop(100)
+                # except Exception, e:
+                #     alz.set_interrupt(True)
+                #     print 'Error: %s' % (str(e), )
+                #     return
 
                 IQ = np.average(ret)
                 amps.append(np.abs(IQ))
