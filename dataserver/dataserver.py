@@ -24,9 +24,10 @@ from shutil import copyfile
 # without start.bat's PYTHONPATH (which normally puts the repo root on
 # sys.path already).
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from lib.server_support.log_rotate import init_log_rotation
+from lib.server_support.log_rotate import (DATA_SERVER_LOG_ENV,
+                                           init_log_rotation)
 
-init_log_rotation('data_server')
+init_log_rotation('data_server', child_env_var=DATA_SERVER_LOG_ENV)
 logging.getLogger().setLevel(logging.INFO)
 import objectsharer as objsh
 import time

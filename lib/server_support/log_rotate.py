@@ -11,6 +11,7 @@ import time
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 LOG_ROOT = os.path.join(_REPO_ROOT, 'log')
 INSTRUMENT_SERVER_LOG_ENV = 'QRLAB_INSTRUMENT_SERVER_LOG'
+DATA_SERVER_LOG_ENV = 'QRLAB_DATA_SERVER_LOG'
 
 
 class _Tee:
@@ -45,8 +46,22 @@ def _attach_log_path(log_path):
     _ATTACHED_LOG_PATHS.add(log_path)
     return log_path
 
+
+def open_log_file_from_env(env_var):
+    """Open the log file pointed at by env_var for appending, or return None."""
+    log_path = os.environ.get(env_var)
+    if not log_path:
+        return None
+    return open(log_path, 'a', buffering=1, encoding='utf-8')
+
+
 def attach_log_from_env(env_var):
     return _attach_log_path(os.environ.get(env_var))
+
+
+def _current_log_path(log_dir):
+    return os.path.join(log_dir, 'current.log')
+
 
 def init_log_rotation(name, keep=5, child_env_var=None):
     """Tee stdout and stderr to a fresh timestamped log file in log/<name>/, keeping
@@ -61,8 +76,15 @@ def init_log_rotation(name, keep=5, child_env_var=None):
     os.makedirs(log_dir, exist_ok=True)
     _rotate(log_dir, keep)
 
-    log_path = os.path.join(log_dir, time.strftime('%Y%m%d_%H%M%S') + '.log')
-    _attach_log_path(log_path)
+    timestamp_log_path = os.path.join(log_dir, time.strftime('%Y%m%d_%H%M%S') + '.log')
+    current_log_path = _current_log_path(log_dir)
+
+    current_log_file = open(current_log_path, 'w', buffering=1, encoding='utf-8')
+    timestamp_log_file = open(timestamp_log_path, 'a', buffering=1, encoding='utf-8')
+    sys.stdout = _Tee(sys.stdout, timestamp_log_file, current_log_file)
+    sys.stderr = _Tee(sys.stderr, timestamp_log_file, current_log_file)
+    _ATTACHED_LOG_PATHS.add(timestamp_log_path)
+    _ATTACHED_LOG_PATHS.add(current_log_path)
     if child_env_var:
-        os.environ[child_env_var] = log_path
-    return log_path
+        os.environ[child_env_var] = current_log_path
+    return timestamp_log_path
