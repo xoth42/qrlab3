@@ -1,10 +1,10 @@
 import logging
 
 from lib.server_support.lifeline import clear_servers, start_servers
+from lib.server_support.uselogs import configure_logging
 
-# import visa
-
-logging.basicConfig(level=logging.DEBUG)  # Debug logging
+configure_logging()
+logger = logging.getLogger(__name__)
 
 CLEAR_SERVERS = True  # kill existing instrument/data servers before starting
 START_SERVERS = True  # launch fresh instrument/data servers
@@ -16,9 +16,26 @@ if START_SERVERS:
 
 from mclient import instruments
 
+# SignalCore 
 SC = instruments.create("SCtest", "SC5511A", devid="10001C09")
+# SC.
+f = SC.do_get_frequency()
+# logger.info("Connected to signal source: %s" % SC.do_get_idn())
 
-if_period = 20
+TESTING_KEYSIGHT = True
+digitizer_ch = 1
+awgs_ch = "3,4"  # AWG2 channels 3,4. (AWG3 is 5-8)
+
+if TESTING_KEYSIGHT:
+    logger.info("Testing Keysight digitizer connection...")
+    digitizer_ch = 2
+    awgs_ch = "3,6"
+
+
+# IF offset
+deltaf = 50e6
+# if_period = round(Fs / deltaf)  # period = Sample rate / demod
+
 dig = instruments.create(
     "dig",
     "Keysight_DIG",
@@ -31,11 +48,13 @@ dig = instruments.create(
     nsamples=5000,
     awg_list=[8, 9],
     channel_delay=150,
+    deltaf=deltaf,
     # if_period = 2, # period = Sample rate / demod LO frequency, 50MHz -> 2 samples. Sample rate is 100MHz
-    if_period=if_period,
+    # if_period=if_period,
+    # set channel
+    main_channel=digitizer_ch,
 )
-
-dig.set_max_sample_rate() # Try to use max sample rate (500MS/s)
+logger.info(f"Connected to digitizer: {dig.do_get_part()}\nSample rate: {dig.do_get_clock_freq()/1e6:.1f} MS/s\nIF_period: {dig.do_get_if_period()} samples per IF cycle\nClock_sync_freq:{dig.do_get_clock_sync_freq()/1e6:.1f} MHz\nPrescaler: {dig.do_get_prescaler(1)}")
 
 AWG2 = instruments.create(
     "AWG2",
@@ -46,7 +65,7 @@ AWG2 = instruments.create(
     amps=[1.5, 1.5, 1.5, 1.5],
     ofs=[0.0, 0.0, 0.0, 0.0],
 )
-
+logger.info(f"Connected to AWG: {AWG2.do_get_part()}\nsample rate: {AWG2.do_get_clock_freq()/1e6:.1f} MS/s")
 AWG3 = instruments.create(
     "AWG3",
     "Keysight_AWG",
@@ -56,6 +75,7 @@ AWG3 = instruments.create(
     amps=[1.5, 1.5, 1.5, 1.5],
     ofs=[0.0, 0.0, 0.0, 0.0],
 )
+logger.info(f"Connected to AWG: {AWG3.do_get_part()}\n sample rate: {AWG3.do_get_clock_freq()/1e6:.1f} MS/s")
 
 
 readout_IQ = instruments.create(
@@ -66,14 +86,14 @@ readout_IQ = instruments.create(
     IQe_radius=1,
     rfsource="SCtest",
     acq_chan="1m1",
-    deltaf=50e6,  # 16.9e3,
+    deltaf=deltaf,  # 16.9e3,
     # channels='3,4', # AWG2 channels 3,4. (AWG3 is 5-8)
-    channels="3,7",
+    channels=awgs_ch,
     sideband_phase=0,
     # width of pulse in microseconds
     # pulse_width=4500,
     # pulse_width=10000,
-    pulse_width=40000,
+    pulse_width=4000, 
     sigma=10,
     # amp=.4,
     amp=1.0,
@@ -383,4 +403,6 @@ if 0:
 """
 
 # to reload:
+# mclient.instruments.reload('AWG1')
+# mclient.instruments.reload('AWG1')
 # mclient.instruments.reload('AWG1')

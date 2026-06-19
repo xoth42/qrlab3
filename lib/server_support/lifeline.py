@@ -14,8 +14,11 @@
 #   clear_servers()   # kill old sessions, wait until gone
 #   start_servers()   # launch fresh, wait until windows appear + init buffer
 
+import logging
 import subprocess
 import time
+
+logger = logging.getLogger(__name__)
 
 # Root directory of the QRLab installation; bat files live here.
 QRLAB_ROOT = r'C:\qrlab-3'
@@ -56,7 +59,7 @@ def wait_servers_dead(timeout=10, interval=0.25):
         if not servers_alive():
             return True
         time.sleep(interval)
-    print('WARNING: server processes still alive after %.0fs — proceeding anyway' % timeout)
+    logger.warning('server processes still alive after %.0fs — proceeding anyway' % timeout)
     return False
 
 
@@ -76,12 +79,13 @@ def wait_servers_alive(timeout=10, interval=0.25):
         if servers_alive():
             return True
         time.sleep(interval)
-    print('WARNING: server processes not detected after %.0fs — proceeding anyway' % timeout)
+    logger.warning('server processes not detected after %.0fs — proceeding anyway' % timeout)
     return False
 
 
 def clear_servers():
     """Kill all running instrument/data servers and wait until they are gone."""
+    logger.debug('Clearing servers...')
     subprocess.run([r'%s\clear.bat' % QRLAB_ROOT], shell=True)
     wait_servers_dead()
 
@@ -94,6 +98,7 @@ def start_servers():
     the Python process inside each window to finish importing and binding
     its ZMQ sockets before create_instruments.py connects.
     """
+    logger.debug('Starting servers...')
     subprocess.run([r'%s\start.bat' % QRLAB_ROOT], shell=True)
     wait_servers_alive()
     time.sleep(2)   # ZMQ socket init happens after the window appears

@@ -1,6 +1,14 @@
+import os
 import sys
 import logging
-logging.getLogger().setLevel(logging.INFO)
+
+# Repo root, so `lib.server_support` is importable regardless of cwd (this
+# subprocess is normally launched with cwd=instrumentserver/, for the
+# relative 'instrument_plugins' sys.path entry added below).
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from lib.server_support.uselogs import configure_logging
+configure_logging()
+
 import time
 import sys
 import pickle

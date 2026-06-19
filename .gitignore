@@ -12,3 +12,5 @@ repo-*.txt
 ActiveResetSweep_g*/
 
 .vscode/
+
+.env

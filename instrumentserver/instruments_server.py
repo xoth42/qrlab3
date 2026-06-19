@@ -4,9 +4,10 @@ import os
 import logging
 import types
 from lib import jsonext
+from lib.server_support.uselogs import configure_logging
 import importlib
 
-logging.getLogger().setLevel(logging.INFO)
+configure_logging()
 import objectsharer as objsh
 import time
 import pythonprocess
