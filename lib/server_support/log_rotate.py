@@ -12,6 +12,9 @@ _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__f
 LOG_ROOT = os.path.join(_REPO_ROOT, 'log')
 INSTRUMENT_SERVER_LOG_ENV = 'QRLAB_INSTRUMENT_SERVER_LOG'
 DATA_SERVER_LOG_ENV = 'QRLAB_DATA_SERVER_LOG'
+# Flush each write so short-lived subprocesses and abrupt exits do not leave
+# the tail of a line sitting in a Python buffer.
+FLUSH_EVERY_WRITE = True
 
 
 class _Tee:
@@ -23,6 +26,8 @@ class _Tee:
     def write(self, data):
         for s in self._streams:
             s.write(data)
+        if FLUSH_EVERY_WRITE:
+            self.flush()
 
     def flush(self):
         for s in self._streams:
