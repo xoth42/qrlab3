@@ -7,6 +7,8 @@ import logging
 import win32api
 import msvcrt
 
+logger = logging.getLogger(__name__)
+
 # Load DLL, 64-bit seems to require windll, 32-bit cdll.
 _DLL_FILE = r'C:/Windows/System32/ATSApi.dll'
 try:
@@ -124,7 +126,7 @@ class Constants:
     GET_CLOCK_SLOPE = 0x1000000D
 
 def CHK(ret):
-#    print ret, "\n"
+    #    print ret, "\n"
     if ret != 512:
         raise ValueError("Alazar error %s: %s" % (ret, get_error(ret)))
 
@@ -191,19 +193,28 @@ class Alazar:
         '''
         pre_trig cannot be more than number of samples per record - 64
         '''
+        logger.info('prepare_capture: samples_per_rec=%d, rec_per_buf=%d, rec_per_acq=%d, '
+                    'trig_delay=%d, channels=0x%x',
+                    samples_per_rec, rec_per_buf, rec_per_acq, trig_delay, self.capture_channels)
+
         ret = ats.AlazarSetTriggerDelay(self.handle, trig_delay)
         if ret == 572:
+            logger.warning('AlazarSetTriggerDelay returned 572 (invalid handle) — re-initialising board')
             self.init_alazar(self._systemid, self._boardid)
             ret = ats.AlazarSetTriggerDelay(self.handle, trig_delay)
+        logger.debug('AlazarSetTriggerDelay ret=%d (%s)', ret, get_error(ret))
         CHK(ret)
 
         dma_flag = 0x001 | 0x200
         ret = ats.AlazarBeforeAsyncRead(self.handle,
             self.capture_channels, ctypes.c_long(pre_trig_samples),
                 samples_per_rec, rec_per_buf, rec_per_acq, dma_flag)
+        logger.debug('AlazarBeforeAsyncRead ret=%d (%s)', ret, get_error(ret))
         CHK(ret)
         ret = ats.AlazarSetRecordSize(self.handle, pre_trig_samples, samples_per_rec - pre_trig_samples)
+        logger.debug('AlazarSetRecordSize ret=%d (%s)', ret, get_error(ret))
         CHK(ret)
+        logger.debug('prepare_capture: DMA setup complete')
 
     def post_buffers(self, bufs):
         if bufs is None:
@@ -217,11 +228,13 @@ class Alazar:
             bufsize = len(buf)
             # ret = ats.AlazarPostAsyncBuffer(self.handle, buf.ctypes.data, bufsize)
             ret = ats.AlazarPostAsyncBuffer(self.handle, buf.ctypes.data_as(ctypes.c_void_p), bufsize)
-            print(ret)
+            logger.debug('AlazarPostAsyncBuffer ret=%d (%s), buf_size=%d, queued_after=%d',
+                         ret, get_error(ret), bufsize, len(self._posted_buffers) + (1 if ret == 512 else 0))
             if ret == 512:
                 self._posted_buffers.append(buf)
             elif ret == 518:
-                print('Error, unable to post buffer!')
+                logger.error('AlazarPostAsyncBuffer failed (518 ApiBufferOverflow): '
+                             'buf_size=%d, currently_queued=%d', bufsize, len(self._posted_buffers))
             else:
                 CHK(ret)
         return True
@@ -243,15 +256,20 @@ class Alazar:
         bytes_per_sample = (bps[0]+7)/8
 
     def start_capture(self):
+        logger.debug('AlazarStartCapture: %d buffer(s) queued', len(self._posted_buffers))
         ret = ats.AlazarStartCapture(self.handle)
+        logger.debug('AlazarStartCapture ret=%d (%s)', ret, get_error(ret))
         CHK(ret)
 
     def end_capture(self):
+        logger.debug('AlazarAbortAsyncRead: %d buffer(s) still queued', len(self._posted_buffers))
         self._posted_buffers = []
         ret = ats.AlazarAbortAsyncRead(self.handle)
         if ret == 572:
+            logger.warning('AlazarAbortAsyncRead returned 572 (invalid handle) — re-initialising board')
             self.init_alazar(self._systemid, self._boardid)
             return
+        logger.debug('AlazarAbortAsyncRead ret=%d (%s)', ret, get_error(ret))
         CHK(ret)
 
     def get_next_buffer(self, timeout=200):
@@ -259,19 +277,18 @@ class Alazar:
         Wait for a buffer from the Alazar to become ready and return it.
         Timeout is in ms.
         '''
-#        print "we are in _card.get_next_buffer"
         if len(self._posted_buffers) == 0:
+            logger.warning('get_next_buffer called with no posted buffers — returning None immediately')
             return None
         buf = self._posted_buffers[0]
-#        print("_posted_buffer excuted")
         ret = ats.AlazarWaitAsyncBufferComplete(self.handle, buf.ctypes.data_as(ctypes.c_void_p), int(timeout))
-        # ret = ats.AlazarWaitAsyncBufferComplete(self.handle, buf.ctypes.data, int(timeout))
-#        print("AlazarWaitAsyncBufferComplete executed, ret is", ret, "\n")
+        logger.debug('AlazarWaitAsyncBufferComplete ret=%d (%s), queued=%d, timeout=%dms',
+                     ret, get_error(ret), len(self._posted_buffers), timeout)
         if ret == 512:
             del self._posted_buffers[0]
             return buf
         elif ret == 579:
-            logging.debug('WaitAsyncBufferComplete timed out!')
+            logger.debug('WaitAsyncBufferComplete timed out (579) after %dms', timeout)
             return None
         else:
             CHK(ret)
@@ -280,7 +297,7 @@ class Alazar:
     def wait_for_buffer(self, buf, timeout=200):
         ret = ats.AlazarWaitAsyncBufferComplete(self.handle, buf.ctypes.data, int(timeout))
         if ret == 579:
-            logging.warning('Warning: timed out!')
+            logger.warning('wait_for_buffer timed out (579) after %dms', timeout)
             return None
         else:
             CHK(ret)

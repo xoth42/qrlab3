@@ -6,30 +6,28 @@
 # - AlazarCard, to directly set channel parameters
 # - AlazarDaemon, to manage buffers and perform the actual acquisition
 
-import sys
-
-import ctypes
-import types
-import numpy as np
 
 #Josh added this on 3/20/18 so maplotlib wouldn't look for PyQt5
 import matplotlib as mpl
-
 import matplotlib.pyplot as plt
+import numpy as np
+
 mpl.rcParams['legend.fontsize'] = 8
-import time
 from lib.dll_support import alazar
+
 AC = alazar.Constants
-from lib.math import demod
-from instrument import Instrument
-import logging
 import gc
+import logging
 import os
 
-import objectsharer as objsh
+from instrument import Instrument
+
+from lib.math import demod
+
+logger = logging.getLogger(__name__)
+
 #objsh.logger.setLevel(logging.DEBUG)
 
-import config
 #alazar_temp = config.alazar_data_temp
 
 class Alazar_Daemon(Instrument):
@@ -375,7 +373,10 @@ real part is applied to I and the imaginary part to Q.
         # Don't reallocate if we already have this size.
         bufsid = (recperbuf, nbuf, samples, nchan)
         if self._allocated_id == bufsid:
+            logger.debug('allocate_buffers: reusing existing allocation %s', bufsid)
             return
+        logger.debug('allocate_buffers: allocating %d buf(s) x %d bytes each (recperbuf=%d, samples=%d, nchan=%d)',
+                     nbuf, recperbuf * samples * nchan, recperbuf, samples, nchan)
         self._allocated_id = bufsid
 
         bufsize = recperbuf * samples * nchan
@@ -397,7 +398,8 @@ real part is applied to I and the imaginary part to Q.
 #        self._bufs = [np.frombuffer(buf.get_obj(), dtype=np.dtype(np.uint8)) for buf in mpars]
 
     def prepare_capture(self):
-        print('Prepare capture: samples: %s, recperbuf: %s, total rec:%s' % (self.get_nsamples(), self.get_nrecperbuf(), self.get_ntotal_rec(),))
+        logger.info('prepare_capture: samples=%s, recperbuf=%s, total_rec=%s',
+                    self.get_nsamples(), self.get_nrecperbuf(), self.get_ntotal_rec())
         self._card.prepare_capture(self.get_nsamples(), self.get_nrecperbuf(), self.get_ntotal_rec(), self.get_ext_trig_delay(), 0)
 
     def arm(self):
@@ -415,7 +417,7 @@ real part is applied to I and the imaginary part to Q.
             blocksize = min(1500, np.ceil(10e6 / nsamples))
 
         nbufs = 1
-        logging.info('Alazar num. records, blocksize: %d,%d' % (N, blocksize))
+        logger.debug('break_records: N=%d, blocksize=%d', N, blocksize)
         while N > blocksize:
             if (N % 5) == 0:
                 nbufs *= 5
@@ -436,9 +438,9 @@ real part is applied to I and the imaginary part to Q.
         if self._capturing:
             raise Exception('Already capturing, use set_interrupt to stop!')
         self._card.start_capture()
-        self._capturing = True 
+        self._capturing = True
         self.emit('start-capture')
-        logging.info('Alazar ready for capture...')
+        logger.info('Alazar ready for capture...')
 
     def end_capture(self):
         self._card.end_capture()
@@ -446,7 +448,7 @@ real part is applied to I and the imaginary part to Q.
             self.emit('end-capture')
         self.set_interrupt(False)
         self._capturing = False
-        logging.info('Alazar ended capture...')
+        logger.info('Alazar ended capture...')
 
     def setup_shots(self, N):
         '''
@@ -463,10 +465,33 @@ real part is applied to I and the imaginary part to Q.
         self.allocate_buffers()
         self.set_demod(avg_periods=1)
         self.prepare_capture()
-        print(self._bufs)
-        print(type(self._bufs))
+        logger.info('setup_shots: %d buf(s), %d bytes each',
+                    len(self._bufs), len(self._bufs[0]) if self._bufs else 0)
         self._card.post_buffers(self._bufs)
         self.start_capture()
+
+    def _decode_samples(self, buf):
+        '''
+        Convert a raw uint8 DMA buffer from the Alazar offset-binary encoding
+        to zero-centred float32 values suitable for demodulation or plotting.
+
+        Alazar 8-bit digitizers (ATS850, ATS860, ATS9850, ATS9870, ...) output
+        unsigned 8-bit codes by default (U8, range 0-255).  The SDK calibration
+        formula is:
+            codeZero  = (1 << (bitsPerSample - 1)) - 0.5  =>  127.5 for 8-bit
+            codeRange = (1 << (bitsPerSample - 1)) - 0.5  =>  127.5 for 8-bit
+            sampleVolts = inputRange_V * (code - codeZero) / codeRange
+
+        The hex dump in the SDK docs shows a flat ~0 V signal as 0x7F (127),
+        confirming the true midpoint sits between 127 and 128 (i.e. 127.5).
+
+        This function only performs the zero-centering step (subtracting 127.5).
+        Multiply by inputRange_V / 127.5 separately if physical volts are needed.
+
+        The DMA buffer (self._bufs) must remain uint8 for re-posting to the card;
+        this method always returns a new float32 array and never modifies buf.
+        '''
+        return buf.astype(np.float32) - 127.5
 
     def complex_signal_to_real(self, buf):
         '''
@@ -489,7 +514,7 @@ real part is applied to I and the imaginary part to Q.
         else:
             return buf
         ''' # We blanked all these off for the 1300 average crashing problem
-        print('inside convert_signal')
+        logger.info('convert_signal: passing buf through unchanged')
         return buf
 
     def take_raw_shots(self, buftimeout=1000):
@@ -499,7 +524,9 @@ real part is applied to I and the imaginary part to Q.
         '''
         buf = self.get_next_buffer(buftimeout)
         self.end_capture()
-        return buf
+        # DMA is finished after end_capture(); safe to return a decoded copy.
+        # return buf  # old: raw uint8 (0 V appeared as ~127)
+        return self._decode_samples(buf)
 
     def setup_demod_shots(self, N):
         self.setup_avg_shot(N)
@@ -528,11 +555,15 @@ real part is applied to I and the imaginary part to Q.
             buf = self.get_next_buffer(acqtimeout)
 #            print len(buf),"\n"
 
-            self._demodA.demodulate(buf[:Nperbuf*nsamples])
+            # Decode offset-binary before demodulation; keep buf (uint8) for re-posting.
+            samples = self._decode_samples(buf)
+#            self._demodA.demodulate(buf[:Nperbuf*nsamples])  # old: raw uint8 (~127 DC bias)
+            self._demodA.demodulate(samples[:Nperbuf*nsamples])
             IQA = self._demodA.IQ.reshape([Nperbuf, periods])
 
             # Calculate reference angles
-            self._demodB.demodulate(buf[Nperbuf*nsamples:])
+#            self._demodB.demodulate(buf[Nperbuf*nsamples:])  # old: raw uint8 (~127 DC bias)
+            self._demodB.demodulate(samples[Nperbuf*nsamples:])
             IQB = self._demodB.IQ.reshape([Nperbuf, periods])
             refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
             IQA = IQA * refs[:, np.newaxis]
@@ -566,8 +597,8 @@ real part is applied to I and the imaginary part to Q.
         self.set_demod(avg_periods=1)
 
         self.prepare_capture()
-        print(self._bufs)
-        print(type(self._bufs))
+        logger.info('setup_avg_shot: %d buf(s), %d bytes each',
+                    len(self._bufs), len(self._bufs[0]) if self._bufs else 0)
         self._card.post_buffers(self._bufs)
         self.start_capture()
 
@@ -584,10 +615,10 @@ real part is applied to I and the imaginary part to Q.
             N *= 2
 
         for i in range(N):
-#            print "You have to get here, right?"
-#            if objsh.helper.backend:
-#                objsh.helper.backend.main_loop(0, origin=1) 
-#                objsh.helper.backend.main_loop_alz(0, origin=1) #DARIO 4/4 Alazar doesn't appear to need this call to the main loop
+            #            print "You have to get here, right?"
+            #            if objsh.helper.backend:
+            #                objsh.helper.backend.main_loop(0, origin=1) 
+            #                objsh.helper.backend.main_loop_alz(0, origin=1) #DARIO 4/4 Alazar doesn't appear to need this call to the main loop
 
             if self.get_interrupt():
                 self.end_capture()
@@ -621,19 +652,22 @@ real part is applied to I and the imaginary part to Q.
         periods = nsamples / self.get_if_period()
         i = 0
         
-#        print(N, Nperbuf, nsamples)
+        #        print(N, Nperbuf, nsamples)
 
         while i < N:
             buf = self.get_next_buffer(acqtimeout)
 
-
             print((i, np.shape(buf), Nperbuf))
-            self._demodA.demodulate(buf[:Nperbuf*nsamples])
+            # Decode offset-binary before demodulation; keep buf (uint8) for re-posting.
+            samples = self._decode_samples(buf)
+            #self._demodA.demodulate(buf[:Nperbuf*nsamples])  # old: raw uint8 (~127 DC bias)
+            self._demodA.demodulate(samples[:Nperbuf*nsamples])
             IQA = self._demodA.IQ.reshape([Nperbuf, periods])
 
             # Calculate reference angles
             if take_ref:
-                self._demodB.demodulate(buf[Nperbuf*nsamples:])
+                #self._demodB.demodulate(buf[Nperbuf*nsamples:])  # old: raw uint8 (~127 DC bias)
+                self._demodB.demodulate(samples[Nperbuf*nsamples:])
                 IQB = self._demodB.IQ.reshape([Nperbuf, periods])
                 refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
 
@@ -721,8 +755,10 @@ real part is applied to I and the imaginary part to Q.
         Return relative IQ values for every shot (1 IQ / shot).
         This takes into account weighting functions
         '''
+        # Decode offset-binary uint8 to zero-centred float32, then cast for demodulation.
+#        buf = np.array(buf, dtype=np.complex64)  # old: raw uint8 cast directly (~127 DC bias)
+        buf = self._decode_samples(buf).astype(np.complex64)
 
-        buf = np.array(buf, dtype=np.complex64)
         blen = len(buf)
         self._demodA.demodulate(buf[:blen/2])
         if take_ref:
@@ -1000,5 +1036,7 @@ if __name__ == '__main__':
     alz.setup_hist(100)
     vals = alz.take_hist()
     plt.scatter(np.real(vals), np.imag(vals))
+
+    plt.show()
 
     plt.show()
