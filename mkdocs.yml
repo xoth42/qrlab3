@@ -1,0 +1,48 @@
+site_name: QRLab
+
+theme:
+  name: material
+  palette:
+    scheme: slate
+  features:
+    - navigation.tabs
+    - navigation.expand
+    - content.code.copy
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            docstring_options:
+              warn_missing_types: false
+            show_source: true
+            show_signature_annotations: true
+            show_root_heading: true
+            members_order: source
+            filters: ["!^_"]
+
+nav:
+  - Home: index.md
+  - API Reference:
+      - Data Server: api/dataserver_dataserver.md
+      - Instrument: api/instrumentserver_instrument.md
+      - Keysight Digitizer: api/instrumentserver_instrument_plugins_keysight_dig.md
+      - Measurement: api/measurement.md
+      - Measurement Client: api/mclient.md
+      - Object Sharer: api/objectsharer_objectsharer.md
+      - VISA Functions: api/lib_visafunc.md
+      - Config: api/lib_config.md
+      - JSON Extensions: api/lib_jsonext.md
+      - Demodulation: api/lib_math_demod.md
+      - Fit Functions: api/lib_math_fit.md
+      - Fitter: api/lib_math_fitter.md
+      - Minimizer: api/lib_math_minimizer.md
+      - Lifeline: api/lib_server_support_lifeline.md
+      - Log Rotation: api/lib_server_support_log_rotate.md
+      - Pulse Library: api/pulseseq_pulselib.md
+      - Sequencer: api/pulseseq_sequencer.md
+      - Amp Generator: api/pulseseq_ampgen.md
+      - Readout Window Delay Sweep: api/scripts_single_cavity_readout_window_delay_sweep.md

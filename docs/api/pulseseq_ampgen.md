@@ -1,0 +1,2 @@
+# Amp Generator
+::: pulseseq.ampgen
