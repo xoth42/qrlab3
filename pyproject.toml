@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qrlab"
+version = "0.0.0"
+description = "Laboratory measurement, instrument server, pulse sequencing, and analysis utilities."
+requires-python = ">=3.11"
+
+[project.optional-dependencies]
+docs = [
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5,<9.7",
+    "mkdocstrings[python]>=0.25",
+]
+
+[tool.setuptools]
+py-modules = [
+    "measurement",
+    "mclient",
+    "fitting_programs",
+]
+
+[tool.setuptools.packages.find]
+include = [
+    "dataserver*",
+    "H5Plot*",
+    "instrumentserver*",
+    "lib*",
+    "objectsharer*",
+    "pulseseq*",
+    "scripts*",
+]
+exclude = [
+    "test*",
+]
