@@ -1,2 +1,0 @@
-# Sequencer
-::: pulseseq.sequencer
