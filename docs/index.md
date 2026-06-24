@@ -1,6 +1,11 @@
 # QRLab
 
 TODO
+
+## Guides
+
+- [HVI SD1 2.x Notes](guides/hvi_sd1_notes.md)
+
 ## API Reference
 
 - [Data Server](api/dataserver_dataserver.md)
