@@ -12,12 +12,11 @@ if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
 import config
-from measurement import Measurement1D
 from lib.server_support.uselogs import configure_logging
+from measurement import Measurement1D
 from pulseseq.pulselib import *
 from pulseseq.sequencer import *  # provides Sequence, Trigger, Delay, Combined, etc.
 from pulseseq.sequencer import Sequence
-
 
 # What works and what dosen't is rather strange.
 # The following:
@@ -311,7 +310,6 @@ class ReadoutWindowDelaySweep(Measurement1D):
         logger.debug('Plotting pulse with channel_delay=%d samples', int(delay))
         plot_iq_trace(ret, delay, if_period, dig.get_naverages(), SAMPLING_RATE=sampling_rate,)
 
-
     def show_pulse_trig(self, delay, nshots=10, awg_pulse_len=4000, amp=0.9):
         """Trigger-to-trigger sampling: AWG2 self-triggers the digitizer.
 
@@ -368,8 +366,14 @@ class ReadoutWindowDelaySweep(Measurement1D):
 
         # EXTTRIG (default): one captured shot per AWG2 TRG-OUT edge.
         dig.setup_raw_shot(channel=capture_channel, naverages=nshots, ntransfers=1)
+        # dig.setup_avg_shot(channel=capture_channel, naverages=nshots) # TODO FIX 
+
         dig.arm()
+
         raw = dig.take_raw_shot(channel=capture_channel)
+        # raw = dig.take_avg_shot(take_ref=False)  # TODO patch may break
+        # plot_iq_trace(raw, delay, if_period, nshots, title='Triggered capture of %d shots with channel_delay=%d samples' % (nshots, int(delay))) # TODO
+        
         dig.release_buf()
         awg2.stop()
 
