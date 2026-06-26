@@ -37,6 +37,7 @@
 # Fixed by adding syncMode (defaulting to SYNC_NONE, matching the SYNC_NONE
 # already used in this file's DAQtriggerExternalConfig calls elsewhere).
 
+
 import os;
 from ctypes import *
 from math import pow, log, ceil
@@ -44,6 +45,10 @@ from math import pow, log, ceil
 import numpy as np
 
 os.add_dll_directory(r"C:\Program Files\Keysight\SD1\shared")
+
+
+# System crash due to Page Fault in non-paged area. At this time, the stack ended up calling (due to bad config) DAQBufferPoolConfig with 3e10 points. (est. ~0.6-1.2 GB non-paged DMA pool) For now, we will call a simple upper bound (rough estimation) based on the ~600MB max buffer allocation, of 1e8 points
+MAX_DAQ_BUFFER_POINTS = 1e8
 
 class SD_Object :
 	__core_dll = cdll.LoadLibrary("SD1core" if os.name == 'nt' else "libSD1core.so")
@@ -1731,10 +1736,14 @@ class SD_AIN(SD_Module) :
 			return SD_Error.MODULE_NOT_OPENED;
 
 	def DAQbufferPoolConfig(self, nDAQ, nPoints, timeOut = 0):
+		# Avoid Page fault from over-allocation
+		assert nPoints < MAX_DAQ_BUFFER_POINTS, "Requested DAQ buffer points exceed the maximum allowed. Risk of Crash (Page Fault in Non paged area)"
 		if self._SD_Object__handle > 0 :
 			if not hasattr(self, '_daq_pool_buffers') :  # first call ever: create the per-channel buffer registry
 				self._daq_pool_buffers = {}  # maps channel -> the ctypes buffer the driver writes into
+			
 			buf = (c_short * nPoints)()  # real short* buffer, owned by us, sized for the requested pool
+			
 			self._daq_pool_buffers[nDAQ] = buf  # keep a reference so ctypes/gc doesn't free it while the driver still holds the pointer
 			return self._SD_Object__core_dll.SD_AIN_DAQbufferPoolConfig(self._SD_Object__handle, nDAQ, buf, nPoints, timeOut, c_void_p(0), c_void_p(0));  # pass the real buffer instead of NULL
 		else :
