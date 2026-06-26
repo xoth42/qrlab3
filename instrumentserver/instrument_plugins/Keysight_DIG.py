@@ -1,67 +1,115 @@
-import sys
-import time
-import types
-import ctypes
-import numpy as np
-from . import keysightSD1 as key
-from .instrument import Instrument
-import logging
-from lib.math import demod
-import gc
-from .CompiledHVI import CompiledHVI
 
+import gc
+import logging
+import os
+import time
+import warnings
+
+import keysightSD1 as key  # There are two versions, TODO: combine
+# from ..keysightAWG import keysightSD1 as key
+import numpy as np
+from CompiledHVI import CompiledHVI
+from instrument import Instrument
+
+from lib.math import demod
+
+logger = logging.getLogger(__name__)
 
 NO_ERROR = '0,"No error"'
-
+NO_CHANNEL = "No channel"
 
 DEFAULT_TIMEOUT = 2000
 VOLTAGE_SCALE = 2.8
-
+SAMPLE_RATE = 500e6 # Rated for 500MS/s, but with HVI config may run at 100 MS/s. This is important and will mess with results if incorrect. See test/keysight_pulse.py for more information.
 
 class Keysight_DIG(Instrument):
+    def __init__(
+        self,
+        name,
+        chassis=0,
+        slot=3,
+        DIG_PRODUCT="M3102A",
+        trigger_period=200,
+        trigger_only=False,
+        awg_list=[7, 8, 9, 10],
+        nsamples=1000,
+        naverages=1000,
+        deltaf=50e6,
+        if_period=None, # period = sample_rate / IF_frequency. Sample rate and IF delta dependent, so better to set the deltaf and have period set from inside here.  
+        channel_delay=0,
+        main_channel=1,
+        ref_channel=NO_CHANNEL,
+        **kwargs,
+    ):
+        """
+        Initialize a Keysight digitizer instrument.
 
-
-
-    def __init__(self, name, chassis=0, slot=3, DIG_PRODUCT = "M3102A", trigger_period = 200, trigger_only = False, awg_list = [7, 8, 9, 10], 
-                 nsamples=1000, naverages = 1000,if_period = 10, channel_delay = 0, **kwargs):
+        Args:
+            name: Instrument name used by the instrument server registry.
+            chassis: PXI chassis index containing the digitizer card.
+            slot: PXI slot number of the digitizer module.
+            DIG_PRODUCT: Keysight digitizer model string, e.g. "M3102A".
+            trigger_period: HVI trigger cycle period in microseconds.
+            trigger_only: If True, configure only trigger-related parameters
+                and skip the full acquisition setup.
+            awg_list: List of PXI AWG slot numbers used by the shared HVI program.
+            nsamples: Number of raw ADC samples to capture per acquisition.
+            naverages: Number of repeated acquisitions to average together.
+            if_period: Samples per IF cycle used by software demodulation.
+            channel_delay: Sample offset between the external trigger edge and
+                the start of the useful capture window.
+            **kwargs: Reserved for future instrument-server options.
+        """
         super(Keysight_DIG, self).__init__(name)
         self._timeout = DEFAULT_TIMEOUT
-        self._main_channel=1
-        self._ref_channel=2
-        self._nsamples=nsamples
-        self._naverages=naverages
-        self._channel_delay=channel_delay
-        self._if_period=if_period
-
-
-        self._trigger_period=trigger_period
+        self._main_channel = main_channel
+        self._ref_channel = ref_channel
+        self._nsamples = nsamples
+        self._naverages = naverages
+        self._channel_delay = channel_delay
+        self._deltaf = deltaf
+        if if_period is not None:
+            logger.warning("if_period argument is deprecated; please specify deltaf instead")
+            self._if_period = int(if_period)
+        else:
+            self._if_period = int(SAMPLE_RATE / deltaf)
+        # self._if_period = if_period
+        self._trigger_period = trigger_period
         self._interrupt = False
         self._capturing = False
-        self._awg_list = awg_list #DARIO 1/31 dynamic slot assignment
+        self._awg_list = awg_list  # DARIO 1/31 dynamic slot assignment
         self._trigger_only = trigger_only
-#        self._ref_freq = ref_freq
-        
+        #        self._ref_freq = ref_freq
+
         self._name = name
         self._chassis = chassis
         self._slot = slot
         self._DIG_PRODUCT = DIG_PRODUCT
-        
+
         self._hvi = None
         self.load_hvi()
-        
+      
         if trigger_only:
-            self.add_parameter('if_period', type=int,
-                           flags=Instrument.FLAG_GETSET,
-                           minval=2, maxval=1000, value=20,
-                           help='Intermediate Frequency period')
-        
-            self.add_parameter('trigger_period', type=int,
-                           flags=Instrument.FLAG_GETSET,
-                           minval=50, maxval=1600, value=self._trigger_period,
-                           help='Period for the HVI trigger for measurments')
+            self.add_parameter(
+                "if_period",
+                type=int,
+                flags=Instrument.FLAG_GETSET,
+                minval=2,
+                maxval=1000,
+                value=20,
+                help="Intermediate Frequency period",
+            )
+
+            self.add_parameter(
+                "trigger_period",
+                type=int,
+                flags=Instrument.FLAG_GETSET,
+                minval=50,
+                maxval=1600,
+                value=self._trigger_period,
+                help="Period for the HVI trigger for measurments",
+            )
             return
-
-
 
         self.dig = key.SD_AIN()
         ainID = self.dig.openWithSlot(DIG_PRODUCT, self._chassis, self._slot)
@@ -73,88 +121,131 @@ class Keysight_DIG(Instrument):
             print(("ainID:", ainID))
             raise Exception("Shit don't work. Check the chassis and slot")
 
+        self.set_max_sample_rate()
 
-        
-        
         # Device Properties
-        self.add_parameter('serial', type=bytes,
-            flags=Instrument.FLAG_GET, 
-            value = self.dig.getSerialNumberBySlot(self._chassis, self._slot))
-        self.add_parameter('part', type=bytes,
+        self.add_parameter(
+            "serial",
+            type=bytes,
             flags=Instrument.FLAG_GET,
-            value = self.dig.getProductNameBySlot(self._chassis, self._slot))
-        self.add_parameter('num_modules', type=bytes,
+            value=self.dig.getSerialNumberBySlot(self._chassis, self._slot),
+        )
+        self.add_parameter(
+            "part",
+            type=bytes,
             flags=Instrument.FLAG_GET,
-            value = self.dig.moduleCount())
-        self.add_parameter('status', type=bytes,
+            value=self.dig.getProductNameBySlot(self._chassis, self._slot),
+        )
+        self.add_parameter(
+            "num_modules",
+            type=bytes,
             flags=Instrument.FLAG_GET,
-            value = self.dig.getStatus())
-        self.add_parameter('clock_freq', type=bytes,
+            value=self.dig.moduleCount(),
+        )
+        self.add_parameter(
+            "status", type=bytes, flags=Instrument.FLAG_GET, value=self.dig.getStatus()
+        )
+        self.add_parameter(
+            "clock_freq",
+            type=bytes,
             flags=Instrument.FLAG_GETSET,
-            value = self.dig.clockGetFrequency())
-        self.add_parameter('clock_sync_freq', type=bytes,
+            value=self.dig.clockGetFrequency(),
+        )
+        self.add_parameter(
+            "clock_sync_freq",
+            type=bytes,
             flags=Instrument.FLAG_GET,
-            value = self.dig.clockGetSyncFrequency())
+            value=self.dig.clockGetSyncFrequency(),
+        )
 
         # Channel options
-#        self.add_parameter('triggerIO', type=types.StringType,
-#            flags=Instrument.FLAG_GETSET,
-#            channels=(1, 4), channel_prefix='ch%d_')
-#        self.add_parameter('DAQdigitalTrigger', type=types.StringType,
-#            flags=Instrument.FLAG_GETSET,
-#            channels=(1, 4), channel_prefix='ch%d_')
-#        self.add_parameter('prescaler', type=types.FloatType,
-#            flags=Instrument.FLAG_GETSET,
-#            channels=(1, 4), channel_prefix='ch%d_')
-#        self.add_parameter('fullScale', type=types.FloatType,
-#            flags=Instrument.FLAG_GETSET,
-#            channels=(1, 4), channel_prefix='ch%d_')
-#        self.add_parameter('impedance', type=types.FloatType,
-#            flags=Instrument.FLAG_GETSET,
-#            channels=(1, 4), channel_prefix='ch%d_', units='ohms')
-#        self.add_parameter('coupling', type=types.FloatType,
-#            flags=Instrument.FLAG_GETSET,
-#            channels=(1, 4), channel_prefix='ch%d_')
-        
-        self.add_parameter('main_channel', type=int,
-                           flags=Instrument.FLAG_GETSET,
-                           value=1)
-        self.add_parameter('ref_channel', type=int,
-                           flags=Instrument.FLAG_GETSET,
-                           value=2)
-        # Acquisition options
-        self.add_parameter('nsamples', type=int,
-                           flags=Instrument.FLAG_GETSET,
-                           minval=64, maxval=1e9, value=5120,
-                           help='Number of samples per record')
-        self.add_parameter('naverages', type=int,
-                           flags=Instrument.FLAG_GETSET,
-                           minval=1, maxval=1000000, value=500,
-                           help='Number of averages to do')
-        
-        self.add_parameter('channel_delay', type=int,
-                           flags=Instrument.FLAG_GETSET,
-                           value=0)
+        #        self.add_parameter('triggerIO', type=types.StringType,
+        #            flags=Instrument.FLAG_GETSET,
+        #            channels=(1, 4), channel_prefix='ch%d_')
+        #        self.add_parameter('DAQdigitalTrigger', type=types.StringType,
+        #            flags=Instrument.FLAG_GETSET,
+        #            channels=(1, 4), channel_prefix='ch%d_')
+        #        self.add_parameter('prescaler', type=types.FloatType,
+        #            flags=Instrument.FLAG_GETSET,
+        #            channels=(1, 4), channel_prefix='ch%d_')
+        #        self.add_parameter('fullScale', type=types.FloatType,
+        #            flags=Instrument.FLAG_GETSET,
+        #            channels=(1, 4), channel_prefix='ch%d_')
+        #        self.add_parameter('impedance', type=types.FloatType,
+        #            flags=Instrument.FLAG_GETSET,
+        #            channels=(1, 4), channel_prefix='ch%d_', units='ohms')
+        #        self.add_parameter('coupling', type=types.FloatType,
+        #            flags=Instrument.FLAG_GETSET,
+        #            channels=(1, 4), channel_prefix='ch%d_')
 
-        
-        self.add_parameter('if_period', type=int,
-                           flags=Instrument.FLAG_GETSET,
-                           minval=2, maxval=1000, value=20,
-                               help='Intermediate Frequency period')
-        
-        self.add_parameter('trigger_period', type=int,
-                           flags=Instrument.FLAG_GETSET,
-                           minval=50, maxval=10000, value=self._trigger_period,
-                               help='Period for the HVI trigger for measurments')
-        
-        self.add_parameter('timeout', type=int, value=DEFAULT_TIMEOUT,
-           units='ms', help='Instrument read timeout')
-        
+        self.add_parameter(
+            "main_channel", flags=Instrument.FLAG_GETSET, value=1
+        )
+        self.add_parameter(
+            "ref_channel", flags=Instrument.FLAG_GETSET, value=NO_CHANNEL
+        )
+        # Acquisition options
+        self.add_parameter(
+            "nsamples",
+            type=int,
+            flags=Instrument.FLAG_GETSET,
+            minval=64,
+            maxval=1e9,
+            value=5120,
+            help="Number of samples per record",
+        )
+        self.add_parameter(
+            "naverages",
+            type=int,
+            flags=Instrument.FLAG_GETSET,
+            minval=1,
+            maxval=1000000,
+            value=500,
+            help="Number of averages to do",
+        )
+
+        self.add_parameter(
+            "channel_delay", type=int, flags=Instrument.FLAG_GETSET, value=0
+        )
+
+        self.add_parameter(
+            "if_period",
+            type=int,
+            flags=Instrument.FLAG_GETSET,
+            minval=2,
+            maxval=1000,
+            value=20,
+            help="Intermediate Frequency period",
+        )
+
+        self.add_parameter(
+            "trigger_period",
+            type=int,
+            flags=Instrument.FLAG_GETSET,
+            minval=50,
+            maxval=10000,
+            value=self._trigger_period,
+            help="Period for the HVI trigger for measurments",
+        )
+
+        self.add_parameter(
+            "timeout",
+            type=int,
+            value=DEFAULT_TIMEOUT,
+            units="ms",
+            help="Instrument read timeout",
+        )
+
+        self.add_parameter(
+            "sample_rate",
+            type=float,
+            flags=Instrument.FLAG_GET,
+            help="Digitizer sampling rate in Hz from clockGetFrequency()",
+        )
+
+
         self.set(kwargs)
         self.get_all()
-
-        
-        
 
     ###############################################
     # Status checks / controls
@@ -168,78 +259,81 @@ class Keysight_DIG(Instrument):
 
     def do_get_num_modules(self):
         return self.dig.moduleCount()
-        
+
     def do_get_status(self):
         return self.dig.getStatus()
-        
+
     def do_get_clock_freq(self):
         return self.dig.clockGetFrequency()
 
     def do_set_clock_freq(self, freq):
-        self.dig.clockSetFrequency(self, freq, mode = 1)
-        
+        self.dig.clockSetFrequency(freq, mode=1)
+
     def do_get_clock_sync_freq(self):
         return self.dig.clockGetSyncFrequency()
-            
+
     def get_runstate(self):
-        print(('keysight get_runstate', self.dig.getStatus()))
+        print(("keysight get_runstate", self.dig.getStatus()))
         return self.dig.getStatus() == 0
 
     def do_get_timeout(self):
         return self._timeout
-        
+
     def do_set_timeout(self, timeout):
         self._timeout = timeout
-        
+
     def set_interrupt(self, val):
         if val:
-            logging.info('Setting capture interrupt flag')
+            logging.info("Setting capture interrupt flag")
         self._interrupt = val
 
     def get_interrupt(self):
         return self._interrupt
-    
-    
-        
 
     def get_all(self):
-        '''
+        """
         Query all parameters with FLAG_GET flag.
-        '''
+        """
         keys = []
         for k, v in self._parameters.items():
-            if v['flags'] & Instrument.FLAG_GET:
+            if v["flags"] & Instrument.FLAG_GET:
                 keys.append(k)
-            if v['flags'] & Instrument.FLAG_GETSET:
+            if v["flags"] & Instrument.FLAG_GETSET:
                 keys.append(k)
         return self.get(keys)
-    
+
     def set_all(self):
-        '''
+        """
         Query all parameters with FLAG_GET flag.
-        '''
+        """
         keys = []
         for k, v in self._parameters.items():
-            if v['flags'] & Instrument.FLAG_SET:
+            if v["flags"] & Instrument.FLAG_SET:
                 keys.append(k)
-            if v['flags'] & Instrument.FLAG_GETSET:
+            if v["flags"] & Instrument.FLAG_GETSET:
                 keys.append(k)
         return self.set(keys)
-    
+
     def load_hvi(self):
-        num_slots = len(self._awg_list) #DARIO 1/31 dynamic slot assignment
-        HVI_location = 'C:/qrlab/instrumentserver/instrument_plugins/HVI/' + str(num_slots) + 'slot' + str(self._trigger_period) + 'us.HVI'
-#        HVI_location = r'C:\qrlab-3\instrumentserver\instrument_plugins\HVI\1slot' + str(self._trigger_period) + 'us.HVI'
-#        HVI_location = 'C:/qrlab/instrumentserver/instrument_plugins/HVI/2slot100us_Dariotesting_Teja.HVI'
+        num_slots = len(self._awg_list)  # DARIO 1/31 dynamic slot assignment
 
+        file_folder = os.path.dirname(os.path.abspath(__file__))
 
-        self._hvi = CompiledHVI(HVI_location, self._chassis, self._awg_list) #DARIO 1/31 dynamic slot assignment
+        HVI_filename = f"{num_slots}slot{self._trigger_period}us.HVI"
+        HVI_location = os.path.join(file_folder, "HVI", HVI_filename)
+
+        # HVI_location = 'C:/qrlab/instrumentserver/instrument_plugins/HVI/' + str(num_slots) + 'slot' + str(self._trigger_period) + 'us.HVI'
+        #        HVI_location = r'C:\qrlab-3\instrumentserver\instrument_plugins\HVI\1slot' + str(self._trigger_period) + 'us.HVI'
+        #        HVI_location = 'C:/qrlab/instrumentserver/instrument_plugins/HVI/2slot100us_Dariotesting_Teja.HVI'
+
+        self._hvi = CompiledHVI(HVI_location, self._chassis, self._awg_list)
 
         self._hvi.stop()
-        
+
     def start_hvi(self):
         self._hvi.start()
-        
+        self._log_status("start_hvi")
+
     def stop_hvi(self):
         self._hvi.stop()
 
@@ -248,7 +342,7 @@ class Keysight_DIG(Instrument):
     ###############################################
 
     def run(self):
-        print('keysight dig run')
+        print("keysight dig run")
         self.dig.DAQstartMultiple(15)
 
     def run_channel(self, channel):
@@ -256,210 +350,547 @@ class Keysight_DIG(Instrument):
 
     def stop(self):
         self.dig.DAQstopMultiple(15)
-        
+
     def stop_channel(self, channel):
         self.dig.DAQstop(channel)
-        
+
     def flush(self):
         self.dig.DAQflushMultiple(15)
-        
+
     def flush_channel(self, channel):
         self.dig.DAQflush(channel)
-        
-    def DAQread(self, nDAQ, nPoints, timeOut = 0):
-        self.dig.DAQread(self, nDAQ, nPoints, timeOut)
 
-    def set_DAQ(self, channel, pointsPerCycle, nCycles, triggerDelay, triggermode = key.SD_TriggerModes.EXTTRIG):
-        self.dig.DAQconfig(self, channel, pointsPerCycle, nCycles, triggerDelay, triggermode)
+    def daq_trigger(self, channel=None):
+        """Fire a software (SWHVITRIG) trigger on a channel.
 
-#    def do_set_triggerIO(self, direction = key.SD_TriggerDirections.AOU_TRG_IN):
-#        self._triggerIOconfig = direction
-#        self.dig.triggerIOconfig(direction)
-#                
-#    def do_get_triggerIO(self):
-#        return self._triggerIOconfig
-#    
-#    def do_set_DAQdigitalTrigger(self, channel, triggerSource = key.SD_TriggerExternalSources.TRIGGER_EXTERN, 
-#                                    triggerBehavior = key.SD_TriggerBehaviors.TRIGGER_HIGH):
-#        self.dig.DAQdigitalTriggerConfig(self, channel, triggerSource, triggerBehavior)
+        For isolating whether the EXTTRIG/TRG-I/O path is the problem: with
+        setup_raw_shot(triggermode=1) (SWHVITRIG) configured and dig.arm()
+        called, this should produce a capture (DAQcounterRead > 0) with no
+        AWG/HVI/cabling involved at all -- if EXTTRIG alone returns 0 samples
+        but this works, the digitizer itself is fine and the external trigger
+        signal specifically isn't being detected.
+        """
+        if channel is None:
+            channel = self._main_channel
+        return self.dig.DAQtrigger(channel)
 
-#    def do_set_prescaler(self, channel, prescaler):
-#        self._prescaler = prescaler
-#        self.dig.channelPrescalerConfig(channel, prescaler)
-#        
-#    def do_set_fullScale(self, channel, fullScale):
-#        self._fullScale = fullScale
-#        self.dig.channelInputConfig(channel, fullScale, self._impedance, self._coupling)        
-#        
-#    def do_set_impedance(self, channel, impedance):
-#        self._impedance = impedance
-#        self.dig.channelInputConfig(channel, self._fullScale, impedance, self._coupling)
-#        
-#    def do_set_coupling(self, channel, coupling):
-#        self._coupling = coupling
-#        self.dig.channelInputConfig(channel, self._fullScale, self._impedance, coupling)
-#        
-#    def do_get_prescaler(self, channel):
-#        return self.dig.channelPrescaler(channel)
-#        
-#    def do_get_fullScale(self, channel):
-#        return self.dig.channelFullScale(channel)
-#        
-#    def do_get_impedance(self, channel):
-#        return self.dig.channelImpedance(channel)
-#        
-#    def do_get_coupling(self, channel):
-#        return self.dig.channelCoupling(channel)
-    
+    def trigger_io_read(self):
+        """Read the live digital logic level currently present at the TRG I/O
+        connector (requires triggerIOconfig(AOU_TRG_IN, ...) to have been set,
+        which setup_avg_shot/setup_raw_shot already do).
+
+        Bypasses DAQconfig/buffer-pool/clock entirely -- this is the most
+        direct software check of whether an external trigger pulse (e.g. from
+        AWG2 ch1) is actually arriving at the connector at all.
+        """
+        return self.dig.triggerIOread()
+
+    def DAQread(self, nDAQ, nPoints, timeOut=0):
+        self.dig.DAQread(nDAQ, nPoints, timeOut)
+
+    def DAQbufferGet(self, channel=None):
+        """Expose SD_AIN.DAQbufferGet through the objectsharer proxy.
+
+        self.dig (SD_AIN) lives in the server process and is never serialised
+        across the proxy boundary. This method delegates to it server-side and
+        returns the result as a plain numpy array the proxy can serialise.
+
+        Args:
+            channel: ADC channel index (1–4).
+
+        Returns:
+            1D numpy float array of raw ADC samples.
+        """
+        if channel is None:
+            channel = self._main_channel
+        return np.asarray(self.dig.DAQbufferGet(channel), dtype=float)
+
+    def set_DAQ(
+        self,
+        channel,
+        pointsPerCycle,
+        nCycles,
+        triggerDelay,
+        triggermode=key.SD_TriggerModes.EXTTRIG,
+    ):
+        self.dig.DAQconfig(
+            self, channel, pointsPerCycle, nCycles, triggerDelay, triggermode
+        )
+
+    #    def do_set_triggerIO(self, direction = key.SD_TriggerDirections.AOU_TRG_IN):
+    #        self._triggerIOconfig = direction
+    #        self.dig.triggerIOconfig(direction)
+    #
+    #    def do_get_triggerIO(self):
+    #        return self._triggerIOconfig
+    #
+    #    def do_set_DAQdigitalTrigger(self, channel, triggerSource = key.SD_TriggerExternalSources.TRIGGER_EXTERN,
+    #                                    triggerBehavior = key.SD_TriggerBehaviors.TRIGGER_HIGH):
+    #        self.dig.DAQdigitalTriggerConfig(self, channel, triggerSource, triggerBehavior)
+
+    def do_set_prescaler(self, channel, prescaler):
+        self._prescaler = prescaler
+        self.dig.channelPrescalerConfig(channel, prescaler)
+
+    #    def do_set_fullScale(self, channel, fullScale):
+    #        self._fullScale = fullScale
+    #        self.dig.channelInputConfig(channel, fullScale, self._impedance, self._coupling)
+    #
+    #    def do_set_impedance(self, channel, impedance):
+    #        self._impedance = impedance
+    #        self.dig.channelInputConfig(channel, self._fullScale, impedance, self._coupling)
+    #
+    #    def do_set_coupling(self, channel, coupling):
+    #        self._coupling = coupling
+    #        self.dig.channelInputConfig(channel, self._fullScale, self._impedance, coupling)
+
+    def do_get_prescaler(self, channel):
+        return self.dig.channelPrescaler(channel)
+
+    #    def do_get_fullScale(self, channel):
+    #        return self.dig.channelFullScale(channel)
+    #
+    #    def do_get_impedance(self, channel):
+    #        return self.dig.channelImpedance(channel)
+    #
+    #    def do_get_coupling(self, channel):
+    #        return self.dig.channelCoupling(channel)
+
     def do_get_nsamples(self):
         return self._nsamples
-        
+
     def do_set_nsamples(self, nsamples):
         self._nsamples = nsamples
-        
+        if self._nsamples % self._if_period != 0:
+            raise ValueError("nsamples (%d) must be a multiple of if_period (%d)" %
+                (self._nsamples, self._if_period))
+
+
     def do_get_naverages(self):
         return self._naverages
-        
+
     def do_set_naverages(self, naverages):
         self._naverages = naverages
-        
+
     def do_get_main_channel(self):
         return self._main_channel
-        
+
     def do_set_main_channel(self, channel):
         self._main_channel = channel
-        
+
     def do_get_ref_channel(self):
         return self._ref_channel
-        
+
     def do_set_ref_channel(self, channel):
         self._ref_channel = channel
-        
+
     def do_get_channel_delay(self):
         return self._channel_delay
-        
+
     def do_set_channel_delay(self, delay):
         self._channel_delay = delay
-        
+
     def do_get_if_period(self):
         return self._if_period
-    
+
+    def do_get_sample_rate(self):
+        return SAMPLE_RATE
+
     def do_set_if_period(self, if_period):
-        self._if_period = if_period
-        
+        self._if_period = int(if_period)
+        if self._nsamples % self._if_period != 0:
+            raise ValueError("nsamples (%d) must be a multiple of if_period (%d)" %
+                     (self._nsamples, self._if_period))
+
+    def do_set_deltaf(self, deltaf):
+        self._deltaf = deltaf
+        self._if_period = int(SAMPLE_RATE / deltaf)
+        if self._nsamples % self._if_period != 0:
+            raise ValueError("nsamples (%d) must be a multiple of if_period (%d)" %
+                     (self._nsamples, self._if_period))
+
     def do_get_trigger_period(self):
         return self._trigger_period
-    
+
     def do_set_trigger_period(self, trigger_period):
-        self.__init__(self._name, chassis = self._chassis, slot = self._slot, 
-                      trigger_period = trigger_period, trigger_only = self._trigger_only,
-                      naverages = self._naverages, nsamples = self._nsamples,
-                      awg_list = self._awg_list)
+        self.__init__(
+            self._name,
+            chassis=self._chassis,
+            slot=self._slot,
+            trigger_period=trigger_period,
+            trigger_only=self._trigger_only,
+            naverages=self._naverages,
+            nsamples=self._nsamples,
+            awg_list=self._awg_list,
+        )
+
+    def set_max_sample_rate(self, target_hz=500e6, mode=1):
+        """
+        Try to set the digitizer sample clock to a high value (e.g. 500e6),
+        then report what SD1 says the actual hardware clock is.
+
+        NOTE:
+        - On the M3102A, the true max is typically 500 MS/s.
+        - HVI may override this; treat this as "best effort" / experiment.
+        """
+        try:
+            # Ask SD1 to set the clock
+            result = self.dig.clockSetFrequency(target_hz, mode)
+            print("clockSetFrequency(target_hz=%g) -> %g" % (target_hz, result))
+
+            # Read back what hardware reports
+            fs = self.dig.clockGetFrequency()
+            print("clockGetFrequency() -> %g Hz" % fs)
+            return fs
+        except Exception as exc:
+            print("set_max_sample_rate failed:", exc)
+            return None
 
     ###############################################
     # Acquizition Methods
     ###############################################
 
+    def _log_status(self, label):
+        # DAQcounterRead reports words actually acquired by the ADC since the
+        # last DAQflush, independent of the buffer-pool retrieval path -- if
+        # this is 0 after a full acquisition cycle, the digitizer never
+        # captured anything (clock/trigger problem), regardless of whether
+        # DAQbufferGet/the buffer pool is working correctly.
+        logger.debug(
+            "%s: dig status=%s, main_channel counter=%s",
+            label,
+            self.dig.getStatus(),
+            self.dig.DAQcounterRead(self._main_channel),
+        )
+
     def arm(self):
         self.dig.DAQstartMultiple(15)
+        self._log_status("arm")
 
-
-    def setup_avg_shot(self, ntransfers = None):
+    def setup_avg_shot(self, ntransfers=None):
         if ntransfers is None:
             ntransfers = 1
-            
+
         self.release_buf()
-        
+        logger.info(
+            "setup_avg_shot(nsamples=%d, naverages=%d, channel_delay=%d, ntransfers=%d)",
+            self._nsamples,
+            self._naverages,
+            self._channel_delay,
+            ntransfers,
+        )
+
         errors = []
-            
+
         errors += [self.dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)]
-        for channel in [self._main_channel, self._ref_channel]:
-            errors += [self.dig.DAQtriggerExternalConfig(channel, key.SD_TriggerExternalSources.TRIGGER_EXTERN, 
-                                    key.SD_TriggerBehaviors.TRIGGER_RISE, key.SD_SyncModes.SYNC_NONE)]
+        relevant_channels = [self._main_channel]
+        if self._ref_channel is not NO_CHANNEL:
+            relevant_channels.append(self._ref_channel)
+        for channel in relevant_channels:
+            errors += [
+                self.dig.DAQtriggerExternalConfig(
+                    channel,
+                    key.SD_TriggerExternalSources.TRIGGER_EXTERN,
+                    key.SD_TriggerBehaviors.TRIGGER_RISE,
+                    key.SD_SyncModes.SYNC_NONE,
+                )
+            ]
             errors += [self.dig.DAQflush(channel)]
-            errors += [self.dig.channelInputConfig(channel, VOLTAGE_SCALE, 
-                                                   key.AIN_Impedance.AIN_IMPEDANCE_50, 
-                                                   key.AIN_Coupling.AIN_COUPLING_DC)]
-            errors += [self.dig.DAQconfig(channel, self._nsamples, self._naverages, 
-                                          self._channel_delay, key.SD_TriggerModes.EXTTRIG)]
-            errors += [self.dig.DAQbufferPoolConfig(channel, self._nsamples * self._naverages / ntransfers, 
-                                                    self._timeout)]
-            self.set_demod(self._nsamples * self._naverages / ntransfers, avg_periods=1) #TODO: change avg_periods?
-        
+            errors += [
+                self.dig.channelInputConfig(
+                    channel,
+                    VOLTAGE_SCALE,
+                    key.AIN_Impedance.AIN_IMPEDANCE_50,
+                    key.AIN_Coupling.AIN_COUPLING_DC,
+                )
+            ]
+            errors += [
+                self.dig.DAQconfig(
+                    channel,
+                    self._nsamples,
+                    self._naverages,
+                    self._channel_delay,
+                    key.SD_TriggerModes.EXTTRIG,
+                )
+            ]
+            # nPoints (arg 4 of DAQbufferPoolConfig) is declared as C int.
+            # Python 3 '/' returns float; ctypes cannot auto-cast float→int.
+            # Use '//' (integer division) — ntransfers always divides evenly
+            # because it defaults to 1 and is only set by the caller to
+            # factors of naverages.
+            npoints = self._nsamples * self._naverages // ntransfers
+            errors += [self.dig.DAQbufferPoolConfig(channel, npoints, self._timeout)]
+            self.set_demod(npoints, avg_periods=1)  # TODO: change avg_periods?
+
         if any(error < 0 for error in errors):
-            print(('setup_avg_shot errors: ', errors))
-            
-    def setup_raw_shot_ROIC(self, ntransfers = None, I_chan=3, Q_chan=4):
+            logger.error("setup_avg_shot errors: %s", errors)
+            print(("setup_avg_shot errors: ", errors))
+
+    def setup_raw_shot_ROIC(self, ntransfers=None, I_chan=3, Q_chan=4):
         if ntransfers is None:
             ntransfers = 1
-            
-        naverages = 1 # I want this for now, possibly change in future.. DARIO 6/9/21
-        
+
+        naverages = 1  # I want this for now, possibly change in future.. DARIO 6/9/21
+
         self.release_buf()
-        
+
         errors = []
-            
+
         errors += [self.dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)]
         for channel in [I_chan, Q_chan]:
-            errors += [self.dig.DAQtriggerExternalConfig(channel, key.SD_TriggerExternalSources.TRIGGER_EXTERN, 
-                                    key.SD_TriggerBehaviors.TRIGGER_RISE, key.SD_SyncModes.SYNC_NONE)]
+            errors += [
+                self.dig.DAQtriggerExternalConfig(
+                    channel,
+                    key.SD_TriggerExternalSources.TRIGGER_EXTERN,
+                    key.SD_TriggerBehaviors.TRIGGER_RISE,
+                    key.SD_SyncModes.SYNC_NONE,
+                )
+            ]
             errors += [self.dig.DAQflush(channel)]
-            errors += [self.dig.channelInputConfig(channel, VOLTAGE_SCALE, 
-                                                   key.AIN_Impedance.AIN_IMPEDANCE_50, 
-                                                   key.AIN_Coupling.AIN_COUPLING_DC)]
-            errors += [self.dig.DAQconfig(channel, self._nsamples, naverages, 
-                                          self._channel_delay, key.SD_TriggerModes.EXTTRIG)]
-            errors += [self.dig.DAQbufferPoolConfig(channel, self._nsamples * naverages / ntransfers, 
-                                                    self._timeout)]
-#            self.set_demod(self._nsamples * naverages / ntransfers, avg_periods=1) #TODO: change avg_periods?
-        
+            errors += [
+                self.dig.channelInputConfig(
+                    channel,
+                    VOLTAGE_SCALE,
+                    key.AIN_Impedance.AIN_IMPEDANCE_50,
+                    key.AIN_Coupling.AIN_COUPLING_DC,
+                )
+            ]
+            errors += [
+                self.dig.DAQconfig(
+                    channel,
+                    self._nsamples,
+                    naverages,
+                    self._channel_delay,
+                    key.SD_TriggerModes.EXTTRIG,
+                )
+            ]
+            errors += [
+                self.dig.DAQbufferPoolConfig(
+                    channel, self._nsamples * naverages / ntransfers, self._timeout
+                )
+            ]
+        #            self.set_demod(self._nsamples * naverages / ntransfers, avg_periods=1) #TODO: change avg_periods?
+
         if any(error < 0 for error in errors):
-            print(('setup_raw_shot errors: ', errors))
+            print(("setup_raw_shot errors: ", errors))
+
+    def setup_raw_shot(self, channel=None, naverages=None, ntransfers=None, triggermode=None):
+        """
+        Configure DAQ for a raw capture on a single channel (no demodulation).
+
+        Args:
+            channel:     ADC channel index (1-4). Defaults to self._main_channel.
+            naverages:   number of shots to acquire. For FFT work, use 1.
+            ntransfers:  number of DAQ transfers; default 1 for simple use.
+            triggermode: key.SD_TriggerModes value. Defaults to EXTTRIG (the
+                normal external-trigger path). Pass AUTOTRIG to capture
+                immediately with no trigger at all -- a pure ADC/clock sanity
+                check that bypasses the AWG/HVI/cabling chain entirely: if
+                DAQcounterRead is still 0 afterwards, the ADC itself isn't
+                converting (clock problem), not a trigger-detection problem.
+        """
+        if channel is None:
+            channel = self._main_channel
+        if ntransfers is None:
+            ntransfers = 1
+
+        self.release_buf()
+
+        errors = []
+        errors += [self.dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)]
+        errors += [
+            self.dig.DAQtriggerExternalConfig(
+                channel,
+                key.SD_TriggerExternalSources.TRIGGER_EXTERN,
+                key.SD_TriggerBehaviors.TRIGGER_RISE,
+                key.SD_SyncModes.SYNC_NONE,
+            )
+        ]
+        errors += [self.dig.DAQflush(channel)]
+        errors += [
+            self.dig.channelInputConfig(
+                channel,
+                VOLTAGE_SCALE,
+                key.AIN_Impedance.AIN_IMPEDANCE_50,
+                key.AIN_Coupling.AIN_COUPLING_DC,
+            )
+        ]
+        errors += [
+            self.dig.DAQconfig(
+                channel,
+                self._nsamples,
+                naverages if naverages is not None else self._naverages,
+                self._channel_delay,
+                triggermode if triggermode is not None else key.SD_TriggerModes.EXTTRIG,
+            )
+        ]
+
+        # nPoints must be an int; use integer division.
+        npoints = self._nsamples * (naverages if naverages is not None else self._naverages) // ntransfers
+        errors += [self.dig.DAQbufferPoolConfig(channel, npoints, self._timeout)]
+
+        if any(e < 0 for e in errors):
+            print("setup_raw_shot errors:", errors)
+
+    def _poll_daq_buffer_get(self, channel, timeout_ms=None, poll_interval=0.01):
+        """Poll DAQbufferGet(channel) until it returns a non-empty result or times out.
+
+        DAQbufferGet is non-blocking: it returns whatever is in the channel's
+        delivered-buffer queue *right now*, which can legitimately be an
+        empty array if the SD1 driver hasn't finished marking the buffer
+        ready yet, even though the trigger fired and the ADC captured data
+        (confirmed empirically: an immediate read after a trigger returned
+        empty, then an identical read a moment later returned real samples).
+        A single un-retried call is therefore not a reliable way to fetch a
+        completed acquisition -- this polls instead.
+
+        Args:
+            channel:      ADC channel index to read.
+            timeout_ms:   Max time to poll, in ms. Defaults to self._timeout.
+            poll_interval: Seconds to sleep between poll attempts.
+
+        Returns:
+            Whatever DAQbufferGet last returned (numpy array, possibly still
+            empty if the timeout elapsed, or a negative int error code).
+        """
+        if timeout_ms is None:
+            timeout_ms = self._timeout
+        deadline = time.time() + timeout_ms / 1000.0
+        result = self.dig.DAQbufferGet(channel)
+        while isinstance(result, np.ndarray) and len(result) == 0 and time.time() < deadline:
+            time.sleep(poll_interval)
+            result = self.dig.DAQbufferGet(channel)
+        if isinstance(result, np.ndarray) and len(result) == 0:
+            logger.warning(
+                "_poll_daq_buffer_get(channel=%d) timed out after %d ms with no data "
+                "— check naverages/trigger; channel likely never (fully) triggered",
+                channel, timeout_ms,
+            )
+        return result
+
+    def take_raw_shot(self, channel=None):
+        """
+        Fetch a single raw buffer from DAQbufferGet for the given channel.
+
+        Returns:
+            1D numpy array of length nsamples * naverages (dtype float).
+        """
+        if channel is None:
+            channel = self._main_channel
+
+        self._log_status("take_raw_shot pre-read")
+        data = self._poll_daq_buffer_get(channel)
+        # Reuse same error helper as for demod case, if you like:
+        if isinstance(data, int) and data < 0:
+            self._raise_if_daq_error(data, channel)
+
+        data = np.asarray(data, dtype=float)
+        if len(data) != self._nsamples * self._naverages:
+            print("take_raw_shot: unexpected buffer length:",
+                  len(data), "expected", self._nsamples * self._naverages)
+        return data
 
 
-    def take_avg_shot(self, acqtimeout=None, take_ref=True):
-        signal = np.zeros(self._naverages * self._nsamples, dtype = np.complex64)
+    def _raise_if_daq_error(self, result, channel):
+        """Raise ValueError with a human-readable SD1 error name if result is an integer error code.
+        DAQbufferGet returns a numpy array on success; a negative int on failure.
+        Parameterized by channel so the message identifies which channel failed."""
+        if not isinstance(result, int):
+            return  # normal array result — nothing to do
+        # Negative integers map to named constants in key.SD_Error
+        err_name = next(
+            (
+                k
+                for k, v in vars(key.SD_Error).items()
+                if not k.startswith("_") and v == result
+            ),
+            "UNKNOWN",
+        )
+        raise ValueError(
+            "DAQbufferGet(channel=%d) returned error %d (%s) "
+            "— check naverages=%d, HVI trigger, and buffer configuration"
+            % (channel, result, err_name, self._naverages)
+        )
+
+    def take_avg_shot(self, acqtimeout=None, take_ref=None):
+        # check if reference channel is configured and/or present
+        if take_ref is None:
+            take_ref = self._ref_channel is not NO_CHANNEL
+
+        signal = np.zeros(self._naverages * self._nsamples, dtype=np.complex64)
         ref = np.zeros_like(signal)
+        expected_len = self._naverages * self._nsamples
+        logger.info(
+            "take_avg_shot(take_ref=%s, nsamples=%d, naverages=%d, channel_delay=%d, if_period=%d, main_channel=%s, ref_channel=%s)",
+            take_ref,
+            self._nsamples,
+            self._naverages,
+            self._channel_delay,
+            self._if_period,
+            self._main_channel,
+            self._ref_channel,
+        )
+        self._log_status("take_avg_shot pre-read")
         try:
             signal = self.dig.DAQbufferGet(self._main_channel)
+            self._raise_if_daq_error(signal, self._main_channel)
             if take_ref:
                 ref = self.dig.DAQbufferGet(self._ref_channel)
+                self._raise_if_daq_error(ref, self._ref_channel)
         except ValueError as e:
+            logger.error("take_avg_shot acquisition failed: %s", e)
             print((str(e)))
-            print('digitizer is likely not getting triggered')
-            raise ValueError
-            
-        if(not len(signal) == self._naverages * self._nsamples):
-            print('Buffer gave some wack shit, or maybe no shit at all:')
+            print("digitizer is likely not getting triggered")
+            raise
+
+        if not len(signal) == expected_len:
+
+            print("DAQ buffer length invalid:")
             print((np.shape(signal), signal))
             print((np.shape(ref), ref))
+            logger.error(
+                "DAQ buffer length invalid: signal_shape=%s ref_shape=%s expected_len=%d",
+                np.shape(signal),
+                np.shape(ref),
+                expected_len,
+            )
             raise ValueError
-        
+
         self._demodA.demodulate(signal)
-        IQA = self._demodA.IQ.reshape([self._naverages, self._nsamples / self._if_period])
-#        IQA = self._demodA.IQ
+        # `signal` is the flat concatenation of _naverages raw shots, each
+        # _nsamples long. demodulate() collapses every if_period-sample block
+        # (one IF cycle) into a single complex point via dot product with
+        # exp(-i*phi), so its flat IQ output has _naverages * (_nsamples //
+        # _if_period) points total. Reshape restores the (shot, time-within-
+        # shot) grid so each row can be phase-corrected/averaged per shot below.
+        IQA = self._demodA.IQ.reshape(
+            [self._naverages, self._nsamples // self._if_period]
+        )
 
         # Calculate reference angles
         if take_ref:
             self._demodB.demodulate(ref)
-            IQB = self._demodB.IQ.reshape([self._naverages, self._nsamples / self._if_period])
+            IQB = self._demodB.IQ.reshape(
+                [self._naverages, self._nsamples // self._if_period]
+            )
             refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
         else:
             refs = np.ones(self._naverages)
-#        IQB = self._demodB.IQ
-        
-#        if self._ref_freq <0:
-#            refs = np.exp(1j * np.angle(np.average(IQB, 1))) 
+        #        IQB = self._demodB.IQ
+
+        #        if self._ref_freq <0:
+        #            refs = np.exp(1j * np.angle(np.average(IQB, 1)))
         avg = 0
         for i in range(self._naverages):
-            avg += IQA[i,:] * refs[i]
-            
+            avg += IQA[i, :] * refs[i]
+
         self.release_buf()
-            
-        return avg/self._naverages
-    
+
+        logger.info("take_avg_shot returning %d IQ bins", len(avg / self._naverages))
+        return avg / self._naverages
+
     def take_raw_shot_ROIC(self, acqtimeout=None, I_chan=3, Q_chan=4):
-        I = np.zeros(self._nsamples, dtype = np.complex64)
+        I = np.zeros(self._nsamples, dtype=np.complex64)
         Q = np.zeros_like(I)
         try:
             I = self.dig.DAQbufferGet(I_chan)
@@ -468,166 +899,214 @@ class Keysight_DIG(Instrument):
             print((np.shape(Q), Q))
         except ValueError as e:
             print((str(e)))
-            print('digitizer is likely not getting triggered')
+            print("digitizer is likely not getting triggered")
             raise ValueError
-            
-        if(not len(I) == self._nsamples):
-            print('Buffer gave some wack shit, or maybe no shit at all:')
+
+        if not len(I) == self._nsamples:
+            print("Buffer gave some wack shit, or maybe no shit at all:")
             print((np.shape(I), I))
             print((np.shape(Q), Q))
             raise ValueError
-            
+
         self.release_buf()
-        
+
         return [I, Q]
-        
-    def setup_experiment(self, num_points, ntransfers = None, take_ref = True):
+
+    def setup_experiment(self, num_points, ntransfers=None, take_ref=True):
         if ntransfers is None:
             if self._naverages % 10 == 0:
                 if num_points >= 10:
-                    self._ntransfers = self._naverages/100
+                    self._ntransfers = self._naverages / 100
                 else:
-                    self._ntransfers = max(1, self._naverages/2000)  # May 2019: Less frequent update when number of points is small
+                    self._ntransfers = max(
+                        1, self._naverages / 2000
+                    )  # May 2019: Less frequent update when number of points is small
             else:
                 self._ntransfers = self._naverages
-        elif(self._naverages % ntransfers == 0):
-                self._ntransfers = ntransfers
+        elif self._naverages % ntransfers == 0:
+            self._ntransfers = ntransfers
         else:
-            print('not able to choose ntransfers or choice is incompatible with naverages')
+            print(
+                "not able to choose ntransfers or choice is incompatible with naverages"
+            )
             raise ValueError
-#        if ntransfers is None:    #Yingying, try more frequent update when number of points is large
-#            if self._naverages % 10 == 0:
-#                if num_points >= 200:
-#                    ntransfers = self._naverages/20                
-#                elif num_points >= 10:
-#                    ntransfers = self._naverages/100
-#                else:
-#                    ntransfers = self._naverages/2000  # May 2019: Less frequent update when number of points is small
-#            else:
-#                ntransfers = self._naverages
-#        if(self._naverages % ntransfers == 0):
-#                self._ntransfers = ntransfers
-#                print('ntransfers is %s'%( ntransfers))
-#        else:
-#            print('not able to choose ntransfers or choice is incompatible with naverages')
-#            raise ValueError
-            
+        #        if ntransfers is None:    #Yingying, try more frequent update when number of points is large
+        #            if self._naverages % 10 == 0:
+        #                if num_points >= 200:
+        #                    ntransfers = self._naverages/20
+        #                elif num_points >= 10:
+        #                    ntransfers = self._naverages/100
+        #                else:
+        #                    ntransfers = self._naverages/2000  # May 2019: Less frequent update when number of points is small
+        #            else:
+        #                ntransfers = self._naverages
+        #        if(self._naverages % ntransfers == 0):
+        #                self._ntransfers = ntransfers
+        #                print('ntransfers is %s'%( ntransfers))
+        #        else:
+        #            print('not able to choose ntransfers or choice is incompatible with naverages')
+        #            raise ValueError
+
         self.release_buf()
-            
-        errors = []    
-        
+
+        errors = []
+
         self._npoints = num_points
-        samples_per_transfer = self._naverages *  self._npoints * self._nsamples / self._ntransfers
+        samples_per_transfer = (
+            self._naverages * self._npoints * self._nsamples // self._ntransfers
+        )
 
         errors += [self.dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)]
         channels = [self._main_channel]
-        if take_ref: channels += [self._ref_channel]
+        if take_ref:
+            channels += [self._ref_channel]
         for channel in channels:
-            errors += [self.dig.DAQtriggerExternalConfig(channel, key.SD_TriggerExternalSources.TRIGGER_EXTERN, 
-                                    key.SD_TriggerBehaviors.TRIGGER_RISE, key.SD_SyncModes.SYNC_NONE)]
+            errors += [
+                self.dig.DAQtriggerExternalConfig(
+                    channel,
+                    key.SD_TriggerExternalSources.TRIGGER_EXTERN,
+                    key.SD_TriggerBehaviors.TRIGGER_RISE,
+                    key.SD_SyncModes.SYNC_NONE,
+                )
+            ]
             errors += [self.dig.DAQflush(channel)]
-            errors += [self.dig.channelInputConfig(channel, VOLTAGE_SCALE, key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)]
-            errors += [self.dig.DAQconfig(channel, self._nsamples, self._naverages * self._npoints, self._channel_delay, key.SD_TriggerModes.EXTTRIG)]
-            errors += [self.dig.DAQbufferPoolConfig(channel, samples_per_transfer, self._timeout)]
-            self.set_demod(samples_per_transfer, avg_periods= 1) #TODO: change avg_periods?
-        
-        if any(error < 0 for error in errors):
-            print(('setup_experiment errors: ', errors))
-        
-    def take_experiment(self, avg_buf=None, cov_buf=None, IQ_e=None, e_radius=None, take_ref=True):
-        samples_per_transfer = self._naverages *  self._npoints * self._nsamples / self._ntransfers
-        acq_per_transfer = self._naverages *  self._npoints / self._ntransfers
+            errors += [
+                self.dig.channelInputConfig(
+                    channel,
+                    VOLTAGE_SCALE,
+                    key.AIN_Impedance.AIN_IMPEDANCE_50,
+                    key.AIN_Coupling.AIN_COUPLING_DC,
+                )
+            ]
+            errors += [
+                self.dig.DAQconfig(
+                    channel,
+                    self._nsamples,
+                    self._naverages * self._npoints,
+                    self._channel_delay,
+                    key.SD_TriggerModes.EXTTRIG,
+                )
+            ]
+            errors += [
+                self.dig.DAQbufferPoolConfig(
+                    channel, samples_per_transfer, self._timeout
+                )
+            ]
+            self.set_demod(
+                samples_per_transfer, avg_periods=1
+            )  # TODO: change avg_periods?
 
-        avgs = np.zeros(self._npoints, dtype = np.complex64)
-        values = np.zeros((self._npoints, self._naverages), dtype = np.complex64)
-                
-        print(('tracking nsamples', self._nsamples))
-        self._capturing = True 
+        if any(error < 0 for error in errors):
+            print(("setup_experiment errors: ", errors))
+
+    def take_experiment(
+        self, avg_buf=None, cov_buf=None, IQ_e=None, e_radius=None, take_ref=True):
+        samples_per_transfer = (
+            self._naverages * self._npoints * self._nsamples // self._ntransfers
+        )
+        acq_per_transfer = self._naverages * self._npoints // self._ntransfers
+
+        avgs = np.zeros(self._npoints, dtype=np.complex64)
+        values = np.zeros((self._npoints, self._naverages), dtype=np.complex64)
+
+        print(("tracking nsamples", self._nsamples))
+        self._capturing = True
         self.set_interrupt(False)
-        self.emit('start-capture')
+        self.emit("start-capture")
         for i in range(self._ntransfers):
-#            print('Acquiring %d/%d', i+1, self._ntransfers)
-            logging.info('%d/%d averages performed', (i)*self._naverages/self._ntransfers, self._naverages)
-            self.emit('capture-progress', (i)*self._naverages/self._ntransfers)
-            
+            #            print('Acquiring %d/%d', i+1, self._ntransfers)
+            logging.info(
+                "%d/%d averages performed",
+                (i) * self._naverages / self._ntransfers,
+                self._naverages,
+            )
+            self.emit("capture-progress", (i) * self._naverages / self._ntransfers)
+
             if self._interrupt:
-                logging.info('Capture interrupted')
-                raise Exception('Capture interrupted')
+                logging.info("Capture interrupted")
+                raise Exception("Capture interrupted")
                 self._card.end_capture()
                 if self._capturing:
-                    self.emit('end-capture')
+                    self.emit("end-capture")
                 self.set_interrupt(False)
                 self._capturing = False
-                logging.info('DIG ended capture...')
-                return avgs/((i+1)*self._naverages/self._ntransfers)
-            
+                logging.info("DIG ended capture...")
+                return avgs / ((i + 1) * self._naverages / self._ntransfers)
+
             try:
-                signal = np.array(self.dig.DAQbufferGet(self._main_channel), dtype=np.complex64)
+                signal = np.array(
+                    self.dig.DAQbufferGet(self._main_channel), dtype=np.complex64
+                )
                 if take_ref:
-                    ref = np.array(self.dig.DAQbufferGet(self._ref_channel), dtype=np.complex64)
+                    ref = np.array(
+                        self.dig.DAQbufferGet(self._ref_channel), dtype=np.complex64
+                    )
             except ValueError as e:
                 print((str(e)))
-#            IQA = self._demodA.IQ.reshape([acq_per_transfer, self._nsample])
-                print('digitizer is likely not getting triggered')
+                #            IQA = self._demodA.IQ.reshape([acq_per_transfer, self._nsample])
+                print("digitizer is likely not getting triggered")
                 raise ValueError
-                        
-            
-                
+
             self._demodA.demodulate(signal)
-            IQA = self._demodA.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
-#            refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
-#            if self._ref_freq <0:
-#               refs = np.exp(1j * np.angle(np.average(IQB, 1))) 
-            
+            IQA = self._demodA.IQ.reshape(
+                [acq_per_transfer, self._nsamples // self._if_period]
+            )
+            #            refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
+            #            if self._ref_freq <0:
+            #               refs = np.exp(1j * np.angle(np.average(IQB, 1)))
+
             if take_ref:
                 self._demodB.demodulate(ref)
-                IQB = self._demodB.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
+                IQB = self._demodB.IQ.reshape(
+                    [acq_per_transfer, self._nsamples // self._if_period]
+                )
                 refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
                 print(refs)
-            
-            '''
+
+            """
             if take_ref:
                 self._demodB.demodulate(ref)
-                IQB = self._demodB.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
+                IQB = self._demodB.IQ.reshape([acq_per_transfer, self._nsamples // self._if_period])
                 refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
             else:
                 refs = np.ones_like(np.average(IQA, 1))
-            '''
-            
-            
-#            self._demodB.demodulate_ref_freq(ref, ref_freq = ref_freq, nsample = self._nsamples) #Yingying
+            """
 
-        
+            #            self._demodB.demodulate_ref_freq(ref, ref_freq = ref_freq, nsample = self._nsamples) #Yingying
+
             for j in range(self._npoints):
-                for k in range(self._naverages / self._ntransfers):
+                for k in range(self._naverages // self._ntransfers):
                     if take_ref:
-
-                        temp = np.mean(IQA[j + k*self._npoints,:] * refs[j + k*self._npoints])## Yingying revert to old digitize function
-#                        temp = np.mean(IQA[j + k*self._npoints,:]
-#                                        * np.exp(-1j * np.angle(IQB[j + k*self._npoints,:])))
+                        temp = np.mean(
+                            IQA[j + k * self._npoints, :] * refs[j + k * self._npoints]
+                        )  ## Yingying revert to old digitize function
+                    #                        temp = np.mean(IQA[j + k*self._npoints,:]
+                    #                                        * np.exp(-1j * np.angle(IQB[j + k*self._npoints,:])))
                     else:
-                        temp =  np.mean(IQA[j + k*self._npoints,:])
+                        temp = np.mean(IQA[j + k * self._npoints, :])
                     avgs[j] += temp
-                    values[j, i*self._naverages / self._ntransfers + k] = temp
-                    
+                    values[j, i * self._naverages // self._ntransfers + k] = temp
+
             if avg_buf:
-                self.update_averages(avg_buf, avgs, (i+1) * self._naverages / self._ntransfers)
-           
+                self.update_averages(
+                    avg_buf, avgs, (i + 1) * self._naverages / self._ntransfers
+                )
+
         re = np.real(values)
         im = np.imag(values)
         cov = np.zeros((self._npoints, 3), dtype=float)
-#        std_i = np.std(re, axis = 1)
-#        std_q = np.std(im, axis = 1)
-#        std_corr = np.sqrt(np.mean((np.mean(re) - re)*(np.mean(im) - im)))
+        #        std_i = np.std(re, axis = 1)
+        #        std_q = np.std(im, axis = 1)
+        #        std_corr = np.sqrt(np.mean((np.mean(re) - re)*(np.mean(im) - im)))
         for i in range(self._npoints):
-            m = np.cov(re[i,:],im[i,:])
-            cov[i] = np.array([m[0,0], m[1,1], m[1,0]])
+            m = np.cov(re[i, :], im[i, :])
+            cov[i] = np.array([m[0, 0], m[1, 1], m[1, 0]])
         if cov_buf:
-            self.update_cov(cov_buf, cov, self._naverages)            
-        
-        return avgs/self._naverages, cov
+            self.update_cov(cov_buf, cov, self._naverages)
 
-        '''
+        return avgs / self._naverages, cov
+
+        """
         if proj_func == 'phase': #DARIO trying to fix std_err bug for phase 10/7
             angles = np.angle(values, deg=True)
             stes = np.std(angles, axis=1)/np.sqrt(self._naverages-1)
@@ -637,57 +1116,92 @@ class Keysight_DIG(Instrument):
             self.update_stes(ste_buf, stes, self._naverages)        
         
         return avgs/self._naverages, stes
-        '''
-    
-    def test_dig(self, nsamples, npoints, naverages, ntransfers, captureDelay = 0, digScale = 2):
-        digChannels = [self._main_channel, self._ref_channel] 
+        """
+
+    def test_dig(
+        self, nsamples, npoints, naverages, ntransfers, captureDelay=0, digScale=2
+    ):
+        """Deprecated: superseded by setup_avg_shot/take_avg_shot. Does not guard NO_CHANNEL."""
+        warnings.warn(
+            "test_dig is deprecated; use setup_avg_shot/take_avg_shot instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        digChannels = [self._main_channel, self._ref_channel]
         errors = []
         errors += [self.dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)]
-    
+
         self.release_buf()
-    
-        for i in range(len(digChannels)):   
-           errors += [self.dig.DAQtriggerExternalConfig(digChannels[i], key.SD_TriggerExternalSources.TRIGGER_EXTERN, 
-                                                key.SD_TriggerBehaviors.TRIGGER_RISE, key.SD_SyncModes.SYNC_NONE)]
-           errors += [self.dig.DAQflush(digChannels[i])]
-           errors += [self.dig.channelInputConfig(digChannels[i], digScale, key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)]
-           errors += [self.dig.DAQconfig(digChannels[i], nsamples, npoints * naverages, captureDelay, key.SD_TriggerModes.EXTTRIG)]
-           errors += [self.dig.DAQbufferPoolConfig(digChannels[i], nsamples * npoints * naverages / ntransfers, 100)]
+
+        for i in range(len(digChannels)):
+            errors += [
+                self.dig.DAQtriggerExternalConfig(
+                    digChannels[i],
+                    key.SD_TriggerExternalSources.TRIGGER_EXTERN,
+                    key.SD_TriggerBehaviors.TRIGGER_RISE,
+                    key.SD_SyncModes.SYNC_NONE,
+                )
+            ]
+            errors += [self.dig.DAQflush(digChannels[i])]
+            errors += [
+                self.dig.channelInputConfig(
+                    digChannels[i],
+                    digScale,
+                    key.AIN_Impedance.AIN_IMPEDANCE_50,
+                    key.AIN_Coupling.AIN_COUPLING_DC,
+                )
+            ]
+            errors += [
+                self.dig.DAQconfig(
+                    digChannels[i],
+                    nsamples,
+                    npoints * naverages,
+                    captureDelay,
+                    key.SD_TriggerModes.EXTTRIG,
+                )
+            ]
+            errors += [
+                self.dig.DAQbufferPoolConfig(
+                    digChannels[i], nsamples * npoints * naverages // ntransfers, 100
+                )
+            ]
         if any(error < 0 for error in errors):
-            print(('test_dig errors:', errors))
-        
-        assert(naverages % ntransfers == 0)
+            print(("test_dig errors:", errors))
+
+        assert naverages % ntransfers == 0
         self.dig.DAQstartMultiple(3)
         self.start_hvi()
-    #    hvi.start()
+        #    hvi.start()
 
         # Add code to either trigger digitizer or wait for first few cycles
-        sums = np.zeros((npoints, nsamples), dtype = np.float64)
-        sums_ref = np.zeros_like(sums, dtype = np.float64)
-           
-    #    return data
+        sums = np.zeros((npoints, nsamples), dtype=np.float64)
+        sums_ref = np.zeros_like(sums, dtype=np.float64)
+
+        #    return data
         averages_per_transfer = naverages / ntransfers
-        temp = np.zeros(nsamples*npoints * averages_per_transfer, dtype = np.float64)
-        print(temp)
+        temp = np.zeros(
+            int(nsamples * npoints * averages_per_transfer), dtype=np.float64
+        )
+        print(np.shape(temp))
         temp_ref = np.zeros_like(temp)
         for transfer in range(ntransfers):
             try:
-                if transfer % (ntransfers/10) == 0: 
-                    print((str(transfer) + r'/' + str(ntransfers) + ' transfers done'))
-    
+                if transfer % (ntransfers / 10) == 0:
+                    print((str(transfer) + r"/" + str(ntransfers) + " transfers done"))
+
                     gc.collect()
             except:
-                pass# modulo shit ain't workin. its ok
+                pass  # modulo shit ain't workin. its ok
             temp = self.dig.DAQbufferGet(self._main_channel)
-#            temp = np.array(self.dig.DAQbufferGet(self._main_channel), dtype=np.complex64)
+            #            temp = np.array(self.dig.DAQbufferGet(self._main_channel), dtype=np.complex64)
             print(temp)
-            temp_ref  = self.dig.DAQbufferGet(self._ref_channel)
-            
+            temp_ref = self.dig.DAQbufferGet(self._ref_channel)
+
             if type(temp) is float and temp < 0:
-                print(('error thrown with code ', temp))
-                
-            if(not len(temp) == naverages * nsamples):
-                print('Buffer gave some wack shit, or maybe no shit at all:')
+                print(("error thrown with code ", temp))
+
+            if not len(temp) == naverages * nsamples:
+                print("Buffer gave some wack shit, or maybe no shit at all:")
                 print((np.shape(temp), temp))
                 print((np.shape(temp_ref), temp_ref))
                 raise ValueError
@@ -695,73 +1209,105 @@ class Keysight_DIG(Instrument):
             samples_per_average = nsamples * npoints
             for i in range(averages_per_transfer):
                 for j in range(npoints):
-                    sums[j] += temp[i * samples_per_average + j * nsamples : i * samples_per_average + (j+1) * nsamples]
-                    sums_ref[j] += temp_ref[i * samples_per_average + j * nsamples : i * samples_per_average + (j+1) * nsamples]
-          
+                    sums[j] += temp[
+                        i * samples_per_average + j * nsamples : i * samples_per_average
+                        + (j + 1) * nsamples
+                    ]
+                    sums_ref[j] += temp_ref[
+                        i * samples_per_average + j * nsamples : i * samples_per_average
+                        + (j + 1) * nsamples
+                    ]
+
         self.stop_hvi()
-        
+
         for i in range(len(digChannels)):
             self.dig.DAQbufferPoolRelease(digChannels[i])
-       
+
         return sums / naverages, sums_ref / naverages
-    
-    def test_dig_ROIC(self, nsamples, npoints, naverages, ntransfers, captureDelay = 0, digScale = 2):
-        digChannels = [1, 2, 3, 4] 
+
+    def test_dig_ROIC(
+        self, nsamples, npoints, naverages, ntransfers, captureDelay=0, digScale=2
+    ):
+        digChannels = [1, 2, 3, 4]
         errors = []
         errors += [self.dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)]
-    
+
         self.release_buf()
-    
-        for i in range(len(digChannels)):   
-           errors += [self.dig.DAQtriggerExternalConfig(digChannels[i], key.SD_TriggerExternalSources.TRIGGER_EXTERN, 
-                                                key.SD_TriggerBehaviors.TRIGGER_RISE, key.SD_SyncModes.SYNC_NONE)]
-           errors += [self.dig.DAQflush(digChannels[i])]
-           errors += [self.dig.channelInputConfig(digChannels[i], digScale, key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)]
-           errors += [self.dig.DAQconfig(digChannels[i], nsamples, npoints * naverages, captureDelay, key.SD_TriggerModes.EXTTRIG)]
-           errors += [self.dig.DAQbufferPoolConfig(digChannels[i], nsamples * npoints * naverages / ntransfers, 100)]
+
+        for i in range(len(digChannels)):
+            errors += [
+                self.dig.DAQtriggerExternalConfig(
+                    digChannels[i],
+                    key.SD_TriggerExternalSources.TRIGGER_EXTERN,
+                    key.SD_TriggerBehaviors.TRIGGER_RISE,
+                    key.SD_SyncModes.SYNC_NONE,
+                )
+            ]
+            errors += [self.dig.DAQflush(digChannels[i])]
+            errors += [
+                self.dig.channelInputConfig(
+                    digChannels[i],
+                    digScale,
+                    key.AIN_Impedance.AIN_IMPEDANCE_50,
+                    key.AIN_Coupling.AIN_COUPLING_DC,
+                )
+            ]
+            errors += [
+                self.dig.DAQconfig(
+                    digChannels[i],
+                    nsamples,
+                    npoints * naverages,
+                    captureDelay,
+                    key.SD_TriggerModes.EXTTRIG,
+                )
+            ]
+            errors += [
+                self.dig.DAQbufferPoolConfig(
+                    digChannels[i], nsamples * npoints * naverages / ntransfers, 100
+                )
+            ]
         if any(error < 0 for error in errors):
-            print(('test_dig errors:', errors))
-        
-        assert(naverages % ntransfers == 0)
+            print(("test_dig errors:", errors))
+
+        assert naverages % ntransfers == 0
         self.dig.DAQstartMultiple(15)
         self.start_hvi()
-    #    hvi.start()
+        #    hvi.start()
 
         # Add code to either trigger digitizer or wait for first few cycles
-        sums1 = np.zeros((npoints, nsamples), dtype = np.float64)
-        sums2 = np.zeros_like(sums1, dtype = np.float64)
-        sums3 = np.zeros_like(sums1, dtype = np.float64)
-        sums4 = np.zeros_like(sums1, dtype = np.float64)
-           
-    #    return data
+        sums1 = np.zeros((npoints, nsamples), dtype=np.float64)
+        sums2 = np.zeros_like(sums1, dtype=np.float64)
+        sums3 = np.zeros_like(sums1, dtype=np.float64)
+        sums4 = np.zeros_like(sums1, dtype=np.float64)
+
+        #    return data
         averages_per_transfer = naverages / ntransfers
-        temp = np.zeros(nsamples*npoints * averages_per_transfer, dtype = np.float64)
-#        print temp
+        temp = np.zeros(nsamples * npoints * averages_per_transfer, dtype=np.float64)
+        #        print temp
         temp_ref = np.zeros_like(temp)
         for transfer in range(ntransfers):
             try:
-                if transfer % (ntransfers/10) == 0: 
-                    print((str(transfer) + r'/' + str(ntransfers) + ' transfers done'))
-    
+                if transfer % (ntransfers / 10) == 0:
+                    print((str(transfer) + r"/" + str(ntransfers) + " transfers done"))
+
                     gc.collect()
             except:
-                pass# modulo shit ain't workin. its ok
+                pass  # modulo shit ain't workin. its ok
             temp = self.dig.DAQbufferGet(1)
-#            temp = np.array(self.dig.DAQbufferGet(self._main_channel), dtype=np.complex64)
+            #            temp = np.array(self.dig.DAQbufferGet(self._main_channel), dtype=np.complex64)
             print((np.shape(temp), temp))
-            temp2  = self.dig.DAQbufferGet(2)
+            temp2 = self.dig.DAQbufferGet(2)
             print((np.shape(temp2), temp2))
-            temp3  = self.dig.DAQbufferGet(3)
+            temp3 = self.dig.DAQbufferGet(3)
             print((np.shape(temp3), temp3))
-            temp4  = self.dig.DAQbufferGet(4)
+            temp4 = self.dig.DAQbufferGet(4)
             print((np.shape(temp4), temp4))
-            
-            
+
             if type(temp) is float and temp < 0:
-                print(('error thrown with code ', temp))
-                
-            if(not len(temp) == naverages * nsamples):
-                print('Buffer gave some wack shit, or maybe no shit at all:')
+                print(("error thrown with code ", temp))
+
+            if not len(temp) == naverages * nsamples:
+                print("Buffer gave some wack shit, or maybe no shit at all:")
                 print((np.shape(temp), temp))
                 print((np.shape(temp_ref), temp_ref))
                 raise ValueError
@@ -769,90 +1315,130 @@ class Keysight_DIG(Instrument):
             samples_per_average = nsamples * npoints
             for i in range(averages_per_transfer):
                 for j in range(npoints):
-                    sums1[j] += temp[i * samples_per_average + j * nsamples : i * samples_per_average + (j+1) * nsamples]
-                    sums2[j] += temp2[i * samples_per_average + j * nsamples : i * samples_per_average + (j+1) * nsamples]
-                    sums3[j] += temp3[i * samples_per_average + j * nsamples : i * samples_per_average + (j+1) * nsamples]
-                    sums4[j] += temp4[i * samples_per_average + j * nsamples : i * samples_per_average + (j+1) * nsamples]
-          
+                    sums1[j] += temp[
+                        i * samples_per_average + j * nsamples : i * samples_per_average
+                        + (j + 1) * nsamples
+                    ]
+                    sums2[j] += temp2[
+                        i * samples_per_average + j * nsamples : i * samples_per_average
+                        + (j + 1) * nsamples
+                    ]
+                    sums3[j] += temp3[
+                        i * samples_per_average + j * nsamples : i * samples_per_average
+                        + (j + 1) * nsamples
+                    ]
+                    sums4[j] += temp4[
+                        i * samples_per_average + j * nsamples : i * samples_per_average
+                        + (j + 1) * nsamples
+                    ]
+
         self.stop_hvi()
-        
+
         for i in range(len(digChannels)):
             self.dig.DAQbufferPoolRelease(digChannels[i])
-       
-        return sums1 / naverages, sums2 / naverages, sums3 / naverages, sums4 / naverages
-    
-    def test_dig_demod(self, nsamples, naverages, captureDelay = 0, take_ref = True):
-        digChannels = [1, 2] 
+
+        return (
+            sums1 / naverages,
+            sums2 / naverages,
+            sums3 / naverages,
+            sums4 / naverages,
+        )
+
+    def test_dig_demod(self, nsamples, naverages, captureDelay=0, take_ref=True):
+        digChannels = [1, 2]
         errors = []
         errors += [self.dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)]
-    
+
         self.release_buf()
-    
-        for i in range(len(digChannels)):   
-           errors += [self.dig.DAQtriggerExternalConfig(digChannels[i], key.SD_TriggerExternalSources.TRIGGER_EXTERN, 
-                                                key.SD_TriggerBehaviors.TRIGGER_RISE, key.SD_SyncModes.SYNC_NONE)]
-           errors += [self.dig.DAQflush(digChannels[i])]
-           errors += [self.dig.channelInputConfig(digChannels[i], VOLTAGE_SCALE, key.AIN_Impedance.AIN_IMPEDANCE_50, key.AIN_Coupling.AIN_COUPLING_DC)]
-           errors += [self.dig.DAQconfig(digChannels[i], nsamples, naverages, captureDelay, key.SD_TriggerModes.EXTTRIG)]
-           errors += [self.dig.DAQbufferPoolConfig(digChannels[i], nsamples * naverages, 100)]
+
+        for i in range(len(digChannels)):
+            errors += [
+                self.dig.DAQtriggerExternalConfig(
+                    digChannels[i],
+                    key.SD_TriggerExternalSources.TRIGGER_EXTERN,
+                    key.SD_TriggerBehaviors.TRIGGER_RISE,
+                    key.SD_SyncModes.SYNC_NONE,
+                )
+            ]
+            errors += [self.dig.DAQflush(digChannels[i])]
+            errors += [
+                self.dig.channelInputConfig(
+                    digChannels[i],
+                    VOLTAGE_SCALE,
+                    key.AIN_Impedance.AIN_IMPEDANCE_50,
+                    key.AIN_Coupling.AIN_COUPLING_DC,
+                )
+            ]
+            errors += [
+                self.dig.DAQconfig(
+                    digChannels[i],
+                    nsamples,
+                    naverages,
+                    captureDelay,
+                    key.SD_TriggerModes.EXTTRIG,
+                )
+            ]
+            errors += [
+                self.dig.DAQbufferPoolConfig(digChannels[i], nsamples * naverages, 100)
+            ]
         if any(error < 0 for error in errors):
-            print(('test_dig errors:', errors))
-        
+            print(("test_dig errors:", errors))
+
         self.dig.DAQstartMultiple(3)
         self.start_hvi()
-    #    hvi.start()
-        
-        
+        #    hvi.start()
+
         try:
             signal = np.array(self.dig.DAQbufferGet(digChannels[0]), dtype=np.complex64)
             if take_ref:
-                ref = np.array(self.dig.DAQbufferGet(digChannels[1]), dtype=np.complex64)
+                ref = np.array(
+                    self.dig.DAQbufferGet(digChannels[1]), dtype=np.complex64
+                )
         except ValueError as e:
             print((str(e)))
-            print('digitizer is likely not getting triggered')
+            print("digitizer is likely not getting triggered")
             raise ValueError
-            
-        if(not len(signal) == naverages * nsamples):
-            print('Buffer gave some wack shit, or maybe no shit at all:')
+
+        if not len(signal) == naverages * nsamples:
+            print("Buffer gave some wack shit, or maybe no shit at all:")
             print((np.shape(signal), signal))
             print((np.shape(ref), ref))
             raise ValueError
-      
+
         self.set_demod(naverages * nsamples)
         self._demodA.demodulate(signal)
-        IQA = self._demodA.IQ.reshape([naverages, nsamples / self._if_period])
-        
+        IQA = self._demodA.IQ.reshape([naverages, nsamples // self._if_period])
+
         if take_ref:
             self._demodB.demodulate(ref)
-            IQB = self._demodB.IQ.reshape([naverages, nsamples / self._if_period])
+            IQB = self._demodB.IQ.reshape([naverages, nsamples // self._if_period])
             refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
         else:
             refs = np.ones(len(IQA))
-        
-        
-        
-#        if self._ref_freq <0:
-#            refs = np.exp(1j * np.angle(np.average(IQB, 1)))
-    
-        avgs = np.zeros_like(IQA[0,:])
+
+        #        if self._ref_freq <0:
+        #            refs = np.exp(1j * np.angle(np.average(IQB, 1)))
+
+        avgs = np.zeros_like(IQA[0, :])
         for i in range(naverages):
-            avgs += IQA[i,:]  * refs[i]
-            
+            avgs += IQA[i, :] * refs[i]
+
         self.stop_hvi()
-        
+
         for i in range(len(digChannels)):
             self.dig.DAQbufferPoolRelease(digChannels[i])
-       
+
         return avgs / naverages
-    
+
     def setup_demod_shots(self, N):
-        self.setup_avg_shots(N)
+        self.setup_avg_shot(N)
 
     def take_demod_shots(self, acqtimeout=None, Iweight=None, Qweight=None):
-        #TODO
+        # TODO
+        raise NotImplementedError("take_demod_shots not implemented yet")
         return 0
-    
-    def setup_hist(self, N, hist_buf = None, num_demods=1, ntransfers=None):   
+
+    def setup_hist(self, N, hist_buf=None, num_demods=1, ntransfers=None):
         self.hist_buf = hist_buf
         self.nacquisitions = N * num_demods
 
@@ -866,101 +1452,139 @@ class Keysight_DIG(Instrument):
             elif self.nacquisitions % 500 == 0:
                 ntransfers = int(self.nacquisitions / 500)
             else:
-                raise Exception('Bad number of averages*points. Make divisible by (1000, 800, 750, 500)')
-                
-        self._ntransfers = ntransfers
-                
-        self.release_buf()
-        
-        errors = []
-            
-        errors += [self.dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)]
-        for channel in [self._main_channel, self._ref_channel]:
-            errors += [self.dig.DAQtriggerExternalConfig(channel, key.SD_TriggerExternalSources.TRIGGER_EXTERN, 
-                                    key.SD_TriggerBehaviors.TRIGGER_RISE, key.SD_SyncModes.SYNC_NONE)]
-            errors += [self.dig.DAQflush(channel)]
-            errors += [self.dig.channelInputConfig(channel, VOLTAGE_SCALE, 
-                                                   key.AIN_Impedance.AIN_IMPEDANCE_50, 
-                                                   key.AIN_Coupling.AIN_COUPLING_DC)]
-            errors += [self.dig.DAQconfig(channel, self._nsamples, self.nacquisitions, 
-                                          self._channel_delay, key.SD_TriggerModes.EXTTRIG)]
-            errors += [self.dig.DAQbufferPoolConfig(channel, self._nsamples * self.nacquisitions / ntransfers, 
-                                                    self._timeout)]
-            self.set_demod(self._nsamples * self.nacquisitions / self._ntransfers, avg_periods= 1) #TODO: change avg_periods?
-        
-        if any(error < 0 for error in errors):
-            print(('setup_avg_shot errors: ', errors))
-        
-        
-        
-        
-    def take_hist(self, num_demods=1, take_ref = True):
-        acq_per_transfer = self.nacquisitions / self._ntransfers
-        
-        print(('acq per transfer ', acq_per_transfer))
-        print(('ntransfers ', self._ntransfers))
-        print(('naqeuistions ', self.nacquisitions))
-        print(('naverages', self._naverages))
-        
+                raise Exception(
+                    "Bad number of averages*points. Make divisible by (1000, 800, 750, 500)"
+                )
 
-        values = np.zeros(self.nacquisitions, dtype = np.complex64)
-                
-        self._capturing = True 
+        self._ntransfers = ntransfers
+
+        self.release_buf()
+
+        errors = []
+
+        errors += [self.dig.triggerIOconfig(key.SD_TriggerDirections.AOU_TRG_IN)]
+        relevant_channels = [self._main_channel]
+        if self._ref_channel is not NO_CHANNEL:
+            relevant_channels.append(self._ref_channel)
+        for channel in relevant_channels:
+            errors += [
+                self.dig.DAQtriggerExternalConfig(
+                    channel,
+                    key.SD_TriggerExternalSources.TRIGGER_EXTERN,
+                    key.SD_TriggerBehaviors.TRIGGER_RISE,
+                    key.SD_SyncModes.SYNC_NONE,
+                )
+            ]
+            errors += [self.dig.DAQflush(channel)]
+            errors += [
+                self.dig.channelInputConfig(
+                    channel,
+                    VOLTAGE_SCALE,
+                    key.AIN_Impedance.AIN_IMPEDANCE_50,
+                    key.AIN_Coupling.AIN_COUPLING_DC,
+                )
+            ]
+            errors += [
+                self.dig.DAQconfig(
+                    channel,
+                    self._nsamples,
+                    self.nacquisitions,
+                    self._channel_delay,
+                    key.SD_TriggerModes.EXTTRIG,
+                )
+            ]
+            errors += [
+                self.dig.DAQbufferPoolConfig(
+                    channel,
+                    self._nsamples * self.nacquisitions // ntransfers,
+                    self._timeout,
+                )
+            ]
+            self.set_demod(
+                self._nsamples * self.nacquisitions // self._ntransfers, avg_periods=1
+            )  # TODO: change avg_periods?
+
+        if any(error < 0 for error in errors):
+            print(("setup_avg_shot errors: ", errors))
+
+    def take_hist(self, num_demods=1, take_ref=True):
+        acq_per_transfer = self.nacquisitions // self._ntransfers
+
+        print(("acq per transfer ", acq_per_transfer))
+        print(("ntransfers ", self._ntransfers))
+        print(("nacquisitions ", self.nacquisitions))
+        print(("naverages", self._naverages))
+
+        values = np.zeros(self.nacquisitions, dtype=np.complex64)
+
+        self._capturing = True
         self.set_interrupt(False)
-        self.emit('start-capture')
+        self.emit("start-capture")
         for i in range(self._ntransfers):
-#            print('Acquiring %d/%d', i+1, self._ntransfers)
-            logging.info('%d/%d acquisitions performed', (i)*acq_per_transfer, self.nacquisitions)
-            self.emit('capture-progress', (i)*acq_per_transfer)
-            
+            #            print('Acquiring %d/%d', i+1, self._ntransfers)
+            logging.info(
+                "%d/%d acquisitions performed",
+                (i) * acq_per_transfer,
+                self.nacquisitions,
+            )
+            self.emit("capture-progress", (i) * acq_per_transfer)
+
             if self._interrupt:
-                logging.info('Capture interrupted')
-                raise Exception('Capture interrupted')
+                logging.info("Capture interrupted")
+                raise Exception("Capture interrupted")
                 self._card.end_capture()
                 if self._capturing:
-                    self.emit('end-capture')
+                    self.emit("end-capture")
                 self.set_interrupt(False)
                 self._capturing = False
-                logging.info('DIG ended capture...')
+                logging.info("DIG ended capture...")
                 return values
-            
+
             try:
-                signal = np.array(self.dig.DAQbufferGet(self._main_channel), dtype=np.complex64)
+                signal = np.array(
+                    self.dig.DAQbufferGet(self._main_channel), dtype=np.complex64
+                )
                 if take_ref:
-                    ref = np.array(self.dig.DAQbufferGet(self._ref_channel), dtype=np.complex64)
-                        
+                    ref = np.array(
+                        self.dig.DAQbufferGet(self._ref_channel), dtype=np.complex64
+                    )
+
             except ValueError as e:
                 print((str(e)))
-                print('digitizer is likely not getting triggered')
+                print("digitizer is likely not getting triggered")
                 raise ValueError
-                        
+
             print((np.shape(signal)))
-                
+
             self._demodA.demodulate(signal)
-            
+
             print((np.shape(self._demodA.IQ)))
-            
-            IQA = self._demodA.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
+
+            IQA = self._demodA.IQ.reshape(
+                [acq_per_transfer, self._nsamples // self._if_period]
+            )
             if take_ref:
-                self._demodB.demodulate(ref)                
-                IQB = self._demodB.IQ.reshape([acq_per_transfer, self._nsamples / self._if_period])
+                self._demodB.demodulate(ref)
+                IQB = self._demodB.IQ.reshape(
+                    [acq_per_transfer, self._nsamples // self._if_period]
+                )
                 refs = np.exp(-1j * np.angle(np.average(IQB, 1)))
             else:
-                refs = np.ones(len(IQA))  
-#            if self._ref_freq <0:
-#                refs = np.exp(1j * np.angle(np.average(IQB, 1)))
-        
+                refs = np.ones(len(IQA))
+            #            if self._ref_freq <0:
+            #                refs = np.exp(1j * np.angle(np.average(IQB, 1)))
+
             for j in range(acq_per_transfer):
-                values[j + i*acq_per_transfer] = np.mean(IQA[j,:] * refs[j])
-        
+                values[j + i * acq_per_transfer] = np.mean(IQA[j, :] * refs[j])
+
         self.hist_buf[:] = values
         return values
 
-    
     def release_buf(self):
         self.dig.DAQbufferPoolRelease(self._main_channel)
-        self.dig.DAQbufferPoolRelease(self._ref_channel)
-    
+        if self._ref_channel is not NO_CHANNEL:
+            self.dig.DAQbufferPoolRelease(self._ref_channel)
+
     def update_averages(self, avg_buf, IQ_sum, n):
         try:
             avg_buf[:] = IQ_sum / float(n)
@@ -968,10 +1592,10 @@ class Keysight_DIG(Instrument):
         except Exception as e:
             print((IQ_sum.shape, n, avg_buf.shape))
             print((avg_buf[:].shape))
-            msg = 'Unable to store averages: %s' % str(e)
+            msg = "Unable to store averages: %s" % str(e)
             logging.warning(msg)
             raise Exception(msg)
-   
+
     def update_cov(self, cov_buf, cov, n):
         try:
             cov_buf[:] = cov
@@ -979,41 +1603,51 @@ class Keysight_DIG(Instrument):
         except Exception as e:
             print((cov.shape, n, cov.shape))
             print((cov_buf[:].shape))
-            msg = 'Unable to store standard errors: %s' % str(e)
+            msg = "Unable to store standard errors: %s" % str(e)
             logging.warning(msg)
             raise Exception(msg)
-    
+
     ###############################################
     # Demodulation stuff
     ###############################################
-    
+
     def set_demod(self, bufsize, avg_periods=1, weight_func=1):
-        '''
+        """
         Sets up demodulators.
         <avg_periods> only applies to channel B (the reference), as we might
         want to use weight functions to the corrected shots.
-        '''
+        """
+        if self._nsamples % self._if_period != 0:
+            raise ValueError("nsamples (%d) must be a multiple of if_period (%d)" %
+                            (self._nsamples, self._if_period))
 
         # Default is no weighting function.
         self._Iweight = None
         self._Qweight = None
 
-#        weight_func = self.load_weight_func(self.get_weight_func())
-#        if type(weight_func) is np.ndarray:
-#            if weight_func.dtype in (np.complex, np.complex64, np.complex128):
-#                self._Iweight = np.real(weight_func)
-#                self._Qweight = np.imag(weight_func)
-#            else:
-#                self._Iweight = weight_func
-#                self._Qweight = weight_func
+        #        weight_func = self.load_weight_func(self.get_weight_func())
+        #        if type(weight_func) is np.ndarray:
+        #            if weight_func.dtype in (np.complex, np.complex64, np.complex128):
+        #                self._Iweight = np.real(weight_func)
+        #                self._Qweight = np.imag(weight_func)
+        #            else:
+        #                self._Iweight = weight_func
+        #                self._Qweight = weight_func
 
         self._demodA = demod.DemodulatorComplex(bufsize, self._if_period, avg_periods=1)
-        self._demodB = demod.DemodulatorComplex(bufsize, self._if_period, avg_periods=avg_periods)
-#        self._demodB = demod.DemodulatorForRef(bufsize, self._if_period, self._nsamples,self._ref_freq, avg_periods=avg_periods)#Yingying changed to this
-        
+        self._demodB = demod.DemodulatorComplex(
+            bufsize, self._if_period, avg_periods=avg_periods
+        )
+        #        self._demodB = demod.DemodulatorForRef(bufsize, self._if_period, self._nsamples,self._ref_freq, avg_periods=avg_periods)#Yingying changed to this
 
         # Garbage collect old demodulators
         gc.collect()
-        
-        
-        
+
+
+    def scan(self):
+        try:
+            logger.info("Starting DIG scan...")
+            return self.dig.scan()
+        except Exception as e:
+            logger.error("DIG scan failed: %s", str(e))
+                        

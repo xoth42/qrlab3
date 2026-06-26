@@ -1,12 +1,17 @@
-# -*- coding: utf-8 -*-
-from . import keysightSD1 as key
+import keysightSD1 as key
+
+
 def error_decorator(function):
     def wrapper(*args):
         result = function(*args)
         if (result < 0) and (result != -8038) and (result != -8031):
-            raise ValueError("Error is " + str(result) + ' in function: ' + str(function.__name__))
+            raise ValueError(
+                "Error is " + str(result) + " in function: " + str(function.__name__)
+            )
+
     return wrapper
-        
+
+
 class CompiledHVI(object):
     def __init__(self, HVI_path_str, chassis, awg_list, *args, **kwargs):
         self.hvi = key.SD_HVI()
@@ -14,49 +19,67 @@ class CompiledHVI(object):
         self.error(self.identifier)
         for i in range(len(awg_list)):
             try:
-                error = self.assignHardware(i, chassis, awg_list[i]) #DARIO 1/31 dynamic slot assignment
+                error = self.assignHardware(
+                    i, chassis, awg_list[i]
+                )  # DARIO 1/31 dynamic slot assignment
             except:
-                print('assignHardware failed, moving on..')
-                
-#        self.assignHardware(1, 0, 10) #DARIO 1/17/19 changed for different slot arrangement on the third
-#                                                                   (digitizer-less) chassis
-#        self.assignHardware(2, 0, 10)
-            
-#        self.assignHardware(0, 1, 7)
-#        self.assignHardware(1, 1, 8) #DARIO changing something for PC8 4/8/21
-        
+                print("assignHardware failed, moving on..")
+
+        #        self.assignHardware(1, 0, 10) #DARIO 1/17/19 changed for different slot arrangement on the third
+        #                                                                   (digitizer-less) chassis
+        #        self.assignHardware(2, 0, 10)
+
+        #        self.assignHardware(0, 1, 7)
+        #        self.assignHardware(1, 1, 8) #DARIO changing something for PC8 4/8/21
 
         self.hvi.compile()
         self.hvi.load()
-        
+
     def error(self, value):
         if (value < 0) and (value != -8038) and (value != -8031):
-            raise ValueError('HVI error ' + str(value))
-    @error_decorator       
+            raise ValueError("HVI error " + str(value))
+
+    @error_decorator
     def start(self):
         result = self.hvi.start()
         return result
-    @error_decorator    
+
+    @error_decorator
     def pause(self):
         result = self.hvi.pause()
         return result
-    @error_decorator    
+
+    @error_decorator
     def resume(self):
         result = self.hvi.resume()
         return result
+
     @error_decorator
     def assignHardware(self, Index, chassisnumber, slotnumber):
-        result = self.hvi.assignHardwareWithIndexAndSlot(Index, chassisnumber, slotnumber)
+        result = self.hvi.assignHardwareWithIndexAndSlot(
+            Index, chassisnumber, slotnumber
+        )
         return result
+
     @error_decorator
     def stop(self):
         result = self.hvi.stop()
         return result
+
     @error_decorator
     def compile(self):
         result = self.hvi.compile()
         return result
+
     @error_decorator
     def load(self):
         result = self.hvi.load()
+        return result
+
+    def isTriggerAssigned(self, trigger):
+        result = self.hvi.isTriggerAssigned(trigger)
+        return result
+    
+    def getTriggersAssigned(self):
+        result = self.hvi.getTriggersAssigned()
         return result

@@ -10,8 +10,9 @@ class Demodulator:
             raise ValueError('Number of samples should be a multiple of the IF period')
 
     def reserve_IQ(self, dtype):
-        self.I = np.zeros([self.nsamples/self.period,], dtype=dtype)
-        self.Q = np.zeros([self.nsamples/self.period,], dtype=dtype)
+        # '//' required in Python 3: numpy zeros() needs integer shape
+        self.I = np.zeros([self.nsamples//self.period,], dtype=dtype)
+        self.Q = np.zeros([self.nsamples//self.period,], dtype=dtype)
 
     def demodulate(self, ar):
         pass
@@ -30,7 +31,7 @@ class DemodulatorInt(Demodulator):
         self.reserve_IQ(dtype=np.int32)
 
     def demodulate(self, ar):
-        ar2 = ar.reshape((len(ar) / self.period, self.period))
+        ar2 = ar.reshape((len(ar) // self.period, self.period))
         np.dot(ar2, self._cosphi, self.I[:len(ar2)])
         self.I /= self._norm
         np.dot(ar2, self._sinphi, self.Q[:len(ar2)])
@@ -46,14 +47,14 @@ class DemodulatorFloat(Demodulator):
         self.reserve_IQ(dtype=np.float32)
 
     def demodulate(self, ar):
-        ar2 = ar.reshape((len(ar) / self.period, self.period))
+        ar2 = ar.reshape((len(ar) // self.period, self.period))
         np.dot(ar2, self._cosphi, self.I[:len(ar2)])
         np.dot(ar2, self._sinphi, self.Q[:len(ar2)])
 
 class DemodulatorComplex(Demodulator):
     '''
     Class to perform complex demodulation by calculating sig * exp(-i phi).
-    This class can directly average the IQ values over several perios of the
+    This class can directly average the IQ values over several periods of the
     IF frequency by specifying <avg_periods>.
     '''
 
@@ -64,17 +65,17 @@ class DemodulatorComplex(Demodulator):
         self.period = period
         self.weight_func = weight_func
         # Number of samples for one data point
-        self.samples_per_point = period * avg_periods
+        self.samples_per_point = int(period * avg_periods)
         if (nsamples % self.samples_per_point) != 0:
             raise ValueError('Number of samples needs to be multiple of period and avg_cycles')
 
-        phis = np.linspace(0, 2*np.pi * avg_periods, self.samples_per_point, endpoint=False)
+        phis = np.linspace(0, 2*np.pi * avg_periods, int(self.samples_per_point), endpoint=False)
         self._exp_iphi = np.exp(1j * phis) / avg_periods * weight_func
         self._exp_iphi = self._exp_iphi.astype(np.complex64)
         self.IQ = np.zeros([int(self.nsamples/self.samples_per_point)], dtype=np.complex64)
 
     def demodulate(self, ar):
-        ar2 = ar.reshape((len(ar) / self.samples_per_point, self.samples_per_point))
+        ar2 = ar.reshape((len(ar) // self.samples_per_point, self.samples_per_point))
         np.dot(ar2, self._exp_iphi, self.IQ[:len(ar2)])
         
 #    def demodulate_ref_freq(self, ar, ref_freq = 50, nsample = 1000):  #Yingying to modulate refrence signal of arbitrary freq

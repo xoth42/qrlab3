@@ -196,6 +196,12 @@ class AWGLoader:
         '''
         logging.info('Loading sequence with %d elements to channel %s on %s' % (len(seq.seq), chan, awg.get_name()))
 
+        # Clear stale queue/waveform state on this channel before requeuing.
+        # Without this, a channel left configured from a previous run (e.g.
+        # AWG3 channels 5-8) can retain old sequence elements.
+        awg.stop_channel(chan)
+        awg.flush_channel(chan)
+
         for i_seq, p in enumerate(seq.seq):
             load, wname, m1, m2 = self._get_wname_m1m2(p, m1seq, m2seq, i_seq)
             if load:

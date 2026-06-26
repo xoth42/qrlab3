@@ -492,7 +492,7 @@ real part is applied to I and the imaginary part to Q.
         print('inside convert_signal')
         return buf
 
-    def take_raw_shots(self, buftimeout=10000):
+    def take_raw_shots(self, buftimeout=1000):
         '''
         Acquire <N> raw shots.
         Not setup to do more than a 1000.
@@ -520,7 +520,7 @@ real part is applied to I and the imaginary part to Q.
         N = self.get_ntotal_rec()
         Nperbuf = self.get_nrecperbuf()
         nsamples = self.get_nsamples()
-        periods = nsamples / self.get_if_period()
+        periods = nsamples // self.get_if_period()
         i = 0
 
         IQr = np.zeros([N, periods], dtype=np.complex)
@@ -763,7 +763,7 @@ real part is applied to I and the imaginary part to Q.
         recperbuf = self.get_nrecperbuf()
         totrec = self.get_ntotal_rec()
 
-        numbufs = totrec / recperbuf
+        numbufs = totrec // recperbuf
         temp_ste = np.zeros((cycles, numbufs), dtype=np.complex64)
 
         i = 0

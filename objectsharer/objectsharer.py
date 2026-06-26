@@ -15,17 +15,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-import logging
-import random
-import pickle as pickle
-import time
-import numpy as np
-import inspect
-import uuid
-import types
 import bisect
+import inspect
+import logging
 import os
+import pickle as pickle
+import random
+import time
 import traceback
+import uuid
+
+import numpy as np
 
 logger = logging.getLogger("Object Sharer")
 logger.setLevel(logging.INFO)
@@ -71,7 +71,7 @@ class TimeoutError(RuntimeError):
 
 class OSSpecial(object):
     def __init__(self, **kwargs):
-        for k, v in kwargs:
+        for k, v in kwargs.items():
             setattr(self, k, v)
 
 #########################################
@@ -138,7 +138,8 @@ def _walk_objects(obj, func, *args):
         for i, v in enumerate(obj):
             obj[i] = _walk_objects(v, func, *args)
     if type(obj) is dict:
-        for k in sorted(obj):
+        # Python 3 cannot sort mixed key types such as int and str.
+        for k in obj:
             obj[k] = _walk_objects(obj[k], func, *args)
     return func(obj, *args)
 
@@ -305,7 +306,7 @@ class ObjectSharer(object):
         props = []
         funcs = []
         for key, val in inspect.getmembers(obj):
-            if key.startswith('_') and not key in SPECIAL_FUNCTIONS:
+            if key.startswith('_') and key not in SPECIAL_FUNCTIONS:
                 continue
             if key == 'connect':
                 continue
@@ -316,8 +317,11 @@ class ObjectSharer(object):
                     opts = {}
                 opts['__doc__'] = getattr(val, '__doc__', None)
                 try:
+                    # Python 3.10 still provides inspect.getargspec() and
+                    # inspect.formatargspec(), so keep the original metadata
+                    # format for compatibility with older ObjectSharer peers.
                     opts['__argspec__'] = inspect.getargspec(val)
-                except:
+                except Exception:
                     opts['__argspec__'] = None
                 funcs.append((key, opts))
             else:
@@ -668,7 +672,7 @@ class ObjectSharer(object):
         # Ping - pong to check alive
         if info[0] == 'ping':
             logger.debug('PING')
-            msg = pickle.pickle(('pong',))
+            msg = pickle.dumps(('pong',))
             self.backend.send_to(from_uid, msg)
         elif info[0] == 'pong':
             logger.debug('PONG')
@@ -731,6 +735,7 @@ class _FunctionCall():
         doc = funcname
         argspec = self._share_options.get('__argspec__', None)
         if argspec:
+            # Python 3.10 still has inspect.formatargspec().
             doc += inspect.formatargspec(*argspec) + '\n'
         else:
             doc += '()\n'
@@ -827,8 +832,9 @@ class ObjectProxy(object):
             else:
                 setattr(self, funcname, func)
 
-        for propname in info['properties']:
-            setattr(self, propname, 'blaat')
+        # What on earth is this? TODO: Delete 
+        # for propname in info['properties']:
+        #     setattr(self, propname, 'blaat') # why?
 
     def connect(self, signame, func):
         return helper.connect_signal(self._OS_UID, signame, func)
@@ -1120,7 +1126,8 @@ class ZMQBackend(object):
 #            print("at top of while loop")
             # Set curdelay based on end time
             if endtime is not None:
-                curdelay = endtime - time.time()
+                # zmq.Poller.poll() expects milliseconds.
+                curdelay = max(0, (endtime - time.time()) * 1000.0)
             else:
                 curdelay = 10000
 
@@ -1131,7 +1138,7 @@ class ZMQBackend(object):
                 curdelay = min(curdelay, to_delay)
 
             # Poll
-            socks = poller.poll(curdelay)
+            socks = poller.poll(int(curdelay))
             if len(socks) == 0:
                 self._run_timeouts()
                 if endtime is not None and time.time() >= endtime:
@@ -1219,7 +1226,8 @@ class ZMQBackend(object):
 
             # Set curdelay based on end time
             if endtime is not None:
-                curdelay = endtime - time.time()
+                # zmq.Poller.poll() expects milliseconds.
+                curdelay = max(0, (endtime - time.time()) * 1000.0)
             else:
                 curdelay = 10000
 
@@ -1235,7 +1243,7 @@ class ZMQBackend(object):
             i need to find out how it works and why its hanging
             for now i'm overriding it in the alazar calls
             """
-            #socks = poller.poll(curdelay)
+            #socks = poller.poll(int(curdelay))
             socks = []
             if len(socks) == 0:
                 self._run_timeouts()
@@ -1284,26 +1292,29 @@ class ZMQBackend(object):
             if endtime is not None and time.time() >= endtime:
                 return False
 
-    def _qt_timer(self):
-        self.main_loop(delay=0)
-        return True
-
-    def add_qt_timer(self, interval=20):
-        '''
-        Install a callback timer at <interval> msec to integrate ZMQ message
-        processing into the Qt4 main loop.
-        '''
-
-        if self.timer is not None:
-            logger.warning('Timer already installed')
-            return False
-
-        from PyQt4 import QtCore, QtGui
-        _app = QtGui.QApplication.instance()
-        self.timer = QtCore.QTimer()
-        QtCore.QObject.connect(self.timer, QtCore.SIGNAL('timeout()'), self._qt_timer)
-#        self.timer.start(interval)
-        self.timer.start()
-
-        return True
+    # def _qt_timer(self):
+    #     self.main_loop(delay=0)
+    #     return True
+    #
+    # def add_qt_timer(self, interval=20):
+    #     '''
+    #     Install a callback timer at <interval> msec to integrate ZMQ message
+    #     processing into the Qt main loop.
+    #     '''
+    #
+    #     if self.timer is not None:
+    #         logger.warning('Timer already installed')
+    #         return False
+    #
+    #     try:
+    #         from PyQt5 import QtCore, QtWidgets
+    #     except ImportError as exc:
+    #         raise ImportError('add_qt_timer requires PyQt5') from exc
+    #
+    #     _app = QtWidgets.QApplication.instance()
+    #     self.timer = QtCore.QTimer()
+    #     self.timer.timeout.connect(self._qt_timer)
+    #     self.timer.start(interval)
+    #
+    #     return True
 

@@ -23,7 +23,7 @@ STYLE_IMAGE = 'IMAGE'
 STYLE_LINES = 'LINES'
 
 def is_complex(ar):
-    return ar.dtype in (np.complex, np.complex64, np.complex128)
+    return ar.dtype in (complex, np.complex64, np.complex128)
 
 class Measurement(object):
     '''
@@ -414,6 +414,11 @@ class Measurement(object):
             self.start_awgs()
             time.sleep(1)
         # Setup and arm alazar
+        if self.cyclelen == 0:
+            logging.warning(
+                'acquisition_loop: cyclelen=0 — zero-length experiment, '
+                'capture will likely produce no data'
+            )
         if self.histogram:
             alz.setup_hist(self.cyclelen * alz.get_naverages(), self.shot_data)
         else:
@@ -423,6 +428,10 @@ class Measurement(object):
         # Estimate a capture timeout, mostly because the AWG is a bit slow...
         timeout = min(10000 + 4000 * self.cyclelen, 600000)
         alz.set_timeout(timeout)
+        logging.info(
+            'acquisition_loop: cyclelen=%d, naverages=%d, timeout_ms=%d, histogram=%s',
+            self.cyclelen, alz.get_naverages(), timeout, self.histogram,
+        )
         time.sleep(1)
 
 
@@ -544,35 +553,35 @@ class Measurement(object):
         '''
         alz = self.instruments['alazar']
         if self.histogram:
-            self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*alz.get_naverages()], dtype=np.complex)
+            self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*alz.get_naverages()], dtype=np.complex64)
             self.avg_data = None
             self.pp_data = None
             self.std_i_data = None
             self.std_q_data = None
         elif self.singleshotbin:
             self.shot_data = None
-            self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
+            self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float64)
             self.pp_data = None
             self.ste_data = None
             '''DARIO added 7/28/18 to keep all single shot data'''
         elif self.keep_shots:
-            self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*alz.get_naverages()], dtype=np.complex)
+            self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*alz.get_naverages()], dtype=np.complex64)
             if not self.real_signals:
-                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.complex)
-                self.pp_data = self.data.create_dataset('avg_pp', [self.cyclelen,], dtype=np.float)
+                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.complex64)
+                self.pp_data = self.data.create_dataset('avg_pp', [self.cyclelen,], dtype=np.float64)
             else:
-                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
+                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float64)
                 self.pp_data = None
         else:
             self.shot_data = None
             # If saving complex data, save both raw signal and post-processed version
             if not self.real_signals:
-                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.complex)
-                self.pp_data = self.data.create_dataset('avg_pp', [self.cyclelen,], dtype=np.float)
+                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.complex64)
+                self.pp_data = self.data.create_dataset('avg_pp', [self.cyclelen,], dtype=np.float64)
             else:
-                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
+                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float64)
                 self.pp_data = None
-            self.cov_data = self.data.create_dataset('cov', [self.cyclelen,3], dtype=np.float)
+            self.cov_data = self.data.create_dataset('cov', [self.cyclelen,3], dtype=np.float64)
 
     def measure(self):
         '''
@@ -583,7 +592,7 @@ class Measurement(object):
         Sets up data sets, performs initialization and updates plots if the
         class has an 'update' function.
         '''
-        if self.dig_type is 'key':
+        if self.dig_type == 'key':
             return self.measure_keysight()
             
         self.setup_measurement()
@@ -652,7 +661,7 @@ class Measurement(object):
 #                                  async_=True, IQ_e=self.readout_info.IQe, 
 #                                  e_radius=self.readout_info.IQe_radius) 
 
-        take_ref = (self.readout is not 'readout_IQ')
+        take_ref = (self.readout != 'readout_IQ')
         if self.histogram:
             ret = dig.take_hist(async_=True, take_ref = take_ref)
         else:
@@ -731,29 +740,29 @@ class Measurement(object):
         '''
         dig = self.instruments['dig']
         if self.histogram:
-            self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*dig.do_get_naverages()], dtype=np.complex)
+            self.shot_data = self.data.create_dataset('shots', shape=[self.cyclelen*dig.do_get_naverages()], dtype=np.complex64)
             self.avg_data = None
             self.pp_data = None
             self.std_i_data = None
             self.std_q_data = None
         elif self.singleshotbin:
             self.shot_data = None
-            self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
+            self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float64)
             self.pp_data = None
             self.ste_data = None
         else:
             self.shot_data = None
             # If saving complex data, save both raw signal and post-processed version
             if not self.real_signals:
-                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.complex)
-                self.pp_data = self.data.create_dataset('avg_pp', [self.cyclelen,], dtype=np.float)
+                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.complex64)
+                self.pp_data = self.data.create_dataset('avg_pp', [self.cyclelen,], dtype=np.float64)
             else:
-                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float)
+                self.avg_data = self.data.create_dataset('avg', [self.cyclelen,], dtype=np.float64)
                 self.pp_data = None
-#            self.std_i_data = self.data.create_dataset('std_i', [self.cyclelen,], dtype=np.float)
-#            self.std_q_data = self.data.create_dataset('std_q', [self.cyclelen,], dtype=np.float)
-#            self.std_corr_data = self.data.create_dataset('std_corr', [self.cyclelen,], dtype=np.float)
-            self.cov_data = self.data.create_dataset('cov', [self.cyclelen,3], dtype=np.float)
+#            self.std_i_data = self.data.create_dataset('std_i', [self.cyclelen,], dtype=np.float64)
+#            self.std_q_data = self.data.create_dataset('std_q', [self.cyclelen,], dtype=np.float64)
+#            self.std_corr_data = self.data.create_dataset('std_corr', [self.cyclelen,], dtype=np.float64)
+            self.cov_data = self.data.create_dataset('cov', [self.cyclelen,3], dtype=np.float64)
 
     def measure_keysight(self):
         '''
@@ -867,9 +876,9 @@ class Measurement(object):
 
         vproj /= np.abs(vproj)
 
-        if(self.proj_func is 'phase'):
+        if self.proj_func == 'phase':
             return np.angle(ys, deg=True) # returns phase #DARIO 8/31 
-        elif(self.proj_func is 'projection'):
+        elif self.proj_func == 'projection':
             ys = ys - IQg #DARIO 8/31
             return np.real(ys) * vproj.real  + np.imag(ys) * vproj.imag # returns projected amplitue
         else:
@@ -926,7 +935,7 @@ class Measurement(object):
         return eb
 
     def get_naverages(self):
-        if self.dig_type is 'alz':
+        if self.dig_type == 'alz':
             return self.instruments['alazar'].get_naverages()
         else:
             return self._dig.get_naverages()

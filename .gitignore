@@ -3,3 +3,16 @@
 .idea/
 *.pyc
 *.png
+
+# Isaac's repo-to-text helper files
+r2txt
+repo-*.txt
+
+# Sweep data
+ActiveResetSweep_g*/
+
+.vscode/
+
+.env
+
+log/*/*.log

@@ -3,6 +3,18 @@ import pickle as pickle
 import base64
 import subprocess
 
+from lib.server_support.log_rotate import INSTRUMENT_SERVER_LOG_ENV, DATA_SERVER_LOG_ENV
+
+
+def _child_log_env_for_pyfile(pyfile):
+    name = pyfile.lower()
+    if 'dataserver' in name:
+        return DATA_SERVER_LOG_ENV
+    if 'instrument_server' in name or 'instrumentserver' in name:
+        return INSTRUMENT_SERVER_LOG_ENV
+    return None
+
+
 def start_python_process(pyfile, **kwargs):
     '''
     Start an independent python process executing pyfile.
@@ -12,8 +24,10 @@ def start_python_process(pyfile, **kwargs):
     '''
     s = base64.b64encode(pickle.dumps(kwargs))
     cmd = [sys.executable, pyfile, '--kwargs', s]
-    pid = subprocess.Popen(cmd).pid
-    return pid
+    # Let the child keep its native console window; it tees its own stdout/stderr
+    # to the active log file during startup.
+    proc = subprocess.Popen(cmd)
+    return proc.pid
 
 def decode_kwargs(s):
     kwargs = pickle.loads(base64.b64decode(s))
